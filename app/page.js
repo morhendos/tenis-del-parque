@@ -22,14 +22,14 @@ export default function Home() {
         contact: 'Contacto'
       },
       hero: {
-        badge: 'Temporada de prueba 2025',
+        badge: 'Temporada de verano 2025',
         title: 'Compite. Mejora. Conecta.',
         tagline: 'La primera liga de tenis amateur en Sotogrande que combina competición seria con ambiente social.',
         cta: 'Únete a la Liga',
         stats: [
           { number: '8', label: 'Rondas por temporada' },
           { number: '3', label: 'Niveles de juego' },
-          { number: '€79', label: 'Por temporada' }
+          { number: '€0', label: 'Primera temporada' }
         ]
       },
       features: {
@@ -64,7 +64,7 @@ export default function Home() {
         steps: [
           {
             title: 'Inscríbete',
-            description: 'Elige tu nivel: principiante, intermedio o avanzado. €79 por toda la temporada.'
+            description: 'Elige tu nivel: principiante, intermedio o avanzado. Gratis para la primera temporada.'
           },
           {
             title: 'Recibe tu emparejamiento',
@@ -126,7 +126,7 @@ export default function Home() {
         items: [
           {
             q: '¿Qué incluye la inscripción?',
-            a: '8 rondas de competición, acceso a la plataforma, rankings en vivo, y eventos sociales de la liga.'
+            a: '8 rondas de competición, acceso a la plataforma, rankings en vivo, y eventos sociales de la liga. ¡La primera temporada es totalmente gratis!'
           },
           {
             q: '¿Quién paga las pistas?',
@@ -144,7 +144,7 @@ export default function Home() {
       },
       signup: {
         title: 'Únete a la temporada inaugural',
-        subtitle: 'Plazas limitadas para la temporada de primavera 2025. Sé parte de algo especial desde el principio.',
+        subtitle: 'Plazas limitadas para la temporada de verano 2025. Sé parte de algo especial desde el principio. ¡Primera temporada gratis!',
         form: {
           name: 'Nombre completo',
           email: 'Email',
@@ -153,7 +153,7 @@ export default function Home() {
         },
         success: {
           title: '¡Bienvenido a la Liga!',
-          message: 'Te contactaremos pronto con los detalles de inscripción y pago.'
+          message: 'Te contactaremos pronto con los detalles de inscripción.'
         }
       },
       footer: {
@@ -174,14 +174,14 @@ export default function Home() {
         contact: 'Contact'
       },
       hero: {
-        badge: 'Trial Season 2025',
+        badge: 'Summer Season 2025',
         title: 'Compete. Improve. Connect.',
         tagline: 'The first amateur tennis league in Sotogrande combining serious competition with social atmosphere.',
         cta: 'Join the League',
         stats: [
           { number: '8', label: 'Rounds per season' },
           { number: '3', label: 'Playing levels' },
-          { number: '€79', label: 'Per season' }
+          { number: '€0', label: 'First season' }
         ]
       },
       features: {
@@ -216,7 +216,7 @@ export default function Home() {
         steps: [
           {
             title: 'Sign up',
-            description: 'Choose your level: beginner, intermediate, or advanced. €79 for the entire season.'
+            description: 'Choose your level: beginner, intermediate, or advanced. Free for the first season.'
           },
           {
             title: 'Get matched',
@@ -278,7 +278,7 @@ export default function Home() {
         items: [
           {
             q: "What's included in registration?",
-            a: '8 rounds of competition, platform access, live rankings, and league social events.'
+            a: '8 rounds of competition, platform access, live rankings, and league social events. The first season is completely free!'
           },
           {
             q: 'Who pays for courts?',
@@ -296,7 +296,7 @@ export default function Home() {
       },
       signup: {
         title: 'Join the inaugural season',
-        subtitle: 'Limited spots for Spring 2025 season. Be part of something special from the beginning.',
+        subtitle: 'Limited spots for Summer 2025 season. Be part of something special from the beginning. First season free!',
         form: {
           name: 'Full name',
           email: 'Email',
@@ -305,7 +305,7 @@ export default function Home() {
         },
         success: {
           title: 'Welcome to the League!',
-          message: "We'll contact you soon with registration and payment details."
+          message: "We'll contact you soon with registration details."
         }
       },
       footer: {
