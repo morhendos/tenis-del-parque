@@ -149,7 +149,7 @@ function RulesPage() {
           title: 'Costos',
           icon: 'costs',
           items: [
-            'Inscripción: €0 para la primera temporada (normalmente €79)',
+            'Inscripción: €0 para la primera temporada',
             'Incluye: 8 rondas, acceso a plataforma, rankings, eventos sociales',
             'Costos de pista NO incluidos - pago directo al club',
             'Sin reembolsos después del inicio de la temporada'
@@ -266,7 +266,7 @@ function RulesPage() {
           title: 'Costs',
           icon: 'costs',
           items: [
-            'Registration: €0 for first season (normally €79)',
+            'Registration: €0 for first season',
             'Includes: 8 rounds, platform access, rankings, social events',
             'Court costs NOT included - paid directly to club',
             'No refunds after season start'
