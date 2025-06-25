@@ -13,6 +13,24 @@ body {
   background: rgb(var(--background-start-rgb));
 }
 
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #563380;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #452a66;
+}
+
 @layer base {
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-raleway), sans-serif;
