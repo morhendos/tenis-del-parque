@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 
-export default function Rules() {
+function RulesPage() {
   const [language, setLanguage] = useState('es')
 
   const content = {
@@ -15,7 +15,7 @@ export default function Rules() {
       },
       hero: {
         title: 'Reglamento Oficial',
-        subtitle: 'Todo lo que necesitas saber para participar en la Liga del Parque'
+        subtitle: 'Todo lo que necesitas saber para participar en Tenis del Parque'
       },
       sections: [
         {
@@ -122,7 +122,7 @@ export default function Rules() {
       },
       hero: {
         title: 'Official Rules',
-        subtitle: 'Everything you need to know to participate in Liga del Parque'
+        subtitle: 'Everything you need to know to participate in Tenis del Parque'
       },
       sections: [
         {
@@ -233,16 +233,16 @@ export default function Rules() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-8">
-              <Link href="/" className="flex items-center space-x-3">
-                <div className="relative w-10 h-10">
+              <Link href="/" className="block">
+                <div className="relative h-10 w-40">
                   <Image
-                    src="/logo.png"
-                    alt="Liga del Parque"
+                    src="/logo-horizontal-02.png"
+                    alt="Tenis del Parque"
                     fill
                     className="object-contain"
+                    priority
                   />
                 </div>
-                <span className="text-xl font-light text-parque-purple">Liga del Parque</span>
               </Link>
               <div className="hidden md:flex space-x-6">
                 <Link href="/" className="text-gray-700 hover:text-parque-purple transition-colors">{t.nav.home}</Link>
@@ -321,10 +321,12 @@ export default function Rules() {
       <footer className="bg-white/80 py-8 border-t border-gray-200">
         <div className="container mx-auto px-4">
           <div className="text-center text-gray-600">
-            <p className="font-light">© 2025 Liga de Tenis del Parque - Sotogrande. {language === 'es' ? 'Todos los derechos reservados.' : 'All rights reserved.'}</p>
+            <p className="font-light">© 2025 Tenis del Parque - Sotogrande. {language === 'es' ? 'Todos los derechos reservados.' : 'All rights reserved.'}</p>
           </div>
         </div>
       </footer>
     </main>
   )
 }
+
+export default RulesPage

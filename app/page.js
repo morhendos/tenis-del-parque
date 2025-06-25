@@ -33,7 +33,7 @@ export default function Home() {
         ]
       },
       features: {
-        title: '¿Por qué Liga del Parque?',
+        title: '¿Por qué Tenis del Parque?',
         subtitle: 'Un sistema probado que funciona para jugadores amateur',
         items: [
           {
@@ -157,7 +157,7 @@ export default function Home() {
         }
       },
       footer: {
-        copyright: '© 2025 Liga de Tenis del Parque - Sotogrande. Todos los derechos reservados.',
+        copyright: '© 2025 Tenis del Parque - Sotogrande. Todos los derechos reservados.',
         links: {
           rules: 'Reglamento',
           privacy: 'Privacidad',
@@ -185,7 +185,7 @@ export default function Home() {
         ]
       },
       features: {
-        title: 'Why Liga del Parque?',
+        title: 'Why Tenis del Parque?',
         subtitle: 'A proven system that works for amateur players',
         items: [
           {
@@ -309,7 +309,7 @@ export default function Home() {
         }
       },
       footer: {
-        copyright: '© 2025 Tennis del Parque League - Sotogrande. All rights reserved.',
+        copyright: '© 2025 Tenis del Parque - Sotogrande. All rights reserved.',
         links: {
           rules: 'Rules',
           privacy: 'Privacy',
@@ -352,7 +352,17 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-8">
-              <Link href="/" className="text-xl font-light text-parque-purple">Liga del Parque</Link>
+              <Link href="/" className="block">
+                <div className="relative h-10 w-40">
+                  <Image
+                    src="/logo-horizontal-02.png"
+                    alt="Tenis del Parque"
+                    fill
+                    className="object-contain"
+                    priority
+                  />
+                </div>
+              </Link>
               <div className="hidden md:flex space-x-6">
                 <Link href="/" className="text-gray-700 hover:text-parque-purple transition-colors">{t.nav.home}</Link>
                 <Link href="/rules" className="text-gray-700 hover:text-parque-purple transition-colors">{t.nav.rules}</Link>
@@ -382,7 +392,7 @@ export default function Home() {
               <div className="relative w-64 h-64 md:w-80 md:h-80">
                 <Image
                   src="/logo.png"
-                  alt="Liga de Tenis del Parque"
+                  alt="Tenis del Parque"
                   fill
                   className="object-contain"
                   priority
