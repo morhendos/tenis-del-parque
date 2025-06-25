@@ -14,7 +14,8 @@ module.exports = {
         'parque-bg': '#D5D3C3',
       },
       fontFamily: {
-        'sans': ['Inter', 'system-ui', 'sans-serif'],
+        'sans': ['var(--font-outfit)', 'system-ui', 'sans-serif'],
+        'display': ['var(--font-raleway)', 'system-ui', 'sans-serif'],
       },
     },
   },

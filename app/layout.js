@@ -1,7 +1,17 @@
-import { Inter } from 'next/font/google'
+import { Outfit, Raleway } from 'next/font/google'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'] })
+const outfit = Outfit({ 
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-outfit'
+})
+
+const raleway = Raleway({ 
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-raleway'
+})
 
 export const metadata = {
   title: 'Liga de Tenis del Parque - Sotogrande',
@@ -11,7 +21,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="es">
-      <body className={inter.className}>{children}</body>
+      <body className={`${outfit.variable} ${raleway.variable} font-sans`}>{children}</body>
     </html>
   )
 }
