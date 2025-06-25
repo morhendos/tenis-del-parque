@@ -11,7 +11,7 @@ module.exports = {
         'parque-purple': '#563380',
         'parque-green': '#8FBF60',
         'parque-yellow': '#E6E94E',
-        'parque-bg': '#D5D3C3',
+        'parque-bg': '#d6dcc5',
       },
       fontFamily: {
         'sans': ['var(--font-outfit)', 'system-ui', 'sans-serif'],
