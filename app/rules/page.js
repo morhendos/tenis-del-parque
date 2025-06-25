@@ -71,8 +71,8 @@ function RulesPage() {
           icon: 'categories',
           items: [
             'Principiante: Elo 0-1199',
-            'Intermedio: Elo 0-1299',
-            'Avanzado: Elo 1150+',
+            'Intermedio: Elo 1200-1299',
+            'Avanzado: Elo 1300+',
             'Si hay pocos jugadores, las categorías pueden combinarse'
           ]
         },
@@ -188,8 +188,8 @@ function RulesPage() {
           icon: 'categories',
           items: [
             'Beginner: Elo 0-1199',
-            'Intermediate: Elo 0-1299',
-            'Advanced: Elo 1150+',
+            'Intermediate: Elo 1200-1299',
+            'Advanced: Elo 1300+',
             'Categories may be combined if player numbers are low'
           ]
         },

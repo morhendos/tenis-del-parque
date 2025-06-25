@@ -109,12 +109,12 @@ export default function Home() {
           },
           {
             name: 'Intermedio',
-            elo: 'Elo 0-1299',
+            elo: 'Elo 1200-1299',
             description: 'Para jugadores regulares con técnica sólida buscando mejorar.'
           },
           {
             name: 'Avanzado',
-            elo: 'Elo 1150+',
+            elo: 'Elo 1300+',
             description: 'Jugadores experimentados buscando competición seria.'
           }
         ]
@@ -261,12 +261,12 @@ export default function Home() {
           },
           {
             name: 'Intermediate',
-            elo: 'Elo 0-1299',
+            elo: 'Elo 1200-1299',
             description: 'For regular players with solid technique looking to improve.'
           },
           {
             name: 'Advanced',
-            elo: 'Elo 1150+',
+            elo: 'Elo 1300+',
             description: 'Experienced players seeking serious competition.'
           }
         ]
@@ -459,9 +459,9 @@ export default function Home() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-parque-yellow/5 rounded-full blur-3xl animate-pulse delay-2000"></div>
         </div>
         
-        <div className="container mx-auto px-4 relative z-10 pt-20">
+        <div className="container mx-auto px-4 relative z-10 py-20">
           <div className="text-center max-w-5xl mx-auto">
-            <span className="inline-block bg-gradient-to-r from-parque-purple to-parque-purple/80 text-white px-8 py-4 rounded-full text-sm font-medium mb-8 animate-fadeInUp shadow-xl">
+            <span className="inline-block bg-gradient-to-r from-parque-purple to-parque-purple/80 text-white px-8 py-4 rounded-full text-sm font-medium mb-8 mt-8 animate-fadeInUp shadow-xl">
               {t.hero.badge}
             </span>
             
