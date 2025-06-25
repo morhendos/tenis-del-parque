@@ -14,6 +14,7 @@ export default function Home() {
   const [language, setLanguage] = useState('es')
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [activePreview, setActivePreview] = useState(0)
 
   // Detect browser language on mount
   useEffect(() => {
@@ -117,6 +118,16 @@ export default function Home() {
             elo: 'Elo 1300+',
             description: 'Jugadores experimentados buscando competición seria.'
           }
+        ]
+      },
+      platformPreview: {
+        title: 'Descubre la Plataforma',
+        subtitle: 'Todo lo que necesitas en un solo lugar',
+        tabs: [
+          { name: 'Clasificación', id: 'standings' },
+          { name: 'Rankings', id: 'rankings' },
+          { name: 'Resultados', id: 'results' },
+          { name: 'Próximos Partidos', id: 'upcoming' }
         ]
       },
       testimonials: {
@@ -271,6 +282,16 @@ export default function Home() {
           }
         ]
       },
+      platformPreview: {
+        title: 'Discover the Platform',
+        subtitle: 'Everything you need in one place',
+        tabs: [
+          { name: 'Standings', id: 'standings' },
+          { name: 'Rankings', id: 'rankings' },
+          { name: 'Results', id: 'results' },
+          { name: 'Upcoming Matches', id: 'upcoming' }
+        ]
+      },
       testimonials: {
         title: 'What our players say',
         items: [
@@ -368,6 +389,177 @@ export default function Home() {
     setIsLangMenuOpen(false)
   }
 
+  // Mock data for platform preview
+  const mockData = {
+    standings: [
+      { position: 1, name: 'Rafael M.', points: 21, played: 7, wins: 7, losses: 0, sets: '14-2' },
+      { position: 2, name: 'Carlos S.', points: 18, played: 7, wins: 6, losses: 1, sets: '12-4' },
+      { position: 3, name: 'Ana G.', points: 15, played: 7, wins: 5, losses: 2, sets: '11-6' },
+      { position: 4, name: 'James W.', points: 12, played: 7, wins: 4, losses: 3, sets: '9-8' },
+      { position: 5, name: 'María L.', points: 9, played: 7, wins: 3, losses: 4, sets: '8-9' },
+      { position: 6, name: 'David K.', points: 6, played: 7, wins: 2, losses: 5, sets: '5-11' },
+      { position: 7, name: 'Sophie B.', points: 3, played: 7, wins: 1, losses: 6, sets: '3-12' },
+      { position: 8, name: 'Tom H.', points: 0, played: 7, wins: 0, losses: 7, sets: '2-14' }
+    ],
+    rankings: [
+      { position: 1, name: 'Rafael M.', elo: 1487, trend: 'up', change: '+23' },
+      { position: 2, name: 'Carlos S.', elo: 1452, trend: 'up', change: '+15' },
+      { position: 3, name: 'Ana G.', elo: 1398, trend: 'down', change: '-8' },
+      { position: 4, name: 'James W.', elo: 1345, trend: 'up', change: '+12' },
+      { position: 5, name: 'María L.', elo: 1289, trend: 'same', change: '0' },
+      { position: 6, name: 'David K.', elo: 1234, trend: 'down', change: '-18' },
+      { position: 7, name: 'Sophie B.', elo: 1198, trend: 'up', change: '+5' },
+      { position: 8, name: 'Tom H.', elo: 1145, trend: 'down', change: '-22' }
+    ],
+    results: [
+      { player1: 'Rafael M.', player2: 'Carlos S.', score: '6-4, 7-5', date: '22 Jun', court: 'Club Sotogrande' },
+      { player1: 'Ana G.', player2: 'María L.', score: '6-3, 2-6, 10-8', date: '21 Jun', court: 'La Reserva' },
+      { player1: 'James W.', player2: 'David K.', score: '6-2, 6-3', date: '20 Jun', court: 'Real Club Valderrama' },
+      { player1: 'Sophie B.', player2: 'Tom H.', score: '4-6, 6-4, 10-7', date: '19 Jun', court: 'Club Sotogrande' }
+    ],
+    upcoming: [
+      { player1: 'Rafael M.', player2: 'Ana G.', round: 8, deadline: '29 Jun' },
+      { player1: 'Carlos S.', player2: 'James W.', round: 8, deadline: '29 Jun' },
+      { player1: 'María L.', player2: 'David K.', round: 8, deadline: '29 Jun' },
+      { player1: 'Sophie B.', player2: 'Tom H.', round: 8, deadline: '29 Jun' }
+    ]
+  }
+
+  const renderPreviewContent = () => {
+    const previews = ['standings', 'rankings', 'results', 'upcoming']
+    const currentPreview = previews[activePreview]
+
+    switch(currentPreview) {
+      case 'standings':
+        return (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-4 px-2 text-sm font-medium text-gray-600">Pos</th>
+                  <th className="text-left py-4 px-4 text-sm font-medium text-gray-600">{language === 'es' ? 'Jugador' : 'Player'}</th>
+                  <th className="text-center py-4 px-2 text-sm font-medium text-gray-600">Pts</th>
+                  <th className="text-center py-4 px-2 text-sm font-medium text-gray-600">PJ</th>
+                  <th className="text-center py-4 px-2 text-sm font-medium text-gray-600">G</th>
+                  <th className="text-center py-4 px-2 text-sm font-medium text-gray-600">P</th>
+                  <th className="text-center py-4 px-2 text-sm font-medium text-gray-600">Sets</th>
+                </tr>
+              </thead>
+              <tbody>
+                {mockData.standings.map((player, index) => (
+                  <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <td className="py-4 px-2">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-medium text-sm ${
+                        player.position <= 3 ? 'bg-gradient-to-br from-parque-yellow to-parque-yellow/70 text-white' : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {player.position}
+                      </div>
+                    </td>
+                    <td className="py-4 px-4 font-medium text-gray-800">{player.name}</td>
+                    <td className="py-4 px-2 text-center font-semibold text-parque-purple">{player.points}</td>
+                    <td className="py-4 px-2 text-center text-gray-600">{player.played}</td>
+                    <td className="py-4 px-2 text-center text-green-600">{player.wins}</td>
+                    <td className="py-4 px-2 text-center text-red-600">{player.losses}</td>
+                    <td className="py-4 px-2 text-center text-gray-600">{player.sets}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
+      
+      case 'rankings':
+        return (
+          <div className="space-y-3">
+            {mockData.rankings.map((player, index) => (
+              <div key={index} className="bg-gray-50 rounded-2xl p-4 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-medium ${
+                      player.position <= 3 ? 'bg-gradient-to-br from-parque-purple to-parque-purple/70 text-white' : 'bg-gray-200 text-gray-700'
+                    }`}>
+                      {player.position}
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-800">{player.name}</h4>
+                      <p className="text-sm text-gray-500">Elo: {player.elo}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <span className={`text-sm font-medium ${
+                      player.trend === 'up' ? 'text-green-600' : player.trend === 'down' ? 'text-red-600' : 'text-gray-500'
+                    }`}>
+                      {player.change}
+                    </span>
+                    {player.trend === 'up' && (
+                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                      </svg>
+                    )}
+                    {player.trend === 'down' && (
+                      <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                      </svg>
+                    )}
+                    {player.trend === 'same' && (
+                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 12H4" />
+                      </svg>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+
+      case 'results':
+        return (
+          <div className="space-y-4">
+            {mockData.results.map((match, index) => (
+              <div key={index} className="bg-gradient-to-r from-gray-50 to-white rounded-2xl p-6 border border-gray-100 hover:shadow-lg transition-all duration-300">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-sm text-gray-500">{match.date}</span>
+                  <span className="text-sm text-parque-purple font-medium">{match.court}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-800">{match.player1}</p>
+                    <p className="text-gray-600">{match.player2}</p>
+                  </div>
+                  <div className="px-6 py-3 bg-parque-purple/10 rounded-xl">
+                    <p className="font-semibold text-parque-purple text-center">{match.score}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+
+      case 'upcoming':
+        return (
+          <div className="space-y-4">
+            {mockData.upcoming.map((match, index) => (
+              <div key={index} className="bg-gradient-to-r from-parque-purple/5 to-parque-green/5 rounded-2xl p-6 border border-parque-purple/20 hover:shadow-lg transition-all duration-300">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-sm font-medium text-parque-purple">{language === 'es' ? 'Ronda' : 'Round'} {match.round}</span>
+                  <span className="text-sm text-gray-600">{language === 'es' ? 'Fecha límite:' : 'Deadline:'} {match.deadline}</span>
+                </div>
+                <div className="flex items-center justify-center space-x-4">
+                  <p className="font-medium text-gray-800">{match.player1}</p>
+                  <span className="text-2xl text-gray-400">vs</span>
+                  <p className="font-medium text-gray-800">{match.player2}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+
+      default:
+        return null
+    }
+  }
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-parque-bg via-white to-parque-bg">
       {/* Navigation */}
@@ -459,9 +651,9 @@ export default function Home() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-parque-yellow/5 rounded-full blur-3xl animate-pulse delay-2000"></div>
         </div>
         
-        <div className="container mx-auto px-4 relative z-10 py-20">
+        <div className="container mx-auto px-4 relative z-10 pt-20">
           <div className="text-center max-w-5xl mx-auto">
-            <span className="inline-block bg-gradient-to-r from-parque-purple to-parque-purple/80 text-white px-8 py-4 rounded-full text-sm font-medium mb-8 mt-8 animate-fadeInUp shadow-xl">
+            <span className="inline-block bg-gradient-to-r from-parque-purple to-parque-purple/80 text-white px-8 py-4 rounded-full text-sm font-medium mb-8 animate-fadeInUp shadow-xl">
               {t.hero.badge}
             </span>
             
@@ -611,6 +803,57 @@ export default function Home() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Platform Preview Section */}
+      <section className="py-24 md:py-32 relative overflow-hidden bg-gradient-to-b from-white/70 to-transparent">
+        <div className="absolute inset-0">
+          <div className="absolute top-20 right-20 w-96 h-96 bg-parque-yellow/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-20 left-20 w-80 h-80 bg-parque-purple/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div>
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-light text-parque-purple mb-6">
+              {t.platformPreview.title}
+            </h2>
+            <p className="text-xl text-gray-600 font-light max-w-2xl mx-auto">{t.platformPreview.subtitle}</p>
+          </div>
+
+          <div className="max-w-6xl mx-auto">
+            {/* Tab Navigation */}
+            <div className="flex flex-wrap justify-center mb-12 gap-4">
+              {t.platformPreview.tabs.map((tab, index) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActivePreview(index)}
+                  className={`px-8 py-4 rounded-2xl font-medium transition-all duration-300 transform ${
+                    activePreview === index
+                      ? 'bg-gradient-to-r from-parque-purple to-parque-purple/80 text-white shadow-lg scale-105'
+                      : 'bg-white/80 text-gray-600 hover:bg-white hover:shadow-md hover:scale-105'
+                  }`}
+                >
+                  {tab.name}
+                </button>
+              ))}
+            </div>
+
+            {/* Preview Content */}
+            <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-8 md:p-12 border border-gray-100 animate-fadeIn">
+              <div className="mb-8 flex items-center justify-between">
+                <h3 className="text-2xl font-light text-parque-purple">
+                  {t.platformPreview.tabs[activePreview].name}
+                </h3>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm text-gray-500">{language === 'es' ? 'En vivo' : 'Live'}</span>
+                </div>
+              </div>
+              
+              {renderPreviewContent()}
+            </div>
           </div>
         </div>
       </section>
