@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -11,7 +11,15 @@ export default function Home() {
   })
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [language, setLanguage] = useState('es') // 'es' or 'en'
+  const [language, setLanguage] = useState('es')
+  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false)
+
+  // Detect browser language on mount
+  useEffect(() => {
+    const browserLang = navigator.language || navigator.languages[0]
+    const detectedLang = browserLang.toLowerCase().startsWith('es') ? 'es' : 'en'
+    setLanguage(detectedLang)
+  }, [])
 
   const content = {
     es: {
@@ -345,6 +353,11 @@ export default function Home() {
     })
   }
 
+  const handleLanguageChange = (lang) => {
+    setLanguage(lang)
+    setIsLangMenuOpen(false)
+  }
+
   return (
     <main className="min-h-screen bg-parque-bg">
       {/* Navigation */}
@@ -368,15 +381,62 @@ export default function Home() {
                 <Link href="/rules" className="text-gray-700 hover:text-parque-purple transition-colors">{t.nav.rules}</Link>
               </div>
             </div>
-            <button
-              onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
-              className="bg-parque-purple/10 px-4 py-2 rounded-full text-parque-purple font-medium hover:bg-parque-purple/20 transition-colors"
-            >
-              {language === 'es' ? 'EN' : 'ES'}
-            </button>
+            
+            {/* Language Selector */}
+            <div className="relative">
+              <button
+                onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
+                className="flex items-center space-x-2 bg-white border border-gray-200 px-4 py-2 rounded-lg hover:border-parque-purple transition-colors"
+              >
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                </svg>
+                <span className="text-gray-700 font-medium">
+                  {language === 'es' ? 'Español' : 'English'}
+                </span>
+                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              {isLangMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-100 py-1">
+                  <button
+                    onClick={() => handleLanguageChange('es')}
+                    className={`w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center space-x-3 ${
+                      language === 'es' ? 'bg-parque-purple/5' : ''
+                    }`}
+                  >
+                    <span className="text-2xl">🇪🇸</span>
+                    <span className={`font-medium ${language === 'es' ? 'text-parque-purple' : 'text-gray-700'}`}>
+                      Español
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => handleLanguageChange('en')}
+                    className={`w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center space-x-3 ${
+                      language === 'en' ? 'bg-parque-purple/5' : ''
+                    }`}
+                  >
+                    <span className="text-2xl">🇬🇧</span>
+                    <span className={`font-medium ${language === 'en' ? 'text-parque-purple' : 'text-gray-700'}`}>
+                      English
+                    </span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </nav>
+
+      {/* Click outside to close language menu */}
+      {isLangMenuOpen && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setIsLangMenuOpen(false)}
+        />
+      )}
 
       {/* Hero Section */}
       <section className="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden">
