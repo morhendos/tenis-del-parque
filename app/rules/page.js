@@ -24,14 +24,22 @@ function RulesPage() {
       
       // Update active section based on scroll position
       const sections = document.querySelectorAll('.rule-section')
+      const scrollPosition = window.scrollY + 100 // Offset for fixed nav
+      
       sections.forEach((section, index) => {
         const rect = section.getBoundingClientRect()
-        if (rect.top <= 200 && rect.bottom >= 200) {
+        const absoluteTop = rect.top + window.scrollY
+        const absoluteBottom = absoluteTop + rect.height
+        
+        // Check if scroll position is within this section
+        if (scrollPosition >= absoluteTop && scrollPosition < absoluteBottom) {
           setActiveSection(index)
         }
       })
     }
+    
     window.addEventListener('scroll', handleScroll)
+    handleScroll() // Call once to set initial state
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
@@ -279,6 +287,14 @@ function RulesPage() {
     setIsLangMenuOpen(false)
   }
 
+  const scrollToSection = (index) => {
+    const element = document.querySelectorAll('.rule-section')[index]
+    const yOffset = -80 // Offset for fixed navigation
+    const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset
+    
+    window.scrollTo({ top: y, behavior: 'smooth' })
+  }
+
   const getIcon = (iconName) => {
     const icons = {
       format: (
@@ -441,14 +457,11 @@ function RulesPage() {
           {t.sections.map((section, index) => (
             <button
               key={index}
-              onClick={() => {
-                const element = document.querySelectorAll('.rule-section')[index]
-                element.scrollIntoView({ behavior: 'smooth', block: 'center' })
-              }}
+              onClick={() => scrollToSection(index)}
               className={`block w-full p-3 rounded-xl mb-2 transition-all duration-300 ${
                 activeSection === index 
-                  ? 'bg-parque-purple text-white' 
-                  : 'hover:bg-gray-100 text-gray-600'
+                  ? 'bg-parque-purple text-white shadow-lg transform scale-105' 
+                  : 'hover:bg-gray-100 text-gray-600 hover:scale-105'
               }`}
               title={section.title}
             >
@@ -526,42 +539,6 @@ function RulesPage() {
           </div>
         </div>
       </footer>
-
-      <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        .animate-fadeIn {
-          animation: fadeIn 0.5s ease-out;
-        }
-        
-        .animate-fadeInUp {
-          animation: fadeInUp 0.8s ease-out;
-          animation-fill-mode: both;
-        }
-        
-        .animation-delay-200 { animation-delay: 200ms; }
-        .animation-delay-400 { animation-delay: 400ms; }
-        .animation-delay-600 { animation-delay: 600ms; }
-        .animation-delay-800 { animation-delay: 800ms; }
-        .animation-delay-1000 { animation-delay: 1000ms; }
-        
-        .delay-1000 { animation-delay: 1000ms; }
-        .delay-2000 { animation-delay: 2000ms; }
-      `}</style>
     </main>
   )
 }
