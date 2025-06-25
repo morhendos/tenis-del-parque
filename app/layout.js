@@ -14,7 +14,7 @@ const raleway = Raleway({
 })
 
 export const metadata = {
-  title: 'Liga de Tenis del Parque - Sotogrande',
+  title: 'Tenis del Parque - Sotogrande',
   description: 'Únete a la primera liga de tenis amateur en Sotogrande. Compite, mejora tu juego y forma parte de nuestra comunidad.',
 }
 
