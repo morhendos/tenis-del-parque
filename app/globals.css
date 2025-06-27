@@ -86,24 +86,24 @@ body {
   right: -70%;
 }
 
-/* Modern abstract dot pattern */
+/* Modern abstract dot pattern - MORE VISIBLE */
 .modern-dots-pattern {
   background-image: 
-    radial-gradient(circle at 20% 30%, rgba(86, 51, 128, 0.15) 2px, transparent 2px),
-    radial-gradient(circle at 80% 70%, rgba(146, 158, 85, 0.12) 2px, transparent 2px),
-    radial-gradient(circle at 50% 50%, rgba(223, 239, 135, 0.1) 1.5px, transparent 1.5px);
-  background-size: 100px 100px, 120px 120px, 80px 80px;
-  background-position: 0 0, 60px 30px, 30px 60px;
+    radial-gradient(circle at 20% 30%, rgba(86, 51, 128, 0.4) 3px, transparent 3px),
+    radial-gradient(circle at 80% 70%, rgba(146, 158, 85, 0.35) 3px, transparent 3px),
+    radial-gradient(circle at 50% 50%, rgba(223, 239, 135, 0.3) 2px, transparent 2px);
+  background-size: 80px 80px, 100px 100px, 60px 60px;
+  background-position: 0 0, 40px 20px, 20px 40px;
 }
 
-/* Modern geometric lines pattern */
+/* Modern geometric lines pattern - MORE VISIBLE */
 .modern-lines-pattern {
   background-image: 
-    linear-gradient(60deg, transparent 48%, rgba(86, 51, 128, 0.06) 49%, rgba(86, 51, 128, 0.06) 51%, transparent 52%),
-    linear-gradient(-60deg, transparent 48%, rgba(146, 158, 85, 0.05) 49%, rgba(146, 158, 85, 0.05) 51%, transparent 52%),
-    linear-gradient(0deg, transparent 48%, rgba(223, 239, 135, 0.04) 49%, rgba(223, 239, 135, 0.04) 51%, transparent 52%);
-  background-size: 200px 200px, 250px 250px, 300px 300px;
-  background-position: 0 0, 100px 50px, 50px 100px;
+    linear-gradient(60deg, transparent 47%, rgba(86, 51, 128, 0.15) 49%, rgba(86, 51, 128, 0.15) 51%, transparent 53%),
+    linear-gradient(-60deg, transparent 47%, rgba(146, 158, 85, 0.12) 49%, rgba(146, 158, 85, 0.12) 51%, transparent 53%),
+    linear-gradient(0deg, transparent 47%, rgba(223, 239, 135, 0.1) 49%, rgba(223, 239, 135, 0.1) 51%, transparent 53%);
+  background-size: 150px 150px, 200px 200px, 250px 250px;
+  background-position: 0 0, 75px 25px, 25px 75px;
 }
 
 /* Radial gradient helper */
