@@ -86,39 +86,57 @@ body {
   right: -70%;
 }
 
-/* Tennis court pattern */
+/* Tennis court pattern - enhanced for parallax */
 .court-lines-pattern {
   position: relative;
-}
-
-.court-lines-pattern::after {
-  content: '';
-  position: absolute;
-  inset: 0;
   background-image: 
-    linear-gradient(90deg, transparent 48%, rgba(255,255,255,0.1) 48%, rgba(255,255,255,0.1) 52%, transparent 52%),
-    linear-gradient(0deg, transparent 48%, rgba(255,255,255,0.1) 48%, rgba(255,255,255,0.1) 52%, transparent 52%);
-  background-size: 200px 200px;
-  pointer-events: none;
+    /* Service boxes */
+    linear-gradient(90deg, transparent 15%, rgba(255,255,255,0.08) 15%, rgba(255,255,255,0.08) 15.5%, transparent 15.5%,
+                          transparent 85%, rgba(255,255,255,0.08) 85%, rgba(255,255,255,0.08) 85.5%, transparent 85.5%),
+    /* Center line */
+    linear-gradient(90deg, transparent 49.75%, rgba(255,255,255,0.08) 49.75%, rgba(255,255,255,0.08) 50.25%, transparent 50.25%),
+    /* Baselines */
+    linear-gradient(0deg, transparent 10%, rgba(255,255,255,0.08) 10%, rgba(255,255,255,0.08) 10.5%, transparent 10.5%,
+                          transparent 90%, rgba(255,255,255,0.08) 90%, rgba(255,255,255,0.08) 90.5%, transparent 90.5%);
+  background-size: 600px 600px;
+  background-position: center;
 }
 
-/* Tennis net pattern */
+/* Tennis net pattern - delicate mesh for parallax */
 .tennis-net-pattern {
   background-image: 
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 10px,
-      rgba(86, 51, 128, 0.03) 10px,
-      rgba(86, 51, 128, 0.03) 11px
-    ),
+    /* Vertical lines */
     repeating-linear-gradient(
       90deg,
       transparent,
-      transparent 10px,
-      rgba(86, 51, 128, 0.03) 10px,
-      rgba(86, 51, 128, 0.03) 11px
+      transparent 20px,
+      rgba(86, 51, 128, 0.04) 20px,
+      rgba(86, 51, 128, 0.04) 21px
+    ),
+    /* Horizontal lines */
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 20px,
+      rgba(86, 51, 128, 0.04) 20px,
+      rgba(86, 51, 128, 0.04) 21px
+    ),
+    /* Diamond pattern overlay */
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 40px,
+      rgba(86, 51, 128, 0.02) 40px,
+      rgba(86, 51, 128, 0.02) 41px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 40px,
+      rgba(86, 51, 128, 0.02) 40px,
+      rgba(86, 51, 128, 0.02) 41px
     );
+  background-size: 100px 100px;
 }
 
 /* Premium glass effect with blur */
