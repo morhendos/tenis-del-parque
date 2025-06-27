@@ -88,7 +88,7 @@ function RulesPage() {
           title: 'Sistema de Puntos',
           icon: 'points',
           items: [
-            'Victoria 2-0: 3 puntos para el ganador',
+            'Victoria 2-0: 2 puntos para el ganador',
             'Victoria 2-1: 2 puntos para el ganador, 1 punto para el perdedor',
             'La clasificación se basa en: puntos totales, fuerza de oponentes, y otros criterios',
             'El ranking Elo se actualiza después de cada partido'
@@ -139,7 +139,7 @@ function RulesPage() {
           title: 'Walkover y Ausencias',
           icon: 'walkover',
           items: [
-            'Si tu oponente no se presenta, ganas 3-0',
+            'Si tu oponente no se presenta, ganas 2-0',
             'Necesitas prueba de la ausencia (captura de pantalla)',
             'El jugador ausente debe pagar el costo total de la pista',
             'Las ausencias repetidas pueden resultar en exclusión'
@@ -205,7 +205,7 @@ function RulesPage() {
           title: 'Point System',
           icon: 'points',
           items: [
-            '2-0 victory: 3 points for winner',
+            '2-0 victory: 2 points for winner',
             '2-1 victory: 2 points for winner, 1 point for loser',
             'Ranking based on: total points, opponent strength, and other criteria',
             'Elo rating updates after each match'
@@ -256,7 +256,7 @@ function RulesPage() {
           title: 'Walkover & No-shows',
           icon: 'walkover',
           items: [
-            'If opponent doesn\'t show, you win 3-0',
+            'If opponent doesn\'t show, you win 2-0',
             'Need proof of absence (screenshot)',
             'No-show player must pay full court cost',
             'Repeated absences may result in exclusion'
