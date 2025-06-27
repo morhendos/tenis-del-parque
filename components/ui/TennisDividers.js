@@ -5,25 +5,9 @@ export default function TennisBallDivider({ className = "" }) {
         {/* Tennis court line */}
         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-20 md:w-32 h-px bg-gradient-to-r from-transparent to-gray-300"></div>
         
-        {/* Tennis ball */}
+        {/* Proper tennis ball */}
         <div className="relative mx-24 md:mx-36">
-          <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-[#DFEF87] to-[#C5D560] rounded-full shadow-lg">
-            {/* Tennis ball seam lines */}
-            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 40 40">
-              <path 
-                d="M20 5 Q 10 20 20 35 Q 30 20 20 5" 
-                fill="none" 
-                stroke="rgba(255,255,255,0.4)" 
-                strokeWidth="1"
-              />
-              <path 
-                d="M20 5 Q 30 20 20 35 Q 10 20 20 5" 
-                fill="none" 
-                stroke="rgba(0,0,0,0.1)" 
-                strokeWidth="1"
-              />
-            </svg>
-          </div>
+          <div className="w-10 h-10 md:w-12 md:h-12 tennis-ball animate-gentle-float"></div>
         </div>
         
         {/* Tennis court line */}
@@ -48,6 +32,11 @@ export function TennisNetDivider({ className = "" }) {
           
           {/* Top tape */}
           <div className="absolute top-0 left-0 right-0 h-1 bg-white shadow-sm"></div>
+          
+          {/* Center strap with small tennis ball */}
+          <div className="absolute left-1/2 -translate-x-1/2 top-0 w-8 h-full flex items-center justify-center">
+            <div className="w-4 h-4 tennis-ball opacity-50"></div>
+          </div>
         </div>
       </div>
     </div>
