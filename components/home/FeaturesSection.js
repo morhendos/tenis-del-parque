@@ -33,9 +33,9 @@ export default function FeaturesSection({ content }) {
       {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-white/50 to-transparent"></div>
       
-      {/* Floating tennis balls - using proper design */}
-      <div className="absolute top-10 left-[10%] w-12 h-12 tennis-ball opacity-10 animate-gentle-float"></div>
-      <div className="absolute bottom-20 right-[15%] w-16 h-16 tennis-ball opacity-10 animate-gentle-float animation-delay-1000"></div>
+      {/* Static tennis balls - no animation */}
+      <div className="absolute top-10 left-[10%] w-12 h-12 tennis-ball opacity-10"></div>
+      <div className="absolute bottom-20 right-[15%] w-16 h-16 tennis-ball opacity-10"></div>
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16 md:mb-20">
@@ -57,7 +57,7 @@ export default function FeaturesSection({ content }) {
                 {/* Tennis net pattern overlay */}
                 <div className="absolute inset-0 tennis-net-pattern opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 
-                {/* Tennis ball accent for each card - proper design */}
+                {/* Tennis ball accent for each card - static */}
                 <div className="absolute -top-4 -right-4 w-12 h-12 tennis-ball opacity-5 group-hover:opacity-10 transition-opacity duration-500"></div>
                 
                 <div className="relative z-10">
@@ -65,7 +65,7 @@ export default function FeaturesSection({ content }) {
                     {getIcon(feature.icon)}
                     {/* Small tennis ball indicator on first card */}
                     {index === 0 && (
-                      <div className="absolute -top-2 -right-2 w-4 h-4 tennis-ball animate-pulse"></div>
+                      <div className="absolute -top-2 -right-2 w-4 h-4 tennis-ball"></div>
                     )}
                   </div>
                   <h3 className="text-lg md:text-xl font-medium text-parque-purple mb-3 md:mb-4">{feature.title}</h3>
