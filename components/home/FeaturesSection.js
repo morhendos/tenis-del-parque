@@ -33,15 +33,15 @@ export default function FeaturesSection({ content }) {
       {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-white/50 to-transparent"></div>
       
-      {/* Floating tennis balls */}
-      <div className="absolute top-10 left-[10%] w-8 h-8 bg-gradient-to-br from-[#DFEF87] to-[#C5D560] rounded-full opacity-10 animate-float"></div>
-      <div className="absolute bottom-20 right-[15%] w-12 h-12 bg-gradient-to-br from-[#DFEF87] to-[#C5D560] rounded-full opacity-10 animate-float animation-delay-1000"></div>
+      {/* Floating tennis balls - using proper design */}
+      <div className="absolute top-10 left-[10%] w-12 h-12 tennis-ball opacity-10 animate-gentle-float"></div>
+      <div className="absolute bottom-20 right-[15%] w-16 h-16 tennis-ball opacity-10 animate-gentle-float animation-delay-1000"></div>
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16 md:mb-20">
           {/* Tennis ball accent above title */}
           <div className="flex justify-center mb-6">
-            <div className="w-2 h-8 bg-gradient-to-b from-[#DFEF87] to-transparent rounded-full opacity-40"></div>
+            <div className="w-8 h-8 tennis-ball opacity-40"></div>
           </div>
           
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-light text-parque-purple mb-6 md:mb-8">
@@ -57,15 +57,15 @@ export default function FeaturesSection({ content }) {
                 {/* Tennis net pattern overlay */}
                 <div className="absolute inset-0 tennis-net-pattern opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 
-                {/* Tennis ball accent for each card */}
-                <div className="absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br from-[#DFEF87] to-[#C5D560] rounded-full opacity-5 group-hover:opacity-10 transition-opacity duration-500"></div>
+                {/* Tennis ball accent for each card - proper design */}
+                <div className="absolute -top-4 -right-4 w-12 h-12 tennis-ball opacity-5 group-hover:opacity-10 transition-opacity duration-500"></div>
                 
                 <div className="relative z-10">
                   <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-parque-purple/20 to-parque-purple/10 rounded-2xl flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 relative">
                     {getIcon(feature.icon)}
-                    {/* Small tennis ball indicator */}
+                    {/* Small tennis ball indicator on first card */}
                     {index === 0 && (
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-br from-[#DFEF87] to-[#C5D560] rounded-full animate-pulse"></div>
+                      <div className="absolute -top-2 -right-2 w-4 h-4 tennis-ball animate-pulse"></div>
                     )}
                   </div>
                   <h3 className="text-lg md:text-xl font-medium text-parque-purple mb-3 md:mb-4">{feature.title}</h3>
