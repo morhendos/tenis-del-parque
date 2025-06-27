@@ -8,7 +8,7 @@ export default function EloPage() {
   const [language, setLanguage] = useState('es')
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [activeSection, setActiveSection] = useState('what')
+  const [activeSection, setActiveSection] = useState('swiss')
 
   // Detect browser language on mount
   useEffect(() => {
@@ -31,15 +31,185 @@ export default function EloPage() {
       nav: {
         home: 'Inicio',
         rules: 'Reglamento',
-        elo: 'Sistema ELO',
+        elo: 'Sistemas ELO y Suizo',
         about: 'Acerca de',
         contact: 'Contacto'
       },
       hero: {
-        title: 'El Sistema ELO',
-        subtitle: 'Compitiendo de forma justa e inteligente'
+        title: 'Sistemas ELO y Suizo',
+        subtitle: 'La combinación perfecta para competir de forma justa e inteligente'
       },
       sections: [
+        {
+          id: 'swiss',
+          title: '¿Qué es el Sistema Suizo?',
+          content: [
+            {
+              type: 'text',
+              text: 'El sistema suizo es un formato de torneo donde los jugadores no son eliminados después de perder. En cada ronda, juegas contra un oponente con resultados similares a los tuyos, asegurando partidos equilibrados durante toda la temporada.'
+            },
+            {
+              type: 'cards',
+              cards: [
+                {
+                  title: 'Sin Eliminación',
+                  description: 'Juegas todas las rondas sin importar tus resultados',
+                  icon: 'no-elimination'
+                },
+                {
+                  title: 'Emparejamientos Justos',
+                  description: 'Siempre juegas contra alguien de tu nivel actual',
+                  icon: 'fair-pairing'
+                },
+                {
+                  title: 'Máxima Participación',
+                  description: 'Todos juegan el mismo número de partidos',
+                  icon: 'max-participation'
+                }
+              ]
+            },
+            {
+              type: 'text',
+              text: 'A diferencia de un torneo eliminatorio donde puedes quedar fuera en la primera ronda, el sistema suizo garantiza que juegues todas las 8 rondas de la temporada, dándote múltiples oportunidades para mejorar y competir.'
+            }
+          ]
+        },
+        {
+          id: 'swiss-history',
+          title: 'Historia del Sistema Suizo',
+          content: [
+            {
+              type: 'text',
+              text: 'El sistema suizo fue creado para torneos de ajedrez en Suiza a finales del siglo XIX. Su objetivo era permitir que muchos jugadores compitieran sin necesidad de que todos jugaran entre sí.'
+            },
+            {
+              type: 'timeline',
+              events: [
+                {
+                  year: '1895',
+                  title: 'Origen',
+                  description: 'Primer uso en Zúrich, Suiza'
+                },
+                {
+                  year: '1900s',
+                  title: 'Ajedrez',
+                  description: 'Se populariza en torneos de ajedrez'
+                },
+                {
+                  year: '1970s',
+                  title: 'Expansión',
+                  description: 'Adoptado por otros deportes y juegos'
+                },
+                {
+                  year: '2025',
+                  title: 'Tenis del Parque',
+                  description: 'Perfectamente adaptado para nuestra liga'
+                }
+              ]
+            },
+            {
+              type: 'text',
+              text: 'Hoy en día, el sistema suizo es usado en deportes como tenis, golf, esports, y muchos más. Es ideal cuando quieres que todos los participantes jueguen múltiples rondas sin eliminación.'
+            }
+          ]
+        },
+        {
+          id: 'swiss-why',
+          title: '¿Por qué Sistema Suizo para nuestra liga?',
+          content: [
+            {
+              type: 'text',
+              text: 'Elegimos el sistema suizo porque queremos que todos nuestros jugadores tengan una experiencia completa durante toda la temporada, no solo los mejores.'
+            },
+            {
+              type: 'comparison',
+              title: 'Comparación con otros formatos',
+              items: [
+                {
+                  system: 'Eliminación directa',
+                  pros: ['Emocionante', 'Claro ganador'],
+                  cons: ['50% eliminados en primera ronda', 'Pocos partidos para mayoría', 'Sin segundas oportunidades']
+                },
+                {
+                  system: 'Sistema Suizo',
+                  pros: ['Todos juegan todas las rondas', 'Múltiples oportunidades', 'Emparejamientos equilibrados', 'Clasificación justa'],
+                  cons: ['Más complejo de organizar']
+                }
+              ]
+            },
+            {
+              type: 'features',
+              features: [
+                {
+                  title: 'Flexibilidad perfecta',
+                  description: 'Con 8 rondas en la temporada, tienes tiempo para recuperarte de un mal inicio o mantener tu momentum.',
+                  icon: 'flexibility'
+                },
+                {
+                  title: 'Aprendizaje continuo',
+                  description: 'Cada semana juegas y aprendes, sin la presión de ser eliminado.',
+                  icon: 'learning'
+                },
+                {
+                  title: 'Social y competitivo',
+                  description: 'Conoces a más jugadores al no repetir oponentes innecesariamente.',
+                  icon: 'social'
+                },
+                {
+                  title: 'Combina con ELO',
+                  description: 'El sistema suizo usa los rankings ELO para crear los mejores emparejamientos posibles.',
+                  icon: 'combine'
+                }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'swiss-works',
+          title: 'Cómo funciona el Sistema Suizo en nuestra liga',
+          content: [
+            {
+              type: 'text',
+              text: 'Aquí está cómo organizamos las 8 rondas de nuestra temporada usando el sistema suizo:'
+            },
+            {
+              type: 'process',
+              title: 'Proceso de emparejamiento',
+              steps: [
+                {
+                  title: 'Ronda 1',
+                  description: 'Emparejamientos aleatorios dentro de tu categoría (Principiante, Intermedio, Avanzado)'
+                },
+                {
+                  title: 'Rondas 2-8',
+                  description: 'Emparejamientos basados en puntos de liga y ELO similar'
+                },
+                {
+                  title: 'Sin repeticiones',
+                  description: 'Evitamos que juegues contra el mismo oponente dos veces'
+                },
+                {
+                  title: 'Equilibrio',
+                  description: 'Si tienes 6 puntos, juegas contra alguien con 5-7 puntos'
+                }
+              ]
+            },
+            {
+              type: 'example',
+              title: 'Ejemplo de progresión',
+              scenario: {
+                player: 'María',
+                rounds: [
+                  { round: 1, opponent: 'Random', result: 'Pierde', points: 0 },
+                  { round: 2, opponent: 'Otro con 0 pts', result: 'Gana', points: 3 },
+                  { round: 3, opponent: 'Otro con 3 pts', result: 'Gana', points: 6 },
+                  { round: 4, opponent: 'Otro con 6 pts', result: 'Pierde', points: 6 },
+                  { round: 5, opponent: 'Otro con 6 pts', result: 'Gana', points: 9 }
+                ]
+              }
+            }
+          ]
+        },
         {
           id: 'what',
           title: '¿Qué son los puntos ELO?',
@@ -76,7 +246,7 @@ export default function EloPage() {
         },
         {
           id: 'history',
-          title: 'Historia y origen',
+          title: 'Historia del Sistema ELO',
           content: [
             {
               type: 'text',
@@ -176,7 +346,7 @@ export default function EloPage() {
         },
         {
           id: 'howItWorks',
-          title: 'Cómo funciona en nuestra liga',
+          title: 'Cómo funciona ELO en nuestra liga',
           content: [
             {
               type: 'text',
@@ -204,11 +374,41 @@ export default function EloPage() {
               description: 'Usamos un factor K de 32 para permitir cambios significativos pero no drásticos. Esto significa que el máximo que puedes ganar o perder en un partido es 32 puntos.'
             }
           ]
+        },
+        {
+          id: 'together',
+          title: 'ELO + Suizo = La combinación perfecta',
+          content: [
+            {
+              type: 'text',
+              text: 'La magia ocurre cuando combinamos ambos sistemas. El sistema suizo garantiza que juegues todas las rondas, mientras que el ELO asegura que cada partido sea equilibrado y emocionante.'
+            },
+            {
+              type: 'cards',
+              cards: [
+                {
+                  title: 'Emparejamientos inteligentes',
+                  description: 'El suizo usa tu ELO para encontrar el mejor oponente cada semana',
+                  icon: 'smart'
+                },
+                {
+                  title: 'Doble motivación',
+                  description: 'Compites por puntos de liga Y por mejorar tu ranking ELO',
+                  icon: 'double'
+                },
+                {
+                  title: 'Experiencia completa',
+                  description: '8 rondas garantizadas con partidos siempre competitivos',
+                  icon: 'complete'
+                }
+              ]
+            }
+          ]
         }
       ],
       cta: {
         title: '¿Listo para competir?',
-        subtitle: 'Únete a la liga y comienza a construir tu ranking ELO',
+        subtitle: 'Únete a la liga y experimenta la mejor forma de jugar tenis amateur',
         button: 'Inscríbete ahora',
         link: '/#signup'
       }
@@ -217,15 +417,185 @@ export default function EloPage() {
       nav: {
         home: 'Home',
         rules: 'Rules',
-        elo: 'ELO System',
+        elo: 'ELO & Swiss Systems',
         about: 'About',
         contact: 'Contact'
       },
       hero: {
-        title: 'The ELO System',
-        subtitle: 'Competing fairly and intelligently'
+        title: 'ELO & Swiss Systems',
+        subtitle: 'The perfect combination for fair and intelligent competition'
       },
       sections: [
+        {
+          id: 'swiss',
+          title: 'What is the Swiss System?',
+          content: [
+            {
+              type: 'text',
+              text: 'The Swiss system is a tournament format where players are not eliminated after losing. In each round, you play against an opponent with similar results to yours, ensuring balanced matches throughout the season.'
+            },
+            {
+              type: 'cards',
+              cards: [
+                {
+                  title: 'No Elimination',
+                  description: 'You play all rounds regardless of your results',
+                  icon: 'no-elimination'
+                },
+                {
+                  title: 'Fair Pairings',
+                  description: 'Always play against someone at your current level',
+                  icon: 'fair-pairing'
+                },
+                {
+                  title: 'Maximum Participation',
+                  description: 'Everyone plays the same number of matches',
+                  icon: 'max-participation'
+                }
+              ]
+            },
+            {
+              type: 'text',
+              text: 'Unlike a knockout tournament where you can be eliminated in the first round, the Swiss system guarantees you play all 8 rounds of the season, giving you multiple opportunities to improve and compete.'
+            }
+          ]
+        },
+        {
+          id: 'swiss-history',
+          title: 'History of the Swiss System',
+          content: [
+            {
+              type: 'text',
+              text: 'The Swiss system was created for chess tournaments in Switzerland in the late 19th century. Its goal was to allow many players to compete without everyone having to play each other.'
+            },
+            {
+              type: 'timeline',
+              events: [
+                {
+                  year: '1895',
+                  title: 'Origin',
+                  description: 'First used in Zurich, Switzerland'
+                },
+                {
+                  year: '1900s',
+                  title: 'Chess',
+                  description: 'Becomes popular in chess tournaments'
+                },
+                {
+                  year: '1970s',
+                  title: 'Expansion',
+                  description: 'Adopted by other sports and games'
+                },
+                {
+                  year: '2025',
+                  title: 'Tenis del Parque',
+                  description: 'Perfectly adapted for our league'
+                }
+              ]
+            },
+            {
+              type: 'text',
+              text: 'Today, the Swiss system is used in sports like tennis, golf, esports, and many more. It\'s ideal when you want all participants to play multiple rounds without elimination.'
+            }
+          ]
+        },
+        {
+          id: 'swiss-why',
+          title: 'Why Swiss System for our league?',
+          content: [
+            {
+              type: 'text',
+              text: 'We chose the Swiss system because we want all our players to have a complete experience throughout the season, not just the best ones.'
+            },
+            {
+              type: 'comparison',
+              title: 'Comparison with other formats',
+              items: [
+                {
+                  system: 'Knockout',
+                  pros: ['Exciting', 'Clear winner'],
+                  cons: ['50% eliminated in first round', 'Few matches for majority', 'No second chances']
+                },
+                {
+                  system: 'Swiss System',
+                  pros: ['Everyone plays all rounds', 'Multiple opportunities', 'Balanced pairings', 'Fair ranking'],
+                  cons: ['More complex to organize']
+                }
+              ]
+            },
+            {
+              type: 'features',
+              features: [
+                {
+                  title: 'Perfect flexibility',
+                  description: 'With 8 rounds in the season, you have time to recover from a bad start or maintain your momentum.',
+                  icon: 'flexibility'
+                },
+                {
+                  title: 'Continuous learning',
+                  description: 'Every week you play and learn, without the pressure of elimination.',
+                  icon: 'learning'
+                },
+                {
+                  title: 'Social and competitive',
+                  description: 'Meet more players by not repeating opponents unnecessarily.',
+                  icon: 'social'
+                },
+                {
+                  title: 'Combines with ELO',
+                  description: 'The Swiss system uses ELO rankings to create the best possible pairings.',
+                  icon: 'combine'
+                }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'swiss-works',
+          title: 'How the Swiss System works in our league',
+          content: [
+            {
+              type: 'text',
+              text: 'Here\'s how we organize the 8 rounds of our season using the Swiss system:'
+            },
+            {
+              type: 'process',
+              title: 'Pairing process',
+              steps: [
+                {
+                  title: 'Round 1',
+                  description: 'Random pairings within your category (Beginner, Intermediate, Advanced)'
+                },
+                {
+                  title: 'Rounds 2-8',
+                  description: 'Pairings based on league points and similar ELO'
+                },
+                {
+                  title: 'No repeats',
+                  description: 'We avoid pairing you against the same opponent twice'
+                },
+                {
+                  title: 'Balance',
+                  description: 'If you have 6 points, you play someone with 5-7 points'
+                }
+              ]
+            },
+            {
+              type: 'example',
+              title: 'Example progression',
+              scenario: {
+                player: 'Maria',
+                rounds: [
+                  { round: 1, opponent: 'Random', result: 'Loses', points: 0 },
+                  { round: 2, opponent: 'Another with 0 pts', result: 'Wins', points: 3 },
+                  { round: 3, opponent: 'Another with 3 pts', result: 'Wins', points: 6 },
+                  { round: 4, opponent: 'Another with 6 pts', result: 'Loses', points: 6 },
+                  { round: 5, opponent: 'Another with 6 pts', result: 'Wins', points: 9 }
+                ]
+              }
+            }
+          ]
+        },
         {
           id: 'what',
           title: 'What are ELO points?',
@@ -262,7 +632,7 @@ export default function EloPage() {
         },
         {
           id: 'history',
-          title: 'History and origin',
+          title: 'History of the ELO System',
           content: [
             {
               type: 'text',
@@ -362,7 +732,7 @@ export default function EloPage() {
         },
         {
           id: 'howItWorks',
-          title: 'How it works in our league',
+          title: 'How ELO works in our league',
           content: [
             {
               type: 'text',
@@ -390,11 +760,41 @@ export default function EloPage() {
               description: 'We use a K factor of 32 to allow significant but not drastic changes. This means the maximum you can win or lose in a match is 32 points.'
             }
           ]
+        },
+        {
+          id: 'together',
+          title: 'ELO + Swiss = The perfect combination',
+          content: [
+            {
+              type: 'text',
+              text: 'The magic happens when we combine both systems. The Swiss system guarantees you play all rounds, while ELO ensures each match is balanced and exciting.'
+            },
+            {
+              type: 'cards',
+              cards: [
+                {
+                  title: 'Smart pairings',
+                  description: 'Swiss uses your ELO to find the best opponent each week',
+                  icon: 'smart'
+                },
+                {
+                  title: 'Double motivation',
+                  description: 'Compete for league points AND improve your ELO ranking',
+                  icon: 'double'
+                },
+                {
+                  title: 'Complete experience',
+                  description: '8 guaranteed rounds with always competitive matches',
+                  icon: 'complete'
+                }
+              ]
+            }
+          ]
         }
       ],
       cta: {
         title: 'Ready to compete?',
-        subtitle: 'Join the league and start building your ELO ranking',
+        subtitle: 'Join the league and experience the best way to play amateur tennis',
         button: 'Sign up now',
         link: '/#signup'
       }
@@ -439,6 +839,36 @@ export default function EloPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     )}
+                    {card.icon === 'no-elimination' && (
+                      <svg className="w-8 h-8 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                      </svg>
+                    )}
+                    {card.icon === 'fair-pairing' && (
+                      <svg className="w-8 h-8 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                    )}
+                    {card.icon === 'max-participation' && (
+                      <svg className="w-8 h-8 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                      </svg>
+                    )}
+                    {card.icon === 'smart' && (
+                      <svg className="w-8 h-8 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                    )}
+                    {card.icon === 'double' && (
+                      <svg className="w-8 h-8 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                      </svg>
+                    )}
+                    {card.icon === 'complete' && (
+                      <svg className="w-8 h-8 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                    )}
                   </div>
                   <h4 className="text-xl font-medium text-parque-purple mb-3">{card.title}</h4>
                   <p className="text-gray-600">{card.description}</p>
@@ -478,7 +908,7 @@ export default function EloPage() {
                     <h5 className="text-xl font-medium text-gray-800 mb-6">{system.system}</h5>
                     <div className="space-y-4">
                       <div>
-                        <p className="text-sm font-medium text-green-600 mb-2">Ventajas:</p>
+                        <p className="text-sm font-medium text-green-600 mb-2">{language === 'es' ? 'Ventajas:' : 'Pros:'}</p>
                         <ul className="space-y-2">
                           {system.pros.map((pro, proIndex) => (
                             <li key={proIndex} className="flex items-start">
@@ -492,7 +922,7 @@ export default function EloPage() {
                       </div>
                       {system.cons.length > 0 && (
                         <div>
-                          <p className="text-sm font-medium text-red-600 mb-2">Desventajas:</p>
+                          <p className="text-sm font-medium text-red-600 mb-2">{language === 'es' ? 'Desventajas:' : 'Cons:'}</p>
                           <ul className="space-y-2">
                             {system.cons.map((con, conIndex) => (
                               <li key={conIndex} className="flex items-start">
@@ -539,6 +969,26 @@ export default function EloPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                         </svg>
                       )}
+                      {feature.icon === 'flexibility' && (
+                        <svg className="w-6 h-6 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                      )}
+                      {feature.icon === 'learning' && (
+                        <svg className="w-6 h-6 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                      )}
+                      {feature.icon === 'social' && (
+                        <svg className="w-6 h-6 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                      )}
+                      {feature.icon === 'combine' && (
+                        <svg className="w-6 h-6 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z" />
+                        </svg>
+                      )}
                     </div>
                     <div>
                       <h4 className="text-xl font-medium text-parque-purple mb-3">{feature.title}</h4>
@@ -550,40 +1000,90 @@ export default function EloPage() {
             </div>
           )
         
+        case 'process':
+          return (
+            <div key={index} className="my-12">
+              <h4 className="text-2xl font-light text-parque-purple mb-8">{item.title}</h4>
+              <div className="grid md:grid-cols-2 gap-6">
+                {item.steps.map((step, stepIndex) => (
+                  <div key={stepIndex} className="flex gap-4">
+                    <div className="w-10 h-10 bg-gradient-to-br from-parque-purple to-parque-purple/80 text-white rounded-xl flex items-center justify-center flex-shrink-0 font-medium">
+                      {stepIndex + 1}
+                    </div>
+                    <div>
+                      <h5 className="text-lg font-medium text-gray-800 mb-2">{step.title}</h5>
+                      <p className="text-gray-600">{step.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        
         case 'example':
           return (
             <div key={index} className="my-12 bg-gradient-to-br from-parque-purple/5 to-transparent rounded-3xl p-8 shadow-lg">
               <h4 className="text-2xl font-light text-parque-purple mb-6">{item.title}</h4>
-              <div className="grid md:grid-cols-2 gap-8 mb-8">
-                <div className="bg-white/90 rounded-2xl p-6">
-                  <h5 className="text-lg font-medium text-gray-800 mb-4">{language === 'es' ? 'Antes del partido' : 'Before the match'}</h5>
+              
+              {item.scenario && item.scenario.player && (
+                <div className="bg-white/90 rounded-2xl p-6 mb-6">
+                  <h5 className="text-lg font-medium text-gray-800 mb-4">{item.scenario.player}</h5>
                   <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">{item.scenario.player1.name}</span>
-                      <span className="text-2xl font-light text-parque-purple">{item.scenario.player1.elo}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">{item.scenario.player2.name}</span>
-                      <span className="text-2xl font-light text-parque-purple">{item.scenario.player2.elo}</span>
-                    </div>
+                    {item.scenario.rounds.map((round, roundIndex) => (
+                      <div key={roundIndex} className="flex items-center justify-between p-3 border-b border-gray-100 last:border-0">
+                        <div className="flex items-center space-x-4">
+                          <span className="text-sm font-medium text-gray-600">{language === 'es' ? 'Ronda' : 'Round'} {round.round}</span>
+                          <span className="text-sm text-gray-500">vs {round.opponent}</span>
+                        </div>
+                        <div className="flex items-center space-x-4">
+                          <span className={`text-sm font-medium ${round.result.includes('Gana') || round.result.includes('Wins') ? 'text-green-600' : 'text-red-600'}`}>
+                            {round.result}
+                          </span>
+                          <span className="text-lg font-medium text-parque-purple">{round.points} pts</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <div className="bg-white/90 rounded-2xl p-6">
-                  <h5 className="text-lg font-medium text-gray-800 mb-4">{language === 'es' ? 'Resultado' : 'Result'}</h5>
-                  <p className="text-lg text-gray-700">{item.scenario.result}</p>
-                </div>
-              </div>
-              <div className="bg-white/90 rounded-2xl p-6">
-                <h5 className="text-lg font-medium text-gray-800 mb-4">{language === 'es' ? 'Cálculo' : 'Calculation'}</h5>
-                <ul className="space-y-2">
-                  {item.calculation.map((step, stepIndex) => (
-                    <li key={stepIndex} className="flex items-start">
-                      <span className="text-parque-green mr-2">→</span>
-                      <span className="text-gray-600">{step}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              )}
+              
+              {item.scenario && item.scenario.player1 && (
+                <>
+                  <div className="grid md:grid-cols-2 gap-8 mb-8">
+                    <div className="bg-white/90 rounded-2xl p-6">
+                      <h5 className="text-lg font-medium text-gray-800 mb-4">{language === 'es' ? 'Antes del partido' : 'Before the match'}</h5>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium">{item.scenario.player1.name}</span>
+                          <span className="text-2xl font-light text-parque-purple">{item.scenario.player1.elo}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium">{item.scenario.player2.name}</span>
+                          <span className="text-2xl font-light text-parque-purple">{item.scenario.player2.elo}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-white/90 rounded-2xl p-6">
+                      <h5 className="text-lg font-medium text-gray-800 mb-4">{language === 'es' ? 'Resultado' : 'Result'}</h5>
+                      <p className="text-lg text-gray-700">{item.scenario.result}</p>
+                    </div>
+                  </div>
+                  
+                  {item.calculation && (
+                    <div className="bg-white/90 rounded-2xl p-6">
+                      <h5 className="text-lg font-medium text-gray-800 mb-4">{language === 'es' ? 'Cálculo' : 'Calculation'}</h5>
+                      <ul className="space-y-2">
+                        {item.calculation.map((step, stepIndex) => (
+                          <li key={stepIndex} className="flex items-start">
+                            <span className="text-parque-green mr-2">→</span>
+                            <span className="text-gray-600">{step}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           )
         
@@ -602,7 +1102,7 @@ export default function EloPage() {
   }
 
   return (
-    <main>
+    <main className="min-h-screen bg-gradient-to-br from-parque-bg via-white to-parque-bg">
       {/* Navigation */}
       <nav className={`fixed top-0 w-full backdrop-blur-md z-50 transition-all duration-300 ${
         scrolled ? 'bg-white/95 shadow-lg' : 'bg-white/70'
