@@ -21,8 +21,8 @@ export default function HeroSection({ content }) {
       
       <div className="container mx-auto px-4 relative z-10 py-20">
         <div className="text-center max-w-5xl mx-auto">
-          {/* Premium badge with tennis ball icon */}
-          <span className="inline-flex items-center gap-2 bg-gradient-to-r from-parque-purple to-parque-purple/80 text-white px-8 py-4 rounded-full text-sm font-medium mb-8 animate-fadeInUp shadow-xl glass-premium">
+          {/* Premium badge with tennis ball icon - FIXED: removed glass-premium */}
+          <span className="inline-flex items-center gap-2 bg-gradient-to-r from-parque-purple to-parque-purple/90 text-white px-8 py-4 rounded-full text-sm font-medium mb-8 animate-fadeInUp shadow-xl">
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="9" />
               <path d="M12 3c-1.5 3-1.5 6 0 9s1.5 6 0 9" />
@@ -45,8 +45,8 @@ export default function HeroSection({ content }) {
             </div>
           </div>
           
-          {/* Title with enhanced gradient */}
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-light text-transparent bg-clip-text bg-gradient-to-r from-parque-purple via-parque-purple/80 to-parque-green mb-8 animate-fadeInUp animation-delay-400 animate-gradient">
+          {/* Title - FIXED: made visible with proper gradient */}
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-light text-transparent bg-clip-text bg-gradient-to-r from-parque-purple to-parque-purple mb-8 animate-fadeInUp animation-delay-400">
             {content.title}
           </h1>
           
@@ -58,8 +58,8 @@ export default function HeroSection({ content }) {
             <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-24 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
           </div>
           
-          {/* CTA with tennis ball bounce effect */}
-          <a href="#signup" className="inline-flex items-center bg-gradient-to-r from-parque-purple to-parque-purple/80 text-white px-12 py-6 rounded-full text-lg font-medium hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 animate-fadeInUp animation-delay-800 group glass-premium">
+          {/* CTA - FIXED: removed glass-premium, solid background */}
+          <a href="#signup" className="inline-flex items-center bg-gradient-to-r from-parque-purple to-parque-purple/90 text-white px-12 py-6 rounded-full text-lg font-medium hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 animate-fadeInUp animation-delay-800 group relative">
             {content.cta}
             <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
