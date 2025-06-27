@@ -11,6 +11,7 @@ import TestimonialsSection from '../components/home/TestimonialsSection'
 import FAQSection from '../components/home/FAQSection'
 import SignupSection from '../components/home/SignupSection'
 import Footer from '../components/common/Footer'
+import TennisBallDivider, { TennisNetDivider, CourtLinesDivider } from '../components/ui/TennisDividers'
 import { useLanguage } from '../lib/hooks/useLanguage'
 import { homeContent } from '../lib/content/homeContent'
 import { mockData } from '../lib/data/mockData'
@@ -56,11 +57,19 @@ export default function Home() {
       
       <HeroSection content={t.hero} />
       
+      <TennisBallDivider />
+      
       <FeaturesSection content={t.features} />
+      
+      <CourtLinesDivider />
       
       <HowItWorksSection content={t.howItWorks} />
       
+      <TennisNetDivider />
+      
       <LevelsSection content={t.levels} />
+      
+      <TennisBallDivider />
       
       <PlatformPreviewSection 
         content={t.platformPreview} 
@@ -68,7 +77,11 @@ export default function Home() {
         language={language} 
       />
       
+      <CourtLinesDivider />
+      
       <TestimonialsSection content={t.testimonials} />
+      
+      <TennisBallDivider />
       
       <FAQSection content={t.faq} />
       
@@ -122,4 +135,4 @@ export default function Home() {
       `}</style>
     </main>
   )
-} 
+}
