@@ -21,14 +21,14 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
     es: {
       home: 'Inicio',
       rules: 'Reglamento',
-      elo: 'Sistema ELO',
+      elo: 'Sistemas ELO y Suizo',
       about: 'Acerca de',
       contact: 'Contacto'
     },
     en: {
       home: 'Home',
       rules: 'Rules',
-      elo: 'ELO System',
+      elo: 'ELO & Swiss Systems',
       about: 'About',
       contact: 'Contact'
     }
