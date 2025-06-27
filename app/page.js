@@ -15,13 +15,13 @@ import { useLanguage } from '../lib/hooks/useLanguage'
 import { homeContent } from '../lib/content/homeContent'
 import { mockData } from '../lib/data/mockData'
 
-// Simple, consistent section divider
+// Simple, consistent section divider with larger tennis ball
 function SectionDivider() {
   return (
     <div className="relative h-px my-20">
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
-      <div className="absolute left-1/2 -translate-x-1/2 -top-1.5">
-        <div className="w-3 h-3 tennis-ball"></div>
+      <div className="absolute left-1/2 -translate-x-1/2 -top-4">
+        <div className="w-8 h-8 tennis-ball"></div>
       </div>
     </div>
   )
@@ -71,9 +71,9 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-parque-bg via-white to-parque-bg relative overflow-x-hidden">
-      {/* Subtle parallax tennis net pattern */}
+      {/* Subtle parallax tennis net pattern - FIXED VISIBILITY */}
       <div 
-        className="fixed inset-0 pointer-events-none opacity-[0.02]"
+        className="fixed inset-0 pointer-events-none z-0 opacity-20"
         style={{
           transform: `translateY(${scrollY * 0.5}px)`,
         }}
@@ -83,7 +83,7 @@ export default function Home() {
       
       {/* Additional parallax layer with court lines */}
       <div 
-        className="fixed inset-0 pointer-events-none opacity-[0.01]"
+        className="fixed inset-0 pointer-events-none z-0 opacity-10"
         style={{
           transform: `translateY(${scrollY * 0.3}px)`,
         }}
@@ -91,53 +91,56 @@ export default function Home() {
         <div className="absolute inset-0 court-lines-pattern" />
       </div>
       
-      <Navigation 
-        currentPage="home" 
-        language={language} 
-        onLanguageChange={setLanguage} 
-      />
-      
-      <HeroSection content={t.hero} />
-      
-      <SectionDivider />
-      
-      <FeaturesSection content={t.features} />
-      
-      <SectionDivider />
-      
-      <HowItWorksSection content={t.howItWorks} />
-      
-      <SectionDivider />
-      
-      <LevelsSection content={t.levels} />
-      
-      <SectionDivider />
-      
-      <PlatformPreviewSection 
-        content={t.platformPreview} 
-        mockData={mockData} 
-        language={language} 
-      />
-      
-      <SectionDivider />
-      
-      <TestimonialsSection content={t.testimonials} />
-      
-      <SectionDivider />
-      
-      <FAQSection content={t.faq} />
-      
-      <SignupSection 
-        content={t.signup} 
-        formData={formData} 
-        isSubmitted={isSubmitted} 
-        isSubmitting={isSubmitting} 
-        onSubmit={handleSubmit} 
-        onChange={handleChange} 
-        language={language} 
-      />
-      
-      <Footer content={t.footer} />
+      {/* Main content with proper z-index */}
+      <div className="relative z-10">
+        <Navigation 
+          currentPage="home" 
+          language={language} 
+          onLanguageChange={setLanguage} 
+        />
+        
+        <HeroSection content={t.hero} />
+        
+        <SectionDivider />
+        
+        <FeaturesSection content={t.features} />
+        
+        <SectionDivider />
+        
+        <HowItWorksSection content={t.howItWorks} />
+        
+        <SectionDivider />
+        
+        <LevelsSection content={t.levels} />
+        
+        <SectionDivider />
+        
+        <PlatformPreviewSection 
+          content={t.platformPreview} 
+          mockData={mockData} 
+          language={language} 
+        />
+        
+        <SectionDivider />
+        
+        <TestimonialsSection content={t.testimonials} />
+        
+        <SectionDivider />
+        
+        <FAQSection content={t.faq} />
+        
+        <SignupSection 
+          content={t.signup} 
+          formData={formData} 
+          isSubmitted={isSubmitted} 
+          isSubmitting={isSubmitting} 
+          onSubmit={handleSubmit} 
+          onChange={handleChange} 
+          language={language} 
+        />
+        
+        <Footer content={t.footer} />
+      </div>
 
       {/* Keep animations */}
       <style jsx>{`
