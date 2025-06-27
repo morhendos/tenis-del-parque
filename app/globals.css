@@ -86,55 +86,36 @@ body {
   right: -70%;
 }
 
-/* Tennis court pattern - enhanced for parallax */
+/* Tennis court pattern - simplified for parallax */
 .court-lines-pattern {
   position: relative;
   background-image: 
-    /* Service boxes */
-    linear-gradient(90deg, transparent 15%, rgba(255,255,255,0.08) 15%, rgba(255,255,255,0.08) 15.5%, transparent 15.5%,
-                          transparent 85%, rgba(255,255,255,0.08) 85%, rgba(255,255,255,0.08) 85.5%, transparent 85.5%),
-    /* Center line */
-    linear-gradient(90deg, transparent 49.75%, rgba(255,255,255,0.08) 49.75%, rgba(255,255,255,0.08) 50.25%, transparent 50.25%),
-    /* Baselines */
-    linear-gradient(0deg, transparent 10%, rgba(255,255,255,0.08) 10%, rgba(255,255,255,0.08) 10.5%, transparent 10.5%,
-                          transparent 90%, rgba(255,255,255,0.08) 90%, rgba(255,255,255,0.08) 90.5%, transparent 90.5%);
-  background-size: 600px 600px;
+    /* Center court line */
+    linear-gradient(90deg, transparent 49.5%, rgba(86, 51, 128, 0.15) 49.5%, rgba(86, 51, 128, 0.15) 50.5%, transparent 50.5%),
+    /* Baseline */
+    linear-gradient(0deg, transparent 20%, rgba(86, 51, 128, 0.15) 20%, rgba(86, 51, 128, 0.15) 20.5%, transparent 20.5%,
+                          transparent 80%, rgba(86, 51, 128, 0.15) 80%, rgba(86, 51, 128, 0.15) 80.5%, transparent 80.5%);
+  background-size: 400px 400px;
   background-position: center;
 }
 
-/* Tennis net pattern - delicate mesh for parallax */
+/* Tennis net pattern - more delicate for parallax */
 .tennis-net-pattern {
   background-image: 
-    /* Vertical lines */
-    repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 20px,
-      rgba(86, 51, 128, 0.04) 20px,
-      rgba(86, 51, 128, 0.04) 21px
-    ),
-    /* Horizontal lines */
+    /* Grid pattern */
     repeating-linear-gradient(
       0deg,
       transparent,
-      transparent 20px,
-      rgba(86, 51, 128, 0.04) 20px,
-      rgba(86, 51, 128, 0.04) 21px
-    ),
-    /* Diamond pattern overlay */
-    repeating-linear-gradient(
-      45deg,
-      transparent,
-      transparent 40px,
-      rgba(86, 51, 128, 0.02) 40px,
-      rgba(86, 51, 128, 0.02) 41px
+      transparent 30px,
+      rgba(86, 51, 128, 0.08) 30px,
+      rgba(86, 51, 128, 0.08) 31px
     ),
     repeating-linear-gradient(
-      -45deg,
+      90deg,
       transparent,
-      transparent 40px,
-      rgba(86, 51, 128, 0.02) 40px,
-      rgba(86, 51, 128, 0.02) 41px
+      transparent 30px,
+      rgba(86, 51, 128, 0.08) 30px,
+      rgba(86, 51, 128, 0.08) 31px
     );
   background-size: 100px 100px;
 }
