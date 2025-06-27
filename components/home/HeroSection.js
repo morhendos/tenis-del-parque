@@ -19,8 +19,8 @@ export default function HeroSection({ content }) {
       
       <div className="container mx-auto px-4 relative z-10 py-20">
         <div className="text-center max-w-5xl mx-auto">
-          {/* Premium badge with glass effect */}
-          <span className="inline-flex items-center gap-2 glass-premium text-parque-purple px-8 py-4 rounded-full text-sm font-medium mb-8 animate-fadeInUp shadow-xl">
+          {/* Premium badge with SOLID background */}
+          <span className="inline-flex items-center gap-2 bg-gradient-to-r from-parque-purple to-parque-purple/90 text-white px-8 py-4 rounded-full text-sm font-medium mb-8 animate-fadeInUp shadow-xl">
             <div className="w-5 h-5 tennis-ball"></div>
             {content.badge}
           </span>
@@ -68,7 +68,7 @@ export default function HeroSection({ content }) {
           <div className="grid grid-cols-3 gap-4 md:gap-8 mt-24 max-w-4xl mx-auto animate-fadeInUp animation-delay-1000">
             {content.stats.map((stat, index) => (
               <div key={index} className="group">
-                <div className="glass-premium rounded-2xl p-4 md:p-6 lg:p-8 hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 relative overflow-hidden hover-lift">
+                <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 md:p-6 lg:p-8 shadow-xl hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 relative overflow-hidden hover-lift border border-white/50">
                   {/* Gradient background on hover */}
                   <div className="absolute inset-0 bg-gradient-to-br from-parque-purple/5 to-parque-green/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   
