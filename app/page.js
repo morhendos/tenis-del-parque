@@ -11,10 +11,21 @@ import TestimonialsSection from '../components/home/TestimonialsSection'
 import FAQSection from '../components/home/FAQSection'
 import SignupSection from '../components/home/SignupSection'
 import Footer from '../components/common/Footer'
-import TennisBallDivider, { TennisNetDivider, CourtLinesDivider } from '../components/ui/TennisDividers'
 import { useLanguage } from '../lib/hooks/useLanguage'
 import { homeContent } from '../lib/content/homeContent'
 import { mockData } from '../lib/data/mockData'
+
+// Simple, consistent section divider
+function SectionDivider() {
+  return (
+    <div className="relative h-px my-20">
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
+      <div className="absolute left-1/2 -translate-x-1/2 -top-1.5">
+        <div className="w-3 h-3 tennis-ball"></div>
+      </div>
+    </div>
+  )
+}
 
 export default function Home() {
   const { language, setLanguage } = useLanguage()
@@ -48,7 +59,17 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-parque-bg via-white to-parque-bg">
+    <main className="min-h-screen bg-gradient-to-br from-parque-bg via-white to-parque-bg relative">
+      {/* Subtle parallax tennis net pattern */}
+      <div className="fixed inset-0 pointer-events-none opacity-[0.02]">
+        <div 
+          className="absolute inset-0 tennis-net-pattern"
+          style={{
+            transform: 'translateY(calc(var(--scroll-y) * 0.5))',
+          }}
+        />
+      </div>
+      
       <Navigation 
         currentPage="home" 
         language={language} 
@@ -57,19 +78,19 @@ export default function Home() {
       
       <HeroSection content={t.hero} />
       
-      <TennisBallDivider />
+      <SectionDivider />
       
       <FeaturesSection content={t.features} />
       
-      <CourtLinesDivider />
+      <SectionDivider />
       
       <HowItWorksSection content={t.howItWorks} />
       
-      <TennisNetDivider />
+      <SectionDivider />
       
       <LevelsSection content={t.levels} />
       
-      <TennisBallDivider />
+      <SectionDivider />
       
       <PlatformPreviewSection 
         content={t.platformPreview} 
@@ -77,11 +98,11 @@ export default function Home() {
         language={language} 
       />
       
-      <CourtLinesDivider />
+      <SectionDivider />
       
       <TestimonialsSection content={t.testimonials} />
       
-      <TennisBallDivider />
+      <SectionDivider />
       
       <FAQSection content={t.faq} />
       
@@ -133,6 +154,17 @@ export default function Home() {
         .delay-1000 { animation-delay: 1000ms; }
         .delay-2000 { animation-delay: 2000ms; }
       `}</style>
+      
+      {/* Parallax scroll tracking */}
+      <script dangerouslySetInnerHTML={{
+        __html: `
+          if (typeof window !== 'undefined') {
+            window.addEventListener('scroll', () => {
+              document.documentElement.style.setProperty('--scroll-y', window.scrollY + 'px');
+            });
+          }
+        `
+      }} />
     </main>
   )
 }
