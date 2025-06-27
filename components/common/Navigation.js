@@ -45,7 +45,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
   return (
     <>
       <nav className={`fixed top-0 w-full backdrop-blur-md z-50 transition-all duration-300 ${
-        scrolled ? 'bg-white/95 shadow-lg tennis-net-pattern' : 'bg-white/70'
+        scrolled ? 'bg-white/95 shadow-lg' : 'bg-white/70'
       }`}>
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
@@ -60,8 +60,6 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
                     priority
                   />
                 </div>
-                {/* Tennis ball accent on hover - no animation */}
-                <TennisBallIcon className="w-4 h-4 text-parque-yellow opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
               
               <div className="hidden md:flex space-x-6">
@@ -75,9 +73,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
                 >
                   {t.home}
                   {currentPage === 'home' && (
-                    <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-parque-purple">
-                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-[#DFEF87] rounded-full"></div>
-                    </div>
+                    <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-parque-purple"></div>
                   )}
                   <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-parque-purple scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
                 </Link>
@@ -92,9 +88,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
                 >
                   {t.rules}
                   {currentPage === 'rules' && (
-                    <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-parque-purple">
-                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-[#DFEF87] rounded-full"></div>
-                    </div>
+                    <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-parque-purple"></div>
                   )}
                   <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-parque-purple scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
                 </Link>
@@ -109,20 +103,18 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
                 >
                   {t.elo}
                   {currentPage === 'elo' && (
-                    <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-parque-purple">
-                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-[#DFEF87] rounded-full"></div>
-                    </div>
+                    <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-parque-purple"></div>
                   )}
                   <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-parque-purple scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
                 </Link>
               </div>
             </div>
             
-            {/* Language Selector with tennis ball accent */}
+            {/* Language Selector */}
             <div className="relative">
               <button
                 onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
-                className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm border border-gray-200 px-4 py-2 rounded-xl hover:border-parque-purple hover:shadow-md transition-all duration-300 group glass-premium"
+                className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm border border-gray-200 px-4 py-2 rounded-xl hover:border-parque-purple hover:shadow-md transition-all duration-300 group"
               >
                 <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
@@ -133,12 +125,10 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
                 <svg className={`w-4 h-4 text-gray-500 transition-transform ${isLangMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                 </svg>
-                {/* Tennis ball indicator */}
-                <div className="absolute -top-1 -right-1 w-2 h-2 bg-[#DFEF87] rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </button>
               
               {isLangMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-gray-100 py-1 animate-fadeIn glass-premium">
+                <div className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-gray-100 py-1 animate-fadeIn">
                   <button
                     onClick={() => handleLanguageChange('es')}
                     className={`w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center space-x-3 transition-colors relative group ${
@@ -149,9 +139,6 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
                     <span className={`font-medium ${language === 'es' ? 'text-parque-purple' : 'text-gray-700'}`}>
                       Español
                     </span>
-                    {language === 'es' && (
-                      <TennisBallIcon className="w-3 h-3 text-parque-yellow absolute right-4" />
-                    )}
                   </button>
                   <button
                     onClick={() => handleLanguageChange('en')}
@@ -163,9 +150,6 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
                     <span className={`font-medium ${language === 'en' ? 'text-parque-purple' : 'text-gray-700'}`}>
                       English
                     </span>
-                    {language === 'en' && (
-                      <TennisBallIcon className="w-3 h-3 text-parque-yellow absolute right-4" />
-                    )}
                   </button>
                 </div>
               )}
