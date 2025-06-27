@@ -52,38 +52,85 @@ body {
   }
 }
 
+/* Proper tennis ball design */
+.tennis-ball {
+  position: relative;
+  background: linear-gradient(135deg, #DFEF87 0%, #D4E470 100%);
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 
+    inset -2px -2px 4px rgba(0, 0, 0, 0.1),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.3),
+    0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.tennis-ball::before,
+.tennis-ball::after {
+  content: '';
+  position: absolute;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+}
+
+/* First curve */
+.tennis-ball::before {
+  width: 100%;
+  height: 100%;
+  top: -50%;
+  left: 0;
+  border-bottom-color: transparent;
+  border-left-color: transparent;
+}
+
+/* Second curve */
+.tennis-ball::after {
+  width: 100%;
+  height: 100%;
+  bottom: -50%;
+  right: 0;
+  border-top-color: transparent;
+  border-right-color: transparent;
+}
+
+/* Tennis ball fly-through animation */
+@keyframes tennis-ball-fly {
+  0% {
+    transform: translate(-100px, 100vh) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.3;
+  }
+  90% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: translate(calc(100vw + 100px), -100px) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.animate-tennis-fly {
+  animation: tennis-ball-fly 20s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-tennis-fly-delayed {
+  animation: tennis-ball-fly 25s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation-delay: 8s;
+}
+
+.animate-tennis-fly-slow {
+  animation: tennis-ball-fly 30s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation-delay: 15s;
+}
+
 /* Tennis-specific patterns */
 .tennis-ball-pattern {
   position: relative;
   overflow: hidden;
 }
 
-.tennis-ball-pattern::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background-image: 
-    radial-gradient(circle at 20% 20%, var(--tennis-yellow) 2px, transparent 2px),
-    radial-gradient(circle at 80% 80%, var(--tennis-yellow) 2px, transparent 2px),
-    radial-gradient(circle at 50% 50%, var(--tennis-yellow) 3px, transparent 3px);
-  background-size: 100px 100px, 100px 100px, 150px 150px;
-  opacity: 0.03;
-  animation: drift 30s linear infinite;
-}
-
-@keyframes drift {
-  from {
-    transform: translate(0, 0);
-  }
-  to {
-    transform: translate(100px, 100px);
-  }
-}
-
-/* Tennis court lines pattern */
+/* Tennis court pattern */
 .court-lines-pattern {
   position: relative;
 }
@@ -118,97 +165,21 @@ body {
     );
 }
 
-/* Tennis ball texture */
-.tennis-ball-texture {
-  position: relative;
-  background: var(--tennis-yellow);
-}
-
-.tennis-ball-texture::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: 
-    repeating-linear-gradient(
-      45deg,
-      transparent,
-      transparent 3px,
-      rgba(255,255,255,0.5) 3px,
-      rgba(255,255,255,0.5) 6px
-    ),
-    repeating-linear-gradient(
-      -45deg,
-      transparent,
-      transparent 3px,
-      rgba(0,0,0,0.1) 3px,
-      rgba(0,0,0,0.1) 6px
-    );
-  mix-blend-mode: multiply;
-}
-
-/* Tennis ball bounce animation */
-@keyframes tennis-ball-bounce {
+/* Gentle float animation */
+@keyframes gentle-float {
   0%, 100% {
-    transform: translateY(0) scale(1);
+    transform: translateY(0) rotate(0deg);
   }
-  10% {
-    transform: translateY(0) scale(1.1, 0.9);
+  25% {
+    transform: translateY(-10px) rotate(5deg);
   }
-  30% {
-    transform: translateY(-100px) scale(0.95, 1.05);
-  }
-  50% {
-    transform: translateY(0) scale(1.05, 0.95);
-  }
-  57% {
-    transform: translateY(-7px) scale(1);
-  }
-  64% {
-    transform: translateY(0) scale(1);
-  }
-  100% {
-    transform: translateY(0) scale(1);
+  75% {
+    transform: translateY(10px) rotate(-5deg);
   }
 }
 
-.animate-tennis-bounce {
-  animation: tennis-ball-bounce 2s cubic-bezier(0.280, 0.840, 0.420, 1) infinite;
-}
-
-/* Racquet swing animation */
-@keyframes racquet-swing {
-  0% {
-    transform: rotate(-45deg) translateX(-20px);
-  }
-  50% {
-    transform: rotate(45deg) translateX(20px);
-  }
-  100% {
-    transform: rotate(-45deg) translateX(-20px);
-  }
-}
-
-.animate-racquet-swing {
-  animation: racquet-swing 3s ease-in-out infinite;
-}
-
-/* Court slide animation */
-@keyframes court-slide {
-  0% {
-    transform: translateX(-100%);
-    opacity: 0;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-}
-
-.animate-court-slide {
-  animation: court-slide 15s linear infinite;
+.animate-gentle-float {
+  animation: gentle-float 8s ease-in-out infinite;
 }
 
 /* Premium glass effect with blur */
