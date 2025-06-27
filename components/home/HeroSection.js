@@ -54,14 +54,11 @@ export default function HeroSection({ content }) {
             </svg>
           </a>
           
-          {/* Stats with tennis-themed design */}
+          {/* Stats with clean design - NO tennis balls */}
           <div className="grid grid-cols-3 gap-4 md:gap-8 mt-24 max-w-4xl mx-auto animate-fadeInUp animation-delay-1000">
             {content.stats.map((stat, index) => (
               <div key={index} className="group">
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 md:p-6 lg:p-8 shadow-xl hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 tennis-net-pattern relative overflow-hidden">
-                  {/* Tennis ball accent - static, no animation */}
-                  <div className="absolute -top-4 -right-4 w-10 h-10 tennis-ball opacity-20"></div>
-                  
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 md:p-6 lg:p-8 shadow-xl hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 relative overflow-hidden">
                   <div className="text-3xl md:text-4xl lg:text-5xl font-light text-transparent bg-clip-text bg-gradient-to-r from-parque-purple to-parque-green mb-2 md:mb-3 group-hover:scale-110 transition-transform relative z-10">
                     {stat.number}
                   </div>
@@ -73,15 +70,12 @@ export default function HeroSection({ content }) {
         </div>
       </div>
       
-      {/* Enhanced scroll indicator with proper tennis ball */}
+      {/* Simple scroll indicator - just an arrow, no tennis ball */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
-        <div className="relative animate-bounce">
-          {/* Proper tennis ball as scroll indicator */}
-          <div className="w-10 h-10 tennis-ball shadow-lg flex items-center justify-center">
-            <svg className="w-5 h-5 text-gray-600 z-10 relative" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
-          </div>
+        <div className="animate-bounce">
+          <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+          </svg>
         </div>
       </div>
     </section>
