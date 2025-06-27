@@ -1,0 +1,61 @@
+root/
+├── README.md
+├── app
+│   ├── elo
+│   │   ├── layout.js
+│   │   └── page.js
+│   ├── globals.css
+│   ├── layout.js
+│   ├── page.js
+│   └── rules
+│       ├── layout.js
+│       └── page.js
+├── components
+│   ├── common
+│   │   ├── Footer.js
+│   │   └── Navigation.js
+│   ├── elo
+│   │   ├── EloCTASection.js
+│   │   ├── EloContentRenderer.js
+│   │   └── EloHeroSection.js
+│   ├── home
+│   │   ├── FAQSection.js
+│   │   ├── FeaturesSection.js
+│   │   ├── HeroSection.js
+│   │   ├── HowItWorksSection.js
+│   │   ├── LevelsSection.js
+│   │   ├── PlatformPreviewSection.js
+│   │   ├── SignupSection.js
+│   │   └── TestimonialsSection.js
+│   ├── layout
+│   ├── rules
+│   │   ├── RulesCTASection.js
+│   │   ├── RulesHeroSection.js
+│   │   ├── RulesSection.js
+│   │   └── RulesSidebar.js
+│   └── ui
+├── lib
+│   ├── content
+│   │   ├── eloContent.js
+│   │   ├── homeContent.js
+│   │   └── rulesContent.js
+│   ├── data
+│   │   └── mockData.js
+│   ├── hooks
+│   │   ├── useActiveSection.js
+│   │   └── useLanguage.js
+│   └── utils
+│       └── rulesIcons.js
+├── next.config.js
+├── package-lock.json
+├── package.json
+├── postcss.config.js
+├── public
+│   ├── logo-big.png
+│   ├── logo-horizontal-01.png
+│   ├── logo-horizontal-02.png
+│   ├── logo-old.png
+│   └── logo.png
+├── scripts
+│   └── tree.js
+└── tailwind.config.js
