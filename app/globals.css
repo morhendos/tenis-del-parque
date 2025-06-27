@@ -6,6 +6,15 @@
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 220, 197;
   --background-end-rgb: 214, 220, 197;
+  
+  /* Tennis court colors */
+  --court-green: #1B7340;
+  --court-clay: #B85D3F;
+  --court-blue: #1E3A8A;
+  --court-line: #FFFFFF;
+  
+  /* Tennis ball color */
+  --tennis-yellow: #DFEF87;
 }
 
 body {
@@ -41,6 +50,183 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+/* Tennis-specific patterns */
+.tennis-ball-pattern {
+  position: relative;
+  overflow: hidden;
+}
+
+.tennis-ball-pattern::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background-image: 
+    radial-gradient(circle at 20% 20%, var(--tennis-yellow) 2px, transparent 2px),
+    radial-gradient(circle at 80% 80%, var(--tennis-yellow) 2px, transparent 2px),
+    radial-gradient(circle at 50% 50%, var(--tennis-yellow) 3px, transparent 3px);
+  background-size: 100px 100px, 100px 100px, 150px 150px;
+  opacity: 0.03;
+  animation: drift 30s linear infinite;
+}
+
+@keyframes drift {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(100px, 100px);
+  }
+}
+
+/* Tennis court lines pattern */
+.court-lines-pattern {
+  position: relative;
+}
+
+.court-lines-pattern::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(90deg, transparent 48%, rgba(255,255,255,0.1) 48%, rgba(255,255,255,0.1) 52%, transparent 52%),
+    linear-gradient(0deg, transparent 48%, rgba(255,255,255,0.1) 48%, rgba(255,255,255,0.1) 52%, transparent 52%);
+  background-size: 200px 200px;
+  pointer-events: none;
+}
+
+/* Tennis net pattern */
+.tennis-net-pattern {
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 10px,
+      rgba(86, 51, 128, 0.03) 10px,
+      rgba(86, 51, 128, 0.03) 11px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 10px,
+      rgba(86, 51, 128, 0.03) 10px,
+      rgba(86, 51, 128, 0.03) 11px
+    );
+}
+
+/* Tennis ball texture */
+.tennis-ball-texture {
+  position: relative;
+  background: var(--tennis-yellow);
+}
+
+.tennis-ball-texture::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 3px,
+      rgba(255,255,255,0.5) 3px,
+      rgba(255,255,255,0.5) 6px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 3px,
+      rgba(0,0,0,0.1) 3px,
+      rgba(0,0,0,0.1) 6px
+    );
+  mix-blend-mode: multiply;
+}
+
+/* Tennis ball bounce animation */
+@keyframes tennis-ball-bounce {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  10% {
+    transform: translateY(0) scale(1.1, 0.9);
+  }
+  30% {
+    transform: translateY(-100px) scale(0.95, 1.05);
+  }
+  50% {
+    transform: translateY(0) scale(1.05, 0.95);
+  }
+  57% {
+    transform: translateY(-7px) scale(1);
+  }
+  64% {
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-tennis-bounce {
+  animation: tennis-ball-bounce 2s cubic-bezier(0.280, 0.840, 0.420, 1) infinite;
+}
+
+/* Racquet swing animation */
+@keyframes racquet-swing {
+  0% {
+    transform: rotate(-45deg) translateX(-20px);
+  }
+  50% {
+    transform: rotate(45deg) translateX(20px);
+  }
+  100% {
+    transform: rotate(-45deg) translateX(-20px);
+  }
+}
+
+.animate-racquet-swing {
+  animation: racquet-swing 3s ease-in-out infinite;
+}
+
+/* Court slide animation */
+@keyframes court-slide {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.animate-court-slide {
+  animation: court-slide 15s linear infinite;
+}
+
+/* Premium glass effect with blur */
+.glass-premium {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 8px 32px 0 rgba(31, 38, 135, 0.15),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+/* Tennis court gradient */
+.gradient-court {
+  background: linear-gradient(135deg, 
+    var(--court-green) 0%, 
+    #2E7D32 50%, 
+    var(--court-green) 100%);
 }
 
 /* Prevent animation flickering by setting initial states */
@@ -211,6 +397,12 @@ body {
 
 .glow-green {
   box-shadow: 0 0 30px rgba(146, 158, 85, 0.5);
+}
+
+.glow-tennis {
+  box-shadow: 
+    0 0 20px rgba(223, 239, 135, 0.5),
+    0 0 40px rgba(223, 239, 135, 0.3);
 }
 
 /* Pattern background */
