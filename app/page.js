@@ -70,25 +70,27 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-parque-bg via-white to-parque-bg relative overflow-x-hidden">
-      {/* Subtle parallax tennis net pattern - FIXED VISIBILITY */}
+    <main className="min-h-screen bg-gradient-to-b from-parque-bg via-white to-white relative overflow-x-hidden">
+      {/* Parallax tennis net pattern - FIXED PARALLAX EFFECT */}
       <div 
-        className="fixed inset-0 pointer-events-none z-0 opacity-20"
+        className="absolute top-0 left-0 w-full pointer-events-none z-0 opacity-40"
         style={{
           transform: `translateY(${scrollY * 0.5}px)`,
+          height: '150vh',
         }}
       >
-        <div className="absolute inset-0 tennis-net-pattern" />
+        <div className="w-full h-full tennis-net-pattern" />
       </div>
       
-      {/* Additional parallax layer with court lines */}
+      {/* Additional parallax layer with court lines - FIXED PARALLAX EFFECT */}
       <div 
-        className="fixed inset-0 pointer-events-none z-0 opacity-10"
+        className="absolute top-0 left-0 w-full pointer-events-none z-0 opacity-25"
         style={{
           transform: `translateY(${scrollY * 0.3}px)`,
+          height: '140vh',
         }}
       >
-        <div className="absolute inset-0 court-lines-pattern" />
+        <div className="w-full h-full court-lines-pattern" />
       </div>
       
       {/* Main content with proper z-index */}
@@ -100,9 +102,10 @@ export default function Home() {
         />
         
         <HeroSection content={t.hero} />
-        
-        <SectionDivider />
-        
+      </div>
+      
+      {/* Rest of content with solid white background to cover parallax */}
+      <div className="bg-white relative z-20">
         <FeaturesSection content={t.features} />
         
         <SectionDivider />
