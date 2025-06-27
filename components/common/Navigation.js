@@ -60,8 +60,8 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
                     priority
                   />
                 </div>
-                {/* Tennis ball accent on hover */}
-                <TennisBallIcon className="w-4 h-4 text-parque-yellow opacity-0 group-hover:opacity-100 group-hover:animate-bounce transition-opacity" />
+                {/* Tennis ball accent on hover - no animation */}
+                <TennisBallIcon className="w-4 h-4 text-parque-yellow opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
               
               <div className="hidden md:flex space-x-6">
