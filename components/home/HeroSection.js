@@ -10,9 +10,6 @@ export default function HeroSection({ content }) {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-parque-yellow/3 rounded-full blur-3xl animate-pulse delay-2000"></div>
       </div>
       
-      {/* Tennis court lines pattern - very subtle */}
-      <div className="absolute inset-0 court-lines-pattern opacity-3"></div>
-      
       <div className="container mx-auto px-4 relative z-10 py-20">
         <div className="text-center max-w-5xl mx-auto">
           {/* Premium badge with tennis ball icon */}
@@ -44,13 +41,10 @@ export default function HeroSection({ content }) {
             {content.title}
           </h1>
           
-          {/* Tagline with tennis net divider */}
-          <div className="relative mb-12">
-            <p className="text-xl md:text-2xl text-gray-700 max-w-3xl mx-auto font-light leading-relaxed animate-fadeInUp animation-delay-600 relative z-10">
-              {content.tagline}
-            </p>
-            <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-24 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
-          </div>
+          {/* Tagline */}
+          <p className="text-xl md:text-2xl text-gray-700 max-w-3xl mx-auto font-light leading-relaxed animate-fadeInUp animation-delay-600 mb-12">
+            {content.tagline}
+          </p>
           
           {/* CTA - solid background */}
           <a href="#signup" className="inline-flex items-center bg-gradient-to-r from-parque-purple to-parque-purple/90 text-white px-12 py-6 rounded-full text-lg font-medium hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 animate-fadeInUp animation-delay-800 group relative">
