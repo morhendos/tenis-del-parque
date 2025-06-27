@@ -71,7 +71,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-parque-bg via-white to-white relative overflow-x-hidden">
-      {/* Modern parallax background layers */}
+      {/* Modern parallax background layers - INCREASED VISIBILITY */}
       
       {/* Layer 1: Abstract geometric shapes - far background */}
       <div 
@@ -81,20 +81,20 @@ export default function Home() {
           height: '200vh',
         }}
       >
-        <div className="absolute top-[10%] left-[10%] w-96 h-96 opacity-[0.03]">
+        <div className="absolute top-[10%] left-[10%] w-96 h-96 opacity-20">
           <div className="w-full h-full rounded-full bg-gradient-to-br from-parque-purple to-transparent blur-3xl" />
         </div>
-        <div className="absolute top-[40%] right-[15%] w-[500px] h-[500px] opacity-[0.04]">
+        <div className="absolute top-[40%] right-[15%] w-[500px] h-[500px] opacity-20">
           <div className="w-full h-full rounded-full bg-gradient-to-tl from-parque-green to-transparent blur-3xl" />
         </div>
-        <div className="absolute top-[70%] left-[20%] w-[600px] h-[600px] opacity-[0.03]">
-          <div className="w-full h-full rounded-full bg-gradient-to-tr from-parque-yellow/30 to-transparent blur-3xl" />
+        <div className="absolute top-[70%] left-[20%] w-[600px] h-[600px] opacity-15">
+          <div className="w-full h-full rounded-full bg-gradient-to-tr from-parque-yellow/50 to-transparent blur-3xl" />
         </div>
       </div>
       
       {/* Layer 2: Modern dot pattern - mid background */}
       <div 
-        className="absolute top-0 left-0 w-full pointer-events-none z-0 opacity-[0.15]"
+        className="absolute top-0 left-0 w-full pointer-events-none z-0 opacity-40"
         style={{
           transform: `translateY(${scrollY * 0.4}px)`,
           height: '150vh',
@@ -105,7 +105,7 @@ export default function Home() {
       
       {/* Layer 3: Subtle geometric lines - near background */}
       <div 
-        className="absolute top-0 left-0 w-full pointer-events-none z-0 opacity-[0.08]"
+        className="absolute top-0 left-0 w-full pointer-events-none z-0 opacity-30"
         style={{
           transform: `translateY(${scrollY * 0.6}px)`,
           height: '130vh',
@@ -123,14 +123,14 @@ export default function Home() {
         }}
       >
         {/* Abstract tennis ball shapes */}
-        <div className="absolute top-[20%] right-[10%] w-32 h-32 opacity-[0.06]">
+        <div className="absolute top-[20%] right-[10%] w-32 h-32 opacity-25">
+          <div className="w-full h-full rounded-full bg-gradient-radial from-parque-yellow/60 to-transparent" />
+        </div>
+        <div className="absolute top-[50%] left-[5%] w-24 h-24 opacity-20">
+          <div className="w-full h-full rounded-full bg-gradient-radial from-parque-yellow/50 to-transparent" />
+        </div>
+        <div className="absolute top-[80%] right-[20%] w-40 h-40 opacity-15">
           <div className="w-full h-full rounded-full bg-gradient-radial from-parque-yellow/40 to-transparent" />
-        </div>
-        <div className="absolute top-[50%] left-[5%] w-24 h-24 opacity-[0.05]">
-          <div className="w-full h-full rounded-full bg-gradient-radial from-parque-yellow/30 to-transparent" />
-        </div>
-        <div className="absolute top-[80%] right-[20%] w-40 h-40 opacity-[0.04]">
-          <div className="w-full h-full rounded-full bg-gradient-radial from-parque-yellow/20 to-transparent" />
         </div>
       </div>
       
@@ -145,43 +145,68 @@ export default function Home() {
         <HeroSection content={t.hero} />
       </div>
       
-      {/* Rest of content with solid white background to cover parallax */}
-      <div className="bg-white relative z-20">
-        <FeaturesSection content={t.features} />
+      {/* Rest of content with alternating backgrounds */}
+      <div className="relative z-20">
+        {/* Features Section - White background */}
+        <div className="bg-white">
+          <FeaturesSection content={t.features} />
+        </div>
         
         <SectionDivider />
         
-        <HowItWorksSection content={t.howItWorks} />
+        {/* How It Works - Light gradient background */}
+        <div className="bg-gradient-to-br from-gray-50 to-parque-bg/20 relative overflow-hidden">
+          <div className="absolute inset-0 pattern-dots opacity-5"></div>
+          <HowItWorksSection content={t.howItWorks} />
+        </div>
         
         <SectionDivider />
         
-        <LevelsSection content={t.levels} />
+        {/* Levels Section - White with subtle pattern */}
+        <div className="bg-white relative overflow-hidden">
+          <div className="absolute inset-0 modern-lines-pattern opacity-5"></div>
+          <LevelsSection content={t.levels} />
+        </div>
         
         <SectionDivider />
         
-        <PlatformPreviewSection 
-          content={t.platformPreview} 
-          mockData={mockData} 
-          language={language} 
-        />
+        {/* Platform Preview - Gradient background */}
+        <div className="bg-gradient-to-bl from-parque-purple/5 to-parque-green/5 relative overflow-hidden">
+          <div className="absolute inset-0 pattern-grid opacity-10"></div>
+          <PlatformPreviewSection 
+            content={t.platformPreview} 
+            mockData={mockData} 
+            language={language} 
+          />
+        </div>
         
         <SectionDivider />
         
-        <TestimonialsSection content={t.testimonials} />
+        {/* Testimonials - White background */}
+        <div className="bg-white">
+          <TestimonialsSection content={t.testimonials} />
+        </div>
         
         <SectionDivider />
         
-        <FAQSection content={t.faq} />
+        {/* FAQ - Light background with pattern */}
+        <div className="bg-gray-50 relative overflow-hidden">
+          <div className="absolute inset-0 modern-dots-pattern opacity-10"></div>
+          <FAQSection content={t.faq} />
+        </div>
         
-        <SignupSection 
-          content={t.signup} 
-          formData={formData} 
-          isSubmitted={isSubmitted} 
-          isSubmitting={isSubmitting} 
-          onSubmit={handleSubmit} 
-          onChange={handleChange} 
-          language={language} 
-        />
+        {/* Signup - Gradient background */}
+        <div className="bg-gradient-to-br from-parque-purple/10 via-parque-green/5 to-parque-yellow/10">
+          <SignupSection 
+            content={t.signup} 
+            formData={formData} 
+            isSubmitted={isSubmitted} 
+            isSubmitting={isSubmitting} 
+            onSubmit={handleSubmit} 
+            onChange={handleChange} 
+            language={language} 
+          />
+        </div>
         
         <Footer content={t.footer} />
       </div>
