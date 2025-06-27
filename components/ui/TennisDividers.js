@@ -5,9 +5,9 @@ export default function TennisBallDivider({ className = "" }) {
         {/* Tennis court line */}
         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-20 md:w-32 h-px bg-gradient-to-r from-transparent to-gray-300"></div>
         
-        {/* Proper tennis ball */}
+        {/* Static tennis ball - no animation */}
         <div className="relative mx-24 md:mx-36">
-          <div className="w-10 h-10 md:w-12 md:h-12 tennis-ball animate-gentle-float"></div>
+          <div className="w-10 h-10 md:w-12 md:h-12 tennis-ball"></div>
         </div>
         
         {/* Tennis court line */}
