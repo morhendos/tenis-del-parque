@@ -71,26 +71,67 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-parque-bg via-white to-white relative overflow-x-hidden">
-      {/* Parallax tennis net pattern - FIXED PARALLAX EFFECT */}
+      {/* Modern parallax background layers */}
+      
+      {/* Layer 1: Abstract geometric shapes - far background */}
       <div 
-        className="absolute top-0 left-0 w-full pointer-events-none z-0 opacity-40"
+        className="absolute top-0 left-0 w-full pointer-events-none z-0"
         style={{
-          transform: `translateY(${scrollY * 0.5}px)`,
+          transform: `translateY(${scrollY * 0.2}px)`,
+          height: '200vh',
+        }}
+      >
+        <div className="absolute top-[10%] left-[10%] w-96 h-96 opacity-[0.03]">
+          <div className="w-full h-full rounded-full bg-gradient-to-br from-parque-purple to-transparent blur-3xl" />
+        </div>
+        <div className="absolute top-[40%] right-[15%] w-[500px] h-[500px] opacity-[0.04]">
+          <div className="w-full h-full rounded-full bg-gradient-to-tl from-parque-green to-transparent blur-3xl" />
+        </div>
+        <div className="absolute top-[70%] left-[20%] w-[600px] h-[600px] opacity-[0.03]">
+          <div className="w-full h-full rounded-full bg-gradient-to-tr from-parque-yellow/30 to-transparent blur-3xl" />
+        </div>
+      </div>
+      
+      {/* Layer 2: Modern dot pattern - mid background */}
+      <div 
+        className="absolute top-0 left-0 w-full pointer-events-none z-0 opacity-[0.15]"
+        style={{
+          transform: `translateY(${scrollY * 0.4}px)`,
           height: '150vh',
         }}
       >
-        <div className="w-full h-full tennis-net-pattern" />
+        <div className="w-full h-full modern-dots-pattern" />
       </div>
       
-      {/* Additional parallax layer with court lines - FIXED PARALLAX EFFECT */}
+      {/* Layer 3: Subtle geometric lines - near background */}
       <div 
-        className="absolute top-0 left-0 w-full pointer-events-none z-0 opacity-25"
+        className="absolute top-0 left-0 w-full pointer-events-none z-0 opacity-[0.08]"
         style={{
-          transform: `translateY(${scrollY * 0.3}px)`,
-          height: '140vh',
+          transform: `translateY(${scrollY * 0.6}px)`,
+          height: '130vh',
         }}
       >
-        <div className="w-full h-full court-lines-pattern" />
+        <div className="w-full h-full modern-lines-pattern" />
+      </div>
+      
+      {/* Layer 4: Floating abstract tennis elements */}
+      <div 
+        className="absolute top-0 left-0 w-full pointer-events-none z-0"
+        style={{
+          transform: `translateY(${scrollY * 0.8}px)`,
+          height: '120vh',
+        }}
+      >
+        {/* Abstract tennis ball shapes */}
+        <div className="absolute top-[20%] right-[10%] w-32 h-32 opacity-[0.06]">
+          <div className="w-full h-full rounded-full bg-gradient-radial from-parque-yellow/40 to-transparent" />
+        </div>
+        <div className="absolute top-[50%] left-[5%] w-24 h-24 opacity-[0.05]">
+          <div className="w-full h-full rounded-full bg-gradient-radial from-parque-yellow/30 to-transparent" />
+        </div>
+        <div className="absolute top-[80%] right-[20%] w-40 h-40 opacity-[0.04]">
+          <div className="w-full h-full rounded-full bg-gradient-radial from-parque-yellow/20 to-transparent" />
+        </div>
       </div>
       
       {/* Main content with proper z-index */}
