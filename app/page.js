@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Navigation from '../components/common/Navigation'
 import HeroSection from '../components/home/HeroSection'
 import FeaturesSection from '../components/home/FeaturesSection'
@@ -32,8 +32,19 @@ export default function Home() {
   const [formData, setFormData] = useState({ name: '', email: '' })
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [scrollY, setScrollY] = useState(0)
 
   const t = homeContent[language]
+
+  // Handle parallax scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY)
+    }
+    
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -59,15 +70,25 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-parque-bg via-white to-parque-bg relative">
+    <main className="min-h-screen bg-gradient-to-br from-parque-bg via-white to-parque-bg relative overflow-x-hidden">
       {/* Subtle parallax tennis net pattern */}
-      <div className="fixed inset-0 pointer-events-none opacity-[0.02]">
-        <div 
-          className="absolute inset-0 tennis-net-pattern"
-          style={{
-            transform: 'translateY(calc(var(--scroll-y) * 0.5))',
-          }}
-        />
+      <div 
+        className="fixed inset-0 pointer-events-none opacity-[0.02]"
+        style={{
+          transform: `translateY(${scrollY * 0.5}px)`,
+        }}
+      >
+        <div className="absolute inset-0 tennis-net-pattern" />
+      </div>
+      
+      {/* Additional parallax layer with court lines */}
+      <div 
+        className="fixed inset-0 pointer-events-none opacity-[0.01]"
+        style={{
+          transform: `translateY(${scrollY * 0.3}px)`,
+        }}
+      >
+        <div className="absolute inset-0 court-lines-pattern" />
       </div>
       
       <Navigation 
@@ -154,17 +175,6 @@ export default function Home() {
         .delay-1000 { animation-delay: 1000ms; }
         .delay-2000 { animation-delay: 2000ms; }
       `}</style>
-      
-      {/* Parallax scroll tracking */}
-      <script dangerouslySetInnerHTML={{
-        __html: `
-          if (typeof window !== 'undefined') {
-            window.addEventListener('scroll', () => {
-              document.documentElement.style.setProperty('--scroll-y', window.scrollY + 'px');
-            });
-          }
-        `
-      }} />
     </main>
   )
 }
