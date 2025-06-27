@@ -40,6 +40,7 @@ export default function Home() {
       nav: {
         home: 'Inicio',
         rules: 'Reglamento',
+        elo: 'Sistema ELO',
         about: 'Acerca de',
         contact: 'Contacto'
       },
@@ -75,7 +76,7 @@ export default function Home() {
           },
           {
             title: 'Rankings en Vivo',
-            description: 'Sigue tu progreso con nuestro sistema de ranking Elo en tiempo real.',
+            description: 'Sigue tu progreso con nuestro sistema de ranking Elo en tiempo real. <a href="/elo" class="text-parque-purple underline hover:text-parque-purple/80">Aprende más sobre ELO</a>',
             icon: 'ranking'
           }
         ]
@@ -204,6 +205,7 @@ export default function Home() {
       nav: {
         home: 'Home',
         rules: 'Rules',
+        elo: 'ELO System',
         about: 'About',
         contact: 'Contact'
       },
@@ -239,7 +241,7 @@ export default function Home() {
           },
           {
             title: 'Live Rankings',
-            description: 'Track your progress with our real-time Elo ranking system.',
+            description: 'Track your progress with our real-time Elo ranking system. <a href="/elo" class="text-parque-purple underline hover:text-parque-purple/80">Learn more about ELO</a>',
             icon: 'ranking'
           }
         ]
@@ -874,6 +876,7 @@ export default function Home() {
               <div className="hidden md:flex space-x-6">
                 <Link href="/" className="text-gray-700 hover:text-parque-purple transition-colors font-medium">{t.nav.home}</Link>
                 <Link href="/rules" className="text-gray-700 hover:text-parque-purple transition-colors font-medium">{t.nav.rules}</Link>
+                <Link href="/elo" className="text-gray-700 hover:text-parque-purple transition-colors font-medium">{t.nav.elo}</Link>
               </div>
             </div>
             
@@ -942,7 +945,7 @@ export default function Home() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-parque-yellow/5 rounded-full blur-3xl animate-pulse delay-2000"></div>
         </div>
         
-        <div className="container mx-auto px-4 relative z-10 pt-20">
+        <div className="container mx-auto px-4 relative z-10 py-20">
           <div className="text-center max-w-5xl mx-auto">
             <span className="inline-block bg-gradient-to-r from-parque-purple to-parque-purple/80 text-white px-8 py-4 rounded-full text-sm font-medium mb-8 animate-fadeInUp shadow-xl">
               {t.hero.badge}
@@ -1036,7 +1039,7 @@ export default function Home() {
                     )}
                   </div>
                   <h3 className="text-lg md:text-xl font-medium text-parque-purple mb-3 md:mb-4">{feature.title}</h3>
-                  <p className="text-sm md:text-base text-gray-600 leading-relaxed">{feature.description}</p>
+                  <p className="text-sm md:text-base text-gray-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: feature.description }} />
                 </div>
               </div>
             ))}
@@ -1347,6 +1350,9 @@ export default function Home() {
             <div className="flex space-x-8">
               <Link href="/rules" className="text-gray-600 hover:text-parque-purple transition-colors font-medium">
                 {t.footer.links.rules}
+              </Link>
+              <Link href="/elo" className="text-gray-600 hover:text-parque-purple transition-colors font-medium">
+                {t.nav.elo}
               </Link>
               <Link href="#" className="text-gray-600 hover:text-parque-purple transition-colors font-medium">
                 {t.footer.links.contact}
