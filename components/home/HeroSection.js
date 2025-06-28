@@ -113,7 +113,7 @@ export default function HeroSection({ content }) {
           <div className="mt-8 sm:mt-12 md:mt-16 lg:mt-20 flex justify-center">
             <button onClick={scrollToFeatures} className="relative inline-block group touch-manipulation">
               <div className="absolute inset-0 bg-parque-purple/20 rounded-full blur-lg animate-pulse scale-150"></div>
-              <div className="relative bg-white/80 backdrop-blur-sm rounded-full p-2 sm:p-3 animate-bounce cursor-pointer hover:bg-white transition-colors">
+              <div className="relative bg-white/80 backdrop-blur-sm rounded-full p-2 sm:p-3 animate-bounce cursor-pointer hover:bg-white transition-colors flex items-center justify-center">
                 <svg className="w-5 h-5 sm:w-6 sm:h-6 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                 </svg>

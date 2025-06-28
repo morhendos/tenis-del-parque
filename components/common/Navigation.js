@@ -340,20 +340,20 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
                       {currentPage === 'home' && (
                         <div className="w-2 h-2 bg-parque-purple rounded-full"></div>
                       )}
-                      {currentPage === 'home' && (
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            setIsHomeSectionsOpen(!isHomeSectionsOpen)
-                          }}
-                          className="p-1 hover:bg-parque-purple/10 rounded-md transition-colors"
-                        >
-                          <svg className={`w-4 h-4 text-parque-purple transition-transform ${isHomeSectionsOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </button>
-                      )}
+                                             {currentPage === 'home' && (
+                         <button
+                           onClick={(e) => {
+                             e.preventDefault()
+                             e.stopPropagation()
+                             setIsHomeSectionsOpen(!isHomeSectionsOpen)
+                           }}
+                           className="flex items-center justify-center w-6 h-6 hover:bg-parque-purple/10 rounded-md transition-colors"
+                         >
+                           <svg className={`w-4 h-4 text-parque-purple transition-transform ${isHomeSectionsOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                           </svg>
+                         </button>
+                       )}
                     </div>
                   </div>
                 </NavLink>
