@@ -90,14 +90,14 @@ async function seedLeagues() {
         timezone: 'Europe/Madrid'
       },
       description: {
-        es: 'La primera liga de tenis amateur en Sotogrande que combina competición seria con ambiente social.',
-        en: 'The first amateur tennis league in Sotogrande combining serious competition with social atmosphere.'
+        es: 'La primera liga de tenis amateur en Sotogrande que combina competición seria con ambiente social. Comenzamos en julio 2025.',
+        en: 'The first amateur tennis league in Sotogrande combining serious competition with social atmosphere. Starting July 2025.'
       },
       seasons: [{
         name: 'Summer 2025',
-        startDate: new Date('2025-06-01'),
-        endDate: new Date('2025-09-30'),
-        registrationDeadline: new Date('2025-05-15'),
+        startDate: new Date('2025-07-01'),
+        endDate: new Date('2025-10-31'),
+        registrationDeadline: new Date('2025-06-20'),
         maxPlayers: 150,
         price: {
           amount: 0,
@@ -161,6 +161,8 @@ async function seedLeagues() {
     await sotogrande.save()
     console.log('✅ Sotogrande league created successfully!')
     console.log('League ID:', sotogrande._id)
+    console.log('Start date: July 1, 2025')
+    console.log('Registration deadline: June 20, 2025')
     
     // Create more leagues for testing (optional)
     const marbella = new League({
