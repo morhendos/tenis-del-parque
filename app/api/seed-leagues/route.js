@@ -4,6 +4,9 @@ import League from '../../../lib/models/League'
 // IMPORTANT: Remove this file after seeding your production database!
 // This is a one-time setup endpoint
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
+
 export async function GET(request) {
   try {
     // Add a secret key check for security
