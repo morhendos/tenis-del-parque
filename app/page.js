@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Navigation from '../components/common/Navigation'
 import HeroSection from '../components/home/HeroSection'
 import FeaturesSection from '../components/home/FeaturesSection'
@@ -9,7 +10,6 @@ import LevelsSection from '../components/home/LevelsSection'
 import PlatformPreviewSection from '../components/home/PlatformPreviewSection'
 import TestimonialsSection from '../components/home/TestimonialsSection'
 import FAQSection from '../components/home/FAQSection'
-import SignupSection from '../components/home/SignupSection'
 import Footer from '../components/common/Footer'
 import { useLanguage } from '../lib/hooks/useLanguage'
 import { homeContent } from '../lib/content/homeContent'
@@ -27,18 +27,62 @@ function SectionDivider() {
   )
 }
 
+// New CTA Section Component
+function CTASection({ content, language, onSignupClick }) {
+  return (
+    <section id="signup" className="py-24 md:py-32 relative overflow-hidden">
+      <div className="absolute inset-0">
+        <div className="absolute top-10 right-10 w-96 h-96 bg-parque-purple/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-10 left-10 w-72 h-72 bg-parque-green/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-light text-parque-purple mb-8">
+            {content.title}
+          </h2>
+          <p className="text-lg text-gray-600 mb-12 font-light leading-relaxed">
+            {content.subtitle}
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={onSignupClick}
+              className="px-8 py-4 bg-gradient-to-r from-parque-purple to-parque-purple/80 text-white rounded-2xl font-medium text-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group"
+            >
+              <span className="flex items-center justify-center">
+                {language === 'es' ? 'Inscríbete ahora' : 'Sign up now'}
+                <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </span>
+            </button>
+            
+            <a
+              href="#features"
+              className="px-8 py-4 border-2 border-parque-purple text-parque-purple rounded-2xl font-medium text-lg hover:bg-parque-purple/10 transition-all duration-300"
+            >
+              {language === 'es' ? 'Descubre más' : 'Learn more'}
+            </a>
+          </div>
+          
+          <div className="mt-12 inline-flex items-center gap-2 px-4 py-2 bg-parque-green/20 rounded-full text-sm">
+            <span className="w-2 h-2 bg-parque-green rounded-full animate-pulse"></span>
+            <span className="text-gray-700 font-medium">
+              {language === 'es' 
+                ? '¡Primera temporada gratis! Plazas limitadas.' 
+                : 'First season free! Limited spots available.'}
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 export default function Home() {
   const { language, setLanguage, isLanguageLoaded } = useLanguage()
-  const [formData, setFormData] = useState({ 
-    name: '', 
-    email: '', 
-    whatsapp: '', 
-    level: '' 
-  })
-  const [isSubmitted, setIsSubmitted] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [errors, setErrors] = useState({})
   const [scrollY, setScrollY] = useState(0)
+  const router = useRouter()
 
   const t = homeContent[language]
 
@@ -52,115 +96,9 @@ export default function Home() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Validate form data
-  const validateForm = () => {
-    const newErrors = {}
-    
-    if (!formData.name.trim()) {
-      newErrors.name = t.signup.form.errors.required
-    }
-    
-    if (!formData.email.trim()) {
-      newErrors.email = t.signup.form.errors.required
-    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
-      newErrors.email = t.signup.form.errors.invalidEmail
-    }
-    
-    if (!formData.whatsapp.trim()) {
-      newErrors.whatsapp = t.signup.form.errors.required
-    } else if (!/^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,5}[-\s\.]?[0-9]{1,5}$/.test(formData.whatsapp.replace(/\s/g, ''))) {
-      newErrors.whatsapp = t.signup.form.errors.invalidPhone
-    }
-    
-    if (!formData.level) {
-      newErrors.level = t.signup.form.errors.required
-    }
-    
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    
-    // Clear previous errors
-    setErrors({})
-    
-    // Validate form
-    if (!validateForm()) {
-      return
-    }
-    
-    setIsSubmitting(true)
-    
-    try {
-      const response = await fetch('/api/players/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          language
-        })
-      })
-      
-      const data = await response.json()
-      
-      if (response.ok && data.success) {
-        setIsSubmitted(true)
-        console.log('Player registered:', data.player)
-        
-        // Reset form after 5 seconds
-        setTimeout(() => {
-          setFormData({ name: '', email: '', whatsapp: '', level: '' })
-          setIsSubmitted(false)
-        }, 5000)
-      } else {
-        // Handle API errors
-        if (response.status === 409) {
-          setErrors({ email: t.signup.form.errors.alreadyRegistered })
-        } else if (data.errors) {
-          // Handle validation errors from API
-          const apiErrors = {}
-          data.errors.forEach(error => {
-            if (error.includes('email')) apiErrors.email = error
-            else if (error.includes('whatsapp')) apiErrors.whatsapp = error
-            else if (error.includes('name')) apiErrors.name = error
-            else if (error.includes('level')) apiErrors.level = error
-          })
-          setErrors(apiErrors)
-        } else {
-          // Generic error
-          setErrors({ submit: data.error || 'Something went wrong. Please try again.' })
-        }
-      }
-    } catch (error) {
-      console.error('Registration error:', error)
-      setErrors({ 
-        submit: language === 'es' 
-          ? 'Error de conexión. Por favor, inténtalo de nuevo.' 
-          : 'Connection error. Please try again.' 
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
-    
-    // Clear error for this field when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: undefined
-      }))
-    }
+  const handleSignupClick = () => {
+    // Navigate to Sotogrande league signup page
+    router.push('/signup/sotogrande')
   }
 
   // Show loading state until language is resolved to prevent hydration flicker
@@ -282,27 +220,13 @@ export default function Home() {
           <FAQSection content={t.faq} />
         </div>
         
-        {/* Signup - Gradient background with tennis ball pattern */}
-        <div id="signup" className="bg-gradient-to-br from-parque-purple/10 via-parque-green/5 to-parque-yellow/10 relative overflow-hidden scroll-mt-20">
+        {/* CTA Section - Gradient background with tennis ball pattern */}
+        <div className="bg-gradient-to-br from-parque-purple/10 via-parque-green/5 to-parque-yellow/10 relative overflow-hidden">
           <div className="absolute inset-0 tennis-ball-pattern opacity-10"></div>
-          {errors.submit && (
-            <div className="container mx-auto px-4 pt-8">
-              <div className="max-w-2xl mx-auto">
-                <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-4 text-center">
-                  <p className="text-red-600">{errors.submit}</p>
-                </div>
-              </div>
-            </div>
-          )}
-          <SignupSection 
+          <CTASection 
             content={t.signup} 
-            formData={formData} 
-            isSubmitted={isSubmitted} 
-            isSubmitting={isSubmitting} 
-            onSubmit={handleSubmit} 
-            onChange={handleChange} 
             language={language}
-            errors={errors}
+            onSignupClick={handleSignupClick}
           />
         </div>
         
