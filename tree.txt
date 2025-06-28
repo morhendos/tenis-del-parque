@@ -1,16 +1,31 @@
 root/
 ├── README.md
 ├── app
+│   ├── api
+│   │   ├── leagues
+│   │   │   └── [league]
+│   │   │       └── route.js
+│   │   ├── players
+│   │   │   └── register
+│   │   │       └── route.js
+│   │   └── seed-leagues
+│   │       └── route.js
 │   ├── elo
 │   │   ├── layout.js
 │   │   └── page.js
 │   ├── globals.css
 │   ├── layout.js
 │   ├── page.js
-│   └── rules
-│       ├── layout.js
-│       └── page.js
+│   ├── rules
+│   │   ├── layout.js
+│   │   └── page.js
+│   └── signup
+│       └── [league]
+│           └── page.js
 ├── components
+│   ├── analytics
+│   │   ├── GoogleAnalytics.js
+│   │   └── MicrosoftClarity.js
 │   ├── common
 │   │   ├── Footer.js
 │   │   └── Navigation.js
@@ -37,16 +52,25 @@ root/
 │       ├── TennisDividers.js
 │       └── TennisIcons.js
 ├── lib
+│   ├── analytics
+│   │   └── analytics.js
 │   ├── content
 │   │   ├── eloContent.js
 │   │   ├── homeContent.js
 │   │   └── rulesContent.js
 │   ├── data
 │   │   └── mockData.js
+│   ├── db
+│   │   ├── mongodb.js
+│   │   └── mongoose.js
 │   ├── hooks
 │   │   ├── useActiveSection.js
 │   │   └── useLanguage.js
+│   ├── models
+│   │   ├── League.js
+│   │   └── Player.js
 │   └── utils
+│       ├── apiHelpers.js
 │       └── rulesIcons.js
 ├── next.config.js
 ├── package-lock.json
@@ -59,6 +83,7 @@ root/
 │   ├── logo-old.png
 │   └── logo.png
 ├── scripts
+│   ├── seedLeagues.js
 │   └── tree.js
 ├── tailwind.config.js
 └── tree.txt
