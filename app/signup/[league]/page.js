@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import Navigation from '../../../../components/common/Navigation'
-import SignupSection from '../../../../components/home/SignupSection'
-import Footer from '../../../../components/common/Footer'
-import { useLanguage } from '../../../../lib/hooks/useLanguage'
-import { homeContent } from '../../../../lib/content/homeContent'
+import Navigation from '../../../components/common/Navigation'
+import SignupSection from '../../../components/home/SignupSection'
+import Footer from '../../../components/common/Footer'
+import { useLanguage } from '../../../lib/hooks/useLanguage'
+import { homeContent } from '../../../lib/content/homeContent'
 
 export default function LeagueSignupPage() {
   const params = useParams()
