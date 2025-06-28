@@ -35,9 +35,24 @@ export default function HeroSection({ content }) {
           
           {/* Logo EVEN BIGGER to push stats below viewport */}
           <div className="mb-10 flex justify-center animate-fadeInUp animation-delay-200">
-            <div className="relative w-96 h-96 md:w-[28rem] md:h-[28rem] lg:w-[32rem] lg:h-[32rem] group cursor-pointer">
-              <div className="absolute inset-0 bg-gradient-to-br from-parque-purple/30 via-transparent to-parque-green/30 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-all duration-700 transform group-hover:scale-110"></div>
-              <div className="relative w-full h-full transform transition-all duration-500 ease-out group-hover:scale-110">
+            <div 
+              className="relative w-96 h-96 md:w-[28rem] md:h-[28rem] lg:w-[32rem] lg:h-[32rem] group cursor-pointer"
+              onClick={() => {
+                // Scroll to show the bottom of hero section (stats area)
+                const heroSection = document.querySelector('section')
+                if (heroSection) {
+                  const heroHeight = heroSection.offsetHeight
+                  const viewportHeight = window.innerHeight
+                  const scrollTarget = heroHeight - viewportHeight + 100 // +100px padding to ensure stats are fully visible
+                  window.scrollTo({ 
+                    top: Math.max(0, scrollTarget), 
+                    behavior: 'smooth' 
+                  })
+                }
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-parque-purple/30 via-transparent to-parque-green/30 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-all duration-700 transform group-hover:scale-105"></div>
+              <div className="relative w-full h-full transform transition-all duration-500 ease-out group-hover:scale-105">
                 <Image
                   src="/logo.png"
                   alt="Tenis del Parque"
