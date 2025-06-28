@@ -1,5 +1,6 @@
 import { Outfit, Raleway } from 'next/font/google'
 import './globals.css'
+import GoogleAnalytics from '../components/analytics/GoogleAnalytics'
 import MicrosoftClarity from '../components/analytics/MicrosoftClarity'
 
 const outfit = Outfit({ 
@@ -24,7 +25,12 @@ export default function RootLayout({ children }) {
     <html lang="es">
       <body className={`${outfit.variable} ${raleway.variable} font-sans`}>
         {children}
-        <MicrosoftClarity clarityId={process.env.NEXT_PUBLIC_CLARITY_ID} />
+        {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
+          <GoogleAnalytics GA_MEASUREMENT_ID={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
+        )}
+        {process.env.NEXT_PUBLIC_CLARITY_ID && (
+          <MicrosoftClarity clarityId={process.env.NEXT_PUBLIC_CLARITY_ID} />
+        )}
       </body>
     </html>
   )
