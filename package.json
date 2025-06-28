@@ -11,6 +11,7 @@
     "seed:leagues": "node scripts/seedLeagues.js"
   },
   "dependencies": {
+    "dotenv": "^16.3.1",
     "mongodb": "^6.3.0",
     "mongoose": "^8.0.3",
     "next": "14.1.0",
