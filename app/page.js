@@ -128,7 +128,7 @@ export default function Home() {
       {/* Rest of content with alternating backgrounds */}
       <div className="relative z-20">
         {/* Features Section - White background */}
-        <div className="bg-white">
+        <div id="features" className="bg-white scroll-mt-20">
           <FeaturesSection content={t.features} />
         </div>
         
@@ -176,7 +176,7 @@ export default function Home() {
         </div>
         
         {/* Signup - Gradient background with tennis ball pattern */}
-        <div className="bg-gradient-to-br from-parque-purple/10 via-parque-green/5 to-parque-yellow/10 relative overflow-hidden">
+        <div id="signup" className="bg-gradient-to-br from-parque-purple/10 via-parque-green/5 to-parque-yellow/10 relative overflow-hidden scroll-mt-20">
           <div className="absolute inset-0 tennis-ball-pattern opacity-10"></div>
           <SignupSection 
             content={t.signup} 
