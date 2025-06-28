@@ -28,7 +28,7 @@ function SectionDivider() {
 }
 
 export default function Home() {
-  const { language, setLanguage } = useLanguage()
+  const { language, setLanguage, isLanguageLoaded } = useLanguage()
   const [formData, setFormData] = useState({ name: '', email: '' })
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -67,6 +67,18 @@ export default function Home() {
       ...formData,
       [e.target.name]: e.target.value
     })
+  }
+
+  // Show loading state until language is resolved to prevent hydration flicker
+  if (!isLanguageLoaded) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-parque-bg via-white to-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 tennis-ball mb-4 animate-bounce mx-auto"></div>
+          <div className="text-parque-purple/60 text-lg font-light">Loading...</div>
+        </div>
+      </div>
+    )
   }
 
   return (
