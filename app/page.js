@@ -71,66 +71,46 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-parque-bg via-white to-white relative overflow-x-hidden">
-      {/* Modern parallax background layers - INCREASED VISIBILITY */}
+      {/* Tennis-themed parallax background layers */}
       
-      {/* Layer 1: Abstract geometric shapes - far background */}
+      {/* Layer 1: Tennis court lines - far background */}
       <div 
-        className="absolute top-0 left-0 w-full pointer-events-none z-0"
+        className="absolute top-0 left-0 w-full pointer-events-none z-0 opacity-20"
         style={{
           transform: `translateY(${scrollY * 0.2}px)`,
           height: '200vh',
         }}
       >
-        <div className="absolute top-[10%] left-[10%] w-96 h-96 opacity-20">
-          <div className="w-full h-full rounded-full bg-gradient-to-br from-parque-purple to-transparent blur-3xl" />
-        </div>
-        <div className="absolute top-[40%] right-[15%] w-[500px] h-[500px] opacity-20">
-          <div className="w-full h-full rounded-full bg-gradient-to-tl from-parque-green to-transparent blur-3xl" />
-        </div>
-        <div className="absolute top-[70%] left-[20%] w-[600px] h-[600px] opacity-15">
-          <div className="w-full h-full rounded-full bg-gradient-to-tr from-parque-yellow/50 to-transparent blur-3xl" />
-        </div>
+        <div className="w-full h-full tennis-court-pattern" />
       </div>
       
-      {/* Layer 2: Modern dot pattern - mid background */}
+      {/* Layer 2: Tennis ball pattern - mid background */}
       <div 
-        className="absolute top-0 left-0 w-full pointer-events-none z-0 opacity-40"
+        className="absolute top-0 left-0 w-full pointer-events-none z-0 opacity-30"
         style={{
           transform: `translateY(${scrollY * 0.4}px)`,
           height: '150vh',
         }}
       >
-        <div className="w-full h-full modern-dots-pattern" />
+        <div className="w-full h-full tennis-ball-pattern" />
       </div>
       
-      {/* Layer 3: Subtle geometric lines - near background */}
+      {/* Layer 3: Subtle gradient orbs for depth */}
       <div 
-        className="absolute top-0 left-0 w-full pointer-events-none z-0 opacity-30"
+        className="absolute top-0 left-0 w-full pointer-events-none z-0"
         style={{
           transform: `translateY(${scrollY * 0.6}px)`,
           height: '130vh',
         }}
       >
-        <div className="w-full h-full modern-lines-pattern" />
-      </div>
-      
-      {/* Layer 4: Floating abstract tennis elements */}
-      <div 
-        className="absolute top-0 left-0 w-full pointer-events-none z-0"
-        style={{
-          transform: `translateY(${scrollY * 0.8}px)`,
-          height: '120vh',
-        }}
-      >
-        {/* Abstract tennis ball shapes */}
-        <div className="absolute top-[20%] right-[10%] w-32 h-32 opacity-25">
-          <div className="w-full h-full rounded-full bg-gradient-radial from-parque-yellow/60 to-transparent" />
+        <div className="absolute top-[10%] left-[10%] w-96 h-96 opacity-15">
+          <div className="w-full h-full rounded-full bg-gradient-to-br from-parque-purple to-transparent blur-3xl" />
         </div>
-        <div className="absolute top-[50%] left-[5%] w-24 h-24 opacity-20">
-          <div className="w-full h-full rounded-full bg-gradient-radial from-parque-yellow/50 to-transparent" />
+        <div className="absolute top-[40%] right-[15%] w-[500px] h-[500px] opacity-15">
+          <div className="w-full h-full rounded-full bg-gradient-to-tl from-parque-green to-transparent blur-3xl" />
         </div>
-        <div className="absolute top-[80%] right-[20%] w-40 h-40 opacity-15">
-          <div className="w-full h-full rounded-full bg-gradient-radial from-parque-yellow/40 to-transparent" />
+        <div className="absolute top-[70%] left-[20%] w-[600px] h-[600px] opacity-10">
+          <div className="w-full h-full rounded-full bg-gradient-to-tr from-parque-yellow/50 to-transparent blur-3xl" />
         </div>
       </div>
       
@@ -154,25 +134,25 @@ export default function Home() {
         
         <SectionDivider />
         
-        {/* How It Works - Light gradient background */}
+        {/* How It Works - Light gradient with tennis net pattern */}
         <div className="bg-gradient-to-br from-gray-50 to-parque-bg/20 relative overflow-hidden">
-          <div className="absolute inset-0 pattern-dots opacity-5"></div>
+          <div className="absolute inset-0 tennis-net-mesh opacity-10"></div>
           <HowItWorksSection content={t.howItWorks} />
         </div>
         
         <SectionDivider />
         
-        {/* Levels Section - White with subtle pattern */}
+        {/* Levels Section - White with sport stripes */}
         <div className="bg-white relative overflow-hidden">
-          <div className="absolute inset-0 modern-lines-pattern opacity-5"></div>
+          <div className="absolute inset-0 sport-stripes-pattern opacity-10"></div>
           <LevelsSection content={t.levels} />
         </div>
         
         <SectionDivider />
         
-        {/* Platform Preview - Gradient background */}
+        {/* Platform Preview - Gradient with racquet strings */}
         <div className="bg-gradient-to-bl from-parque-purple/5 to-parque-green/5 relative overflow-hidden">
-          <div className="absolute inset-0 pattern-grid opacity-10"></div>
+          <div className="absolute inset-0 racquet-strings-pattern opacity-15"></div>
           <PlatformPreviewSection 
             content={t.platformPreview} 
             mockData={mockData} 
@@ -189,14 +169,15 @@ export default function Home() {
         
         <SectionDivider />
         
-        {/* FAQ - Light background with pattern */}
+        {/* FAQ - Light background with subtle tennis court pattern */}
         <div className="bg-gray-50 relative overflow-hidden">
-          <div className="absolute inset-0 modern-dots-pattern opacity-10"></div>
+          <div className="absolute inset-0 tennis-court-pattern opacity-5"></div>
           <FAQSection content={t.faq} />
         </div>
         
-        {/* Signup - Gradient background */}
-        <div className="bg-gradient-to-br from-parque-purple/10 via-parque-green/5 to-parque-yellow/10">
+        {/* Signup - Gradient background with tennis ball pattern */}
+        <div className="bg-gradient-to-br from-parque-purple/10 via-parque-green/5 to-parque-yellow/10 relative overflow-hidden">
+          <div className="absolute inset-0 tennis-ball-pattern opacity-10"></div>
           <SignupSection 
             content={t.signup} 
             formData={formData} 
