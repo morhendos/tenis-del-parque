@@ -1,6 +1,6 @@
-import dbConnect from '../../../lib/db/mongoose'
-import Player from '../../../lib/models/Player'
-import League from '../../../lib/models/League'
+import dbConnect from '../../../../lib/db/mongoose'
+import Player from '../../../../lib/models/Player'
+import League from '../../../../lib/models/League'
 
 export async function GET() {
   try {
