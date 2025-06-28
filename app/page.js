@@ -114,14 +114,15 @@ export default function Home() {
         </div>
       </div>
       
-      {/* Main content with proper z-index */}
-      <div className="relative z-10">
-        <Navigation 
-          currentPage="home" 
-          language={language} 
-          onLanguageChange={setLanguage} 
-        />
-        
+      {/* Navigation with high z-index */}
+      <Navigation 
+        currentPage="home" 
+        language={language} 
+        onLanguageChange={setLanguage} 
+      />
+      
+      {/* Main content with proper z-index (lower than navigation) */}
+      <div className="relative z-10 pt-16">
         <HeroSection content={t.hero} />
       </div>
       
