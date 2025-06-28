@@ -1,22 +1,25 @@
 # Tenis del Parque - Sotogrande 🎾
 
-A modern, multilingual tennis league platform built with Next.js, featuring ELO rankings, Swiss tournament system, and comprehensive league management for Sotogrande's premier amateur tennis community.
+A modern, multilingual tennis league platform built with Next.js and MongoDB, featuring ELO rankings, Swiss tournament system, multi-league support, and comprehensive player management. Starting July 2025!
 
 ## 🚀 Overview
 
-Tenis del Parque is a sophisticated web application that combines cutting-edge web technologies with professional tennis league management. The platform supports both Spanish and English languages and provides comprehensive information about league rules, ELO & Swiss systems, and player registration.
+Tenis del Parque is a sophisticated web application that combines cutting-edge web technologies with professional tennis league management. The platform supports multiple leagues, player registration with database persistence, and provides comprehensive information about league rules, ELO & Swiss systems.
 
-### ✨ Key Achievements
+### ✨ Key Features
 
-- **🏗️ Component-Based Architecture**: Professionally organized with reusable, focused components
-- **📦 92.1% Code Reduction**: Transformed from 3,179 lines to 251 lines through intelligent refactoring
+- **🏆 Multi-League Support**: Scalable architecture supporting multiple tennis leagues
+- **💾 MongoDB Integration**: Complete player registration and data persistence
 - **🌍 Multilingual Support**: Full Spanish/English localization with automatic browser detection
 - **📱 Responsive Design**: Beautiful, modern UI that works on all devices
-- **⚡ Performance Optimized**: Clean code structure for excellent loading speeds
+- **🎯 League Management**: Swiss tournament system with ELO rankings
+- **📅 Flexible Registration**: No deadlines - register players anytime
+- **🚀 Starting July 2025**: Liga de Sotogrande launches when enough players registered
 
 ## 🛠️ Tech Stack
 
 - **Framework**: Next.js 14 with App Router
+- **Database**: MongoDB with Mongoose ODM
 - **Styling**: Tailwind CSS with custom design system
 - **Languages**: JavaScript/JSX with modern React patterns
 - **State Management**: React Hooks (useState, useEffect, custom hooks)
@@ -27,133 +30,173 @@ Tenis del Parque is a sophisticated web application that combines cutting-edge w
 ```
 tenis-del-parque/
 ├── README.md
-├── app/                          # Next.js App Router pages
+├── .env.local.example           # Environment variables example
+├── app/                         # Next.js App Router pages
+│   ├── api/                     # API routes
+│   │   ├── leagues/
+│   │   │   └── [league]/
+│   │   │       └── route.js     # League info endpoint
+│   │   └── players/
+│   │       └── register/
+│   │           └── route.js     # Player registration endpoint
+│   ├── signup/
+│   │   └── [league]/
+│   │       └── page.js          # Dynamic league signup page
 │   ├── elo/
 │   │   ├── layout.js
-│   │   └── page.js               # ELO & Swiss Systems page (69 lines)
-│   ├── globals.css               # Global styles
-│   ├── layout.js                 # Root layout
-│   ├── page.js                   # Home page (124 lines)
-│   └── rules/
-│       ├── layout.js
-│       └── page.js               # Rules page (58 lines)
-├── components/                   # Reusable component library
-│   ├── common/                   # Shared components
-│   │   ├── Footer.js             # Centralized footer
-│   │   └── Navigation.js         # Centralized navigation
-│   ├── elo/                      # ELO page components
-│   │   ├── EloCTASection.js
-│   │   ├── EloContentRenderer.js
-│   │   └── EloHeroSection.js
-│   ├── home/                     # Home page components
-│   │   ├── FAQSection.js
-│   │   ├── FeaturesSection.js
-│   │   ├── HeroSection.js
-│   │   ├── HowItWorksSection.js
-│   │   ├── LevelsSection.js
-│   │   ├── PlatformPreviewSection.js
-│   │   ├── SignupSection.js
-│   │   └── TestimonialsSection.js
-│   ├── layout/                   # Layout components (future use)
-│   ├── rules/                    # Rules page components
-│   │   ├── RulesCTASection.js
-│   │   ├── RulesHeroSection.js
-│   │   ├── RulesSection.js
-│   │   └── RulesSidebar.js
-│   └── ui/                       # UI components (future use)
-├── lib/                          # Utilities and business logic
-│   ├── content/                  # Centralized content management
-│   │   ├── eloContent.js         # All ELO page content
-│   │   ├── homeContent.js        # All home page content
-│   │   └── rulesContent.js       # All rules page content
-│   ├── data/                     # Mock data and samples
-│   │   └── mockData.js
-│   ├── hooks/                    # Custom React hooks
-│   │   ├── useActiveSection.js   # Scroll tracking
-│   │   └── useLanguage.js        # Language management
-│   └── utils/                    # Utility functions
-│       └── rulesIcons.js         # Rules page icons
-├── next.config.js                # Next.js configuration
-├── package-lock.json
-├── package.json                  # Dependencies and scripts
-├── postcss.config.js            # PostCSS configuration
-├── public/                       # Static assets
-│   ├── logo-big.png
-│   ├── logo-horizontal-01.png
-│   ├── logo-horizontal-02.png
-│   ├── logo-old.png
-│   └── logo.png
-├── scripts/                      # Build and utility scripts
-│   └── tree.js
-└── tailwind.config.js           # Tailwind CSS configuration
+│   │   └── page.js              # ELO & Swiss Systems page
+│   ├── rules/
+│   │   ├── layout.js
+│   │   └── page.js              # Rules page
+│   ├── globals.css              # Global styles
+│   ├── layout.js                # Root layout
+│   └── page.js                  # Home page
+├── components/                  # Reusable component library
+│   ├── common/                  # Shared components
+│   ├── elo/                     # ELO page components
+│   ├── home/                    # Home page components
+│   └── rules/                   # Rules page components
+├── lib/                         # Utilities and business logic
+│   ├── content/                 # Centralized content management
+│   ├── db/                      # Database utilities
+│   │   ├── mongodb.js           # MongoDB connection
+│   │   └── mongoose.js          # Mongoose connection handler
+│   ├── models/                  # Database models
+│   │   ├── Player.js            # Player model
+│   │   └── League.js            # League model
+│   ├── hooks/                   # Custom React hooks
+│   └── utils/                   # Utility functions
+├── scripts/                     # Utility scripts
+│   ├── seedLeagues.js           # Database seeder for leagues
+│   └── tree.js                  # Project structure generator
+└── public/                      # Static assets
 ```
-
-## 🎯 Features
-
-### Core Features
-- **🏆 League Management**: Complete tennis league system with 8-round Swiss format
-- **📊 ELO Rating System**: Professional ranking system adapted for amateur tennis
-- **📋 Comprehensive Rules**: Detailed league regulations and guidelines
-- **👥 Player Registration**: Streamlined signup process with form validation
-- **📱 Responsive Design**: Optimized for mobile, tablet, and desktop
-
-### Technical Features
-- **🌐 Multilingual**: Spanish/English with automatic browser detection
-- **⚡ Performance**: Optimized bundle size and loading speeds
-- **♿ Accessibility**: WCAG compliant with proper semantic HTML
-- **🎨 Design System**: Consistent branding with custom Tailwind CSS variables
-- **📡 SEO Optimized**: Proper meta tags and semantic structure
-
-### League Features
-- **🎯 Swiss Tournament System**: Fair pairing system ensuring all players compete
-- **📈 ELO Rankings**: Dynamic skill-based rating system
-- **🏅 Multiple Categories**: Beginner, Intermediate, and Advanced divisions
-- **⚡ Wild Cards**: Flexible scheduling system for player convenience
-- **💰 Transparent Pricing**: Clear cost structure and payment guidelines
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 18+ 
+- Node.js 16+ 
 - npm, yarn, or pnpm
+- MongoDB (local or MongoDB Atlas)
 
 ### Installation
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/tenis-del-parque.git
+   git clone https://github.com/morhendos/tenis-del-parque.git
    cd tenis-del-parque
    ```
 
 2. **Install dependencies**
    ```bash
    npm install
-   # or
-   yarn install
-   # or
-   pnpm install
    ```
 
-3. **Run the development server**
+3. **Set up environment variables**
+   ```bash
+   cp .env.local.example .env.local
+   ```
+   Edit `.env.local` and add your MongoDB connection string:
+   ```
+   MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/tenis-del-parque
+   ```
+
+4. **Seed the database**
+   ```bash
+   npm run seed:leagues
+   ```
+   This creates the Sotogrande league (and a test Marbella league).
+
+5. **Run the development server**
    ```bash
    npm run dev
-   # or
-   yarn dev
-   # or
-   pnpm dev
    ```
 
-4. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
+6. **Open your browser**
+   - Homepage: [http://localhost:3000](http://localhost:3000)
+   - Signup page: [http://localhost:3000/signup/sotogrande](http://localhost:3000/signup/sotogrande)
 
 ### Available Scripts
 
 ```bash
-npm run dev      # Start development server
-npm run build    # Build for production
-npm run start    # Start production server
-npm run lint     # Run ESLint
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run start        # Start production server
+npm run lint         # Run ESLint
+npm run seed:leagues # Seed database with initial leagues
 ```
+
+## 📊 Database Models
+
+### Player Model
+```javascript
+{
+  name: String,              // Player's full name
+  email: String,             // Unique email address
+  whatsapp: String,          // WhatsApp contact number
+  level: String,             // 'beginner', 'intermediate', or 'advanced'
+  league: ObjectId,          // Reference to League
+  season: String,            // e.g., 'summer-2025'
+  status: String,            // 'pending', 'confirmed', 'active', 'inactive'
+  registeredAt: Date,        // Registration timestamp
+  stats: {                   // Future league stats
+    matchesPlayed: Number,
+    matchesWon: Number,
+    eloRating: Number
+  }
+}
+```
+
+### League Model
+```javascript
+{
+  name: String,              // e.g., 'Liga de Sotogrande'
+  slug: String,              // URL-friendly identifier
+  location: {                // League location details
+    city: String,
+    region: String,
+    country: String,
+    timezone: String
+  },
+  seasons: [{                // League seasons
+    name: String,
+    startDate: Date,         // July 1, 2025 for Sotogrande
+    endDate: Date,
+    maxPlayers: Number,
+    price: Object,
+    status: String           // 'registration_open', 'active', etc.
+  }],
+  config: {                  // League configuration
+    roundsPerSeason: Number,
+    wildCardsPerPlayer: Number,
+    playoffPlayers: Number,
+    levels: Array
+  }
+}
+```
+
+## 🎯 Features
+
+### Core Features
+- **🏆 Multi-League Architecture**: Support for multiple tennis leagues across different locations
+- **📊 Player Registration**: Complete signup flow with MongoDB persistence
+- **🌐 Dynamic League Pages**: Each league has its own signup page (`/signup/[league-slug]`)
+- **📅 Flexible Timeline**: League starts July 2025, no registration deadline
+- **💾 Data Persistence**: All player data saved in MongoDB
+
+### Technical Features
+- **🌍 Multilingual**: Spanish/English with automatic browser detection
+- **📱 Responsive Design**: Mobile-first approach
+- **⚡ API Routes**: RESTful API for player registration and league data
+- **🔒 Data Validation**: Server-side validation for all inputs
+- **🎨 Design System**: Consistent branding with Tailwind CSS
+
+### League Features
+- **🎯 Swiss Tournament System**: Fair pairing system
+- **📈 ELO Rankings**: Dynamic skill-based rating system
+- **🏅 Three Levels**: Beginner, Intermediate, and Advanced divisions
+- **⚡ Wild Cards**: Flexible scheduling system
+- **💰 Free First Season**: No cost for inaugural season
 
 ## 🎨 Design System
 
@@ -165,75 +208,75 @@ npm run lint     # Run ESLint
 --parque-bg: #D5D3C3        /* Background color */
 ```
 
-### Typography
-- **Headings**: Light weight for elegant appearance
-- **Body**: Optimized for readability across languages
-- **Interactive**: Clear hover states and transitions
+## 🌍 Multi-League Support
 
-## 🌍 Internationalization
+The platform is designed to support multiple tennis leagues:
 
-The application supports two languages with automatic detection:
+1. **Liga de Sotogrande** (Active)
+   - URL: `/signup/sotogrande`
+   - Starting: July 2025
+   - Status: Registration Open
 
-- **Spanish (es)**: Primary language for local players
-- **English (en)**: International player support
+2. **Liga de Marbella** (Coming Soon)
+   - URL: `/signup/marbella`
+   - Status: Coming Soon
 
-Content is centrally managed in `/lib/content/` files, making translations easy to maintain and update.
+### Adding a New League
 
-## 🏗️ Architecture Highlights
+1. Edit `scripts/seedLeagues.js` to add your league
+2. Run `npm run seed:leagues`
+3. Access at `/signup/your-league-slug`
 
-### Component Design Principles
-- **Single Responsibility**: Each component has a focused, single purpose
-- **Reusability**: Components are designed for reuse across pages
-- **Prop Interfaces**: Clear, well-defined prop structures
-- **Performance**: Optimized rendering with minimal re-renders
+## 🚀 API Endpoints
 
-### Custom Hooks
-- **`useLanguage`**: Centralized language state management
-- **`useActiveSection`**: Intelligent scroll tracking for navigation
+### Player Registration
+```
+POST /api/players/register
+Body: {
+  name: string,
+  email: string,
+  whatsapp: string,
+  level: 'beginner' | 'intermediate' | 'advanced',
+  leagueId: string,
+  language: 'es' | 'en'
+}
+```
 
-### Content Management
-- **Centralized**: All text content in dedicated files
-- **Multilingual**: Consistent structure across languages
-- **Maintainable**: Easy to update without touching components
+### League Information
+```
+GET /api/leagues/[slug]
+Returns: League details and registration status
+```
 
-## 📈 Performance Metrics
+## 🔧 Environment Variables
 
-### Code Optimization Results
-- **Home Page**: 1,365 → 124 lines (91% reduction)
-- **Rules Page**: 545 → 58 lines (89.4% reduction)
-- **ELO Page**: 1,269 → 69 lines (94.6% reduction)
-- **Total Codebase**: 3,179 → 251 lines (92.1% reduction)
+Create a `.env.local` file with:
 
-### Benefits
-- ✅ **Faster Load Times**: Smaller bundle sizes
-- ✅ **Better Maintainability**: Clean, organized code
-- ✅ **Improved Developer Experience**: Easy to find and modify code
-- ✅ **Enhanced Scalability**: Easy to add new features
+```env
+# MongoDB Connection String
+MONGODB_URI=your_mongodb_connection_string
+
+# Optional: Specific database name
+MONGODB_DB=tenis-del-parque
+```
+
+## 📅 Timeline
+
+- **Now - June 2025**: Open registration period
+- **June 2025**: Contact registered players with details
+- **July 2025**: Liga de Sotogrande begins!
+- **October 2025**: Season ends with playoffs
 
 ## 🚀 Deployment
 
 ### Vercel (Recommended)
 1. Push your code to GitHub
-2. Connect your repo to [Vercel](https://vercel.com)
-3. Deploy automatically on every push
+2. Import project to [Vercel](https://vercel.com)
+3. Add environment variables in Vercel dashboard
+4. Deploy automatically on every push
 
-### Manual Deployment
-```bash
-npm run build
-npm run start
-```
-
-## 🔧 Customization
-
-### Adding New Content
-1. **Multilingual Content**: Add to appropriate `/lib/content/` file
-2. **New Components**: Follow the established component structure
-3. **Styling**: Use the existing Tailwind classes and brand colors
-
-### Extending Features
-- **New Pages**: Add to `/app/` directory with corresponding components
-- **New Languages**: Extend content files with new language keys
-- **New Components**: Follow the component design principles
+### Environment Variables for Production
+- `MONGODB_URI`: Your production MongoDB connection string
 
 ## 🤝 Contributing
 
@@ -249,4 +292,4 @@ npm run start
 
 ---
 
-Built with ❤️ for the Sotogrande tennis community
+Built with ❤️ for the tennis community
