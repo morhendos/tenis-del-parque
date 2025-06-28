@@ -30,7 +30,7 @@ function SectionDivider() {
 // New CTA Section Component
 function CTASection({ content, language, onSignupClick }) {
   return (
-    <section id="signup" className="py-24 md:py-32 relative overflow-hidden">
+    <section id="signup" className="py-24 md:py-32 relative overflow-hidden scroll-mt-20">
       <div className="absolute inset-0">
         <div className="absolute top-10 right-10 w-96 h-96 bg-parque-purple/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-10 left-10 w-72 h-72 bg-parque-green/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
@@ -180,7 +180,7 @@ export default function Home() {
         <SectionDivider />
         
         {/* How It Works - Light gradient with tennis net pattern */}
-        <div className="bg-gradient-to-br from-gray-50 to-parque-bg/20 relative overflow-hidden">
+        <div id="how-it-works" className="bg-gradient-to-br from-gray-50 to-parque-bg/20 relative overflow-hidden scroll-mt-20">
           <div className="absolute inset-0 tennis-net-mesh opacity-10"></div>
           <HowItWorksSection content={t.howItWorks} />
         </div>
@@ -188,7 +188,7 @@ export default function Home() {
         <SectionDivider />
         
         {/* Levels Section - White with sport stripes */}
-        <div className="bg-white relative overflow-hidden">
+        <div id="levels" className="bg-white relative overflow-hidden scroll-mt-20">
           <div className="absolute inset-0 sport-stripes-pattern opacity-10"></div>
           <LevelsSection content={t.levels} />
         </div>
@@ -196,7 +196,7 @@ export default function Home() {
         <SectionDivider />
         
         {/* Platform Preview - Gradient with racquet strings */}
-        <div className="bg-gradient-to-bl from-parque-purple/5 to-parque-green/5 relative overflow-hidden">
+        <div id="platform" className="bg-gradient-to-bl from-parque-purple/5 to-parque-green/5 relative overflow-hidden scroll-mt-20">
           <div className="absolute inset-0 racquet-strings-pattern opacity-15"></div>
           <PlatformPreviewSection 
             content={t.platformPreview} 
@@ -208,14 +208,14 @@ export default function Home() {
         <SectionDivider />
         
         {/* Testimonials - White background */}
-        <div className="bg-white">
+        <div id="testimonials" className="bg-white scroll-mt-20">
           <TestimonialsSection content={t.testimonials} />
         </div>
         
         <SectionDivider />
         
         {/* FAQ - Light background with subtle tennis court pattern */}
-        <div className="bg-gray-50 relative overflow-hidden">
+        <div id="faq" className="bg-gray-50 relative overflow-hidden scroll-mt-20">
           <div className="absolute inset-0 tennis-court-pattern opacity-5"></div>
           <FAQSection content={t.faq} />
         </div>
