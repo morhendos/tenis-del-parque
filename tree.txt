@@ -34,6 +34,8 @@ root/
 │   │   ├── RulesSection.js
 │   │   └── RulesSidebar.js
 │   └── ui
+│       ├── TennisDividers.js
+│       └── TennisIcons.js
 ├── lib
 │   ├── content
 │   │   ├── eloContent.js
@@ -58,4 +60,5 @@ root/
 │   └── logo.png
 ├── scripts
 │   └── tree.js
-└── tailwind.config.js
+├── tailwind.config.js
+└── tree.txt
