@@ -1,5 +1,6 @@
 import { Outfit, Raleway } from 'next/font/google'
 import './globals.css'
+import MicrosoftClarity from '../components/analytics/MicrosoftClarity'
 
 const outfit = Outfit({ 
   subsets: ['latin'],
@@ -21,7 +22,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="es">
-      <body className={`${outfit.variable} ${raleway.variable} font-sans`}>{children}</body>
+      <body className={`${outfit.variable} ${raleway.variable} font-sans`}>
+        {children}
+        <MicrosoftClarity clarityId={process.env.NEXT_PUBLIC_CLARITY_ID} />
+      </body>
     </html>
   )
 }
