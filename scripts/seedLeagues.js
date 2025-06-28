@@ -1,9 +1,76 @@
-import dbConnect from '../lib/db/mongoose.js'
-import League from '../lib/models/League.js'
+const mongoose = require('mongoose')
+
+// Load environment variables
+require('dotenv').config({ path: '.env.local' })
 
 async function seedLeagues() {
   try {
-    await dbConnect()
+    // Connect to MongoDB
+    if (!process.env.MONGODB_URI) {
+      throw new Error('Please add your MongoDB URI to .env.local')
+    }
+    
+    await mongoose.connect(process.env.MONGODB_URI)
+    console.log('✅ Connected to MongoDB')
+    
+    // Define League schema (since we can't import the model directly)
+    const LeagueSchema = new mongoose.Schema({
+      name: String,
+      slug: String,
+      location: {
+        city: String,
+        region: String,
+        country: String,
+        timezone: String
+      },
+      description: {
+        es: String,
+        en: String
+      },
+      seasons: [{
+        name: String,
+        startDate: Date,
+        endDate: Date,
+        registrationDeadline: Date,
+        maxPlayers: Number,
+        price: {
+          amount: Number,
+          currency: String,
+          isFree: Boolean
+        },
+        status: String
+      }],
+      config: {
+        roundsPerSeason: Number,
+        wildCardsPerPlayer: Number,
+        playoffPlayers: Number,
+        levels: [{
+          key: String,
+          name: {
+            es: String,
+            en: String
+          },
+          eloRange: {
+            min: Number,
+            max: Number
+          }
+        }]
+      },
+      contact: {
+        email: String,
+        whatsapp: String,
+        website: String
+      },
+      status: String,
+      stats: {
+        totalPlayers: Number,
+        totalMatches: Number
+      }
+    }, {
+      timestamps: true
+    })
+    
+    const League = mongoose.models.League || mongoose.model('League', LeagueSchema)
     
     // Check if Sotogrande league already exists
     const existing = await League.findOne({ slug: 'sotogrande' })
@@ -84,7 +151,11 @@ async function seedLeagues() {
         whatsapp: '+34600000000',
         website: 'https://tenisdelparque.com'
       },
-      status: 'active'
+      status: 'active',
+      stats: {
+        totalPlayers: 0,
+        totalMatches: 0
+      }
     })
     
     await sotogrande.save()
@@ -105,7 +176,17 @@ async function seedLeagues() {
         es: 'Liga de tenis amateur en Marbella.',
         en: 'Amateur tennis league in Marbella.'
       },
-      status: 'coming_soon'
+      status: 'coming_soon',
+      config: {
+        roundsPerSeason: 8,
+        wildCardsPerPlayer: 4,
+        playoffPlayers: 8,
+        levels: []
+      },
+      stats: {
+        totalPlayers: 0,
+        totalMatches: 0
+      }
     })
     
     await marbella.save()
@@ -114,6 +195,8 @@ async function seedLeagues() {
   } catch (error) {
     console.error('❌ Error seeding leagues:', error)
   } finally {
+    await mongoose.disconnect()
+    console.log('👋 Disconnected from MongoDB')
     process.exit()
   }
 }
