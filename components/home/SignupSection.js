@@ -1,4 +1,4 @@
-export default function SignupSection({ content, formData, isSubmitted, isSubmitting, onSubmit, onChange, language }) {
+export default function SignupSection({ content, formData, isSubmitted, isSubmitting, onSubmit, onChange, language, errors = {} }) {
   return (
     <section id="signup" className="py-24 md:py-32 relative overflow-hidden">
       <div className="absolute inset-0">
@@ -24,6 +24,7 @@ export default function SignupSection({ content, formData, isSubmitted, isSubmit
             </div>
           ) : (
             <form onSubmit={onSubmit} className="space-y-8">
+              {/* Name Field */}
               <div className="group">
                 <label htmlFor="name" className="block text-base font-medium text-gray-700 mb-3">
                   {content.form.name}
@@ -35,10 +36,13 @@ export default function SignupSection({ content, formData, isSubmitted, isSubmit
                   value={formData.name}
                   onChange={onChange}
                   required
-                  className="w-full px-6 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-parque-purple/20 focus:border-parque-purple outline-none transition-all text-lg bg-white/80 backdrop-blur-sm"
+                  className={`w-full px-6 py-4 border-2 ${errors.name ? 'border-red-500' : 'border-gray-200'} rounded-2xl focus:ring-4 focus:ring-parque-purple/20 focus:border-parque-purple outline-none transition-all text-lg bg-white/80 backdrop-blur-sm`}
                   placeholder={language === 'es' ? 'Juan García' : 'John Smith'}
                 />
+                {errors.name && <p className="mt-2 text-sm text-red-600">{errors.name}</p>}
               </div>
+
+              {/* Email Field */}
               <div className="group">
                 <label htmlFor="email" className="block text-base font-medium text-gray-700 mb-3">
                   {content.form.email}
@@ -50,10 +54,64 @@ export default function SignupSection({ content, formData, isSubmitted, isSubmit
                   value={formData.email}
                   onChange={onChange}
                   required
-                  className="w-full px-6 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-parque-purple/20 focus:border-parque-purple outline-none transition-all text-lg bg-white/80 backdrop-blur-sm"
+                  className={`w-full px-6 py-4 border-2 ${errors.email ? 'border-red-500' : 'border-gray-200'} rounded-2xl focus:ring-4 focus:ring-parque-purple/20 focus:border-parque-purple outline-none transition-all text-lg bg-white/80 backdrop-blur-sm`}
                   placeholder={language === 'es' ? 'tu@email.com' : 'your@email.com'}
                 />
+                {errors.email && <p className="mt-2 text-sm text-red-600">{errors.email}</p>}
               </div>
+
+              {/* WhatsApp Field */}
+              <div className="group">
+                <label htmlFor="whatsapp" className="block text-base font-medium text-gray-700 mb-3">
+                  {content.form.whatsapp}
+                </label>
+                <input
+                  type="tel"
+                  id="whatsapp"
+                  name="whatsapp"
+                  value={formData.whatsapp}
+                  onChange={onChange}
+                  required
+                  className={`w-full px-6 py-4 border-2 ${errors.whatsapp ? 'border-red-500' : 'border-gray-200'} rounded-2xl focus:ring-4 focus:ring-parque-purple/20 focus:border-parque-purple outline-none transition-all text-lg bg-white/80 backdrop-blur-sm`}
+                  placeholder={content.form.whatsappPlaceholder}
+                />
+                <p className="mt-2 text-sm text-gray-500">{content.form.whatsappHelper}</p>
+                {errors.whatsapp && <p className="mt-2 text-sm text-red-600">{errors.whatsapp}</p>}
+              </div>
+
+              {/* Level Field */}
+              <div className="group">
+                <label className="block text-base font-medium text-gray-700 mb-4">
+                  {content.form.level}
+                </label>
+                <div className="space-y-3">
+                  {['beginner', 'intermediate', 'advanced'].map((level) => (
+                    <label
+                      key={level}
+                      className={`flex items-start p-4 border-2 rounded-2xl cursor-pointer transition-all hover:bg-parque-purple/5 ${
+                        formData.level === level
+                          ? 'border-parque-purple bg-parque-purple/10'
+                          : errors.level ? 'border-red-500' : 'border-gray-200'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="level"
+                        value={level}
+                        checked={formData.level === level}
+                        onChange={onChange}
+                        className="mt-1 w-4 h-4 text-parque-purple border-gray-300 focus:ring-parque-purple"
+                      />
+                      <span className="ml-3 text-base">
+                        {content.form.levelOptions[level]}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                {errors.level && <p className="mt-2 text-sm text-red-600">{errors.level}</p>}
+              </div>
+
+              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={isSubmitting}
@@ -82,4 +140,4 @@ export default function SignupSection({ content, formData, isSubmitted, isSubmit
       </div>
     </section>
   )
-} 
+}

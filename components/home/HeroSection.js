@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import Link from 'next/link'
 
 export default function HeroSection({ content }) {
   const scrollToFeatures = (e) => {
@@ -76,8 +77,8 @@ export default function HeroSection({ content }) {
             {content.tagline}
           </p>
           
-          {/* Enhanced CTA with glow effect */}
-          <a href="#signup" className="inline-flex items-center bg-gradient-to-r from-parque-purple to-parque-purple/90 text-white px-10 py-5 rounded-full text-lg font-medium hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 animate-fadeInUp animation-delay-800 group relative glow-purple hover:glow">
+          {/* Enhanced CTA with glow effect - Now links to signup page */}
+          <Link href="/signup/sotogrande" className="inline-flex items-center bg-gradient-to-r from-parque-purple to-parque-purple/90 text-white px-10 py-5 rounded-full text-lg font-medium hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 animate-fadeInUp animation-delay-800 group relative glow-purple hover:glow">
             <span className="relative z-10">{content.cta}</span>
             <svg className="w-5 h-5 ml-2 group-hover:translate-x-2 transition-transform relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -86,7 +87,7 @@ export default function HeroSection({ content }) {
             <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <div className="absolute inset-0 rounded-full shimmer"></div>
             </div>
-          </a>
+          </Link>
           
           {/* Stats with enhanced glass effect - INCREASED TOP MARGIN */}
           <div className="grid grid-cols-3 gap-4 md:gap-6 mt-24 md:mt-32 max-w-4xl mx-auto animate-fadeInUp animation-delay-1000">
