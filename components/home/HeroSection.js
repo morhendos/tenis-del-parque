@@ -25,17 +25,18 @@ export default function HeroSection({ content }) {
             {content.badge}
           </span>
           
-          {/* Logo with enhanced hover effects */}
+          {/* Logo with FIXED visibility */}
           <div className="mb-10 flex justify-center animate-fadeInUp animation-delay-200">
-            <div className="relative w-64 h-64 md:w-80 md:h-80 group perspective-1000">
+            <div className="relative w-64 h-64 md:w-80 md:h-80 group">
               <div className="absolute inset-0 bg-gradient-to-br from-parque-purple/30 via-transparent to-parque-green/30 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-all duration-700 transform group-hover:scale-110"></div>
-              <div className="transform-3d">
+              <div className="relative w-full h-full">
                 <Image
                   src="/logo.png"
                   alt="Tenis del Parque"
                   fill
-                  className="object-contain drop-shadow-2xl relative z-10"
+                  className="object-contain drop-shadow-2xl"
                   priority
+                  sizes="(max-width: 768px) 256px, 320px"
                 />
               </div>
             </div>
