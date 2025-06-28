@@ -42,9 +42,9 @@ export default function HeroSection({ content }) {
             </div>
           </div>
           
-          {/* Title FIXED - removed text-transparent, using regular gradient */}
+          {/* Title FIXED - using parque-purple color directly */}
           <h1 
-            className="text-5xl md:text-7xl lg:text-8xl font-light bg-gradient-to-r from-[#563380] to-[#929E55] text-transparent bg-clip-text mb-8 pb-6 animate-fadeInUp animation-delay-400"
+            className="text-5xl md:text-7xl lg:text-8xl font-light text-parque-purple mb-8 pb-6 animate-fadeInUp animation-delay-400"
             dangerouslySetInnerHTML={{ __html: content.title }}
           />
           
@@ -73,7 +73,7 @@ export default function HeroSection({ content }) {
                   {/* Gradient background on hover */}
                   <div className="absolute inset-0 bg-gradient-to-br from-parque-purple/5 to-parque-green/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   
-                  <div className="text-3xl md:text-4xl lg:text-5xl font-light text-transparent bg-clip-text bg-gradient-to-r from-[#563380] to-[#929E55] mb-2 md:mb-3 group-hover:scale-110 transition-transform relative z-10">
+                  <div className="text-3xl md:text-4xl lg:text-5xl font-light text-transparent bg-clip-text bg-gradient-to-r from-parque-purple to-parque-green mb-2 md:mb-3 group-hover:scale-110 transition-transform relative z-10">
                     {stat.number}
                   </div>
                   <div className="text-xs md:text-sm lg:text-base text-gray-600 font-medium relative z-10">{stat.label}</div>
