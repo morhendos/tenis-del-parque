@@ -31,7 +31,6 @@ async function seedLeagues() {
         name: String,
         startDate: Date,
         endDate: Date,
-        registrationDeadline: Date,
         maxPlayers: Number,
         price: {
           amount: Number,
@@ -97,7 +96,6 @@ async function seedLeagues() {
         name: 'Summer 2025',
         startDate: new Date('2025-07-01'),
         endDate: new Date('2025-10-31'),
-        registrationDeadline: new Date('2025-06-20'),
         maxPlayers: 150,
         price: {
           amount: 0,
@@ -162,7 +160,7 @@ async function seedLeagues() {
     console.log('✅ Sotogrande league created successfully!')
     console.log('League ID:', sotogrande._id)
     console.log('Start date: July 1, 2025')
-    console.log('Registration deadline: June 20, 2025')
+    console.log('Registration: OPEN (no deadline)')
     
     // Create more leagues for testing (optional)
     const marbella = new League({
