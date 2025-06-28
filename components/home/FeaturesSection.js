@@ -27,7 +27,9 @@ export default function FeaturesSection({ content }) {
 
   return (
     <section className="py-24 md:py-32 relative overflow-hidden">
+      {/* Subtle gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-white/50 to-transparent"></div>
+      
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16 md:mb-20">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-light text-parque-purple mb-6 md:mb-8">
@@ -35,15 +37,33 @@ export default function FeaturesSection({ content }) {
           </h2>
           <p className="text-lg md:text-xl text-gray-600 font-light max-w-2xl mx-auto">{content.subtitle}</p>
         </div>
+        
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 max-w-7xl mx-auto">
           {content.items.map((feature, index) => (
             <div key={index} className="group animate-fadeInUp" style={{animationDelay: `${index * 100}ms`}}>
-              <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 md:p-8 shadow-xl hover:shadow-2xl transform hover:-translate-y-3 transition-all duration-500 h-full border border-gray-100 hover:border-parque-purple/20">
-                <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-parque-purple/20 to-parque-purple/10 rounded-2xl flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-                  {getIcon(feature.icon)}
+              <div className="glass-premium rounded-3xl p-6 md:p-8 hover:shadow-2xl transform hover:-translate-y-3 transition-all duration-500 h-full relative overflow-hidden hover-lift">
+                {/* Modern gradient overlay on hover */}
+                <div className="absolute inset-0 bg-gradient-to-br from-parque-purple/5 via-transparent to-parque-green/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                
+                {/* Floating orb effect */}
+                <div className="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br from-parque-yellow/10 to-transparent rounded-full blur-2xl opacity-0 group-hover:opacity-100 group-hover:animate-float transition-opacity duration-700"></div>
+                
+                <div className="relative z-10">
+                  <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-parque-purple/20 to-parque-purple/10 rounded-2xl flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 relative">
+                    {/* Icon glow effect on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-parque-purple/30 to-parque-green/30 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <div className="relative z-10">
+                      {getIcon(feature.icon)}
+                    </div>
+                  </div>
+                  <h3 className="text-lg md:text-xl font-medium text-parque-purple mb-3 md:mb-4 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-parque-purple group-hover:to-parque-green transition-all duration-500">{feature.title}</h3>
+                  <p className="text-sm md:text-base text-gray-600 leading-relaxed transition-colors duration-500 group-hover:text-gray-700" dangerouslySetInnerHTML={{ __html: feature.description }} />
                 </div>
-                <h3 className="text-lg md:text-xl font-medium text-parque-purple mb-3 md:mb-4">{feature.title}</h3>
-                <p className="text-sm md:text-base text-gray-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: feature.description }} />
+                
+                {/* Subtle shimmer effect on hover */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+                  <div className="absolute inset-0 shimmer rounded-3xl"></div>
+                </div>
               </div>
             </div>
           ))}
@@ -51,4 +71,4 @@ export default function FeaturesSection({ content }) {
       </div>
     </section>
   )
-} 
+}

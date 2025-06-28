@@ -10,7 +10,7 @@ import EloContentRenderer from '../../components/elo/EloContentRenderer'
 import EloCTASection from '../../components/elo/EloCTASection'
 
 export default function EloPage() {
-  const { language, setLanguage } = useLanguage()
+  const { language, setLanguage, isLanguageLoaded } = useLanguage()
   const [scrolled, setScrolled] = useState(false)
 
   // Handle scroll effect
@@ -23,6 +23,18 @@ export default function EloPage() {
   }, [])
 
   const t = eloContent[language]
+
+  // Show loading state until language is resolved to prevent hydration flicker
+  if (!isLanguageLoaded) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-parque-bg via-white to-parque-bg flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 tennis-ball mb-4 animate-bounce mx-auto"></div>
+          <div className="text-parque-purple/60 text-lg font-light">Loading...</div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-parque-bg via-white to-parque-bg">
