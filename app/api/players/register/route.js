@@ -1,5 +1,6 @@
 import dbConnect from '../../../../lib/db/mongoose'
 import Player from '../../../../lib/models/Player'
+import League from '../../../../lib/models/League'
 
 export async function POST(request) {
   try {
@@ -8,7 +9,16 @@ export async function POST(request) {
 
     // Parse request body
     const body = await request.json()
-    const { name, email, whatsapp, level, language = 'es' } = body
+    const { 
+      name, 
+      email, 
+      whatsapp, 
+      level, 
+      language = 'es',
+      leagueId,
+      leagueSlug,
+      season = 'summer-2025'
+    } = body
 
     // Basic validation
     if (!name || !email || !whatsapp || !level) {
@@ -23,16 +33,42 @@ export async function POST(request) {
       )
     }
 
-    // Check if player already exists
-    const existingPlayer = await Player.findOne({ email: email.toLowerCase() })
+    // Validate league exists
+    let league
+    if (leagueId) {
+      league = await League.findById(leagueId)
+    } else if (leagueSlug) {
+      league = await League.findOne({ slug: leagueSlug, status: 'active' })
+    } else {
+      // Default to Sotogrande if no league specified
+      league = await League.findOne({ slug: 'sotogrande', status: 'active' })
+    }
+
+    if (!league) {
+      return Response.json(
+        { 
+          success: false, 
+          error: language === 'es'
+            ? 'Liga no encontrada o no activa'
+            : 'League not found or not active'
+        },
+        { status: 400 }
+      )
+    }
+
+    // Check if player already exists in this league
+    const existingPlayer = await Player.findOne({ 
+      email: email.toLowerCase(),
+      league: league._id 
+    })
     
     if (existingPlayer) {
       return Response.json(
         { 
           success: false, 
           error: language === 'es'
-            ? 'Este email ya está registrado'
-            : 'This email is already registered'
+            ? 'Este email ya está registrado en esta liga'
+            : 'This email is already registered in this league'
         },
         { status: 409 }
       )
@@ -51,6 +87,8 @@ export async function POST(request) {
       email,
       whatsapp,
       level,
+      league: league._id,
+      season,
       metadata: {
         language,
         source: 'web',
@@ -61,6 +99,11 @@ export async function POST(request) {
 
     // Save to database
     await player.save()
+
+    // Update league stats
+    await League.findByIdAndUpdate(league._id, {
+      $inc: { 'stats.totalPlayers': 1 }
+    })
 
     // Return success response
     return Response.json(
@@ -73,7 +116,12 @@ export async function POST(request) {
           id: player._id,
           name: player.name,
           email: player.email,
-          level: player.level
+          level: player.level,
+          league: {
+            id: league._id,
+            name: league.name,
+            slug: league.slug
+          }
         }
       },
       { status: 201 }
@@ -106,19 +154,27 @@ export async function POST(request) {
   }
 }
 
-// GET method to check API health
+// GET method to check API health and get stats
 export async function GET() {
   try {
     await dbConnect()
     
-    const playerCount = await Player.countDocuments()
+    // Get stats for all leagues
+    const leagues = await League.find({ status: 'active' })
+    const stats = {}
+    
+    for (const league of leagues) {
+      const playerCount = await Player.countDocuments({ league: league._id })
+      stats[league.slug] = {
+        name: league.name,
+        totalPlayers: playerCount
+      }
+    }
     
     return Response.json({
       success: true,
       message: 'Player registration API is working',
-      stats: {
-        totalPlayers: playerCount
-      }
+      stats
     })
   } catch (error) {
     return Response.json(
