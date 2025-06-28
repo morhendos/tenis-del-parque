@@ -82,18 +82,19 @@ export default function HeroSection({ content }) {
                   <div className="absolute -bottom-8 -right-8 w-20 h-20 bg-gradient-to-br from-parque-yellow/10 to-transparent rounded-full blur-2xl opacity-0 group-hover:opacity-100 group-hover:animate-float transition-opacity duration-500"></div>
                 </div>
               </div>
-            ))}</div>
-        </div>
-      </div>
-      
-      {/* Enhanced scroll indicator with pulse effect */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
-        <div className="relative">
-          <div className="absolute inset-0 bg-parque-purple/20 rounded-full blur-lg animate-pulse"></div>
-          <div className="relative bg-white/80 backdrop-blur-sm rounded-full p-3 animate-bounce">
-            <svg className="w-6 h-6 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
+            ))}
+          </div>
+          
+          {/* Enhanced scroll indicator - MOVED INSIDE STATS CONTAINER */}
+          <div className="mt-16 flex justify-center">
+            <a href="#features" className="relative inline-block group">
+              <div className="absolute inset-0 bg-parque-purple/20 rounded-full blur-lg animate-pulse scale-150"></div>
+              <div className="relative bg-white/80 backdrop-blur-sm rounded-full p-3 animate-bounce cursor-pointer hover:bg-white transition-colors">
+                <svg className="w-6 h-6 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+              </div>
+            </a>
           </div>
         </div>
       </div>
