@@ -33,9 +33,9 @@ export default function HeroSection({ content }) {
             {content.badge}
           </span>
           
-          {/* Logo BIGGER */}
-          <div className="mb-8 flex justify-center animate-fadeInUp animation-delay-200">
-            <div className="relative w-80 h-80 md:w-96 md:h-96 group">
+          {/* Logo EVEN BIGGER to push stats below viewport */}
+          <div className="mb-10 flex justify-center animate-fadeInUp animation-delay-200">
+            <div className="relative w-96 h-96 md:w-[28rem] md:h-[28rem] lg:w-[32rem] lg:h-[32rem] group">
               <div className="absolute inset-0 bg-gradient-to-br from-parque-purple/30 via-transparent to-parque-green/30 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-all duration-700 transform group-hover:scale-110"></div>
               <div className="relative w-full h-full">
                 <Image
@@ -44,7 +44,7 @@ export default function HeroSection({ content }) {
                   fill
                   className="object-contain drop-shadow-2xl"
                   priority
-                  sizes="(max-width: 768px) 320px, 384px"
+                  sizes="(max-width: 768px) 384px, (max-width: 1024px) 448px, 512px"
                 />
               </div>
             </div>
@@ -73,8 +73,8 @@ export default function HeroSection({ content }) {
             </div>
           </a>
           
-          {/* Stats with enhanced glass effect - REDUCED SPACING */}
-          <div className="grid grid-cols-3 gap-4 md:gap-6 mt-16 max-w-4xl mx-auto animate-fadeInUp animation-delay-1000">
+          {/* Stats with enhanced glass effect - INCREASED TOP MARGIN */}
+          <div className="grid grid-cols-3 gap-4 md:gap-6 mt-24 md:mt-32 max-w-4xl mx-auto animate-fadeInUp animation-delay-1000">
             {content.stats.map((stat, index) => (
               <div key={index} className="group">
                 <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-3 md:p-4 lg:p-6 shadow-xl hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 relative overflow-hidden hover-lift border border-white/50">
@@ -93,8 +93,8 @@ export default function HeroSection({ content }) {
             ))}
           </div>
           
-          {/* Enhanced scroll indicator with SMOOTH SCROLL - REDUCED SPACING */}
-          <div className="mt-12 flex justify-center">
+          {/* Enhanced scroll indicator with SMOOTH SCROLL */}
+          <div className="mt-16 md:mt-20 flex justify-center">
             <button onClick={scrollToFeatures} className="relative inline-block group">
               <div className="absolute inset-0 bg-parque-purple/20 rounded-full blur-lg animate-pulse scale-150"></div>
               <div className="relative bg-white/80 backdrop-blur-sm rounded-full p-3 animate-bounce cursor-pointer hover:bg-white transition-colors">
