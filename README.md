@@ -87,6 +87,32 @@ When creating new API routes, always:
 2. Call `await dbConnect()` before any database operations
 3. Use the exact function name `dbConnect` (no aliases)
 
+### Database Schema Best Practices
+
+**Avoid Duplicate Indexes**: Don't create explicit indexes on fields that already have `unique: true`:
+
+```javascript
+// ✅ CORRECT - unique: true automatically creates an index
+const UserSchema = new mongoose.Schema({
+  email: {
+    type: String,
+    unique: true  // This creates an index automatically
+  }
+})
+
+// Don't add explicit index for unique fields
+// UserSchema.index({ email: 1 }) // ❌ This would create a duplicate
+
+// ✅ CORRECT - Add indexes for non-unique fields that need them
+UserSchema.index({ status: 1 })
+UserSchema.index({ createdAt: -1 })
+```
+
+**Why This Matters**:
+- Prevents Mongoose warnings about duplicate indexes
+- Avoids unnecessary database storage overhead
+- Improves database performance
+
 ## 📁 Project Structure
 
 ```
