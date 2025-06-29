@@ -4,6 +4,7 @@ export default function PlatformPreviewSection({ content, mockData, language }) 
   const [activePreview, setActivePreview] = useState(0)
   const [selectedMatch, setSelectedMatch] = useState(null)
   const [hoveredPlayer, setHoveredPlayer] = useState(null)
+  const [selectedPlayer, setSelectedPlayer] = useState('Rafael M.')
 
   const handleTabChange = (index) => {
     setActivePreview(index)
@@ -254,73 +255,141 @@ export default function PlatformPreviewSection({ content, mockData, language }) 
         )
 
       case 'statistics':
+        // Player Statistics View
         return (
-          <div className="grid md:grid-cols-3 gap-6">
-            {/* Top Aces */}
-            <div className="bg-gradient-to-br from-parque-purple/5 to-transparent rounded-2xl p-6 border border-parque-purple/10">
-              <h4 className="text-lg font-medium text-parque-purple mb-4 flex items-center space-x-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <span>{language === 'es' ? 'Más Aces' : 'Top Aces'}</span>
+          <div className="space-y-6">
+            {/* Player Selector */}
+            <div className="flex items-center justify-between mb-6">
+              <h4 className="text-xl font-light text-gray-800">
+                {language === 'es' ? 'Estadísticas del Jugador' : 'Player Statistics'}
               </h4>
-              <div className="space-y-3">
-                {mockData.statistics.topAces.map((player, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                        index === 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600'
-                      }`}>
-                        {index + 1}
-                      </div>
-                      <span className="font-medium text-gray-800">{player.name}</span>
-                    </div>
-                    <span className="text-2xl font-light text-parque-purple">{player.total}</span>
-                  </div>
+              <select 
+                value={selectedPlayer}
+                onChange={(e) => setSelectedPlayer(e.target.value)}
+                className="px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-parque-purple"
+              >
+                {mockData.standings.map((player) => (
+                  <option key={player.name} value={player.name}>{player.name}</option>
                 ))}
+              </select>
+            </div>
+
+            {/* Player Stats Cards */}
+            <div className="grid md:grid-cols-4 gap-4">
+              <div className="bg-gradient-to-br from-parque-purple/10 to-transparent rounded-2xl p-6 border border-parque-purple/20">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-600">{language === 'es' ? 'Ranking ELO' : 'ELO Ranking'}</span>
+                  <svg className="w-5 h-5 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <p className="text-3xl font-light text-parque-purple">1452</p>
+                <p className="text-xs text-gray-500 mt-1">+15 {language === 'es' ? 'esta semana' : 'this week'}</p>
+              </div>
+
+              <div className="bg-gradient-to-br from-green-50 to-transparent rounded-2xl p-6 border border-green-200">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-600">{language === 'es' ? 'Partidos Ganados' : 'Matches Won'}</span>
+                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <p className="text-3xl font-light text-green-600">24</p>
+                <p className="text-xs text-gray-500 mt-1">{language === 'es' ? 'de 32 partidos' : 'of 32 matches'}</p>
+              </div>
+
+              <div className="bg-gradient-to-br from-red-50 to-transparent rounded-2xl p-6 border border-red-200">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-600">{language === 'es' ? 'Partidos Perdidos' : 'Matches Lost'}</span>
+                  <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <p className="text-3xl font-light text-red-600">8</p>
+                <p className="text-xs text-gray-500 mt-1">75% {language === 'es' ? 'tasa de victoria' : 'win rate'}</p>
+              </div>
+
+              <div className="bg-gradient-to-br from-parque-yellow/10 to-transparent rounded-2xl p-6 border border-parque-yellow/30">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-600">{language === 'es' ? 'Racha Actual' : 'Current Streak'}</span>
+                  <svg className="w-5 h-5 text-parque-yellow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <p className="text-3xl font-light text-parque-yellow">W4</p>
+                <p className="text-xs text-gray-500 mt-1">{language === 'es' ? '4 victorias seguidas' : '4 wins in a row'}</p>
               </div>
             </div>
 
-            {/* Longest Matches */}
-            <div className="bg-gradient-to-br from-parque-green/5 to-transparent rounded-2xl p-6 border border-parque-green/10">
-              <h4 className="text-lg font-medium text-parque-green mb-4 flex items-center space-x-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>{language === 'es' ? 'Partidos más largos' : 'Longest Matches'}</span>
-              </h4>
+            {/* Recent Performance */}
+            <div className="bg-white rounded-2xl p-6 border border-gray-200">
+              <h5 className="text-lg font-medium text-gray-800 mb-4">
+                {language === 'es' ? 'Rendimiento Reciente' : 'Recent Performance'}
+              </h5>
               <div className="space-y-3">
-                {mockData.statistics.longestMatches.map((match, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">{match.players}</span>
-                    <span className="font-medium text-parque-green">{match.duration}</span>
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-xl">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                      <span className="text-green-700 font-medium">W</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-800">vs James W.</p>
+                      <p className="text-sm text-gray-500">6-4, 6-3</p>
+                    </div>
                   </div>
-                ))}
+                  <span className="text-sm text-gray-500">22 Jun</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-xl">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                      <span className="text-green-700 font-medium">W</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-800">vs María L.</p>
+                      <p className="text-sm text-gray-500">7-5, 6-2</p>
+                    </div>
+                  </div>
+                  <span className="text-sm text-gray-500">15 Jun</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-red-50 rounded-xl">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                      <span className="text-red-700 font-medium">L</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-800">vs Rafael M.</p>
+                      <p className="text-sm text-gray-500">4-6, 5-7</p>
+                    </div>
+                  </div>
+                  <span className="text-sm text-gray-500">8 Jun</span>
+                </div>
               </div>
             </div>
 
-            {/* Win Streaks */}
-            <div className="bg-gradient-to-br from-parque-yellow/5 to-transparent rounded-2xl p-6 border border-parque-yellow/10">
-              <h4 className="text-lg font-medium text-parque-yellow mb-4 flex items-center space-x-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                </svg>
-                <span>{language === 'es' ? 'Rachas de victorias' : 'Win Streaks'}</span>
-              </h4>
-              <div className="space-y-3">
-                {mockData.statistics.winStreaks.map((player, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <span className="font-medium text-gray-800">{player.name}</span>
-                    <div className="flex items-center space-x-2">
-                      <div className="flex space-x-1">
-                        {[...Array(Math.min(player.streak, 5))].map((_, i) => (
-                          <div key={i} className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-                        ))}
-                      </div>
-                      <span className="text-lg font-medium text-yellow-600">{player.streak}</span>
+            {/* Head to Head Records */}
+            <div className="bg-white rounded-2xl p-6 border border-gray-200">
+              <h5 className="text-lg font-medium text-gray-800 mb-4">
+                {language === 'es' ? 'Cara a Cara' : 'Head to Head'}
+              </h5>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                  <span className="font-medium text-gray-700">vs Rafael M.</span>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-red-600">0-3</span>
+                    <div className="w-16 bg-gray-200 rounded-full h-2">
+                      <div className="bg-red-500 h-2 rounded-full" style={{width: '0%'}}></div>
                     </div>
                   </div>
-                ))}
+                </div>
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                  <span className="font-medium text-gray-700">vs Ana G.</span>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-green-600">2-1</span>
+                    <div className="w-16 bg-gray-200 rounded-full h-2">
+                      <div className="bg-green-500 h-2 rounded-full" style={{width: '66%'}}></div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -328,31 +397,190 @@ export default function PlatformPreviewSection({ content, mockData, language }) 
 
       case 'bracket':
         return (
-          <div className="overflow-x-auto">
-            <div className="min-w-[800px] p-4">
-              <div className="flex justify-between items-start">
-                {mockData.bracket.map((round, roundIndex) => (
-                  <div key={roundIndex} className="flex-1">
-                    <h4 className="text-center font-medium text-parque-purple mb-6">{round.round}</h4>
-                    <div className={`space-y-${8 - roundIndex * 2}`}>
-                      {round.matches.map((match, matchIndex) => (
-                        <div key={matchIndex} className="bg-white rounded-xl border-2 border-gray-200 p-4 hover:border-parque-purple/50 transition-all duration-300 transform hover:scale-105">
-                          <div className="space-y-2">
-                            <div className={`flex items-center justify-between p-2 rounded ${match.winner === match.p1 ? 'bg-green-50 font-medium' : ''}`}>
-                              <span className={match.winner === match.p1 ? 'text-green-700' : 'text-gray-600'}>{match.p1}</span>
-                              {match.winner === match.p1 && <span className="text-green-600">✓</span>}
+          <div className="overflow-x-auto pb-8">
+            <div className="min-w-[1000px] p-8">
+              {/* Tournament Title */}
+              <div className="text-center mb-8">
+                <h4 className="text-2xl font-light text-parque-purple mb-2">
+                  {language === 'es' ? 'Cuadro de Playoffs' : 'Playoff Bracket'}
+                </h4>
+                <p className="text-sm text-gray-500">
+                  {language === 'es' ? 'Top 8 jugadores clasificados' : 'Top 8 qualified players'}
+                </p>
+              </div>
+
+              <div className="relative">
+                {/* SVG for connecting lines */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{zIndex: 1}}>
+                  {/* Quarterfinals to Semifinals connections */}
+                  <path d="M 280 100 L 320 100 L 320 175 L 360 175" stroke="#e5e7eb" strokeWidth="2" fill="none" />
+                  <path d="M 280 200 L 320 200 L 320 175 L 360 175" stroke="#e5e7eb" strokeWidth="2" fill="none" />
+                  <path d="M 280 350 L 320 350 L 320 425 L 360 425" stroke="#e5e7eb" strokeWidth="2" fill="none" />
+                  <path d="M 280 450 L 320 450 L 320 425 L 360 425" stroke="#e5e7eb" strokeWidth="2" fill="none" />
+                  
+                  {/* Semifinals to Final connections */}
+                  <path d="M 600 175 L 640 175 L 640 300 L 680 300" stroke="#e5e7eb" strokeWidth="2" fill="none" />
+                  <path d="M 600 425 L 640 425 L 640 300 L 680 300" stroke="#e5e7eb" strokeWidth="2" fill="none" />
+                </svg>
+
+                <div className="flex justify-between items-start relative" style={{zIndex: 2}}>
+                  {/* Quarterfinals */}
+                  <div className="flex-1 max-w-[280px]">
+                    <h5 className="text-center font-medium text-parque-purple mb-6 text-lg">
+                      {language === 'es' ? 'Cuartos de Final' : 'Quarterfinals'}
+                    </h5>
+                    <div className="space-y-6">
+                      {mockData.bracket[0].matches.map((match, matchIndex) => (
+                        <div key={matchIndex} className="bg-white rounded-2xl shadow-lg border-2 border-gray-200 overflow-hidden hover:border-parque-purple/50 transition-all duration-300 transform hover:scale-105">
+                          <div className="bg-gradient-to-r from-parque-purple/10 to-parque-purple/5 px-4 py-2 text-center">
+                            <span className="text-xs font-medium text-parque-purple">
+                              {language === 'es' ? `Partido ${matchIndex + 1}` : `Match ${matchIndex + 1}`}
+                            </span>
+                          </div>
+                          <div className="p-4 space-y-3">
+                            <div className={`flex items-center justify-between p-3 rounded-xl transition-all ${
+                              match.winner === match.p1 ? 'bg-green-50 ring-2 ring-green-200' : 'bg-gray-50'
+                            }`}>
+                              <span className={`font-medium ${match.winner === match.p1 ? 'text-green-700' : 'text-gray-600'}`}>
+                                {match.p1}
+                              </span>
+                              {match.winner === match.p1 && (
+                                <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              )}
                             </div>
-                            <div className="border-t border-gray-100"></div>
-                            <div className={`flex items-center justify-between p-2 rounded ${match.winner === match.p2 ? 'bg-green-50 font-medium' : ''}`}>
-                              <span className={match.winner === match.p2 ? 'text-green-700' : 'text-gray-600'}>{match.p2}</span>
-                              {match.winner === match.p2 && <span className="text-green-600">✓</span>}
+                            <div className="h-px bg-gray-200"></div>
+                            <div className={`flex items-center justify-between p-3 rounded-xl transition-all ${
+                              match.winner === match.p2 ? 'bg-green-50 ring-2 ring-green-200' : 'bg-gray-50'
+                            }`}>
+                              <span className={`font-medium ${match.winner === match.p2 ? 'text-green-700' : 'text-gray-600'}`}>
+                                {match.p2}
+                              </span>
+                              {match.winner === match.p2 && (
+                                <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              )}
                             </div>
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
-                ))}
+
+                  {/* Semifinals */}
+                  <div className="flex-1 max-w-[280px] mx-8">
+                    <h5 className="text-center font-medium text-parque-purple mb-6 text-lg">
+                      {language === 'es' ? 'Semifinales' : 'Semifinals'}
+                    </h5>
+                    <div className="space-y-32 mt-20">
+                      {mockData.bracket[1].matches.map((match, matchIndex) => (
+                        <div key={matchIndex} className="bg-white rounded-2xl shadow-lg border-2 border-gray-200 overflow-hidden hover:border-parque-purple/50 transition-all duration-300 transform hover:scale-105">
+                          <div className="bg-gradient-to-r from-parque-purple/10 to-parque-purple/5 px-4 py-2 text-center">
+                            <span className="text-xs font-medium text-parque-purple">
+                              {language === 'es' ? `Semifinal ${matchIndex + 1}` : `Semifinal ${matchIndex + 1}`}
+                            </span>
+                          </div>
+                          <div className="p-4 space-y-3">
+                            <div className={`flex items-center justify-between p-3 rounded-xl transition-all ${
+                              match.winner === match.p1 ? 'bg-green-50 ring-2 ring-green-200' : 'bg-gray-50'
+                            }`}>
+                              <span className={`font-medium ${match.winner === match.p1 ? 'text-green-700' : 'text-gray-600'}`}>
+                                {match.p1}
+                              </span>
+                              {match.winner === match.p1 && (
+                                <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              )}
+                            </div>
+                            <div className="h-px bg-gray-200"></div>
+                            <div className={`flex items-center justify-between p-3 rounded-xl transition-all ${
+                              match.winner === match.p2 ? 'bg-green-50 ring-2 ring-green-200' : 'bg-gray-50'
+                            }`}>
+                              <span className={`font-medium ${match.winner === match.p2 ? 'text-green-700' : 'text-gray-600'}`}>
+                                {match.p2}
+                              </span>
+                              {match.winner === match.p2 && (
+                                <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Final */}
+                  <div className="flex-1 max-w-[280px]">
+                    <h5 className="text-center font-medium text-parque-purple mb-6 text-lg">
+                      {language === 'es' ? 'Final' : 'Final'}
+                    </h5>
+                    <div className="mt-52">
+                      {mockData.bracket[2].matches.map((match, matchIndex) => (
+                        <div key={matchIndex} className="bg-gradient-to-br from-parque-yellow/20 to-parque-yellow/10 rounded-2xl shadow-xl border-2 border-parque-yellow/30 overflow-hidden hover:border-parque-yellow/50 transition-all duration-300 transform hover:scale-105">
+                          <div className="bg-gradient-to-r from-parque-yellow/30 to-parque-yellow/20 px-4 py-3 text-center">
+                            <span className="text-sm font-medium text-gray-800">
+                              🏆 {language === 'es' ? 'Gran Final' : 'Grand Final'} 🏆
+                            </span>
+                          </div>
+                          <div className="p-6 space-y-4">
+                            <div className={`flex items-center justify-between p-4 rounded-xl transition-all ${
+                              match.winner === match.p1 ? 'bg-green-50 ring-2 ring-green-300' : 'bg-white/70'
+                            }`}>
+                              <span className={`font-semibold text-lg ${match.winner === match.p1 ? 'text-green-700' : 'text-gray-700'}`}>
+                                {match.p1}
+                              </span>
+                              {match.winner === match.p1 && (
+                                <span className="text-2xl">🏆</span>
+                              )}
+                            </div>
+                            <div className="relative">
+                              <div className="h-px bg-gray-300"></div>
+                              <span className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-3 text-gray-400 font-light text-2xl">VS</span>
+                            </div>
+                            <div className={`flex items-center justify-between p-4 rounded-xl transition-all ${
+                              match.winner === match.p2 ? 'bg-green-50 ring-2 ring-green-300' : 'bg-white/70'
+                            }`}>
+                              <span className={`font-semibold text-lg ${match.winner === match.p2 ? 'text-green-700' : 'text-gray-700'}`}>
+                                {match.p2}
+                              </span>
+                              {match.winner === match.p2 && (
+                                <span className="text-2xl">🏆</span>
+                              )}
+                            </div>
+                          </div>
+                          {!match.winner && (
+                            <div className="bg-parque-purple/10 px-4 py-3 text-center">
+                              <span className="text-sm text-parque-purple font-medium">
+                                {language === 'es' ? 'Pendiente' : 'Pending'}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Legend */}
+              <div className="mt-12 flex justify-center space-x-6 text-sm">
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 bg-green-100 rounded"></div>
+                  <span className="text-gray-600">{language === 'es' ? 'Ganador' : 'Winner'}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 bg-gray-100 rounded"></div>
+                  <span className="text-gray-600">{language === 'es' ? 'Eliminado' : 'Eliminated'}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 bg-parque-yellow/20 rounded"></div>
+                  <span className="text-gray-600">{language === 'es' ? 'Final' : 'Final'}</span>
+                </div>
               </div>
             </div>
           </div>
