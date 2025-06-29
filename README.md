@@ -146,6 +146,34 @@ import User from '../lib/models/User.js'
 - **Main Application**: Uses ES modules (`import/export`) with Next.js
 - **Scripts Directory**: Uses CommonJS (`require/module.exports`) for utility scripts
 
+### Import Path Patterns
+
+**Important**: Different API route directories require different relative path depths:
+
+```javascript
+// ✅ 4 levels up - For routes in app/api/admin/[directory]/
+// Example: app/api/admin/users/route.js, app/api/admin/matches/route.js
+import dbConnect from '../../../../lib/db/mongoose'
+
+// ✅ 5 levels up - For routes in app/api/admin/auth/[directory]/
+// Example: app/api/admin/auth/login/route.js, app/api/admin/auth/check/route.js  
+import dbConnect from '../../../../../lib/db/mongoose'
+
+// ✅ 4 levels up - For routes in app/api/[directory]/
+// Example: app/api/auth/login/route.js, app/api/players/register/route.js
+import dbConnect from '../../../../lib/db/mongoose'
+```
+
+**Quick Path Reference**:
+- `app/api/[dir]/` → `../../../../lib/` (4 levels)
+- `app/api/admin/[dir]/` → `../../../../lib/` (4 levels)  
+- `app/api/admin/auth/[dir]/` → `../../../../../lib/` (5 levels)
+
+**Why This Matters**:
+- **Module Resolution**: Wrong paths cause "Module not found" errors
+- **Nested Routing**: Next.js file-based routing creates different nesting levels
+- **Consistency**: Following the pattern prevents import errors
+
 ## 📁 Project Structure
 
 ```

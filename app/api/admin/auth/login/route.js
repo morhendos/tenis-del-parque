@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
-import dbConnect from '../../../../lib/db/mongoose'
-import User from '../../../../lib/models/User'
-import { generateAuthTokens, getCookieOptions } from '../../../../lib/utils/jwt'
+import dbConnect from '../../../../../lib/db/mongoose'
+import User from '../../../../../lib/models/User'
+import { generateAuthTokens, getCookieOptions } from '../../../../../lib/utils/jwt'
 
 export async function POST(request) {
   try {
