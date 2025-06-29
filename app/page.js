@@ -209,7 +209,7 @@ export default function Home() {
         
         {/* Testimonials - White background */}
         <div id="testimonials" className="bg-white scroll-mt-20">
-          <TestimonialsSection content={t.testimonials} />
+          <TestimonialsSection content={t.testimonials} language={language} />
         </div>
         
         <SectionDivider />
