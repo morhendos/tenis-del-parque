@@ -1,60 +1,98 @@
-import { cookies } from 'next/headers'
-import crypto from 'crypto'
-
-// In production, use environment variable
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || 
-  // Default password: "admin123" (CHANGE THIS IN PRODUCTION!)
-  crypto.createHash('sha256').update('admin123').digest('hex')
-
-const SESSION_NAME = 'admin_session'
-const SESSION_SECRET = process.env.SESSION_SECRET || 'your-session-secret-here'
+import { NextResponse } from 'next/server'
+import dbConnect from '../../../../lib/db/mongoose'
+import User from '../../../../lib/models/User'
+import { generateAuthTokens, getCookieOptions } from '../../../../lib/utils/jwt'
 
 export async function POST(request) {
   try {
-    const { password } = await request.json()
+    await dbConnect()
 
-    if (!password) {
-      return Response.json(
-        { success: false, error: 'Password is required' },
+    const { email, password } = await request.json()
+
+    // Validate input
+    if (!email || !password) {
+      return NextResponse.json(
+        { success: false, error: 'Email and password are required' },
         { status: 400 }
       )
     }
 
-    // Hash the provided password
-    const passwordHash = crypto.createHash('sha256').update(password).digest('hex')
+    // Find admin user with password field
+    const user = await User.findByEmailWithPassword(email.toLowerCase())
 
-    // Check if password is correct
-    if (passwordHash !== ADMIN_PASSWORD_HASH) {
-      return Response.json(
-        { success: false, error: 'Invalid password' },
+    if (!user || user.role !== 'admin') {
+      return NextResponse.json(
+        { success: false, error: 'Invalid credentials' },
         { status: 401 }
       )
     }
 
-    // Create session token
-    const sessionToken = crypto
-      .createHash('sha256')
-      .update(`${Date.now()}-${SESSION_SECRET}`)
-      .digest('hex')
+    // Check if account is locked
+    if (user.isLocked) {
+      return NextResponse.json(
+        { success: false, error: 'Account is locked due to too many failed attempts. Please try again later.' },
+        { status: 401 }
+      )
+    }
 
-    // Set secure cookie
-    cookies().set(SESSION_NAME, sessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24, // 24 hours
-      path: '/'
-    })
+    // Check if account is active
+    if (!user.isActive) {
+      return NextResponse.json(
+        { success: false, error: 'Account is inactive. Please contact support.' },
+        { status: 401 }
+      )
+    }
 
-    return Response.json({
+    // Verify password
+    const isValidPassword = await user.comparePassword(password)
+
+    if (!isValidPassword) {
+      // Increment login attempts
+      await user.incLoginAttempts()
+      
+      return NextResponse.json(
+        { success: false, error: 'Invalid credentials' },
+        { status: 401 }
+      )
+    }
+
+    // Reset login attempts on successful login
+    await user.resetLoginAttempts()
+
+    // Update last login
+    user.lastLogin = new Date()
+    await user.save()
+
+    // Generate tokens
+    const { accessToken, refreshToken } = generateAuthTokens(user)
+
+    // Create response
+    const response = NextResponse.json({
       success: true,
-      message: 'Login successful'
+      message: 'Login successful',
+      user: {
+        id: user._id,
+        email: user.email,
+        role: user.role
+      }
     })
+
+    // Set cookies
+    const cookieOptions = getCookieOptions(30 * 24 * 60 * 60) // 30 days
+    
+    response.cookies.set('admin-token', accessToken, {
+      ...cookieOptions,
+      maxAge: 24 * 60 * 60 // 1 day for access token
+    })
+    
+    response.cookies.set('admin-refresh-token', refreshToken, cookieOptions)
+
+    return response
 
   } catch (error) {
-    console.error('Login error:', error)
-    return Response.json(
-      { success: false, error: 'Internal server error' },
+    console.error('Admin login error:', error)
+    return NextResponse.json(
+      { success: false, error: 'Login failed' },
       { status: 500 }
     )
   }
