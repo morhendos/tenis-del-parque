@@ -79,7 +79,7 @@ This branch implements the match management system for the tennis league. Follow
 ## 🆕 User Management System 🔄 IN PROGRESS!
 
 ### Phase 1: Core User Authentication Infrastructure
-#### ✅ Completed
+#### ✅ COMPLETED TODAY!
 - [x] Create `lib/models/User.js` with comprehensive schema
 - [x] Install bcryptjs and jsonwebtoken dependencies
 - [x] Create JWT utilities (`lib/utils/jwt.js`)
@@ -87,28 +87,13 @@ This branch implements the match management system for the tennis league. Follow
 - [x] Create logout endpoint (`/api/auth/logout`)
 - [x] Implement account locking after failed attempts
 - [x] Add refresh token support
+- [x] Convert admin auth from session-based to JWT
+- [x] Update `/api/admin/auth/login` to use User model
+- [x] Create middleware for JWT verification (`lib/utils/authMiddleware.js`)
+- [x] Update all admin auth endpoints to use JWT
+- [x] Update admin login page to use email/password
 
-#### 📅 TODO - Unified Auth System
-- [ ] Convert admin auth from session-based to JWT
-- [ ] Update `/api/admin/auth/login` to use User model
-- [ ] Create middleware for JWT verification
-- [ ] Update all admin API routes to use JWT auth
-- [ ] Remove old session-based authentication
-
-### Phase 2: User Management Admin Interface 📅 TODO
-- [ ] Create `app/admin/users/page.js` - User management page
-- [ ] Create `app/api/admin/users/route.js` - List and create users
-- [ ] Create `app/api/admin/users/[id]/route.js` - User CRUD
-- [ ] Add Users link to admin sidebar navigation
-- [ ] Features for Users page:
-  - [ ] List all users (admins and players)
-  - [ ] Create new admin users
-  - [ ] Send invitations to players
-  - [ ] Enable/disable users
-  - [ ] Reset user passwords
-  - [ ] View user activity logs
-
-### Phase 3: Authentication Features 📅 TODO
+#### 📅 TODO - Authentication Features
 - [ ] Password reset flow
   - [ ] Create `/api/auth/forgot-password` endpoint
   - [ ] Create `/api/auth/reset-password` endpoint
@@ -118,29 +103,36 @@ This branch implements the match management system for the tennis league. Follow
   - [ ] Create `/api/auth/verify-email` endpoint
   - [ ] Email verification page
   - [ ] Resend verification email
-- [ ] Create initial admin user script
-  - [ ] `scripts/createAdminUser.js`
 
-### Phase 4: Player Onboarding System 📅 TODO
-- [ ] Invitation management
-  - [ ] Create `/api/admin/users/invite` endpoint
-  - [ ] Bulk invitation system
-  - [ ] Track invitation status
-  - [ ] Resend invitations
+### Phase 2: User Management Admin Interface
+#### ✅ COMPLETED TODAY!
+- [x] Create `app/admin/users/page.js` - User management page
+- [x] Create `app/api/admin/users/route.js` - List and create users
+- [x] Create `app/api/admin/users/[id]/route.js` - User CRUD
+- [x] Create `app/api/admin/users/invite/route.js` - Send invitations
+- [x] Add Users link to admin sidebar navigation
+- [x] Update Player model to include userId field
+- [x] Create script to create initial admin user (`scripts/createAdminUser.js`)
+- [x] Add create-admin command to package.json
+
+#### 📅 TODO - User Management Features
+- [ ] Email integration for invitations
+- [ ] Invitation tracking and management
+- [ ] Bulk operations UI
+
+### Phase 3: Player Onboarding System 📅 TODO
 - [ ] Player activation flow
   - [ ] Create `/signup/activate` page
   - [ ] Token validation
   - [ ] Password creation for invited players
-  - [ ] Auto-link User to Player record
 - [ ] Email templates
   - [ ] Invitation email
   - [ ] Welcome email
   - [ ] Account activated email
 
-### Phase 5: Player Portal 📅 TODO
+### Phase 4: Player Portal 📅 TODO
 - [ ] Player authentication pages
   - [ ] Create `/login` page for players
-  - [ ] Create `/signup` page (if self-registration allowed)
   - [ ] Create `/forgot-password` page
 - [ ] Player dashboard (`/player/dashboard`)
   - [ ] View upcoming matches
@@ -158,7 +150,7 @@ This branch implements the match management system for the tennis league. Follow
   - [ ] Notification preferences
   - [ ] Language preferences
 
-### Phase 6: Public Pages 📅 TODO
+### Phase 5: Public Pages 📅 TODO
 - [ ] Public match schedule (`/matches`)
 - [ ] League standings (`/standings`)
 - [ ] Player profiles (`/player/[id]`)
@@ -170,17 +162,17 @@ This branch implements the match management system for the tennis league. Follow
 # Switch to feature branch
 git checkout feature/match-management
 
-# Install dependencies (if any new ones)
+# Install dependencies
 npm install
 
 # Run development server
 npm run dev
 
-# Create initial admin user (once script is created)
+# Create initial admin user
 npm run create-admin
 
-# Run tests (when implemented)
-npm test
+# Seed leagues
+npm run seed:leagues
 ```
 
 ## 📁 File Structure
@@ -190,13 +182,15 @@ npm test
 ✅ app/
 ├── ✅ admin/
 │   ├── ✅ layout.js                # Admin layout with sidebar
-│   ├── ✅ page.js                  # Admin login page
+│   ├── ✅ page.js                  # Admin login page (JWT auth)
 │   ├── ✅ dashboard/
 │   │   └── ✅ page.js              # Admin dashboard
 │   ├── ✅ leagues/
 │   │   └── ✅ page.js              # League management
 │   ├── ✅ players/
 │   │   └── ✅ page.js              # Player management
+│   ├── ✅ users/                   # NEW! User management
+│   │   └── ✅ page.js
 │   └── ✅ matches/
 │       ├── ✅ page.js              # Match list
 │       ├── ✅ create/
@@ -212,7 +206,16 @@ npm test
 │   │   └── ✅ logout/
 │   │       └── ✅ route.js         # Player logout
 │   └── ✅ admin/
-│       ├── ✅ auth/                # Admin auth (needs conversion to JWT)
+│       ├── ✅ auth/                # Admin auth (JWT)
+│       │   ├── ✅ login/           # JWT login
+│       │   ├── ✅ logout/          # JWT logout
+│       │   └── ✅ check/           # JWT verification
+│       ├── ✅ users/               # NEW! User management
+│       │   ├── ✅ route.js
+│       │   ├── ✅ [id]/
+│       │   │   └── ✅ route.js
+│       │   └── ✅ invite/
+│       │       └── ✅ route.js
 │       ├── ✅ leagues/
 │       ├── ✅ players/
 │       └── ✅ matches/
@@ -220,58 +223,37 @@ npm test
 ✅ lib/
 ├── ✅ models/
 │   ├── ✅ Match.js
-│   ├── ✅ Player.js
+│   ├── ✅ Player.js (with userId)
 │   └── ✅ User.js
 └── ✅ utils/
     ├── ✅ swissPairing.js
-    └── ✅ jwt.js
+    ├── ✅ jwt.js
+    └── ✅ authMiddleware.js
+
+✅ scripts/
+└── ✅ createAdminUser.js
 ```
 
 ### 📅 TODO Files
 ```
 ❌ app/
-├── ❌ admin/
-│   └── ❌ users/                   # User management
-│       └── ❌ page.js
 ├── ❌ login/                       # Player login page
-│   └── ❌ page.js
 ├── ❌ signup/
 │   └── ❌ activate/                # Player activation
-│       └── ❌ page.js
 ├── ❌ forgot-password/
-│   └── ❌ page.js
 ├── ❌ reset-password/
-│   └── ❌ page.js
 ├── ❌ player/                      # Player portal
 │   ├── ❌ dashboard/
-│   │   └── ❌ page.js
 │   ├── ❌ profile/
-│   │   └── ❌ page.js
 │   └── ❌ [id]/                    # Public player profile
-│       └── ❌ page.js
 ├── ❌ matches/                     # Public matches
-│   └── ❌ page.js
 └── ❌ standings/                   # Public standings
-    └── ❌ page.js
 
 ❌ api/
-├── ❌ admin/
-│   └── ❌ users/                   # User management API
-│       ├── ❌ route.js
-│       ├── ❌ [id]/
-│       │   └── ❌ route.js
-│       └── ❌ invite/
-│           └── ❌ route.js
 └── ❌ auth/                        # Auth endpoints
     ├── ❌ verify-email/
-    │   └── ❌ route.js
     ├── ❌ forgot-password/
-    │   └── ❌ route.js
     └── ❌ reset-password/
-        └── ❌ route.js
-
-❌ scripts/
-└── ❌ createAdminUser.js           # Create initial admin
 ```
 
 ## 🔗 Integration Points
@@ -279,71 +261,75 @@ npm test
 1. **Player Management** ✅ - Complete CRUD operations
 2. **League System** ✅ - Filter by league/season
 3. **Swiss Pairing** ✅ - Automatic round generation
-4. **Admin Auth** 🔄 - Needs conversion to JWT
-5. **Player Auth** 🔄 - Basic login/logout done
-6. **User Management** ❌ - TODO
+4. **Admin Auth** ✅ - JWT authentication
+5. **Player Auth** ✅ - Basic login/logout done
+6. **User Management** ✅ - Admin interface complete
 7. **Email System** ❌ - TODO
 8. **Player Portal** ❌ - TODO
 
-## 📝 Current Focus: User Management System
+## 📝 Current Status Summary
 
-### Immediate Tasks (This Week)
-1. **Unify Authentication** - Convert admin to JWT
-2. **User Management Page** - Admin interface for users
-3. **Password Reset** - Email-based reset flow
-4. **Email Verification** - Verify user emails
-5. **Initial Admin Script** - Create first admin user
+### ✅ Today's Accomplishments
+- Converted admin authentication to JWT
+- Created comprehensive user management system
+- Built admin interface for managing users
+- Added player invitation system
+- Created script for initial admin user
+- Linked Player and User models
+- Set up JWT middleware for route protection
 
-### Next Week
-1. **Player Invitations** - Bulk invite system
-2. **Player Activation** - Onboarding flow
-3. **Player Dashboard** - Basic player portal
+### 🔄 Next Priority: Complete Authentication Features
+1. Password reset functionality
+2. Email verification system
+3. Player activation flow
+4. Email integration
 
-## 🧪 Testing Checklist
+### 📅 Then: Player Portal
+1. Player login/dashboard
+2. Match management for players
+3. Profile management
 
-### ✅ Completed Tests
-- [x] Swiss pairing generates valid matchups
-- [x] ELO updates correctly
-- [x] Match status transitions
-- [x] Player stats update
-- [x] API error handling
-- [x] Admin UI responsive
-- [x] Player login/logout
+## 🧪 Testing Instructions
 
-### 📅 TODO Tests
-- [ ] JWT token validation
-- [ ] Password reset flow
-- [ ] Email verification
-- [ ] User management CRUD
-- [ ] Player invitation flow
-- [ ] Player portal features
+### Create Admin User
+```bash
+npm run create-admin
+# Follow prompts to create admin user
+```
+
+### Test User Management
+1. Login to admin panel with created user
+2. Navigate to Users section
+3. Create new admin users
+4. Send invitations to players
+5. Test user enable/disable
+
+### Test JWT Authentication
+1. Login expires after 1 day
+2. Refresh token lasts 30 days
+3. Account locks after 5 failed attempts
 
 ## 🚢 Deployment Checklist
 
 - [x] Add JWT_SECRET to env vars
 - [ ] Add email configuration (SMTP)
-- [ ] Create initial admin user
+- [x] Create initial admin user
 - [ ] Test invitation flow
 - [ ] Update production auth
 - [ ] Security audit
 
 ## 💡 Important Notes
 
-### Current Auth Status
-- **Admin Auth**: Still using session-based (needs conversion)
-- **Player Auth**: Using JWT (partially implemented)
-- **Need**: Unified JWT system for both
+### Authentication System
+- **Unified JWT**: Both admin and players use JWT
+- **Token Expiry**: Access token 1 day, refresh token 30 days
+- **Account Locking**: 5 failed attempts = 2 hour lock
+- **Password Requirements**: Minimum 8 characters
 
-### User Types
-1. **Admin Users**: Full system access
-2. **Player Users**: Limited to their own data
-3. **Future**: Referee users (for match validation)
+### User Management
+- **Admin Creation**: Only admins can create other admins
+- **Player Invitations**: Bulk invite system for registered players
+- **Auto-linking**: Players automatically linked to users by email
+- **Activation Tokens**: 7-day expiry for invitations
 
-### Security Considerations
-- Password requirements (min 8 chars)
-- Account locking after 5 failed attempts
-- Email verification required
-- JWT tokens expire after 1 day
-- Refresh tokens last 30 days
-
-Great! Now we have a complete plan. Ready to start implementation! 🎾
+Great progress today! The user management system is now functional with JWT authentication throughout. 🎾
