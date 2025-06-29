@@ -7,8 +7,6 @@ root/
 │   │   │   └── page.js
 │   │   ├── layout.js
 │   │   ├── leagues
-│   │   │   ├── [id]
-│   │   │   │   └── page.js
 │   │   │   └── page.js
 │   │   ├── matches
 │   │   │   ├── [id]
@@ -126,7 +124,8 @@ root/
 │   ├── logo-horizontal-01.png
 │   ├── logo-horizontal-02.png
 │   ├── logo-old.png
-│   └── logo.png
+│   ├── logo.png
+│   └── players-2025-06-28.csv
 ├── scripts
 │   ├── seedLeagues.js
 │   └── tree.js
