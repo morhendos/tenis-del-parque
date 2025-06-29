@@ -7,22 +7,29 @@ export async function GET() {
   try {
     await dbConnect()
 
-    // WORKAROUND: Use raw MongoDB queries to handle documents with incorrect version fields
-    // Some documents have '_v' instead of '__v' which causes Mongoose to not recognize them
-    // This is a temporary fix until the database is corrected
+    // DEBUG: Let's see what's happening
+    const allPlayersMongoose = await Player.find().lean()
+    console.log('All players via Mongoose:', allPlayersMongoose.length)
     
+    // Get total player count - both ways
+    const totalPlayersMongoose = await Player.countDocuments()
+    
+    // Use raw MongoDB to ensure we get all documents
     const db = mongoose.connection.db
     const playersCollection = db.collection('players')
+    const totalPlayersRaw = await playersCollection.countDocuments()
     
-    // Get total player count using raw query
-    const totalPlayers = await playersCollection.countDocuments()
+    console.log('Total players - Mongoose:', totalPlayersMongoose)
+    console.log('Total players - Raw:', totalPlayersRaw)
 
-    // Get player count by level using raw queries
+    // Get player count by level using raw queries to avoid any schema issues
     const byLevel = {
       beginner: await playersCollection.countDocuments({ level: 'beginner' }),
       intermediate: await playersCollection.countDocuments({ level: 'intermediate' }),
       advanced: await playersCollection.countDocuments({ level: 'advanced' })
     }
+
+    console.log('By level counts:', byLevel)
 
     // Get player count by league
     const leagues = await League.find({ status: 'active' })
@@ -35,12 +42,14 @@ export async function GET() {
       }
     }
 
-    // Get recent registrations using raw query then convert to Mongoose documents
+    // Get recent registrations using raw query to ensure we get all
     const recentPlayersRaw = await playersCollection
       .find()
       .sort({ registeredAt: -1 })
       .limit(10)
       .toArray()
+
+    console.log('Recent players count:', recentPlayersRaw.length)
 
     // Populate league info manually
     const recentPlayers = []
@@ -74,12 +83,17 @@ export async function GET() {
     return Response.json({
       success: true,
       stats: {
-        totalPlayers,
+        totalPlayers: totalPlayersRaw, // Use raw count
         byLevel,
         byLeague,
         registrationsByDay
       },
-      recentPlayers
+      recentPlayers,
+      debug: {
+        mongooseCount: totalPlayersMongoose,
+        rawCount: totalPlayersRaw,
+        discrepancy: totalPlayersRaw !== totalPlayersMongoose
+      }
     })
 
   } catch (error) {
