@@ -1,19 +1,61 @@
+import { NextResponse } from 'next/server'
 import dbConnect from '../../../../lib/db/mongoose'
 import Player from '../../../../lib/models/Player'
+import { verifyAdminAuth } from '../../../../lib/utils/adminAuth'
 
-export async function GET() {
+export const dynamic = 'force-dynamic'
+
+export async function GET(request) {
   try {
+    // Check authentication
+    const auth = await verifyAdminAuth(request)
+    if (!auth.authenticated) {
+      return NextResponse.json({ error: auth.error }, { status: 401 })
+    }
+
     await dbConnect()
 
-    // Fetch all players with league info
+    // Get query parameters
+    const { searchParams } = new URL(request.url)
+    const league = searchParams.get('league')
+    const status = searchParams.get('status')
+    const level = searchParams.get('level')
+    const hasUser = searchParams.get('hasUser')
+
+    // Build query
+    const query = {}
+    if (league) {
+      query.league = league
+    }
+    if (status) {
+      // Support comma-separated status values
+      const statusValues = status.split(',')
+      query.status = { $in: statusValues }
+    }
+    if (level) {
+      query.level = level
+    }
+    
+    // Filter by user account status
+    if (hasUser === 'true') {
+      query.userId = { $exists: true, $ne: null }
+    } else if (hasUser === 'false') {
+      query.$or = [
+        { userId: { $exists: false } },
+        { userId: null }
+      ]
+    }
+
+    // Fetch players with league info
     const players = await Player
-      .find()
+      .find(query)
       .populate('league', 'name slug')
+      .populate('userId', 'email role isActive emailVerified')
       .sort({ registeredAt: -1 })
       .lean()
 
     // Create response
-    const response = Response.json({
+    const response = NextResponse.json({
       success: true,
       players,
       total: players.length,
@@ -30,7 +72,7 @@ export async function GET() {
 
   } catch (error) {
     console.error('Players fetch error:', error)
-    return Response.json(
+    return NextResponse.json(
       { 
         success: false, 
         error: 'Failed to fetch players' 

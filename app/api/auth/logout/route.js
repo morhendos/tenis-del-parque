@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server'
 
 export async function POST() {
   try {
+    // Create response
     const response = NextResponse.json({
       success: true,
-      message: 'Logged out successfully'
+      message: 'Logout successful'
     })
 
     // Clear auth cookies
-    response.cookies.set('admin-token', '', {
+    response.cookies.set('auth-token', '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -16,7 +17,7 @@ export async function POST() {
       path: '/'
     })
     
-    response.cookies.set('admin-refresh-token', '', {
+    response.cookies.set('refresh-token', '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -29,7 +30,7 @@ export async function POST() {
   } catch (error) {
     console.error('Logout error:', error)
     return NextResponse.json(
-      { success: false, error: 'Logout failed' },
+      { error: 'Logout failed', details: error.message },
       { status: 500 }
     )
   }

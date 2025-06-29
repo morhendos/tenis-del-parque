@@ -1,9 +1,16 @@
 import dbConnect from '../../../../lib/db/mongoose'
 import Player from '../../../../lib/models/Player'
 import League from '../../../../lib/models/League'
+import { verifyAdminAuth } from '../../../../lib/utils/adminAuth'
 
-export async function GET() {
+export async function GET(request) {
   try {
+    // Check authentication
+    const auth = await verifyAdminAuth(request)
+    if (!auth.authenticated) {
+      return Response.json({ error: auth.error }, { status: 401 })
+    }
+
     await dbConnect()
 
     // Get total player count

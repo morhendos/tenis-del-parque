@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
-import dbConnect from '../../../../../lib/db/mongoose'
-import User from '../../../../../lib/models/User'
-import { generateAuthTokens, getCookieOptions } from '../../../../../lib/utils/jwt'
+import dbConnect from '../../../../lib/db/mongoose'
+import User from '../../../../lib/models/User'
+import { generateAuthTokens, getCookieOptions } from '../../../../lib/utils/jwt'
 
 export async function POST(request) {
   try {
@@ -12,17 +12,17 @@ export async function POST(request) {
     // Validate input
     if (!email || !password) {
       return NextResponse.json(
-        { success: false, error: 'Email and password are required' },
+        { error: 'Email and password are required' },
         { status: 400 }
       )
     }
 
-    // Find admin user with password field
+    // Find user with password field
     const user = await User.findByEmailWithPassword(email.toLowerCase())
 
-    if (!user || user.role !== 'admin') {
+    if (!user) {
       return NextResponse.json(
-        { success: false, error: 'Invalid credentials' },
+        { error: 'Invalid email or password' },
         { status: 401 }
       )
     }
@@ -30,7 +30,7 @@ export async function POST(request) {
     // Check if account is locked
     if (user.isLocked) {
       return NextResponse.json(
-        { success: false, error: 'Account is locked due to too many failed attempts. Please try again later.' },
+        { error: 'Account is locked due to too many failed attempts. Please try again later.' },
         { status: 401 }
       )
     }
@@ -38,7 +38,7 @@ export async function POST(request) {
     // Check if account is active
     if (!user.isActive) {
       return NextResponse.json(
-        { success: false, error: 'Account is inactive. Please contact support.' },
+        { error: 'Account is inactive. Please contact support.' },
         { status: 401 }
       )
     }
@@ -51,7 +51,7 @@ export async function POST(request) {
       await user.incLoginAttempts()
       
       return NextResponse.json(
-        { success: false, error: 'Invalid credentials' },
+        { error: 'Invalid email or password' },
         { status: 401 }
       )
     }
@@ -66,6 +66,13 @@ export async function POST(request) {
     // Generate tokens
     const { accessToken, refreshToken } = generateAuthTokens(user)
 
+    // Populate player data if linked
+    let playerData = null
+    if (user.playerId) {
+      await user.populate('playerId')
+      playerData = user.playerId
+    }
+
     // Create response
     const response = NextResponse.json({
       success: true,
@@ -73,26 +80,39 @@ export async function POST(request) {
       user: {
         id: user._id,
         email: user.email,
-        role: user.role
+        role: user.role,
+        emailVerified: user.emailVerified,
+        preferences: user.preferences,
+        player: playerData ? {
+          id: playerData._id,
+          name: playerData.name,
+          league: playerData.league,
+          level: playerData.level,
+          stats: playerData.stats
+        } : null
+      },
+      tokens: {
+        accessToken,
+        refreshToken
       }
     })
 
     // Set cookies
     const cookieOptions = getCookieOptions(30 * 24 * 60 * 60) // 30 days
     
-    response.cookies.set('admin-token', accessToken, {
+    response.cookies.set('auth-token', accessToken, {
       ...cookieOptions,
       maxAge: 24 * 60 * 60 // 1 day for access token
     })
     
-    response.cookies.set('admin-refresh-token', refreshToken, cookieOptions)
+    response.cookies.set('refresh-token', refreshToken, cookieOptions)
 
     return response
 
   } catch (error) {
-    console.error('Admin login error:', error)
+    console.error('Login error:', error)
     return NextResponse.json(
-      { success: false, error: 'Login failed' },
+      { error: 'Login failed', details: error.message },
       { status: 500 }
     )
   }

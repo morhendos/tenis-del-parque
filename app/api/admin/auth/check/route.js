@@ -1,26 +1,56 @@
-import { cookies } from 'next/headers'
+import { NextResponse } from 'next/server'
+import { verifyToken, extractTokenFromHeader } from '../../../../../lib/utils/jwt'
 
-const SESSION_NAME = 'admin_session'
-
-export async function GET() {
+export async function GET(request) {
   try {
-    const cookieStore = cookies()
-    const sessionToken = cookieStore.get(SESSION_NAME)
+    // Check for token in cookies first
+    const cookieToken = request.cookies.get('admin-token')?.value
+    
+    // Then check Authorization header
+    const authHeader = request.headers.get('authorization')
+    const headerToken = extractTokenFromHeader(authHeader)
+    
+    const token = cookieToken || headerToken
 
-    // For MVP, simple session check
-    // In production, validate token against database or cache
-    const authenticated = !!sessionToken?.value
+    if (!token) {
+      return NextResponse.json(
+        { authenticated: false, error: 'No token provided' },
+        { status: 401 }
+      )
+    }
 
-    return Response.json({
-      authenticated,
-      session: authenticated ? { token: sessionToken.value } : null
+    // Verify token
+    const decoded = verifyToken(token)
+    
+    if (!decoded) {
+      return NextResponse.json(
+        { authenticated: false, error: 'Invalid or expired token' },
+        { status: 401 }
+      )
+    }
+
+    // Check if user is admin
+    if (decoded.role !== 'admin') {
+      return NextResponse.json(
+        { authenticated: false, error: 'Insufficient permissions' },
+        { status: 403 }
+      )
+    }
+
+    return NextResponse.json({
+      authenticated: true,
+      user: {
+        id: decoded.userId,
+        email: decoded.email,
+        role: decoded.role
+      }
     })
 
   } catch (error) {
     console.error('Auth check error:', error)
-    return Response.json(
-      { authenticated: false, error: 'Internal server error' },
-      { status: 500 }
+    return NextResponse.json(
+      { authenticated: false, error: 'Authentication failed' },
+      { status: 401 }
     )
   }
 }
