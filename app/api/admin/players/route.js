@@ -13,6 +13,7 @@ export async function GET(request) {
     const league = searchParams.get('league')
     const status = searchParams.get('status')
     const level = searchParams.get('level')
+    const hasUser = searchParams.get('hasUser')
 
     // Build query
     const query = {}
@@ -27,11 +28,22 @@ export async function GET(request) {
     if (level) {
       query.level = level
     }
+    
+    // Filter by user account status
+    if (hasUser === 'true') {
+      query.userId = { $exists: true, $ne: null }
+    } else if (hasUser === 'false') {
+      query.$or = [
+        { userId: { $exists: false } },
+        { userId: null }
+      ]
+    }
 
     // Fetch players with league info
     const players = await Player
       .find(query)
       .populate('league', 'name slug')
+      .populate('userId', 'email role isActive emailVerified')
       .sort({ registeredAt: -1 })
       .lean()
 
