@@ -12,11 +12,21 @@ export async function GET() {
       .sort({ registeredAt: -1 })
       .lean()
 
-    return Response.json({
+    // Create response
+    const response = Response.json({
       success: true,
       players,
-      total: players.length
+      total: players.length,
+      timestamp: new Date().toISOString() // Add timestamp to verify freshness
     })
+
+    // Set headers to prevent ANY caching
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+    response.headers.set('Pragma', 'no-cache')
+    response.headers.set('Expires', '0')
+    response.headers.set('Surrogate-Control', 'no-store')
+    
+    return response
 
   } catch (error) {
     console.error('Players fetch error:', error)
