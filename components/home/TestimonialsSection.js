@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
 
-export default function TestimonialsSection({ content }) {
+export default function TestimonialsSection({ content, language }) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isAutoPlaying, setIsAutoPlaying] = useState(true)
   const [touchStart, setTouchStart] = useState(0)
@@ -81,19 +82,19 @@ export default function TestimonialsSection({ content }) {
         <div className="block md:hidden">
           <div 
             ref={containerRef}
-            className="relative"
+            className="relative px-4"
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
-            <div className="overflow-hidden">
+            <div className="overflow-hidden rounded-3xl">
               <div 
                 className="flex transition-transform duration-500 ease-out"
                 style={{ transform: `translateX(-${currentIndex * 100}%)` }}
               >
                 {content.items.map((testimonial, index) => (
-                  <div key={index} className="w-full flex-shrink-0 px-4">
-                    <div className="bg-white rounded-3xl shadow-lg p-6 relative">
+                  <div key={index} className="w-full flex-shrink-0 px-2">
+                    <div className="bg-white rounded-3xl shadow-lg p-6 relative mx-2">
                       {/* Quote Icon */}
                       <div className="absolute -top-4 -left-2 w-12 h-12 bg-parque-purple/10 rounded-full flex items-center justify-center">
                         <svg className="w-6 h-6 text-parque-purple/60" fill="currentColor" viewBox="0 0 24 24">
@@ -209,10 +210,14 @@ export default function TestimonialsSection({ content }) {
 
         {/* CTA Button */}
         <div className="text-center mt-12 md:mt-16">
-          <p className="text-gray-600 mb-6">Join our growing community of tennis enthusiasts</p>
-          <button className="bg-gradient-to-r from-parque-purple to-parque-purple/80 text-white px-8 py-4 rounded-2xl font-medium hover:shadow-xl transform hover:scale-105 transition-all duration-300">
-            Reserve Your Spot
-          </button>
+          <p className="text-gray-600 mb-6">
+            {language === 'es' ? 'Únete a nuestra creciente comunidad de entusiastas del tenis' : 'Join our growing community of tennis enthusiasts'}
+          </p>
+          <Link href="/signup/sotogrande">
+            <button className="bg-gradient-to-r from-parque-purple to-parque-purple/80 text-white px-8 py-4 rounded-2xl font-medium hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+              {language === 'es' ? 'Reserva tu Plaza' : 'Reserve Your Spot'}
+            </button>
+          </Link>
         </div>
       </div>
     </section>
