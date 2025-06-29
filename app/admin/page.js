@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function AdminLogin() {
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -38,7 +39,7 @@ export default function AdminLogin() {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ password })
+        body: JSON.stringify({ email, password })
       })
 
       const data = await res.json()
@@ -85,6 +86,21 @@ export default function AdminLogin() {
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-parque-purple focus:border-transparent"
+                placeholder="admin@tenisdelparque.com"
+              />
+            </div>
+
+            <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
               </label>
@@ -95,7 +111,7 @@ export default function AdminLogin() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-parque-purple focus:border-transparent"
-                placeholder="Enter admin password"
+                placeholder="Enter your password"
               />
             </div>
 
@@ -115,8 +131,15 @@ export default function AdminLogin() {
           </form>
 
           {/* Footer */}
-          <div className="mt-6 text-center text-xs text-gray-500">
-            Protected area. Authorized personnel only.
+          <div className="mt-6 text-center">
+            <p className="text-xs text-gray-500">
+              Protected area. Authorized personnel only.
+            </p>
+            {process.env.NODE_ENV === 'development' && (
+              <p className="mt-2 text-xs text-gray-400">
+                Dev tip: Run <code className="bg-gray-100 px-1 py-0.5 rounded">npm run create-admin</code> to create an admin user
+              </p>
+            )}
           </div>
         </div>
       </div>
