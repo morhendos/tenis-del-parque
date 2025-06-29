@@ -13,6 +13,7 @@ export default function AdminLayout({ children }) {
     { name: 'Leagues', href: '/admin/leagues', icon: '🏆' },
     { name: 'Players', href: '/admin/players', icon: '👥' },
     { name: 'Matches', href: '/admin/matches', icon: '🎾' },
+    { name: 'Users', href: '/admin/users', icon: '🔐' },
   ]
 
   const isActive = (href) => {
@@ -96,7 +97,8 @@ export default function AdminLayout({ children }) {
           
           <div className="flex-1 flex items-center justify-between ml-4 lg:ml-0">
             <h1 className="text-xl font-semibold text-gray-900">
-              {pathname.includes('leagues') ? 'League Management' :
+              {pathname.includes('users') ? 'User Management' :
+               pathname.includes('leagues') ? 'League Management' :
                pathname.includes('players') ? 'Player Management' :
                pathname.includes('matches') ? 'Match Management' :
                'Dashboard'}
