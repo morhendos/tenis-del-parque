@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
-import connectDB from '@/lib/db/mongodb'
-import Match from '@/lib/models/Match'
-import Player from '@/lib/models/Player'
+import connectDB from '../../../../../lib/db/mongoose'
+import Match from '../../../../../lib/models/Match'
+import Player from '../../../../../lib/models/Player'
 import { cookies } from 'next/headers'
 
 export const dynamic = 'force-dynamic'
