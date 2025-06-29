@@ -1,18 +1,21 @@
 # Tenis del Parque - Sotogrande 🎾
 
-A modern, multilingual tennis league platform built with Next.js and MongoDB, featuring ELO rankings, Swiss tournament system, multi-league support, and comprehensive player management. Starting July 2025!
+A modern, multilingual tennis league platform built with Next.js and MongoDB, featuring ELO rankings, Swiss tournament system, multi-league support, match management, and comprehensive admin panel. Starting July 2025!
 
 ## 🚀 Overview
 
-Tenis del Parque is a sophisticated web application that combines cutting-edge web technologies with professional tennis league management. The platform supports multiple leagues, player registration with database persistence, and provides comprehensive information about league rules, ELO & Swiss systems.
+Tenis del Parque is a sophisticated web application that combines cutting-edge web technologies with professional tennis league management. The platform supports multiple leagues, player registration with database persistence, match scheduling and results tracking, and provides comprehensive information about league rules, ELO & Swiss systems.
 
 ### ✨ Key Features
 
 - **🏆 Multi-League Support**: Scalable architecture supporting multiple tennis leagues
+- **🎾 Match Management**: Complete match scheduling, result tracking, and ELO calculations
+- **👨‍💼 Admin Panel**: Comprehensive admin interface for league operations
 - **💾 MongoDB Integration**: Complete player registration and data persistence
 - **🌍 Multilingual Support**: Full Spanish/English localization with automatic browser detection
 - **📱 Responsive Design**: Beautiful, modern UI that works on all devices
 - **🎯 League Management**: Swiss tournament system with ELO rankings
+- **📊 Player Statistics**: Track wins, losses, ELO ratings, and match history
 - **📅 Flexible Registration**: No deadlines - register players anytime
 - **🚀 Starting July 2025**: Liga de Sotogrande launches when enough players registered
 
@@ -24,6 +27,7 @@ Tenis del Parque is a sophisticated web application that combines cutting-edge w
 - **Languages**: JavaScript/JSX with modern React patterns
 - **State Management**: React Hooks (useState, useEffect, custom hooks)
 - **Architecture**: Component-based with clear separation of concerns
+- **Authentication**: Session-based admin authentication
 
 ## 📁 Project Structure
 
@@ -32,7 +36,17 @@ tenis-del-parque/
 ├── README.md
 ├── .env.local.example           # Environment variables example
 ├── app/                         # Next.js App Router pages
+│   ├── admin/                   # Admin panel
+│   │   ├── leagues/             # League management
+│   │   ├── matches/             # Match management
+│   │   ├── players/             # Player management
+│   │   └── dashboard/           # Admin dashboard
 │   ├── api/                     # API routes
+│   │   ├── admin/               # Admin API endpoints
+│   │   │   ├── auth/            # Authentication
+│   │   │   ├── leagues/         # League operations
+│   │   │   ├── matches/         # Match CRUD operations
+│   │   │   └── players/         # Player management
 │   │   ├── leagues/
 │   │   │   └── [league]/
 │   │   │       └── route.js     # League info endpoint
@@ -52,6 +66,7 @@ tenis-del-parque/
 │   ├── layout.js                # Root layout
 │   └── page.js                  # Home page
 ├── components/                  # Reusable component library
+│   ├── admin/                   # Admin panel components
 │   ├── common/                  # Shared components
 │   ├── elo/                     # ELO page components
 │   ├── home/                    # Home page components
@@ -62,13 +77,16 @@ tenis-del-parque/
 │   │   ├── mongodb.js           # MongoDB connection
 │   │   └── mongoose.js          # Mongoose connection handler
 │   ├── models/                  # Database models
-│   │   ├── Player.js            # Player model
-│   │   └── League.js            # League model
+│   │   ├── Player.js            # Player model with match history
+│   │   ├── League.js            # League model
+│   │   └── Match.js             # Match model with ELO tracking
 │   ├── hooks/                   # Custom React hooks
 │   └── utils/                   # Utility functions
 ├── scripts/                     # Utility scripts
 │   ├── seedLeagues.js           # Database seeder for leagues
 │   └── tree.js                  # Project structure generator
+├── docs/                        # Documentation
+│   └── MATCH_MANAGEMENT_GUIDE.md # Match management implementation guide
 └── public/                      # Static assets
 ```
 
@@ -96,9 +114,11 @@ tenis-del-parque/
    ```bash
    cp .env.local.example .env.local
    ```
-   Edit `.env.local` and add your MongoDB connection string:
+   Edit `.env.local` and add your MongoDB connection string and admin credentials:
    ```
    MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/tenis-del-parque
+   ADMIN_PASSWORD_HASH=your_password_hash
+   SESSION_SECRET=your_session_secret
    ```
 
 4. **Seed the database**
@@ -115,6 +135,7 @@ tenis-del-parque/
 6. **Open your browser**
    - Homepage: [http://localhost:3000](http://localhost:3000)
    - Signup page: [http://localhost:3000/signup/sotogrande](http://localhost:3000/signup/sotogrande)
+   - Admin panel: [http://localhost:3000/admin](http://localhost:3000/admin)
 
 ### Available Scripts
 
@@ -139,10 +160,26 @@ npm run seed:leagues # Seed database with initial leagues
   season: String,            // e.g., 'summer-2025'
   status: String,            // 'pending', 'confirmed', 'active', 'inactive'
   registeredAt: Date,        // Registration timestamp
-  stats: {                   // Future league stats
+  stats: {                   // League statistics
     matchesPlayed: Number,
     matchesWon: Number,
-    eloRating: Number
+    eloRating: Number,
+    highestElo: Number,
+    lowestElo: Number,
+    setsWon: Number,
+    setsLost: Number
+  },
+  matchHistory: [{           // Match history tracking
+    match: ObjectId,
+    opponent: ObjectId,
+    result: 'won' | 'lost',
+    eloChange: Number,
+    date: Date
+  }],
+  wildCards: {               // Wild card management
+    total: Number,
+    used: Number,
+    history: Array
   }
 }
 ```
@@ -175,25 +212,73 @@ npm run seed:leagues # Seed database with initial leagues
 }
 ```
 
+### Match Model
+```javascript
+{
+  league: ObjectId,          // Reference to League
+  season: String,            // Season identifier
+  round: Number,             // Round number
+  players: {
+    player1: ObjectId,
+    player2: ObjectId
+  },
+  schedule: {
+    confirmedDate: Date,
+    court: String
+  },
+  result: {
+    winner: ObjectId,
+    score: {
+      sets: Array,           // Set scores
+      walkover: Boolean,
+      retiredPlayer: ObjectId
+    }
+  },
+  eloChanges: {              // ELO tracking
+    player1: {
+      before: Number,
+      after: Number,
+      change: Number
+    },
+    player2: {
+      before: Number,
+      after: Number,
+      change: Number
+    }
+  },
+  status: String             // 'scheduled', 'completed', 'cancelled'
+}
+```
+
 ## 🎯 Features
 
 ### Core Features
 - **🏆 Multi-League Architecture**: Support for multiple tennis leagues across different locations
 - **📊 Player Registration**: Complete signup flow with MongoDB persistence
+- **🎾 Match Management**: Schedule matches, track results, calculate ELO ratings
+- **👨‍💼 Admin Panel**: Protected admin interface for complete league control
 - **🌐 Dynamic League Pages**: Each league has its own signup page (`/signup/[league-slug]`)
 - **📅 Flexible Timeline**: League starts July 2025, no registration deadline
-- **💾 Data Persistence**: All player data saved in MongoDB
+- **💾 Data Persistence**: All player and match data saved in MongoDB
+
+### Admin Panel Features
+- **League Management**: View and manage multiple leagues
+- **Player Management**: Update player status, view statistics, export data
+- **Match Scheduling**: Create matches between players
+- **Result Entry**: Enter match scores and automatic ELO calculation
+- **Dashboard**: Overview of league statistics and recent activity
 
 ### Technical Features
 - **🌍 Multilingual**: Spanish/English with automatic browser detection
 - **📱 Responsive Design**: Mobile-first approach
-- **⚡ API Routes**: RESTful API for player registration and league data
+- **⚡ API Routes**: RESTful API for all operations
 - **🔒 Data Validation**: Server-side validation for all inputs
 - **🎨 Design System**: Consistent branding with Tailwind CSS
+- **🔐 Authentication**: Secure admin panel with session management
 
 ### League Features
 - **🎯 Swiss Tournament System**: Fair pairing system
-- **📈 ELO Rankings**: Dynamic skill-based rating system
+- **📈 ELO Rankings**: Dynamic skill-based rating system (K-factor: 32)
 - **🏅 Three Levels**: Beginner, Intermediate, and Advanced divisions
 - **⚡ Wild Cards**: Flexible scheduling system
 - **💰 Free First Season**: No cost for inaugural season
@@ -229,7 +314,9 @@ The platform is designed to support multiple tennis leagues:
 
 ## 🚀 API Endpoints
 
-### Player Registration
+### Public API
+
+#### Player Registration
 ```
 POST /api/players/register
 Body: {
@@ -242,11 +329,15 @@ Body: {
 }
 ```
 
-### League Information
+#### League Information
 ```
 GET /api/leagues/[slug]
 Returns: League details and registration status
 ```
+
+### Admin API (Protected)
+
+See the [Admin Panel Documentation](./app/admin/README.md) for complete API reference.
 
 ## 🔧 Environment Variables
 
@@ -258,6 +349,14 @@ MONGODB_URI=your_mongodb_connection_string
 
 # Optional: Specific database name
 MONGODB_DB=tenis-del-parque
+
+# Admin Panel
+ADMIN_PASSWORD_HASH=your_password_hash
+SESSION_SECRET=your_session_secret
+
+# Analytics (optional)
+NEXT_PUBLIC_GA_ID=your_google_analytics_id
+NEXT_PUBLIC_CLARITY_ID=your_microsoft_clarity_id
 ```
 
 ## 📅 Timeline
@@ -277,6 +376,8 @@ MONGODB_DB=tenis-del-parque
 
 ### Environment Variables for Production
 - `MONGODB_URI`: Your production MongoDB connection string
+- `ADMIN_PASSWORD_HASH`: Secure admin password hash
+- `SESSION_SECRET`: Strong session secret
 
 ## 🤝 Contributing
 
