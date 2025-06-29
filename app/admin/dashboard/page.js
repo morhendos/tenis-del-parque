@@ -16,7 +16,9 @@ export default function AdminDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      const response = await fetch('/api/admin/dashboard')
+      const response = await fetch('/api/admin/dashboard', {
+        cache: 'no-store' // Prevent client-side caching
+      })
       
       if (!response.ok) {
         if (response.status === 401) {
