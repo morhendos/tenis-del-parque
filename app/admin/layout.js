@@ -6,7 +6,7 @@ import Link from 'next/link'
 
 export default function AdminLayout({ children }) {
   const pathname = usePathname()
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   const navigation = [
     { name: 'Dashboard', href: '/admin/dashboard', icon: '📊' },
@@ -26,7 +26,7 @@ export default function AdminLayout({ children }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
       <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -46,7 +46,7 @@ export default function AdminLayout({ children }) {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-2">
+          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
             {navigation.map((item) => (
               <Link
                 key={item.name}
@@ -82,7 +82,7 @@ export default function AdminLayout({ children }) {
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-64">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
         <div className="sticky top-0 z-40 flex items-center h-16 px-6 bg-white shadow-sm">
           <button
@@ -107,8 +107,10 @@ export default function AdminLayout({ children }) {
         </div>
 
         {/* Page content */}
-        <main className="p-6">
-          {children}
+        <main className="flex-1 overflow-x-hidden overflow-y-auto">
+          <div className="container mx-auto px-6 py-6 max-w-7xl">
+            {children}
+          </div>
         </main>
       </div>
 
