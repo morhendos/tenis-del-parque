@@ -5,6 +5,7 @@ root/
 │   │   ├── README.md
 │   │   ├── dashboard
 │   │   │   └── page.js
+│   │   ├── layout.js
 │   │   ├── leagues
 │   │   │   ├── [id]
 │   │   │   │   └── page.js
@@ -91,7 +92,8 @@ root/
 │       ├── TennisDividers.js
 │       └── TennisIcons.js
 ├── docs
-│   └── MATCH_MANAGEMENT_GUIDE.md
+│   ├── MATCH_MANAGEMENT_GUIDE.md
+│   └── PR_MATCH_MANAGEMENT.md
 ├── lib
 │   ├── analytics
 │   │   └── analytics.js
