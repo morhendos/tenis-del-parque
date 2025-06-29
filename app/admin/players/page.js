@@ -23,7 +23,9 @@ export default function AdminPlayers() {
 
   const fetchPlayers = async () => {
     try {
-      const response = await fetch('/api/admin/players')
+      const response = await fetch('/api/admin/players', {
+        cache: 'no-store' // Prevent client-side caching
+      })
       
       if (!response.ok) {
         if (response.status === 401) {
