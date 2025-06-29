@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 
-export default function AdminPlayersPage() {
+function AdminPlayersContent() {
   const [players, setPlayers] = useState([])
   const [filteredPlayers, setFilteredPlayers] = useState([])
   const [loading, setLoading] = useState(true)
@@ -350,5 +350,21 @@ export default function AdminPlayersPage() {
         </div>
       )}
     </div>
+  )
+}
+
+function LoadingFallback() {
+  return (
+    <div className="flex items-center justify-center h-64">
+      <div className="text-xl text-gray-600">Loading players...</div>
+    </div>
+  )
+}
+
+export default function AdminPlayersPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <AdminPlayersContent />
+    </Suspense>
   )
 }

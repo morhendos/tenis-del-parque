@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function AdminMatchesPage() {
+function AdminMatchesContent() {
   const [matches, setMatches] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -280,5 +280,21 @@ export default function AdminMatchesPage() {
         </div>
       )}
     </div>
+  )
+}
+
+function LoadingFallback() {
+  return (
+    <div className="flex items-center justify-center h-64">
+      <div className="text-xl text-gray-600">Loading matches...</div>
+    </div>
+  )
+}
+
+export default function AdminMatchesPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <AdminMatchesContent />
+    </Suspense>
   )
 }

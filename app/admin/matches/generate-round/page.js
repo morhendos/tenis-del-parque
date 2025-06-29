@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function GenerateRoundPage() {
+function GenerateRoundContent() {
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState('')
@@ -291,5 +291,21 @@ export default function GenerateRoundPage() {
         </div>
       )}
     </div>
+  )
+}
+
+function LoadingFallback() {
+  return (
+    <div className="flex items-center justify-center h-64">
+      <div className="text-xl text-gray-600">Loading round data...</div>
+    </div>
+  )
+}
+
+export default function GenerateRoundPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <GenerateRoundContent />
+    </Suspense>
   )
 }
