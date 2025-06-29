@@ -63,6 +63,12 @@ export default function AdminDashboard() {
             <h1 className="text-2xl font-bold text-parque-purple">Admin Dashboard</h1>
             <div className="flex items-center space-x-4">
               <Link
+                href="/admin/leagues"
+                className="text-parque-purple hover:text-opacity-80 transition-colors"
+              >
+                Leagues
+              </Link>
+              <Link
                 href="/admin/players"
                 className="text-parque-purple hover:text-opacity-80 transition-colors"
               >
@@ -81,6 +87,33 @@ export default function AdminDashboard() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <Link
+            href="/admin/leagues"
+            className="bg-parque-purple text-white rounded-lg shadow p-6 hover:bg-opacity-90 transition-colors"
+          >
+            <h3 className="text-lg font-semibold mb-2">Manage Leagues</h3>
+            <p className="text-sm opacity-90">View and manage all tennis leagues</p>
+          </Link>
+          
+          <Link
+            href="/admin/players"
+            className="bg-parque-green text-white rounded-lg shadow p-6 hover:bg-opacity-90 transition-colors"
+          >
+            <h3 className="text-lg font-semibold mb-2">Manage Players</h3>
+            <p className="text-sm opacity-90">View all players across leagues</p>
+          </Link>
+          
+          <Link
+            href="/admin/matches"
+            className="bg-parque-yellow text-parque-purple rounded-lg shadow p-6 hover:bg-opacity-90 transition-colors"
+          >
+            <h3 className="text-lg font-semibold mb-2">Manage Matches</h3>
+            <p className="text-sm">Schedule and track match results</p>
+          </Link>
+        </div>
+
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
