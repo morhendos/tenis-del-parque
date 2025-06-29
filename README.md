@@ -29,6 +29,64 @@ Tenis del Parque is a sophisticated web application that combines cutting-edge w
 - **Architecture**: Component-based with clear separation of concerns
 - **Authentication**: Session-based admin authentication
 
+## 🔌 Database Connection Pattern
+
+**Important**: The codebase uses a standardized database connection pattern that all developers must follow:
+
+### Database Connection Function
+All API routes should use the **`dbConnect`** function from `lib/db/mongoose.js`:
+
+```javascript
+// ✅ CORRECT - Import and use dbConnect
+import dbConnect from '../../../lib/db/mongoose'
+
+export async function GET() {
+  try {
+    await dbConnect()  // Always call this before database operations
+    
+    // Your database operations here...
+    const data = await SomeModel.find()
+    
+    return NextResponse.json({ data })
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed' }, { status: 500 })
+  }
+}
+```
+
+### ⚠️ Common Mistakes to Avoid
+
+```javascript
+// ❌ WRONG - Don't import from mongodb.js
+import { connectDB } from '../../../lib/db/mongodb'
+
+// ❌ WRONG - Don't use aliases for the function name
+import connectDB from '../../../lib/db/mongoose'
+
+// ❌ WRONG - Don't call a function that doesn't exist
+await connectDB()  // This will cause import errors
+```
+
+### Database Files Overview
+- **`lib/db/mongoose.js`**: Main database connection using Mongoose ODM
+  - Exports: `dbConnect` (default export)
+  - Use this for all API routes
+- **`lib/db/mongodb.js`**: Legacy MongoDB client connection
+  - Exports: `clientPromise` (default export)
+  - Not used in API routes, kept for reference
+
+### Why This Pattern?
+- **Consistency**: All developers use the same connection method
+- **Connection Pooling**: Mongoose handles connection reuse efficiently
+- **Error Handling**: Built-in reconnection and error handling
+- **Development**: Prevents connection issues during hot reloads
+
+### Adding New API Routes
+When creating new API routes, always:
+1. Import `dbConnect` from `lib/db/mongoose`
+2. Call `await dbConnect()` before any database operations
+3. Use the exact function name `dbConnect` (no aliases)
+
 ## 📁 Project Structure
 
 ```

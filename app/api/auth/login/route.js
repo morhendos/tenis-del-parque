@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
-import { connectDB } from '../../../../lib/db/mongodb'
+import dbConnect from '../../../../lib/db/mongoose'
 import User from '../../../../lib/models/User'
 import { generateAuthTokens, getCookieOptions } from '../../../../lib/utils/jwt'
 
 export async function POST(request) {
   try {
-    await connectDB()
+    await dbConnect()
 
     const { email, password } = await request.json()
 

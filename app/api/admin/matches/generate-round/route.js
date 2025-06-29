@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
-import { connectDB } from '../../../../../lib/db/mongodb'
+import dbConnect from '../../../../../lib/db/mongoose'
 import Match from '../../../../../lib/models/Match'
 import Player from '../../../../../lib/models/Player'
 import { generateSwissPairings, validatePairings, getPairingsSummary } from '../../../../../lib/utils/swissPairing'
 
 export async function POST(request) {
   try {
-    await connectDB()
+    await dbConnect()
 
     const { leagueId, season, round, generateMatches = false } = await request.json()
 
@@ -159,7 +159,7 @@ export async function POST(request) {
 // GET endpoint to check what rounds have been generated
 export async function GET(request) {
   try {
-    await connectDB()
+    await dbConnect()
 
     const { searchParams } = new URL(request.url)
     const leagueId = searchParams.get('league')

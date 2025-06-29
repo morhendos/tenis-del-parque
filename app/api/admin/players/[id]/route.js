@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import connectDB from '../../../../../lib/db/mongoose'
+import dbConnect from '../../../../../lib/db/mongoose'
 import Player from '../../../../../lib/models/Player'
 import Match from '../../../../../lib/models/Match'
 import { cookies } from 'next/headers'
@@ -20,7 +20,7 @@ export async function GET(request, { params }) {
     }
 
     const { id } = params
-    await connectDB()
+    await dbConnect()
 
     const player = await Player.findById(id)
       .populate('league', 'name slug')
@@ -51,7 +51,7 @@ export async function PATCH(request, { params }) {
     const { id } = params
     const body = await request.json()
     
-    await connectDB()
+    await dbConnect()
 
     const player = await Player.findById(id)
     if (!player) {
@@ -90,7 +90,7 @@ export async function DELETE(request, { params }) {
     }
 
     const { id } = params
-    await connectDB()
+    await dbConnect()
 
     // Check if player has any matches
     const matchCount = await Match.countDocuments({

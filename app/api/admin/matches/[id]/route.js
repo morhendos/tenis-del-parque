@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import connectDB from '../../../../../lib/db/mongoose'
+import dbConnect from '../../../../../lib/db/mongoose'
 import Match from '../../../../../lib/models/Match'
 import Player from '../../../../../lib/models/Player'
 import { cookies } from 'next/headers'
@@ -23,7 +23,7 @@ export async function GET(request, { params }) {
     const { id } = params
 
     // Connect to database
-    await connectDB()
+    await dbConnect()
 
     // Fetch match with populated data
     const match = await Match.findById(id)
@@ -59,7 +59,7 @@ export async function PATCH(request, { params }) {
     const body = await request.json()
 
     // Connect to database
-    await connectDB()
+    await dbConnect()
 
     // Find the match
     const match = await Match.findById(id)
@@ -204,7 +204,7 @@ export async function DELETE(request, { params }) {
     const { id } = params
 
     // Connect to database
-    await connectDB()
+    await dbConnect()
 
     // Find the match
     const match = await Match.findById(id)

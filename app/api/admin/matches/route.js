@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import connectDB from '../../../../lib/db/mongoose'
+import dbConnect from '../../../../lib/db/mongoose'
 import Match from '../../../../lib/models/Match'
 import Player from '../../../../lib/models/Player'
 import { cookies } from 'next/headers'
@@ -29,7 +29,7 @@ export async function GET(request) {
     const player = searchParams.get('player')
 
     // Connect to database
-    await connectDB()
+    await dbConnect()
 
     // Build query
     const query = {}
@@ -100,7 +100,7 @@ export async function POST(request) {
     }
 
     // Connect to database
-    await connectDB()
+    await dbConnect()
 
     // Verify both players exist and belong to the league
     const [player1, player2] = await Promise.all([

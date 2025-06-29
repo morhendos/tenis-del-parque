@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import connectDB from '../../../../lib/db/mongoose'
+import dbConnect from '../../../../lib/db/mongoose'
 import League from '../../../../lib/models/League'
 import Player from '../../../../lib/models/Player'
 import { cookies } from 'next/headers'
@@ -20,7 +20,7 @@ export async function GET() {
     }
 
     // Connect to database
-    await connectDB()
+    await dbConnect()
 
     // Fetch all leagues with basic info
     const leagues = await League.find({})
