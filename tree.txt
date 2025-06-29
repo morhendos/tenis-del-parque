@@ -1,7 +1,46 @@
 root/
 ├── README.md
 ├── app
+│   ├── admin
+│   │   ├── README.md
+│   │   ├── dashboard
+│   │   │   └── page.js
+│   │   ├── leagues
+│   │   │   ├── [id]
+│   │   │   │   └── page.js
+│   │   │   └── page.js
+│   │   ├── matches
+│   │   │   ├── [id]
+│   │   │   │   └── page.js
+│   │   │   ├── create
+│   │   │   │   └── page.js
+│   │   │   └── page.js
+│   │   ├── page.js
+│   │   └── players
+│   │       └── page.js
 │   ├── api
+│   │   ├── admin
+│   │   │   ├── auth
+│   │   │   │   ├── check
+│   │   │   │   │   └── route.js
+│   │   │   │   ├── login
+│   │   │   │   │   └── route.js
+│   │   │   │   └── logout
+│   │   │   │       └── route.js
+│   │   │   ├── dashboard
+│   │   │   │   └── route.js
+│   │   │   ├── leagues
+│   │   │   │   └── route.js
+│   │   │   ├── matches
+│   │   │   │   ├── [id]
+│   │   │   │   │   └── route.js
+│   │   │   │   └── route.js
+│   │   │   └── players
+│   │   │       ├── [id]
+│   │   │       │   └── route.js
+│   │   │       ├── export
+│   │   │       │   └── route.js
+│   │   │       └── route.js
 │   │   ├── leagues
 │   │   │   └── [league]
 │   │   │       └── route.js
@@ -51,6 +90,8 @@ root/
 │   └── ui
 │       ├── TennisDividers.js
 │       └── TennisIcons.js
+├── docs
+│   └── MATCH_MANAGEMENT_GUIDE.md
 ├── lib
 │   ├── analytics
 │   │   └── analytics.js
@@ -68,10 +109,12 @@ root/
 │   │   └── useLanguage.js
 │   ├── models
 │   │   ├── League.js
+│   │   ├── Match.js
 │   │   └── Player.js
 │   └── utils
 │       ├── apiHelpers.js
 │       └── rulesIcons.js
+├── middleware.js
 ├── next.config.js
 ├── package-lock.json
 ├── package.json
