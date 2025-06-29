@@ -1,19 +1,27 @@
 import dbConnect from '../../../../lib/db/mongoose'
 import Player from '../../../../lib/models/Player'
 import League from '../../../../lib/models/League'
+import mongoose from 'mongoose'
 
 export async function GET() {
   try {
     await dbConnect()
 
-    // Get total player count
-    const totalPlayers = await Player.countDocuments()
+    // WORKAROUND: Use raw MongoDB queries to handle documents with incorrect version fields
+    // Some documents have '_v' instead of '__v' which causes Mongoose to not recognize them
+    // This is a temporary fix until the database is corrected
+    
+    const db = mongoose.connection.db
+    const playersCollection = db.collection('players')
+    
+    // Get total player count using raw query
+    const totalPlayers = await playersCollection.countDocuments()
 
-    // Get player count by level
+    // Get player count by level using raw queries
     const byLevel = {
-      beginner: await Player.countDocuments({ level: 'beginner' }),
-      intermediate: await Player.countDocuments({ level: 'intermediate' }),
-      advanced: await Player.countDocuments({ level: 'advanced' })
+      beginner: await playersCollection.countDocuments({ level: 'beginner' }),
+      intermediate: await playersCollection.countDocuments({ level: 'intermediate' }),
+      advanced: await playersCollection.countDocuments({ level: 'advanced' })
     }
 
     // Get player count by league
@@ -23,17 +31,26 @@ export async function GET() {
     for (const league of leagues) {
       byLeague[league.slug] = {
         name: league.name,
-        count: await Player.countDocuments({ league: league._id })
+        count: await playersCollection.countDocuments({ league: league._id })
       }
     }
 
-    // Get recent registrations (last 10)
-    const recentPlayers = await Player
+    // Get recent registrations using raw query then convert to Mongoose documents
+    const recentPlayersRaw = await playersCollection
       .find()
       .sort({ registeredAt: -1 })
       .limit(10)
-      .populate('league', 'name slug')
-      .lean()
+      .toArray()
+
+    // Populate league info manually
+    const recentPlayers = []
+    for (const playerRaw of recentPlayersRaw) {
+      const league = await League.findById(playerRaw.league).lean()
+      recentPlayers.push({
+        ...playerRaw,
+        league: league ? { name: league.name, slug: league.slug } : null
+      })
+    }
 
     // Get registration trends (last 7 days)
     const sevenDaysAgo = new Date()
