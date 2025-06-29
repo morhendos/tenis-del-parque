@@ -1,12 +1,90 @@
 #!/usr/bin/env node
 
-import mongoose from 'mongoose'
-import dotenv from 'dotenv'
-import readline from 'readline'
-import User from '../lib/models/User.js'
+const mongoose = require('mongoose')
+const dotenv = require('dotenv')
+const readline = require('readline')
+const bcrypt = require('bcryptjs')
 
 // Load environment variables
 dotenv.config({ path: '.env.local' })
+
+// Define User schema (since we can't import the model directly in CommonJS)
+const userSchema = new mongoose.Schema({
+  email: {
+    type: String,
+    required: [true, 'Email is required'],
+    unique: true,
+    lowercase: true,
+    trim: true,
+    match: [/^\S+@\S+\.\S+$/, 'Please provide a valid emaila address']
+  },
+  
+  password: {
+    type: String,
+    required: [true, 'Password is required'],
+    minlength: [8, 'Password must be at least 8 characters long'],
+    select: false // Don't include password in queries by default
+  },
+  
+  role: {
+    type: String,
+    enum: ['admin', 'player'],
+    default: 'player'
+  },
+  
+  playerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Player',
+    default: null
+  },
+  
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  
+  emailVerified: {
+    type: Boolean,
+    default: false
+  },
+  
+  lastLogin: {
+    type: Date,
+    default: null
+  },
+  
+  loginAttempts: {
+    type: Number,
+    default: 0
+  },
+  
+  preferences: {
+    language: {
+      type: String,
+      enum: ['es', 'en'],
+      default: 'es'
+    }
+  }
+}, {
+  timestamps: true
+})
+
+// Pre-save middleware to hash password
+userSchema.pre('save', async function(next) {
+  // Only hash the password if it has been modified
+  if (!this.isModified('password')) return next()
+  
+  try {
+    // Generate salt and hash password
+    const salt = await bcrypt.genSalt(10)
+    this.password = await bcrypt.hash(this.password, salt)
+    next()
+  } catch (error) {
+    next(error)
+  }
+})
+
+const User = mongoose.models.User || mongoose.model('User', userSchema)
 
 // Create readline interface for user input
 const rl = readline.createInterface({

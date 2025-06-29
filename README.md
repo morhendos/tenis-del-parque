@@ -113,6 +113,39 @@ UserSchema.index({ createdAt: -1 })
 - Avoids unnecessary database storage overhead
 - Improves database performance
 
+### Scripts Module System
+
+**Important**: Scripts in the `/scripts` directory use CommonJS syntax for consistency and compatibility:
+
+```javascript
+// ✅ CORRECT - Scripts use CommonJS (require/exports)
+const mongoose = require('mongoose')
+const dotenv = require('dotenv')
+
+// Define schemas inline since we can't easily import ES modules
+const UserSchema = new mongoose.Schema({
+  // schema definition...
+})
+
+const User = mongoose.models.User || mongoose.model('User', UserSchema)
+```
+
+```javascript
+// ❌ WRONG - Don't use ES modules in scripts
+import mongoose from 'mongoose'  // This will cause syntax errors
+import User from '../lib/models/User.js'
+```
+
+**Why Scripts Use CommonJS**:
+- **Consistency**: All existing scripts use CommonJS
+- **Simplicity**: No need to modify package.json or file extensions
+- **Node.js Compatibility**: Works out of the box with Node.js
+- **Inline Schemas**: We define schemas directly in scripts for better isolation
+
+**Main App vs Scripts**:
+- **Main Application**: Uses ES modules (`import/export`) with Next.js
+- **Scripts Directory**: Uses CommonJS (`require/module.exports`) for utility scripts
+
 ## 📁 Project Structure
 
 ```
@@ -224,12 +257,34 @@ tenis-del-parque/
 ### Available Scripts
 
 ```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run start        # Start production server
-npm run lint         # Run ESLint
-npm run seed:leagues # Seed database with initial leagues
+npm run dev           # Start development server
+npm run build         # Build for production
+npm run start         # Start production server
+npm run lint          # Run ESLint
+npm run seed:leagues  # Seed database with initial leagues
+npm run create-admin  # Create an admin user for the admin panel
 ```
+
+### Admin Setup
+
+Before using the admin panel, you need to create an admin user:
+
+```bash
+npm run create-admin
+```
+
+This will prompt you for:
+- Admin email address
+- Password (minimum 8 characters)
+- Password confirmation
+
+The script will:
+- Connect to your MongoDB database
+- Check for existing admin users
+- Create a new admin user with hashed password
+- Provide the admin user ID for reference
+
+Once created, you can access the admin panel at [http://localhost:3000/admin](http://localhost:3000/admin)
 
 ## 📊 Database Models
 
