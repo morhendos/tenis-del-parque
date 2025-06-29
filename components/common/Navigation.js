@@ -139,20 +139,20 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
       <nav className={`fixed top-0 w-full backdrop-blur-md z-[100] transition-all duration-300 ${
         scrolled ? 'bg-white/95 shadow-lg' : 'bg-white/70'
       }`}>
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-2 md:px-4">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center">
               <Link href="/" className="group flex items-center space-x-2 transform hover:scale-105 transition-transform">
-                <div className="relative h-8 w-32 md:h-10 md:w-40">
-                  <Image
-                    src="/logo-horizontal-02.png"
-                    alt="Tenis del Parque"
-                    fill
-                    className="object-contain"
-                    priority
-                  />
-                </div>
+                <Image
+                  src="/logo-horizontal-big.png"
+                  alt="Tenis del Parque"
+                  height={48}
+                  width={200}
+                  className="h-12 w-auto"
+                  priority
+                  quality={100}
+                />
               </Link>
             </div>
             
@@ -322,7 +322,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
             ? 'translate-y-0 opacity-100' 
             : '-translate-y-full opacity-0'
         }`}>
-          <div className="container mx-auto px-4 py-6">
+          <div className="container mx-auto px-2 md:px-4 py-6">
             <div className="flex flex-col space-y-4">
               {/* Home Page Link */}
               <div>
