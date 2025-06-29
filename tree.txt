@@ -17,7 +17,9 @@ root/
 │   │   │   │   └── page.js
 │   │   │   └── page.js
 │   │   ├── page.js
-│   │   └── players
+│   │   ├── players
+│   │   │   └── page.js
+│   │   └── users
 │   │       └── page.js
 │   ├── api
 │   │   ├── admin
@@ -38,10 +40,16 @@ root/
 │   │   │   │   ├── generate-round
 │   │   │   │   │   └── route.js
 │   │   │   │   └── route.js
-│   │   │   └── players
+│   │   │   ├── players
+│   │   │   │   ├── [id]
+│   │   │   │   │   └── route.js
+│   │   │   │   ├── export
+│   │   │   │   │   └── route.js
+│   │   │   │   └── route.js
+│   │   │   └── users
 │   │   │       ├── [id]
 │   │   │       │   └── route.js
-│   │   │       ├── export
+│   │   │       ├── invite
 │   │   │       │   └── route.js
 │   │   │       └── route.js
 │   │   ├── auth
@@ -123,6 +131,7 @@ root/
 │   │   └── User.js
 │   └── utils
 │       ├── apiHelpers.js
+│       ├── authMiddleware.js
 │       ├── jwt.js
 │       ├── rulesIcons.js
 │       └── swissPairing.js
@@ -139,6 +148,7 @@ root/
 │   ├── logo.png
 │   └── players-2025-06-28.csv
 ├── scripts
+│   ├── createAdminUser.js
 │   ├── seedLeagues.js
 │   └── tree.js
 ├── tailwind.config.js
