@@ -147,7 +147,7 @@ export default function FAQSection({ content }) {
                  {content.contact.email}
                </a>
                <a
-                 href="https://wa.me/34600000000"
+                 href="https://wa.me/34652714328"
                  className="inline-flex items-center justify-center gap-2 bg-green-500 text-white px-6 py-3 rounded-full hover:bg-green-600 transition-all duration-300 text-sm sm:text-base font-medium touch-manipulation min-h-[48px]"
                >
                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
