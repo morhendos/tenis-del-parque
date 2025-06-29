@@ -2,10 +2,17 @@ import { NextResponse } from 'next/server'
 import dbConnect from '../../../../lib/db/mongoose'
 import User from '../../../../lib/models/User'
 import Player from '../../../../lib/models/Player'
+import { verifyAdminAuth } from '../../../../lib/utils/adminAuth'
 
 // GET /api/admin/users - List all users
 export async function GET(request) {
   try {
+    // Check authentication
+    const auth = await verifyAdminAuth(request)
+    if (!auth.authenticated) {
+      return NextResponse.json({ error: auth.error }, { status: 401 })
+    }
+
     await dbConnect()
 
     const { searchParams } = new URL(request.url)
@@ -77,6 +84,12 @@ export async function GET(request) {
 // POST /api/admin/users - Create new user (admin only)
 export async function POST(request) {
   try {
+    // Check authentication
+    const auth = await verifyAdminAuth(request)
+    if (!auth.authenticated) {
+      return NextResponse.json({ error: auth.error }, { status: 401 })
+    }
+
     await dbConnect()
 
     const { email, password, role } = await request.json()

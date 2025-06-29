@@ -2,21 +2,16 @@ import { NextResponse } from 'next/server'
 import dbConnect from '../../../../../lib/db/mongoose'
 import Player from '../../../../../lib/models/Player'
 import Match from '../../../../../lib/models/Match'
-import { cookies } from 'next/headers'
+import { verifyAdminAuth } from '../../../../../lib/utils/adminAuth'
 
 export const dynamic = 'force-dynamic'
-
-async function isAuthenticated() {
-  const cookieStore = cookies()
-  const sessionCookie = cookieStore.get('admin_session')
-  return !!sessionCookie?.value
-}
 
 // GET /api/admin/players/[id] - Get player details
 export async function GET(request, { params }) {
   try {
-    if (!await isAuthenticated()) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const auth = await verifyAdminAuth(request)
+    if (!auth.authenticated) {
+      return NextResponse.json({ error: auth.error }, { status: 401 })
     }
 
     const { id } = params
@@ -44,8 +39,9 @@ export async function GET(request, { params }) {
 // PATCH /api/admin/players/[id] - Update player
 export async function PATCH(request, { params }) {
   try {
-    if (!await isAuthenticated()) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const auth = await verifyAdminAuth(request)
+    if (!auth.authenticated) {
+      return NextResponse.json({ error: auth.error }, { status: 401 })
     }
 
     const { id } = params
@@ -85,8 +81,9 @@ export async function PATCH(request, { params }) {
 // DELETE /api/admin/players/[id] - Delete player
 export async function DELETE(request, { params }) {
   try {
-    if (!await isAuthenticated()) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const auth = await verifyAdminAuth(request)
+    if (!auth.authenticated) {
+      return NextResponse.json({ error: auth.error }, { status: 401 })
     }
 
     const { id } = params

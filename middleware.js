@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { verifyToken } from './lib/utils/jwt'
 
 // Protect admin routes
 export function middleware(request) {
@@ -9,11 +10,19 @@ export function middleware(request) {
       pathname !== '/admin' && 
       !pathname.startsWith('/api/admin/auth')) {
     
-    // Check for session cookie
-    const sessionCookie = request.cookies.get('admin_session')
+    // Check for JWT token cookie
+    const tokenCookie = request.cookies.get('admin-token')
     
-    if (!sessionCookie) {
+    if (!tokenCookie?.value) {
       // Redirect to login
+      return NextResponse.redirect(new URL('/admin', request.url))
+    }
+
+    // Verify the token
+    const decoded = verifyToken(tokenCookie.value)
+    
+    if (!decoded || decoded.role !== 'admin') {
+      // Redirect to login if token is invalid or not admin
       return NextResponse.redirect(new URL('/admin', request.url))
     }
   }
@@ -22,9 +31,19 @@ export function middleware(request) {
   if (pathname.startsWith('/api/admin') && 
       !pathname.startsWith('/api/admin/auth')) {
     
-    const sessionCookie = request.cookies.get('admin_session')
+    const tokenCookie = request.cookies.get('admin-token')
     
-    if (!sessionCookie) {
+    if (!tokenCookie?.value) {
+      return Response.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    // Verify the token
+    const decoded = verifyToken(tokenCookie.value)
+    
+    if (!decoded || decoded.role !== 'admin') {
       return Response.json(
         { error: 'Unauthorized' },
         { status: 401 }

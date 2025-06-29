@@ -5,10 +5,10 @@ A comprehensive admin panel for managing tennis leagues, players, and matches.
 ## Features
 
 ### 🔐 Authentication
-- Password-based login with secure session management
-- SHA-256 password hashing
-- HTTP-only cookies for session storage
-- Automatic session expiry (24 hours)
+- JWT-based authentication with secure token management
+- bcrypt password hashing
+- HTTP-only cookies for token storage
+- Automatic token expiry (24 hours)
 
 ### 🏆 League Management
 - View all leagues with player counts
@@ -49,28 +49,22 @@ A comprehensive admin panel for managing tennis leagues, players, and matches.
 Add these to your `.env.local`:
 
 ```bash
-# Admin password hash (default: "admin123")
-# Generate your own: echo -n "your-password" | sha256sum
-ADMIN_PASSWORD_HASH=240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9
-
-# Session secret
-SESSION_SECRET=your-secret-key-here
+# JWT secret for token authentication
+JWT_SECRET=your-jwt-secret-key-here
 
 # MongoDB connection
 MONGODB_URI=your_mongodb_connection_string
 ```
 
-### 2. Generate Password Hash
+### 2. Create Admin User
 
-To create your own admin password:
+Create an admin user using the script:
 
 ```bash
-# On Mac/Linux
-echo -n "your-secure-password" | shasum -a 256
-
-# Or using Node.js
-node -e "console.log(require('crypto').createHash('sha256').update('your-secure-password').digest('hex'))"
+npm run create-admin
 ```
+
+This will prompt you for email and password and create the admin user in the database.
 
 ### 3. Access Admin Panel
 
@@ -150,7 +144,7 @@ All admin API endpoints are protected by session authentication.
 ## Security Considerations
 
 1. **Change the default password** - Never use "admin123" in production
-2. **Use strong session secrets** - Generate random, long strings
+2. **Use strong JWT secrets** - Generate random, long strings
 3. **HTTPS only** - Always use HTTPS in production
 4. **Regular updates** - Update dependencies regularly
 5. **Access logs** - Monitor admin access in production

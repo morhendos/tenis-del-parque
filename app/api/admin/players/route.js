@@ -1,11 +1,18 @@
 import { NextResponse } from 'next/server'
 import dbConnect from '../../../../lib/db/mongoose'
 import Player from '../../../../lib/models/Player'
+import { verifyAdminAuth } from '../../../../lib/utils/adminAuth'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request) {
   try {
+    // Check authentication
+    const auth = await verifyAdminAuth(request)
+    if (!auth.authenticated) {
+      return NextResponse.json({ error: auth.error }, { status: 401 })
+    }
+
     await dbConnect()
 
     // Get query parameters

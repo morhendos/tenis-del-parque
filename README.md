@@ -27,7 +27,7 @@ Tenis del Parque is a sophisticated web application that combines cutting-edge w
 - **Languages**: JavaScript/JSX with modern React patterns
 - **State Management**: React Hooks (useState, useEffect, custom hooks)
 - **Architecture**: Component-based with clear separation of concerns
-- **Authentication**: Session-based admin authentication
+- **Authentication**: JWT-based authentication with secure HTTP-only cookies
 
 ## 🔌 Database Connection Pattern
 
@@ -259,11 +259,10 @@ tenis-del-parque/
    ```bash
    cp .env.local.example .env.local
    ```
-   Edit `.env.local` and add your MongoDB connection string and admin credentials:
+   Edit `.env.local` and add your MongoDB connection string and JWT secret:
    ```
    MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/tenis-del-parque
-   ADMIN_PASSWORD_HASH=your_password_hash
-   SESSION_SECRET=your_session_secret
+   JWT_SECRET=your_jwt_secret_key
    ```
 
 4. **Seed the database**
@@ -517,9 +516,8 @@ MONGODB_URI=your_mongodb_connection_string
 # Optional: Specific database name
 MONGODB_DB=tenis-del-parque
 
-# Admin Panel
-ADMIN_PASSWORD_HASH=your_password_hash
-SESSION_SECRET=your_session_secret
+# JWT Authentication
+JWT_SECRET=your_jwt_secret_key
 
 # Analytics (optional)
 NEXT_PUBLIC_GA_ID=your_google_analytics_id
@@ -543,8 +541,7 @@ NEXT_PUBLIC_CLARITY_ID=your_microsoft_clarity_id
 
 ### Environment Variables for Production
 - `MONGODB_URI`: Your production MongoDB connection string
-- `ADMIN_PASSWORD_HASH`: Secure admin password hash
-- `SESSION_SECRET`: Strong session secret
+- `JWT_SECRET`: Strong JWT signing secret
 
 ## 🤝 Contributing
 

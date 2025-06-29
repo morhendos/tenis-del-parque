@@ -2,22 +2,17 @@ import { NextResponse } from 'next/server'
 import dbConnect from '../../../../lib/db/mongoose'
 import Match from '../../../../lib/models/Match'
 import Player from '../../../../lib/models/Player'
-import { cookies } from 'next/headers'
+import { verifyAdminAuth } from '../../../../lib/utils/adminAuth'
 
 export const dynamic = 'force-dynamic'
-
-async function isAuthenticated() {
-  const cookieStore = cookies()
-  const sessionCookie = cookieStore.get('admin_session')
-  return !!sessionCookie?.value
-}
 
 // GET /api/admin/matches - List matches
 export async function GET(request) {
   try {
     // Check authentication
-    if (!await isAuthenticated()) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const auth = await verifyAdminAuth(request)
+    if (!auth.authenticated) {
+      return NextResponse.json({ error: auth.error }, { status: 401 })
     }
 
     // Get query parameters
@@ -76,8 +71,9 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     // Check authentication
-    if (!await isAuthenticated()) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const auth = await verifyAdminAuth(request)
+    if (!auth.authenticated) {
+      return NextResponse.json({ error: auth.error }, { status: 401 })
     }
 
     const body = await request.json()
