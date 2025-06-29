@@ -1,7 +1,32 @@
 root/
 ├── README.md
 ├── app
+│   ├── admin
+│   │   ├── README.md
+│   │   ├── dashboard
+│   │   │   └── page.js
+│   │   ├── page.js
+│   │   └── players
+│   │       └── page.js
 │   ├── api
+│   │   ├── admin
+│   │   │   ├── auth
+│   │   │   │   ├── check
+│   │   │   │   │   └── route.js
+│   │   │   │   ├── login
+│   │   │   │   │   └── route.js
+│   │   │   │   └── logout
+│   │   │   │       └── route.js
+│   │   │   ├── dashboard
+│   │   │   │   └── route.js
+│   │   │   ├── debug
+│   │   │   │   └── route.js
+│   │   │   └── players
+│   │   │       ├── [id]
+│   │   │       │   └── route.js
+│   │   │       ├── export
+│   │   │       │   └── route.js
+│   │   │       └── route.js
 │   │   ├── leagues
 │   │   │   └── [league]
 │   │   │       └── route.js
@@ -72,6 +97,7 @@ root/
 │   └── utils
 │       ├── apiHelpers.js
 │       └── rulesIcons.js
+├── middleware.js
 ├── next.config.js
 ├── package-lock.json
 ├── package.json
@@ -81,7 +107,8 @@ root/
 │   ├── logo-horizontal-01.png
 │   ├── logo-horizontal-02.png
 │   ├── logo-old.png
-│   └── logo.png
+│   ├── logo.png
+│   └── players-2025-06-28.csv
 ├── scripts
 │   ├── seedLeagues.js
 │   └── tree.js
