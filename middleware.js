@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
-import { verifyToken } from './lib/utils/jwt'
+import { verifyTokenEdge } from './lib/utils/edgeJwt'
 
 // Protect admin routes
-export function middleware(request) {
+export async function middleware(request) {
   const { pathname } = request.nextUrl
 
   // Check if it's an admin route (excluding login and auth endpoints)
@@ -18,8 +18,8 @@ export function middleware(request) {
       return NextResponse.redirect(new URL('/admin', request.url))
     }
 
-    // Verify the token
-    const decoded = verifyToken(tokenCookie.value)
+    // Verify the token (Edge Runtime compatible)
+    const decoded = await verifyTokenEdge(tokenCookie.value, process.env.JWT_SECRET)
     
     if (!decoded || decoded.role !== 'admin') {
       // Redirect to login if token is invalid or not admin
@@ -40,8 +40,8 @@ export function middleware(request) {
       )
     }
 
-    // Verify the token
-    const decoded = verifyToken(tokenCookie.value)
+    // Verify the token (Edge Runtime compatible)
+    const decoded = await verifyTokenEdge(tokenCookie.value, process.env.JWT_SECRET)
     
     if (!decoded || decoded.role !== 'admin') {
       return Response.json(
