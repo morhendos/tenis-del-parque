@@ -7,22 +7,23 @@ export default function AdminLogin() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [checking, setChecking] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
-    // Check if already authenticated
     checkAuth()
   }, [])
 
   const checkAuth = async () => {
     try {
-      const response = await fetch('/api/admin/auth/check')
-      const data = await response.json()
-      if (data.authenticated) {
+      const res = await fetch('/api/admin/auth/check')
+      if (res.ok) {
         router.push('/admin/dashboard')
       }
     } catch (error) {
       console.error('Auth check error:', error)
+    } finally {
+      setChecking(false)
     }
   }
 
@@ -32,19 +33,23 @@ export default function AdminLogin() {
     setLoading(true)
 
     try {
-      const response = await fetch('/api/admin/auth/login', {
+      const res = await fetch('/api/admin/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({ password })
       })
 
-      const data = await response.json()
+      const data = await res.json()
 
-      if (response.ok && data.success) {
-        router.push('/admin/dashboard')
-      } else {
-        setError(data.error || 'Invalid password')
+      if (!res.ok) {
+        setError(data.error || 'Login failed')
+        return
       }
+
+      // Redirect to dashboard
+      router.push('/admin/dashboard')
     } catch (error) {
       setError('An error occurred. Please try again.')
     } finally {
@@ -52,34 +57,50 @@ export default function AdminLogin() {
     }
   }
 
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-parque-bg flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-purple-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
         <div className="bg-white rounded-lg shadow-xl p-8">
+          {/* Logo/Header */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-parque-purple">Admin Panel</h1>
-            <p className="text-gray-600 mt-2">Tenis del Parque - Sotogrande</p>
+            <div className="text-5xl mb-4">🎾</div>
+            <h2 className="text-3xl font-bold text-gray-900">
+              Admin Panel
+            </h2>
+            <p className="mt-2 text-sm text-gray-600">
+              Tennis del Parque - Sotogrande
+            </p>
           </div>
 
+          {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
               </label>
               <input
-                type="password"
                 id="password"
+                type="password"
+                required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-parque-purple focus:border-transparent"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-parque-purple focus:border-transparent"
                 placeholder="Enter admin password"
-                required
-                autoFocus
               />
             </div>
 
             {error && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
+              <div className="bg-red-50 border border-red-200 text-red-600 rounded-md p-3 text-sm">
                 {error}
               </div>
             )}
@@ -87,14 +108,15 @@ export default function AdminLogin() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-parque-purple text-white py-3 rounded-md hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-parque-purple hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-parque-purple disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? 'Signing in...' : 'Sign in'}
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-gray-500">
-            <p>Secure admin access only</p>
+          {/* Footer */}
+          <div className="mt-6 text-center text-xs text-gray-500">
+            Protected area. Authorized personnel only.
           </div>
         </div>
       </div>
