@@ -10,20 +10,8 @@ export default function AdminLeaguesPage() {
   const router = useRouter()
 
   useEffect(() => {
-    checkAuth()
     fetchLeagues()
   }, [])
-
-  const checkAuth = async () => {
-    try {
-      const res = await fetch('/api/admin/auth/check')
-      if (!res.ok) {
-        router.push('/admin')
-      }
-    } catch (error) {
-      router.push('/admin')
-    }
-  }
 
   const fetchLeagues = async () => {
     try {
@@ -42,117 +30,97 @@ export default function AdminLeaguesPage() {
   }
 
   const handleManageLeague = (leagueId, leagueName) => {
-    // Store selected league in session storage for other pages to reference
     sessionStorage.setItem('selectedLeague', JSON.stringify({ id: leagueId, name: leagueName }))
-    router.push(`/admin/leagues/${leagueId}`)
+    router.push(`/admin/matches?league=${leagueId}`)
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-parque-bg flex items-center justify-center">
-        <div className="text-xl text-parque-purple">Loading leagues...</div>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-xl text-gray-600">Loading leagues...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-parque-bg">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-parque-purple">League Management</h1>
-            <p className="text-gray-600 mt-2">Select a league to manage matches and players</p>
-          </div>
-          <button
-            onClick={() => router.push('/admin/dashboard')}
-            className="px-4 py-2 bg-parque-green text-white rounded-lg hover:bg-opacity-90"
-          >
-            Back to Dashboard
-          </button>
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">Leagues</h2>
+        <p className="text-gray-600 mt-1">Select a league to manage matches and view statistics</p>
+      </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg p-4">
+          {error}
         </div>
+      )}
 
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-            {error}
-          </div>
-        )}
-
-        {/* Leagues Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {leagues.map((league) => {
-            const currentSeason = league.seasons?.find(s => s.status === 'registration_open' || s.status === 'active') || league.seasons?.[0]
-            const playerCount = league.playerCount || 0
-            
-            return (
-              <div key={league._id} className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                <div className="p-6">
-                  <h2 className="text-xl font-semibold text-parque-purple mb-2">
+      {/* Leagues Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {leagues.map((league) => {
+          const currentSeason = league.seasons?.find(s => s.status === 'registration_open' || s.status === 'active') || league.seasons?.[0]
+          const playerCount = league.playerCount || 0
+          
+          return (
+            <div key={league._id} className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all">
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="text-xl font-semibold text-gray-900">
                     {league.name}
-                  </h2>
-                  
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <p>
-                      <span className="font-medium">Location:</span> {league.location?.city}, {league.location?.region}
-                    </p>
-                    <p>
-                      <span className="font-medium">Current Season:</span> {currentSeason?.name || 'No active season'}
-                    </p>
-                    <p>
-                      <span className="font-medium">Players:</span> {playerCount}
-                    </p>
-                    <p>
-                      <span className="font-medium">Status:</span>{' '}
-                      <span className={`inline-block px-2 py-1 rounded text-xs ${
-                        currentSeason?.status === 'active' ? 'bg-green-100 text-green-800' :
-                        currentSeason?.status === 'registration_open' ? 'bg-blue-100 text-blue-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {currentSeason?.status?.replace('_', ' ').toUpperCase() || 'INACTIVE'}
-                      </span>
-                    </p>
+                  </h3>
+                  <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${
+                    currentSeason?.status === 'active' ? 'bg-green-100 text-green-800' :
+                    currentSeason?.status === 'registration_open' ? 'bg-blue-100 text-blue-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {currentSeason?.status?.replace('_', ' ').toUpperCase() || 'INACTIVE'}
+                  </span>
+                </div>
+                
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center text-gray-600">
+                    <span className="text-lg mr-2">📍</span>
+                    <span>{league.location?.city}, {league.location?.region}</span>
                   </div>
-
-                  <div className="mt-4 space-y-2">
-                    <button
-                      onClick={() => handleManageLeague(league._id, league.name)}
-                      className="w-full px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-opacity-90 transition-colors"
-                    >
-                      Manage League
-                    </button>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        onClick={() => {
-                          sessionStorage.setItem('selectedLeague', JSON.stringify({ id: league._id, name: league.name }))
-                          router.push(`/admin/matches?league=${league._id}`)
-                        }}
-                        className="px-3 py-1.5 bg-parque-green text-white text-sm rounded hover:bg-opacity-90"
-                      >
-                        Matches
-                      </button>
-                      <button
-                        onClick={() => {
-                          sessionStorage.setItem('selectedLeague', JSON.stringify({ id: league._id, name: league.name }))
-                          router.push(`/admin/players?league=${league._id}`)
-                        }}
-                        className="px-3 py-1.5 bg-parque-yellow text-parque-purple text-sm rounded hover:bg-opacity-90"
-                      >
-                        Players
-                      </button>
-                    </div>
+                  <div className="flex items-center text-gray-600">
+                    <span className="text-lg mr-2">📅</span>
+                    <span>{currentSeason?.name || 'No active season'}</span>
+                  </div>
+                  <div className="flex items-center text-gray-600">
+                    <span className="text-lg mr-2">👥</span>
+                    <span>{playerCount} players</span>
                   </div>
                 </div>
-              </div>
-            )
-          })}
-        </div>
 
-        {leagues.length === 0 && !loading && (
-          <div className="text-center py-12">
-            <p className="text-gray-600">No leagues found. Create leagues using the seed script.</p>
-          </div>
-        )}
+                <div className="mt-6 grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => handleManageLeague(league._id, league.name)}
+                    className="px-4 py-2 bg-parque-purple text-white text-sm rounded-lg hover:bg-opacity-90 transition-colors"
+                  >
+                    Matches
+                  </button>
+                  <button
+                    onClick={() => {
+                      sessionStorage.setItem('selectedLeague', JSON.stringify({ id: league._id, name: league.name }))
+                      router.push(`/admin/players?league=${league._id}`)
+                    }}
+                    className="px-4 py-2 bg-parque-green text-white text-sm rounded-lg hover:bg-opacity-90 transition-colors"
+                  >
+                    Players
+                  </button>
+                </div>
+              </div>
+            </div>
+          )
+        })}
       </div>
+
+      {leagues.length === 0 && !loading && (
+        <div className="text-center py-12 bg-white rounded-lg shadow">
+          <p className="text-gray-600">No leagues found. Create leagues using the seed script.</p>
+        </div>
+      )}
     </div>
   )
 }
