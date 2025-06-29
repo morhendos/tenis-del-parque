@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "tree": "node scripts/tree.js",
-    "seed:leagues": "node scripts/seedLeagues.js"
+    "seed:leagues": "node scripts/seedLeagues.js",
+    "create-admin": "node scripts/createAdminUser.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
