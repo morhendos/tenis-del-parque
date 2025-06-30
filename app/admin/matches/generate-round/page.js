@@ -27,7 +27,7 @@ function GenerateRoundContent() {
     } else {
       fetchRoundsData({ id: leagueId })
     }
-  }, [leagueId])
+  }, [leagueId, router])
 
   const fetchRoundsData = async (league) => {
     try {

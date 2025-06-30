@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 function AdminMatchesContent() {
@@ -18,19 +18,7 @@ function AdminMatchesContent() {
   const searchParams = useSearchParams()
   const leagueId = searchParams.get('league')
 
-  useEffect(() => {
-    const storedLeague = sessionStorage.getItem('selectedLeague')
-    if (storedLeague) {
-      setSelectedLeague(JSON.parse(storedLeague))
-    } else if (!leagueId) {
-      router.push('/admin/leagues')
-      return
-    }
-
-    fetchMatches()
-  }, [leagueId])
-
-  const fetchMatches = async () => {
+  const fetchMatches = useCallback(async () => {
     try {
       setLoading(true)
       const params = new URLSearchParams({
@@ -48,7 +36,19 @@ function AdminMatchesContent() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [leagueId, selectedLeague?.id])
+
+  useEffect(() => {
+    const storedLeague = sessionStorage.getItem('selectedLeague')
+    if (storedLeague) {
+      setSelectedLeague(JSON.parse(storedLeague))
+    } else if (!leagueId) {
+      router.push('/admin/leagues')
+      return
+    }
+
+    fetchMatches()
+  }, [leagueId, router, fetchMatches])
 
   const handleCreateMatch = () => {
     router.push(`/admin/matches/create?league=${leagueId || selectedLeague?.id}`)

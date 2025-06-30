@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function AdminLogin() {
@@ -11,11 +11,7 @@ export default function AdminLogin() {
   const [checking, setChecking] = useState(true)
   const router = useRouter()
 
-  useEffect(() => {
-    checkAuth()
-  }, [])
-
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/auth/check')
       if (res.ok) {
@@ -26,7 +22,11 @@ export default function AdminLogin() {
     } finally {
       setChecking(false)
     }
-  }
+  }, [router])
+
+  useEffect(() => {
+    checkAuth()
+  }, [checkAuth])
 
   const handleSubmit = async (e) => {
     e.preventDefault()

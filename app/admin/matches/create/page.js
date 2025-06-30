@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 function CreateMatchContent() {
@@ -23,21 +23,7 @@ function CreateMatchContent() {
   const searchParams = useSearchParams()
   const leagueId = searchParams.get('league')
 
-  useEffect(() => {
-    // Get selected league from session storage
-    const storedLeague = sessionStorage.getItem('selectedLeague')
-    if (storedLeague) {
-      setSelectedLeague(JSON.parse(storedLeague))
-    } else if (!leagueId) {
-      router.push('/admin/leagues')
-      return
-    }
-
-    checkAuth()
-    fetchPlayers()
-  }, [leagueId])
-
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/auth/check')
       if (!res.ok) {
@@ -46,9 +32,9 @@ function CreateMatchContent() {
     } catch (error) {
       router.push('/admin')
     }
-  }
+  }, [router])
 
-  const fetchPlayers = async () => {
+  const fetchPlayers = useCallback(async () => {
     try {
       setLoading(true)
       const params = new URLSearchParams({
@@ -67,7 +53,21 @@ function CreateMatchContent() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [leagueId, selectedLeague?.id])
+
+  useEffect(() => {
+    // Get selected league from session storage
+    const storedLeague = sessionStorage.getItem('selectedLeague')
+    if (storedLeague) {
+      setSelectedLeague(JSON.parse(storedLeague))
+    } else if (!leagueId) {
+      router.push('/admin/leagues')
+      return
+    }
+
+    checkAuth()
+    fetchPlayers()
+  }, [leagueId, router, checkAuth, fetchPlayers])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
