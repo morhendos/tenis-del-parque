@@ -115,7 +115,7 @@ export default function TestimonialsSection({ content, language }) {
 
                       {/* Testimonial Text */}
                       <p className="text-gray-700 text-base leading-relaxed italic">
-                        "{testimonial.text}"
+                        &ldquo;{testimonial.text}&rdquo;
                       </p>
 
                       {/* Rating Stars */}
@@ -179,7 +179,7 @@ export default function TestimonialsSection({ content, language }) {
 
                 {/* Testimonial Text */}
                 <p className="text-gray-700 mb-8 italic text-base lg:text-lg leading-relaxed relative z-10">
-                  "{testimonial.text}"
+                  &ldquo;{testimonial.text}&rdquo;
                 </p>
 
                 {/* Author Info */}
