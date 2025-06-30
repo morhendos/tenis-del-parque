@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { verifyToken, extractTokenFromHeader } from '../../../../../lib/utils/jwt'
+
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
 
 export async function GET(request) {
   try {
     // Check for token in cookies first
-    const cookieToken = request.cookies.get('admin-token')?.value
+    const cookieStore = cookies()
+    const cookieToken = cookieStore.get('admin-token')?.value
     
     // Then check Authorization header
     const authHeader = request.headers.get('authorization')

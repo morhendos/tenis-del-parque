@@ -4,6 +4,9 @@ import User from '../../../../lib/models/User'
 import Player from '../../../../lib/models/Player'
 import { verifyAdminAuth } from '../../../../lib/utils/adminAuth'
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
+
 // GET /api/admin/users - List all users
 export async function GET(request) {
   try {

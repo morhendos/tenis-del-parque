@@ -4,6 +4,7 @@ import League from '../../../../lib/models/League'
 import Player from '../../../../lib/models/Player'
 import { verifyAdminAuth } from '../../../../lib/utils/adminAuth'
 
+// Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
 
 export async function GET(request) {

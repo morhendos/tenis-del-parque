@@ -4,6 +4,7 @@ import Match from '../../../../../lib/models/Match'
 import Player from '../../../../../lib/models/Player'
 import { verifyAdminAuth } from '../../../../../lib/utils/adminAuth'
 
+// Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
 
 // GET /api/admin/matches/[id] - Get match details

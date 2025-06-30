@@ -4,6 +4,9 @@ import Match from '../../../../../lib/models/Match'
 import Player from '../../../../../lib/models/Player'
 import { generateSwissPairings, validatePairings, getPairingsSummary } from '../../../../../lib/utils/swissPairing'
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
+
 export async function POST(request) {
   try {
     await dbConnect()

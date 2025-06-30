@@ -3,6 +3,9 @@ import Player from '../../../../lib/models/Player'
 import League from '../../../../lib/models/League'
 import { verifyAdminAuth } from '../../../../lib/utils/adminAuth'
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
+
 export async function GET(request) {
   try {
     // Check authentication

@@ -3,6 +3,7 @@ import dbConnect from '../../../../lib/db/mongoose'
 import Player from '../../../../lib/models/Player'
 import { verifyAdminAuth } from '../../../../lib/utils/adminAuth'
 
+// Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
 
 export async function GET(request) {

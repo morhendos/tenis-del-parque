@@ -3,6 +3,9 @@ import dbConnect from '../../../../../lib/db/mongoose'
 import User from '../../../../../lib/models/User'
 import Player from '../../../../../lib/models/Player'
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
+
 // POST /api/admin/users/invite - Send invitations to players
 export async function POST(request) {
   try {

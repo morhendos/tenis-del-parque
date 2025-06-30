@@ -1,6 +1,9 @@
 import dbConnect from '../../../../../lib/db/mongoose'
 import Player from '../../../../../lib/models/Player'
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     await dbConnect()
