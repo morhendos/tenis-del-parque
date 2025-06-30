@@ -43,7 +43,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
     es: {
       home: 'Inicio',
       rules: 'Reglamento',
-      elo: 'Sistema ELO',
+      elo: 'ELO Puntos',
       swiss: 'Sistema Suizo',
       about: 'Acerca de',
       contact: 'Contacto',
@@ -60,7 +60,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
     en: {
       home: 'Home',
       rules: 'Rules',
-      elo: 'ELO System',
+      elo: 'ELO Points',
       swiss: 'Swiss System',
       about: 'About',
       contact: 'Contact',
