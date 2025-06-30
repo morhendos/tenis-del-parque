@@ -43,7 +43,8 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
     es: {
       home: 'Inicio',
       rules: 'Reglamento',
-      elo: 'Sistemas ELO y Suizo',
+      elo: 'ELO Puntos',
+      swiss: 'Sistema Suizo',
       about: 'Acerca de',
       contact: 'Contacto',
       sections: {
@@ -59,7 +60,8 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
     en: {
       home: 'Home',
       rules: 'Rules',
-      elo: 'ELO & Swiss Systems',
+      elo: 'ELO Points',
+      swiss: 'Swiss System',
       about: 'About',
       contact: 'Contact',
       sections: {
@@ -176,6 +178,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
                   )}
                 </div>
                 <NavLink href="/rules">{t.rules}</NavLink>
+                <NavLink href="/swiss">{t.swiss}</NavLink>
                 <NavLink href="/elo">{t.elo}</NavLink>
               </div>
               
@@ -387,6 +390,22 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
                 }`}>
                   <span className="text-lg font-medium">{t.rules}</span>
                   {currentPage === 'rules' && (
+                    <div className="w-2 h-2 bg-parque-purple rounded-full"></div>
+                  )}
+                </div>
+              </NavLink>
+              
+              <NavLink 
+                href="/swiss" 
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <div className={`flex items-center justify-between py-3 px-4 rounded-xl transition-all duration-200 ${
+                  currentPage === 'swiss' 
+                    ? 'bg-gradient-to-r from-parque-purple/10 to-transparent border-l-4 border-parque-purple' 
+                    : 'hover:bg-gray-50'
+                }`}>
+                  <span className="text-lg font-medium">{t.swiss}</span>
+                  {currentPage === 'swiss' && (
                     <div className="w-2 h-2 bg-parque-purple rounded-full"></div>
                   )}
                 </div>

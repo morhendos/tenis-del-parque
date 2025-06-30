@@ -11,7 +11,7 @@ export default function Footer({ content }) {
               {content.links.rules}
             </Link>
             <Link href="/elo" className="text-gray-600 hover:text-parque-purple transition-colors font-medium">
-              ELO System
+              ELO Points
             </Link>
             <Link href="#" className="text-gray-600 hover:text-parque-purple transition-colors font-medium">
               {content.links.contact}

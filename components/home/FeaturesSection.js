@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export default function FeaturesSection({ content }) {
   const getIcon = (iconName) => {
     const icons = {
@@ -39,8 +41,13 @@ export default function FeaturesSection({ content }) {
         </div>
         
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 max-w-7xl mx-auto">
-          {content.items.map((feature, index) => (
-            <div key={index} className="group animate-fadeInUp" style={{animationDelay: `${index * 100}ms`}}>
+          {content.items.map((feature, index) => {
+            const isRankingFeature = feature.icon === 'ranking'
+            const cleanDescription = isRankingFeature 
+              ? feature.description.replace(/<a[^>]*>.*?<\/a>/gi, 'Learn more about ELO')
+              : feature.description
+
+            const CardContent = () => (
               <div className="glass-premium rounded-3xl p-6 md:p-8 hover:shadow-2xl transform hover:-translate-y-3 transition-all duration-500 h-full relative overflow-hidden hover-lift">
                 {/* Modern gradient overlay on hover */}
                 <div className="absolute inset-0 bg-gradient-to-br from-parque-purple/5 via-transparent to-parque-green/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
@@ -57,7 +64,8 @@ export default function FeaturesSection({ content }) {
                     </div>
                   </div>
                   <h3 className="text-lg md:text-xl font-medium text-parque-purple mb-3 md:mb-4 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-parque-purple group-hover:to-parque-green transition-all duration-500">{feature.title}</h3>
-                  <p className="text-sm md:text-base text-gray-600 leading-relaxed transition-colors duration-500 group-hover:text-gray-700" dangerouslySetInnerHTML={{ __html: feature.description }} />
+                  <p className="text-sm md:text-base text-gray-600 leading-relaxed transition-colors duration-500 group-hover:text-gray-700" 
+                     dangerouslySetInnerHTML={{ __html: cleanDescription }} />
                 </div>
                 
                 {/* Subtle shimmer effect on hover */}
@@ -65,8 +73,20 @@ export default function FeaturesSection({ content }) {
                   <div className="absolute inset-0 shimmer rounded-3xl"></div>
                 </div>
               </div>
-            </div>
-          ))}
+            )
+
+            return (
+              <div key={index} className="group animate-fadeInUp" style={{animationDelay: `${index * 100}ms`}}>
+                {isRankingFeature ? (
+                  <Link href="/elo" className="block">
+                    <CardContent />
+                  </Link>
+                ) : (
+                  <CardContent />
+                )}
+              </div>
+            )
+          })}
         </div>
       </div>
     </section>
