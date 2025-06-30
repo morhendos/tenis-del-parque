@@ -94,7 +94,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
   const handleSectionClick = (sectionId, closeMobileMenu = false) => {
     if (currentPage !== 'home') {
       // If not on home page, navigate to home page with section
-      window.location.href = `/#${sectionId}`
+      window.location.href = `/sotogrande#${sectionId}`
     } else {
       // If on home page, scroll to section
       const element = document.getElementById(sectionId)
@@ -114,13 +114,13 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
       href={href} 
       onClick={onClick}
       className={`relative transition-colors font-medium group block py-2 md:py-0 ${
-        currentPage === href.slice(1) || (href === '/' && currentPage === 'home')
+        currentPage === href.slice(1) || (href === '/sotogrande' && currentPage === 'home')
           ? 'text-parque-purple' 
           : 'text-gray-700 hover:text-parque-purple'
       }`}
     >
       {children}
-      {(currentPage === href.slice(1) || (href === '/' && currentPage === 'home')) && (
+      {(currentPage === href.slice(1) || (href === '/sotogrande' && currentPage === 'home')) && (
         <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-parque-purple hidden md:block"></div>
       )}
       <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-parque-purple scale-x-0 group-hover:scale-x-100 transition-transform origin-left hidden md:block"></div>
@@ -145,7 +145,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <Link href="/" className="group flex items-center space-x-2 transform hover:scale-105 transition-transform">
+              <Link href="/sotogrande" className="group flex items-center space-x-2 transform hover:scale-105 transition-transform">
                 <Image
                   src="/logo-horizontal-big.png"
                   alt="Tenis del Parque"
@@ -163,7 +163,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
               <div className="flex space-x-6">
                 {/* Home with dropdown for sections */}
                 <div className="relative group">
-                  <NavLink href="/">{t.home}</NavLink>
+                  <NavLink href="/sotogrande">{t.home}</NavLink>
                   {/* Home sections dropdown */}
                   {currentPage === 'home' && (
                     <div className="absolute top-full left-0 mt-2 w-48 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-gray-100 py-2 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
@@ -330,7 +330,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
               {/* Home Page Link */}
               <div>
                 <NavLink 
-                  href="/" 
+                  href="/sotogrande" 
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <div className={`flex items-center justify-between py-3 px-4 rounded-xl transition-all duration-200 ${

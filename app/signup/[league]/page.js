@@ -121,7 +121,7 @@ export default function LeagueSignupPage() {
         
         // Redirect to home after 5 seconds
         setTimeout(() => {
-          router.push('/')
+          router.push('/sotogrande')
         }, 5000)
       } else {
         // Handle API errors
@@ -201,7 +201,7 @@ export default function LeagueSignupPage() {
               : 'The league you are looking for does not exist or is not active.'}
           </p>
           <button 
-            onClick={() => router.push('/')}
+            onClick={() => router.push('/sotogrande')}
             className="bg-parque-purple text-white px-8 py-3 rounded-full hover:bg-parque-purple/90 transition-colors"
           >
             {language === 'es' ? 'Volver al inicio' : 'Back to home'}
