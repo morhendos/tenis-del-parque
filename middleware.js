@@ -15,7 +15,7 @@ export async function middleware(request) {
     
     if (!tokenCookie?.value) {
       // Redirect to login
-      return NextResponse.redirect(new URL('/admin', request.url))
+      return NextResponse.redirect(new URL('/admin-login', request.url))
     }
 
     // Verify the token (Edge Runtime compatible)
@@ -23,7 +23,7 @@ export async function middleware(request) {
     
     if (!decoded || decoded.role !== 'admin') {
       // Redirect to login if token is invalid or not admin
-      return NextResponse.redirect(new URL('/admin', request.url))
+      return NextResponse.redirect(new URL('/admin-login', request.url))
     }
   }
 
