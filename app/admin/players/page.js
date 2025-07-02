@@ -444,6 +444,15 @@ function AdminPlayersContent() {
                     <li>level (beginner/intermediate/advanced)</li>
                     <li>status (pending/confirmed/active/inactive)</li>
                   </ul>
+                  <div className="mb-2">
+                    <a 
+                      href="/players-import-template.csv" 
+                      download
+                      className="text-sm text-blue-600 hover:text-blue-800 underline"
+                    >
+                      Download CSV template
+                    </a>
+                  </div>
                   {(filters.league || leagueParam) && (
                     <p className="text-sm text-blue-600 font-medium">
                       Players will be imported to: {leagues.find(l => l._id === (filters.league || leagueParam))?.name}
@@ -463,6 +472,13 @@ function AdminPlayersContent() {
                       Selected: {importModal.file.name}
                     </p>
                   )}
+                </div>
+
+                <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm text-yellow-800">
+                    <strong>Note:</strong> If a player with the same email already exists, their information will be updated. 
+                    New user accounts will be created with a temporary password: Tennis{new Date().getFullYear()}!
+                  </p>
                 </div>
 
                 <div className="flex justify-end space-x-3">
