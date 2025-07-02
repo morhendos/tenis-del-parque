@@ -1,0 +1,5 @@
+name,email,whatsapp,level,status
+John Doe,john.doe@example.com,+34 600 123 456,intermediate,pending
+Jane Smith,jane.smith@example.com,+34 600 234 567,beginner,confirmed
+Carlos Rodriguez,carlos@example.com,+34 600 345 678,advanced,active
+Maria Garcia,maria.garcia@example.com,+34 600 456 789,intermediate,pending
