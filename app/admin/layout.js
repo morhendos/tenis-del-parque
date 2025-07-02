@@ -1,36 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 
 export default function AdminLayout({ children }) {
   const pathname = usePathname()
-  const router = useRouter()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [loading, setLoading] = useState(true)
-
-  // Check if user is authenticated
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const res = await fetch('/api/admin/auth/check')
-        setIsAuthenticated(res.ok)
-      } catch (error) {
-        setIsAuthenticated(false)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    // Only check auth if not on login page
-    if (pathname !== '/admin') {
-      checkAuth()
-    } else {
-      setLoading(false)
-    }
-  }, [pathname])
 
   const navigation = [
     { name: 'Dashboard', href: '/admin/dashboard', icon: '📊' },
@@ -47,26 +23,9 @@ export default function AdminLayout({ children }) {
 
   const handleLogout = async () => {
     await fetch('/api/admin/auth/logout', { method: 'POST' })
-    router.push('/admin')
+    window.location.href = '/admin-login'
   }
 
-  // Show loading state
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
-        </div>
-      </div>
-    )
-  }
-
-  // If on login page or not authenticated, just render children without layout
-  if (pathname === '/admin' || !isAuthenticated) {
-    return <>{children}</>
-  }
-
-  // Render full admin layout with sidebar
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
