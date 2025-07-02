@@ -7,30 +7,11 @@ export default function AdminIndex() {
   const router = useRouter()
 
   useEffect(() => {
-    // Check if authenticated
-    fetch('/api/admin/auth/check')
-      .then(res => {
-        if (res.ok) {
-          // If authenticated, go to dashboard
-          router.push('/admin/dashboard')
-        } else {
-          // If not authenticated, go to login page
-          router.push('/admin-login')
-        }
-      })
-      .catch(() => {
-        // On error, go to login page
-        router.push('/admin-login')
-      })
+    // If we reach this page, user is authenticated (middleware handles auth)
+    // Just redirect to dashboard
+    router.push('/admin/dashboard')
   }, [router])
 
-  // Show loading state while checking auth
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
-        <p className="mt-4 text-gray-600">Loading...</p>
-      </div>
-    </div>
-  )
+  // Return null to prevent any flash of content
+  return null
 }
