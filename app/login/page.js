@@ -164,7 +164,7 @@ export default function Login() {
           {/* Links */}
           <div className="mt-6 text-center space-y-2">
             <p className="text-sm text-gray-600">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <a href="/signup/sotogrande" className="font-medium text-parque-purple hover:text-opacity-80">
                 Register for the league
               </a>
