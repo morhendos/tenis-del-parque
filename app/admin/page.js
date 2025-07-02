@@ -15,12 +15,12 @@ export default function AdminIndex() {
           router.push('/admin/dashboard')
         } else {
           // If not authenticated, go to login page
-          router.push('/admin-login')
+          router.push('/login')
         }
       })
       .catch(() => {
         // On error, go to login page
-        router.push('/admin-login')
+        router.push('/login')
       })
   }, [router])
 
