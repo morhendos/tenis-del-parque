@@ -5,7 +5,7 @@ import { verifyTokenEdge } from './lib/utils/edgeJwt'
 export async function middleware(request) {
   const { pathname } = request.nextUrl
 
-  // Check if it's an admin route (excluding login and auth endpoints)
+  // Check if it's an admin route (excluding the index and auth endpoints)
   if (pathname.startsWith('/admin') && 
       pathname !== '/admin' && 
       !pathname.startsWith('/api/admin/auth')) {
@@ -15,7 +15,7 @@ export async function middleware(request) {
     
     if (!tokenCookie?.value) {
       // Redirect to login
-      return NextResponse.redirect(new URL('/admin-login', request.url))
+      return NextResponse.redirect(new URL('/login', request.url))
     }
 
     // Verify the token (Edge Runtime compatible)
@@ -23,7 +23,7 @@ export async function middleware(request) {
     
     if (!decoded || decoded.role !== 'admin') {
       // Redirect to login if token is invalid or not admin
-      return NextResponse.redirect(new URL('/admin-login', request.url))
+      return NextResponse.redirect(new URL('/login', request.url))
     }
   }
 
@@ -51,12 +51,21 @@ export async function middleware(request) {
     }
   }
 
+  // TODO: Add player route protection when player dashboard is built
+  // if (pathname.startsWith('/player') && pathname !== '/player') {
+  //   const tokenCookie = request.cookies.get('player-token')
+  //   ...
+  // }
+
   return NextResponse.next()
 }
 
 export const config = {
   matcher: [
     '/admin/:path*',
-    '/api/admin/:path*'
+    '/api/admin/:path*',
+    // TODO: Add player routes when built
+    // '/player/:path*',
+    // '/api/player/:path*'
   ]
 }
