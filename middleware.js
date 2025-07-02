@@ -5,9 +5,8 @@ import { verifyTokenEdge } from './lib/utils/edgeJwt'
 export async function middleware(request) {
   const { pathname } = request.nextUrl
 
-  // Check if it's an admin route (excluding the index and auth endpoints)
+  // Check if it's an admin route (excluding auth endpoints)
   if (pathname.startsWith('/admin') && 
-      pathname !== '/admin' && 
       !pathname.startsWith('/api/admin/auth')) {
     
     // Check for JWT token cookie
@@ -52,7 +51,7 @@ export async function middleware(request) {
   }
 
   // TODO: Add player route protection when player dashboard is built
-  // if (pathname.startsWith('/player') && pathname !== '/player') {
+  // if (pathname.startsWith('/player')) {
   //   const tokenCookie = request.cookies.get('player-token')
   //   ...
   // }
