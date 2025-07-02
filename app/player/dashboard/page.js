@@ -96,7 +96,7 @@ export default function PlayerDashboard() {
           Welcome back, {player.name}! 👋
         </h1>
         <p className="mt-2 text-gray-600">
-          Here's your tennis journey at a glance
+          Here&apos;s your tennis journey at a glance
         </p>
       </div>
 

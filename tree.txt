@@ -21,6 +21,8 @@ root/
 │   │   │   └── page.js
 │   │   └── users
 │   │       └── page.js
+│   ├── admin-login
+│   │   └── page.js
 │   ├── api
 │   │   ├── admin
 │   │   │   ├── auth
@@ -45,6 +47,8 @@ root/
 │   │   │   │   │   └── route.js
 │   │   │   │   ├── export
 │   │   │   │   │   └── route.js
+│   │   │   │   ├── import
+│   │   │   │   │   └── route.js
 │   │   │   │   └── route.js
 │   │   │   └── users
 │   │   │       ├── [id]
@@ -53,12 +57,19 @@ root/
 │   │   │       │   └── route.js
 │   │   │       └── route.js
 │   │   ├── auth
+│   │   │   ├── check
+│   │   │   │   └── route.js
 │   │   │   ├── login
 │   │   │   │   └── route.js
 │   │   │   └── logout
 │   │   │       └── route.js
 │   │   ├── leagues
 │   │   │   └── [league]
+│   │   │       └── route.js
+│   │   ├── player
+│   │   │   ├── matches
+│   │   │   │   └── route.js
+│   │   │   └── profile
 │   │   │       └── route.js
 │   │   ├── players
 │   │   │   └── register
@@ -70,13 +81,25 @@ root/
 │   │   └── page.js
 │   ├── globals.css
 │   ├── layout.js
+│   ├── login
+│   │   └── page.js
 │   ├── page.js
+│   ├── player
+│   │   ├── dashboard
+│   │   │   └── page.js
+│   │   ├── layout.js
+│   │   └── page.js
 │   ├── rules
 │   │   ├── layout.js
 │   │   └── page.js
-│   └── signup
-│       └── [league]
-│           └── page.js
+│   ├── signup
+│   │   └── [league]
+│   │       └── page.js
+│   ├── sotogrande
+│   │   └── page.js
+│   └── swiss
+│       ├── layout.js
+│       └── page.js
 ├── components
 │   ├── analytics
 │   │   ├── GoogleAnalytics.js
@@ -115,7 +138,8 @@ root/
 │   ├── content
 │   │   ├── eloContent.js
 │   │   ├── homeContent.js
-│   │   └── rulesContent.js
+│   │   ├── rulesContent.js
+│   │   └── swissContent.js
 │   ├── data
 │   │   └── mockData.js
 │   ├── db
@@ -130,8 +154,10 @@ root/
 │   │   ├── Player.js
 │   │   └── User.js
 │   └── utils
+│       ├── adminAuth.js
 │       ├── apiHelpers.js
 │       ├── authMiddleware.js
+│       ├── edgeJwt.js
 │       ├── jwt.js
 │       ├── rulesIcons.js
 │       └── swissPairing.js
@@ -144,9 +170,11 @@ root/
 │   ├── logo-big.png
 │   ├── logo-horizontal-01.png
 │   ├── logo-horizontal-02.png
+│   ├── logo-horizontal-big.png
 │   ├── logo-old.png
 │   ├── logo.png
-│   └── players-2025-06-28.csv
+│   ├── players-2025-06-28.csv
+│   └── players-import-template.csv
 ├── scripts
 │   ├── createAdminUser.js
 │   ├── seedLeagues.js
