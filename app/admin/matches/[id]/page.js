@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 
 export default function MatchDetailPage() {
@@ -20,12 +20,7 @@ export default function MatchDetailPage() {
   const params = useParams()
   const matchId = params.id
 
-  useEffect(() => {
-    checkAuth()
-    fetchMatch()
-  }, [matchId])
-
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/auth/check')
       if (!res.ok) {
@@ -34,9 +29,9 @@ export default function MatchDetailPage() {
     } catch (error) {
       router.push('/admin')
     }
-  }
+  }, [router])
 
-  const fetchMatch = async () => {
+  const fetchMatch = useCallback(async () => {
     try {
       setLoading(true)
       const res = await fetch(`/api/admin/matches/${matchId}`)
@@ -60,7 +55,12 @@ export default function MatchDetailPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [matchId])
+
+  useEffect(() => {
+    checkAuth()
+    fetchMatch()
+  }, [checkAuth, fetchMatch])
 
   const handleAddSet = () => {
     setResultForm({
