@@ -25,8 +25,7 @@ function LoginForm() {
       // Then check if player
       const playerRes = await fetch('/api/auth/check')
       if (playerRes.ok) {
-        // TODO: Change this to /player/dashboard when it exists
-        router.push('/')
+        router.push('/player/dashboard')
         return
       }
     } catch (error) {
@@ -74,8 +73,7 @@ function LoginForm() {
       if (playerRes.ok) {
         const data = await playerRes.json()
         // Player login successful
-        // TODO: Change this to /player/dashboard when it exists
-        router.push(returnUrl || '/')
+        router.push(returnUrl || '/player/dashboard')
         return
       }
 
