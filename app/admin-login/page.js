@@ -1,1 +1,5 @@
-// This file has been removed - use /login instead
+import { redirect } from 'next/navigation'
+
+export default function AdminLoginRedirect() {
+  redirect('/login')
+}
