@@ -337,76 +337,28 @@ export default function MatchDetailPage() {
 
               {/* VS/Score Section */}
               <div className="text-center">
-                {match.result ? (
-                  <div className="space-y-4">
-                    {/* Final Score Display */}
-                    <div className="text-sm opacity-90 font-medium">FINAL SCORE</div>
-                    
-                    {match.result.score?.sets && match.result.score.sets.length > 0 ? (
-                      <div className="space-y-4">
-                        {/* Player vs Player Score */}
-                        <div className="bg-white bg-opacity-10 rounded-lg p-4">
-                          <div className="grid grid-cols-3 items-center gap-4">
-                            {/* Player 1 Name & Sets */}
-                            <div className="text-right">
-                              <div className="text-lg font-bold opacity-90">
-                                {match.players.player1.name}
-                              </div>
-                              <div className="text-3xl font-bold">
-                                {match.result.score.sets.filter(set => 
-                                  parseInt(set.player1) > parseInt(set.player2)
-                                ).length}
-                              </div>
-                            </div>
-                            
-                            {/* VS */}
-                            <div className="text-2xl font-bold opacity-60">VS</div>
-                            
-                            {/* Player 2 Name & Sets */}
-                            <div className="text-left">
-                              <div className="text-lg font-bold opacity-90">
-                                {match.players.player2.name}
-                              </div>
-                              <div className="text-3xl font-bold">
-                                {match.result.score.sets.filter(set => 
-                                  parseInt(set.player2) > parseInt(set.player1)
-                                ).length}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Set by Set Score with Player Names */}
-                        <div className="space-y-2">
-                          <div className="text-xs opacity-75 font-medium">SET SCORES</div>
-                          <div className="flex justify-center space-x-1">
-                            {match.result.score.sets.map((set, index) => (
-                              <div key={index} className="bg-white bg-opacity-20 rounded-lg px-3 py-2 min-w-[80px]">
-                                <div className="text-xs opacity-75 mb-1">SET {index + 1}</div>
-                                <div className="space-y-1">
-                                  <div className={`text-sm font-bold ${
-                                    parseInt(set.player1) > parseInt(set.player2) ? 'text-green-300' : 'opacity-75'
-                                  }`}>
-                                    {match.players.player1.name.split(' ')[0]}: {set.player1}
-                                  </div>
-                                  <div className={`text-sm font-bold ${
-                                    parseInt(set.player2) > parseInt(set.player1) ? 'text-green-300' : 'opacity-75'
-                                  }`}>
-                                    {match.players.player2.name.split(' ')[0]}: {set.player2}
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-3xl font-bold">
-                        {match.result.score?.walkover ? 'WALKOVER' : 'MATCH COMPLETED'}
-                      </div>
-                    )}
+                {match.status === 'completed' && match.result ? (
+                  <div className="space-y-3">
+                    {/* Simple Completed Match Display */}
+                    <div className="text-sm opacity-90 font-medium">MATCH COMPLETED</div>
+                    <div className="text-4xl font-bold opacity-80">
+                      {(() => {
+                        const player1Sets = match.result.score?.sets?.filter(set => 
+                          parseInt(set.player1) > parseInt(set.player2)
+                        ).length || 0
+                        const player2Sets = match.result.score?.sets?.filter(set => 
+                          parseInt(set.player2) > parseInt(set.player1)
+                        ).length || 0
+                        return `${player1Sets} - ${player2Sets}`
+                      })()}
+                    </div>
                     
                     {/* Special cases */}
+                    {match.result.score?.walkover && (
+                      <div className="text-sm bg-yellow-500 bg-opacity-20 rounded-full px-3 py-1">
+                        WALKOVER
+                      </div>
+                    )}
                     {match.result.score?.retiredPlayer && (
                       <div className="text-sm bg-yellow-500 bg-opacity-20 rounded-full px-3 py-1">
                         RETIREMENT
@@ -414,7 +366,26 @@ export default function MatchDetailPage() {
                     )}
                   </div>
                 ) : (
-                  <div className="text-4xl font-bold opacity-80">VS</div>
+                  <div className="space-y-3">
+                    <div className="text-4xl font-bold opacity-80">VS</div>
+                    {match.status === 'scheduled' && match.schedule?.confirmedDate && (
+                      <div className="bg-white bg-opacity-10 rounded-lg p-3">
+                        <div className="text-sm opacity-75 font-medium mb-1">SCHEDULED FOR</div>
+                        <div className="text-lg font-semibold">
+                          {new Date(match.schedule.confirmedDate).toLocaleDateString()}
+                        </div>
+                        <div className="text-sm opacity-90">
+                          {new Date(match.schedule.confirmedDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {match.schedule.court && ` • ${match.schedule.court}`}
+                        </div>
+                      </div>
+                    )}
+                    {match.status === 'scheduled' && !match.schedule?.confirmedDate && (
+                      <div className="bg-white bg-opacity-10 rounded-lg p-3">
+                        <div className="text-sm opacity-75 font-medium">AWAITING SCHEDULE</div>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
 
@@ -435,7 +406,7 @@ export default function MatchDetailPage() {
           </div>
 
           {/* Match Result Banner */}
-          {match.result?.winner && (
+          {match.status === 'completed' && match.result?.winner && (
             <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-200 px-6 py-4">
               <div className="text-center space-y-2">
                 <div className="flex items-center justify-center space-x-3">
@@ -466,27 +437,29 @@ export default function MatchDetailPage() {
                     </div>
                     
                     {/* Exact Score Display */}
-                    <div className="bg-white bg-opacity-50 rounded-lg p-3">
-                      <div className="text-sm text-green-800 font-medium mb-2">Match Score:</div>
-                      <div className="grid grid-cols-3 gap-2 text-sm">
-                        <div className="text-center font-semibold">{match.players.player1.name.split(' ')[0]}</div>
-                        <div className="text-center">vs</div>
-                        <div className="text-center font-semibold">{match.players.player2.name.split(' ')[0]}</div>
-                        {match.result.score.sets.map((set, index) => (
-                          <React.Fragment key={index}>
-                            <div className={`text-center font-bold ${
-                              parseInt(set.player1) > parseInt(set.player2) ? 'text-green-700' : 'text-green-600'
-                            }`}>
-                              {set.player1}
-                            </div>
-                            <div className="text-center text-green-600">-</div>
-                            <div className={`text-center font-bold ${
-                              parseInt(set.player2) > parseInt(set.player1) ? 'text-green-700' : 'text-green-600'
-                            }`}>
-                              {set.player2}
-                            </div>
-                          </React.Fragment>
-                        ))}
+                    <div className="flex justify-center">
+                      <div className="bg-white bg-opacity-50 rounded-lg p-3 max-w-sm">
+                        <div className="text-sm text-green-800 font-medium mb-2 text-center">Match Score:</div>
+                        <div className="grid grid-cols-3 gap-3 text-sm">
+                          <div className="text-center font-semibold">{match.players.player1.name.split(' ')[0]}</div>
+                          <div className="text-center">vs</div>
+                          <div className="text-center font-semibold">{match.players.player2.name.split(' ')[0]}</div>
+                          {match.result.score.sets.map((set, index) => (
+                            <React.Fragment key={index}>
+                              <div className={`text-center font-bold ${
+                                parseInt(set.player1) > parseInt(set.player2) ? 'text-green-700' : 'text-green-600'
+                              }`}>
+                                {set.player1}
+                              </div>
+                              <div className="text-center text-green-600">-</div>
+                              <div className={`text-center font-bold ${
+                                parseInt(set.player2) > parseInt(set.player1) ? 'text-green-700' : 'text-green-600'
+                              }`}>
+                                {set.player2}
+                              </div>
+                            </React.Fragment>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
