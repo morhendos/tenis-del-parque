@@ -29,7 +29,19 @@ export default function AdminLeaguesPage() {
     }
   }
 
-  const handleManageLeague = (leagueId, leagueName) => {
+  const handleLeagueClick = (leagueId, leagueName) => {
+    sessionStorage.setItem('selectedLeague', JSON.stringify({ id: leagueId, name: leagueName }))
+    router.push(`/admin/leagues/${leagueId}`)
+  }
+
+  const handlePlayersClick = (e, leagueId, leagueName) => {
+    e.stopPropagation()
+    sessionStorage.setItem('selectedLeague', JSON.stringify({ id: leagueId, name: leagueName }))
+    router.push(`/admin/players?league=${leagueId}`)
+  }
+
+  const handleMatchesClick = (e, leagueId, leagueName) => {
+    e.stopPropagation()
     sessionStorage.setItem('selectedLeague', JSON.stringify({ id: leagueId, name: leagueName }))
     router.push(`/admin/matches?league=${leagueId}`)
   }
@@ -47,7 +59,10 @@ export default function AdminLeaguesPage() {
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Leagues</h2>
-        <p className="text-gray-600 mt-1">Select a league to manage matches and view statistics</p>
+        <div className="mt-1">
+          <p className="text-gray-600">Click on a league card to access its management dashboard</p>
+          <p className="text-sm text-gray-500 mt-1">Or use the quick action buttons to jump directly to Players or Matches</p>
+        </div>
       </div>
 
       {error && (
@@ -63,11 +78,19 @@ export default function AdminLeaguesPage() {
           const playerCount = league.playerCount || 0
           
           return (
-            <div key={league._id} className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all">
+            <div 
+              key={league._id} 
+              onClick={() => handleLeagueClick(league._id, league.name)}
+              className="bg-white rounded-lg shadow-md hover:shadow-lg hover:border-parque-purple hover:border transition-all cursor-pointer group"
+              title={`Click to manage ${league.name}`}
+            >
               <div className="p-6">
                 <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-xl font-semibold text-gray-900">
+                  <h3 className="text-xl font-semibold text-gray-900 group-hover:text-parque-purple transition-colors flex items-center">
                     {league.name}
+                    <svg className="w-4 h-4 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
                   </h3>
                   <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${
                     currentSeason?.status === 'active' ? 'bg-green-100 text-green-800' :
@@ -95,16 +118,13 @@ export default function AdminLeaguesPage() {
 
                 <div className="mt-6 grid grid-cols-2 gap-2">
                   <button
-                    onClick={() => handleManageLeague(league._id, league.name)}
+                    onClick={(e) => handleMatchesClick(e, league._id, league.name)}
                     className="px-4 py-2 bg-parque-purple text-white text-sm rounded-lg hover:bg-opacity-90 transition-colors"
                   >
                     Matches
                   </button>
                   <button
-                    onClick={() => {
-                      sessionStorage.setItem('selectedLeague', JSON.stringify({ id: league._id, name: league.name }))
-                      router.push(`/admin/players?league=${league._id}`)
-                    }}
+                    onClick={(e) => handlePlayersClick(e, league._id, league.name)}
                     className="px-4 py-2 bg-parque-green text-white text-sm rounded-lg hover:bg-opacity-90 transition-colors"
                   >
                     Players

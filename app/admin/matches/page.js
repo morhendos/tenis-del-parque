@@ -115,8 +115,7 @@ function AdminMatchesContent() {
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Matches</h2>
           <p className="text-gray-600 mt-1">
-            {selectedLeague ? `${selectedLeague.name} - ` : ''}
-            Manage matches and results
+            {selectedLeague ? `Manage matches and results for ${selectedLeague.name}` : 'Manage matches and results'}
           </p>
         </div>
         <div className="flex space-x-3">
@@ -235,7 +234,7 @@ function AdminMatchesContent() {
                         {match.result.score?.sets?.map(set => `${set.player1}-${set.player2}`).join(', ') || 'No score'}
                       </span>
                     </div>
-                    {match.result.winner && (
+                    {match.result.winner && match.players?.player1 && match.players?.player2 && (
                       <div className="mt-1 text-sm text-green-600 font-medium">
                         Winner: {match.result.winner === match.players.player1._id ? match.players.player1.name : match.players.player2.name}
                       </div>

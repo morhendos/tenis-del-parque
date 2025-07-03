@@ -207,7 +207,12 @@ function AdminPlayersContent() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Players</h2>
-          <p className="text-gray-600 mt-1">Manage all registered players across leagues</p>
+          <p className="text-gray-600 mt-1">
+            {leagueParam ? 
+              `Manage players in ${leagues.find(l => l._id === leagueParam)?.name || 'selected league'}` :
+              'Manage all registered players across leagues'
+            }
+          </p>
         </div>
         <div className="flex space-x-3">
           <button

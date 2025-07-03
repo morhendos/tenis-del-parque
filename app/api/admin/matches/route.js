@@ -48,9 +48,14 @@ export async function GET(request) {
       .sort({ round: -1, 'schedule.confirmedDate': -1 })
       .lean()
 
+    // Filter out matches with null player references (orphaned after CSV import)
+    const validMatches = matches.filter(match => 
+      match.players?.player1 && match.players?.player2
+    )
+
     return NextResponse.json({
-      matches,
-      total: matches.length
+      matches: validMatches,
+      total: validMatches.length
     }, {
       headers: {
         'Cache-Control': 'no-store, no-cache, must-revalidate',

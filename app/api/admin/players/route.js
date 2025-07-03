@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import dbConnect from '../../../../lib/db/mongoose'
 import Player from '../../../../lib/models/Player'
+import User from '../../../../lib/models/User'
 import { verifyAdminAuth } from '../../../../lib/utils/adminAuth'
 
 // Force dynamic rendering for this route
