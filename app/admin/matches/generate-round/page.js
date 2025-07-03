@@ -32,13 +32,29 @@ function GenerateRoundContent() {
   const fetchRoundsData = async (league) => {
     try {
       setLoading(true)
-      const season = league.currentSeason || 'summer-2025'
+      
+      // First, fetch the actual league data to get the correct season
+      const leagueRes = await fetch('/api/admin/leagues')
+      if (!leagueRes.ok) throw new Error('Failed to fetch league data')
+      const leagueData = await leagueRes.json()
+      const actualLeague = leagueData.leagues?.find(l => l._id === league.id)
+      
+      // Determine the correct season to use
+      let season = 'summer-2025' // default fallback
+      if (actualLeague?.seasons?.length > 0) {
+        // Find active season or use the first season
+        const activeSeason = actualLeague.seasons.find(s => s.status === 'active' || s.status === 'registration_open')
+        season = activeSeason?.name || actualLeague.seasons[0].name
+      }
+      
+      console.log(`Using season: ${season} for league: ${actualLeague?.name}`)
+      
       const res = await fetch(`/api/admin/matches/generate-round?league=${league.id}&season=${season}`)
       
       if (!res.ok) throw new Error('Failed to fetch rounds data')
       
       const data = await res.json()
-      setRoundsData(data)
+      setRoundsData({ ...data, currentSeason: season })
     } catch (error) {
       console.error('Error fetching rounds:', error)
       setError('Failed to load rounds data')
@@ -53,7 +69,7 @@ function GenerateRoundContent() {
       setError('')
       setSuccess('')
       
-      const season = selectedLeague?.currentSeason || 'summer-2025'
+      const season = roundsData?.currentSeason || 'summer-2025'
       const nextRound = roundsData?.nextRound || 1
       
       const res = await fetch('/api/admin/matches/generate-round', {
@@ -87,7 +103,7 @@ function GenerateRoundContent() {
       setGenerating(true)
       setError('')
       
-      const season = selectedLeague?.currentSeason || 'summer-2025'
+      const season = roundsData?.currentSeason || 'summer-2025'
       const nextRound = roundsData?.nextRound || 1
       
       const res = await fetch('/api/admin/matches/generate-round', {
@@ -164,10 +180,22 @@ function GenerateRoundContent() {
       {/* Current Status */}
       <div className="bg-white rounded-lg shadow p-6">
         <h3 className="text-lg font-semibold mb-4">Tournament Status</h3>
+        {roundsData?.currentSeason && (
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <strong>Season:</strong> {roundsData.currentSeason}
+            </p>
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-gray-50 rounded p-4">
             <div className="text-sm text-gray-600">Active Players</div>
             <div className="text-2xl font-bold text-gray-900">{roundsData?.activePlayers || 0}</div>
+            {roundsData?.activePlayers === 0 && (
+              <div className="text-xs text-red-600 mt-1">
+                No active players found for current season
+              </div>
+            )}
           </div>
           <div className="bg-gray-50 rounded p-4">
             <div className="text-sm text-gray-600">Rounds Completed</div>
@@ -200,16 +228,40 @@ function GenerateRoundContent() {
       {/* Generate Preview Button */}
       {!preview && (
         <div className="bg-white rounded-lg shadow p-6 text-center">
-          <p className="text-gray-600 mb-4">
-            Ready to generate pairings for Round {roundsData?.nextRound || 1}?
-          </p>
-          <button
-            onClick={generatePreview}
-            disabled={generating}
-            className="px-6 py-3 bg-parque-purple text-white rounded-lg hover:bg-opacity-90 disabled:opacity-50"
-          >
-            {generating ? 'Generating...' : 'Generate Preview'}
-          </button>
+          {roundsData?.activePlayers > 0 ? (
+            <>
+              <p className="text-gray-600 mb-4">
+                Ready to generate pairings for Round {roundsData?.nextRound || 1}?
+              </p>
+              <button
+                onClick={generatePreview}
+                disabled={generating}
+                className="px-6 py-3 bg-parque-purple text-white rounded-lg hover:bg-opacity-90 disabled:opacity-50"
+              >
+                {generating ? 'Generating...' : 'Generate Preview'}
+              </button>
+            </>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-red-600 mb-4">
+                Cannot generate matches: No active players found for the current season.
+              </p>
+              <div className="text-sm text-gray-600 space-y-2">
+                <p>Possible solutions:</p>
+                                 <ul className="list-disc list-inside text-left max-w-md mx-auto">
+                   <li>Check that players have status &quot;active&quot; in the Players page</li>
+                   <li>Verify players are assigned to the correct season: {roundsData?.currentSeason}</li>
+                   <li>Import players with the correct season or update existing players</li>
+                 </ul>
+              </div>
+              <button
+                onClick={() => router.push(`/admin/players?league=${selectedLeague?.id || leagueId}`)}
+                className="px-4 py-2 bg-parque-green text-white rounded-lg hover:bg-opacity-90"
+              >
+                Go to Players Page
+              </button>
+            </div>
+          )}
         </div>
       )}
 

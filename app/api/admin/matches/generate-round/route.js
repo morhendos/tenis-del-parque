@@ -20,12 +20,26 @@ export async function POST(request) {
       )
     }
 
-    // Get all active players in the league
-    const players = await Player.find({ 
+    // Get all active players in the league (be flexible with season)
+    let players = await Player.find({ 
       league: leagueId,
       season: season,
       status: 'active'
     }).lean()
+
+    // If no players found with exact season, try finding active players in the league
+    if (players.length === 0) {
+      console.log(`No players found for season ${season}, trying without season filter...`)
+      players = await Player.find({ 
+        league: leagueId,
+        status: 'active'
+      }).lean()
+      
+      // Log what we found for debugging
+      console.log(`Found ${players.length} active players in league ${leagueId}:`, 
+        players.map(p => ({ name: p.name, season: p.season, status: p.status }))
+      )
+    }
 
     if (players.length < 2) {
       return NextResponse.json(
@@ -205,12 +219,29 @@ export async function GET(request) {
 
     const rounds = Object.values(roundsData).sort((a, b) => a.round - b.round)
 
-    // Get active players count
-    const activePlayers = await Player.countDocuments({
+    // Get active players count (be flexible with season)
+    let activePlayers = await Player.countDocuments({
       league: leagueId,
       season: season,
       status: 'active'
     })
+
+    // If no players found with exact season, try without season filter
+    if (activePlayers === 0) {
+      console.log(`No active players found for season ${season}, trying without season filter...`)
+      activePlayers = await Player.countDocuments({
+        league: leagueId,
+        status: 'active'
+      })
+      
+      // Also get some debug info
+      const playersDebug = await Player.find({
+        league: leagueId,
+        status: 'active'
+      }, 'name season status').lean()
+      
+      console.log(`Found ${activePlayers} active players in league ${leagueId}:`, playersDebug)
+    }
 
     return NextResponse.json({
       rounds,

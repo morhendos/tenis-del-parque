@@ -50,7 +50,7 @@ export async function POST(request) {
     // Get league if specified
     let league = null
     if (leagueId) {
-      league = await League.findById(leagueId)
+      league = await League.findById(leagueId).lean()
       if (!league) {
         return NextResponse.json(
           { error: 'Invalid league ID' },
@@ -59,7 +59,14 @@ export async function POST(request) {
       }
     } else {
       // Default to Sotogrande league if no league specified
-      league = await League.findOne({ slug: 'sotogrande' })
+      league = await League.findOne({ slug: 'sotogrande' }).lean()
+    }
+
+    if (!league) {
+      return NextResponse.json(
+        { error: 'No league found. Please specify a valid league.' },
+        { status: 400 }
+      )
     }
 
     // Process each row
@@ -111,6 +118,14 @@ export async function POST(request) {
         const existingPlayer = await Player.findOne({ email: rowData.email })
 
         if (existingPlayer) {
+          // Determine the correct season to use
+          let season = 'summer-2025' // default fallback
+          if (league?.seasons?.length > 0) {
+            // Find active season or use the first season
+            const activeSeason = league.seasons.find(s => s.status === 'active' || s.status === 'registration_open')
+            season = activeSeason?.name || league.seasons[0].name
+          }
+
           // Update existing player
           existingPlayer.name = rowData.name
           existingPlayer.whatsapp = rowData.whatsapp
@@ -118,9 +133,20 @@ export async function POST(request) {
           if (rowData.status) existingPlayer.status = rowData.status.toLowerCase()
           if (league && !existingPlayer.league) existingPlayer.league = league._id
           
+          // Update season to match current league season
+          existingPlayer.season = season
+          
           await existingPlayer.save()
           results.updated++
         } else {
+          // Determine the correct season to use
+          let season = 'summer-2025' // default fallback
+          if (league?.seasons?.length > 0) {
+            // Find active season or use the first season
+            const activeSeason = league.seasons.find(s => s.status === 'active' || s.status === 'registration_open')
+            season = activeSeason?.name || league.seasons[0].name
+          }
+
           // Create new player
           const playerData = {
             name: rowData.name,
@@ -129,7 +155,7 @@ export async function POST(request) {
             level: rowData.level?.toLowerCase() || 'intermediate',
             status: rowData.status?.toLowerCase() || 'pending',
             league: league?._id,
-            season: league?.seasons?.[0]?.name || 'summer-2025',
+            season: season,
             registeredAt: new Date()
           }
 
