@@ -63,20 +63,41 @@ export async function POST(request) {
         player.userId = user._id
         await player.save()
 
-        // TODO: Send invitation email
-        // In production, you would send an email here with the activation link
-        // await sendInvitationEmail(player.email, player.name, activationToken)
+        // Generate activation link
+        const activationLink = `${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/activate?token=${activationToken}`
+        
+        // Generate WhatsApp message and link
+        const whatsappMessage = `🎾 ¡Hola ${player.name}! 
+
+Tu cuenta de usuario para la Liga de Tenis está lista. 
+
+✅ Activa tu cuenta aquí: ${activationLink}
+
+Una vez activada podrás:
+• Ver tus partidos
+• Consultar tu ranking 
+• Acceder a tu dashboard personal
+
+¡Nos vemos en la pista! 🏆`
+
+        const whatsappLink = `https://wa.me/${player.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(whatsappMessage)}`
 
         invitations.push({
           playerId: player._id,
           playerName: player.name,
           email: player.email,
+          whatsapp: player.whatsapp,
           userId: user._id,
+          activationLink,
+          whatsappLink,
+          whatsappMessage,
           activationToken: process.env.NODE_ENV === 'development' ? activationToken : undefined
         })
 
-        console.log(`Invitation for ${player.name} (${player.email}):`)
-        console.log(`Activation link: ${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/signup/activate?token=${activationToken}`)
+        console.log(`\n📱 WhatsApp invitation for ${player.name}:`)
+        console.log(`WhatsApp: ${player.whatsapp}`)
+        console.log(`Link: ${whatsappLink}`)
+        console.log(`Activation: ${activationLink}`)
 
       } catch (error) {
         console.error(`Error inviting player ${player.email}:`, error)

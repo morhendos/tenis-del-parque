@@ -448,6 +448,8 @@ function InvitePlayersModal({ onClose, onSuccess }) {
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
+  const [step, setStep] = useState('select') // 'select' or 'results'
+  const [invitationResults, setInvitationResults] = useState(null)
 
   useEffect(() => {
     fetchPlayersWithoutUsers()
@@ -486,8 +488,9 @@ function InvitePlayersModal({ onClose, onSuccess }) {
         throw new Error(data.error || 'Failed to send invitations')
       }
 
-      alert(`Successfully sent ${data.sent} invitations`)
-      onSuccess()
+      // Show WhatsApp links instead of just alert
+      setInvitationResults(data)
+      setStep('results')
     } catch (error) {
       setError(error.message)
     } finally {
@@ -514,7 +517,9 @@ function InvitePlayersModal({ onClose, onSuccess }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
-        <h3 className="text-lg font-semibold mb-4">Invite Players</h3>
+        <h3 className="text-lg font-semibold mb-4">
+          {step === 'select' ? 'Invite Players' : '📱 WhatsApp Invitations Ready'}
+        </h3>
         
         {error && (
           <div className="mb-4 bg-red-50 text-red-600 p-3 rounded-lg">
@@ -522,15 +527,80 @@ function InvitePlayersModal({ onClose, onSuccess }) {
           </div>
         )}
 
-        {loading ? (
+        {step === 'results' && invitationResults ? (
+          <div className="flex-1 overflow-y-auto">
+            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-green-800 font-medium">
+                ✅ Successfully created {invitationResults.sent} user accounts!
+              </p>
+              <p className="text-green-600 text-sm mt-1">
+                Click the WhatsApp buttons below to send activation links to players.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              {invitationResults.invitations?.map((invitation) => (
+                <div key={invitation.playerId} className="border rounded-lg p-4 bg-gray-50">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-medium text-gray-900">{invitation.playerName}</h4>
+                      <p className="text-sm text-gray-600">{invitation.email}</p>
+                      <p className="text-sm text-gray-600">📱 {invitation.whatsapp}</p>
+                    </div>
+                    <a
+                      href={invitation.whatsappLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+                      </svg>
+                      <span>Send WhatsApp</span>
+                    </a>
+                  </div>
+                  
+                  {process.env.NODE_ENV === 'development' && (
+                    <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded text-xs">
+                      <p className="font-medium text-yellow-800">Development Mode:</p>
+                      <p className="text-yellow-700 mt-1">Direct link: {invitation.activationLink}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 flex justify-between">
+              <button
+                onClick={() => {
+                  setStep('select')
+                  setInvitationResults(null)
+                  setSelectedPlayers([])
+                }}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+              >
+                ← Back to Selection
+              </button>
+              <button
+                onClick={() => {
+                  onSuccess()
+                  onClose()
+                }}
+                className="px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-opacity-90"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        ) : step === 'select' && loading ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-gray-600">Loading players...</div>
           </div>
-        ) : (
+        ) : step === 'select' ? (
           <>
             <div className="mb-4 flex justify-between items-center">
               <p className="text-sm text-gray-600">
-                Select players to send invitation emails
+                Select players to send WhatsApp invitations
               </p>
               <div className="space-x-2">
                 <button
@@ -620,7 +690,7 @@ function InvitePlayersModal({ onClose, onSuccess }) {
               </div>
             </div>
           </>
-        )}
+        ) : null}
       </div>
     </div>
   )
