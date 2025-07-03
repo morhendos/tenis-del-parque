@@ -11,9 +11,34 @@ export default function AdminLayout({ children }) {
   const [showLeagueSwitcher, setShowLeagueSwitcher] = useState(false)
 
   const navigation = [
-    { name: 'Dashboard', href: '/admin/dashboard', icon: '📊' },
-    { name: 'Leagues', href: '/admin/leagues', icon: '🏆' },
-    { name: 'Users', href: '/admin/users', icon: '🔐' },
+    { 
+      name: 'Dashboard', 
+      href: '/admin/dashboard', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6h-8V5z" />
+        </svg>
+      )
+    },
+    { 
+      name: 'Leagues', 
+      href: '/admin/leagues', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+        </svg>
+      )
+    },
+    { 
+      name: 'Users', 
+      href: '/admin/users', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+        </svg>
+      )
+    },
   ]
 
   // Load selected league from sessionStorage
@@ -83,65 +108,82 @@ export default function AdminLayout({ children }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
+      } transition-transform duration-300 ease-in-out lg:translate-x-0`}>
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-between h-16 px-6 bg-parque-purple">
-            <Link href="/admin/dashboard" className="flex items-center">
-              <span className="text-xl font-bold text-white">Tennis Admin</span>
+          <div className="flex items-center justify-between h-16 px-6 bg-gradient-to-r from-parque-purple to-parque-green">
+            <Link href="/admin/dashboard" className="flex items-center group">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold">🎾</span>
+                </div>
+                <span className="text-xl font-bold text-white group-hover:text-gray-100 transition-colors">
+                  Tennis Admin
+                </span>
+              </div>
             </Link>
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="lg:hidden text-white hover:text-gray-200"
+              className="lg:hidden text-white hover:text-gray-200 p-2 rounded-lg hover:bg-white hover:bg-opacity-20 transition-colors"
             >
-              ✕
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+          <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                className={`group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
                   isActive(item.href)
-                    ? 'bg-parque-purple text-white'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? 'bg-gradient-to-r from-parque-purple to-parque-green text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-parque-purple'
                 }`}
               >
-                <span className="mr-3 text-lg">{item.icon}</span>
-                {item.name}
+                <span className="mr-3 flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
+                  {item.icon}
+                </span>
+                <span className="truncate">{item.name}</span>
               </Link>
             ))}
           </nav>
 
           {/* User section */}
-          <div className="p-4 border-t">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-900">Admin User</p>
-                <p className="text-xs text-gray-500">admin@tenisdelparque.com</p>
+          <div className="p-4 border-t border-gray-200">
+            <div className="flex items-center space-x-3 mb-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-parque-purple to-parque-green rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-lg">A</span>
               </div>
-              <button
-                onClick={handleLogout}
-                className="text-sm text-gray-500 hover:text-gray-700"
-              >
-                Logout
-              </button>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">Admin User</p>
+                <p className="text-xs text-gray-500 truncate">admin@tenisdelparque.com</p>
+              </div>
             </div>
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 hover:text-parque-purple transition-colors duration-200"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Logout
+            </button>
           </div>
         </div>
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="lg:ml-64 flex flex-col min-h-screen">
         {/* Top bar */}
-        <div className="sticky top-0 z-40 flex items-center h-16 px-6 bg-white shadow-sm">
+        <div className="sticky top-0 z-40 flex items-center h-16 px-6 bg-white shadow-sm border-b border-gray-200">
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             className="lg:hidden text-gray-600 hover:text-gray-900"
@@ -200,7 +242,7 @@ export default function AdminLayout({ children }) {
         </div>
 
         {/* Page content */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
           <div className="container mx-auto px-6 py-6 max-w-7xl">
             {children}
           </div>
@@ -210,7 +252,7 @@ export default function AdminLayout({ children }) {
       {/* Mobile sidebar backdrop */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden transition-opacity duration-300"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}

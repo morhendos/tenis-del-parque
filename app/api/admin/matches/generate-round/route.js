@@ -67,8 +67,42 @@ export async function POST(request) {
       )
     }
 
+    // Log player distribution by skill level for debugging
+    const skillDistribution = players.reduce((acc, player) => {
+      const level = player.level || 'unknown'
+      acc[level] = (acc[level] || 0) + 1
+      return acc
+    }, {})
+    
+    console.log(`Round ${round} - Player distribution by skill level:`, skillDistribution)
+    console.log(`Using ${round <= 3 ? 'skill-level priority' : 'traditional Swiss'} pairing for round ${round}`)
+
     // Generate pairings
     const result = generateSwissPairings(players, previousMatches, round)
+    
+    // Log pairing results for debugging
+    console.log(`Generated ${result.pairings.length} pairings for round ${round}:`)
+    result.pairings.forEach((pairing, index) => {
+      const crossLevel = pairing.player1.level !== pairing.player2.level
+      console.log(`  Match ${index + 1}: ${pairing.player1.name} (${pairing.player1.level}) vs ${pairing.player2.name} (${pairing.player2.level})${crossLevel ? ' [CROSS-LEVEL]' : ''}${pairing.isRematch ? ' [REMATCH - ERROR!]' : ''}`)
+    })
+    
+    if (result.bye) {
+      console.log(`  Regular Bye: ${result.bye.name} (${result.bye.level})`)
+    }
+    
+    if (result.additionalByes && result.additionalByes.length > 0) {
+      console.log(`  Additional Byes (to avoid rematches):`)
+      result.additionalByes.forEach((player, index) => {
+        console.log(`    ${index + 1}. ${player.name} (${player.level})`)
+      })
+    }
+    
+    // Check for any rematches that shouldn't exist
+    const rematchCount = result.pairings.filter(p => p.isRematch).length
+    if (rematchCount > 0) {
+      console.error(`ERROR: Found ${rematchCount} rematches that should have been avoided!`)
+    }
     
     // Validate pairings
     const validation = validatePairings(result.pairings, players)
@@ -115,46 +149,18 @@ export async function POST(request) {
 
     // Handle bye if there is one
     if (result.bye) {
-      const byeMatch = new Match({
-        league: leagueId,
-        season: season,
-        round: round,
-        players: {
-          player1: result.bye._id,
-          player2: null
-        },
-        status: 'completed',
-        result: {
-          winner: result.bye._id,
-          isBye: true
-        },
-        isBye: true,
-        createdBy: 'Swiss Pairing System',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      })
+      const byeMatch = await createByeMatch(result.bye, leagueId, season, round)
+      createdMatches.push(byeMatch)
+    }
 
-      const savedByeMatch = await byeMatch.save()
+    // Handle additional byes (players who couldn't be paired without rematches)
+    if (result.additionalByes && result.additionalByes.length > 0) {
+      console.log(`Creating ${result.additionalByes.length} additional bye matches to avoid rematches`)
       
-      // Update player stats for bye
-      await Player.findByIdAndUpdate(result.bye._id, {
-        $inc: { 
-          'stats.matchesPlayed': 1,
-          'stats.matchesWon': 1
-        },
-        $push: {
-          matchHistory: {
-            match: savedByeMatch._id,
-            opponent: null,
-            result: 'won',
-            isBye: true,
-            eloChange: 0,
-            date: new Date()
-          }
-        }
-      })
-
-      createdMatches.push(savedByeMatch)
+      for (const player of result.additionalByes) {
+        const byeMatch = await createByeMatch(player, leagueId, season, round)
+        createdMatches.push(byeMatch)
+      }
     }
 
     return NextResponse.json({
@@ -257,4 +263,50 @@ export async function GET(request) {
       { status: 500 }
     )
   }
+}
+
+// Helper function to create bye matches
+async function createByeMatch(player, leagueId, season, round) {
+  const byeMatch = new Match({
+    league: leagueId,
+    season: season,
+    round: round,
+    players: {
+      player1: player._id,
+      player2: null
+    },
+    status: 'completed',
+    result: {
+      winner: player._id,
+      isBye: true
+    },
+    isBye: true,
+    createdBy: 'Swiss Pairing System',
+    createdAt: new Date(),
+    updatedAt: new Date()
+  })
+
+  const savedByeMatch = await byeMatch.save()
+  
+  // Update player stats for bye
+  await Player.findByIdAndUpdate(player._id, {
+    $inc: { 
+      'stats.matchesPlayed': 1,
+      'stats.matchesWon': 1
+    },
+    $push: {
+      matchHistory: {
+        match: savedByeMatch._id,
+        opponent: null,
+        result: 'won',
+        isBye: true,
+        eloChange: 0,
+        eloAfter: player.stats?.eloRating || 1200,
+        round: round,
+        date: new Date()
+      }
+    }
+  })
+
+  return savedByeMatch
 }

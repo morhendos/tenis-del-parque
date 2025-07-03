@@ -86,11 +86,8 @@ export default function AdminLeaguesPage() {
             >
               <div className="p-6">
                 <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-xl font-semibold text-gray-900 group-hover:text-parque-purple transition-colors flex items-center">
+                  <h3 className="text-xl font-semibold text-gray-900 group-hover:text-parque-purple transition-colors">
                     {league.name}
-                    <svg className="w-4 h-4 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
                   </h3>
                   <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${
                     currentSeason?.status === 'active' ? 'bg-green-100 text-green-800' :
