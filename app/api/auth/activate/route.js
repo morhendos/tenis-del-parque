@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import dbConnect from '../../../../lib/db/mongoose'
 import User from '../../../../lib/models/User'
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic'
+
 export async function POST(request) {
   try {
     await dbConnect()

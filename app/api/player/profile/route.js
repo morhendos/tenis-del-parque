@@ -4,6 +4,9 @@ import Player from '../../../../lib/models/Player'
 import User from '../../../../lib/models/User'
 import { verifyToken } from '../../../../lib/utils/jwt'
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic'
+
 export async function GET(request) {
   try {
     // Get token from cookie

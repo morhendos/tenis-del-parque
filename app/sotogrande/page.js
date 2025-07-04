@@ -27,6 +27,36 @@ function SectionDivider() {
   )
 }
 
+// Urgent Launch Banner Component
+function UrgentLaunchBanner({ language }) {
+  return (
+    <div className="bg-gradient-to-r from-red-600 via-red-500 to-orange-500 text-white py-3 px-4 relative overflow-hidden">
+      <div className="absolute inset-0 bg-black/10"></div>
+      <div className="absolute inset-0">
+        <div className="absolute animate-pulse bg-white/20 h-full w-8 -skew-x-12 opacity-30 translate-x-[-100%] animate-[shimmer_2s_infinite]"></div>
+      </div>
+      <div className="container mx-auto text-center relative z-10">
+        <div className="flex items-center justify-center space-x-2 font-bold text-sm md:text-base">
+          <span className="animate-bounce">🚨</span>
+          <span>
+            {language === 'es' 
+              ? '¡ATENCIÓN! Liga comienza LUNES 7 JULIO - Emparejamientos DOMINGO 6 - ¡Últimas horas!'
+              : 'ATTENTION! League starts MONDAY JULY 7TH - Pairings SUNDAY 6TH - Last hours!'
+            }
+          </span>
+          <span className="animate-bounce">🚨</span>
+        </div>
+      </div>
+      <style jsx>{`
+        @keyframes shimmer {
+          0% { transform: translateX(-100%) skewX(-12deg); }
+          100% { transform: translateX(200vw) skewX(-12deg); }
+        }
+      `}</style>
+    </div>
+  )
+}
+
 // New CTA Section Component
 function CTASection({ content, language, onSignupClick }) {
   return (
@@ -65,12 +95,12 @@ function CTASection({ content, language, onSignupClick }) {
             </a>
           </div>
           
-          <div className="mt-12 inline-flex items-center gap-2 px-4 py-2 bg-parque-green/20 rounded-full text-sm">
-            <span className="w-2 h-2 bg-parque-green rounded-full animate-pulse"></span>
-            <span className="text-gray-700 font-medium">
+          <div className="mt-12 inline-flex items-center gap-2 px-4 py-2 bg-red-100 border border-red-300 rounded-full text-sm">
+            <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+            <span className="text-red-700 font-bold">
               {language === 'es' 
-                ? '¡Primera temporada gratis! Plazas limitadas.' 
-                : 'First season free! Limited spots available.'}
+                ? '⚡ ¡ÚLTIMAS HORAS! Emparejamientos DOMINGO 6 - Liga LUNES 7' 
+                : '⚡ LAST HOURS! Pairings SUNDAY 6TH - League MONDAY 7TH'}
             </span>
           </div>
         </div>
@@ -165,8 +195,13 @@ export default function SotograndePage() {
         onLanguageChange={setLanguage} 
       />
       
+      {/* Urgent Launch Banner */}
+      <div className="relative z-30 mt-16">
+        <UrgentLaunchBanner language={language} />
+      </div>
+      
       {/* Main content with proper z-index (lower than navigation) */}
-      <div className="relative z-10 pt-16">
+      <div className="relative z-10">
         <HeroSection content={t.hero} />
       </div>
       
