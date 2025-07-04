@@ -336,8 +336,16 @@ function AdminPlayersContent() {
           </div>
         </div>
         
-        <div className="mt-4 text-sm text-gray-600">
-          Showing {filteredPlayers.length} of {players.length} players
+        <div className="mt-4 flex justify-between items-center">
+          <div className="text-sm text-gray-600">
+            Showing {filteredPlayers.length} of {players.length} players
+          </div>
+          <div className="text-xs text-gray-500">
+            <strong>Status:</strong> 
+            <span className="mx-1 px-2 py-1 bg-yellow-100 text-yellow-800 rounded">pending</span> → 
+            <span className="mx-1 px-2 py-1 bg-blue-100 text-blue-800 rounded">confirmed</span> → 
+            <span className="mx-1 px-2 py-1 bg-green-100 text-green-800 rounded">active</span>
+          </div>
         </div>
       </div>
 
@@ -541,10 +549,10 @@ function AdminPlayersContent() {
                   )}
                 </div>
 
-                <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <p className="text-sm text-yellow-800">
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800">
                     <strong>Note:</strong> If a player with the same email already exists, their information will be updated. 
-                    New user accounts will be created with a temporary password: Tennis{new Date().getFullYear()}!
+                    Imported players will NOT automatically get user accounts - you&apos;ll need to invite them separately via the &quot;Users&quot; → &quot;Invite Players&quot; feature.
                   </p>
                 </div>
 

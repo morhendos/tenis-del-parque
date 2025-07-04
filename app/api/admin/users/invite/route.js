@@ -20,15 +20,50 @@ export async function POST(request) {
       )
     }
 
+    // Debug: Check what we received
+    console.log('🔍 Invitation request for player IDs:', playerIds)
+    
+    // Find ALL requested players first for debugging
+    const allRequestedPlayers = await Player.find({
+      _id: { $in: playerIds }
+    }).populate('league', 'name').populate('userId', 'email role')
+
+    console.log('📊 All requested players:', allRequestedPlayers.map(p => ({
+      id: p._id,
+      name: p.name,
+      email: p.email,
+      status: p.status,
+      hasUserId: !!p.userId,
+      userDetails: p.userId ? { email: p.userId.email, role: p.userId.role } : null
+    })))
+
     // Find players without users
     const players = await Player.find({
       _id: { $in: playerIds },
-      userId: { $exists: false }
+      $or: [
+        { userId: { $exists: false } },
+        { userId: null }
+      ]
     }).populate('league', 'name')
 
+    console.log('✅ Valid players for invitation:', players.map(p => ({
+      id: p._id,
+      name: p.name,
+      email: p.email,
+      status: p.status
+    })))
+
     if (players.length === 0) {
+      const invalidReasons = allRequestedPlayers.map(p => 
+        `${p.name} (${p.email}): ${p.userId ? 'Already has user account' : 'Unknown issue'}`
+      )
+      
       return NextResponse.json(
-        { error: 'No valid players found to invite' },
+        { 
+          error: 'No valid players found to invite',
+          details: 'All selected players already have user accounts',
+          invalidPlayers: invalidReasons
+        },
         { status: 400 }
       )
     }
@@ -59,8 +94,9 @@ export async function POST(request) {
         const activationToken = user.generateActivationToken()
         await user.save()
 
-        // Update player with userId
+        // Update player with userId and change status to confirmed
         player.userId = user._id
+        player.status = 'confirmed' // Player has been invited
         await player.save()
 
         // Generate activation link

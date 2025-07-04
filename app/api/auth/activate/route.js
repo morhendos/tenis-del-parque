@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import dbConnect from '../../../../lib/db/mongoose'
 import User from '../../../../lib/models/User'
+import Player from '../../../../lib/models/Player'
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic'
@@ -59,6 +60,13 @@ export async function POST(request) {
     user.activationToken = undefined
     user.activationTokenExpiry = undefined
     await user.save()
+
+    // Update linked player status to active
+    if (user.playerId) {
+      await Player.findByIdAndUpdate(user.playerId, { 
+        status: 'active' 
+      })
+    }
 
     return NextResponse.json({
       success: true,

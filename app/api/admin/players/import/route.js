@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server'
 import dbConnect from '../../../../../lib/db/mongoose'
 import Player from '../../../../../lib/models/Player'
 import League from '../../../../../lib/models/League'
-import User from '../../../../../lib/models/User'
-import bcrypt from 'bcryptjs'
 
 export async function POST(request) {
   try {
@@ -162,22 +160,8 @@ export async function POST(request) {
           await Player.create(playerData)
           results.created++
 
-          // Check if user exists for this email
-          const existingUser = await User.findOne({ email: rowData.email })
-          
-          if (!existingUser) {
-            // Create a user account with temporary password
-            const tempPassword = `Tennis${new Date().getFullYear()}!`
-            const hashedPassword = await bcrypt.hash(tempPassword, 10)
-            
-            await User.create({
-              email: rowData.email,
-              password: hashedPassword,
-              role: 'player',
-              isActive: true,
-              createdAt: new Date()
-            })
-          }
+          // Note: User accounts are NOT created during import
+          // Players will need to be invited separately via the invitation system
         }
       } catch (error) {
         console.error(`Error processing row ${i + 1}:`, error)

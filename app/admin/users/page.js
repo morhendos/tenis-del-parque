@@ -126,10 +126,18 @@ export default function AdminUsersPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">User Management</h2>
-          <p className="text-gray-600 mt-1">Manage admin users and player accounts</p>
+              <div>
+        <h2 className="text-2xl font-bold text-gray-900">User Management</h2>
+        <p className="text-gray-600 mt-1">Manage admin users and player accounts</p>
+        <div className="text-sm mt-2 space-y-1">
+          <p className="text-blue-600">
+            💡 <strong>Workflow:</strong> Players sign up (pending) → You invite them (confirmed) → They activate (active)
+          </p>
+          <p className="text-gray-600">
+            Only players with <span className="px-1 bg-yellow-100 text-yellow-800 rounded text-xs">pending</span> status can be invited.
+          </p>
         </div>
+      </div>
         <div className="flex space-x-3">
           <button
             onClick={handleInvitePlayers}
@@ -450,6 +458,8 @@ function InvitePlayersModal({ onClose, onSuccess }) {
   const [error, setError] = useState('')
   const [step, setStep] = useState('select') // 'select' or 'results'
   const [invitationResults, setInvitationResults] = useState(null)
+  const [lastRefresh, setLastRefresh] = useState(null)
+  const [processingPlayer, setProcessingPlayer] = useState(null)
 
   useEffect(() => {
     fetchPlayersWithoutUsers()
@@ -458,16 +468,18 @@ function InvitePlayersModal({ onClose, onSuccess }) {
   const fetchPlayersWithoutUsers = async () => {
     try {
       // First, let's see all players to debug
-      console.log('Fetching players...')
+      console.log('🔍 Fetching all players for debugging...')
       const allPlayersRes = await fetch('/api/admin/players')
       if (allPlayersRes.ok) {
         const allPlayersData = await allPlayersRes.json()
-        console.log('All players in database:', allPlayersData.players)
-        console.log('Total players found:', allPlayersData.players?.length || 0)
+        console.log('📊 All players in database:', allPlayersData.players)
+        console.log('📈 Total players found:', allPlayersData.players?.length || 0)
         
-        // Show status breakdown
+        // Show detailed breakdown
         const statusCounts = {}
         const userCounts = { hasUser: 0, noUser: 0 }
+        const playerDetails = []
+        
         allPlayersData.players?.forEach(player => {
           statusCounts[player.status] = (statusCounts[player.status] || 0) + 1
           if (player.userId) {
@@ -475,52 +487,169 @@ function InvitePlayersModal({ onClose, onSuccess }) {
           } else {
             userCounts.noUser++
           }
+          
+          // Collect player details for debugging
+          playerDetails.push({
+            name: player.name,
+            email: player.email,
+            status: player.status,
+            hasUserId: !!player.userId,
+            registeredAt: player.registeredAt
+          })
         })
-        console.log('Status breakdown:', statusCounts)
-        console.log('User account breakdown:', userCounts)
+        
+        console.log('📋 Status breakdown:', statusCounts)
+        console.log('👥 User account breakdown:', userCounts)
+        console.log('🎾 Player details:', playerDetails)
+        
+        // Show most recent players
+        const recentPlayers = playerDetails
+          .sort((a, b) => new Date(b.registeredAt) - new Date(a.registeredAt))
+          .slice(0, 5)
+        console.log('🕐 5 most recent players:', recentPlayers)
       }
       
-      // Include active, confirmed, and pending players who don't have user accounts
-      const res = await fetch('/api/admin/players?hasUser=false&status=pending,confirmed,active')
-      if (!res.ok) throw new Error('Failed to fetch players')
+      // Only include pending players (not yet invited) who don't have user accounts
+      console.log('🔍 Now fetching players without user accounts...')
+      const res = await fetch('/api/admin/players?hasUser=false&status=pending')
+      if (!res.ok) {
+        console.error('❌ Failed to fetch filtered players:', res.status, res.statusText)
+        throw new Error('Failed to fetch players')
+      }
       
       const data = await res.json()
-      console.log('Players without users (filtered):', data.players) // Debug log
+      console.log('✅ Players without users (filtered response):', data)
+      console.log('📝 Players eligible for invitation:', data.players)
+      console.log('🎯 Count of eligible players:', data.players?.length || 0)
+      
+      // Show summary instead of detailed logs to reduce noise
+      if (data.players?.length > 0) {
+        console.log(`✅ Found ${data.players.length} eligible players:`, 
+          data.players.map(p => `${p.name} (${p.status})`)
+        )
+      }
+      
+      if (data.players?.length === 0) {
+        console.log('⚠️ No players found matching criteria:')
+        console.log('   - hasUser=false (no user account)')
+        console.log('   - status=pending (not yet invited)')
+        console.log('   - This might mean all pending players have been invited already')
+        console.log('   - Players with status "confirmed" or "active" have already been processed')
+      }
+      
       setPlayers(data.players || [])
+      setLastRefresh(new Date())
     } catch (error) {
       setError('Failed to load players')
-      console.error('Error fetching players:', error)
+      console.error('❌ Error fetching players:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  const handleSendInvitations = async () => {
-    if (selectedPlayers.length === 0) return
+  const handleSendInvitations = async (playerIds = null) => {
+    const idsToInvite = playerIds || selectedPlayers
+    if (idsToInvite.length === 0) return
 
     try {
       setSending(true)
       setError('')
       
+      console.log('🚀 Sending invitations for player IDs:', idsToInvite)
+      
       const res = await fetch('/api/admin/users/invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ playerIds: selectedPlayers })
+        body: JSON.stringify({ playerIds: idsToInvite })
       })
 
       const data = await res.json()
+      console.log('📨 Invitation response:', data)
       
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to send invitations')
+        console.error('❌ Invitation failed:', data)
+        let errorMessage = data.error || 'Failed to send invitations'
+        if (data.details) {
+          errorMessage += ` - ${data.details}`
+        }
+        if (data.invalidPlayers?.length > 0) {
+          errorMessage += `\n\nPlayer issues:\n${data.invalidPlayers.join('\n')}`
+        }
+        throw new Error(errorMessage)
       }
 
       // Show WhatsApp links instead of just alert
       setInvitationResults(data)
       setStep('results')
+      
+      // Clear selections when moving to results
+      setSelectedPlayers([])
+      
+      // Refresh the players list to remove invited players
+      setTimeout(() => {
+        fetchPlayersWithoutUsers()
+      }, 1000)
     } catch (error) {
+      console.error('❌ Invitation error:', error)
       setError(error.message)
     } finally {
       setSending(false)
+      setProcessingPlayer(null)
+    }
+  }
+
+  const handleSingleInvitation = async (playerId) => {
+    // Don't modify selectedPlayers for individual invitations
+    const originalSelected = [...selectedPlayers]
+    
+    try {
+      setSending(true)
+      setProcessingPlayer(playerId)
+      setError('')
+      
+      console.log('🚀 Sending single invitation for player ID:', playerId)
+      
+      const res = await fetch('/api/admin/users/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerIds: [playerId] })
+      })
+
+      const data = await res.json()
+      console.log('📨 Single invitation response:', data)
+      
+      if (!res.ok) {
+        console.error('❌ Single invitation failed:', data)
+        let errorMessage = data.error || 'Failed to send invitation'
+        if (data.details) {
+          errorMessage += ` - ${data.details}`
+        }
+        if (data.invalidPlayers?.length > 0) {
+          errorMessage += `\n\nPlayer issues:\n${data.invalidPlayers.join('\n')}`
+        }
+        throw new Error(errorMessage)
+      }
+
+      // Show WhatsApp links
+      setInvitationResults(data)
+      setStep('results')
+      
+      // Clear selections when moving to results
+      setSelectedPlayers([])
+      
+      // Refresh the players list to remove invited players
+      setTimeout(() => {
+        fetchPlayersWithoutUsers()
+      }, 1000)
+      
+    } catch (error) {
+      console.error('❌ Single invitation error:', error)
+      setError(error.message)
+      // Restore original selection on error
+      setSelectedPlayers(originalSelected)
+    } finally {
+      setSending(false)
+      setProcessingPlayer(null)
     }
   }
 
@@ -625,10 +754,27 @@ function InvitePlayersModal({ onClose, onSuccess }) {
         ) : step === 'select' ? (
           <>
             <div className="mb-4 flex justify-between items-center">
-              <p className="text-sm text-gray-600">
-                Select players to send WhatsApp invitations
-              </p>
+              <div>
+                <p className="text-sm text-gray-600">
+                  Select players to send WhatsApp invitations
+                </p>
+                {lastRefresh && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    Last refreshed: {lastRefresh.toLocaleTimeString()}
+                  </p>
+                )}
+              </div>
               <div className="space-x-2">
+                <button
+                  onClick={() => {
+                    setLoading(true)
+                    fetchPlayersWithoutUsers()
+                  }}
+                  disabled={loading}
+                  className="text-sm text-blue-600 hover:underline disabled:opacity-50"
+                >
+                  🔄 {loading ? 'Refreshing...' : 'Refresh'}
+                </button>
                 <button
                   onClick={selectAll}
                   className="text-sm text-parque-purple hover:underline"
@@ -646,8 +792,29 @@ function InvitePlayersModal({ onClose, onSuccess }) {
 
             <div className="flex-1 overflow-y-auto mb-4 border rounded-lg">
               {players.length === 0 ? (
-                <div className="p-8 text-center text-gray-500">
-                  No players without user accounts found
+                <div className="p-8 text-center">
+                  <div className="text-gray-500 mb-4">
+                    <svg className="w-12 h-12 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                    <h4 className="text-lg font-medium text-gray-900 mb-2">No players found for invitation</h4>
+                    <p className="text-gray-600 mb-4">
+                      All registered players already have user accounts, or they have a different status.
+                    </p>
+                                         <div className="text-sm text-gray-500 bg-gray-50 p-4 rounded-lg">
+                       <p className="font-medium mb-2">Looking for players with:</p>
+                       <ul className="text-left space-y-1">
+                         <li>• No existing user account</li>
+                         <li>• Status: <strong>pending</strong> (not yet invited)</li>
+                       </ul>
+                       <p className="mt-3 text-xs">
+                         <strong>Status workflow:</strong> pending → confirmed (invited) → active (activated account)
+                       </p>
+                       <p className="mt-2">
+                         Check the browser console for detailed debugging information.
+                       </p>
+                     </div>
+                  </div>
                 </div>
               ) : (
                 <table className="min-w-full">
@@ -672,6 +839,9 @@ function InvitePlayersModal({ onClose, onSuccess }) {
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                         Level
                       </th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                        Action
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -688,6 +858,17 @@ function InvitePlayersModal({ onClose, onSuccess }) {
                         <td className="px-4 py-2 text-sm">{player.email}</td>
                         <td className="px-4 py-2 text-sm">{player.league?.name || '-'}</td>
                         <td className="px-4 py-2 text-sm capitalize">{player.level}</td>
+                        <td className="px-4 py-2 text-sm">
+                          <button
+                            onClick={() => handleSingleInvitation(player._id)}
+                            disabled={sending}
+                            className={`px-3 py-1 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed ${
+                              processingPlayer === player._id ? 'bg-yellow-600' : 'bg-blue-600'
+                            }`}
+                          >
+                            {processingPlayer === player._id ? 'Processing...' : sending ? 'Wait...' : 'Invite'}
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -707,7 +888,7 @@ function InvitePlayersModal({ onClose, onSuccess }) {
                   Cancel
                 </button>
                 <button
-                  onClick={handleSendInvitations}
+                  onClick={() => handleSendInvitations()}
                   disabled={sending || selectedPlayers.length === 0}
                   className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
                 >
