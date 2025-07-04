@@ -131,10 +131,10 @@ export default function AdminUsersPage() {
         <p className="text-gray-600 mt-1">Manage admin users and player accounts</p>
         <div className="text-sm mt-2 space-y-1">
           <p className="text-blue-600">
-            💡 <strong>Workflow:</strong> Players sign up (pending) → You invite them (confirmed) → They activate (active)
+            💡 <strong>Workflow:</strong> Players sign up (pending) → You invite them from Players page (confirmed) → They activate (active)
           </p>
           <p className="text-gray-600">
-            Only players with <span className="px-1 bg-yellow-100 text-yellow-800 rounded text-xs">pending</span> status can be invited.
+            💡 <strong>Tip:</strong> Go to <span className="font-medium">Players</span> page to send invitations directly from the list!
           </p>
         </div>
       </div>

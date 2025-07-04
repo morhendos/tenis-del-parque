@@ -9,7 +9,7 @@ export async function middleware(request) {
   if (pathname.startsWith('/admin') && 
       !pathname.startsWith('/api/admin/auth')) {
     
-    // Check for JWT token cookie
+    // Check for admin JWT token cookie
     const tokenCookie = request.cookies.get('admin-token')
     
     if (!tokenCookie?.value) {
@@ -29,8 +29,8 @@ export async function middleware(request) {
   // Check if it's a player route
   if (pathname.startsWith('/player')) {
     
-    // Check for JWT token cookie
-    const tokenCookie = request.cookies.get('player-token')
+    // Check for player JWT token cookie
+    const tokenCookie = request.cookies.get('auth-token')
     
     if (!tokenCookie?.value) {
       // Redirect to login with return URL
@@ -77,7 +77,7 @@ export async function middleware(request) {
   // Player API routes protection
   if (pathname.startsWith('/api/player')) {
     
-    const tokenCookie = request.cookies.get('player-token')
+    const tokenCookie = request.cookies.get('auth-token')
     
     if (!tokenCookie?.value) {
       return Response.json(

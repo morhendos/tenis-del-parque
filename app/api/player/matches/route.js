@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic'
 export async function GET(request) {
   try {
     // Get token from cookie
-    const token = request.cookies.get('player-token')?.value
+    const token = request.cookies.get('auth-token')?.value
 
     if (!token) {
       return NextResponse.json(

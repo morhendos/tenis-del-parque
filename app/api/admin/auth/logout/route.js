@@ -10,7 +10,7 @@ export async function POST() {
       message: 'Logged out successfully'
     })
 
-    // Clear auth cookies
+    // Clear admin auth cookies
     response.cookies.set('admin-token', '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

@@ -80,7 +80,7 @@ export async function POST(request) {
       }
     })
 
-    // Set cookies
+    // Set cookies - ADMIN tokens are separate for security
     const cookieOptions = getCookieOptions(30 * 24 * 60 * 60) // 30 days
     
     response.cookies.set('admin-token', accessToken, {
