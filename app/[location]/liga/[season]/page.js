@@ -7,74 +7,125 @@ import Footer from '../../../../components/common/Footer'
 import { useLanguage } from '../../../../lib/hooks/useLanguage'
 import { homeContent } from '../../../../lib/content/homeContent'
 
-// Standings Table Component
+// Standings Table Component - Mobile Optimized
 function StandingsTable({ players, language, unified = false }) {
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              {language === 'es' ? 'Pos.' : 'Pos.'}
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              {language === 'es' ? 'Jugador' : 'Player'}
-            </th>
-            <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              {language === 'es' ? 'Puntos' : 'Points'}
-            </th>
-            <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              {language === 'es' ? 'P.J.' : 'MP'}
-            </th>
-            <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              {language === 'es' ? 'P.G.' : 'MW'}
-            </th>
-            <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              {language === 'es' ? 'Sets' : 'Sets'}
-            </th>
-            <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              {language === 'es' ? 'Juegos' : 'Games'}
-            </th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {players.map((standing) => (
-            <tr key={standing.player._id} className="hover:bg-gray-50">
-              <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+      {/* Mobile-first card layout for small screens */}
+      <div className="block md:hidden space-y-3">
+        {players.map((standing) => (
+          <div key={standing.player._id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center space-x-3">
                 <div className="flex items-center">
-                  <span className="font-bold text-lg">#{standing.position}</span>
+                  <span className="font-bold text-xl text-parque-purple">#{standing.position}</span>
                   {standing.position === 1 && <span className="ml-2 text-xl">🏆</span>}
                   {standing.position === 2 && <span className="ml-2 text-xl">🥈</span>}
                   {standing.position === 3 && <span className="ml-2 text-xl">🥉</span>}
                 </div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-medium text-gray-900">
+                <div className="text-lg font-semibold text-gray-900">
                   {standing.player.name}
                 </div>
-              </td>
-              <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                <span className="font-bold text-parque-purple text-lg">{standing.stats.totalPoints || 0}</span>
-              </td>
-              <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                {standing.stats.matchesPlayed}
-              </td>
-              <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                <span className="font-medium text-green-600">{standing.stats.matchesWon}</span>
-                <span className="text-gray-500">-{standing.stats.matchesLost}</span>
-              </td>
-              <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                <span className="font-medium">{standing.stats.setsWon}</span>
-                <span className="text-gray-500">-{standing.stats.setsLost}</span>
-              </td>
-              <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                <span className="font-medium">{standing.stats.gamesWon || 0}</span>
-                <span className="text-gray-500">-{standing.stats.gamesLost || 0}</span>
-              </td>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-parque-purple">{standing.stats.totalPoints || 0}</div>
+                <div className="text-xs text-gray-500">
+                  {language === 'es' ? 'puntos' : 'points'}
+                </div>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-3 text-sm">
+              <div className="text-center bg-gray-50 rounded-lg p-2">
+                <div className="font-medium text-gray-900">{standing.stats.matchesPlayed}</div>
+                <div className="text-xs text-gray-500">
+                  {language === 'es' ? 'P.J.' : 'MP'}
+                </div>
+              </div>
+              <div className="text-center bg-gray-50 rounded-lg p-2">
+                <div className="font-medium text-green-600">{standing.stats.matchesWon}</div>
+                <div className="text-xs text-gray-500">
+                  {language === 'es' ? 'P.G.' : 'MW'}
+                </div>
+              </div>
+              <div className="text-center bg-gray-50 rounded-lg p-2">
+                <div className="font-medium text-gray-900">
+                  {standing.stats.setsWon}-{standing.stats.setsLost}
+                </div>
+                <div className="text-xs text-gray-500">Sets</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop table layout */}
+      <div className="hidden md:block">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {language === 'es' ? 'Pos.' : 'Pos.'}
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {language === 'es' ? 'Jugador' : 'Player'}
+              </th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {language === 'es' ? 'Puntos' : 'Points'}
+              </th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {language === 'es' ? 'P.J.' : 'MP'}
+              </th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {language === 'es' ? 'P.G.' : 'MW'}
+              </th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {language === 'es' ? 'Sets' : 'Sets'}
+              </th>
+              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {language === 'es' ? 'Juegos' : 'Games'}
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {players.map((standing) => (
+              <tr key={standing.player._id} className="hover:bg-gray-50">
+                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <div className="flex items-center">
+                    <span className="font-bold text-lg">#{standing.position}</span>
+                    {standing.position === 1 && <span className="ml-2 text-xl">🏆</span>}
+                    {standing.position === 2 && <span className="ml-2 text-xl">🥈</span>}
+                    {standing.position === 3 && <span className="ml-2 text-xl">🥉</span>}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm font-medium text-gray-900">
+                    {standing.player.name}
+                  </div>
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <span className="font-bold text-parque-purple text-lg">{standing.stats.totalPoints || 0}</span>
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {standing.stats.matchesPlayed}
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <span className="font-medium text-green-600">{standing.stats.matchesWon}</span>
+                  <span className="text-gray-500">-{standing.stats.matchesLost}</span>
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <span className="font-medium">{standing.stats.setsWon}</span>
+                  <span className="text-gray-500">-{standing.stats.setsLost}</span>
+                </td>
+                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <span className="font-medium">{standing.stats.gamesWon || 0}</span>
+                  <span className="text-gray-500">-{standing.stats.gamesLost || 0}</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
@@ -218,23 +269,23 @@ export default function LeagueSeasonPage() {
       <Navigation currentPage="league" language={language} onLanguageChange={setLanguage} />
       
       {/* Hero Section */}
-      <section className="relative pt-32 pb-16">
+      <section className="relative pt-20 md:pt-32 pb-8 md:pb-16">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <div className="text-6xl mb-6">🏆</div>
-            <h1 className="text-5xl font-light text-parque-purple mb-4">
-              {league.name}
-            </h1>
-            <p className="text-xl text-gray-600 mb-2">
-              {getSeasonDisplayName(season)}
-            </p>
-            <p className="text-lg text-gray-500">
-              📍 {league.location.city}, {league.location.region}
-            </p>
+          <div className="text-center mb-8 md:mb-12">
+            <div className="mb-4 md:mb-6">
+              <img 
+                src="/logo.png" 
+                alt="Tenis del Parque - Sotogrande League" 
+                className="h-24 md:h-32 lg:h-40 w-auto mx-auto"
+              />
+            </div>
             
-            {/* Season Status */}
-            <div className="mt-6">
-              <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${
+            {/* Season and Status in a compact layout */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4 mb-4">
+              <p className="text-lg md:text-xl text-gray-600 font-medium">
+                {getSeasonDisplayName(season)}
+              </p>
+              <span className={`inline-flex items-center px-3 md:px-4 py-2 rounded-full text-sm font-medium ${
                 currentSeason.status === 'registration_open' 
                   ? 'bg-green-100 text-green-800' 
                   : currentSeason.status === 'active'
@@ -260,40 +311,68 @@ export default function LeagueSeasonPage() {
       </section>
 
       {/* Navigation Tabs */}
-      <section className="container mx-auto px-4 mb-8">
+      <section className="container mx-auto px-4 mb-6 md:mb-8">
         <div className="flex justify-center">
-          <div className="bg-white rounded-lg p-2 shadow-lg">
-            <nav className="flex space-x-2">
+          {/* Mobile tabs - full width */}
+          <div className="bg-white rounded-lg p-1 shadow-lg w-full max-w-md md:hidden">
+            <nav className="flex space-x-1 overflow-x-auto scrollbar-hide">
               {[
-                { id: 'standings', label: language === 'es' ? 'Clasificación' : 'Standings', icon: '🏆' },
-                { id: 'schedule', label: language === 'es' ? 'Calendario' : 'Schedule', icon: '📅' },
-                { id: 'matches', label: language === 'es' ? 'Resultados' : 'Results', icon: '🎾' },
-                { id: 'register', label: language === 'es' ? 'Inscribirse' : 'Register', icon: '✍️' }
+                { id: 'standings', label: language === 'es' ? 'Clasificación' : 'Standings', shortLabel: language === 'es' ? 'Tabla' : 'Table', icon: '🏆' },
+                { id: 'schedule', label: language === 'es' ? 'Calendario' : 'Schedule', shortLabel: language === 'es' ? 'Fecha' : 'Date', icon: '📅' },
+                { id: 'matches', label: language === 'es' ? 'Resultados' : 'Results', shortLabel: language === 'es' ? 'Juegos' : 'Games', icon: '🎾' },
+                { id: 'register', label: language === 'es' ? 'Inscribirse' : 'Register', shortLabel: language === 'es' ? 'Unirse' : 'Join', icon: '✍️' }
               ].map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  className={`flex items-center justify-center space-x-1 px-2 py-2 rounded-lg font-medium transition-colors whitespace-nowrap min-w-0 flex-1 ${
                     activeTab === tab.id
                       ? 'bg-parque-purple text-white'
                       : 'text-gray-600 hover:text-parque-purple hover:bg-parque-bg'
                   }`}
                 >
-                  <span>{tab.icon}</span>
-                  <span>{tab.label}</span>
+                  <span className="text-sm">{tab.icon}</span>
+                  <span className="text-xs">{tab.shortLabel}</span>
                 </button>
               ))}
+            </nav>
+          </div>
+
+          {/* Desktop tabs - more compact and elegant */}
+          <div className="hidden md:block">
+            <nav className="bg-white rounded-xl shadow-lg p-2 border border-gray-100">
+              <div className="flex items-center space-x-1">
+                {[
+                  { id: 'standings', label: language === 'es' ? 'Clasificación' : 'Standings', icon: '🏆' },
+                  { id: 'schedule', label: language === 'es' ? 'Calendario' : 'Schedule', icon: '📅' },
+                  { id: 'matches', label: language === 'es' ? 'Resultados' : 'Results', icon: '🎾' },
+                  { id: 'register', label: language === 'es' ? 'Inscribirse' : 'Register', icon: '✍️' }
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+                      activeTab === tab.id
+                        ? 'bg-parque-purple text-white shadow-md transform scale-105'
+                        : 'text-gray-600 hover:text-parque-purple hover:bg-parque-bg/50 hover:shadow-sm'
+                    }`}
+                  >
+                    <span className="text-lg">{tab.icon}</span>
+                    <span className="text-sm font-semibold">{tab.label}</span>
+                  </button>
+                ))}
+              </div>
             </nav>
           </div>
         </div>
       </section>
 
       {/* Content Sections */}
-      <section className="container mx-auto px-4 pb-16">
+      <section className="container mx-auto px-4 pb-8 md:pb-16">
         {activeTab === 'schedule' && (
           <div className="max-w-5xl mx-auto">
-            <div className="bg-white rounded-xl shadow-lg p-8">
-              <h2 className="text-2xl font-bold text-parque-purple mb-6">
+            <div className="bg-white rounded-xl shadow-lg p-4 md:p-8">
+              <h2 className="text-xl md:text-2xl font-bold text-parque-purple mb-4 md:mb-6">
                 {language === 'es' ? 'Calendario de Partidos' : 'Match Schedule'}
               </h2>
               
@@ -455,8 +534,8 @@ export default function LeagueSeasonPage() {
 
         {activeTab === 'standings' && (
           <div className="max-w-4xl mx-auto">
-            <div className="bg-white rounded-xl shadow-lg p-8">
-              <h2 className="text-2xl font-bold text-parque-purple mb-6">
+            <div className="bg-white rounded-xl shadow-lg p-4 md:p-8">
+              <h2 className="text-xl md:text-2xl font-bold text-parque-purple mb-4 md:mb-6">
                 {language === 'es' ? 'Clasificación General' : 'League Standings'}
               </h2>
               
@@ -469,7 +548,7 @@ export default function LeagueSeasonPage() {
                         : `${standings.totalPlayers} players • Current round: ${standings.currentRound || 0}`
                       }
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs md:text-sm text-gray-500 px-2">
                       {language === 'es' 
                         ? 'Victoria 2-0: 3 pts • Victoria 2-1: 2 pts • Derrota 1-2: 1 pt • Derrota 0-2: 0 pts'
                         : 'Win 2-0: 3 pts • Win 2-1: 2 pts • Loss 1-2: 1 pt • Loss 0-2: 0 pts'
@@ -498,8 +577,8 @@ export default function LeagueSeasonPage() {
 
         {activeTab === 'matches' && (
           <div className="max-w-5xl mx-auto">
-            <div className="bg-white rounded-xl shadow-lg p-8">
-              <h2 className="text-2xl font-bold text-parque-purple mb-6">
+            <div className="bg-white rounded-xl shadow-lg p-4 md:p-8">
+              <h2 className="text-xl md:text-2xl font-bold text-parque-purple mb-4 md:mb-6">
                 {language === 'es' ? 'Partidos Recientes' : 'Recent Matches'}
               </h2>
               
@@ -588,8 +667,8 @@ export default function LeagueSeasonPage() {
 
         {activeTab === 'register' && (
           <div className="max-w-2xl mx-auto">
-            <div className="bg-white rounded-xl shadow-lg p-8">
-              <h2 className="text-2xl font-bold text-parque-purple mb-6 text-center">
+            <div className="bg-white rounded-xl shadow-lg p-4 md:p-8">
+              <h2 className="text-xl md:text-2xl font-bold text-parque-purple mb-4 md:mb-6 text-center">
                 {language === 'es' ? 'Inscribirse en la Liga' : 'Register for the League'}
               </h2>
               

@@ -174,14 +174,6 @@ function LoginForm() {
             </p>
           </div>
 
-          {/* Footer */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mt-8 text-center">
-              <p className="text-xs text-gray-400">
-                Dev tip: Run <code className="bg-gray-100 px-1 py-0.5 rounded">npm run create-admin</code> to create an admin user
-              </p>
-            </div>
-          )}
         </div>
       </div>
     </div>
