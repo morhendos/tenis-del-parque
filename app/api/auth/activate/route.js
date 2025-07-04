@@ -36,7 +36,14 @@ export async function POST(request) {
 
     // Find user by activation token
     const user = await User.findByActivationToken(token)
-      .populate('playerId', 'name league level')
+      .populate({
+        path: 'playerId',
+        select: 'name league season level',
+        populate: {
+          path: 'league',
+          select: 'name slug'
+        }
+      })
 
     if (!user) {
       return NextResponse.json(
@@ -76,6 +83,7 @@ export async function POST(request) {
         player: user.playerId ? {
           name: user.playerId.name,
           league: user.playerId.league,
+          season: user.playerId.season,
           level: user.playerId.level
         } : null
       }
@@ -107,7 +115,14 @@ export async function GET(request) {
 
     // Find user by activation token
     const user = await User.findByActivationToken(token)
-      .populate('playerId', 'name league level')
+      .populate({
+        path: 'playerId',
+        select: 'name league season level',
+        populate: {
+          path: 'league',
+          select: 'name slug'
+        }
+      })
 
     if (!user) {
       return NextResponse.json(
@@ -130,6 +145,7 @@ export async function GET(request) {
         player: user.playerId ? {
           name: user.playerId.name,
           league: user.playerId.league,
+          season: user.playerId.season,
           level: user.playerId.level
         } : null
       }
