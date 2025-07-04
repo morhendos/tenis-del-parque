@@ -10,6 +10,7 @@ function AdminPlayersContent() {
   const [deleteModal, setDeleteModal] = useState({ show: false, player: null })
   const [importModal, setImportModal] = useState({ show: false, file: null, importing: false })
   const [importResult, setImportResult] = useState(null)
+  const [updateLoading, setUpdateLoading] = useState({})
   const [filters, setFilters] = useState({
     search: '',
     level: '',
@@ -84,6 +85,9 @@ function AdminPlayersContent() {
   }
 
   const handleStatusUpdate = async (playerId, newStatus) => {
+    const loadingKey = `status-${playerId}`
+    setUpdateLoading(prev => ({ ...prev, [loadingKey]: true }))
+    
     try {
       const res = await fetch(`/api/admin/players/${playerId}`, {
         method: 'PATCH',
@@ -96,9 +100,43 @@ function AdminPlayersContent() {
         setPlayers(players.map(p => 
           p._id === playerId ? { ...p, status: newStatus } : p
         ))
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Failed to update player status')
       }
     } catch (error) {
       console.error('Error updating player:', error)
+      alert('Error updating player status')
+    } finally {
+      setUpdateLoading(prev => ({ ...prev, [loadingKey]: false }))
+    }
+  }
+
+  const handleLevelUpdate = async (playerId, newLevel) => {
+    const loadingKey = `level-${playerId}`
+    setUpdateLoading(prev => ({ ...prev, [loadingKey]: true }))
+    
+    try {
+      const res = await fetch(`/api/admin/players/${playerId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ level: newLevel })
+      })
+      
+      if (res.ok) {
+        // Update local state
+        setPlayers(players.map(p => 
+          p._id === playerId ? { ...p, level: newLevel } : p
+        ))
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Failed to update player level')
+      }
+    } catch (error) {
+      console.error('Error updating player level:', error)
+      alert('Error updating player level')
+    } finally {
+      setUpdateLoading(prev => ({ ...prev, [loadingKey]: false }))
     }
   }
 
@@ -350,13 +388,28 @@ function AdminPlayersContent() {
                     <div className="text-sm text-gray-500">{player.whatsapp}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      player.level === 'beginner' ? 'bg-green-100 text-green-800' :
-                      player.level === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-purple-100 text-purple-800'
-                    }`}>
-                      {player.level}
-                    </span>
+                    <select
+                      value={player.level}
+                      onChange={(e) => handleLevelUpdate(player._id, e.target.value)}
+                      disabled={updateLoading[`level-${player._id}`]}
+                      className={`text-xs font-semibold px-2 py-1 rounded border ${
+                        player.level === 'beginner' ? 'bg-green-50 text-green-800 border-green-200' :
+                        player.level === 'intermediate' ? 'bg-yellow-50 text-yellow-800 border-yellow-200' :
+                        'bg-purple-50 text-purple-800 border-purple-200'
+                      } ${updateLoading[`level-${player._id}`] ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    >
+                      <option value="beginner">Beginner</option>
+                      <option value="intermediate">Intermediate</option>
+                      <option value="advanced">Advanced</option>
+                    </select>
+                    {updateLoading[`level-${player._id}`] && (
+                      <div className="inline-block ml-2">
+                        <svg className="animate-spin h-3 w-3 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {player.league?.name || 'N/A'}
@@ -369,18 +422,27 @@ function AdminPlayersContent() {
                     <select
                       value={player.status}
                       onChange={(e) => handleStatusUpdate(player._id, e.target.value)}
+                      disabled={updateLoading[`status-${player._id}`]}
                       className={`text-xs font-semibold px-2 py-1 rounded border ${
                         player.status === 'active' ? 'bg-green-50 text-green-800 border-green-200' :
                         player.status === 'confirmed' ? 'bg-blue-50 text-blue-800 border-blue-200' :
                         player.status === 'pending' ? 'bg-yellow-50 text-yellow-800 border-yellow-200' :
                         'bg-gray-50 text-gray-800 border-gray-200'
-                      }`}
+                      } ${updateLoading[`status-${player._id}`] ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                     >
                       <option value="pending">Pending</option>
                       <option value="confirmed">Confirmed</option>
                       <option value="active">Active</option>
                       <option value="inactive">Inactive</option>
                     </select>
+                    {updateLoading[`status-${player._id}`] && (
+                      <div className="inline-block ml-2">
+                        <svg className="animate-spin h-3 w-3 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
