@@ -42,9 +42,11 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
   const navContent = {
     es: {
       home: 'Inicio',
+      leagues: 'Ligas',
       rules: 'Reglamento',
       elo: 'ELO Puntos',
       swiss: 'Sistema Suizo',
+      login: 'Iniciar Sesión',
       about: 'Acerca de',
       contact: 'Contacto',
       sections: {
@@ -59,9 +61,11 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
     },
     en: {
       home: 'Home',
+      leagues: 'Leagues',
       rules: 'Rules',
       elo: 'ELO Points',
       swiss: 'Swiss System',
+      login: 'Login',
       about: 'About',
       contact: 'Contact',
       sections: {
@@ -177,9 +181,20 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
                     </div>
                   )}
                 </div>
+                <NavLink href="/leagues">{t.leagues}</NavLink>
                 <NavLink href="/rules">{t.rules}</NavLink>
                 <NavLink href="/swiss">{t.swiss}</NavLink>
                 <NavLink href="/elo">{t.elo}</NavLink>
+              </div>
+              
+              {/* Login Button */}
+              <div className="ml-4">
+                <a
+                  href="/login"
+                  className="bg-parque-purple text-white px-4 py-2 rounded-lg hover:bg-parque-purple/90 transition-colors font-medium text-sm"
+                >
+                  {t.login}
+                </a>
               </div>
               
               {/* Desktop Language Selector */}
@@ -380,6 +395,22 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
               </div>
               
               <NavLink 
+                href="/leagues" 
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <div className={`flex items-center justify-between py-3 px-4 rounded-xl transition-all duration-200 ${
+                  currentPage === 'leagues' 
+                    ? 'bg-gradient-to-r from-parque-purple/10 to-transparent border-l-4 border-parque-purple'
+                    : 'hover:bg-gray-50'
+                }`}>
+                  <span className="text-lg font-medium">{t.leagues}</span>
+                  {currentPage === 'leagues' && (
+                    <div className="w-2 h-2 bg-parque-purple rounded-full"></div>
+                  )}
+                </div>
+              </NavLink>
+              
+              <NavLink 
                 href="/rules" 
                 onClick={() => setIsMobileMenuOpen(false)}
               >
@@ -426,6 +457,17 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
                   )}
                 </div>
               </NavLink>
+              
+              {/* Mobile Login Button */}
+              <div className="pt-4 border-t border-gray-200">
+                <a
+                  href="/login"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="block w-full bg-parque-purple text-white text-center py-3 px-4 rounded-xl hover:bg-parque-purple/90 transition-colors font-medium"
+                >
+                  {t.login}
+                </a>
+              </div>
             </div>
           </div>
         </div>

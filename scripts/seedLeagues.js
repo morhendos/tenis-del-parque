@@ -93,7 +93,7 @@ async function seedLeagues() {
         en: 'The first amateur tennis league in Sotogrande combining serious competition with social atmosphere. Starting July 2025.'
       },
       seasons: [{
-        name: 'Summer 2025',
+                    name: 'Verano 2025',
         startDate: new Date('2025-07-01'),
         endDate: new Date('2025-10-31'),
         maxPlayers: 150,

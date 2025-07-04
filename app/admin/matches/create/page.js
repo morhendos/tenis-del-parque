@@ -186,9 +186,9 @@ function CreateMatchContent() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple"
                 required
               >
-                <option value="summer-2025">Summer 2025</option>
-                <option value="fall-2025">Fall 2025</option>
-                <option value="winter-2025">Winter 2025</option>
+                <option value="verano-2025">Verano 2025</option>
+                <option value="otono-2025">Otoño 2025</option>
+                <option value="invierno-2025">Invierno 2025</option>
               </select>
             </div>
           </div>
