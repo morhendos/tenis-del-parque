@@ -9,122 +9,307 @@ import { homeContent } from '../../../../lib/content/homeContent'
 
 // Standings Table Component - Mobile Optimized
 function StandingsTable({ players, language, unified = false }) {
+  const getPositionStyle = (position) => {
+    if (position === 1) return "bg-gradient-to-r from-yellow-50 to-yellow-100 border-yellow-200 shadow-yellow-100"
+    if (position === 2) return "bg-gradient-to-r from-gray-50 to-gray-100 border-gray-200 shadow-gray-100"
+    if (position === 3) return "bg-gradient-to-r from-orange-50 to-orange-100 border-orange-200 shadow-orange-100"
+    if (position <= 5) return "bg-gradient-to-r from-green-50 to-green-100 border-green-200 shadow-green-100"
+    return "bg-white border-gray-200 shadow-gray-100"
+  }
+
+  const getWinPercentage = (won, total) => {
+    if (total === 0) return 0
+    return Math.round((won / total) * 100)
+  }
+
   return (
     <div className="overflow-x-auto">
       {/* Mobile-first card layout for small screens */}
-      <div className="block md:hidden space-y-3">
-        {players.map((standing) => (
-          <div key={standing.player._id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center">
-                  <span className="font-bold text-xl text-parque-purple">#{standing.position}</span>
-                  {standing.position === 1 && <span className="ml-2 text-xl">🏆</span>}
-                  {standing.position === 2 && <span className="ml-2 text-xl">🥈</span>}
-                  {standing.position === 3 && <span className="ml-2 text-xl">🥉</span>}
+      <div className="block md:hidden space-y-4">
+        {players.map((standing, index) => {
+          const winPercentage = getWinPercentage(standing.stats.matchesWon, standing.stats.matchesPlayed)
+          const isTopPlayer = standing.position <= 3
+          
+          return (
+            <div 
+              key={standing.player._id} 
+              className={`${getPositionStyle(standing.position)} rounded-xl p-4 shadow-lg border transition-all duration-300 hover:shadow-xl hover:scale-[1.02]`}
+            >
+              {/* Header with position, name, and points */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  {/* Position with enhanced styling */}
+                  <div className="flex items-center">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${
+                      standing.position === 1 ? 'bg-yellow-400 text-yellow-900' :
+                      standing.position === 2 ? 'bg-gray-400 text-gray-900' :
+                      standing.position === 3 ? 'bg-orange-400 text-orange-900' :
+                      'bg-parque-purple text-white'
+                    }`}>
+                      {standing.position}
+                    </div>
+                    {standing.position === 1 && <span className="ml-2 text-2xl">🏆</span>}
+                    {standing.position === 2 && <span className="ml-2 text-2xl">🥈</span>}
+                    {standing.position === 3 && <span className="ml-2 text-2xl">🥉</span>}
+                  </div>
+                  
+                  {/* Player name with avatar */}
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 rounded-full bg-parque-purple text-white flex items-center justify-center text-sm font-bold">
+                      {standing.player.name.charAt(0)}
+                    </div>
+                    <div>
+                      <div className="text-lg font-bold text-gray-900">
+                        {standing.player.name}
+                      </div>
+                      {winPercentage > 0 && (
+                        <div className="text-xs text-gray-500">
+                          {winPercentage}% {language === 'es' ? 'victorias' : 'win rate'}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="text-lg font-semibold text-gray-900">
-                  {standing.player.name}
+                
+                {/* Points with enhanced styling */}
+                <div className="text-right">
+                  <div className={`text-3xl font-bold ${
+                    standing.position === 1 ? 'text-yellow-600' :
+                    standing.position === 2 ? 'text-gray-600' :
+                    standing.position === 3 ? 'text-orange-600' :
+                    'text-parque-purple'
+                  }`}>
+                    {standing.stats.totalPoints || 0}
+                  </div>
+                  <div className="text-xs text-gray-500 font-medium">
+                    {language === 'es' ? 'puntos' : 'points'}
+                  </div>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-parque-purple">{standing.stats.totalPoints || 0}</div>
-                <div className="text-xs text-gray-500">
-                  {language === 'es' ? 'puntos' : 'points'}
+
+              {/* Win percentage bar */}
+              {standing.stats.matchesPlayed > 0 && (
+                <div className="mb-4">
+                  <div className="flex justify-between text-xs text-gray-600 mb-1">
+                    <span>{language === 'es' ? 'Progreso' : 'Progress'}</span>
+                    <span>{winPercentage}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className={`h-2 rounded-full transition-all duration-500 ${
+                        winPercentage >= 75 ? 'bg-green-500' :
+                        winPercentage >= 50 ? 'bg-yellow-500' :
+                        'bg-red-500'
+                      }`}
+                      style={{ width: `${winPercentage}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Enhanced stats grid */}
+              <div className="grid grid-cols-4 gap-3 text-sm">
+                <div className="text-center bg-white/50 rounded-lg p-3 border border-white/20">
+                  <div className="font-bold text-gray-900 text-lg">{standing.stats.matchesPlayed}</div>
+                  <div className="text-xs text-gray-600 font-medium">
+                    {language === 'es' ? 'P.J.' : 'MP'}
+                  </div>
+                </div>
+                <div className="text-center bg-white/50 rounded-lg p-3 border border-white/20">
+                  <div className="font-bold text-green-600 text-lg">{standing.stats.matchesWon}</div>
+                  <div className="text-xs text-gray-600 font-medium">
+                    {language === 'es' ? 'P.G.' : 'MW'}
+                  </div>
+                </div>
+                <div className="text-center bg-white/50 rounded-lg p-3 border border-white/20">
+                  <div className="font-bold text-gray-900 text-lg">
+                    {standing.stats.setsWon}-{standing.stats.setsLost}
+                  </div>
+                  <div className="text-xs text-gray-600 font-medium">Sets</div>
+                </div>
+                <div className="text-center bg-white/50 rounded-lg p-3 border border-white/20">
+                  <div className="font-bold text-gray-900 text-lg">
+                    {standing.stats.gamesWon || 0}-{standing.stats.gamesLost || 0}
+                  </div>
+                  <div className="text-xs text-gray-600 font-medium">
+                    {language === 'es' ? 'Juegos' : 'Games'}
+                  </div>
                 </div>
               </div>
+
+              {/* Form indicator for recent matches */}
+              {standing.stats.matchesPlayed > 0 && (
+                <div className="mt-3 flex items-center justify-between">
+                  <div className="text-xs text-gray-500">
+                    {language === 'es' ? 'Forma reciente' : 'Recent form'}
+                  </div>
+                  <div className="flex space-x-1">
+                    {/* Simulated recent form - you can enhance this with actual data */}
+                    {[...Array(Math.min(5, standing.stats.matchesPlayed))].map((_, i) => (
+                      <div
+                        key={i}
+                        className={`w-2 h-2 rounded-full ${
+                          i < standing.stats.matchesWon ? 'bg-green-500' : 'bg-red-500'
+                        }`}
+                      ></div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-            
-            <div className="grid grid-cols-3 gap-3 text-sm">
-              <div className="text-center bg-gray-50 rounded-lg p-2">
-                <div className="font-medium text-gray-900">{standing.stats.matchesPlayed}</div>
-                <div className="text-xs text-gray-500">
-                  {language === 'es' ? 'P.J.' : 'MP'}
-                </div>
-              </div>
-              <div className="text-center bg-gray-50 rounded-lg p-2">
-                <div className="font-medium text-green-600">{standing.stats.matchesWon}</div>
-                <div className="text-xs text-gray-500">
-                  {language === 'es' ? 'P.G.' : 'MW'}
-                </div>
-              </div>
-              <div className="text-center bg-gray-50 rounded-lg p-2">
-                <div className="font-medium text-gray-900">
-                  {standing.stats.setsWon}-{standing.stats.setsLost}
-                </div>
-                <div className="text-xs text-gray-500">Sets</div>
-              </div>
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
-      {/* Desktop table layout */}
+      {/* Desktop table layout - Enhanced */}
       <div className="hidden md:block">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {language === 'es' ? 'Pos.' : 'Pos.'}
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {language === 'es' ? 'Jugador' : 'Player'}
-              </th>
-              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {language === 'es' ? 'Puntos' : 'Points'}
-              </th>
-              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {language === 'es' ? 'P.J.' : 'MP'}
-              </th>
-              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {language === 'es' ? 'P.G.' : 'MW'}
-              </th>
-              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {language === 'es' ? 'Sets' : 'Sets'}
-              </th>
-              <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                {language === 'es' ? 'Juegos' : 'Games'}
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {players.map((standing) => (
-              <tr key={standing.player._id} className="hover:bg-gray-50">
-                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                  <div className="flex items-center">
-                    <span className="font-bold text-lg">#{standing.position}</span>
-                    {standing.position === 1 && <span className="ml-2 text-xl">🏆</span>}
-                    {standing.position === 2 && <span className="ml-2 text-xl">🥈</span>}
-                    {standing.position === 3 && <span className="ml-2 text-xl">🥉</span>}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">
-                    {standing.player.name}
-                  </div>
-                </td>
-                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                  <span className="font-bold text-parque-purple text-lg">{standing.stats.totalPoints || 0}</span>
-                </td>
-                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {standing.stats.matchesPlayed}
-                </td>
-                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                  <span className="font-medium text-green-600">{standing.stats.matchesWon}</span>
-                  <span className="text-gray-500">-{standing.stats.matchesLost}</span>
-                </td>
-                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                  <span className="font-medium">{standing.stats.setsWon}</span>
-                  <span className="text-gray-500">-{standing.stats.setsLost}</span>
-                </td>
-                <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
-                  <span className="font-medium">{standing.stats.gamesWon || 0}</span>
-                  <span className="text-gray-500">-{standing.stats.gamesLost || 0}</span>
-                </td>
+        <div className="overflow-hidden rounded-xl border border-gray-200 shadow-lg">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gradient-to-r from-parque-purple to-parque-purple/90">
+              <tr>
+                <th className="px-4 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
+                  {language === 'es' ? 'Posición' : 'Position'}
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
+                  {language === 'es' ? 'Jugador' : 'Player'}
+                </th>
+                <th className="px-3 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
+                  {language === 'es' ? 'Puntos' : 'Points'}
+                </th>
+                <th className="px-3 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
+                  {language === 'es' ? 'Partidos' : 'Matches'}
+                </th>
+                <th className="px-3 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
+                  {language === 'es' ? 'Victorias' : 'Wins'}
+                </th>
+                <th className="px-3 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
+                  Sets
+                </th>
+                <th className="px-3 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
+                  {language === 'es' ? 'Juegos' : 'Games'}
+                </th>
+                <th className="px-3 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
+                  {language === 'es' ? 'Forma' : 'Form'}
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-100">
+              {players.map((standing, index) => {
+                const winPercentage = getWinPercentage(standing.stats.matchesWon, standing.stats.matchesPlayed)
+                const rowBg = standing.position === 1 ? 'bg-gradient-to-r from-yellow-50 to-yellow-100' :
+                            standing.position === 2 ? 'bg-gradient-to-r from-gray-50 to-gray-100' :
+                            standing.position === 3 ? 'bg-gradient-to-r from-orange-50 to-orange-100' :
+                            standing.position <= 5 ? 'bg-gradient-to-r from-green-50 to-green-100' :
+                            'bg-white'
+                            
+                return (
+                  <tr key={standing.player._id} className={`${rowBg} hover:shadow-md hover:scale-[1.01] transition-all duration-200`}>
+                    <td className="px-4 py-5 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm mr-3 ${
+                          standing.position === 1 ? 'bg-yellow-400 text-yellow-900' :
+                          standing.position === 2 ? 'bg-gray-400 text-gray-900' :
+                          standing.position === 3 ? 'bg-orange-400 text-orange-900' :
+                          'bg-parque-purple text-white'
+                        }`}>
+                          {standing.position}
+                        </div>
+                        {standing.position === 1 && <span className="text-xl">🏆</span>}
+                        {standing.position === 2 && <span className="text-xl">🥈</span>}
+                        {standing.position === 3 && <span className="text-xl">🥉</span>}
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 rounded-full bg-parque-purple text-white flex items-center justify-center text-sm font-bold mr-3">
+                          {standing.player.name.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-gray-900">
+                            {standing.player.name}
+                          </div>
+                          {winPercentage > 0 && (
+                            <div className="text-xs text-gray-500">
+                              {winPercentage}% {language === 'es' ? 'victorias' : 'win rate'}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-3 py-5 whitespace-nowrap text-center">
+                      <div className={`inline-flex items-center px-3 py-1 rounded-full text-lg font-bold ${
+                        standing.position === 1 ? 'bg-yellow-200 text-yellow-800' :
+                        standing.position === 2 ? 'bg-gray-200 text-gray-800' :
+                        standing.position === 3 ? 'bg-orange-200 text-orange-800' :
+                        'bg-parque-purple/10 text-parque-purple'
+                      }`}>
+                        {standing.stats.totalPoints || 0}
+                      </div>
+                    </td>
+                    <td className="px-3 py-5 whitespace-nowrap text-center">
+                      <div className="text-sm font-medium text-gray-900">
+                        {standing.stats.matchesPlayed}
+                      </div>
+                    </td>
+                    <td className="px-3 py-5 whitespace-nowrap text-center">
+                      <div className="flex items-center justify-center space-x-1">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          {standing.stats.matchesWon}
+                        </span>
+                        <span className="text-gray-400">-</span>
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                          {standing.stats.matchesLost}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-5 whitespace-nowrap text-center">
+                      <div className="text-sm font-medium text-gray-900">
+                        <span className="text-green-600">{standing.stats.setsWon}</span>
+                        <span className="text-gray-400 mx-1">-</span>
+                        <span className="text-red-600">{standing.stats.setsLost}</span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-5 whitespace-nowrap text-center">
+                      <div className="text-sm font-medium text-gray-900">
+                        <span className="text-green-600">{standing.stats.gamesWon || 0}</span>
+                        <span className="text-gray-400 mx-1">-</span>
+                        <span className="text-red-600">{standing.stats.gamesLost || 0}</span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-5 whitespace-nowrap text-center">
+                      <div className="flex items-center justify-center space-x-1">
+                        {standing.stats.matchesPlayed > 0 && (
+                          <>
+                            {/* Progress bar */}
+                            <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                              <div 
+                                className={`h-2 rounded-full transition-all duration-500 ${
+                                  winPercentage >= 75 ? 'bg-green-500' :
+                                  winPercentage >= 50 ? 'bg-yellow-500' :
+                                  'bg-red-500'
+                                }`}
+                                style={{ width: `${winPercentage}%` }}
+                              ></div>
+                            </div>
+                            {/* Recent form dots */}
+                            {[...Array(Math.min(3, standing.stats.matchesPlayed))].map((_, i) => (
+                              <div
+                                key={i}
+                                className={`w-2 h-2 rounded-full ${
+                                  i < standing.stats.matchesWon ? 'bg-green-500' : 'bg-red-500'
+                                }`}
+                              ></div>
+                            ))}
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   )
@@ -541,25 +726,74 @@ export default function LeagueSeasonPage() {
               
               {standings && standings.unifiedStandings ? (
                 <div>
-                  <div className="mb-4 text-center">
-                    <div className="text-sm text-gray-600 mb-2">
-                      {language === 'es' 
-                        ? `${standings.totalPlayers} jugadores • Ronda actual: ${standings.currentRound || 0}`
-                        : `${standings.totalPlayers} players • Current round: ${standings.currentRound || 0}`
-                      }
-                    </div>
-                    <div className="text-xs md:text-sm text-gray-500 px-2">
-                      {language === 'es' 
-                        ? 'Victoria 2-0: 3 pts • Victoria 2-1: 2 pts • Derrota 1-2: 1 pt • Derrota 0-2: 0 pts'
-                        : 'Win 2-0: 3 pts • Win 2-1: 2 pts • Loss 1-2: 1 pt • Loss 0-2: 0 pts'
-                      }
-                    </div>
-                  </div>
                   <StandingsTable 
                     players={standings.unifiedStandings} 
                     language={language}
                     unified={true}
                   />
+                  
+                  {/* League stats and scoring system moved to bottom */}
+                  <div className="mt-8 text-center">
+                    {/* Enhanced league stats */}
+                    <div className="flex items-center justify-center space-x-6 mb-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-10 h-10 rounded-full bg-parque-purple/10 flex items-center justify-center">
+                          <span className="text-parque-purple font-bold">👥</span>
+                        </div>
+                        <div>
+                          <div className="text-lg font-bold text-gray-900">{standings.totalPlayers}</div>
+                          <div className="text-xs text-gray-500">
+                            {language === 'es' ? 'jugadores' : 'players'}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                          <span className="text-blue-600 font-bold">🎯</span>
+                        </div>
+                        <div>
+                          <div className="text-lg font-bold text-gray-900">{standings.currentRound || 0}</div>
+                          <div className="text-xs text-gray-500">
+                            {language === 'es' ? 'ronda actual' : 'current round'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Enhanced scoring system */}
+                    <div className="bg-gradient-to-r from-parque-bg to-white rounded-lg p-4 border border-parque-purple/20">
+                      <div className="text-xs font-semibold text-parque-purple mb-2">
+                        {language === 'es' ? 'Sistema de Puntuación' : 'Scoring System'}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center text-xs font-bold">3</div>
+                          <span className="text-gray-600">
+                            {language === 'es' ? 'Victoria 2-0' : 'Win 2-0'}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold">2</div>
+                          <span className="text-gray-600">
+                            {language === 'es' ? 'Victoria 2-1' : 'Win 2-1'}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-6 h-6 rounded-full bg-yellow-500 text-white flex items-center justify-center text-xs font-bold">1</div>
+                          <span className="text-gray-600">
+                            {language === 'es' ? 'Derrota 1-2' : 'Loss 1-2'}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs font-bold">0</div>
+                          <span className="text-gray-600">
+                            {language === 'es' ? 'Derrota 0-2' : 'Loss 0-2'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-12 text-gray-500">
