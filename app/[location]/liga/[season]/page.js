@@ -10,11 +10,27 @@ import { homeContent } from '../../../../lib/content/homeContent'
 // Standings Table Component - Mobile Optimized
 function StandingsTable({ players, language, unified = false }) {
   const getPositionStyle = (position) => {
-    if (position === 1) return "bg-gradient-to-r from-yellow-50 to-yellow-100 border-yellow-200 shadow-yellow-100"
-    if (position === 2) return "bg-gradient-to-r from-gray-50 to-gray-100 border-gray-200 shadow-gray-100"
-    if (position === 3) return "bg-gradient-to-r from-orange-50 to-orange-100 border-orange-200 shadow-orange-100"
-    if (position <= 5) return "bg-gradient-to-r from-green-50 to-green-100 border-green-200 shadow-green-100"
+    // Playoff A qualification (positions 1-8)
+    if (position <= 8) return "bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 shadow-blue-100"
+    // Playoff B qualification (positions 9-16)  
+    if (position <= 16) return "bg-gradient-to-r from-green-50 to-green-100 border-green-200 shadow-green-100"
+    // Not qualified for playoffs
     return "bg-white border-gray-200 shadow-gray-100"
+  }
+
+  const getPositionBadgeStyle = (position) => {
+    // Playoff A qualification (positions 1-8)
+    if (position <= 8) return 'bg-blue-500 text-white'
+    // Playoff B qualification (positions 9-16)
+    if (position <= 16) return 'bg-green-500 text-white'
+    // Not qualified for playoffs
+    return 'bg-gray-400 text-white'
+  }
+
+  const getPositionLabel = (position) => {
+    if (position <= 8) return language === 'es' ? 'Playoff A' : 'Playoff A'
+    if (position <= 16) return language === 'es' ? 'Playoff B' : 'Playoff B'
+    return language === 'es' ? 'Eliminado' : 'Eliminated'
   }
 
   const getWinPercentage = (won, total) => {
@@ -28,7 +44,6 @@ function StandingsTable({ players, language, unified = false }) {
       <div className="block md:hidden space-y-4">
         {players.map((standing, index) => {
           const winPercentage = getWinPercentage(standing.stats.matchesWon, standing.stats.matchesPlayed)
-          const isTopPlayer = standing.position <= 3
           
           return (
             <div 
@@ -38,19 +53,21 @@ function StandingsTable({ players, language, unified = false }) {
               {/* Header with position, name, and points */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
-                  {/* Position with enhanced styling */}
+                  {/* Position with playoff qualification styling */}
                   <div className="flex items-center">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${
-                      standing.position === 1 ? 'bg-yellow-400 text-yellow-900' :
-                      standing.position === 2 ? 'bg-gray-400 text-gray-900' :
-                      standing.position === 3 ? 'bg-orange-400 text-orange-900' :
-                      'bg-parque-purple text-white'
-                    }`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${getPositionBadgeStyle(standing.position)}`}>
                       {standing.position}
                     </div>
-                    {standing.position === 1 && <span className="ml-2 text-2xl">🏆</span>}
-                    {standing.position === 2 && <span className="ml-2 text-2xl">🥈</span>}
-                    {standing.position === 3 && <span className="ml-2 text-2xl">🥉</span>}
+                    {/* Playoff qualification indicator */}
+                    <div className="ml-2 text-xs">
+                      <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        standing.position <= 8 ? 'bg-blue-100 text-blue-700' :
+                        standing.position <= 16 ? 'bg-green-100 text-green-700' :
+                        'bg-gray-100 text-gray-600'
+                      }`}>
+                        {getPositionLabel(standing.position)}
+                      </div>
+                    </div>
                   </div>
                   
                   {/* Player name with avatar */}
@@ -71,13 +88,12 @@ function StandingsTable({ players, language, unified = false }) {
                   </div>
                 </div>
                 
-                {/* Points with enhanced styling */}
+                {/* Points with playoff zone styling */}
                 <div className="text-right">
                   <div className={`text-3xl font-bold ${
-                    standing.position === 1 ? 'text-yellow-600' :
-                    standing.position === 2 ? 'text-gray-600' :
-                    standing.position === 3 ? 'text-orange-600' :
-                    'text-parque-purple'
+                    standing.position <= 8 ? 'text-blue-600' :
+                    standing.position <= 16 ? 'text-green-600' :
+                    'text-gray-600'
                   }`}>
                     {standing.stats.totalPoints || 0}
                   </div>
@@ -174,6 +190,9 @@ function StandingsTable({ players, language, unified = false }) {
                   {language === 'es' ? 'Jugador' : 'Player'}
                 </th>
                 <th className="px-3 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
+                  {language === 'es' ? 'Clasificación' : 'Qualification'}
+                </th>
+                <th className="px-3 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
                   {language === 'es' ? 'Puntos' : 'Points'}
                 </th>
                 <th className="px-3 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
@@ -188,35 +207,20 @@ function StandingsTable({ players, language, unified = false }) {
                 <th className="px-3 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
                   {language === 'es' ? 'Juegos' : 'Games'}
                 </th>
-                <th className="px-3 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
-                  {language === 'es' ? 'Forma' : 'Form'}
-                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">
               {players.map((standing, index) => {
                 const winPercentage = getWinPercentage(standing.stats.matchesWon, standing.stats.matchesPlayed)
-                const rowBg = standing.position === 1 ? 'bg-gradient-to-r from-yellow-50 to-yellow-100' :
-                            standing.position === 2 ? 'bg-gradient-to-r from-gray-50 to-gray-100' :
-                            standing.position === 3 ? 'bg-gradient-to-r from-orange-50 to-orange-100' :
-                            standing.position <= 5 ? 'bg-gradient-to-r from-green-50 to-green-100' :
-                            'bg-white'
+                const rowBg = getPositionStyle(standing.position)
                             
                 return (
                   <tr key={standing.player._id} className={`${rowBg} hover:shadow-md hover:scale-[1.01] transition-all duration-200`}>
                     <td className="px-4 py-5 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm mr-3 ${
-                          standing.position === 1 ? 'bg-yellow-400 text-yellow-900' :
-                          standing.position === 2 ? 'bg-gray-400 text-gray-900' :
-                          standing.position === 3 ? 'bg-orange-400 text-orange-900' :
-                          'bg-parque-purple text-white'
-                        }`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm mr-3 ${getPositionBadgeStyle(standing.position)}`}>
                           {standing.position}
                         </div>
-                        {standing.position === 1 && <span className="text-xl">🏆</span>}
-                        {standing.position === 2 && <span className="text-xl">🥈</span>}
-                        {standing.position === 3 && <span className="text-xl">🥉</span>}
                       </div>
                     </td>
                     <td className="px-6 py-5 whitespace-nowrap">
@@ -237,11 +241,19 @@ function StandingsTable({ players, language, unified = false }) {
                       </div>
                     </td>
                     <td className="px-3 py-5 whitespace-nowrap text-center">
+                      <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                        standing.position <= 8 ? 'bg-blue-100 text-blue-800' :
+                        standing.position <= 16 ? 'bg-green-100 text-green-800' :
+                        'bg-gray-100 text-gray-600'
+                      }`}>
+                        {getPositionLabel(standing.position)}
+                      </div>
+                    </td>
+                    <td className="px-3 py-5 whitespace-nowrap text-center">
                       <div className={`inline-flex items-center px-3 py-1 rounded-full text-lg font-bold ${
-                        standing.position === 1 ? 'bg-yellow-200 text-yellow-800' :
-                        standing.position === 2 ? 'bg-gray-200 text-gray-800' :
-                        standing.position === 3 ? 'bg-orange-200 text-orange-800' :
-                        'bg-parque-purple/10 text-parque-purple'
+                        standing.position <= 8 ? 'bg-blue-200 text-blue-800' :
+                        standing.position <= 16 ? 'bg-green-200 text-green-800' :
+                        'bg-gray-200 text-gray-800'
                       }`}>
                         {standing.stats.totalPoints || 0}
                       </div>
@@ -276,34 +288,6 @@ function StandingsTable({ players, language, unified = false }) {
                         <span className="text-red-600">{standing.stats.gamesLost || 0}</span>
                       </div>
                     </td>
-                    <td className="px-3 py-5 whitespace-nowrap text-center">
-                      <div className="flex items-center justify-center space-x-1">
-                        {standing.stats.matchesPlayed > 0 && (
-                          <>
-                            {/* Progress bar */}
-                            <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                              <div 
-                                className={`h-2 rounded-full transition-all duration-500 ${
-                                  winPercentage >= 75 ? 'bg-green-500' :
-                                  winPercentage >= 50 ? 'bg-yellow-500' :
-                                  'bg-red-500'
-                                }`}
-                                style={{ width: `${winPercentage}%` }}
-                              ></div>
-                            </div>
-                            {/* Recent form dots */}
-                            {[...Array(Math.min(3, standing.stats.matchesPlayed))].map((_, i) => (
-                              <div
-                                key={i}
-                                className={`w-2 h-2 rounded-full ${
-                                  i < standing.stats.matchesWon ? 'bg-green-500' : 'bg-red-500'
-                                }`}
-                              ></div>
-                            ))}
-                          </>
-                        )}
-                      </div>
-                    </td>
                   </tr>
                 )
               })}
@@ -327,6 +311,8 @@ export default function LeagueSeasonPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [activeTab, setActiveTab] = useState('standings')
+  const [currentRound, setCurrentRound] = useState(1)
+  const [totalRounds, setTotalRounds] = useState(8) // Default from league config
 
   const t = homeContent[language]
 
@@ -360,6 +346,11 @@ export default function LeagueSeasonPage() {
       
       setLeague({ ...leagueData.league, currentSeason: targetSeason })
       
+      // Set total rounds from league config
+      if (leagueData.league.config?.roundsPerSeason) {
+        setTotalRounds(leagueData.league.config.roundsPerSeason)
+      }
+      
       // Fetch standings data
       const standingsRes = await fetch(`/api/leagues/${location}/standings?season=${targetSeasonName}`)
       if (standingsRes.ok) {
@@ -375,10 +366,16 @@ export default function LeagueSeasonPage() {
       }
       
       // Fetch upcoming matches schedule
-      const scheduleRes = await fetch(`/api/leagues/${location}/matches?season=${targetSeasonName}&status=scheduled&limit=20`)
+      const scheduleRes = await fetch(`/api/leagues/${location}/matches?season=${targetSeasonName}&status=scheduled&limit=50`)
       if (scheduleRes.ok) {
         const scheduleData = await scheduleRes.json()
         setSchedule(scheduleData.matches || [])
+        
+        // Set current round to the first round with matches, or 1 if no matches
+        if (scheduleData.matches && scheduleData.matches.length > 0) {
+          const firstRound = Math.min(...scheduleData.matches.map(m => m.round))
+          setCurrentRound(firstRound)
+        }
       }
       
     } catch (err) {
@@ -405,6 +402,47 @@ export default function LeagueSeasonPage() {
       }
     }
     return seasonNames[language][seasonKey] || seasonKey
+  }
+
+  // Get matches for current round
+  const getCurrentRoundMatches = () => {
+    return schedule.filter(match => match.round === currentRound)
+  }
+
+  // Get available rounds
+  const getAvailableRounds = () => {
+    const roundsWithMatches = [...new Set(schedule.map(match => match.round))].sort((a, b) => a - b)
+    const allRounds = Array.from({ length: totalRounds }, (_, i) => i + 1)
+    return allRounds.map(round => ({
+      round,
+      hasMatches: roundsWithMatches.includes(round),
+      matchCount: schedule.filter(match => match.round === round).length
+    }))
+  }
+
+  // Format date for display
+  const formatDateForDisplay = (date, showTime = false) => {
+    if (!date) return null
+    
+    const dateObj = new Date(date)
+    const today = new Date()
+    const tomorrow = new Date(today)
+    tomorrow.setDate(today.getDate() + 1)
+    
+    const isToday = dateObj.toDateString() === today.toDateString()
+    const isTomorrow = dateObj.toDateString() === tomorrow.toDateString()
+    
+    if (isToday) {
+      return language === 'es' ? 'Hoy' : 'Today'
+    } else if (isTomorrow) {
+      return language === 'es' ? 'Mañana' : 'Tomorrow'
+    } else {
+      return dateObj.toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric'
+      })
+    }
   }
 
   if (loading) {
@@ -557,160 +595,292 @@ export default function LeagueSeasonPage() {
         {activeTab === 'schedule' && (
           <div className="max-w-5xl mx-auto">
             <div className="bg-white rounded-xl shadow-lg p-4 md:p-8">
-              <h2 className="text-xl md:text-2xl font-bold text-parque-purple mb-4 md:mb-6">
-                {language === 'es' ? 'Calendario de Partidos' : 'Match Schedule'}
-              </h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl md:text-2xl font-bold text-parque-purple">
+                  {language === 'es' ? 'Calendario de Partidos' : 'Match Schedule'}
+                </h2>
+                <div className="text-sm text-gray-600">
+                  {language === 'es' ? 'Ronda' : 'Round'} {currentRound} {language === 'es' ? 'de' : 'of'} {totalRounds}
+                </div>
+              </div>
               
-              {schedule && schedule.length > 0 ? (
-                <div className="space-y-6">
-                  {/* Group matches by round */}
-                  {Object.entries(
-                    schedule.reduce((rounds, match) => {
-                      const roundKey = match.round || 'TBD'
-                      if (!rounds[roundKey]) rounds[roundKey] = []
-                      rounds[roundKey].push(match)
-                      return rounds
-                    }, {})
-                  ).map(([round, roundMatches]) => (
-                    <div key={round} className="border border-gray-200 rounded-lg overflow-hidden">
-                      <div className="bg-parque-purple text-white px-6 py-4">
-                        <h3 className="text-lg font-semibold">
-                          {language === 'es' ? 'Ronda' : 'Round'} {round}
-                        </h3>
-                        <p className="text-sm opacity-90">
-                          {roundMatches.length} {language === 'es' ? 'partidos programados' : 'scheduled matches'}
-                        </p>
-                      </div>
-                      
-                      <div className="divide-y divide-gray-200">
-                        {roundMatches.map((match) => (
-                          <div key={match._id} className="p-6 hover:bg-gray-50 transition-colors">
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                                  {/* Player 1 */}
-                                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                                    <div className="font-medium text-gray-900">
-                                      {match.players?.player1?.name || 'TBD'}
-                                    </div>
-                                  </div>
-                                  
-                                  {/* VS */}
-                                  <div className="text-center">
-                                    <div className="text-xl font-bold text-gray-400">vs</div>
-                                  </div>
-                                  
-                                  {/* Player 2 */}
-                                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                                    <div className="font-medium text-gray-900">
-                                      {match.players?.player2?.name || 'TBD'}
-                                    </div>
-                                  </div>
+              {/* Round Navigation */}
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    {language === 'es' ? 'Seleccionar Ronda' : 'Select Round'}
+                  </h3>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => setCurrentRound(Math.max(1, currentRound - 1))}
+                      disabled={currentRound === 1}
+                      className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      ← {language === 'es' ? 'Anterior' : 'Previous'}
+                    </button>
+                    <button
+                      onClick={() => setCurrentRound(Math.min(totalRounds, currentRound + 1))}
+                      disabled={currentRound === totalRounds}
+                      className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {language === 'es' ? 'Siguiente' : 'Next'} →
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Round selector pills */}
+                <div className="flex flex-wrap gap-2">
+                  {getAvailableRounds().map(({ round, hasMatches, matchCount }) => (
+                    <button
+                      key={round}
+                      onClick={() => setCurrentRound(round)}
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 relative ${
+                        currentRound === round
+                          ? 'bg-parque-purple text-white shadow-lg transform scale-105'
+                          : hasMatches
+                          ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                          : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                      }`}
+                    >
+                      {language === 'es' ? 'Ronda' : 'Round'} {round}
+                      {hasMatches && (
+                        <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                          {matchCount}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Current Round Matches */}
+              {getCurrentRoundMatches().length > 0 ? (
+                <div className="space-y-4">
+                  <div className="bg-gradient-to-r from-parque-purple to-parque-purple/80 text-white px-6 py-4 rounded-lg">
+                    <h3 className="text-xl font-bold mb-2">
+                      {language === 'es' ? 'Ronda' : 'Round'} {currentRound}
+                    </h3>
+                    <div className="flex items-center space-x-4 text-sm opacity-90">
+                      <span>
+                        {getCurrentRoundMatches().length} {language === 'es' ? 'partidos' : 'matches'}
+                      </span>
+                      <span>•</span>
+                      <span>
+                        {getCurrentRoundMatches().filter(m => m.schedule?.confirmedDate).length} {language === 'es' ? 'confirmados' : 'confirmed'}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-6">
+                    {getCurrentRoundMatches().map((match) => (
+                      <div key={match._id} className="bg-white border-2 border-gray-100 rounded-xl p-6 hover:shadow-lg hover:border-parque-purple/20 transition-all duration-200">
+                        {/* Match Players */}
+                        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center mb-6">
+                          {/* Player 1 */}
+                          <div className="md:col-span-2">
+                            <div className="flex items-center space-x-3 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg">
+                              <div className="w-12 h-12 rounded-full bg-parque-purple text-white flex items-center justify-center text-lg font-bold">
+                                {match.players?.player1?.name?.charAt(0) || '?'}
+                              </div>
+                              <div>
+                                <div className="font-bold text-gray-900 text-lg">
+                                  {match.players?.player1?.name || 'TBD'}
                                 </div>
-                                
-                                {/* Match details */}
-                                <div className="mt-4 space-y-3">
-                                  {/* Confirmed Date & Time */}
-                                  {match.schedule?.confirmedDate && (
-                                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                                      <div className="flex items-center space-x-2 mb-2">
-                                        <span className="text-green-600">✅</span>
-                                        <span className="font-medium text-green-800">
-                                          {language === 'es' ? 'Partido Confirmado' : 'Match Confirmed'}
-                                        </span>
-                                      </div>
-                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                                        <div className="flex items-center space-x-2">
-                                          <span>📅</span>
-                                          <span className="font-medium">
-                                            {new Date(match.schedule.confirmedDate).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
-                                              weekday: 'long',
-                                              year: 'numeric',
-                                              month: 'long', 
-                                              day: 'numeric'
-                                            })}
-                                          </span>
-                                        </div>
-                                        {match.schedule?.time && (
-                                          <div className="flex items-center space-x-2">
-                                            <span>🕐</span>
-                                            <span className="font-medium">{match.schedule.time}</span>
-                                          </div>
-                                        )}
-                                        {match.schedule?.club && (
-                                          <div className="flex items-center space-x-2">
-                                            <span>🏌️</span>
-                                            <span className="font-medium">{match.schedule.club}</span>
-                                          </div>
-                                        )}
-                                        {(match.schedule?.court || match.schedule?.courtNumber) && (
-                                          <div className="flex items-center space-x-2">
-                                            <span>🎾</span>
-                                            <span className="font-medium">
-                                              {match.schedule.court} 
-                                              {match.schedule.courtNumber && ` ${match.schedule.courtNumber}`}
-                                            </span>
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                  )}
-                                  
-                                  {/* Deadline info for unconfirmed matches */}
-                                  {!match.schedule?.confirmedDate && match.schedule?.deadline && (
-                                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                                      <div className="flex items-center space-x-2 mb-2">
-                                        <span className="text-amber-600">⏰</span>
-                                        <span className="font-medium text-amber-800">
-                                          {language === 'es' ? 'Pendiente de Confirmación' : 'Pending Confirmation'}
-                                        </span>
-                                      </div>
-                                      <div className="text-sm text-amber-700">
-                                        {language === 'es' ? 'Fecha límite:' : 'Deadline:'} {' '}
-                                        <span className="font-medium">
-                                          {new Date(match.schedule.deadline).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
-                                            weekday: 'short',
-                                            month: 'short',
-                                            day: 'numeric'
-                                          })}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  )}
-                                  
-                                  {/* Status indicator */}
-                                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                                    <span className={`w-2 h-2 rounded-full ${
-                                      match.status === 'scheduled' ? 'bg-blue-500' :
-                                      match.status === 'in_progress' ? 'bg-yellow-500' :
-                                      'bg-gray-500'
-                                    }`}></span>
-                                    <span className="capitalize">
-                                      {match.status === 'scheduled' ? 
-                                        (language === 'es' ? 'Programado' : 'Scheduled') :
-                                        match.status === 'in_progress' ? 
-                                        (language === 'es' ? 'En progreso' : 'In Progress') :
-                                        match.status
-                                      }
-                                    </span>
-                                  </div>
+                                <div className="text-sm text-gray-600">
+                                  {language === 'es' ? 'Jugador 1' : 'Player 1'}
                                 </div>
                               </div>
                             </div>
                           </div>
-                        ))}
+                          
+                          {/* VS */}
+                          <div className="text-center">
+                            <div className="bg-parque-purple/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto">
+                              <span className="text-2xl font-bold text-parque-purple">vs</span>
+                            </div>
+                          </div>
+                          
+                          {/* Player 2 */}
+                          <div className="md:col-span-2">
+                            <div className="flex items-center space-x-3 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg">
+                              <div className="w-12 h-12 rounded-full bg-parque-purple text-white flex items-center justify-center text-lg font-bold">
+                                {match.players?.player2?.name?.charAt(0) || '?'}
+                              </div>
+                              <div>
+                                <div className="font-bold text-gray-900 text-lg">
+                                  {match.players?.player2?.name || 'TBD'}
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                  {language === 'es' ? 'Jugador 2' : 'Player 2'}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* ENHANCED DATE & TIME SECTION - Most Important */}
+                        {match.schedule?.confirmedDate ? (
+                          <div className="bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-200 rounded-xl p-6 mb-4">
+                            <div className="flex items-center space-x-3 mb-4">
+                              <div className="w-12 h-12 rounded-full bg-green-500 text-white flex items-center justify-center">
+                                <span className="text-2xl">✓</span>
+                              </div>
+                              <div>
+                                <div className="text-lg font-bold text-green-800">
+                                  {language === 'es' ? 'Partido Confirmado' : 'Match Confirmed'}
+                                </div>
+                                <div className="text-sm text-green-600">
+                                  {language === 'es' ? 'Los jugadores han acordado fecha y hora' : 'Players have agreed on date and time'}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* PRIMARY DATE & TIME DISPLAY */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              {/* Date - Most prominent */}
+                              <div className="bg-white/80 rounded-lg p-4 text-center">
+                                <div className="text-3xl mb-2">📅</div>
+                                <div className="text-2xl font-bold text-gray-900 mb-1">
+                                  {formatDateForDisplay(match.schedule.confirmedDate)}
+                                </div>
+                                <div className="text-lg text-gray-600">
+                                  {new Date(match.schedule.confirmedDate).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
+                                    month: 'long',
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                  })}
+                                </div>
+                              </div>
+                              
+                              {/* Time - Secondary prominence */}
+                              {match.schedule?.time && (
+                                <div className="bg-white/80 rounded-lg p-4 text-center">
+                                  <div className="text-3xl mb-2">🕐</div>
+                                  <div className="text-3xl font-bold text-parque-purple mb-1">
+                                    {match.schedule.time}
+                                  </div>
+                                  <div className="text-sm text-gray-600">
+                                    {language === 'es' ? 'Hora del partido' : 'Match time'}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Venue Information */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                              {match.schedule?.club && (
+                                <div className="flex items-center space-x-3 bg-white/60 rounded-lg p-3">
+                                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <span className="text-xl">🏌️</span>
+                                  </div>
+                                  <div>
+                                    <div className="font-bold text-gray-900">{match.schedule.club}</div>
+                                    <div className="text-sm text-gray-600">
+                                      {language === 'es' ? 'Club' : 'Club'}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {(match.schedule?.court || match.schedule?.courtNumber) && (
+                                <div className="flex items-center space-x-3 bg-white/60 rounded-lg p-3">
+                                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                                    <span className="text-xl">🎾</span>
+                                  </div>
+                                  <div>
+                                    <div className="font-bold text-gray-900">
+                                      {match.schedule.court || 'Court'} {match.schedule.courtNumber}
+                                    </div>
+                                    <div className="text-sm text-gray-600">
+                                      {language === 'es' ? 'Pista' : 'Court'}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="bg-gradient-to-r from-amber-50 to-amber-100 border-2 border-amber-200 rounded-xl p-6 mb-4">
+                            <div className="flex items-center space-x-3 mb-4">
+                              <div className="w-12 h-12 rounded-full bg-amber-500 text-white flex items-center justify-center">
+                                <span className="text-2xl">⏰</span>
+                              </div>
+                              <div>
+                                <div className="text-lg font-bold text-amber-800">
+                                  {language === 'es' ? 'Pendiente de Confirmación' : 'Pending Confirmation'}
+                                </div>
+                                <div className="text-sm text-amber-600">
+                                  {language === 'es' ? 'Los jugadores deben acordar fecha y hora' : 'Players need to agree on date and time'}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Deadline Information */}
+                            {match.schedule?.deadline && (
+                              <div className="bg-white/80 rounded-lg p-4 text-center">
+                                <div className="text-2xl mb-2">⏳</div>
+                                <div className="text-lg font-bold text-gray-900 mb-1">
+                                  {language === 'es' ? 'Fecha Límite' : 'Deadline'}
+                                </div>
+                                <div className="text-xl font-bold text-amber-700">
+                                  {formatDateForDisplay(match.schedule.deadline)}
+                                </div>
+                                <div className="text-sm text-gray-600 mt-1">
+                                  {new Date(match.schedule.deadline).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
+                                    month: 'long',
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                  })}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
+                        {/* Match Status */}
+                        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                          <div className="flex items-center space-x-2">
+                            <div className={`w-3 h-3 rounded-full ${
+                              match.status === 'scheduled' ? 'bg-blue-500' :
+                              match.status === 'in_progress' ? 'bg-yellow-500' :
+                              'bg-gray-500'
+                            }`}></div>
+                            <span className="text-sm font-medium text-gray-700">
+                              {match.status === 'scheduled' ? 
+                                (language === 'es' ? 'Programado' : 'Scheduled') :
+                                match.status === 'in_progress' ? 
+                                (language === 'es' ? 'En progreso' : 'In Progress') :
+                                match.status
+                              }
+                            </span>
+                          </div>
+                          
+                          {match.schedule?.confirmedDate && (
+                            <div className="text-sm text-gray-500">
+                              {language === 'es' ? 'Confirmado' : 'Confirmed'} ✓
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <span className="text-4xl mb-4 block">📅</span>
-                  <p>
+                <div className="text-center py-16">
+                  <div className="text-6xl mb-4">📅</div>
+                  <h3 className="text-xl font-bold text-gray-700 mb-2">
+                    {language === 'es' ? 'Ronda' : 'Round'} {currentRound}
+                  </h3>
+                  <p className="text-gray-500 mb-6">
                     {language === 'es' 
-                      ? 'No hay partidos programados en este momento.'
-                      : 'No matches scheduled at the moment.'}
+                      ? 'No hay partidos programados para esta ronda todavía.'
+                      : 'No matches scheduled for this round yet.'}
                   </p>
+                  <div className="text-sm text-gray-400">
+                    {language === 'es' 
+                      ? 'Los partidos se programarán una vez que se complete la ronda anterior.'
+                      : 'Matches will be scheduled once the previous round is completed.'}
+                  </div>
                 </div>
               )}
             </div>
@@ -939,4 +1109,4 @@ export default function LeagueSeasonPage() {
       <Footer content={t.footer} />
     </div>
   )
-} 
+}
