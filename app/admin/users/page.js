@@ -457,13 +457,39 @@ function InvitePlayersModal({ onClose, onSuccess }) {
 
   const fetchPlayersWithoutUsers = async () => {
     try {
-      const res = await fetch('/api/admin/players?hasUser=false&status=confirmed')
+      // First, let's see all players to debug
+      console.log('Fetching players...')
+      const allPlayersRes = await fetch('/api/admin/players')
+      if (allPlayersRes.ok) {
+        const allPlayersData = await allPlayersRes.json()
+        console.log('All players in database:', allPlayersData.players)
+        console.log('Total players found:', allPlayersData.players?.length || 0)
+        
+        // Show status breakdown
+        const statusCounts = {}
+        const userCounts = { hasUser: 0, noUser: 0 }
+        allPlayersData.players?.forEach(player => {
+          statusCounts[player.status] = (statusCounts[player.status] || 0) + 1
+          if (player.userId) {
+            userCounts.hasUser++
+          } else {
+            userCounts.noUser++
+          }
+        })
+        console.log('Status breakdown:', statusCounts)
+        console.log('User account breakdown:', userCounts)
+      }
+      
+      // Include active, confirmed, and pending players who don't have user accounts
+      const res = await fetch('/api/admin/players?hasUser=false&status=pending,confirmed,active')
       if (!res.ok) throw new Error('Failed to fetch players')
       
       const data = await res.json()
+      console.log('Players without users (filtered):', data.players) // Debug log
       setPlayers(data.players || [])
     } catch (error) {
       setError('Failed to load players')
+      console.error('Error fetching players:', error)
     } finally {
       setLoading(false)
     }
