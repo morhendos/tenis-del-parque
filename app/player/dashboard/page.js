@@ -208,13 +208,13 @@ export default function PlayerDashboard() {
         <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-200">
           <div className="flex items-center">
             <div className="w-10 h-10 bg-yellow-100 rounded-xl flex items-center justify-center">
-              <span className="text-xl">⭐</span>
+              <span className="text-xl">🏆</span>
             </div>
             <div className="ml-3 sm:ml-4">
               <p className="text-xs sm:text-sm font-medium text-gray-600">
-                {language === 'es' ? 'Nivel' : 'Level'}
+                {language === 'es' ? 'Puntos' : 'Points'}
               </p>
-              <p className="text-lg sm:text-2xl font-bold text-gray-900">{player.level || 'N/A'}</p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900">{player.stats?.totalPoints || 0}</p>
             </div>
           </div>
         </div>
