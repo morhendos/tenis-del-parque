@@ -44,7 +44,8 @@ export async function GET(request, { params }) {
       .sort({ 
         'stats.totalPoints': -1,  // Primary: total points
         'stats.setsWon': -1,      // Secondary: sets won
-        'stats.gamesWon': -1      // Tertiary: games won
+        'stats.gamesWon': -1,     // Tertiary: games won
+        'name': 1                 // Quaternary: alphabetical by name
       })
       .lean()
     

@@ -77,6 +77,7 @@ function LoginForm() {
 
       if (playerRes.ok) {
         const data = await playerRes.json()
+        
         // Player login successful
         router.push(returnUrl || '/player/dashboard')
         return

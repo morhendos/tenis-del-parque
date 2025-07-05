@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { useLanguage } from '../../../lib/hooks/useLanguage'
 
 export default function PlayerDashboard() {
+  const { language } = useLanguage()
   const [player, setPlayer] = useState(null)
-  const [upcomingMatches, setUpcomingMatches] = useState([])
-  const [recentMatches, setRecentMatches] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [recentMatches, setRecentMatches] = useState([])
+  const [upcomingMatches, setUpcomingMatches] = useState([])
   const router = useRouter()
 
   useEffect(() => {
@@ -17,61 +19,91 @@ export default function PlayerDashboard() {
 
   const fetchPlayerData = async () => {
     try {
-      setLoading(true)
+      // First get the user info
+      const authResponse = await fetch('/api/auth/check')
+      if (!authResponse.ok) {
+        router.push('/login')
+        return
+      }
       
-      // Get player data
-      const playerRes = await fetch('/api/player/profile')
-      if (!playerRes.ok) throw new Error('Failed to fetch player data')
-      const playerData = await playerRes.json()
-      setPlayer(playerData.player)
-
-      // Get matches
-      const matchesRes = await fetch('/api/player/matches')
-      if (!matchesRes.ok) throw new Error('Failed to fetch matches')
-      const matchesData = await matchesRes.json()
+      const authData = await authResponse.json()
+      const userEmail = authData.user.email
       
-      // Separate upcoming and recent matches
-      const now = new Date()
-      const upcoming = matchesData.matches.filter(match => 
-        match.status === 'scheduled' && 
-        (!match.schedule?.confirmedDate || new Date(match.schedule.confirmedDate) > now)
-      )
-      const recent = matchesData.matches.filter(match => 
-        match.status === 'completed'
-      ).slice(0, 5) // Last 5 matches
-
-      setUpcomingMatches(upcoming)
-      setRecentMatches(recent)
-      
+      // Then get player profile data
+      const profileResponse = await fetch('/api/player/profile')
+      if (profileResponse.ok) {
+        const profileData = await profileResponse.json()
+        if (profileData.success && profileData.player) {
+          setPlayer(profileData.player)
+        } else {
+          // Create a basic player object if profile doesn't exist yet
+          setPlayer({
+            name: userEmail.split('@')[0],
+            email: userEmail,
+            stats: {
+              eloRating: 1200,
+              matchesPlayed: 0,
+              matchesWon: 0
+            },
+            level: 'intermediate'
+          })
+        }
+      } else {
+        // Fallback - create basic player from auth data
+        setPlayer({
+          name: userEmail.split('@')[0],
+          email: userEmail,
+          stats: {
+            eloRating: 1200,
+            matchesPlayed: 0,
+            matchesWon: 0
+          },
+          level: 'intermediate'
+        })
+      }
     } catch (error) {
       console.error('Error fetching player data:', error)
-      setError('Failed to load dashboard data')
+      // Even if there's an error, try to create a basic player state
+      try {
+        const authResponse = await fetch('/api/auth/check')
+        if (authResponse.ok) {
+          const authData = await authResponse.json()
+          setPlayer({
+            name: authData.user.email.split('@')[0],
+            email: authData.user.email,
+            stats: {
+              eloRating: 1200,
+              matchesPlayed: 0,
+              matchesWon: 0
+            },
+            level: 'intermediate'
+          })
+        }
+      } catch (fallbackError) {
+        console.error('Fallback error:', fallbackError)
+      }
     } finally {
       setLoading(false)
     }
+  }
+
+  const formatDate = (date) => {
+    return new Date(date).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric'
+    })
   }
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-green mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading your dashboard...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
+          <p className="mt-4 text-gray-600">
+            {language === 'es' ? 'Cargando...' : 'Loading...'}
+          </p>
         </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-red-600">{error}</p>
-        <button 
-          onClick={fetchPlayerData}
-          className="mt-4 px-4 py-2 bg-parque-green text-white rounded hover:bg-opacity-90"
-        >
-          Try Again
-        </button>
       </div>
     )
   }
@@ -79,167 +111,238 @@ export default function PlayerDashboard() {
   if (!player) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-600">No player data found</p>
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">
+          {language === 'es' ? 'Bienvenido al Portal del Jugador' : 'Welcome to Player Portal'}
+        </h2>
+        <p className="text-gray-600 mb-6">
+          {language === 'es' 
+            ? 'No se encontraron datos del jugador.' 
+            : 'No player data found.'}
+        </p>
+        <Link
+          href="/player/profile"
+          className="inline-flex items-center px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-purple-700 transition-colors"
+        >
+          {language === 'es' ? 'Configurar Perfil' : 'Set Up Profile'}
+        </Link>
       </div>
     )
   }
 
-  const winRate = player.stats?.matchesPlayed > 0 
-    ? Math.round((player.stats.matchesWon / player.stats.matchesPlayed) * 100)
-    : 0
-
   return (
-    <div>
-      {/* Welcome Section */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Welcome back, {player.name}! 👋
-        </h1>
-        <p className="mt-2 text-gray-600">
-          Here&apos;s your tennis journey at a glance
-        </p>
-      </div>
-
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">ELO Rating</p>
-              <p className="mt-1 text-2xl font-bold text-gray-900">
-                {player.stats?.eloRating || 1200}
-              </p>
-            </div>
-            <div className="text-3xl">🏆</div>
+    <div className="space-y-6 sm:space-y-8">
+      {/* Welcome Header */}
+      <div className="bg-gradient-to-r from-parque-purple to-purple-600 rounded-xl text-white p-6 sm:p-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2">
+              {language === 'es' ? '¡Hola' : 'Hello'}, {player.name}! 👋
+            </h1>
+            <p className="text-purple-100 text-sm sm:text-base">
+              {language === 'es' 
+                ? 'Bienvenido de vuelta. Aquí tienes un resumen de tu actividad.'
+                : 'Welcome back. Here\'s a summary of your activity.'}
+            </p>
           </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Matches Played</p>
-              <p className="mt-1 text-2xl font-bold text-gray-900">
-                {player.stats?.matchesPlayed || 0}
-              </p>
-            </div>
-            <div className="text-3xl">🎾</div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Win Rate</p>
-              <p className="mt-1 text-2xl font-bold text-gray-900">
-                {winRate}%
-              </p>
-            </div>
-            <div className="text-3xl">📊</div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Level</p>
-              <p className="mt-1 text-2xl font-bold text-gray-900 capitalize">
-                {player.level}
-              </p>
-            </div>
-            <div className="text-3xl">⭐</div>
+          <div className="mt-4 sm:mt-0 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+            <Link
+              href="/player/matches"
+              className="inline-flex items-center justify-center px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors text-sm font-medium"
+            >
+              <span className="mr-2">🎾</span>
+              {language === 'es' ? 'Mis Partidos' : 'My Matches'}
+            </Link>
+            <Link
+              href="/player/league"
+              className="inline-flex items-center justify-center px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors text-sm font-medium"
+            >
+              <span className="mr-2">🏆</span>
+              {language === 'es' ? 'Ver Liga' : 'View League'}
+            </Link>
           </div>
         </div>
       </div>
 
-      {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Upcoming Matches */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b">
-            <h2 className="text-lg font-semibold text-gray-900">Upcoming Matches</h2>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-200">
+          <div className="flex items-center">
+            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+              <span className="text-xl">🎯</span>
+            </div>
+            <div className="ml-3 sm:ml-4">
+              <p className="text-xs sm:text-sm font-medium text-gray-600">ELO</p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900">{player.stats?.eloRating || 1200}</p>
+            </div>
           </div>
-          <div className="p-6">
-            {upcomingMatches.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No upcoming matches scheduled</p>
-            ) : (
-              <div className="space-y-4">
-                {upcomingMatches.map((match) => {
-                  const opponent = match.players.player1._id === player._id 
-                    ? match.players.player2 
-                    : match.players.player1
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-200">
+          <div className="flex items-center">
+            <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+              <span className="text-xl">🏆</span>
+            </div>
+            <div className="ml-3 sm:ml-4">
+              <p className="text-xs sm:text-sm font-medium text-gray-600">
+                {language === 'es' ? 'Partidos' : 'Matches'}
+              </p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900">{player.stats?.matchesPlayed || 0}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-200">
+          <div className="flex items-center">
+            <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+              <span className="text-xl">📈</span>
+            </div>
+            <div className="ml-3 sm:ml-4">
+              <p className="text-xs sm:text-sm font-medium text-gray-600">
+                {language === 'es' ? 'Victorias' : 'Wins'}
+              </p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900">{player.stats?.matchesWon || 0}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-200">
+          <div className="flex items-center">
+            <div className="w-10 h-10 bg-yellow-100 rounded-xl flex items-center justify-center">
+              <span className="text-xl">⭐</span>
+            </div>
+            <div className="ml-3 sm:ml-4">
+              <p className="text-xs sm:text-sm font-medium text-gray-600">
+                {language === 'es' ? 'Nivel' : 'Level'}
+              </p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900">{player.level || 'N/A'}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* My League Card - Mobile Optimized */}
+      {player && player.league && (
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl shadow-lg border border-green-200">
+          <div className="px-4 sm:px-6 py-4 border-b border-green-200">
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+              <span className="text-2xl mr-2">🏆</span>
+              {language === 'es' ? 'Mi Liga' : 'My League'}
+            </h2>
+          </div>
+          <div className="p-4 sm:p-6">
+            {/* Mobile-first responsive layout */}
+            <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+              {/* Left section - League info */}
+              <div className="flex items-center space-x-3 sm:space-x-4">
+                {/* Logo - smaller on mobile, tennis emoji */}
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-parque-purple to-purple-600 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                  <span className="text-lg sm:text-xl">🎾</span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 truncate">{player.league.name}</h3>
+                  <p className="text-sm text-gray-600 font-medium">{language === 'es' ? 'Temporada' : 'Season'}: {player.season}</p>
                   
-                  return (
-                    <div key={match._id} className="border rounded-lg p-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            vs {opponent.name}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            Round {match.round} • {opponent.level}
-                          </p>
-                          <p className="text-sm text-gray-500 mt-1">
-                            {match.schedule?.confirmedDate 
-                              ? new Date(match.schedule.confirmedDate).toLocaleString()
-                              : 'Date TBD'}
-                          </p>
-                        </div>
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          Scheduled
-                        </span>
-                      </div>
+                  {/* Stats - responsive layout */}
+                  <div className="flex flex-col xs:flex-row xs:items-center gap-2 mt-2">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 w-fit">
+                      ELO: {player.stats?.eloRating || 1200}
+                    </span>
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 w-fit">
+                      {language === 'es' ? 'Nivel' : 'Level'}: {player.level}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Right section - Action button */}
+              <div className="flex-shrink-0 w-full sm:w-auto">
+                <Link
+                  href="/player/league"
+                  className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-parque-purple to-purple-600 text-white text-sm font-medium rounded-lg hover:from-purple-700 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg"
+                >
+                  <span className="text-lg mr-2">🔗</span>
+                  {language === 'es' ? 'Ver Liga' : 'View League'}
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Recent Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+        {/* Recent Matches */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">
+              {language === 'es' ? 'Partidos Recientes' : 'Recent Matches'}
+            </h3>
+          </div>
+          <div className="p-4 sm:p-6">
+            {recentMatches.length > 0 ? (
+              <div className="space-y-4">
+                {recentMatches.slice(0, 3).map((match, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium text-gray-900">vs {match.opponent}</p>
+                      <p className="text-sm text-gray-600">{formatDate(match.date)}</p>
                     </div>
-                  )
-                })}
+                    <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      match.result === 'won' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {match.result === 'won' 
+                        ? (language === 'es' ? 'Victoria' : 'Won')
+                        : (language === 'es' ? 'Derrota' : 'Lost')
+                      }
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="text-4xl mb-2">🎾</div>
+                <p className="text-gray-500 text-sm">
+                  {language === 'es' 
+                    ? 'No hay partidos recientes'
+                    : 'No recent matches'}
+                </p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Recent Results */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b">
-            <h2 className="text-lg font-semibold text-gray-900">Recent Results</h2>
+        {/* Upcoming Matches */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">
+              {language === 'es' ? 'Próximos Partidos' : 'Upcoming Matches'}
+            </h3>
           </div>
-          <div className="p-6">
-            {recentMatches.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">No matches played yet</p>
-            ) : (
+          <div className="p-4 sm:p-6">
+            {upcomingMatches.length > 0 ? (
               <div className="space-y-4">
-                {recentMatches.map((match) => {
-                  const opponent = match.players.player1._id === player._id 
-                    ? match.players.player2 
-                    : match.players.player1
-                  const won = match.result?.winner === player._id
-                  const score = match.result?.score?.sets?.map(set => 
-                    match.players.player1._id === player._id 
-                      ? `${set.player1}-${set.player2}`
-                      : `${set.player2}-${set.player1}`
-                  ).join(', ')
-                  
-                  return (
-                    <div key={match._id} className="border rounded-lg p-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            vs {opponent.name}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {score || 'Score not available'}
-                          </p>
-                          <p className="text-sm text-gray-500 mt-1">
-                            {new Date(match.result.playedAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          won ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                        }`}>
-                          {won ? 'Won' : 'Lost'}
-                        </span>
-                      </div>
+                {upcomingMatches.slice(0, 3).map((match, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                    <div>
+                      <p className="font-medium text-gray-900">vs {match.opponent}</p>
+                      <p className="text-sm text-gray-600">{formatDate(match.date)}</p>
                     </div>
-                  )
-                })}
+                    <div className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                      {language === 'es' ? 'Programado' : 'Scheduled'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="text-4xl mb-2">📅</div>
+                <p className="text-gray-500 text-sm">
+                  {language === 'es' 
+                    ? 'No hay partidos programados'
+                    : 'No upcoming matches'}
+                </p>
               </div>
             )}
           </div>
@@ -247,47 +350,39 @@ export default function PlayerDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="mt-8 bg-parque-bg rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button 
-            onClick={() => router.push('/player/matches')}
-            className="p-4 bg-white rounded-lg hover:shadow-md transition-shadow text-left"
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          {language === 'es' ? 'Acciones Rápidas' : 'Quick Actions'}
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <Link
+            href="/player/matches"
+            className="flex items-center justify-center px-4 py-3 bg-purple-50 text-parque-purple rounded-lg hover:bg-purple-100 transition-colors text-sm font-medium"
           >
-            <div className="flex items-center">
-              <span className="text-2xl mr-3">📅</span>
-              <div>
-                <p className="font-medium text-gray-900">View All Matches</p>
-                <p className="text-sm text-gray-600">See your full match history</p>
-              </div>
-            </div>
-          </button>
-
-          <button 
-            onClick={() => router.push('/player/profile')}
-            className="p-4 bg-white rounded-lg hover:shadow-md transition-shadow text-left"
+            <span className="mr-2">🎾</span>
+            {language === 'es' ? 'Ver Partidos' : 'View Matches'}
+          </Link>
+          <Link
+            href="/player/league"
+            className="flex items-center justify-center px-4 py-3 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors text-sm font-medium"
           >
-            <div className="flex items-center">
-              <span className="text-2xl mr-3">✏️</span>
-              <div>
-                <p className="font-medium text-gray-900">Update Profile</p>
-                <p className="text-sm text-gray-600">Change your contact info</p>
-              </div>
-            </div>
-          </button>
-
-          <button 
-            onClick={() => router.push('/standings')}
-            className="p-4 bg-white rounded-lg hover:shadow-md transition-shadow text-left"
+            <span className="mr-2">🏆</span>
+            {language === 'es' ? 'Clasificación' : 'Standings'}
+          </Link>
+          <Link
+            href="/player/profile"
+            className="flex items-center justify-center px-4 py-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium"
           >
-            <div className="flex items-center">
-              <span className="text-2xl mr-3">🏅</span>
-              <div>
-                <p className="font-medium text-gray-900">League Standings</p>
-                <p className="text-sm text-gray-600">See the current rankings</p>
-              </div>
-            </div>
-          </button>
+            <span className="mr-2">👤</span>
+            {language === 'es' ? 'Mi Perfil' : 'My Profile'}
+          </Link>
+          <Link
+            href="/player/rules"
+            className="flex items-center justify-center px-4 py-3 bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 transition-colors text-sm font-medium"
+          >
+            <span className="mr-2">📋</span>
+            {language === 'es' ? 'Reglas' : 'Rules'}
+          </Link>
         </div>
       </div>
     </div>

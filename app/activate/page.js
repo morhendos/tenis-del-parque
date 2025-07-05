@@ -88,7 +88,7 @@ function ActivateContent() {
         setSuccess(true)
         setTimeout(() => {
           router.push('/login?message=Account activated successfully')
-        }, 2000)
+        }, 5000)
       } else {
         setError(data.error || t.validation.activationFailed)
       }

@@ -57,8 +57,8 @@ export async function GET(request) {
         { 'players.player2': player._id }
       ]
     })
-    .populate('players.player1', 'name level')
-    .populate('players.player2', 'name level')
+    .populate('players.player1', 'name level whatsapp stats.eloRating')
+    .populate('players.player2', 'name level whatsapp stats.eloRating')
     .populate('league', 'name')
     .sort({ createdAt: -1 })
 
