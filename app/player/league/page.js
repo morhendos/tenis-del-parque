@@ -452,11 +452,6 @@ export default function PlayerLeague() {
         <div className="px-6 py-8 sm:px-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center space-x-4">
-              <img 
-                src="/logo.png" 
-                alt="Liga del Parque" 
-                className="h-16 w-auto"
-              />
               <div>
                 <h1 className="text-3xl font-bold text-white">{player.league.name}</h1>
                 <p className="text-purple-100 mt-1">Temporada: {player.season}</p>
