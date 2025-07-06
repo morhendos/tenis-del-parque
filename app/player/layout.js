@@ -78,6 +78,18 @@ export default function PlayerLayout({ children }) {
     setIsSidebarOpen(false)
   }
 
+  // Prevent body scroll when mobile sidebar is open
+  useEffect(() => {
+    if (isSidebarOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isSidebarOpen])
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -95,9 +107,9 @@ export default function PlayerLayout({ children }) {
       <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-xl transform ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       } transition-transform duration-300 ease-in-out lg:translate-x-0`}>
-        <div className="flex flex-col h-screen overflow-hidden">
+        <div className="flex flex-col h-screen">
           {/* Simplified Header - Remove tiny logo on mobile */}
-          <div className="bg-gradient-to-r from-parque-purple via-purple-600 to-indigo-600 px-6 py-6">
+          <div className="flex-shrink-0 bg-gradient-to-r from-parque-purple via-purple-600 to-indigo-600 px-6 py-6">
             <div className="flex items-center justify-between">
               <Link href="/player/dashboard" className="group" onClick={handleNavClick}>
                 <div className="flex items-center space-x-3">
@@ -123,8 +135,8 @@ export default function PlayerLayout({ children }) {
             </div>
           </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-2">
+          {/* Navigation - Scrollable area that takes available space */}
+          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
             {navigation.map((item) => (
               <Link
                 key={item.name}
