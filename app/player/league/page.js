@@ -27,7 +27,7 @@ function StandingsTable({ players, language, unified = false }) {
   const getPositionLabel = (position) => {
     if (position <= 8) return language === 'es' ? 'Playoff A' : 'Playoff A'
     if (position <= 16) return language === 'es' ? 'Playoff B' : 'Playoff B'
-    return language === 'es' ? 'Eliminado' : 'Eliminated'
+    return language === 'es' ? 'Liga' : 'League' // More neutral than "Eliminated"
   }
 
   const getWinPercentage = (won, total) => {

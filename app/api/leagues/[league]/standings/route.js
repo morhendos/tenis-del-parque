@@ -39,22 +39,6 @@ export async function GET(request, { params }) {
     }
     if (level) query.level = level
     
-    // DEBUG: Log query details
-    console.log('Standings API Debug:', {
-      leagueSlug: slug,
-      leagueId: league._id,
-      seasonSearching: season,
-      query: query
-    })
-    
-    // DEBUG: Check all players in this league regardless of season
-    const allPlayersInLeague = await Player.find({ league: league._id })
-    console.log('All players in league:', allPlayersInLeague.map(p => ({
-      name: p.name,
-      season: p.season,
-      status: p.status
-    })))
-    
     // Get players with standings sorted by performance
     let players = await Player.find(query)
       .sort({ 
@@ -80,15 +64,8 @@ export async function GET(request, { params }) {
         })
         .lean()
       
-      console.log(`Fallback found ${players.length} players`)
+      console.log(`Fallback: Found ${players.length} players without season filter`)
     }
-    
-    // DEBUG: Log query results
-    console.log(`Found ${players.length} players matching query:`, players.map(p => ({
-      name: p.name,
-      season: p.season,
-      status: p.status
-    })))
     
     // Calculate additional stats for each player
     const standings = players.map((player, index) => {
