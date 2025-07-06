@@ -2,15 +2,8 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useLanguage } from '../../lib/hooks/useLanguage'
 import { loginContent } from '../../lib/content/loginContent'
-
-// Browser language detection function for login page
-function getBrowserLanguage() {
-  if (typeof window === 'undefined') return 'es'
-  
-  const browserLang = navigator.language || navigator.languages[0]
-  return browserLang.toLowerCase().startsWith('es') ? 'es' : 'en'
-}
 
 function LoginForm() {
   const [email, setEmail] = useState('')
@@ -18,18 +11,12 @@ function LoginForm() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [checking, setChecking] = useState(true)
-  const [language, setLanguage] = useState('es')
   const router = useRouter()
   const searchParams = useSearchParams()
   const returnUrl = searchParams.get('return') || null
+  const { language, isLanguageLoaded } = useLanguage()
   
   const t = loginContent[language]
-
-  // Initialize language based on browser preference
-  useEffect(() => {
-    const detectedLanguage = getBrowserLanguage()
-    setLanguage(detectedLanguage)
-  }, [])
 
   const checkAuth = useCallback(async () => {
     try {
@@ -106,9 +93,10 @@ function LoginForm() {
     }
   }
 
-  if (checking) {
+  // Show loading until language is determined to prevent flickering
+  if (!isLanguageLoaded || checking) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-parque-bg via-white to-parque-bg flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
         </div>

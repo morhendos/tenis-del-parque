@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useLanguage } from '../../../lib/hooks/useLanguage'
 
 export default function PlayerMatches() {
-  const { language } = useLanguage()
+  const { language, isLanguageLoaded } = useLanguage()
   const [matches, setMatches] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -221,7 +221,8 @@ export default function PlayerMatches() {
     { id: 'completed', label: language === 'es' ? 'Completados' : 'Completed', count: completedMatches.length }
   ]
 
-  if (loading) {
+  // Show loading until both language and data are loaded to prevent flickering
+  if (!isLanguageLoaded || loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">

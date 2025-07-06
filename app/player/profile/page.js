@@ -12,7 +12,7 @@ export default function PlayerProfile() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [isEditing, setIsEditing] = useState(false)
-  const { language, setLanguage: setGlobalLanguage } = useLanguage()
+  const { language, setLanguage: setGlobalLanguage, isLanguageLoaded } = useLanguage()
   
   // Form data
   const [formData, setFormData] = useState({
@@ -174,7 +174,8 @@ export default function PlayerProfile() {
     setSuccess('')
   }
 
-  if (loading) {
+  // Show loading until both language and data are loaded to prevent flickering
+  if (!isLanguageLoaded || loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">

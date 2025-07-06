@@ -3,15 +3,8 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useLanguage } from '../../lib/hooks/useLanguage'
 import { activateContent } from '../../lib/content/activateContent'
-
-// Browser language detection function for activate page
-function getBrowserLanguage() {
-  if (typeof window === 'undefined') return 'es'
-  
-  const browserLang = navigator.language || navigator.languages[0]
-  return browserLang.toLowerCase().startsWith('es') ? 'es' : 'en'
-}
 
 function ActivateContent() {
   const [token, setToken] = useState('')
@@ -22,18 +15,23 @@ function ActivateContent() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [userInfo, setUserInfo] = useState(null)
-  const [language, setLanguage] = useState('es')
   
   const searchParams = useSearchParams()
   const router = useRouter()
+  const { language, isLanguageLoaded } = useLanguage()
   
   const t = activateContent[language]
 
-  // Initialize language based on browser preference
-  useEffect(() => {
-    const detectedLanguage = getBrowserLanguage()
-    setLanguage(detectedLanguage)
-  }, [])
+  // Show loading until language is determined to prevent flickering
+  if (!isLanguageLoaded) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-parque-bg via-white to-parque-bg flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
+        </div>
+      </div>
+    )
+  }
 
   useEffect(() => {
     const tokenFromUrl = searchParams.get('token')

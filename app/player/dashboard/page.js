@@ -8,7 +8,7 @@ import { useWelcomeModal } from '../../../lib/hooks/useWelcomeModal'
 import WelcomeModal from '../../../components/ui/WelcomeModal'
 
 export default function PlayerDashboard() {
-  const { language } = useLanguage()
+  const { language, isLanguageLoaded } = useLanguage()
   const [player, setPlayer] = useState(null)
   const [loading, setLoading] = useState(true)
   const [recentMatches, setRecentMatches] = useState([])
@@ -64,7 +64,8 @@ export default function PlayerDashboard() {
     })
   }
 
-  if (loading) {
+  // Show loading until both language and data are loaded to prevent flickering
+  if (!isLanguageLoaded || loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">

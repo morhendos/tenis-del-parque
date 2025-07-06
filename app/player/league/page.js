@@ -273,7 +273,7 @@ export default function PlayerLeague() {
   const [player, setPlayer] = useState(null)
   const [currentRound, setCurrentRound] = useState(1)
   const [totalRounds, setTotalRounds] = useState(8)
-  const { language, setLanguage } = useLanguage()
+  const { language, setLanguage, isLanguageLoaded } = useLanguage()
   const router = useRouter()
 
   // Helper functions for schedule functionality
@@ -385,12 +385,15 @@ export default function PlayerLeague() {
     { id: 'results', label: language === 'es' ? 'Resultados' : 'Results', icon: '🏆' }
   ]
 
-  if (loading) {
+  // Show loading until both language and data are loaded to prevent flickering
+  if (!isLanguageLoaded || loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando datos de la liga...</p>
+          <p className="mt-4 text-gray-600">
+            {language === 'es' ? 'Cargando datos de la liga...' : 'Loading league data...'}
+          </p>
         </div>
       </div>
     )
