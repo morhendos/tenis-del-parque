@@ -37,10 +37,10 @@ function StandingsTable({ players, language, unified = false }) {
 
   // Helper function to get player status styling
   const getPlayerStatusStyle = (player) => {
-    const isActive = player.status === 'active' || player.status === 'confirmed'
+    const isActive = player.status === 'active'
     return isActive 
       ? 'opacity-100' 
-      : 'opacity-50 bg-gray-50' // Make inactive players transparent with gray background
+      : 'opacity-50 bg-gray-50' // Make pending/confirmed (invited but not activated) players transparent with gray background
   }
 
   // Helper function to get player status indicator
