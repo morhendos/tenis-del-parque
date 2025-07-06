@@ -176,8 +176,8 @@ Una vez activada podrás:
           userId: user._id,
           activationLink,
           whatsappLink,
-          whatsappMessage,
-          activationToken: process.env.NODE_ENV === 'development' ? activationToken : undefined
+          whatsappMessage
+          // activationToken excluded from response for security
         })
 
         console.log(`\n📱 WhatsApp invitation for ${player.name}:`)
@@ -196,8 +196,15 @@ Una vez activada podrás:
       message: `Successfully sent ${invitations.length} invitations`,
       sent: invitations.length,
       failed: errors.length,
-      invitations: process.env.NODE_ENV === 'development' ? invitations : undefined,
-      errors: errors.length > 0 ? errors : undefined
+      invitations: invitations, // Always send invitations data for frontend popup
+      errors: errors.length > 0 ? errors : undefined,
+      // Only include sensitive activation tokens in development
+      debug: process.env.NODE_ENV === 'development' ? {
+        detailedInvitations: invitations.map(inv => ({
+          ...inv,
+          activationToken: inv.activationToken
+        }))
+      } : undefined
     })
 
   } catch (error) {
