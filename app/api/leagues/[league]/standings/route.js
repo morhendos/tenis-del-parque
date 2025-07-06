@@ -91,15 +91,6 @@ export async function GET(request, { params }) {
       console.log(`Fallback: Found ${players.length} players without season filter`)
     }
     
-    // DEBUG: Log actual stats values to see why sorting is off
-    console.log('Player stats debug:', players.map(p => ({
-      name: p.name,
-      totalPoints: p.stats?.totalPoints || 0,
-      setsWon: p.stats?.setsWon || 0,
-      gamesWon: p.stats?.gamesWon || 0,
-      matchesPlayed: p.stats?.matchesPlayed || 0
-    })))
-    
     // Calculate additional stats for each player
     const standings = players.map((player, index) => {
       const winPercentage = player.stats.matchesPlayed > 0 

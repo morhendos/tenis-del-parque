@@ -11,7 +11,7 @@ export async function POST(request) {
   try {
     await dbConnect()
 
-    const { playerIds } = await request.json()
+    const { playerIds, forceReinvite = false } = await request.json()
 
     if (!playerIds || !Array.isArray(playerIds) || playerIds.length === 0) {
       return NextResponse.json(
@@ -34,17 +34,43 @@ export async function POST(request) {
       email: p.email,
       status: p.status,
       hasUserId: !!p.userId,
-      userDetails: p.userId ? { email: p.userId.email, role: p.userId.role } : null
+      userIdValue: p.userId,
+      userDetails: p.userId ? { 
+        id: p.userId._id,
+        email: p.userId.email, 
+        role: p.userId.role,
+        isActive: p.userId.isActive,
+        emailVerified: p.userId.emailVerified
+      } : null
     })))
 
-    // Find players without users
-    const players = await Player.find({
-      _id: { $in: playerIds },
-      $or: [
-        { userId: { $exists: false } },
-        { userId: null }
-      ]
-    }).populate('league', 'name')
+    // Also check if any users exist with these emails
+    const playerEmails = allRequestedPlayers.map(p => p.email?.toLowerCase()).filter(Boolean)
+    const existingUsers = await User.find({ 
+      email: { $in: playerEmails } 
+    }).select('email _id isActive emailVerified role')
+    
+    console.log('📧 Existing users with these emails:', existingUsers)
+
+    // Find players without users (or force re-invite)
+    let players
+    if (forceReinvite) {
+      // If force re-invite, get all requested players
+      players = await Player.find({
+        _id: { $in: playerIds }
+      }).populate('league', 'name').populate('userId')
+      
+      console.log('🔄 Force re-invite mode: including players with existing users')
+    } else {
+      // Normal mode: only players without users
+      players = await Player.find({
+        _id: { $in: playerIds },
+        $or: [
+          { userId: { $exists: false } },
+          { userId: null }
+        ]
+      }).populate('league', 'name')
+    }
 
     console.log('✅ Valid players for invitation:', players.map(p => ({
       id: p._id,
@@ -74,24 +100,48 @@ export async function POST(request) {
     for (const player of players) {
       try {
         // Check if user already exists with this email
-        const existingUser = await User.findOne({ email: player.email.toLowerCase() })
-        if (existingUser) {
+        let existingUser = await User.findOne({ email: player.email.toLowerCase() })
+        
+        if (existingUser && !forceReinvite) {
           errors.push(`User already exists for ${player.email}`)
           continue
         }
+        
+        // Handle existing user for re-invite or create new user
+        let user
+        let activationToken
+        
+        if (existingUser && forceReinvite) {
+          console.log(`🔄 Re-inviting existing user: ${player.email}`)
+          user = existingUser
+          
+          // Reset activation if needed
+          if (!user.emailVerified) {
+            activationToken = user.generateActivationToken()
+            console.log(`📧 Regenerated activation token for ${player.email}`)
+          } else {
+            // User is already verified, generate new token anyway for re-invite
+            activationToken = user.generateActivationToken()
+            user.emailVerified = false // Reset verification status
+            console.log(`📧 Generated new activation token for verified user: ${player.email}`)
+          }
+        } else {
+          console.log(`✨ Creating new user for: ${player.email}`)
+          
+          // Create user account with temporary password
+          user = new User({
+            email: player.email.toLowerCase(),
+            password: Math.random().toString(36).substring(2, 15), // Temporary password
+            role: 'player',
+            playerId: player._id,
+            isActive: true,
+            emailVerified: false
+          })
 
-        // Create user account with temporary password
-        const user = new User({
-          email: player.email.toLowerCase(),
-          password: Math.random().toString(36).substring(2, 15), // Temporary password
-          role: 'player',
-          playerId: player._id,
-          isActive: true,
-          emailVerified: false
-        })
-
-        // Generate activation token
-        const activationToken = user.generateActivationToken()
+          // Generate activation token
+          activationToken = user.generateActivationToken()
+        }
+        
         await user.save()
 
         // Update player with userId and change status to confirmed
