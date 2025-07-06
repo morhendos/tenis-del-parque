@@ -3,8 +3,15 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useLanguage } from '../../lib/hooks/useLanguage'
 import { activateContent } from '../../lib/content/activateContent'
+
+// Browser language detection function for activate page
+function getBrowserLanguage() {
+  if (typeof window === 'undefined') return 'es'
+  
+  const browserLang = navigator.language || navigator.languages[0]
+  return browserLang.toLowerCase().startsWith('es') ? 'es' : 'en'
+}
 
 function ActivateContent() {
   const [token, setToken] = useState('')
@@ -15,12 +22,18 @@ function ActivateContent() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [userInfo, setUserInfo] = useState(null)
+  const [language, setLanguage] = useState('es')
   
   const searchParams = useSearchParams()
   const router = useRouter()
-  const { language, setLanguage } = useLanguage()
   
   const t = activateContent[language]
+
+  // Initialize language based on browser preference
+  useEffect(() => {
+    const detectedLanguage = getBrowserLanguage()
+    setLanguage(detectedLanguage)
+  }, [])
 
   useEffect(() => {
     const tokenFromUrl = searchParams.get('token')
@@ -105,32 +118,6 @@ function ActivateContent() {
       <div className="min-h-screen bg-gradient-to-br from-parque-bg via-white to-parque-bg md:flex md:items-center md:justify-center md:py-8 md:px-4">
         <div className="w-full md:max-w-md">
           <div className="bg-white min-h-screen md:min-h-0 md:rounded-xl md:shadow-xl p-6 sm:p-8">
-            {/* Language Switcher - Mobile optimized */}
-            <div className="flex justify-end mb-3 sm:mb-4">
-              <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
-                <button
-                  onClick={() => setLanguage('es')}
-                  className={`w-8 h-8 sm:w-10 sm:h-10 text-xs sm:text-sm font-medium rounded-md transition-colors flex items-center justify-center !mb-0 ${
-                    language === 'es'
-                      ? 'bg-parque-purple text-white'
-                      : 'text-gray-600 hover:text-parque-purple'
-                  }`}
-                >
-                  ES
-                </button>
-                <button
-                  onClick={() => setLanguage('en')}
-                  className={`w-8 h-8 sm:w-10 sm:h-10 text-xs sm:text-sm font-medium rounded-md transition-colors flex items-center justify-center !mb-0 ${
-                    language === 'en'
-                      ? 'bg-parque-purple text-white'
-                      : 'text-gray-600 hover:text-parque-purple'
-                  }`}
-                >
-                  EN
-                </button>
-              </div>
-            </div>
-
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto mb-4"></div>
               <p className="text-gray-600">{t.loading.validating}</p>
@@ -146,32 +133,6 @@ function ActivateContent() {
       <div className="min-h-screen bg-gradient-to-br from-parque-bg via-white to-parque-bg md:flex md:items-center md:justify-center md:py-8 md:px-4">
         <div className="w-full md:max-w-md">
           <div className="bg-white min-h-screen md:min-h-0 md:rounded-xl md:shadow-xl p-6 sm:p-8">
-            {/* Language Switcher - Mobile optimized */}
-            <div className="flex justify-end mb-3 sm:mb-4">
-              <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
-                <button
-                  onClick={() => setLanguage('es')}
-                  className={`w-8 h-8 sm:w-10 sm:h-10 text-xs sm:text-sm font-medium rounded-md transition-colors flex items-center justify-center !mb-0 ${
-                    language === 'es'
-                      ? 'bg-parque-purple text-white'
-                      : 'text-gray-600 hover:text-parque-purple'
-                  }`}
-                >
-                  ES
-                </button>
-                <button
-                  onClick={() => setLanguage('en')}
-                  className={`w-8 h-8 sm:w-10 sm:h-10 text-xs sm:text-sm font-medium rounded-md transition-colors flex items-center justify-center !mb-0 ${
-                    language === 'en'
-                      ? 'bg-parque-purple text-white'
-                      : 'text-gray-600 hover:text-parque-purple'
-                  }`}
-                >
-                  EN
-                </button>
-              </div>
-            </div>
-
             <div className="text-center">
               <div className="mb-4 sm:mb-6">
                 <a href="/">
@@ -216,32 +177,6 @@ function ActivateContent() {
       <div className="min-h-screen bg-gradient-to-br from-parque-bg via-white to-parque-bg md:flex md:items-center md:justify-center md:py-8 md:px-4">
         <div className="w-full md:max-w-md">
           <div className="bg-white min-h-screen md:min-h-0 md:rounded-xl md:shadow-xl p-6 sm:p-8">
-            {/* Language Switcher - Mobile optimized */}
-            <div className="flex justify-end mb-3 sm:mb-4">
-              <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
-                <button
-                  onClick={() => setLanguage('es')}
-                  className={`w-8 h-8 sm:w-10 sm:h-10 text-xs sm:text-sm font-medium rounded-md transition-colors flex items-center justify-center !mb-0 ${
-                    language === 'es'
-                      ? 'bg-parque-purple text-white'
-                      : 'text-gray-600 hover:text-parque-purple'
-                  }`}
-                >
-                  ES
-                </button>
-                <button
-                  onClick={() => setLanguage('en')}
-                  className={`w-8 h-8 sm:w-10 sm:h-10 text-xs sm:text-sm font-medium rounded-md transition-colors flex items-center justify-center !mb-0 ${
-                    language === 'en'
-                      ? 'bg-parque-purple text-white'
-                      : 'text-gray-600 hover:text-parque-purple'
-                  }`}
-                >
-                  EN
-                </button>
-              </div>
-            </div>
-
             <div className="text-center">
               <div className="mb-4 sm:mb-6">
                 <a href="/">
@@ -282,46 +217,20 @@ function ActivateContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-parque-bg via-white to-parque-bg md:flex md:items-center md:justify-center md:py-8 md:px-4">
-              <div className="w-full md:max-w-md">
-          <div className="bg-white min-h-screen md:min-h-0 md:rounded-xl md:shadow-xl p-6 sm:p-8">
-            {/* Language Switcher - Mobile optimized */}
-            <div className="flex justify-end mb-3 sm:mb-4">
-              <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
-                <button
-                  onClick={() => setLanguage('es')}
-                  className={`w-8 h-8 sm:w-10 sm:h-10 text-xs sm:text-sm font-medium rounded-md transition-colors flex items-center justify-center !mb-0 ${
-                    language === 'es'
-                      ? 'bg-parque-purple text-white'
-                      : 'text-gray-600 hover:text-parque-purple'
-                  }`}
-                >
-                  ES
-                </button>
-                <button
-                  onClick={() => setLanguage('en')}
-                  className={`w-8 h-8 sm:w-10 sm:h-10 text-xs sm:text-sm font-medium rounded-md transition-colors flex items-center justify-center !mb-0 ${
-                    language === 'en'
-                      ? 'bg-parque-purple text-white'
-                      : 'text-gray-600 hover:text-parque-purple'
-                  }`}
-                >
-                  EN
-                </button>
-              </div>
+      <div className="w-full md:max-w-md">
+        <div className="bg-white min-h-screen md:min-h-0 md:rounded-xl md:shadow-xl p-6 sm:p-8">
+          {/* Logo/Header - Mobile optimized sizing */}
+          <div className="text-center mb-6 sm:mb-8">
+            <div className="mb-4 sm:mb-6">
+              <a href="/">
+                <img 
+                  src="/logo.png" 
+                  alt="Liga del Parque" 
+                  className="h-24 sm:h-32 lg:h-36 w-auto mx-auto hover:scale-105 transition-transform duration-200 cursor-pointer"
+                />
+              </a>
             </div>
-
-            {/* Logo/Header - Mobile optimized sizing */}
-            <div className="text-center mb-6 sm:mb-8">
-              <div className="mb-4 sm:mb-6">
-                <a href="/">
-                  <img 
-                    src="/logo.png" 
-                    alt="Liga del Parque" 
-                    className="h-24 sm:h-32 lg:h-36 w-auto mx-auto hover:scale-105 transition-transform duration-200 cursor-pointer"
-                  />
-                </a>
-              </div>
-            
+          
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">
               {t.form.title}
             </h2>

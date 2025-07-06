@@ -2,8 +2,15 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useLanguage } from '../../lib/hooks/useLanguage'
 import { loginContent } from '../../lib/content/loginContent'
+
+// Browser language detection function for login page
+function getBrowserLanguage() {
+  if (typeof window === 'undefined') return 'es'
+  
+  const browserLang = navigator.language || navigator.languages[0]
+  return browserLang.toLowerCase().startsWith('es') ? 'es' : 'en'
+}
 
 function LoginForm() {
   const [email, setEmail] = useState('')
@@ -11,12 +18,18 @@ function LoginForm() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [checking, setChecking] = useState(true)
+  const [language, setLanguage] = useState('es')
   const router = useRouter()
   const searchParams = useSearchParams()
   const returnUrl = searchParams.get('return') || null
-  const { language, setLanguage } = useLanguage()
   
   const t = loginContent[language]
+
+  // Initialize language based on browser preference
+  useEffect(() => {
+    const detectedLanguage = getBrowserLanguage()
+    setLanguage(detectedLanguage)
+  }, [])
 
   const checkAuth = useCallback(async () => {
     try {
@@ -104,50 +117,24 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-parque-bg via-white to-parque-bg flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full">
-        <div className="bg-white rounded-xl shadow-xl p-8">
-          {/* Language Switcher */}
-          <div className="flex justify-end mb-4">
-            <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
-              <button
-                onClick={() => setLanguage('es')}
-                className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
-                  language === 'es'
-                    ? 'bg-parque-purple text-white'
-                    : 'text-gray-600 hover:text-parque-purple'
-                }`}
-              >
-                ES
-              </button>
-              <button
-                onClick={() => setLanguage('en')}
-                className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
-                  language === 'en'
-                    ? 'bg-parque-purple text-white'
-                    : 'text-gray-600 hover:text-parque-purple'
-                }`}
-              >
-                EN
-              </button>
-            </div>
-          </div>
-
-          {/* Logo/Header */}
-          <div className="text-center mb-8">
-            <div className="mb-8">
+    <div className="min-h-screen bg-gradient-to-br from-parque-bg via-white to-parque-bg md:flex md:items-center md:justify-center md:py-8 md:px-4">
+      <div className="w-full md:max-w-md">
+        <div className="bg-white min-h-screen md:min-h-0 md:rounded-xl md:shadow-xl p-6 sm:p-8 flex flex-col justify-center md:justify-start">
+          {/* Logo/Header - Mobile optimized sizing */}
+          <div className="text-center mb-6 sm:mb-8">
+            <div className="mb-6 sm:mb-8">
               <a href="/">
                 <img 
                   src="/logo.png" 
                   alt="Liga del Parque" 
-                  className="h-40 w-auto mx-auto hover:scale-105 transition-transform duration-200 cursor-pointer"
+                  className="h-32 sm:h-40 w-auto mx-auto hover:scale-105 transition-transform duration-200 cursor-pointer"
                 />
               </a>
             </div>
           </div>
 
-          {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Login Form - Mobile optimized */}
+          <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 {t.form.emailLabel}
@@ -158,7 +145,7 @@ function LoginForm() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-parque-purple focus:border-transparent transition-colors"
+                className="w-full px-3 sm:px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-parque-purple focus:border-transparent transition-colors text-sm sm:text-base"
                 placeholder={t.form.emailPlaceholder}
               />
             </div>
@@ -173,26 +160,27 @@ function LoginForm() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-parque-purple focus:border-transparent transition-colors"
+                className="w-full px-3 sm:px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-parque-purple focus:border-transparent transition-colors text-sm sm:text-base"
                 placeholder={t.form.passwordPlaceholder}
               />
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg p-4 text-sm">
-                <div className="flex items-center">
-                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg p-3 sm:p-4 text-sm">
+                <div className="flex items-start">
+                  <svg className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                   </svg>
-                  {error}
+                  <span className="leading-5">{error}</span>
                 </div>
               </div>
             )}
 
+            {/* Mobile-optimized button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-parque-purple hover:bg-parque-purple/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-parque-purple disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95"
+              className="w-full flex justify-center items-center py-4 px-4 border border-transparent rounded-lg shadow-sm text-sm sm:text-base font-medium text-white bg-parque-purple hover:bg-parque-purple/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-parque-purple disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-95 touch-manipulation"
             >
               {loading ? (
                 <>
@@ -213,8 +201,8 @@ function LoginForm() {
             </button>
           </form>
 
-          {/* Links */}
-          <div className="mt-8 text-center space-y-4">
+          {/* Links - Mobile optimized */}
+          <div className="mt-6 sm:mt-8 text-center space-y-4">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300" />
@@ -227,14 +215,14 @@ function LoginForm() {
             <div className="space-y-3">
               <a 
                 href="/signup/sotogrande" 
-                className="block w-full text-center py-2 px-4 border border-parque-purple text-parque-purple rounded-lg hover:bg-parque-purple hover:text-white transition-colors font-medium"
+                className="block w-full text-center py-3 sm:py-2 px-4 border border-parque-purple text-parque-purple rounded-lg hover:bg-parque-purple hover:text-white transition-colors font-medium touch-manipulation"
               >
                 {t.links.registerForLeague}
               </a>
               
               <a 
                 href="/forgot-password" 
-                className="block text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                className="block text-sm text-gray-600 hover:text-gray-800 transition-colors touch-manipulation"
               >
                 {t.links.forgotPassword}
               </a>

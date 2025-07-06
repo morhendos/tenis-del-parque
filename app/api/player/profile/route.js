@@ -155,10 +155,42 @@ export async function PUT(request) {
     }
 
     if (preferences) {
-      user.preferences = {
-        ...user.preferences,
-        ...preferences
+      // Ensure user.preferences exists with proper defaults
+      if (!user.preferences) {
+        user.preferences = {
+          language: 'es',
+          hasSeenWelcomeModal: false,
+          notifications: {
+            email: true,
+            matchReminders: true,
+            resultReminders: true
+          }
+        }
       }
+      
+      // Ensure notifications object exists with defaults
+      if (!user.preferences.notifications) {
+        user.preferences.notifications = {
+          email: true,
+          matchReminders: true,
+          resultReminders: true
+        }
+      }
+      
+      // Handle nested preferences properly
+      if (preferences.notifications) {
+        user.preferences.notifications = {
+          ...user.preferences.notifications,
+          ...preferences.notifications
+        }
+      }
+      
+      // Handle other preference fields
+      Object.keys(preferences).forEach(key => {
+        if (key !== 'notifications') {
+          user.preferences[key] = preferences[key]
+        }
+      })
     }
 
     // Save both documents

@@ -16,11 +16,7 @@ export default function PlayerDashboard() {
   const router = useRouter()
   const { showWelcome, playerName, closeWelcome } = useWelcomeModal()
 
-  // Function to trigger welcome modal for testing
-  const triggerWelcomeModal = () => {
-    sessionStorage.setItem('showWelcome', 'true')
-    window.location.reload()
-  }
+
 
   useEffect(() => {
     fetchPlayerData()
@@ -113,8 +109,8 @@ export default function PlayerDashboard() {
             </h1>
             <p className="text-purple-100 text-sm sm:text-base">
               {language === 'es' 
-                ? 'Bienvenido de vuelta. Aquí tienes un resumen de tu actividad.'
-                : 'Welcome back. Here\'s a summary of your activity.'}
+                ? 'Bienvenido! Aquí tienes un resumen de tu actividad.'
+                : 'Welcome! Here\'s a summary of your activity.'}
             </p>
           </div>
           <div className="mt-4 sm:mt-0 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
@@ -327,7 +323,7 @@ export default function PlayerDashboard() {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
           {language === 'es' ? 'Acciones Rápidas' : 'Quick Actions'}
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <Link
             href="/player/matches"
             className="flex items-center justify-center px-4 py-3 bg-purple-50 text-parque-purple rounded-lg hover:bg-purple-100 transition-colors text-sm font-medium"
@@ -356,13 +352,6 @@ export default function PlayerDashboard() {
             <span className="mr-2">📋</span>
             {language === 'es' ? 'Reglas' : 'Rules'}
           </Link>
-          <button
-            onClick={triggerWelcomeModal}
-            className="flex items-center justify-center px-4 py-3 bg-pink-50 text-pink-700 rounded-lg hover:bg-pink-100 transition-colors text-sm font-medium"
-          >
-            <span className="mr-2">👋</span>
-            {language === 'es' ? 'Bienvenida' : 'Welcome'}
-          </button>
         </div>
       </div>
 

@@ -326,7 +326,7 @@ export default function PlayerProfile() {
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
@@ -365,20 +365,6 @@ export default function PlayerProfile() {
             </div>
             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
               <span className="text-2xl">📊</span>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-xl p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-orange-100">
-                {language === 'es' ? 'Nivel' : 'Level'}
-              </p>
-              <p className="text-3xl font-bold mt-1 capitalize">{player?.level || 'N/A'}</p>
-            </div>
-            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-              <span className="text-2xl">⭐</span>
             </div>
           </div>
         </div>
