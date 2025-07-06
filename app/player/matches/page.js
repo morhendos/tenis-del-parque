@@ -535,7 +535,14 @@ export default function PlayerMatches() {
                     {opponent.whatsapp && (
                       <div className="mt-3">
                         <a
-                          href={`https://wa.me/${opponent.whatsapp.replace(/[\s\-\(\)]/g, '')}?text=Hi ${opponent.name}! I'm also in the tennis league. Would you like to play a practice match or schedule our league game?`}
+                          href={`https://wa.me/${(() => {
+                            // Normalize phone number for WhatsApp
+                            let cleaned = opponent.whatsapp.replace(/[^0-9]/g, '')
+                            if (cleaned.startsWith('00')) {
+                              cleaned = cleaned.substring(2)
+                            }
+                            return cleaned
+                          })()}?text=Hi ${opponent.name}! I'm also in the tennis league. Would you like to play a practice match or schedule our league game?`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="w-full inline-flex items-center justify-center px-3 py-2 text-xs font-medium text-white bg-green-500 rounded-lg hover:bg-green-600 transition-colors"

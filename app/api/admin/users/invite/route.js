@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import dbConnect from '../../../../../lib/db/mongoose'
 import User from '../../../../../lib/models/User'
 import Player from '../../../../../lib/models/Player'
+import { createWhatsAppLink } from '../../../../../lib/utils/phoneUtils'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
@@ -232,7 +233,9 @@ La liga comienza mañana! No te lo pierdas.
 
 Nos vemos en la pista!`
 
-        const whatsappLink = `https://wa.me/${player.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(whatsappMessage)}`
+        // Generate WhatsApp link with normalized phone number
+        const whatsappLink = createWhatsAppLink(player.whatsapp, whatsappMessage)
+        console.log(`📱 WhatsApp link for ${player.name}: ${whatsappLink}`)
 
         invitations.push({
           playerId: player._id,
