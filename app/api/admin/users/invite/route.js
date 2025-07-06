@@ -150,21 +150,27 @@ export async function POST(request) {
         await player.save()
 
         // Generate activation link
-        const activationLink = `${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/activate?token=${activationToken}`
+        const activationLink = `${process.env.NEXT_PUBLIC_URL || 'https://www.tenisdp.es'}/activate?token=${activationToken}`
         
-        // Generate WhatsApp message and link
-        const whatsappMessage = `🎾 ¡Hola ${player.name}! 
+        // Generate WhatsApp message in both languages
+        const whatsappMessage = `🎾 ¡Hola ${player.name}! / Hi ${player.name}!
 
-Tu cuenta de usuario para la Liga de Tenis está lista. 
+¡Tu acceso a la Liga de Tenis está listo! 
+Your Tennis League access is ready! 
 
-✅ Activa tu cuenta aquí: ${activationLink}
+🔐 Crea tu contraseña aquí / Set up your password here: 
+${activationLink}
 
-Una vez activada podrás:
-• Ver tus partidos
-• Consultar tu ranking 
-• Acceder a tu dashboard personal
+Una vez que crees tu contraseña podrás:
+Once you create your password you'll be able to:
+• ✅ Acceder a tu dashboard personal / Access your personal dashboard
+• 📊 Ver tu ranking y estadísticas / Check your ranking and stats
+• 🏆 Consultar tus partidos programados / View your scheduled matches
 
-¡Nos vemos en la pista! 🏆`
+⚡ ¡La liga comienza mañana! No te lo pierdas.
+⚡ The league starts tomorrow! Don't miss it.
+
+¡Nos vemos en la pista! 🎾 / See you on the court! 🎾`
 
         const whatsappLink = `https://wa.me/${player.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(whatsappMessage)}`
 
