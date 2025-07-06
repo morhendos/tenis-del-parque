@@ -107,9 +107,9 @@ export default function PlayerLayout({ children }) {
       <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-xl transform ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       } transition-transform duration-300 ease-in-out lg:translate-x-0`}>
-        <div className="flex flex-col h-screen">
+        <div className="relative h-full">
           {/* Simplified Header - Remove tiny logo on mobile */}
-          <div className="flex-shrink-0 bg-gradient-to-r from-parque-purple via-purple-600 to-indigo-600 px-6 py-6">
+          <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-parque-purple via-purple-600 to-indigo-600 px-6 py-6">
             <div className="flex items-center justify-between">
               <Link href="/player/dashboard" className="group" onClick={handleNavClick}>
                 <div className="flex items-center space-x-3">
@@ -135,8 +135,8 @@ export default function PlayerLayout({ children }) {
             </div>
           </div>
 
-          {/* Navigation - Scrollable area that takes available space */}
-          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+          {/* Navigation - Scrollable area between header and footer */}
+          <nav className="absolute top-24 bottom-20 left-0 right-0 px-4 py-6 space-y-2 overflow-y-auto">
             {navigation.map((item) => (
               <Link
                 key={item.name}
@@ -162,7 +162,7 @@ export default function PlayerLayout({ children }) {
           </nav>
 
           {/* Enhanced User Section - Always visible at bottom */}
-          <div className="flex-shrink-0 p-4 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-purple-50">
+          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-purple-50">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gradient-to-r from-parque-purple to-purple-600 rounded-full flex items-center justify-center">
