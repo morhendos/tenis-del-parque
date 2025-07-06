@@ -14,6 +14,7 @@ export default function PlayerLayout({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [showAnnouncement, setShowAnnouncement] = useState(false)
+  const [hasNewAnnouncement, setHasNewAnnouncement] = useState(false)
   const { language } = useLanguage()
 
   const checkAuth = useCallback(async () => {
@@ -28,7 +29,12 @@ export default function PlayerLayout({ children }) {
       
       // Check if user needs to see the announcement
       const currentAnnouncement = announcementContent.firstRoundDelay
-      if (!data.user?.seenAnnouncements?.includes(currentAnnouncement.id)) {
+      const hasSeenAnnouncement = data.user?.seenAnnouncements?.includes(currentAnnouncement.id)
+      
+      setHasNewAnnouncement(!hasSeenAnnouncement)
+      
+      // Only show announcement modal if they haven't seen it
+      if (!hasSeenAnnouncement) {
         setShowAnnouncement(true)
       }
     } catch (error) {
@@ -66,7 +72,7 @@ export default function PlayerLayout({ children }) {
       href: '/player/messages', 
       icon: '📬', 
       description: language === 'es' ? 'Anuncios importantes' : 'Important announcements',
-      badge: showAnnouncement ? 'new' : null
+      badge: hasNewAnnouncement ? 'new' : null
     },
     { 
       name: language === 'es' ? 'Perfil' : 'Profile', 
@@ -105,6 +111,15 @@ export default function PlayerLayout({ children }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messageId: announcementContent.firstRoundDelay.id })
       })
+      
+      // Update local state to remove the badge
+      setHasNewAnnouncement(false)
+      
+      // Update user state with the seen announcement
+      setUser(prev => ({
+        ...prev,
+        seenAnnouncements: [...(prev?.seenAnnouncements || []), announcementContent.firstRoundDelay.id]
+      }))
     } catch (error) {
       console.error('Failed to mark announcement as seen:', error)
     }
@@ -173,7 +188,13 @@ export default function PlayerLayout({ children }) {
               <Link
                 key={item.name}
                 href={item.href}
-                onClick={handleNavClick}
+                onClick={() => {
+                  handleNavClick()
+                  // If clicking on messages, update the badge
+                  if (item.href === '/player/messages' && hasNewAnnouncement) {
+                    setHasNewAnnouncement(false)
+                  }
+                }}
                 className={`group flex items-center px-4 py-4 text-sm font-medium rounded-xl transition-all duration-200 ${
                   isActive(item.href)
                     ? 'bg-gradient-to-r from-parque-purple to-purple-600 text-white shadow-lg transform scale-105'
