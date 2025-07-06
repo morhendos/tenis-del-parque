@@ -170,31 +170,33 @@ export default function WelcomeModal({ isOpen, onClose, playerName }) {
         {/* Modal */}
         <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full lg:max-w-2xl">
           <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            {/* Language Switcher */}
-            <div className="flex justify-end mb-4">
-              <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
-                <button
-                  onClick={() => setLanguage('es')}
-                  className={`w-8 h-8 text-xs font-medium rounded-md transition-colors flex items-center justify-center ${
-                    language === 'es'
-                      ? 'bg-parque-purple text-white'
-                      : 'text-gray-600 hover:text-parque-purple'
-                  }`}
-                >
-                  ES
-                </button>
-                <button
-                  onClick={() => setLanguage('en')}
-                  className={`w-8 h-8 text-xs font-medium rounded-md transition-colors flex items-center justify-center ${
-                    language === 'en'
-                      ? 'bg-parque-purple text-white'
-                      : 'text-gray-600 hover:text-parque-purple'
-                  }`}
-                >
-                  EN
-                </button>
+            {/* Language Switcher - Only show on first step */}
+            {currentStep === 0 && (
+              <div className="flex justify-end mb-4">
+                <div className="flex space-x-1 bg-gray-100 rounded-lg p-1 language-selector-buttons">
+                  <button
+                    onClick={() => setLanguage('es')}
+                    className={`w-8 h-8 text-xs font-medium rounded-md transition-colors flex items-center justify-center lang-button ${
+                      language === 'es'
+                        ? 'bg-parque-purple text-white'
+                        : 'text-gray-600 hover:text-parque-purple'
+                    }`}
+                  >
+                    ES
+                  </button>
+                  <button
+                    onClick={() => setLanguage('en')}
+                    className={`w-8 h-8 text-xs font-medium rounded-md transition-colors flex items-center justify-center lang-button ${
+                      language === 'en'
+                        ? 'bg-parque-purple text-white'
+                        : 'text-gray-600 hover:text-parque-purple'
+                    }`}
+                  >
+                    EN
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
             
             {/* Progress indicator */}
             <div className="mb-6">
@@ -242,15 +244,6 @@ export default function WelcomeModal({ isOpen, onClose, playerName }) {
                 className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-parque-purple sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors"
               >
                 {language === 'es' ? 'Anterior' : 'Previous'}
-              </button>
-            )}
-            
-            {currentStep === 1 && (
-              <button
-                onClick={handleViewRules}
-                className="mt-3 w-full inline-flex justify-center rounded-md border border-parque-purple shadow-sm px-4 py-2 bg-white text-base font-medium text-parque-purple hover:bg-parque-purple/5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-parque-purple sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors"
-              >
-                {t.buttons.viewRules}
               </button>
             )}
           </div>

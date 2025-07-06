@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useLanguage } from '../../lib/hooks/useLanguage'
 
 export default function PlayerLayout({ children }) {
   const pathname = usePathname()
@@ -10,6 +11,7 @@ export default function PlayerLayout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const { language } = useLanguage()
 
   useEffect(() => {
     checkAuth()
@@ -30,16 +32,6 @@ export default function PlayerLayout({ children }) {
       setLoading(false)
     }
   }
-
-  // Get user's language preference from localStorage (used by useLanguage hook)
-  const [language, setLanguage] = useState('es')
-  
-  useEffect(() => {
-    const savedLanguage = localStorage.getItem('tenis-del-parque-language')
-    if (savedLanguage && (savedLanguage === 'es' || savedLanguage === 'en')) {
-      setLanguage(savedLanguage)
-    }
-  }, [])
 
   const navigation = [
     { 
@@ -252,7 +244,7 @@ export default function PlayerLayout({ children }) {
 
         {/* Page content */}
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
-          <div className="container mx-auto px-4 md:px-6 py-6 md:py-8 max-w-7xl">
+          <div className="container mx-auto px-2 md:px-6 py-4 md:py-8 max-w-7xl">
             {children}
           </div>
         </main>

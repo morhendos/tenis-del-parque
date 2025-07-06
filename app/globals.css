@@ -62,6 +62,11 @@ body {
   button:not(:last-child) {
     margin-bottom: 8px;
   }
+  
+  /* Override for language selector buttons */
+  .language-selector-buttons button.lang-button {
+    margin-bottom: 0 !important;
+  }
 }
 
 /* Touch-friendly interactions */
