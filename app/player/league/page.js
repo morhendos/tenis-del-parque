@@ -65,14 +65,14 @@ function StandingsTable({ players, language, unified = false }) {
           return (
             <div 
               key={standing.player._id} 
-              className={`${getPositionStyle(standing.position)} ${getPlayerStatusStyle(standing.player)} rounded-xl p-4 shadow-lg border transition-all duration-300 hover:shadow-xl hover:scale-[1.02]`}
+              className={`${getPositionStyle(standing.position)} ${getPlayerStatusStyle(standing.player)} rounded-xl p-3 shadow-lg border transition-all duration-300 hover:shadow-xl hover:scale-[1.02]`}
             >
               {/* Header with position and points */}
               <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
                   {/* Position with playoff qualification styling */}
                   <div className="flex items-center">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${getPositionBadgeStyle(standing.position)}`}>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${getPositionBadgeStyle(standing.position)}`}>
                       {standing.position}
                     </div>
                     {/* Playoff qualification indicator - only show for playoff positions */}
@@ -91,7 +91,7 @@ function StandingsTable({ players, language, unified = false }) {
                 
                 {/* Points with playoff zone styling */}
                 <div className="text-right">
-                  <div className={`text-3xl font-bold ${
+                  <div className={`text-2xl font-bold ${
                     standing.position <= 8 ? 'text-blue-600' :
                     standing.position <= 16 ? 'text-green-600' :
                     'text-gray-600'
@@ -103,8 +103,8 @@ function StandingsTable({ players, language, unified = false }) {
               </div>
 
               {/* Player name on separate row */}
-              <div className="mb-4 text-center">
-                <div className="text-xl font-bold text-gray-900 mb-1 flex items-center justify-center">
+              <div className="mb-3 text-center">
+                <div className="text-lg font-bold text-gray-900 mb-1 flex items-center justify-center">
                   {standing.player.name}
                   {getPlayerStatusIndicator(standing.player)}
                 </div>
@@ -117,7 +117,7 @@ function StandingsTable({ players, language, unified = false }) {
 
               {/* Win percentage bar */}
               {standing.stats.matchesPlayed > 0 && (
-                <div className="mb-4">
+                <div className="mb-3">
                   <div className="flex justify-between text-xs text-gray-600 mb-1">
                     <span>{language === 'es' ? 'Progreso' : 'Progress'}</span>
                     <span>{winPercentage}%</span>
@@ -135,24 +135,24 @@ function StandingsTable({ players, language, unified = false }) {
                 </div>
               )}
               
-              {/* Enhanced stats grid */}
-              <div className="grid grid-cols-4 gap-3 text-sm">
-                <div className="text-center bg-white/50 rounded-lg p-3 border border-white/20">
-                  <div className="font-bold text-gray-900 text-lg">{standing.stats.matchesPlayed}</div>
+              {/* Enhanced stats grid - More compact for mobile */}
+              <div className="grid grid-cols-4 gap-1 text-sm">
+                <div className="text-center bg-white/50 rounded-lg p-2 border border-white/20">
+                  <div className="font-bold text-gray-900 text-base">{standing.stats.matchesPlayed}</div>
                   <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'P.J.' : 'MP'}</div>
                 </div>
-                <div className="text-center bg-white/50 rounded-lg p-3 border border-white/20">
-                  <div className="font-bold text-green-600 text-lg">{standing.stats.matchesWon}</div>
+                <div className="text-center bg-white/50 rounded-lg p-2 border border-white/20">
+                  <div className="font-bold text-green-600 text-base">{standing.stats.matchesWon}</div>
                   <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'P.G.' : 'MW'}</div>
                 </div>
-                <div className="text-center bg-white/50 rounded-lg p-3 border border-white/20">
-                  <div className="font-bold text-gray-900 text-lg">
+                <div className="text-center bg-white/50 rounded-lg p-2 border border-white/20">
+                  <div className="font-bold text-gray-900 text-base">
                     {standing.stats.setsWon}-{standing.stats.setsLost}
                   </div>
                   <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'Sets' : 'Sets'}</div>
                 </div>
-                <div className="text-center bg-white/50 rounded-lg p-3 border border-white/20">
-                  <div className="font-bold text-gray-900 text-lg">
+                <div className="text-center bg-white/50 rounded-lg p-2 border border-white/20">
+                  <div className="font-bold text-gray-900 text-base">
                     {standing.stats.gamesWon || 0}-{standing.stats.gamesLost || 0}
                   </div>
                   <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'Juegos' : 'Games'}</div>
@@ -165,8 +165,8 @@ function StandingsTable({ players, language, unified = false }) {
 
       {/* Desktop table layout - Enhanced */}
       <div className="hidden md:block">
-        <div className="overflow-hidden rounded-xl border border-gray-200 shadow-lg">
-          <table className="min-w-full divide-y divide-gray-200">
+        <div className="overflow-x-auto overflow-hidden rounded-xl border border-gray-200 shadow-lg">
+          <table className="min-w-full divide-y divide-gray-200" style={{ minWidth: '900px' }}>
             <thead className="bg-gradient-to-r from-parque-purple to-parque-purple/90">
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
