@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
 import { verifyToken } from '../../../../lib/utils/jwt'
+import dbConnect from '../../../../lib/db/mongoose'
+import User from '../../../../lib/models/User'
+import Player from '../../../../lib/models/Player'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
@@ -26,13 +29,29 @@ export async function GET(request) {
       )
     }
 
+    // Connect to database
+    await dbConnect()
+
+    // Fetch user data to get seenAnnouncements
+    const user = await User.findById(decoded.userId)
+    const player = decoded.playerId ? await Player.findById(decoded.playerId) : null
+
     // Return user info
     return NextResponse.json({
+      authenticated: true,
       user: {
         id: decoded.userId,
         email: decoded.email,
-        role: decoded.role
-      }
+        role: decoded.role,
+        seenAnnouncements: user?.seenAnnouncements || [],
+        preferences: user?.preferences || {},
+        createdAt: user?.createdAt
+      },
+      player: player ? {
+        id: player._id,
+        name: player.name,
+        level: player.level
+      } : null
     })
   } catch (error) {
     return NextResponse.json(

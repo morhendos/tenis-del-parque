@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useLanguage } from '../../lib/hooks/useLanguage'
+import AnnouncementModal from '../../components/ui/AnnouncementModal'
+import { announcementContent } from '../../lib/content/announcementContent'
 
 export default function PlayerLayout({ children }) {
   const pathname = usePathname()
@@ -11,6 +13,8 @@ export default function PlayerLayout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [showAnnouncement, setShowAnnouncement] = useState(false)
+  const [hasNewAnnouncement, setHasNewAnnouncement] = useState(false)
   const { language } = useLanguage()
 
   const checkAuth = useCallback(async () => {
@@ -22,6 +26,17 @@ export default function PlayerLayout({ children }) {
       }
       const data = await res.json()
       setUser(data.user)
+      
+      // Check if user needs to see the announcement
+      const currentAnnouncement = announcementContent.firstRoundDelay
+      const hasSeenAnnouncement = data.user?.seenAnnouncements?.includes(currentAnnouncement.id)
+      
+      setHasNewAnnouncement(!hasSeenAnnouncement)
+      
+      // Only show announcement modal if they haven't seen it
+      if (!hasSeenAnnouncement) {
+        setShowAnnouncement(true)
+      }
     } catch (error) {
       router.push('/login')
     } finally {
@@ -53,6 +68,13 @@ export default function PlayerLayout({ children }) {
       description: language === 'es' ? 'Historial de partidos' : 'Match history' 
     },
     { 
+      name: language === 'es' ? 'Mensajes' : 'Messages', 
+      href: '/player/messages', 
+      icon: '📬', 
+      description: language === 'es' ? 'Anuncios importantes' : 'Important announcements',
+      badge: hasNewAnnouncement ? 'new' : null
+    },
+    { 
       name: language === 'es' ? 'Perfil' : 'Profile', 
       href: '/player/profile', 
       icon: '👤', 
@@ -76,6 +98,31 @@ export default function PlayerLayout({ children }) {
   // Close mobile menu when clicking navigation items
   const handleNavClick = () => {
     setIsSidebarOpen(false)
+  }
+
+  // Handle closing announcement
+  const handleCloseAnnouncement = async () => {
+    setShowAnnouncement(false)
+    
+    // Mark as seen in the backend
+    try {
+      await fetch('/api/player/messages/mark-seen', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messageId: announcementContent.firstRoundDelay.id })
+      })
+      
+      // Update local state to remove the badge
+      setHasNewAnnouncement(false)
+      
+      // Update user state with the seen announcement
+      setUser(prev => ({
+        ...prev,
+        seenAnnouncements: [...(prev?.seenAnnouncements || []), announcementContent.firstRoundDelay.id]
+      }))
+    } catch (error) {
+      console.error('Failed to mark announcement as seen:', error)
+    }
   }
 
   // Prevent body scroll when mobile sidebar is open
@@ -136,12 +183,18 @@ export default function PlayerLayout({ children }) {
           </div>
 
           {/* Navigation - Scrollable area between header and footer */}
-          <nav className="absolute top-24 bottom-20 left-0 right-0 px-4 py-6 space-y-2 overflow-y-auto">
+          <nav className="absolute top-28 bottom-20 left-0 right-0 px-4 py-4 space-y-2 overflow-y-auto">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
-                onClick={handleNavClick}
+                onClick={() => {
+                  handleNavClick()
+                  // If clicking on messages, update the badge
+                  if (item.href === '/player/messages' && hasNewAnnouncement) {
+                    setHasNewAnnouncement(false)
+                  }
+                }}
                 className={`group flex items-center px-4 py-4 text-sm font-medium rounded-xl transition-all duration-200 ${
                   isActive(item.href)
                     ? 'bg-gradient-to-r from-parque-purple to-purple-600 text-white shadow-lg transform scale-105'
@@ -149,8 +202,15 @@ export default function PlayerLayout({ children }) {
                 }`}
               >
                 <span className="text-2xl mr-4">{item.icon}</span>
-                <div>
-                  <div className="font-semibold">{item.name}</div>
+                <div className="flex-1">
+                  <div className="font-semibold flex items-center space-x-2">
+                    <span>{item.name}</span>
+                    {item.badge === 'new' && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-500 text-white">
+                        {language === 'es' ? 'Nuevo' : 'New'}
+                      </span>
+                    )}
+                  </div>
                   <div className={`text-xs ${
                     isActive(item.href) ? 'text-purple-200' : 'text-gray-500 group-hover:text-purple-600'
                   }`}>
@@ -210,7 +270,9 @@ export default function PlayerLayout({ children }) {
               
               <div>
                 <h1 className="text-lg md:text-xl font-bold text-gray-900">
-                  {pathname.includes('matches') ? 
+                  {pathname.includes('messages') ? 
+                    (language === 'es' ? 'Mensajes' : 'Messages') :
+                   pathname.includes('matches') ? 
                     (language === 'es' ? 'Mis Partidos' : 'My Matches') :
                    pathname.includes('profile') ? 
                     (language === 'es' ? 'Mi Perfil' : 'My Profile') :
@@ -221,7 +283,9 @@ export default function PlayerLayout({ children }) {
                    'Dashboard'}
                 </h1>
                 <p className="text-xs md:text-sm text-gray-500 hidden sm:block">
-                  {pathname.includes('matches') ? 
+                  {pathname.includes('messages') ? 
+                    (language === 'es' ? 'Anuncios y comunicaciones importantes' : 'Important announcements and communications') :
+                   pathname.includes('matches') ? 
                     (language === 'es' ? 'Historial y calendario de partidos' : 'Match history and schedule') :
                    pathname.includes('profile') ? 
                     (language === 'es' ? 'Configuración de cuenta' : 'Account settings') :
@@ -253,6 +317,13 @@ export default function PlayerLayout({ children }) {
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
+
+      {/* Announcement Modal */}
+      <AnnouncementModal
+        isOpen={showAnnouncement}
+        onClose={handleCloseAnnouncement}
+        announcement={announcementContent.firstRoundDelay}
+      />
     </div>
   )
 }
