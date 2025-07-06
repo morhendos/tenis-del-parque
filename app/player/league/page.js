@@ -399,7 +399,7 @@ export default function PlayerLeague() {
     } finally {
       setLoading(false)
     }
-  }, [router, setLanguage])
+  }, [router])
 
   useEffect(() => {
     fetchPlayerAndLeague()

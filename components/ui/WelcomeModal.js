@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLanguage } from '../../lib/hooks/useLanguage'
 import { welcomeContent } from '../../lib/content/welcomeContent'
@@ -8,8 +8,19 @@ export default function WelcomeModal({ isOpen, onClose, playerName }) {
   const [currentStep, setCurrentStep] = useState(0)
   const { language, setLanguage } = useLanguage()
   const router = useRouter()
+  const contentRef = useRef(null)
   
   const t = welcomeContent[language]
+  
+  // Auto-scroll to top when step changes
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      })
+    }
+  }, [currentStep])
   
   if (!isOpen) return null
 
@@ -227,7 +238,10 @@ export default function WelcomeModal({ isOpen, onClose, playerName }) {
             </div>
             
             {/* Content */}
-            <div className="min-h-[400px]">
+            <div 
+              ref={contentRef}
+              className="min-h-[400px] max-h-[60vh] overflow-y-auto"
+            >
               {renderStep()}
             </div>
           </div>
