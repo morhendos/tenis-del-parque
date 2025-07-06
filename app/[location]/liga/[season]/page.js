@@ -78,16 +78,17 @@ function StandingsTable({ players, language, unified = false }) {
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${getPositionBadgeStyle(standing.position)}`}>
                       {standing.position}
                     </div>
-                    {/* Playoff qualification indicator */}
-                    <div className="ml-2 text-xs">
-                      <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        standing.position <= 8 ? 'bg-blue-100 text-blue-700' :
-                        standing.position <= 16 ? 'bg-green-100 text-green-700' :
-                        'bg-gray-100 text-gray-600'
-                      }`}>
-                        {getPositionLabel(standing.position)}
+                    {/* Playoff qualification indicator - only show for playoff positions */}
+                    {standing.position <= 16 && (
+                      <div className="ml-2 text-xs">
+                        <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          standing.position <= 8 ? 'bg-blue-100 text-blue-700' :
+                          'bg-green-100 text-green-700'
+                        }`}>
+                          {getPositionLabel(standing.position)}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
                 
@@ -258,13 +259,16 @@ function StandingsTable({ players, language, unified = false }) {
                       </div>
                     </td>
                     <td className="px-6 py-5 whitespace-nowrap text-center">
-                      <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                        standing.position <= 8 ? 'bg-blue-100 text-blue-800' :
-                        standing.position <= 16 ? 'bg-green-100 text-green-800' :
-                        'bg-gray-100 text-gray-600'
-                      }`}>
-                        {getPositionLabel(standing.position)}
-                      </div>
+                      {standing.position <= 16 ? (
+                        <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                          standing.position <= 8 ? 'bg-blue-100 text-blue-800' :
+                          'bg-green-100 text-green-800'
+                        }`}>
+                          {getPositionLabel(standing.position)}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
                     </td>
                     <td className="px-6 py-5 whitespace-nowrap text-center">
                       <div className={`inline-flex items-center px-3 py-1 rounded-full text-lg font-bold ${
