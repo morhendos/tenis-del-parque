@@ -27,30 +27,45 @@ function SectionDivider() {
   )
 }
 
-// Urgent Launch Banner Component
-function UrgentLaunchBanner({ language }) {
+// Beautiful Registration Banner Component
+function RegistrationBanner({ language }) {
   return (
-    <div className="bg-gradient-to-r from-red-600 via-red-500 to-orange-500 text-white py-3 px-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-black/10"></div>
+    <div className="bg-gradient-to-r from-parque-purple via-purple-600 to-indigo-600 text-white py-3 px-4 relative overflow-hidden">
+      <div className="absolute inset-0 bg-white/5"></div>
       <div className="absolute inset-0">
-        <div className="absolute animate-pulse bg-white/20 h-full w-8 -skew-x-12 opacity-30 translate-x-[-100%] animate-[shimmer_2s_infinite]"></div>
+        <div className="absolute -inset-40 opacity-30">
+          <div className="absolute top-0 -left-4 w-72 h-72 bg-white rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+          <div className="absolute top-0 -right-4 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+          <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+        </div>
       </div>
       <div className="container mx-auto text-center relative z-10">
-        <div className="flex items-center justify-center space-x-2 font-bold text-sm md:text-base">
-          <span className="animate-bounce">🚨</span>
+        <div className="flex items-center justify-center space-x-3 font-medium text-sm md:text-base">
+          <span className="text-xl">🎾</span>
           <span>
             {language === 'es' 
-              ? '¡INSCRIPCIONES CIERRAN MAÑANA LUNES a las 23:00! Emparejamientos el martes - ¡Últimas plazas!'
-              : 'REGISTRATION CLOSES TOMORROW MONDAY at 23:00! Pairings on Tuesday - Last spots available!'
+              ? 'Las inscripciones cierran mañana lunes a las 23:00 - ¡Reserva tu plaza!'
+              : 'Registration closes tomorrow Monday at 23:00 - Reserve your spot!'
             }
           </span>
-          <span className="animate-bounce">🚨</span>
+          <span className="text-xl">✨</span>
         </div>
       </div>
       <style jsx>{`
-        @keyframes shimmer {
-          0% { transform: translateX(-100%) skewX(-12deg); }
-          100% { transform: translateX(200vw) skewX(-12deg); }
+        @keyframes blob {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob {
+          animation: blob 7s infinite;
+        }
+        .animation-delay-2000 {
+          animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+          animation-delay: 4s;
         }
       `}</style>
     </div>
@@ -95,12 +110,12 @@ function CTASection({ content, language, onSignupClick }) {
             </a>
           </div>
           
-          <div className="mt-12 inline-flex items-center gap-2 px-4 py-2 bg-red-100 border border-red-300 rounded-full text-sm">
-            <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-            <span className="text-red-700 font-bold">
+          <div className="mt-12 inline-flex items-center gap-2 px-4 py-2 bg-parque-purple/10 border border-parque-purple/20 rounded-full text-sm">
+            <span className="w-2 h-2 bg-parque-purple rounded-full animate-pulse"></span>
+            <span className="text-parque-purple font-medium">
               {language === 'es' 
-                ? '⚡ INSCRIPCIONES CIERRAN MAÑANA LUNES 23:00 - Liga comienza pronto!' 
-                : '⚡ REGISTRATION CLOSES TOMORROW MONDAY 23:00 - League starts soon!'}
+                ? 'Inscripciones cierran mañana lunes 23:00' 
+                : 'Registration closes tomorrow Monday 23:00'}
             </span>
           </div>
         </div>
@@ -195,9 +210,9 @@ export default function SotograndePage() {
         onLanguageChange={setLanguage} 
       />
       
-      {/* Urgent Launch Banner */}
+      {/* Beautiful Registration Banner */}
       <div className="relative z-30 mt-16">
-        <UrgentLaunchBanner language={language} />
+        <RegistrationBanner language={language} />
       </div>
       
       {/* Main content with proper z-index (lower than navigation) */}
