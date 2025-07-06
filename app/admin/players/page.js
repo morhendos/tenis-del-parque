@@ -142,17 +142,20 @@ function AdminPlayersContent() {
     }
   }
 
-  const handleInvitePlayer = async (playerId) => {
+  const handleInvitePlayer = async (playerId, forceReinvite = false) => {
     const loadingKey = `invite-${playerId}`
     setInvitationLoading(prev => ({ ...prev, [loadingKey]: true }))
     
     try {
-      console.log('🚀 Inviting player:', playerId)
+      console.log('🚀 Inviting player:', playerId, forceReinvite ? '(Re-invite)' : '(New invite)')
       
       const res = await fetch('/api/admin/users/invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ playerIds: [playerId] })
+        body: JSON.stringify({ 
+          playerIds: [playerId],
+          forceReinvite: forceReinvite
+        })
       })
 
       const data = await res.json()
@@ -179,6 +182,26 @@ function AdminPlayersContent() {
 
   const canInvitePlayer = (player) => {
     return player.status === 'pending' && !player.userId
+  }
+
+  const canReinvitePlayer = (player) => {
+    return player.status === 'pending' && player.userId
+  }
+
+  const getInviteButtonConfig = (player) => {
+    if (canInvitePlayer(player)) {
+      return { show: true, text: '📧 Invite', isReinvite: false }
+    }
+    if (canReinvitePlayer(player)) {
+      return { show: true, text: '🔄 Re-invite', isReinvite: true }
+    }
+    if (player.status === 'confirmed') {
+      return { show: false, status: '✉️ Invited' }
+    }
+    if (player.status === 'active') {
+      return { show: false, status: '✅ Active' }
+    }
+    return { show: false, status: '-' }
   }
 
   const handleDelete = async () => {
@@ -293,7 +316,7 @@ function AdminPlayersContent() {
             }
           </p>
           <p className="text-sm text-blue-600 mt-2">
-            💡 Click <span className="font-medium">📧 Invite</span> to send WhatsApp invitations to players with pending status
+            💡 Click <span className="font-medium">📧 Invite</span> for new players or <span className="font-medium">🔄 Re-invite</span> for players who need a new activation link
           </p>
         </div>
         <div className="flex space-x-3">
@@ -500,21 +523,35 @@ function AdminPlayersContent() {
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {canInvitePlayer(player) ? (
-                      <button
-                        onClick={() => handleInvitePlayer(player._id)}
-                        disabled={invitationLoading[`invite-${player._id}`]}
-                        className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {invitationLoading[`invite-${player._id}`] ? 'Inviting...' : '📧 Invite'}
-                      </button>
-                    ) : player.status === 'confirmed' ? (
-                      <span className="text-xs text-blue-600 font-medium">✉️ Invited</span>
-                    ) : player.status === 'active' ? (
-                      <span className="text-xs text-green-600 font-medium">✅ Active</span>
-                    ) : (
-                      <span className="text-xs text-gray-400">-</span>
-                    )}
+                    {(() => {
+                      const config = getInviteButtonConfig(player)
+                      if (config.show) {
+                        return (
+                          <button
+                            onClick={() => handleInvitePlayer(player._id, config.isReinvite)}
+                            disabled={invitationLoading[`invite-${player._id}`]}
+                            className={`px-3 py-1 text-white text-xs rounded disabled:opacity-50 disabled:cursor-not-allowed ${
+                              config.isReinvite 
+                                ? 'bg-orange-600 hover:bg-orange-700' 
+                                : 'bg-green-600 hover:bg-green-700'
+                            }`}
+                          >
+                            {invitationLoading[`invite-${player._id}`] 
+                              ? (config.isReinvite ? 'Re-inviting...' : 'Inviting...') 
+                              : config.text
+                            }
+                          </button>
+                        )
+                      } else {
+                        const statusClass = player.status === 'confirmed' ? 'text-blue-600' :
+                                          player.status === 'active' ? 'text-green-600' : 'text-gray-400'
+                        return (
+                          <span className={`text-xs font-medium ${statusClass}`}>
+                            {config.status}
+                          </span>
+                        )
+                      }
+                    })()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
