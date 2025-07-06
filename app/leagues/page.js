@@ -63,9 +63,27 @@ export default function LeaguesPage() {
   }
 
   const getSeasonUrl = (league, season) => {
-    // Convert Spanish season names to URL slugs
-    const seasonSlug = season.name.toLowerCase()
-      .replace(/\s+/g, '') // Remove spaces: "Verano 2025" -> "verano2025"
+    // Normalize season name to always use Spanish URL slug regardless of language
+    const normalizeSeasonName = (name) => {
+      const seasonMappings = {
+        // Spanish variants
+        'verano 2025': 'verano2025',
+        'invierno 2025': 'invierno2025',
+        'primavera 2025': 'primavera2025',
+        'otoño 2025': 'otono2025',
+        // English variants
+        'summer 2025': 'verano2025',
+        'winter 2025': 'invierno2025',
+        'spring 2025': 'primavera2025',
+        'autumn 2025': 'otono2025',
+        'fall 2025': 'otono2025'
+      }
+      
+      const normalizedName = name.toLowerCase()
+      return seasonMappings[normalizedName] || normalizedName.replace(/\s+/g, '')
+    }
+    
+    const seasonSlug = normalizeSeasonName(season.name)
     return `/${league.slug}/liga/${seasonSlug}`
   }
 

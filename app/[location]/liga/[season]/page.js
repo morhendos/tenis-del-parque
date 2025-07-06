@@ -326,10 +326,17 @@ export default function LeagueSeasonPage() {
       
       // Find the season that matches our URL season parameter
       const seasonMap = {
+        // Spanish URLs (primary)
         'verano2025': 'Verano 2025',
         'invierno2025': 'Invierno 2025',
         'primavera2025': 'Primavera 2025',
-        'otono2025': 'Otoño 2025'
+        'otono2025': 'Otoño 2025',
+        // English URLs (fallback)
+        'summer2025': 'Verano 2025',
+        'winter2025': 'Invierno 2025',
+        'spring2025': 'Primavera 2025',
+        'autumn2025': 'Otoño 2025',
+        'fall2025': 'Otoño 2025'
       }
       
       const targetSeasonName = seasonMap[season]
