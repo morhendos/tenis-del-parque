@@ -2,15 +2,17 @@ import { NextResponse } from 'next/server'
 import dbConnect from '../../../../../lib/db/mongoose'
 import Match from '../../../../../lib/models/Match'
 import Player from '../../../../../lib/models/Player'
-import { getServerSession } from 'next-auth'
+import User from '../../../../../lib/models/User'
+import { verifyAuth } from '../../../../../lib/utils/authMiddleware'
 
 export async function POST(request) {
   try {
     await dbConnect()
     
-    const session = await getServerSession()
-    if (!session) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+    // Use existing JWT authentication system
+    const auth = await verifyAuth(request, { role: 'player' })
+    if (!auth.authenticated) {
+      return auth.response
     }
 
     const { matchId, myScore, opponentScore } = await request.json()
@@ -36,10 +38,13 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'Match not found' }, { status: 404 })
     }
 
-    // Check if user is part of this match
-    const userEmail = session.user.email
-    const userPlayer = await Player.findOne({ email: userEmail })
-    
+    // Get user and player from JWT token
+    const user = await User.findById(auth.user.userId)
+    if (!user || !user.playerId) {
+      return NextResponse.json({ success: false, error: 'Player not found' }, { status: 404 })
+    }
+
+    const userPlayer = await Player.findById(user.playerId)
     if (!userPlayer) {
       return NextResponse.json({ success: false, error: 'Player not found' }, { status: 404 })
     }
