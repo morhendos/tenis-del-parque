@@ -57,7 +57,8 @@ export default function MessagesPage() {
       subtitle: announcementContent.firstRoundDelay[language].subtitle,
       icon: '📢',
       bgColor: 'from-yellow-100 to-orange-100',
-      isNew: !session?.user?.seenAnnouncements?.includes(announcementContent.firstRoundDelay.id)
+      isNew: !session?.user?.seenAnnouncements?.includes(announcementContent.firstRoundDelay.id),
+      content: announcementContent.firstRoundDelay
     }
   ]
 
@@ -68,13 +69,22 @@ export default function MessagesPage() {
 
   const handleCloseModal = async () => {
     // Mark announcement as seen if it's an announcement
-    if (modalType === 'announcement' && selectedMessage?.id) {
+    if (modalType === 'announcement' && selectedMessage?.id && selectedMessage?.isNew) {
       try {
         await fetch('/api/player/messages/mark-seen', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ messageId: selectedMessage.id })
         })
+        
+        // Update local state
+        setSession(prev => ({
+          ...prev,
+          user: {
+            ...prev.user,
+            seenAnnouncements: [...(prev.user.seenAnnouncements || []), selectedMessage.id]
+          }
+        }))
       } catch (error) {
         console.error('Failed to mark message as seen:', error)
       }
@@ -193,11 +203,11 @@ export default function MessagesPage() {
         />
       )}
       
-      {modalType === 'announcement' && selectedMessage && (
+      {modalType === 'announcement' && selectedMessage?.content && (
         <AnnouncementModal
           isOpen={true}
           onClose={handleCloseModal}
-          announcement={announcementContent[Object.keys(announcementContent).find(key => announcementContent[key].id === selectedMessage.id)]}
+          announcement={selectedMessage.content}
         />
       )}
     </div>
