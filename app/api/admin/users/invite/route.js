@@ -152,25 +152,40 @@ export async function POST(request) {
         // Generate activation link
         const activationLink = `${process.env.NEXT_PUBLIC_URL || 'https://www.tenisdp.es'}/activate?token=${activationToken}`
         
-        // Generate WhatsApp message in both languages
-        const whatsappMessage = `🎾 ¡Hola ${player.name}! / Hi ${player.name}!
+        // Generate WhatsApp message in both languages - English first, then Spanish
+        const whatsappMessage = `Hi ${player.name}!
 
-¡Tu acceso a la Liga de Tenis está listo! 
 Your Tennis League access is ready! 
 
-🔐 Crea tu contraseña aquí / Set up your password here: 
+Set up your password here: 
 ${activationLink}
 
-Una vez que crees tu contraseña podrás:
 Once you create your password you'll be able to:
-• ✅ Acceder a tu dashboard personal / Access your personal dashboard
-• 📊 Ver tu ranking y estadísticas / Check your ranking and stats
-• 🏆 Consultar tus partidos programados / View your scheduled matches
+• Access your personal dashboard
+• Check your ranking and stats
+• View your scheduled matches
 
-⚡ ¡La liga comienza mañana! No te lo pierdas.
-⚡ The league starts tomorrow! Don't miss it.
+The league starts tomorrow! Don't miss it.
 
-¡Nos vemos en la pista! 🎾 / See you on the court! 🎾`
+See you on the court!
+
+---
+
+Hola ${player.name}!
+
+Tu acceso a la Liga de Tenis esta listo!
+
+Crea tu contraseña aqui:
+${activationLink}
+
+Una vez que crees tu contraseña podras:
+• Acceder a tu dashboard personal
+• Ver tu ranking y estadisticas
+• Consultar tus partidos programados
+
+La liga comienza mañana! No te lo pierdas.
+
+Nos vemos en la pista!`
 
         const whatsappLink = `https://wa.me/${player.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(whatsappMessage)}`
 
