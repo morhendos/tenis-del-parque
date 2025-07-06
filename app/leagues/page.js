@@ -21,12 +21,12 @@ export default function LeaguesPage() {
   const fetchLeagues = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/admin/leagues')
+      const response = await fetch('/api/leagues')
       if (response.ok) {
         const data = await response.json()
         setLeagues(data.leagues || [])
       } else {
-        // If admin API fails, show demo leagues
+        // If API fails, show demo leagues
         setLeagues([
           {
             _id: 'demo-sotogrande',
@@ -41,15 +41,15 @@ export default function LeaguesPage() {
               es: 'La primera liga amateur de tenis en Sotogrande. Sistema suizo, rankings ELO y ambiente competitivo pero relajado.',
               en: 'The first amateur tennis league in Sotogrande. Swiss system, ELO rankings and competitive but relaxed atmosphere.'
             },
-                         seasons: [
-               {
-                 name: 'Verano 2025',
-                 status: 'active',
-                 startDate: '2025-07-07',
-                 price: { isFree: true }
-               }
-             ],
-            playerCount: 12,
+            seasons: [
+              {
+                name: 'Verano 2025',
+                status: 'active',
+                startDate: '2025-07-07',
+                price: { isFree: true }
+              }
+            ],
+            playerCount: 20,
             status: 'active'
           }
         ])
