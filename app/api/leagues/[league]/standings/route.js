@@ -39,8 +39,24 @@ export async function GET(request, { params }) {
     }
     if (level) query.level = level
     
+    // DEBUG: Log query details
+    console.log('Standings API Debug:', {
+      leagueSlug: slug,
+      leagueId: league._id,
+      seasonSearching: season,
+      query: query
+    })
+    
+    // DEBUG: Check all players in this league regardless of season
+    const allPlayersInLeague = await Player.find({ league: league._id })
+    console.log('All players in league:', allPlayersInLeague.map(p => ({
+      name: p.name,
+      season: p.season,
+      status: p.status
+    })))
+    
     // Get players with standings sorted by performance
-    const players = await Player.find(query)
+    let players = await Player.find(query)
       .sort({ 
         'stats.totalPoints': -1,  // Primary: total points
         'stats.setsWon': -1,      // Secondary: sets won
@@ -48,6 +64,31 @@ export async function GET(request, { params }) {
         'name': 1                 // Quaternary: alphabetical by name
       })
       .lean()
+    
+    // FALLBACK: If no players found with exact season, try without season filter
+    if (players.length === 0) {
+      console.log('No players found with exact season, trying without season filter...')
+      const fallbackQuery = { league: league._id }
+      if (level) fallbackQuery.level = level
+      
+      players = await Player.find(fallbackQuery)
+        .sort({ 
+          'stats.totalPoints': -1,
+          'stats.setsWon': -1,
+          'stats.gamesWon': -1,
+          'name': 1
+        })
+        .lean()
+      
+      console.log(`Fallback found ${players.length} players`)
+    }
+    
+    // DEBUG: Log query results
+    console.log(`Found ${players.length} players matching query:`, players.map(p => ({
+      name: p.name,
+      season: p.season,
+      status: p.status
+    })))
     
     // Calculate additional stats for each player
     const standings = players.map((player, index) => {
