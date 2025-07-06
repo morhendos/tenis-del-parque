@@ -40,8 +40,8 @@ function UrgentLaunchBanner({ language }) {
           <span className="animate-bounce">🚨</span>
           <span>
             {language === 'es' 
-              ? '¡ATENCIÓN! Liga comienza LUNES 7 JULIO - Emparejamientos DOMINGO 6 - ¡Últimas horas!'
-              : 'ATTENTION! League starts MONDAY JULY 7TH - Pairings SUNDAY 6TH - Last hours!'
+              ? '¡INSCRIPCIONES CIERRAN MAÑANA LUNES a las 23:00! Emparejamientos el martes - ¡Últimas plazas!'
+              : 'REGISTRATION CLOSES TOMORROW MONDAY at 23:00! Pairings on Tuesday - Last spots available!'
             }
           </span>
           <span className="animate-bounce">🚨</span>
@@ -99,8 +99,8 @@ function CTASection({ content, language, onSignupClick }) {
             <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
             <span className="text-red-700 font-bold">
               {language === 'es' 
-                ? '⚡ ¡ÚLTIMAS HORAS! Emparejamientos DOMINGO 6 - Liga LUNES 7' 
-                : '⚡ LAST HOURS! Pairings SUNDAY 6TH - League MONDAY 7TH'}
+                ? '⚡ INSCRIPCIONES CIERRAN MAÑANA LUNES 23:00 - Liga comienza pronto!' 
+                : '⚡ REGISTRATION CLOSES TOMORROW MONDAY 23:00 - League starts soon!'}
             </span>
           </div>
         </div>
