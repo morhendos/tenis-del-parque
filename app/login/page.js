@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Image from 'next/image'
 import { useLanguage } from '../../lib/hooks/useLanguage'
 import { loginContent } from '../../lib/content/loginContent'
 
@@ -112,9 +113,11 @@ function LoginForm() {
           <div className="text-center mb-6 sm:mb-8">
             <div className="mb-6 sm:mb-8">
               <a href="/">
-                <img 
+                <Image 
                   src="/logo.png" 
-                  alt="Liga del Parque" 
+                  alt="Liga del Parque"
+                  width={160}
+                  height={160}
                   className="h-32 sm:h-40 w-auto mx-auto hover:scale-105 transition-transform duration-200 cursor-pointer"
                 />
               </a>

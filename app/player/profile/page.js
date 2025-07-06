@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLanguage } from '../../../lib/hooks/useLanguage'
 
@@ -31,11 +31,7 @@ export default function PlayerProfile() {
   
   const router = useRouter()
 
-  useEffect(() => {
-    fetchProfile()
-  }, [])
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch('/api/player/profile')
@@ -74,7 +70,11 @@ export default function PlayerProfile() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchProfile()
+  }, [fetchProfile])
 
   const handleInputChange = (field, value) => {
     setFormData(prev => {

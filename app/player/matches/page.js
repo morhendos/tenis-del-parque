@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLanguage } from '../../../lib/hooks/useLanguage'
 
@@ -32,7 +32,7 @@ export default function PlayerMatches() {
     fetchPlayerData()
   }, [])
 
-  const fetchLeaguePlayers = async () => {
+  const fetchLeaguePlayers = useCallback(async () => {
     if (!player?.league?._id) return
     
     try {
@@ -52,13 +52,13 @@ export default function PlayerMatches() {
     } catch (error) {
       console.error('Error fetching league players:', error)
     }
-  }
+  }, [matches, player])
 
   useEffect(() => {
     if (matches.length > 0 && player) {
       fetchLeaguePlayers()
     }
-  }, [matches, player])
+  }, [matches, player, fetchLeaguePlayers])
 
   const fetchPlayerData = async () => {
     try {

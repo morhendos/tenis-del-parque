@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useLanguage } from '../../lib/hooks/useLanguage'
 import { activateContent } from '../../lib/content/activateContent'
 
@@ -22,29 +23,7 @@ function ActivateContent() {
   
   const t = activateContent[language]
 
-  // Show loading until language is determined to prevent flickering
-  if (!isLanguageLoaded) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-parque-bg via-white to-parque-bg flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
-        </div>
-      </div>
-    )
-  }
-
-  useEffect(() => {
-    const tokenFromUrl = searchParams.get('token')
-    if (tokenFromUrl) {
-      setToken(tokenFromUrl)
-      validateToken(tokenFromUrl)
-    } else {
-      setError(t.error.noToken)
-      setValidating(false)
-    }
-  }, [searchParams, t.error.noToken])
-
-  const validateToken = async (tokenToValidate) => {
+  const validateToken = useCallback(async (tokenToValidate) => {
     try {
       const response = await fetch(`/api/auth/activate?token=${tokenToValidate}`)
       const data = await response.json()
@@ -61,6 +40,28 @@ function ActivateContent() {
       setError(t.error.failedValidation)
       setValidating(false)
     }
+  }, [t.error.failedValidation])
+
+  useEffect(() => {
+    const tokenFromUrl = searchParams.get('token')
+    if (tokenFromUrl) {
+      setToken(tokenFromUrl)
+      validateToken(tokenFromUrl)
+    } else {
+      setError(t.error.noToken)
+      setValidating(false)
+    }
+  }, [searchParams, t.error.noToken, validateToken])
+
+  // Show loading until language is determined to prevent flickering
+  if (!isLanguageLoaded) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-parque-bg via-white to-parque-bg flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
+        </div>
+      </div>
+    )
   }
 
   const handleSubmit = async (e) => {
@@ -134,9 +135,11 @@ function ActivateContent() {
             <div className="text-center">
               <div className="mb-4 sm:mb-6">
                 <a href="/">
-                  <img 
+                  <Image 
                     src="/logo.png" 
-                    alt="Liga del Parque" 
+                    alt="Liga del Parque"
+                    width={112}
+                    height={112}
                     className="h-20 sm:h-28 w-auto mx-auto hover:scale-105 transition-transform duration-200 cursor-pointer"
                   />
                 </a>
@@ -178,9 +181,11 @@ function ActivateContent() {
             <div className="text-center">
               <div className="mb-4 sm:mb-6">
                 <a href="/">
-                  <img 
+                  <Image 
                     src="/logo.png" 
-                    alt="Liga del Parque" 
+                    alt="Liga del Parque"
+                    width={112}
+                    height={112}
                     className="h-20 sm:h-28 w-auto mx-auto hover:scale-105 transition-transform duration-200 cursor-pointer"
                   />
                 </a>
@@ -221,9 +226,11 @@ function ActivateContent() {
           <div className="text-center mb-6 sm:mb-8">
             <div className="mb-4 sm:mb-6">
               <a href="/">
-                <img 
+                <Image 
                   src="/logo.png" 
-                  alt="Liga del Parque" 
+                  alt="Liga del Parque"
+                  width={144}
+                  height={144}
                   className="h-24 sm:h-32 lg:h-36 w-auto mx-auto hover:scale-105 transition-transform duration-200 cursor-pointer"
                 />
               </a>

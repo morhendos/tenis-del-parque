@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLanguage } from '../../../lib/hooks/useLanguage'
 
@@ -315,11 +315,7 @@ export default function PlayerLeague() {
     }
   }
 
-  useEffect(() => {
-    fetchPlayerAndLeague()
-  }, [])
-
-  const fetchPlayerAndLeague = async () => {
+  const fetchPlayerAndLeague = useCallback(async () => {
     try {
       setLoading(true)
       
@@ -377,7 +373,11 @@ export default function PlayerLeague() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [router, setLanguage])
+
+  useEffect(() => {
+    fetchPlayerAndLeague()
+  }, [fetchPlayerAndLeague])
 
   const tabs = [
     { id: 'standings', label: language === 'es' ? 'Clasificación' : 'Standings', icon: '📊' },

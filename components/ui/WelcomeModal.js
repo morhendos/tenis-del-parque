@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLanguage } from '../../lib/hooks/useLanguage'
 import { welcomeContent } from '../../lib/content/welcomeContent'
+import Image from 'next/image'
 
 export default function WelcomeModal({ isOpen, onClose, playerName }) {
   const [currentStep, setCurrentStep] = useState(0)
@@ -46,11 +47,15 @@ export default function WelcomeModal({ isOpen, onClose, playerName }) {
         return (
           <div className="text-center space-y-6">
             <div className="mb-6">
-              <img 
-                src="/logo.png" 
-                alt="Liga del Parque" 
-                className="h-20 w-auto mx-auto mb-4"
-              />
+              <div className="flex justify-center mb-4">
+                <Image 
+                  src="/logo.png" 
+                  alt="Liga del Parque" 
+                  width={80}
+                  height={80}
+                  className="h-20 w-auto"
+                />
+              </div>
               <h2 className="text-3xl font-bold text-gray-900 mb-2">
                 {t.title}
               </h2>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useLanguage } from '../../../lib/hooks/useLanguage'
@@ -16,13 +16,7 @@ export default function PlayerDashboard() {
   const router = useRouter()
   const { showWelcome, playerName, closeWelcome } = useWelcomeModal()
 
-
-
-  useEffect(() => {
-    fetchPlayerData()
-  }, [])
-
-  const fetchPlayerData = async () => {
+  const fetchPlayerData = useCallback(async () => {
     try {
       // First get the user info
       const authResponse = await fetch('/api/auth/check')
@@ -54,7 +48,11 @@ export default function PlayerDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [router])
+
+  useEffect(() => {
+    fetchPlayerData()
+  }, [fetchPlayerData])
 
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {

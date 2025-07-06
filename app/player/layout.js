@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useLanguage } from '../../lib/hooks/useLanguage'
@@ -13,11 +13,7 @@ export default function PlayerLayout({ children }) {
   const [loading, setLoading] = useState(true)
   const { language } = useLanguage()
 
-  useEffect(() => {
-    checkAuth()
-  }, [])
-
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       const res = await fetch('/api/auth/check')
       if (!res.ok) {
@@ -31,7 +27,11 @@ export default function PlayerLayout({ children }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [router])
+
+  useEffect(() => {
+    checkAuth()
+  }, [checkAuth])
 
   const navigation = [
     { 
