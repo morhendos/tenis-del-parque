@@ -183,7 +183,7 @@ export default function PlayerLayout({ children }) {
           </div>
 
           {/* Navigation - Scrollable area between header and footer */}
-          <nav className="absolute top-24 bottom-20 left-0 right-0 px-4 py-6 space-y-2 overflow-y-auto">
+          <nav className="absolute top-28 bottom-20 left-0 right-0 px-4 py-4 space-y-2 overflow-y-auto">
             {navigation.map((item) => (
               <Link
                 key={item.name}
