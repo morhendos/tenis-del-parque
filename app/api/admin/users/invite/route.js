@@ -62,33 +62,67 @@ export async function POST(request) {
       
       console.log('🔄 Force re-invite mode: including players with existing users')
     } else {
-      // Normal mode: only players without users
+      // Normal mode: only players without users OR players with userId but user doesn't exist
       players = await Player.find({
-        _id: { $in: playerIds },
-        $or: [
-          { userId: { $exists: false } },
-          { userId: null }
-        ]
-      }).populate('league', 'name')
+        _id: { $in: playerIds }
+      }).populate('league', 'name').populate('userId')
+      
+      // Filter out players that have valid user accounts
+      const validPlayers = []
+      for (const player of players) {
+        if (!player.userId) {
+          // No userId - eligible for invitation
+          validPlayers.push(player)
+        } else {
+          // Has userId - check if user actually exists
+          const userExists = await User.findById(player.userId)
+          if (!userExists) {
+            console.log(`🔧 Player ${player.name} has userId ${player.userId} but user doesn't exist - eligible for re-invite`)
+            validPlayers.push(player)
+          } else {
+            console.log(`❌ Player ${player.name} has valid user account - skipping`)
+          }
+        }
+      }
+      players = validPlayers
     }
 
     console.log('✅ Valid players for invitation:', players.map(p => ({
       id: p._id,
       name: p.name,
       email: p.email,
-      status: p.status
+      status: p.status,
+      hasUserId: !!p.userId,
+      forceReinvite
     })))
 
     if (players.length === 0) {
-      const invalidReasons = allRequestedPlayers.map(p => 
-        `${p.name} (${p.email}): ${p.userId ? 'Already has user account' : 'Unknown issue'}`
-      )
+      const invalidReasons = []
+      
+      for (const p of allRequestedPlayers) {
+        if (!p.userId) {
+          invalidReasons.push(`${p.name} (${p.email}): Unknown issue - no userId but not selected`)
+        } else {
+          const userExists = await User.findById(p.userId)
+          if (userExists) {
+            invalidReasons.push(`${p.name} (${p.email}): Already has user account (${userExists.email})`)
+          } else {
+            invalidReasons.push(`${p.name} (${p.email}): Has userId but user doesn't exist - should be eligible for re-invite`)
+          }
+        }
+      }
       
       return NextResponse.json(
         { 
           error: 'No valid players found to invite',
-          details: 'All selected players already have user accounts',
-          invalidPlayers: invalidReasons
+          details: forceReinvite ? 'Error in re-invite logic' : 'All selected players already have user accounts',
+          invalidPlayers: invalidReasons,
+          forceReinvite,
+          debug: {
+            requestedPlayerIds: playerIds,
+            foundPlayers: allRequestedPlayers.length,
+            forceReinviteMode: forceReinvite
+          }
         },
         { status: 400 }
       )
@@ -111,6 +145,13 @@ export async function POST(request) {
         let user
         let activationToken
         
+        // Check if player has a userId that doesn't exist anymore
+        if (player.userId && !existingUser) {
+          console.log(`🔧 Player ${player.name} has dangling userId ${player.userId} - will create new user`)
+          // Player has userId but user doesn't exist - clean it up
+          player.userId = null
+        }
+        
         if (existingUser && forceReinvite) {
           console.log(`🔄 Re-inviting existing user: ${player.email}`)
           user = existingUser
@@ -125,6 +166,10 @@ export async function POST(request) {
             user.emailVerified = false // Reset verification status
             console.log(`📧 Generated new activation token for verified user: ${player.email}`)
           }
+        } else if (existingUser && !forceReinvite) {
+          // This should have been caught earlier, but just in case
+          errors.push(`User already exists for ${player.email}`)
+          continue
         } else {
           console.log(`✨ Creating new user for: ${player.email}`)
           
