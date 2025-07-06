@@ -39,15 +39,29 @@ export async function GET(request, { params }) {
     }
     if (level) query.level = level
     
-    // Get players with standings sorted by performance
-    let players = await Player.find(query)
-      .sort({ 
-        'stats.totalPoints': -1,  // Primary: total points
-        'stats.setsWon': -1,      // Secondary: sets won
-        'stats.gamesWon': -1,     // Tertiary: games won
-        'name': 1                 // Quaternary: alphabetical by name
-      })
-      .lean()
+    // Get players with standings - we'll sort manually to handle null/undefined stats
+    let players = await Player.find(query).lean()
+    
+    // Manual sort to ensure consistent handling of null/undefined stats
+    players = players.sort((a, b) => {
+      // Primary: total points (handle null/undefined)
+      const aPoints = a.stats?.totalPoints || 0
+      const bPoints = b.stats?.totalPoints || 0
+      if (aPoints !== bPoints) return bPoints - aPoints
+      
+      // Secondary: sets won
+      const aSets = a.stats?.setsWon || 0
+      const bSets = b.stats?.setsWon || 0
+      if (aSets !== bSets) return bSets - aSets
+      
+      // Tertiary: games won
+      const aGames = a.stats?.gamesWon || 0
+      const bGames = b.stats?.gamesWon || 0
+      if (aGames !== bGames) return bGames - aGames
+      
+      // Quaternary: alphabetical by name
+      return a.name.localeCompare(b.name)
+    })
     
     // FALLBACK: If no players found with exact season, try without season filter
     if (players.length === 0) {
@@ -55,17 +69,36 @@ export async function GET(request, { params }) {
       const fallbackQuery = { league: league._id }
       if (level) fallbackQuery.level = level
       
-      players = await Player.find(fallbackQuery)
-        .sort({ 
-          'stats.totalPoints': -1,
-          'stats.setsWon': -1,
-          'stats.gamesWon': -1,
-          'name': 1
-        })
-        .lean()
+      players = await Player.find(fallbackQuery).lean()
+      
+      // Apply same manual sort for fallback
+      players = players.sort((a, b) => {
+        const aPoints = a.stats?.totalPoints || 0
+        const bPoints = b.stats?.totalPoints || 0
+        if (aPoints !== bPoints) return bPoints - aPoints
+        
+        const aSets = a.stats?.setsWon || 0
+        const bSets = b.stats?.setsWon || 0
+        if (aSets !== bSets) return bSets - aSets
+        
+        const aGames = a.stats?.gamesWon || 0
+        const bGames = b.stats?.gamesWon || 0
+        if (aGames !== bGames) return bGames - aGames
+        
+        return a.name.localeCompare(b.name)
+      })
       
       console.log(`Fallback: Found ${players.length} players without season filter`)
     }
+    
+    // DEBUG: Log actual stats values to see why sorting is off
+    console.log('Player stats debug:', players.map(p => ({
+      name: p.name,
+      totalPoints: p.stats?.totalPoints || 0,
+      setsWon: p.stats?.setsWon || 0,
+      gamesWon: p.stats?.gamesWon || 0,
+      matchesPlayed: p.stats?.matchesPlayed || 0
+    })))
     
     // Calculate additional stats for each player
     const standings = players.map((player, index) => {
