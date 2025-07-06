@@ -14,8 +14,8 @@ export default function WelcomeModal({ isOpen, onClose, playerName }) {
 
   const steps = [
     'welcome',
-    'rules',
     'encouragement',
+    'rules',
     'nextSteps'
   ]
 

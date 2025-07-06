@@ -50,8 +50,8 @@ function StandingsTable({ players, language, unified = false }) {
               key={standing.player._id} 
               className={`${getPositionStyle(standing.position)} rounded-xl p-4 shadow-lg border transition-all duration-300 hover:shadow-xl hover:scale-[1.02]`}
             >
-              {/* Header with position, name, and points */}
-              <div className="flex items-center justify-between mb-4">
+              {/* Header with position and points */}
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-3">
                   {/* Position with playoff qualification styling */}
                   <div className="flex items-center">
@@ -69,23 +69,6 @@ function StandingsTable({ players, language, unified = false }) {
                       </div>
                     </div>
                   </div>
-                  
-                  {/* Player name with avatar */}
-                  <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 rounded-full bg-parque-purple text-white flex items-center justify-center text-sm font-bold">
-                      {standing.player.name.charAt(0)}
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-gray-900">
-                        {standing.player.name}
-                      </div>
-                      {winPercentage > 0 && (
-                        <div className="text-xs text-gray-500">
-                          {winPercentage}% {language === 'es' ? 'victorias' : 'win rate'}
-                        </div>
-                      )}
-                    </div>
-                  </div>
                 </div>
                 
                 {/* Points with playoff zone styling */}
@@ -101,6 +84,18 @@ function StandingsTable({ players, language, unified = false }) {
                     {language === 'es' ? 'puntos' : 'points'}
                   </div>
                 </div>
+              </div>
+
+              {/* Player name on separate row */}
+              <div className="mb-4 text-center">
+                <div className="text-xl font-bold text-gray-900 mb-1">
+                  {standing.player.name}
+                </div>
+                {winPercentage > 0 && (
+                  <div className="text-sm text-gray-500">
+                    {winPercentage}% {language === 'es' ? 'victorias' : 'win rate'}
+                  </div>
+                )}
               </div>
 
               {/* Win percentage bar */}
@@ -183,28 +178,28 @@ function StandingsTable({ players, language, unified = false }) {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gradient-to-r from-parque-purple to-parque-purple/90">
               <tr>
-                <th className="px-4 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
                   {language === 'es' ? 'Posición' : 'Position'}
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
                   {language === 'es' ? 'Jugador' : 'Player'}
                 </th>
-                <th className="px-3 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
+                <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
                   {language === 'es' ? 'Clasificación' : 'Qualification'}
                 </th>
-                <th className="px-3 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
+                <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
                   {language === 'es' ? 'Puntos' : 'Points'}
                 </th>
-                <th className="px-3 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
+                <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
                   {language === 'es' ? 'Partidos' : 'Matches'}
                 </th>
-                <th className="px-3 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
+                <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
                   {language === 'es' ? 'Victorias' : 'Wins'}
                 </th>
-                <th className="px-3 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
+                <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
                   Sets
                 </th>
-                <th className="px-3 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
+                <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
                   {language === 'es' ? 'Juegos' : 'Games'}
                 </th>
               </tr>
@@ -216,7 +211,7 @@ function StandingsTable({ players, language, unified = false }) {
                             
                 return (
                   <tr key={standing.player._id} className={`${rowBg} hover:shadow-md hover:scale-[1.01] transition-all duration-200`}>
-                    <td className="px-4 py-5 whitespace-nowrap">
+                    <td className="px-6 py-5 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm mr-3 ${getPositionBadgeStyle(standing.position)}`}>
                           {standing.position}
@@ -240,7 +235,7 @@ function StandingsTable({ players, language, unified = false }) {
                         </div>
                       </div>
                     </td>
-                    <td className="px-3 py-5 whitespace-nowrap text-center">
+                    <td className="px-6 py-5 whitespace-nowrap text-center">
                       <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
                         standing.position <= 8 ? 'bg-blue-100 text-blue-800' :
                         standing.position <= 16 ? 'bg-green-100 text-green-800' :
@@ -249,7 +244,7 @@ function StandingsTable({ players, language, unified = false }) {
                         {getPositionLabel(standing.position)}
                       </div>
                     </td>
-                    <td className="px-3 py-5 whitespace-nowrap text-center">
+                    <td className="px-6 py-5 whitespace-nowrap text-center">
                       <div className={`inline-flex items-center px-3 py-1 rounded-full text-lg font-bold ${
                         standing.position <= 8 ? 'bg-blue-200 text-blue-800' :
                         standing.position <= 16 ? 'bg-green-200 text-green-800' :
@@ -258,12 +253,12 @@ function StandingsTable({ players, language, unified = false }) {
                         {standing.stats.totalPoints || 0}
                       </div>
                     </td>
-                    <td className="px-3 py-5 whitespace-nowrap text-center">
+                    <td className="px-6 py-5 whitespace-nowrap text-center">
                       <div className="text-sm font-medium text-gray-900">
                         {standing.stats.matchesPlayed}
                       </div>
                     </td>
-                    <td className="px-3 py-5 whitespace-nowrap text-center">
+                    <td className="px-6 py-5 whitespace-nowrap text-center">
                       <div className="flex items-center justify-center space-x-1">
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                           {standing.stats.matchesWon}
@@ -274,14 +269,14 @@ function StandingsTable({ players, language, unified = false }) {
                         </span>
                       </div>
                     </td>
-                    <td className="px-3 py-5 whitespace-nowrap text-center">
+                    <td className="px-6 py-5 whitespace-nowrap text-center">
                       <div className="text-sm font-medium text-gray-900">
                         <span className="text-green-600">{standing.stats.setsWon}</span>
                         <span className="text-gray-400 mx-1">-</span>
                         <span className="text-red-600">{standing.stats.setsLost}</span>
                       </div>
                     </td>
-                    <td className="px-3 py-5 whitespace-nowrap text-center">
+                    <td className="px-6 py-5 whitespace-nowrap text-center">
                       <div className="text-sm font-medium text-gray-900">
                         <span className="text-green-600">{standing.stats.gamesWon || 0}</span>
                         <span className="text-gray-400 mx-1">-</span>
@@ -888,7 +883,7 @@ export default function LeagueSeasonPage() {
         )}
 
         {activeTab === 'standings' && (
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-7xl mx-auto">
             <div className="bg-white rounded-xl shadow-lg p-4 md:p-8">
               <h2 className="text-xl md:text-2xl font-bold text-parque-purple mb-4 md:mb-6">
                 {language === 'es' ? 'Clasificación General' : 'League Standings'}

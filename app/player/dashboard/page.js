@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useLanguage } from '../../../lib/hooks/useLanguage'
+import { useWelcomeModal } from '../../../lib/hooks/useWelcomeModal'
+import WelcomeModal from '../../../components/ui/WelcomeModal'
 
 export default function PlayerDashboard() {
   const { language } = useLanguage()
@@ -12,6 +14,13 @@ export default function PlayerDashboard() {
   const [recentMatches, setRecentMatches] = useState([])
   const [upcomingMatches, setUpcomingMatches] = useState([])
   const router = useRouter()
+  const { showWelcome, playerName, closeWelcome } = useWelcomeModal()
+
+  // Function to trigger welcome modal for testing
+  const triggerWelcomeModal = () => {
+    sessionStorage.setItem('showWelcome', 'true')
+    window.location.reload()
+  }
 
   useEffect(() => {
     fetchPlayerData()
@@ -33,55 +42,19 @@ export default function PlayerDashboard() {
       const profileResponse = await fetch('/api/player/profile')
       if (profileResponse.ok) {
         const profileData = await profileResponse.json()
-        if (profileData.success && profileData.player) {
+        if (profileData.player) {
           setPlayer(profileData.player)
         } else {
-          // Create a basic player object if profile doesn't exist yet
-          setPlayer({
-            name: userEmail.split('@')[0],
-            email: userEmail,
-            stats: {
-              eloRating: 1200,
-              matchesPlayed: 0,
-              matchesWon: 0
-            },
-            level: 'intermediate'
-          })
+          // Profile response was ok but no player data
+          setPlayer(null)
         }
       } else {
-        // Fallback - create basic player from auth data
-        setPlayer({
-          name: userEmail.split('@')[0],
-          email: userEmail,
-          stats: {
-            eloRating: 1200,
-            matchesPlayed: 0,
-            matchesWon: 0
-          },
-          level: 'intermediate'
-        })
+        // No player profile found - don't create fallback with email prefix
+        setPlayer(null)
       }
     } catch (error) {
       console.error('Error fetching player data:', error)
-      // Even if there's an error, try to create a basic player state
-      try {
-        const authResponse = await fetch('/api/auth/check')
-        if (authResponse.ok) {
-          const authData = await authResponse.json()
-          setPlayer({
-            name: authData.user.email.split('@')[0],
-            email: authData.user.email,
-            stats: {
-              eloRating: 1200,
-              matchesPlayed: 0,
-              matchesWon: 0
-            },
-            level: 'intermediate'
-          })
-        }
-      } catch (fallbackError) {
-        console.error('Fallback error:', fallbackError)
-      }
+      setPlayer(null)
     } finally {
       setLoading(false)
     }
@@ -354,7 +327,7 @@ export default function PlayerDashboard() {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
           {language === 'es' ? 'Acciones Rápidas' : 'Quick Actions'}
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
           <Link
             href="/player/matches"
             className="flex items-center justify-center px-4 py-3 bg-purple-50 text-parque-purple rounded-lg hover:bg-purple-100 transition-colors text-sm font-medium"
@@ -383,8 +356,22 @@ export default function PlayerDashboard() {
             <span className="mr-2">📋</span>
             {language === 'es' ? 'Reglas' : 'Rules'}
           </Link>
+          <button
+            onClick={triggerWelcomeModal}
+            className="flex items-center justify-center px-4 py-3 bg-pink-50 text-pink-700 rounded-lg hover:bg-pink-100 transition-colors text-sm font-medium"
+          >
+            <span className="mr-2">👋</span>
+            {language === 'es' ? 'Bienvenida' : 'Welcome'}
+          </button>
         </div>
       </div>
+
+      {/* Welcome Modal */}
+      <WelcomeModal
+        isOpen={showWelcome}
+        onClose={closeWelcome}
+        playerName={playerName || player?.name || 'Player'}
+      />
     </div>
   )
 }
