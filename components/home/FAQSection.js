@@ -138,7 +138,7 @@ export default function FAQSection({ content }) {
              </p>
              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
                <a
-                 href="mailto:info@tenisdelparque.com"
+                 href="mailto:morhendos@gmail.com"
                  className="inline-flex items-center justify-center gap-2 bg-parque-purple text-white px-6 py-3 rounded-full hover:bg-parque-purple/90 transition-all duration-300 text-sm sm:text-base font-medium touch-manipulation min-h-[48px]"
                >
                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -205,13 +205,13 @@ export default function PlayerRules() {
           </p>
           <div className="flex justify-center space-x-4">
             <a 
-              href="mailto:info@tenisdelparque.com" 
+              href="mailto:morhendos@gmail.com" 
               className="bg-parque-purple text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors"
             >
               {language === 'es' ? 'Enviar Email' : 'Send Email'}
             </a>
             <a 
-              href="https://wa.me/1234567890" 
+              href="https://wa.me/34652714328" 
               target="_blank" 
               rel="noopener noreferrer"
               className="bg-green-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-600 transition-colors"
