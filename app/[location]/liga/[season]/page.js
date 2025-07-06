@@ -340,7 +340,19 @@ export default function LeagueSeasonPage() {
       }
       
       const targetSeasonName = seasonMap[season]
-      const targetSeason = leagueData.league.seasons?.find(s => s.name === targetSeasonName)
+      // Try to find the season by the mapped name, or try both Spanish and English variants
+      let targetSeason = leagueData.league.seasons?.find(s => s.name === targetSeasonName)
+      
+      // If not found, try alternative names for the same season
+      if (!targetSeason && season === 'verano2025') {
+        targetSeason = leagueData.league.seasons?.find(s => 
+          s.name === 'Verano 2025' || s.name === 'Summer 2025'
+        )
+      } else if (!targetSeason && season === 'summer2025') {
+        targetSeason = leagueData.league.seasons?.find(s => 
+          s.name === 'Summer 2025' || s.name === 'Verano 2025'
+        )
+      }
       
       if (!targetSeason) {
         throw new Error(`Season ${season} not found`)
