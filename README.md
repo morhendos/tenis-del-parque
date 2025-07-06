@@ -9,14 +9,18 @@ Tenis del Parque is a sophisticated web application that combines cutting-edge w
 ### ✨ Key Features
 
 - **🏆 Multi-League Support**: Scalable architecture supporting multiple tennis leagues
-- **🎾 Match Management**: Complete match scheduling, result tracking, and ELO calculations
-- **👨‍💼 Admin Panel**: Comprehensive admin interface for league operations
+- **🎾 Match Management**: Complete match scheduling, result tracking, and ELO calculations  
+- **👨‍💼 Admin Panel**: Comprehensive admin interface with player invitation system
+- **👤 Player Dashboard**: Personalized player hub with league standings, matches, and profile
+- **📧 Invitation System**: WhatsApp-based player invitations with activation links
 - **💾 MongoDB Integration**: Complete player registration and data persistence
-- **🌍 Multilingual Support**: Full Spanish/English localization with automatic browser detection
-- **📱 Responsive Design**: Beautiful, modern UI that works on all devices
-- **🎯 League Management**: Swiss tournament system with ELO rankings
+- **🌍 Multilingual Support**: Full Spanish/English localization with browser detection and user preferences
+- **📱 Responsive Design**: Mobile-first UI optimized for all devices
+- **🎯 League Management**: Swiss tournament system with ELO rankings and playoff qualification
 - **📊 Player Statistics**: Track wins, losses, ELO ratings, and match history
 - **📅 Flexible Registration**: No deadlines - register players anytime
+- **🔄 Re-invite System**: Handle incomplete registrations and account issues
+- **📱 WhatsApp Integration**: Normalized phone numbers for reliable WhatsApp links
 - **🚀 Starting July 2025**: Liga de Sotogrande launches when enough players registered
 
 ## 🛠️ Tech Stack
@@ -28,6 +32,8 @@ Tenis del Parque is a sophisticated web application that combines cutting-edge w
 - **State Management**: React Hooks (useState, useEffect, custom hooks)
 - **Architecture**: Component-based with clear separation of concerns
 - **Authentication**: JWT-based authentication with secure HTTP-only cookies
+- **Communication**: WhatsApp integration with phone number normalization
+- **Internationalization**: Custom language system with localStorage and user preferences
 
 ## 🔌 Database Connection Pattern
 
@@ -174,6 +180,118 @@ import dbConnect from '../../../../lib/db/mongoose'
 - **Nested Routing**: Next.js file-based routing creates different nesting levels
 - **Consistency**: Following the pattern prevents import errors
 
+## 🔐 Authentication & Invitation System
+
+The platform features a comprehensive user management system with JWT authentication and WhatsApp-based invitations:
+
+### Player Registration Flow
+1. **Public Registration**: Players sign up on `/signup/[league]` pages
+2. **Admin Invitation**: Admins send WhatsApp invitations from admin panel
+3. **Account Activation**: Players set passwords via secure activation links
+4. **Player Dashboard**: Authenticated players access personalized hub
+
+### Authentication Architecture
+
+#### JWT Authentication
+- **Secure Tokens**: HTTP-only cookies with JWS signing
+- **Session Management**: Automatic token refresh and validation
+- **Route Protection**: Middleware protects admin and player routes
+- **Role-Based Access**: Admin and player role separation
+
+#### User Models
+```javascript
+// User Schema (Authentication)
+{
+  email: String,               // Unique identifier
+  password: String,           // Hashed with bcryptjs
+  role: 'admin' | 'player',   // Access control
+  playerId: ObjectId,         // Link to Player model
+  emailVerified: Boolean,     // Activation status
+  activationToken: String,    // Secure activation token
+  activationTokenExpiry: Date, // Token expiration (7 days)
+  preferences: {              // User preferences
+    language: 'es' | 'en',
+    hasSeenWelcomeModal: Boolean
+  }
+}
+```
+
+### Invitation System
+
+#### WhatsApp Integration
+- **Phone Normalization**: Automatic formatting for international numbers
+- **Link Generation**: Secure activation links with domain detection
+- **Message Templates**: Bilingual invitation messages (English/Spanish)
+- **Re-invite Capability**: Handle failed activations and data inconsistencies
+
+#### Invitation Workflow
+1. **Admin Selection**: Choose players from admin panel
+2. **Token Generation**: Create secure 7-day activation tokens
+3. **WhatsApp Message**: Bilingual message with activation link
+4. **Account Creation**: Players set passwords and activate accounts
+5. **Player Status**: Automatic status updates (pending → confirmed → active)
+
+#### Phone Number Normalization
+```javascript
+// Phone Utility Functions (lib/utils/phoneUtils.js)
+normalizePhoneForWhatsApp(phone)  // Remove "00" prefix, clean format
+createWhatsAppLink(phone, message) // Generate reliable WhatsApp URLs
+isValidWhatsAppNumber(phone)      // Validate phone format
+```
+
+**Supported Formats**:
+- `"0035358009856"` → `"35358009856"` (Remove "00" prefix)
+- `"+35358009856"` → `"35358009856"` (Remove "+" prefix)
+- `"35358009856"` → `"35358009856"` (Keep clean format)
+
+### Player Dashboard Features
+
+#### Personalized Hub
+- **League Standings**: Real-time rankings with playoff qualification indicators
+- **Match History**: Complete match records with results and ELO changes
+- **Schedule View**: Upcoming matches with opponent contact information
+- **Profile Management**: Language preferences and account settings
+
+#### Mobile Optimization
+- **Responsive Layout**: Mobile-first design with sidebar navigation
+- **Touch-Friendly**: Optimized button sizes and interactions
+- **Compact Cards**: Mobile-optimized standings display
+- **Scroll Prevention**: Mobile menu prevents background scrolling
+
+### Language System
+
+#### Multi-Language Support
+- **Browser Detection**: Automatic language detection from browser settings
+- **User Preferences**: Stored language choices in user profiles
+- **Real-Time Switching**: Dynamic language changes without page reload
+- **Consistent Sync**: Language preferences sync across login sessions
+
+#### Language Priority Order
+1. **User Profile**: Stored language preference (highest priority)
+2. **Manual Selection**: User-selected language in session
+3. **Browser Language**: Automatic detection from browser headers
+4. **Default Fallback**: Spanish (es) as default language
+
+### Status Management
+
+#### Player Status Flow
+```
+pending → confirmed → active → inactive
+   ↑         ↑         ↑         ↑
+Register  Invited  Activated  Manual
+```
+
+- **Pending**: Registered but not yet invited
+- **Confirmed**: Invitation sent, awaiting activation
+- **Active**: Account activated, can log in
+- **Inactive**: Manually deactivated by admin
+
+#### Re-invite System
+- **Data Consistency**: Handle incomplete user records
+- **Token Regeneration**: Fresh activation tokens for failed attempts
+- **Status Reset**: Clean up orphaned user references
+- **Force Re-invite**: Override existing user accounts when needed
+
 ## 📁 Project Structure
 
 ```
@@ -184,49 +302,97 @@ tenis-del-parque/
 │   ├── admin/                   # Admin panel
 │   │   ├── leagues/             # League management
 │   │   ├── matches/             # Match management
-│   │   ├── players/             # Player management
+│   │   ├── players/             # Player management with invitation system
+│   │   ├── users/               # User account management
 │   │   └── dashboard/           # Admin dashboard
+│   ├── player/                  # Player dashboard area
+│   │   ├── dashboard/           # Player overview
+│   │   ├── league/              # League standings and schedule
+│   │   ├── matches/             # Match history and results
+│   │   ├── profile/             # Account settings and preferences
+│   │   ├── rules/               # League rules
+│   │   └── layout.js            # Player dashboard layout
 │   ├── api/                     # API routes
 │   │   ├── admin/               # Admin API endpoints
-│   │   │   ├── auth/            # Authentication
+│   │   │   ├── auth/            # Admin authentication
 │   │   │   ├── leagues/         # League operations
 │   │   │   ├── matches/         # Match CRUD operations
-│   │   │   └── players/         # Player management
+│   │   │   ├── players/         # Player management with export/import
+│   │   │   └── users/           # User invitation system
+│   │   ├── auth/                # Player authentication
+│   │   │   ├── login/           # Player login
+│   │   │   ├── logout/          # Session termination
+│   │   │   ├── check/           # Session validation
+│   │   │   └── activate/        # Account activation
+│   │   ├── player/              # Player API endpoints
+│   │   │   ├── profile/         # Player profile management
+│   │   │   └── matches/         # Match operations for players
 │   │   ├── leagues/
-│   │   │   └── [league]/
-│   │   │       └── route.js     # League info endpoint
+│   │   │   └── [league]/        # Public league endpoints
+│   │   │       ├── route.js     # League info
+│   │   │       ├── standings/   # Public standings
+│   │   │       └── matches/     # Public match data
 │   │   └── players/
 │   │       └── register/
 │   │           └── route.js     # Player registration endpoint
+│   ├── activate/                # Account activation page
+│   ├── login/                   # Player login page
+│   ├── admin-login/             # Admin login page
 │   ├── signup/
 │   │   └── [league]/
 │   │       └── page.js          # Dynamic league signup page
+│   ├── [location]/              # Dynamic location pages
+│   │   └── liga/
+│   │       └── [season]/        # Season-specific league pages
 │   ├── elo/
 │   │   ├── layout.js
 │   │   └── page.js              # ELO & Swiss Systems page
 │   ├── rules/
 │   │   ├── layout.js
 │   │   └── page.js              # Rules page
+│   ├── swiss/                   # Swiss system information
 │   ├── globals.css              # Global styles
 │   ├── layout.js                # Root layout
+│   ├── middleware.js            # Route protection middleware
 │   └── page.js                  # Home page
 ├── components/                  # Reusable component library
 │   ├── admin/                   # Admin panel components
-│   ├── common/                  # Shared components
+│   ├── common/                  # Shared components (Navigation, Footer)
 │   ├── elo/                     # ELO page components
 │   ├── home/                    # Home page components
-│   └── rules/                   # Rules page components
+│   ├── rules/                   # Rules page components
+│   ├── analytics/               # Analytics integration (GA, Clarity)
+│   └── ui/                      # UI components (WelcomeModal, Icons, etc.)
 ├── lib/                         # Utilities and business logic
 │   ├── content/                 # Centralized content management
+│   │   ├── homeContent.js       # Homepage multilingual content
+│   │   ├── loginContent.js      # Login page content
+│   │   ├── rulesContent.js      # Rules page content
+│   │   ├── eloContent.js        # ELO page content
+│   │   ├── swissContent.js      # Swiss system content
+│   │   ├── activateContent.js   # Activation page content
+│   │   └── welcomeContent.js    # Welcome modal content
 │   ├── db/                      # Database utilities
 │   │   ├── mongodb.js           # MongoDB connection
 │   │   └── mongoose.js          # Mongoose connection handler
 │   ├── models/                  # Database models
 │   │   ├── Player.js            # Player model with match history
 │   │   ├── League.js            # League model
-│   │   └── Match.js             # Match model with ELO tracking
+│   │   ├── Match.js             # Match model with ELO tracking
+│   │   └── User.js              # User authentication model
 │   ├── hooks/                   # Custom React hooks
+│   │   ├── useLanguage.js       # Language detection and management
+│   │   ├── useActiveSection.js  # Section scrolling for pages
+│   │   └── useWelcomeModal.js   # Welcome modal state management
 │   └── utils/                   # Utility functions
+│       ├── phoneUtils.js        # WhatsApp phone number normalization
+│       ├── authMiddleware.js    # Player authentication middleware
+│       ├── adminAuth.js         # Admin authentication helpers
+│       ├── jwt.js               # JWT token management
+│       ├── edgeJwt.js          # Edge runtime JWT utilities
+│       ├── apiHelpers.js        # API utility functions
+│       ├── swissPairing.js      # Swiss tournament pairing algorithm
+│       └── rulesIcons.js        # Rules page icon mappings
 ├── scripts/                     # Utility scripts
 │   ├── seedLeagues.js           # Database seeder for leagues
 │   └── tree.js                  # Project structure generator
@@ -429,18 +595,26 @@ Once created, you can access the admin panel at [http://localhost:3000/admin](ht
 
 ### Admin Panel Features
 - **League Management**: View and manage multiple leagues
-- **Player Management**: Update player status, view statistics, export data
+- **Player Management**: Update player status, view statistics, export/import data
+- **Invitation System**: Send WhatsApp invitations with bilingual messages
+- **Re-invite Capability**: Handle failed activations and incomplete registrations  
+- **User Management**: View user accounts, activation status, and pending invitations
 - **Match Scheduling**: Create matches between players
 - **Result Entry**: Enter match scores and automatic ELO calculation
 - **Dashboard**: Overview of league statistics and recent activity
+- **Data Export**: CSV export for player data and league analytics
 
 ### Technical Features
-- **🌍 Multilingual**: Spanish/English with automatic browser detection
-- **📱 Responsive Design**: Mobile-first approach
-- **⚡ API Routes**: RESTful API for all operations
-- **🔒 Data Validation**: Server-side validation for all inputs
-- **🎨 Design System**: Consistent branding with Tailwind CSS
-- **🔐 Authentication**: Secure admin panel with session management
+- **🌍 Multilingual**: Spanish/English with browser detection, user preferences, and real-time switching
+- **📱 Responsive Design**: Mobile-first approach with touch-optimized interactions
+- **⚡ API Routes**: RESTful API with comprehensive error handling and debugging
+- **🔒 Data Validation**: Server-side validation with detailed error responses
+- **🎨 Design System**: Consistent branding with Tailwind CSS and custom components
+- **🔐 Authentication**: JWT-based auth with secure HTTP-only cookies and role separation
+- **📱 WhatsApp Integration**: Phone number normalization and reliable message links
+- **🔄 State Management**: Custom React hooks for language, authentication, and UI state
+- **🏗️ Route Protection**: Middleware-based authentication for admin and player areas
+- **📊 Debugging**: Comprehensive logging and error tracking for production issues
 
 ### League Features
 - **🎯 Swiss Tournament System**: Fair pairing system
@@ -499,9 +673,82 @@ Body: {
 ```
 GET /api/leagues/[slug]
 Returns: League details and registration status
+
+GET /api/leagues/[slug]/standings?season=string
+Returns: Public league standings
+
+GET /api/leagues/[slug]/matches?season=string&status=string
+Returns: Public match data
+```
+
+### Authentication API
+
+#### Player Authentication
+```
+POST /api/auth/login
+Body: { email: string, password: string }
+Returns: JWT token in HTTP-only cookie
+
+POST /api/auth/logout
+Returns: Clears authentication cookie
+
+GET /api/auth/check
+Returns: Current session status
+
+POST /api/auth/activate
+Body: { token: string, password: string, confirmPassword: string }
+Returns: Account activation result
+```
+
+### Player Dashboard API (Protected)
+
+#### Player Profile
+```
+GET /api/player/profile
+Returns: Player profile with league and user data
+
+PUT /api/player/profile
+Body: { preferences: { language: 'es' | 'en' } }
+Returns: Updated profile
+```
+
+#### Player Matches
+```
+GET /api/player/matches/schedule
+Returns: Upcoming matches for logged-in player
+
+POST /api/player/matches/result
+Body: { matchId: string, score: object }
+Returns: Match result submission
 ```
 
 ### Admin API (Protected)
+
+#### User Management
+```
+POST /api/admin/users/invite
+Body: { playerIds: string[], forceReinvite?: boolean }
+Returns: WhatsApp invitation links and activation tokens
+
+GET /api/admin/users/invite
+Returns: Pending invitations list
+
+GET /api/admin/users
+Returns: All user accounts with status
+```
+
+#### Player Management
+```
+GET /api/admin/players?hasUser=boolean&status=string
+Returns: Filtered player list
+
+GET /api/admin/players/export
+Returns: CSV export of player data
+
+POST /api/admin/players/import
+Body: FormData with CSV file
+Returns: Import results
+```
 
 See the [Admin Panel Documentation](./app/admin/README.md) for complete API reference.
 
@@ -519,10 +766,48 @@ MONGODB_DB=tenis-del-parque
 # JWT Authentication
 JWT_SECRET=your_jwt_secret_key
 
+# Application URL (for activation links)
+NEXT_PUBLIC_URL=https://yourdomain.com
+
 # Analytics (optional)
 NEXT_PUBLIC_GA_ID=your_google_analytics_id
 NEXT_PUBLIC_CLARITY_ID=your_microsoft_clarity_id
 ```
+
+## 🐛 Troubleshooting
+
+### Common Issues and Solutions
+
+#### Activation Token Issues
+- **Invalid Token Error**: Try opening activation link in incognito/private browser mode
+- **Expired Token**: Request a new invitation from admin panel (tokens expire after 7 days)
+- **Browser Cache**: Clear browser cache or hard refresh (Ctrl+F5 / Cmd+Shift+R)
+
+#### WhatsApp Link Problems
+- **Phone Format**: The system automatically normalizes phone numbers (removes "00" and "+" prefixes)
+- **International Numbers**: Use clean international format (e.g., "34652714328" for Spain)
+- **Link Not Opening**: Copy URL manually instead of clicking if WhatsApp doesn't open
+
+#### Language Issues
+- **Wrong Language**: Language preference is saved in user profile and localStorage
+- **Language Flickering**: The system waits for language detection before rendering to prevent flicker
+- **Browser Detection**: System respects browser language settings for new users
+
+#### Mobile Display Issues
+- **Standings Wrapping**: Mobile standings use compact card layout optimized for small screens
+- **Menu Scrolling**: Mobile menu prevents background scrolling when open
+- **Touch Issues**: All interactive elements are optimized for touch with 44px minimum size
+
+#### Database Connection Issues
+- **Always use `dbConnect`**: Import from `lib/db/mongoose.js` in all API routes
+- **Path Issues**: Check relative import paths based on route depth
+- **Connection Errors**: Verify MongoDB URI and network connectivity
+
+### Performance Optimization
+- **Mobile-First Design**: UI optimized for mobile devices with responsive breakpoints
+- **Lazy Loading**: Components load only when needed
+- **Optimized Images**: Using Next.js Image component for automatic optimization
+- **Database Indexing**: Proper indexes on frequently queried fields
 
 ## 📅 Timeline
 

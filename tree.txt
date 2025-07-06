@@ -1,12 +1,20 @@
 root/
 ├── README.md
 ├── app
+│   ├── [location]
+│   │   └── liga
+│   │       └── [season]
+│   │           └── page.js
+│   ├── activate
+│   │   └── page.js
 │   ├── admin
 │   │   ├── README.md
 │   │   ├── dashboard
 │   │   │   └── page.js
 │   │   ├── layout.js
 │   │   ├── leagues
+│   │   │   ├── [id]
+│   │   │   │   └── page.js
 │   │   │   └── page.js
 │   │   ├── matches
 │   │   │   ├── [id]
@@ -57,6 +65,8 @@ root/
 │   │   │       │   └── route.js
 │   │   │       └── route.js
 │   │   ├── auth
+│   │   │   ├── activate
+│   │   │   │   └── route.js
 │   │   │   ├── check
 │   │   │   │   └── route.js
 │   │   │   ├── login
@@ -64,11 +74,20 @@ root/
 │   │   │   └── logout
 │   │   │       └── route.js
 │   │   ├── leagues
-│   │   │   └── [league]
-│   │   │       └── route.js
+│   │   │   ├── [league]
+│   │   │   │   ├── matches
+│   │   │   │   │   └── route.js
+│   │   │   │   ├── route.js
+│   │   │   │   └── standings
+│   │   │   │       └── route.js
+│   │   │   └── route.js
 │   │   ├── player
 │   │   │   ├── matches
-│   │   │   │   └── route.js
+│   │   │   │   ├── result
+│   │   │   │   │   └── route.js
+│   │   │   │   ├── route.js
+│   │   │   │   └── schedule
+│   │   │   │       └── route.js
 │   │   │   └── profile
 │   │   │       └── route.js
 │   │   ├── players
@@ -81,6 +100,8 @@ root/
 │   │   └── page.js
 │   ├── globals.css
 │   ├── layout.js
+│   ├── leagues
+│   │   └── page.js
 │   ├── login
 │   │   └── page.js
 │   ├── page.js
@@ -88,7 +109,15 @@ root/
 │   │   ├── dashboard
 │   │   │   └── page.js
 │   │   ├── layout.js
-│   │   └── page.js
+│   │   ├── league
+│   │   │   └── page.js
+│   │   ├── matches
+│   │   │   └── page.js
+│   │   ├── page.js
+│   │   ├── profile
+│   │   │   └── page.js
+│   │   └── rules
+│   │       └── page.js
 │   ├── rules
 │   │   ├── layout.js
 │   │   └── page.js
@@ -128,18 +157,24 @@ root/
 │   │   └── RulesSidebar.js
 │   └── ui
 │       ├── TennisDividers.js
-│       └── TennisIcons.js
+│       ├── TennisIcons.js
+│       └── WelcomeModal.js
 ├── docs
+│   ├── CHANGELOG.md
 │   ├── MATCH_MANAGEMENT_GUIDE.md
-│   └── PR_MATCH_MANAGEMENT.md
+│   ├── PR_MATCH_MANAGEMENT.md
+│   └── RECENT_IMPROVEMENTS.md
 ├── lib
 │   ├── analytics
 │   │   └── analytics.js
 │   ├── content
+│   │   ├── activateContent.js
 │   │   ├── eloContent.js
 │   │   ├── homeContent.js
+│   │   ├── loginContent.js
 │   │   ├── rulesContent.js
-│   │   └── swissContent.js
+│   │   ├── swissContent.js
+│   │   └── welcomeContent.js
 │   ├── data
 │   │   └── mockData.js
 │   ├── db
@@ -147,7 +182,8 @@ root/
 │   │   └── mongoose.js
 │   ├── hooks
 │   │   ├── useActiveSection.js
-│   │   └── useLanguage.js
+│   │   ├── useLanguage.js
+│   │   └── useWelcomeModal.js
 │   ├── models
 │   │   ├── League.js
 │   │   ├── Match.js
@@ -159,6 +195,7 @@ root/
 │       ├── authMiddleware.js
 │       ├── edgeJwt.js
 │       ├── jwt.js
+│       ├── phoneUtils.js
 │       ├── rulesIcons.js
 │       └── swissPairing.js
 ├── middleware.js
@@ -176,7 +213,9 @@ root/
 │   ├── players-2025-06-28.csv
 │   └── players-import-template.csv
 ├── scripts
+│   ├── checkAuth.mjs
 │   ├── createAdminUser.js
+│   ├── createTestData.js
 │   ├── seedLeagues.js
 │   └── tree.js
 ├── tailwind.config.js
