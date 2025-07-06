@@ -35,6 +35,26 @@ function StandingsTable({ players, language, unified = false }) {
     return Math.round((won / total) * 100)
   }
 
+  // Helper function to get player status styling
+  const getPlayerStatusStyle = (player) => {
+    const isActive = player.status === 'active' || player.status === 'confirmed'
+    return isActive 
+      ? 'opacity-100' 
+      : 'opacity-50 bg-gray-50' // Make inactive players transparent with gray background
+  }
+
+  // Helper function to get player status indicator
+  const getPlayerStatusIndicator = (player) => {
+    if (player.status === 'active' || player.status === 'confirmed') {
+      return null // No indicator for active players
+    }
+    return (
+      <span className="ml-2 px-2 py-1 text-xs rounded-full bg-gray-200 text-gray-600">
+        {player.status}
+      </span>
+    )
+  }
+
   return (
     <div className="overflow-x-auto">
       {/* Mobile-first card layout for small screens */}
@@ -45,7 +65,7 @@ function StandingsTable({ players, language, unified = false }) {
           return (
             <div 
               key={standing.player._id} 
-              className={`${getPositionStyle(standing.position)} rounded-xl p-4 shadow-lg border transition-all duration-300 hover:shadow-xl hover:scale-[1.02]`}
+              className={`${getPositionStyle(standing.position)} ${getPlayerStatusStyle(standing.player)} rounded-xl p-4 shadow-lg border transition-all duration-300 hover:shadow-xl hover:scale-[1.02]`}
             >
               {/* Header with position and points */}
               <div className="flex items-center justify-between mb-3">
@@ -83,8 +103,9 @@ function StandingsTable({ players, language, unified = false }) {
 
               {/* Player name on separate row */}
               <div className="mb-4 text-center">
-                <div className="text-xl font-bold text-gray-900 mb-1">
+                <div className="text-xl font-bold text-gray-900 mb-1 flex items-center justify-center">
                   {standing.player.name}
+                  {getPlayerStatusIndicator(standing.player)}
                 </div>
                 {winPercentage > 0 && (
                   <div className="text-sm text-gray-500">
@@ -179,7 +200,7 @@ function StandingsTable({ players, language, unified = false }) {
                 const rowBg = getPositionStyle(standing.position)
                             
                 return (
-                  <tr key={standing.player._id} className={`${rowBg} hover:shadow-md hover:scale-[1.01] transition-all duration-200`}>
+                  <tr key={standing.player._id} className={`${rowBg} ${getPlayerStatusStyle(standing.player)} hover:shadow-md hover:scale-[1.01] transition-all duration-200`}>
                     <td className="px-6 py-5 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm mr-3 ${getPositionBadgeStyle(standing.position)}`}>
@@ -193,8 +214,9 @@ function StandingsTable({ players, language, unified = false }) {
                           {standing.player.name.charAt(0)}
                         </div>
                         <div>
-                          <div className="text-sm font-bold text-gray-900">
+                          <div className="text-sm font-bold text-gray-900 flex items-center">
                             {standing.player.name}
+                            {getPlayerStatusIndicator(standing.player)}
                           </div>
                           {winPercentage > 0 && (
                             <div className="text-xs text-gray-500">

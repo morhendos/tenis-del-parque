@@ -31,11 +31,11 @@ export async function GET(request, { params }) {
       )
     }
     
-    // Build query for players
+    // Build query for players - include ALL players, not just active ones
     const query = { 
       league: league._id, 
-      season: season,
-      status: { $in: ['confirmed', 'active'] }
+      season: season
+      // Removed status filter to show all players
     }
     if (level) query.level = level
     
@@ -68,7 +68,8 @@ export async function GET(request, { params }) {
         player: {
           _id: player._id,
           name: player.name,
-          level: player.level
+          level: player.level,
+          status: player.status  // Include player status for frontend styling
         },
         stats: {
           matchesPlayed: player.stats.matchesPlayed || 0,
