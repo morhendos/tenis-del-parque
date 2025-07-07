@@ -397,10 +397,10 @@ export default function PlayerLeague() {
         // Convert league season name to database season name for API calls
         const seasonToDbName = (seasonName) => {
           const mapping = {
-            'Verano 2025': 'summer-2025',
-            'Invierno 2025': 'winter-2025',
-            'Primavera 2025': 'spring-2025',
-            'Otoño 2025': 'autumn-2025'
+            'Summer 2025': 'summer-2025',
+            'Winter 2025': 'winter-2025',
+            'Spring 2025': 'spring-2025',
+            'Autumn 2025': 'autumn-2025'
           }
           return mapping[seasonName] || seasonName
         }
