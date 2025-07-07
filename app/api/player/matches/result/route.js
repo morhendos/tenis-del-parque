@@ -112,25 +112,6 @@ export async function POST(request) {
       player1Won
     )
 
-    // Calculate points based on the scoring system
-    // Win 2-0: 3 points, Win 2-1: 2 points, Lose 1-2: 1 point, Lose 0-2: 0 points
-    let player1Points = 0
-    let player2Points = 0
-    
-    if (player1SetsWon === 2 && player2SetsWon === 0) {
-      player1Points = 3
-      player2Points = 0
-    } else if (player1SetsWon === 2 && player2SetsWon === 1) {
-      player1Points = 2
-      player2Points = 1
-    } else if (player1SetsWon === 1 && player2SetsWon === 2) {
-      player1Points = 1
-      player2Points = 2
-    } else if (player1SetsWon === 0 && player2SetsWon === 2) {
-      player1Points = 0
-      player2Points = 3
-    }
-
     // Update match with result and ELO changes
     match.result = {
       winner: winner,
@@ -182,16 +163,14 @@ export async function POST(request) {
       })
     ])
 
-    // Update sets won/lost and points stats
+    // Update sets won/lost stats
     player1.stats.setsWon = (player1.stats.setsWon || 0) + player1SetsWon
     player1.stats.setsLost = (player1.stats.setsLost || 0) + player2SetsWon
-    player1.stats.totalPoints = (player1.stats.totalPoints || 0) + player1Points
     
     player2.stats.setsWon = (player2.stats.setsWon || 0) + player2SetsWon
     player2.stats.setsLost = (player2.stats.setsLost || 0) + player1SetsWon
-    player2.stats.totalPoints = (player2.stats.totalPoints || 0) + player2Points
     
-    // Save both players with updated stats
+    // Save both players with updated stats (no longer updating totalPoints)
     await Promise.all([player1.save(), player2.save()])
 
     // Populate match data for response
