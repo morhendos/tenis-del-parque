@@ -479,30 +479,45 @@ function CreateMatchContent() {
             )}
             
             <div className="space-y-4 max-h-[600px] overflow-y-auto">
-              {Object.entries(playersByLevel).map(([level, levelPlayers]) => (
-                <div key={level}>
-                  <h3 className="text-sm font-medium text-gray-600 mb-2 capitalize">
-                    {level} ({unpairedPlayers.filter(p => p.level === level).length}/{levelPlayers.length})
-                  </h3>
-                  <div className="space-y-2">
-                    {levelPlayers.map(player => {
-                      const isPaired = !unpairedPlayers.includes(player)
-                      const isSelected = selectedPlayers.some(p => p._id === player._id)
-                      
-                      return (
-                        <div key={player._id} className={isPaired ? 'opacity-50' : ''}>
-                          <PlayerCard
-                            player={player}
-                            isSelected={isSelected}
-                            onSelect={handlePlayerSelect}
-                            matchHistory={playerHistory[player._id] || []}
-                          />
-                        </div>
-                      )
-                    })}
+              {Object.entries(playersByLevel).map(([level, levelPlayers]) => {
+                // Sort players within each level: unpaired first, then paired
+                const sortedLevelPlayers = [...levelPlayers].sort((a, b) => {
+                  const aIsPaired = !unpairedPlayers.includes(a)
+                  const bIsPaired = !unpairedPlayers.includes(b)
+                  
+                  // Unpaired players come first
+                  if (aIsPaired && !bIsPaired) return 1
+                  if (!aIsPaired && bIsPaired) return -1
+                  
+                  // Within same pairing status, sort by name
+                  return a.name.localeCompare(b.name)
+                })
+                
+                return (
+                  <div key={level}>
+                    <h3 className="text-sm font-medium text-gray-600 mb-2 capitalize">
+                      {level} ({unpairedPlayers.filter(p => p.level === level).length}/{levelPlayers.length})
+                    </h3>
+                    <div className="space-y-2">
+                      {sortedLevelPlayers.map(player => {
+                        const isPaired = !unpairedPlayers.includes(player)
+                        const isSelected = selectedPlayers.some(p => p._id === player._id)
+                        
+                        return (
+                          <div key={player._id} className={isPaired ? 'opacity-50' : ''}>
+                            <PlayerCard
+                              player={player}
+                              isSelected={isSelected}
+                              onSelect={handlePlayerSelect}
+                              matchHistory={playerHistory[player._id] || []}
+                            />
+                          </div>
+                        )
+                      })}
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
             
             {selectedPlayers.length === 1 && (
