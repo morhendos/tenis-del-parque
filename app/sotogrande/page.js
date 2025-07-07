@@ -27,50 +27,7 @@ function SectionDivider() {
   )
 }
 
-// Beautiful Registration Banner Component
-function RegistrationBanner({ language }) {
-  return (
-    <div className="bg-gradient-to-r from-parque-purple via-purple-600 to-indigo-600 text-white py-3 px-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-white/5"></div>
-      <div className="absolute inset-0">
-        <div className="absolute -inset-40 opacity-30">
-          <div className="absolute top-0 -left-4 w-72 h-72 bg-white rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-          <div className="absolute top-0 -right-4 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-          <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
-        </div>
-      </div>
-      <div className="container mx-auto text-center relative z-10">
-        <div className="flex items-center justify-center space-x-3 font-medium text-sm md:text-base">
-          <span className="text-xl">🎾</span>
-          <span>
-            {language === 'es' 
-              ? 'Las inscripciones cierran hoy lunes a las 23:00 - ¡Reserva tu plaza!'
-              : 'Registration closes today Monday at 23:00 - Reserve your spot!'
-            }
-          </span>
-          <span className="text-xl">✨</span>
-        </div>
-      </div>
-      <style jsx>{`
-        @keyframes blob {
-          0% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
-          100% { transform: translate(0px, 0px) scale(1); }
-        }
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-      `}</style>
-    </div>
-  )
-}
+
 
 // New CTA Section Component
 function CTASection({ content, language, onSignupClick }) {
@@ -90,17 +47,7 @@ function CTASection({ content, language, onSignupClick }) {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              onClick={onSignupClick}
-              className="px-8 py-4 bg-gradient-to-r from-parque-purple to-parque-purple/80 text-white rounded-2xl font-medium text-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group"
-            >
-              <span className="flex items-center justify-center">
-                {language === 'es' ? 'Inscríbete ahora' : 'Sign up now'}
-                <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </span>
-            </button>
+            
             
             <a
               href="#features"
@@ -110,14 +57,7 @@ function CTASection({ content, language, onSignupClick }) {
             </a>
           </div>
           
-          <div className="mt-12 inline-flex items-center gap-2 px-4 py-2 bg-parque-purple/10 border border-parque-purple/20 rounded-full text-sm">
-            <span className="w-2 h-2 bg-parque-purple rounded-full animate-pulse"></span>
-            <span className="text-parque-purple font-medium">
-              {language === 'es' 
-                ? 'Inscripciones cierran hoy lunes 23:00' 
-                : 'Registration closes today Monday 23:00'}
-            </span>
-          </div>
+         
         </div>
       </div>
     </section>
@@ -212,7 +152,6 @@ export default function SotograndePage() {
       
       {/* Beautiful Registration Banner */}
       <div className="relative z-30 mt-16">
-        <RegistrationBanner language={language} />
       </div>
       
       {/* Main content with proper z-index (lower than navigation) */}
