@@ -92,22 +92,37 @@ export async function GET(request, { params }) {
       calculatedPoints: playerPointsMap.get(player._id.toString()) || 0
     }))
     
-    // Sort players by points, then sets, then games
+    // Sort players with active status first, then by points
     playersWithPoints.sort((a, b) => {
-      // Primary: total points (calculated from matches)
+      // Primary: Active status (active players first)
+      const statusPriority = {
+        'active': 0,
+        'confirmed': 1,
+        'pending': 2,
+        'inactive': 3
+      }
+      
+      const aStatusPriority = statusPriority[a.status] ?? 99
+      const bStatusPriority = statusPriority[b.status] ?? 99
+      
+      if (aStatusPriority !== bStatusPriority) {
+        return aStatusPriority - bStatusPriority
+      }
+      
+      // Secondary: total points (calculated from matches)
       if (a.calculatedPoints !== b.calculatedPoints) return b.calculatedPoints - a.calculatedPoints
       
-      // Secondary: sets won
+      // Tertiary: sets won
       const aSets = a.stats?.setsWon || 0
       const bSets = b.stats?.setsWon || 0
       if (aSets !== bSets) return bSets - aSets
       
-      // Tertiary: games won
+      // Quaternary: games won
       const aGames = a.stats?.gamesWon || 0
       const bGames = b.stats?.gamesWon || 0
       if (aGames !== bGames) return bGames - aGames
       
-      // Quaternary: alphabetical by name
+      // Quinary: alphabetical by name
       return a.name.localeCompare(b.name)
     })
     
