@@ -13,6 +13,8 @@ export default function MessagesPage() {
   const { language } = useLanguage()
   const [loading, setLoading] = useState(true)
   const [session, setSession] = useState(null)
+  const [player, setPlayer] = useState(null)
+  const [firstRoundMatch, setFirstRoundMatch] = useState(null)
   const [selectedMessage, setSelectedMessage] = useState(null)
   const [modalType, setModalType] = useState(null)
 
@@ -31,11 +33,67 @@ export default function MessagesPage() {
       }
       
       setSession(data)
+      
+      // Get player profile data
+      const profileResponse = await fetch('/api/player/profile')
+      if (profileResponse.ok) {
+        const profileData = await profileResponse.json()
+        setPlayer(profileData.player)
+        
+        // Check for first round matches
+        const matchesResponse = await fetch('/api/player/matches/schedule')
+        if (matchesResponse.ok) {
+          const matchesData = await matchesResponse.json()
+          const firstRound = matchesData.matches?.find(match => match.round === 1)
+          setFirstRoundMatch(firstRound)
+        }
+      }
     } catch (error) {
       console.error('Auth check failed:', error)
       router.push('/login')
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Prepare dynamic first round match announcement
+  const getFirstRoundMatchMessage = () => {
+    if (!firstRoundMatch || !player) return null
+    
+    const opponent = firstRoundMatch.players.player1._id === player._id 
+      ? firstRoundMatch.players.player2 
+      : firstRoundMatch.players.player1
+    
+    return {
+      id: announcementContent.firstRoundMatch.id,
+      type: 'announcement',
+      date: announcementContent.firstRoundMatch.date,
+      title: announcementContent.firstRoundMatch[language].title,
+      subtitle: announcementContent.firstRoundMatch[language].subtitle,
+      icon: '🎾',
+      bgColor: 'from-parque-purple/10 to-green-100',
+      isNew: !session?.user?.seenAnnouncements?.includes(announcementContent.firstRoundMatch.id),
+      content: {
+        ...announcementContent.firstRoundMatch,
+        es: {
+          ...announcementContent.firstRoundMatch.es,
+          content: announcementContent.firstRoundMatch.es.getContent(
+            player.name,
+            opponent.name,
+            opponent.whatsapp,
+            { level: player.level }
+          )
+        },
+        en: {
+          ...announcementContent.firstRoundMatch.en,
+          content: announcementContent.firstRoundMatch.en.getContent(
+            player.name,
+            opponent.name,
+            opponent.whatsapp,
+            { level: player.level }
+          )
+        }
+      }
     }
   }
 
@@ -61,6 +119,15 @@ export default function MessagesPage() {
       content: announcementContent.firstRoundDelay
     }
   ]
+
+  // Add first round match message if available
+  const firstRoundMatchMessage = getFirstRoundMatchMessage()
+  if (firstRoundMatchMessage) {
+    messages.push(firstRoundMatchMessage)
+  }
+
+  // Sort messages by date (newest first)
+  messages.sort((a, b) => new Date(b.date) - new Date(a.date))
 
   const handleMessageClick = (message) => {
     setSelectedMessage(message)
@@ -114,7 +181,7 @@ export default function MessagesPage() {
     )
   }
 
-  const playerName = session?.player?.name || 'Player'
+  const playerName = session?.player?.name || player?.name || 'Player'
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
