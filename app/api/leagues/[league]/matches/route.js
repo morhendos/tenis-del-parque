@@ -17,21 +17,26 @@ export async function GET(request, { params }) {
     const round = searchParams.get('round')
     const limit = parseInt(searchParams.get('limit')) || 20
     
-    // Find league by slug
+    console.log('API: Fetching matches for league:', slug, 'season:', season, 'status:', status)
+    
+    // Find league by slug - Remove status filter to be more lenient
     const league = await League.findOne({ 
-      slug: slug.toLowerCase(),
-      status: 'active'
+      slug: slug.toLowerCase()
     })
     
     if (!league) {
+      console.error('API: League not found for slug:', slug)
       return NextResponse.json(
         { 
           success: false, 
-          error: 'League not found' 
+          error: 'League not found',
+          debug: { slug: slug.toLowerCase() }
         },
         { status: 404 }
       )
     }
+    
+    console.log('API: Found league:', league.name, 'with ID:', league._id)
     
     // Build query for matches
     const query = { 
@@ -41,14 +46,18 @@ export async function GET(request, { params }) {
     if (status) query.status = status
     if (round) query.round = parseInt(round)
     
+    console.log('API: Match query:', JSON.stringify(query))
+    
     // Get matches with player details
     const matches = await Match.find(query)
       .populate('players.player1', 'name level stats.eloRating')
       .populate('players.player2', 'name level stats.eloRating')
       .populate('result.winner', 'name')
-      .sort({ 'result.playedAt': -1, 'schedule.confirmedDate': -1 })
+      .sort({ round: 1, 'schedule.confirmedDate': 1 })
       .limit(limit)
       .lean()
+    
+    console.log('API: Found', matches.length, 'matches')
     
     // Format matches for frontend
     const formattedMatches = matches.map(match => {
@@ -60,18 +69,18 @@ export async function GET(request, { params }) {
         _id: match._id,
         round: match.round,
         players: {
-          player1: {
+          player1: match.players.player1 ? {
             _id: match.players.player1._id,
             name: match.players.player1.name,
             level: match.players.player1.level,
             eloRating: match.players.player1.stats?.eloRating || 1200
-          },
-          player2: {
+          } : null,
+          player2: match.players.player2 ? {
             _id: match.players.player2._id,
             name: match.players.player2.name,
             level: match.players.player2.level,
             eloRating: match.players.player2.stats?.eloRating || 1200
-          }
+          } : null
         },
         schedule: {
           confirmedDate: match.schedule?.confirmedDate,
@@ -119,7 +128,8 @@ export async function GET(request, { params }) {
       league: {
         _id: league._id,
         name: league.name,
-        slug: league.slug
+        slug: league.slug,
+        status: league.status
       },
       season,
       matches: formattedMatches,
@@ -134,6 +144,11 @@ export async function GET(request, { params }) {
         round,
         limit
       },
+      debug: {
+        query,
+        matchCount: matches.length,
+        leagueStatus: league.status
+      },
       timestamp: new Date().toISOString()
     })
     
@@ -142,7 +157,8 @@ export async function GET(request, { params }) {
     return NextResponse.json(
       { 
         success: false, 
-        error: 'Internal server error' 
+        error: 'Internal server error',
+        details: error.message
       },
       { status: 500 }
     )

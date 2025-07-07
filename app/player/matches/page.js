@@ -267,6 +267,30 @@ export default function PlayerMatches() {
     })
   }
 
+  const formatDateForDisplay = (date) => {
+    if (!date) return null
+    
+    const dateObj = new Date(date)
+    const today = new Date()
+    const tomorrow = new Date(today)
+    tomorrow.setDate(today.getDate() + 1)
+    
+    const isToday = dateObj.toDateString() === today.toDateString()
+    const isTomorrow = dateObj.toDateString() === tomorrow.toDateString()
+    
+    if (isToday) {
+      return language === 'es' ? 'Hoy' : 'Today'
+    } else if (isTomorrow) {
+      return language === 'es' ? 'Mañana' : 'Tomorrow'
+    } else {
+      return dateObj.toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric'
+      })
+    }
+  }
+
   const getWhatsAppUrl = (phoneNumber, opponentName) => {
     // Normalize phone number for WhatsApp
     let cleaned = phoneNumber.replace(/[^0-9]/g, '')
@@ -468,49 +492,103 @@ export default function PlayerMatches() {
                       </div>
                     </div>
                     
-                    {/* Match Actions - Mobile Optimized */}
+                    {/* Match Details - Show schedule information prominently */}
                     <div className="p-4">
-                      {match.schedule?.confirmedDate && (
-                        <div className="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
-                          <div className="flex items-center space-x-2 bg-gray-50 rounded-lg p-3">
-                            <span className="text-xl">📅</span>
+                      {/* Display confirmed date/time if available */}
+                      {match.schedule?.confirmedDate ? (
+                        <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-4">
+                          <div className="flex items-center space-x-3 mb-3">
+                            <div className="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center">
+                              <span className="text-lg">✓</span>
+                            </div>
                             <div>
-                              <p className="font-medium text-gray-900">
-                                {formatDate(match.schedule.confirmedDate)}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {language === 'es' ? 'Fecha' : 'Date'}
-                              </p>
+                              <div className="font-semibold text-green-800">
+                                {language === 'es' ? 'Partido Confirmado' : 'Match Confirmed'}
+                              </div>
+                              <div className="text-sm text-green-600">
+                                {language === 'es' ? 'Fecha y hora acordadas' : 'Date and time agreed'}
+                              </div>
                             </div>
                           </div>
-                          {match.schedule.club && (
-                            <div className="flex items-center space-x-2 bg-gray-50 rounded-lg p-3">
-                              <span className="text-xl">🏟️</span>
+                          
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                            <div className="flex items-center space-x-2 bg-white rounded-lg p-3">
+                              <span className="text-xl">📅</span>
                               <div>
                                 <p className="font-medium text-gray-900">
-                                  {match.schedule.club}
+                                  {formatDateForDisplay(match.schedule.confirmedDate)}
                                 </p>
                                 <p className="text-xs text-gray-500">
-                                  {language === 'es' ? 'Lugar' : 'Venue'}
+                                  {new Date(match.schedule.confirmedDate).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
+                                    month: 'long',
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                  })}
                                 </p>
                               </div>
                             </div>
-                          )}
-                          {match.schedule.court && (
-                            <div className="flex items-center space-x-2 bg-gray-50 rounded-lg p-3">
-                              <span className="text-xl">🎾</span>
-                              <div>
-                                <p className="font-medium text-gray-900">
-                                  {match.schedule.court}
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                  {language === 'es' ? 'Cancha' : 'Court'}
-                                </p>
+                            
+                            {match.schedule.time && (
+                              <div className="flex items-center space-x-2 bg-white rounded-lg p-3">
+                                <span className="text-xl">🕐</span>
+                                <div>
+                                  <p className="font-medium text-gray-900">
+                                    {match.schedule.time}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {language === 'es' ? 'Hora' : 'Time'}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
+                            
+                            {match.schedule.club && (
+                              <div className="flex items-center space-x-2 bg-white rounded-lg p-3">
+                                <span className="text-xl">🏟️</span>
+                                <div>
+                                  <p className="font-medium text-gray-900">
+                                    {match.schedule.club}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {language === 'es' ? 'Club' : 'Club'}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {(match.schedule.court || match.schedule.courtNumber) && (
+                              <div className="flex items-center space-x-2 bg-white rounded-lg p-3">
+                                <span className="text-xl">🎾</span>
+                                <div>
+                                  <p className="font-medium text-gray-900">
+                                    {match.schedule.court || 'Court'} {match.schedule.courtNumber || ''}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {language === 'es' ? 'Pista' : 'Court'}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      )}
+                      ) : match.schedule?.deadline ? (
+                        <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-4">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 rounded-full bg-amber-500 text-white flex items-center justify-center">
+                              <span className="text-lg">⏰</span>
+                            </div>
+                            <div>
+                              <div className="font-semibold text-amber-800">
+                                {language === 'es' ? 'Pendiente de Confirmación' : 'Pending Confirmation'}
+                              </div>
+                              <div className="text-sm text-amber-600">
+                                {language === 'es' ? 'Fecha límite: ' : 'Deadline: '}
+                                {formatDateForDisplay(match.schedule.deadline)}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : null}
                       
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <button
