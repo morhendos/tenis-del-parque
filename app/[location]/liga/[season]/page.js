@@ -196,14 +196,14 @@ function StandingsTable({ players, language, unified = false }) {
 
       {/* Desktop table layout - Enhanced */}
       <div className="hidden md:block">
-        <div className="overflow-hidden rounded-xl border border-gray-200 shadow-lg">
-          <table className="min-w-full divide-y divide-gray-200">
+        <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-lg">
+          <table className="w-full divide-y divide-gray-200" style={{ minWidth: '1100px' }}>
             <thead className="bg-gradient-to-r from-parque-purple to-parque-purple/90">
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
                   {language === 'es' ? 'Posición' : 'Position'}
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider w-48">
                   {language === 'es' ? 'Jugador' : 'Player'}
                 </th>
                 <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
@@ -223,6 +223,9 @@ function StandingsTable({ players, language, unified = false }) {
                 </th>
                 <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
                   {language === 'es' ? 'Juegos' : 'Games'}
+                </th>
+                <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
+                  {language === 'es' ? 'Progreso' : 'Progress'}
                 </th>
               </tr>
             </thead>
@@ -307,6 +310,23 @@ function StandingsTable({ players, language, unified = false }) {
                         <span className="text-green-600">{standing.stats.gamesWon || 0}</span>
                         <span className="text-gray-400 mx-1">-</span>
                         <span className="text-red-600">{standing.stats.gamesLost || 0}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 whitespace-nowrap text-center w-32">
+                      <div className="flex items-center justify-center space-x-3">
+                        <div className="flex-1 bg-gray-200 rounded-full h-3 min-w-[60px]">
+                          <div 
+                            className={`h-3 rounded-full transition-all duration-500 ${
+                              winPercentage >= 75 ? 'bg-green-500' :
+                              winPercentage >= 50 ? 'bg-yellow-500' :
+                              'bg-red-500'
+                            }`}
+                            style={{ width: `${winPercentage}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm font-medium text-gray-700 min-w-[2.5rem]">
+                          {winPercentage}%
+                        </span>
                       </div>
                     </td>
                   </tr>
@@ -633,7 +653,7 @@ export default function LeagueSeasonPage() {
       {/* Content Sections */}
       <section className="container mx-auto px-4 pb-8 md:pb-16">
         {activeTab === 'schedule' && (
-          <div className="max-w-5xl mx-auto">
+          <div className="max-w-[1200px] mx-auto">
             <div className="bg-white rounded-xl shadow-lg p-4 md:p-8">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl md:text-2xl font-bold text-parque-purple">
@@ -928,7 +948,7 @@ export default function LeagueSeasonPage() {
         )}
 
         {activeTab === 'standings' && (
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-[1400px] mx-auto">
             <div className="bg-white rounded-xl shadow-lg p-4 md:p-8">
               <h2 className="text-xl md:text-2xl font-bold text-parque-purple mb-4 md:mb-6">
                 {language === 'es' ? 'Clasificación General' : 'League Standings'}
@@ -1020,7 +1040,7 @@ export default function LeagueSeasonPage() {
         )}
 
         {activeTab === 'matches' && (
-          <div className="max-w-5xl mx-auto">
+          <div className="max-w-[1200px] mx-auto">
             <div className="bg-white rounded-xl shadow-lg p-4 md:p-8">
               <h2 className="text-xl md:text-2xl font-bold text-parque-purple mb-4 md:mb-6">
                 {language === 'es' ? 'Partidos Recientes' : 'Recent Matches'}
@@ -1110,7 +1130,7 @@ export default function LeagueSeasonPage() {
         )}
 
         {activeTab === 'register' && (
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-4xl mx-auto">
             <div className="bg-white rounded-xl shadow-lg p-4 md:p-8">
               <h2 className="text-xl md:text-2xl font-bold text-parque-purple mb-4 md:mb-6 text-center">
                 {language === 'es' ? 'Inscribirse en la Liga' : 'Register for the League'}

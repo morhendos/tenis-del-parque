@@ -165,14 +165,14 @@ function StandingsTable({ players, language, unified = false }) {
 
       {/* Desktop table layout - Enhanced */}
       <div className="hidden md:block">
-        <div className="overflow-x-auto overflow-hidden rounded-xl border border-gray-200 shadow-lg">
-          <table className="min-w-full divide-y divide-gray-200" style={{ minWidth: '900px' }}>
+        <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-lg">
+          <table className="w-full divide-y divide-gray-200" style={{ minWidth: '1100px' }}>
             <thead className="bg-gradient-to-r from-parque-purple to-parque-purple/90">
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
                   {language === 'es' ? 'Posición' : 'Position'}
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider w-48">
                   {language === 'es' ? 'Jugador' : 'Player'}
                 </th>
                 <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
@@ -192,6 +192,9 @@ function StandingsTable({ players, language, unified = false }) {
                 </th>
                 <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
                   {language === 'es' ? 'Juegos' : 'Games'}
+                </th>
+                <th className="px-6 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">
+                  {language === 'es' ? 'Progreso' : 'Progress'}
                 </th>
               </tr>
             </thead>
@@ -276,6 +279,23 @@ function StandingsTable({ players, language, unified = false }) {
                         <span className="text-green-600">{standing.stats.gamesWon || 0}</span>
                         <span className="text-gray-400 mx-1">-</span>
                         <span className="text-red-600">{standing.stats.gamesLost || 0}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 whitespace-nowrap text-center w-32">
+                      <div className="flex items-center justify-center space-x-3">
+                        <div className="flex-1 bg-gray-200 rounded-full h-3 min-w-[60px]">
+                          <div 
+                            className={`h-3 rounded-full transition-all duration-500 ${
+                              winPercentage >= 75 ? 'bg-green-500' :
+                              winPercentage >= 50 ? 'bg-yellow-500' :
+                              'bg-red-500'
+                            }`}
+                            style={{ width: `${winPercentage}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm font-medium text-gray-700 min-w-[2.5rem]">
+                          {winPercentage}%
+                        </span>
                       </div>
                     </td>
                   </tr>
