@@ -445,7 +445,7 @@ export default function LeagueSeasonPage() {
       setLoading(false)
     }
   }
-
+console.log("standings")
   const getSeasonDisplayName = (seasonKey) => {
     const seasonNames = {
       es: {
