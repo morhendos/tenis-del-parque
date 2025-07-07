@@ -372,13 +372,14 @@ export default function LeagueSeasonPage() {
       const leagueData = await leagueRes.json()
       
       // Find the season that matches our URL season parameter
+      // Map URL season to league season names (display names)
       const seasonMap = {
-        // Spanish URLs (primary)
+        // Spanish URLs (primary) - map to league season display names
         'verano2025': 'Verano 2025',
         'invierno2025': 'Invierno 2025',
         'primavera2025': 'Primavera 2025',
         'otono2025': 'Otoño 2025',
-        // English URLs (fallback)
+        // English URLs (fallback) - map to league season display names
         'summer2025': 'Verano 2025',
         'winter2025': 'Invierno 2025',
         'spring2025': 'Primavera 2025',
@@ -387,18 +388,12 @@ export default function LeagueSeasonPage() {
       }
       
       const targetSeasonName = seasonMap[season]
-      // Try to find the season by the mapped name, or try both Spanish and English variants
+      // Try to find the season by the mapped database name
       let targetSeason = leagueData.league.seasons?.find(s => s.name === targetSeasonName)
       
-      // If not found, try alternative names for the same season
-      if (!targetSeason && season === 'verano2025') {
-        targetSeason = leagueData.league.seasons?.find(s => 
-          s.name === 'Verano 2025' || s.name === 'Summer 2025'
-        )
-      } else if (!targetSeason && season === 'summer2025') {
-        targetSeason = leagueData.league.seasons?.find(s => 
-          s.name === 'Summer 2025' || s.name === 'Verano 2025'
-        )
+      // If not found, try to find by the season key directly
+      if (!targetSeason) {
+        targetSeason = leagueData.league.seasons?.find(s => s.name === season)
       }
       
       if (!targetSeason) {
@@ -412,22 +407,35 @@ export default function LeagueSeasonPage() {
         setTotalRounds(leagueData.league.config.roundsPerSeason)
       }
       
+      // Convert league season name to database season name for API calls
+      const seasonToDbName = (seasonName) => {
+        const mapping = {
+          'Verano 2025': 'summer-2025',
+          'Invierno 2025': 'winter-2025',
+          'Primavera 2025': 'spring-2025',
+          'Otoño 2025': 'autumn-2025'
+        }
+        return mapping[seasonName] || seasonName
+      }
+      
+      const dbSeasonName = seasonToDbName(targetSeasonName)
+      
       // Fetch standings data
-      const standingsRes = await fetch(`/api/leagues/${location}/standings?season=${targetSeasonName}`)
+      const standingsRes = await fetch(`/api/leagues/${location}/standings?season=${dbSeasonName}`)
       if (standingsRes.ok) {
         const standingsData = await standingsRes.json()
         setStandings(standingsData)
       }
       
       // Fetch recent matches
-      const matchesRes = await fetch(`/api/leagues/${location}/matches?season=${targetSeasonName}&status=completed&limit=10`)
+      const matchesRes = await fetch(`/api/leagues/${location}/matches?season=${dbSeasonName}&status=completed&limit=10`)
       if (matchesRes.ok) {
         const matchesData = await matchesRes.json()
         setMatches(matchesData.matches || [])
       }
       
       // Fetch upcoming matches schedule - get more matches
-      const scheduleRes = await fetch(`/api/leagues/${location}/matches?season=${targetSeasonName}&status=scheduled&limit=100`)
+      const scheduleRes = await fetch(`/api/leagues/${location}/matches?season=${dbSeasonName}&status=scheduled&limit=100`)
       if (scheduleRes.ok) {
         const scheduleData = await scheduleRes.json()
         setSchedule(scheduleData.matches || [])
