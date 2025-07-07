@@ -394,20 +394,34 @@ export default function PlayerLeague() {
           setLanguage(playerData.user.preferences.language)
         }
 
-        // EXACT SAME API CALLS as public page
-        const standingsRes = await fetch(`/api/leagues/${location}/standings?season=${seasonDisplayName}`)
+        // Convert league season name to database season name for API calls
+        const seasonToDbName = (seasonName) => {
+          const mapping = {
+            'Verano 2025': 'summer-2025',
+            'Invierno 2025': 'winter-2025',
+            'Primavera 2025': 'spring-2025',
+            'Otoño 2025': 'autumn-2025'
+          }
+          return mapping[seasonName] || seasonName
+        }
+        
+        const dbSeasonName = seasonToDbName(seasonDisplayName)
+        console.log('Season conversion:', { seasonDisplayName, dbSeasonName })
+
+        // API CALLS with converted season name
+        const standingsRes = await fetch(`/api/leagues/${location}/standings?season=${dbSeasonName}`)
         if (standingsRes.ok) {
           const standingsData = await standingsRes.json()
           setStandings(standingsData)
         }
         
-        const matchesRes = await fetch(`/api/leagues/${location}/matches?season=${seasonDisplayName}&status=completed&limit=10`)
+        const matchesRes = await fetch(`/api/leagues/${location}/matches?season=${dbSeasonName}&status=completed&limit=10`)
         if (matchesRes.ok) {
           const matchesData = await matchesRes.json()
           setMatches(matchesData.matches || [])
         }
         
-        const scheduleRes = await fetch(`/api/leagues/${location}/matches?season=${seasonDisplayName}&status=scheduled&limit=50`)
+        const scheduleRes = await fetch(`/api/leagues/${location}/matches?season=${dbSeasonName}&status=scheduled&limit=50`)
         if (scheduleRes.ok) {
           const scheduleData = await scheduleRes.json()
           setSchedule(scheduleData.matches || [])
