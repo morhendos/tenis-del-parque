@@ -299,8 +299,8 @@ export default function PlayerMatches() {
     }
     
     const message = language === 'es' 
-      ? `Hola ${opponentName}! Soy ${player?.name} de la liga de tenis. ¿Cuándo te viene bien para jugar nuestro partido de la ronda ${selectedMatch?.round}?`
-      : `Hi ${opponentName}! I'm ${player?.name} from the tennis league. When would be a good time to play our round ${selectedMatch?.round} match?`
+      ? `Hola ${opponentName}! Soy ${player?.name} de TDP liga de tenis. ¿Cuándo te viene bien para jugar nuestro partido de la ronda ${selectedMatch?.round}?`
+      : `Hi ${opponentName}! I'm ${player?.name} from the TDP tennis league. When would be a good time to play our round ${selectedMatch?.round} match?`
     
     return `https://wa.me/${cleaned}?text=${encodeURIComponent(message)}`
   }
