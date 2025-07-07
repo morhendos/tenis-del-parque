@@ -208,17 +208,7 @@ export default function TestimonialsSection({ content, language }) {
           ))}
         </div>
 
-        {/* CTA Button */}
-        <div className="text-center mt-12 md:mt-16">
-          <p className="text-gray-600 mb-6">
-            {language === 'es' ? 'Únete a nuestra creciente comunidad de entusiastas del tenis' : 'Join our growing community of tennis enthusiasts'}
-          </p>
-          <Link href="/signup/sotogrande">
-            <button className="bg-gradient-to-r from-parque-purple to-parque-purple/80 text-white px-8 py-4 rounded-2xl font-medium hover:shadow-xl transform hover:scale-105 transition-all duration-300">
-              {language === 'es' ? 'Reserva tu Plaza' : 'Reserve Your Spot'}
-            </button>
-          </Link>
-        </div>
+        
       </div>
     </section>
   )

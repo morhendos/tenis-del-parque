@@ -204,12 +204,7 @@ function LoginForm() {
             </div>
             
             <div className="space-y-3">
-              <a 
-                href="/signup/sotogrande" 
-                className="block w-full text-center py-3 sm:py-2 px-4 border border-parque-purple text-parque-purple rounded-lg hover:bg-parque-purple hover:text-white transition-colors font-medium touch-manipulation"
-              >
-                {t.links.registerForLeague}
-              </a>
+             
               
               <a 
                 href="/forgot-password" 

@@ -30,7 +30,7 @@ export default function HeroSection({ content }) {
         <div className="text-center max-w-5xl mx-auto">
           {/* Premium badge with SOLID background - SMALLER ON MOBILE */}
           <span className="inline-flex items-center gap-2 bg-gradient-to-r from-parque-purple to-parque-purple/90 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-6 animate-fadeInUp shadow-xl">
-            <div className="w-4 h-4 sm:w-5 sm:h-5 tennis-ball"></div>
+            <div className="w-4 h-4 sm:w-5 sm:h-5 "></div>
             {content.badge}
           </span>
           
@@ -78,7 +78,7 @@ export default function HeroSection({ content }) {
           </p>
           
           {/* Enhanced CTA - MOBILE OPTIMIZED */}
-          <Link href="/signup/sotogrande" className="inline-flex items-center bg-gradient-to-r from-parque-purple to-parque-purple/90 text-white px-6 py-3 sm:px-8 sm:py-4 md:px-10 md:py-5 rounded-full text-base sm:text-lg font-medium hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 animate-fadeInUp animation-delay-800 group relative glow-purple hover:glow min-h-[48px] touch-manipulation">
+          <Link href="/rules" className="inline-flex items-center bg-gradient-to-r from-parque-purple to-parque-purple/90 text-white px-6 py-3 sm:px-8 sm:py-4 md:px-10 md:py-5 rounded-full text-base sm:text-lg font-medium hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 animate-fadeInUp animation-delay-800 group relative glow-purple hover:glow min-h-[48px] touch-manipulation">
             <span className="relative z-10">{content.cta}</span>
             <svg className="w-4 h-4 sm:w-5 sm:h-5 ml-2 group-hover:translate-x-2 transition-transform relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
