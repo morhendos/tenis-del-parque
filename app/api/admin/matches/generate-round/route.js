@@ -20,30 +20,30 @@ export async function POST(request) {
       )
     }
 
-    // Get all active players in the league (be flexible with season)
+    // Get all active AND confirmed players in the league (be flexible with season)
     let players = await Player.find({ 
       league: leagueId,
       season: season,
-      status: 'active'
+      status: { $in: ['active', 'confirmed'] }
     }).lean()
 
-    // If no players found with exact season, try finding active players in the league
+    // If no players found with exact season, try finding active/confirmed players in the league
     if (players.length === 0) {
       console.log(`No players found for season ${season}, trying without season filter...`)
       players = await Player.find({ 
         league: leagueId,
-        status: 'active'
+        status: { $in: ['active', 'confirmed'] }
       }).lean()
       
       // Log what we found for debugging
-      console.log(`Found ${players.length} active players in league ${leagueId}:`, 
+      console.log(`Found ${players.length} active/confirmed players in league ${leagueId}:`, 
         players.map(p => ({ name: p.name, season: p.season, status: p.status }))
       )
     }
 
     if (players.length < 2) {
       return NextResponse.json(
-        { error: 'Need at least 2 active players to generate pairings' },
+        { error: 'Need at least 2 active or confirmed players to generate pairings' },
         { status: 400 }
       )
     }
@@ -67,14 +67,21 @@ export async function POST(request) {
       )
     }
 
-    // Log player distribution by skill level for debugging
+    // Log player distribution by skill level and status for debugging
     const skillDistribution = players.reduce((acc, player) => {
       const level = player.level || 'unknown'
       acc[level] = (acc[level] || 0) + 1
       return acc
     }, {})
     
+    const statusDistribution = players.reduce((acc, player) => {
+      const status = player.status || 'unknown'
+      acc[status] = (acc[status] || 0) + 1
+      return acc
+    }, {})
+    
     console.log(`Round ${round} - Player distribution by skill level:`, skillDistribution)
+    console.log(`Round ${round} - Player distribution by status:`, statusDistribution)
     console.log(`Using ${round <= 3 ? 'skill-level priority' : 'traditional Swiss'} pairing for round ${round}`)
 
     // Generate pairings
@@ -84,17 +91,17 @@ export async function POST(request) {
     console.log(`Generated ${result.pairings.length} pairings for round ${round}:`)
     result.pairings.forEach((pairing, index) => {
       const crossLevel = pairing.player1.level !== pairing.player2.level
-      console.log(`  Match ${index + 1}: ${pairing.player1.name} (${pairing.player1.level}) vs ${pairing.player2.name} (${pairing.player2.level})${crossLevel ? ' [CROSS-LEVEL]' : ''}${pairing.isRematch ? ' [REMATCH - ERROR!]' : ''}`)
+      console.log(`  Match ${index + 1}: ${pairing.player1.name} (${pairing.player1.level}, ${pairing.player1.status}) vs ${pairing.player2.name} (${pairing.player2.level}, ${pairing.player2.status})${crossLevel ? ' [CROSS-LEVEL]' : ''}${pairing.isRematch ? ' [REMATCH - ERROR!]' : ''}`)
     })
     
     if (result.bye) {
-      console.log(`  Regular Bye: ${result.bye.name} (${result.bye.level})`)
+      console.log(`  Regular Bye: ${result.bye.name} (${result.bye.level}, ${result.bye.status})`)
     }
     
     if (result.additionalByes && result.additionalByes.length > 0) {
       console.log(`  Additional Byes (to avoid rematches):`)
       result.additionalByes.forEach((player, index) => {
-        console.log(`    ${index + 1}. ${player.name} (${player.level})`)
+        console.log(`    ${index + 1}. ${player.name} (${player.level}, ${player.status})`)
       })
     }
     
@@ -225,28 +232,28 @@ export async function GET(request) {
 
     const rounds = Object.values(roundsData).sort((a, b) => a.round - b.round)
 
-    // Get active players count (be flexible with season)
+    // Get active AND confirmed players count (be flexible with season)
     let activePlayers = await Player.countDocuments({
       league: leagueId,
       season: season,
-      status: 'active'
+      status: { $in: ['active', 'confirmed'] }
     })
 
     // If no players found with exact season, try without season filter
     if (activePlayers === 0) {
-      console.log(`No active players found for season ${season}, trying without season filter...`)
+      console.log(`No active/confirmed players found for season ${season}, trying without season filter...`)
       activePlayers = await Player.countDocuments({
         league: leagueId,
-        status: 'active'
+        status: { $in: ['active', 'confirmed'] }
       })
       
       // Also get some debug info
       const playersDebug = await Player.find({
         league: leagueId,
-        status: 'active'
+        status: { $in: ['active', 'confirmed'] }
       }, 'name season status').lean()
       
-      console.log(`Found ${activePlayers} active players in league ${leagueId}:`, playersDebug)
+      console.log(`Found ${activePlayers} active/confirmed players in league ${leagueId}:`, playersDebug)
     }
 
     return NextResponse.json({
