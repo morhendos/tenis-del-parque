@@ -60,14 +60,16 @@ export async function POST(request) {
     // Determine winner based on sets or walkover
     let winner;
     let resultSets = [];
+    let player1SetsWon = 0;
+    let player2SetsWon = 0;
     
     if (walkover) {
       winner = userPlayer._id
+      // For walkover, winner gets 2-0
+      player1SetsWon = isPlayer1 ? 2 : 0
+      player2SetsWon = isPlayer1 ? 0 : 2
     } else {
       // Count sets won by each player
-      let player1SetsWon = 0
-      let player2SetsWon = 0
-      
       resultSets = sets.map(set => {
         const p1Score = isPlayer1 ? set.myScore : set.opponentScore
         const p2Score = isPlayer1 ? set.opponentScore : set.myScore
@@ -109,6 +111,25 @@ export async function POST(request) {
       player2.stats.eloRating,
       player1Won
     )
+
+    // Calculate points based on the scoring system
+    // Win 2-0: 3 points, Win 2-1: 2 points, Lose 1-2: 1 point, Lose 0-2: 0 points
+    let player1Points = 0
+    let player2Points = 0
+    
+    if (player1SetsWon === 2 && player2SetsWon === 0) {
+      player1Points = 3
+      player2Points = 0
+    } else if (player1SetsWon === 2 && player2SetsWon === 1) {
+      player1Points = 2
+      player2Points = 1
+    } else if (player1SetsWon === 1 && player2SetsWon === 2) {
+      player1Points = 1
+      player2Points = 2
+    } else if (player1SetsWon === 0 && player2SetsWon === 2) {
+      player1Points = 0
+      player2Points = 3
+    }
 
     // Update match with result and ELO changes
     match.result = {
@@ -161,27 +182,17 @@ export async function POST(request) {
       })
     ])
 
-    // Also update sets won/lost stats
-    if (!walkover && resultSets.length > 0) {
-      let p1SetsWon = 0, p1SetsLost = 0, p2SetsWon = 0, p2SetsLost = 0
-      
-      resultSets.forEach(set => {
-        if (set.player1 > set.player2) {
-          p1SetsWon++
-          p2SetsLost++
-        } else {
-          p2SetsWon++
-          p1SetsLost++
-        }
-      })
-      
-      player1.stats.setsWon = (player1.stats.setsWon || 0) + p1SetsWon
-      player1.stats.setsLost = (player1.stats.setsLost || 0) + p1SetsLost
-      player2.stats.setsWon = (player2.stats.setsWon || 0) + p2SetsWon
-      player2.stats.setsLost = (player2.stats.setsLost || 0) + p2SetsLost
-      
-      await Promise.all([player1.save(), player2.save()])
-    }
+    // Update sets won/lost and points stats
+    player1.stats.setsWon = (player1.stats.setsWon || 0) + player1SetsWon
+    player1.stats.setsLost = (player1.stats.setsLost || 0) + player2SetsWon
+    player1.stats.totalPoints = (player1.stats.totalPoints || 0) + player1Points
+    
+    player2.stats.setsWon = (player2.stats.setsWon || 0) + player2SetsWon
+    player2.stats.setsLost = (player2.stats.setsLost || 0) + player1SetsWon
+    player2.stats.totalPoints = (player2.stats.totalPoints || 0) + player2Points
+    
+    // Save both players with updated stats
+    await Promise.all([player1.save(), player2.save()])
 
     // Populate match data for response
     await match.populate('players.player1 players.player2 league')
