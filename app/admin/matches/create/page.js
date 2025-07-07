@@ -159,6 +159,7 @@ function CreateMatchContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const leagueId = searchParams.get('league')
+  const initialMode = searchParams.get('mode')
 
   const fetchPlayers = useCallback(async () => {
     try {
@@ -200,9 +201,12 @@ function CreateMatchContent() {
         const maxRound = Math.max(0, ...rounds)
         setRoundNumber(maxRound + 1)
       }
+      
+      return data.players || []
     } catch (error) {
       console.error('Error fetching players:', error)
       setError('Error loading players')
+      return []
     } finally {
       setLoading(false)
     }
@@ -217,8 +221,39 @@ function CreateMatchContent() {
       return
     }
 
-    fetchPlayers()
-  }, [leagueId, router, fetchPlayers])
+    fetchPlayers().then((playerList) => {
+      // Check if we have Swiss pairings from the generate-round page
+      if (initialMode === 'swiss') {
+        const swissData = sessionStorage.getItem('swissPairings')
+        if (swissData) {
+          const { round, pairings } = JSON.parse(swissData)
+          setRoundNumber(round)
+          
+          // Convert pairings to match format using the actual player objects
+          const swissMatches = pairings.map(pairing => {
+            const player1 = playerList.find(p => p.name === pairing.player1.name)
+            const player2 = playerList.find(p => p.name === pairing.player2.name)
+            
+            if (player1 && player2) {
+              return {
+                player1,
+                player2,
+                round: round,
+                isRematch: pairing.isRematch
+              }
+            }
+            return null
+          }).filter(m => m !== null)
+          
+          setMatches(swissMatches)
+          setMode('combined')
+          
+          // Clear the stored pairings
+          sessionStorage.removeItem('swissPairings')
+        }
+      }
+    })
+  }, [leagueId, router, fetchPlayers, initialMode])
 
   const handlePlayerSelect = (player) => {
     if (selectedPlayers.some(p => p._id === player._id)) {
