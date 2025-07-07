@@ -44,8 +44,8 @@ function RegistrationBanner({ language }) {
           <span className="text-xl">🎾</span>
           <span>
             {language === 'es' 
-              ? 'Las inscripciones cierran mañana lunes a las 23:00 - ¡Reserva tu plaza!'
-              : 'Registration closes tomorrow Monday at 23:00 - Reserve your spot!'
+              ? 'Las inscripciones cierran hoy lunes a las 23:00 - ¡Reserva tu plaza!'
+              : 'Registration closes today Monday at 23:00 - Reserve your spot!'
             }
           </span>
           <span className="text-xl">✨</span>
@@ -114,8 +114,8 @@ function CTASection({ content, language, onSignupClick }) {
             <span className="w-2 h-2 bg-parque-purple rounded-full animate-pulse"></span>
             <span className="text-parque-purple font-medium">
               {language === 'es' 
-                ? 'Inscripciones cierran mañana lunes 23:00' 
-                : 'Registration closes tomorrow Monday 23:00'}
+                ? 'Inscripciones cierran hoy lunes 23:00' 
+                : 'Registration closes today Monday 23:00'}
             </span>
           </div>
         </div>
