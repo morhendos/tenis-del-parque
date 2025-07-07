@@ -374,17 +374,16 @@ export default function LeagueSeasonPage() {
       // Find the season that matches our URL season parameter
       // Map URL season to league season names (display names)
       const seasonMap = {
-        // Spanish URLs (primary) - map to league season display names
-        'verano2025': 'Verano 2025',
-        'invierno2025': 'Invierno 2025',
-        'primavera2025': 'Primavera 2025',
-        'otono2025': 'Otoño 2025',
-        // English URLs (fallback) - map to league season display names
-        'summer2025': 'Verano 2025',
-        'winter2025': 'Invierno 2025',
-        'spring2025': 'Primavera 2025',
-        'autumn2025': 'Otoño 2025',
-        'fall2025': 'Otoño 2025'
+        // Map to what's actually in your database seasons array
+        'verano2025': 'Summer 2025',
+        'summer2025': 'Summer 2025',
+        'invierno2025': 'Winter 2025',
+        'winter2025': 'Winter 2025',
+        'primavera2025': 'Spring 2025',
+        'spring2025': 'Spring 2025',
+        'otono2025': 'Autumn 2025',
+        'autumn2025': 'Autumn 2025',
+        'fall2025': 'Autumn 2025'
       }
       
       const targetSeasonName = seasonMap[season]
@@ -407,35 +406,25 @@ export default function LeagueSeasonPage() {
         setTotalRounds(leagueData.league.config.roundsPerSeason)
       }
       
-      // Convert league season name to database season name for API calls
-      const seasonToDbName = (seasonName) => {
-        const mapping = {
-          'Verano 2025': 'summer-2025',
-          'Invierno 2025': 'winter-2025',
-          'Primavera 2025': 'spring-2025',
-          'Otoño 2025': 'autumn-2025'
-        }
-        return mapping[seasonName] || seasonName
-      }
-      
-      const dbSeasonName = seasonToDbName(targetSeasonName)
+      // Convert to database season name for API calls
+      const dbSeason = targetSeasonName === 'Summer 2025' ? 'summer-2025' : targetSeasonName
       
       // Fetch standings data
-      const standingsRes = await fetch(`/api/leagues/${location}/standings?season=${dbSeasonName}`)
+      const standingsRes = await fetch(`/api/leagues/${location}/standings?season=${dbSeason}`)
       if (standingsRes.ok) {
         const standingsData = await standingsRes.json()
         setStandings(standingsData)
       }
       
       // Fetch recent matches
-      const matchesRes = await fetch(`/api/leagues/${location}/matches?season=${dbSeasonName}&status=completed&limit=10`)
+      const matchesRes = await fetch(`/api/leagues/${location}/matches?season=${dbSeason}&status=completed&limit=10`)
       if (matchesRes.ok) {
         const matchesData = await matchesRes.json()
         setMatches(matchesData.matches || [])
       }
       
-      // Fetch upcoming matches schedule - get more matches
-      const scheduleRes = await fetch(`/api/leagues/${location}/matches?season=${dbSeasonName}&status=scheduled&limit=100`)
+      // Fetch upcoming matches schedule
+      const scheduleRes = await fetch(`/api/leagues/${location}/matches?season=${dbSeason}&status=scheduled&limit=50`)
       if (scheduleRes.ok) {
         const scheduleData = await scheduleRes.json()
         setSchedule(scheduleData.matches || [])
@@ -1239,6 +1228,86 @@ export default function LeagueSeasonPage() {
                 )}
               </div>
             )}
+            
+            {/* Match Status */}
+            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+              <div className="flex items-center space-x-2">
+                <div className={`w-3 h-3 rounded-full ${
+                  match.status === 'scheduled' ? 'bg-blue-500' :
+                  match.status === 'in_progress' ? 'bg-yellow-500' :
+                  'bg-gray-500'
+                }`}></div>
+                <span className="text-sm font-medium text-gray-700">
+                  {match.status === 'scheduled' ? 
+                    (language === 'es' ? 'Programado' : 'Scheduled') :
+                    match.status === 'in_progress' ? 
+                    (language === 'es' ? 'En progreso' : 'In Progress') :
+                    match.status
+                  }
+                </span>
+              </div>
+              
+              {match.schedule?.confirmedDate && (
+                <div className="text-sm text-gray-500">
+                  {language === 'es' ? 'Confirmado' : 'Confirmed'} ✓
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  // Helper function to render matches
+  function renderMatches(matchList) {
+    return (
+      <div className="space-y-6">
+        {matchList.map((match) => (
+          <div key={match._id} className="bg-white border-2 border-gray-100 rounded-xl p-6 hover:shadow-lg hover:border-parque-purple/20 transition-all duration-200">
+            {/* Match Players */}
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center mb-6">
+              {/* Player 1 */}
+              <div className="md:col-span-2">
+                <div className="flex items-center space-x-3 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg">
+                  <div className="w-12 h-12 rounded-full bg-parque-purple text-white flex items-center justify-center text-lg font-bold">
+                    {match.players?.player1?.name?.charAt(0) || '?'}
+                  </div>
+                  <div>
+                    <div className="font-bold text-gray-900 text-lg">
+                      {match.players?.player1?.name || 'TBD'}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {language === 'es' ? 'Jugador 1' : 'Player 1'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* VS */}
+              <div className="text-center">
+                <div className="bg-parque-purple/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto">
+                  <span className="text-2xl font-bold text-parque-purple">vs</span>
+                </div>
+              </div>
+              
+              {/* Player 2 */}
+              <div className="md:col-span-2">
+                <div className="flex items-center space-x-3 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg">
+                  <div className="w-12 h-12 rounded-full bg-parque-purple text-white flex items-center justify-center text-lg font-bold">
+                    {match.players?.player2?.name?.charAt(0) || '?'}
+                  </div>
+                  <div>
+                    <div className="font-bold text-gray-900 text-lg">
+                      {match.players?.player2?.name || 'TBD'}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {language === 'es' ? 'Jugador 2' : 'Player 2'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
             
             {/* Match Status */}
             <div className="flex items-center justify-between pt-4 border-t border-gray-100">
