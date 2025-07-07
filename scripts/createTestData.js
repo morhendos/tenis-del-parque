@@ -103,22 +103,22 @@ async function createTestData() {
     // Create test players
     const testPlayers = [
       // Beginners
-      { name: 'Carlos Rodriguez', email: 'carlos@example.com', whatsapp: '+34600111001', level: 'beginner', elo: 1150 },
+      { name: 'Carlos Rodriguez', email: 'carlos@example.com', whatsapp: '+34600111001', level: 'beginner', elo: 1170 },
       { name: 'Ana Martinez', email: 'ana@example.com', whatsapp: '+34600111002', level: 'beginner', elo: 1180 },
-      { name: 'Luis Garcia', email: 'luis@example.com', whatsapp: '+34600111003', level: 'beginner', elo: 1120 },
+      { name: 'Luis Garcia', email: 'luis@example.com', whatsapp: '+34600111003', level: 'beginner', elo: 1160 },
       { name: 'Sofia Lopez', email: 'sofia@example.com', whatsapp: '+34600111004', level: 'beginner', elo: 1190 },
       
       // Intermediates  
       { name: 'Miguel Fernandez', email: 'miguel@example.com', whatsapp: '+34600111005', level: 'intermediate', elo: 1220 },
-      { name: 'Carmen Ruiz', email: 'carmen@example.com', whatsapp: '+34600111006', level: 'intermediate', elo: 1250 },
-      { name: 'David Moreno', email: 'david@example.com', whatsapp: '+34600111007', level: 'intermediate', elo: 1280 },
+      { name: 'Carmen Ruiz', email: 'carmen@example.com', whatsapp: '+34600111006', level: 'intermediate', elo: 1210 },
+      { name: 'David Moreno', email: 'david@example.com', whatsapp: '+34600111007', level: 'intermediate', elo: 1230 },
       { name: 'Elena Jimenez', email: 'elena@example.com', whatsapp: '+34600111008', level: 'intermediate', elo: 1240 },
       
       // Advanced
-      { name: 'Roberto Sanchez', email: 'roberto@example.com', whatsapp: '+34600111009', level: 'advanced', elo: 1320 },
-      { name: 'Patricia Herrera', email: 'patricia@example.com', whatsapp: '+34600111010', level: 'advanced', elo: 1350 },
-      { name: 'Fernando Torres', email: 'fernando@example.com', whatsapp: '+34600111011', level: 'advanced', elo: 1380 },
-      { name: 'Lucia Vargas', email: 'lucia@example.com', whatsapp: '+34600111012', level: 'advanced', elo: 1310 }
+      { name: 'Roberto Sanchez', email: 'roberto@example.com', whatsapp: '+34600111009', level: 'advanced', elo: 1270 },
+      { name: 'Patricia Herrera', email: 'patricia@example.com', whatsapp: '+34600111010', level: 'advanced', elo: 1300 },
+      { name: 'Fernando Torres', email: 'fernando@example.com', whatsapp: '+34600111011', level: 'advanced', elo: 1320 },
+      { name: 'Lucia Vargas', email: 'lucia@example.com', whatsapp: '+34600111012', level: 'advanced', elo: 1280 }
     ]
 
     const createdPlayers = []
