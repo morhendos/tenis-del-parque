@@ -71,8 +71,7 @@ export default function MessagesPage() {
       title: announcementContent.firstRoundMatch[language].title,
       subtitle: announcementContent.firstRoundMatch[language].subtitle,
       icon: '🎾',
-      bgColor: 'from-green-100 to-emerald-100',
-      iconBgColor: 'from-green-500 to-emerald-600',
+      bgColor: 'from-parque-purple/10 to-green-100',
       isNew: !session?.user?.seenAnnouncements?.includes(announcementContent.firstRoundMatch.id),
       content: {
         ...announcementContent.firstRoundMatch,
@@ -111,8 +110,7 @@ export default function MessagesPage() {
         title: language === 'es' ? 'Mensaje de Bienvenida' : 'Welcome Message',
         subtitle: language === 'es' ? 'Tu primera vez en la plataforma' : 'Your first time on the platform',
         icon: '👋',
-        bgColor: 'from-purple-100 to-pink-100',
-        iconBgColor: 'from-parque-purple to-purple-700'
+        bgColor: 'from-parque-purple/10 to-green-100'
       })
     }
     
@@ -125,7 +123,6 @@ export default function MessagesPage() {
       subtitle: announcementContent.firstRoundDelay[language].subtitle,
       icon: '📢',
       bgColor: 'from-yellow-100 to-orange-100',
-      iconBgColor: 'from-yellow-500 to-orange-600',
       isNew: !session?.user?.seenAnnouncements?.includes(announcementContent.firstRoundDelay.id),
       content: announcementContent.firstRoundDelay
     })
@@ -264,9 +261,9 @@ export default function MessagesPage() {
             }`}
           >
             <div className="flex items-start space-x-3 sm:space-x-4">
-              {/* Icon - Smaller on mobile */}
-              <div className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br ${message.iconBgColor || message.bgColor} flex items-center justify-center text-lg sm:text-2xl shadow-sm`}>
-                <span className="filter drop-shadow-sm">{message.icon}</span>
+              {/* Icon - Using original simple style */}
+              <div className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-r ${message.bgColor} flex items-center justify-center text-lg sm:text-2xl`}>
+                {message.icon}
               </div>
 
               {/* Content */}
