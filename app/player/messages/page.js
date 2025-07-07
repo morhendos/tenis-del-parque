@@ -67,11 +67,12 @@ export default function MessagesPage() {
     return {
       id: announcementContent.firstRoundMatch.id,
       type: 'announcement',
-      date: announcementContent.firstRoundMatch.date,
+      date: new Date(firstRoundMatch.createdAt || announcementContent.firstRoundMatch.date), // Use match creation date if available
       title: announcementContent.firstRoundMatch[language].title,
       subtitle: announcementContent.firstRoundMatch[language].subtitle,
       icon: '🎾',
-      bgColor: 'from-parque-purple/10 to-green-100',
+      bgColor: 'from-green-100 to-emerald-100',
+      iconBgColor: 'from-green-500 to-emerald-600',
       isNew: !session?.user?.seenAnnouncements?.includes(announcementContent.firstRoundMatch.id),
       content: {
         ...announcementContent.firstRoundMatch,
@@ -97,37 +98,49 @@ export default function MessagesPage() {
     }
   }
 
-  const messages = [
-    {
-      id: 'welcome',
-      type: 'welcome',
-      date: session?.user?.createdAt ? new Date(session.user.createdAt) : new Date(),
-      title: language === 'es' ? 'Mensaje de Bienvenida' : 'Welcome Message',
-      subtitle: language === 'es' ? 'Tu primera vez en la plataforma' : 'Your first time on the platform',
-      icon: '👋',
-      bgColor: 'from-parque-purple/10 to-green-100'
-    },
-    {
+  // Build messages array with proper dates
+  const buildMessages = () => {
+    const messagesList = []
+    
+    // Welcome message - use account creation date
+    if (session?.user?.createdAt) {
+      messagesList.push({
+        id: 'welcome',
+        type: 'welcome',
+        date: new Date(session.user.createdAt),
+        title: language === 'es' ? 'Mensaje de Bienvenida' : 'Welcome Message',
+        subtitle: language === 'es' ? 'Tu primera vez en la plataforma' : 'Your first time on the platform',
+        icon: '👋',
+        bgColor: 'from-purple-100 to-pink-100',
+        iconBgColor: 'from-parque-purple to-purple-700'
+      })
+    }
+    
+    // First round delay announcement
+    messagesList.push({
       id: announcementContent.firstRoundDelay.id,
       type: 'announcement',
-      date: announcementContent.firstRoundDelay.date,
+      date: new Date(announcementContent.firstRoundDelay.date),
       title: announcementContent.firstRoundDelay[language].title,
       subtitle: announcementContent.firstRoundDelay[language].subtitle,
       icon: '📢',
       bgColor: 'from-yellow-100 to-orange-100',
+      iconBgColor: 'from-yellow-500 to-orange-600',
       isNew: !session?.user?.seenAnnouncements?.includes(announcementContent.firstRoundDelay.id),
       content: announcementContent.firstRoundDelay
+    })
+    
+    // Add first round match message if available
+    const firstRoundMatchMessage = getFirstRoundMatchMessage()
+    if (firstRoundMatchMessage) {
+      messagesList.push(firstRoundMatchMessage)
     }
-  ]
-
-  // Add first round match message if available
-  const firstRoundMatchMessage = getFirstRoundMatchMessage()
-  if (firstRoundMatchMessage) {
-    messages.push(firstRoundMatchMessage)
+    
+    // Sort messages by date (newest first)
+    return messagesList.sort((a, b) => b.date.getTime() - a.date.getTime())
   }
 
-  // Sort messages by date (newest first)
-  messages.sort((a, b) => new Date(b.date) - new Date(a.date))
+  const messages = buildMessages()
 
   const handleMessageClick = (message) => {
     setSelectedMessage(message)
@@ -163,14 +176,57 @@ export default function MessagesPage() {
 
   const formatDate = (date) => {
     const messageDate = new Date(date)
+    const now = new Date()
+    const diffTime = Math.abs(now - messageDate)
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+    
+    // For recent messages, show relative time
+    if (diffDays === 0) {
+      const diffHours = Math.floor(diffTime / (1000 * 60 * 60))
+      if (diffHours === 0) {
+        const diffMinutes = Math.floor(diffTime / (1000 * 60))
+        return language === 'es' 
+          ? `Hace ${diffMinutes} minutos`
+          : `${diffMinutes} minutes ago`
+      }
+      return language === 'es' 
+        ? `Hace ${diffHours} ${diffHours === 1 ? 'hora' : 'horas'}`
+        : `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`
+    } else if (diffDays === 1) {
+      return language === 'es' ? 'Ayer' : 'Yesterday'
+    } else if (diffDays < 7) {
+      return language === 'es' 
+        ? `Hace ${diffDays} días`
+        : `${diffDays} days ago`
+    }
+    
+    // For older messages, show date
     const options = { 
       day: 'numeric', 
-      month: language === 'es' ? 'long' : 'long', 
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      month: 'short',
+      year: diffDays > 365 ? 'numeric' : undefined
     }
     return messageDate.toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', options)
+  }
+
+  const formatDateMobile = (date) => {
+    const messageDate = new Date(date)
+    const now = new Date()
+    const diffTime = Math.abs(now - messageDate)
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+    
+    if (diffDays === 0) {
+      const hours = messageDate.getHours()
+      const minutes = messageDate.getMinutes()
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
+    } else if (diffDays < 7) {
+      return messageDate.toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', { weekday: 'short' })
+    }
+    
+    return messageDate.toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', { 
+      day: 'numeric', 
+      month: 'numeric' 
+    })
   }
 
   if (loading) {
@@ -184,60 +240,75 @@ export default function MessagesPage() {
   const playerName = session?.player?.name || player?.name || 'Player'
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      {/* Header - More compact on mobile */}
+      <div className="mb-4 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
           {language === 'es' ? 'Mensajes' : 'Messages'}
         </h1>
-        <p className="mt-2 text-gray-600">
+        <p className="mt-1 text-sm sm:text-base text-gray-600">
           {language === 'es' 
-            ? 'Todos tus mensajes y anuncios importantes' 
-            : 'All your messages and important announcements'}
+            ? 'Todos tus mensajes y anuncios' 
+            : 'All your messages and announcements'}
         </p>
       </div>
 
-      {/* Messages List */}
-      <div className="space-y-4">
+      {/* Messages List - Optimized for mobile */}
+      <div className="space-y-3 sm:space-y-4">
         {messages.map((message) => (
           <div
             key={message.id}
             onClick={() => handleMessageClick(message)}
-            className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-md transition-all duration-200 ${
+            className={`bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 cursor-pointer hover:shadow-md active:scale-[0.98] transition-all duration-200 ${
               message.isNew ? 'ring-2 ring-parque-purple ring-opacity-50' : ''
             }`}
           >
-            <div className="flex items-start space-x-4">
-              {/* Icon */}
-              <div className={`flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-r ${message.bgColor} flex items-center justify-center text-2xl`}>
-                {message.icon}
+            <div className="flex items-start space-x-3 sm:space-x-4">
+              {/* Icon - Smaller on mobile */}
+              <div className={`flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br ${message.iconBgColor || message.bgColor} flex items-center justify-center text-lg sm:text-2xl shadow-sm`}>
+                <span className="filter drop-shadow-sm">{message.icon}</span>
               </div>
 
               {/* Content */}
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900 flex items-center space-x-2">
-                      <span>{message.title}</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between space-x-2">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate pr-1">
+                      {message.title}
+                    </h3>
+                    <p className="mt-0.5 text-xs sm:text-sm text-gray-600 line-clamp-2">
+                      {message.subtitle}
+                    </p>
+                    {/* Mobile date - shown below on small screens */}
+                    <div className="sm:hidden mt-1.5 flex items-center space-x-2">
+                      <span className="text-xs text-gray-500">
+                        {formatDateMobile(message.date)}
+                      </span>
                       {message.isNew && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-parque-purple text-white">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-parque-purple text-white">
                           {language === 'es' ? 'Nuevo' : 'New'}
                         </span>
                       )}
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                      {message.subtitle}
-                    </p>
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-400">
-                    {formatDate(message.date)}
+                  
+                  {/* Desktop date and new badge */}
+                  <div className="hidden sm:flex flex-col items-end space-y-1">
+                    <span className="text-xs sm:text-sm text-gray-500 whitespace-nowrap">
+                      {formatDate(message.date)}
+                    </span>
+                    {message.isNew && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-parque-purple text-white">
+                        {language === 'es' ? 'Nuevo' : 'New'}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Arrow */}
-              <div className="flex-shrink-0">
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {/* Arrow - Smaller on mobile */}
+              <div className="flex-shrink-0 flex items-center">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </div>
@@ -249,11 +320,11 @@ export default function MessagesPage() {
       {/* Empty State */}
       {messages.length === 0 && (
         <div className="text-center py-12">
-          <div className="text-6xl mb-4">📭</div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <div className="text-5xl sm:text-6xl mb-4">📭</div>
+          <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
             {language === 'es' ? 'No tienes mensajes' : 'No messages'}
           </h3>
-          <p className="text-gray-500">
+          <p className="text-sm sm:text-base text-gray-500">
             {language === 'es' 
               ? 'Los mensajes importantes aparecerán aquí' 
               : 'Important messages will appear here'}
