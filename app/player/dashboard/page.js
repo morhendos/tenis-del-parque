@@ -41,8 +41,8 @@ export default function PlayerDashboard() {
         if (profileData.player) {
           setPlayer(profileData.player)
           
-          // Check for first round matches
-          const matchesResponse = await fetch('/api/player/matches/schedule')
+          // Check for first round matches - FIXED ENDPOINT
+          const matchesResponse = await fetch('/api/player/matches')
           if (matchesResponse.ok) {
             const matchesData = await matchesResponse.json()
             const firstRound = matchesData.matches?.find(match => match.round === 1)
