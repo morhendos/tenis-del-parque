@@ -269,11 +269,11 @@ function GenerateRoundContent() {
               </p>
               <div className="text-sm text-gray-600 space-y-2">
                 <p>Possible solutions:</p>
-                                 <ul className="list-disc list-inside text-left max-w-md mx-auto">
-                   <li>Check that players have status &quot;active&quot; in the Players page</li>
-                   <li>Verify players are assigned to the correct season: {roundsData?.currentSeason}</li>
-                   <li>Import players with the correct season or update existing players</li>
-                 </ul>
+                <ul className="list-disc list-inside text-left max-w-md mx-auto">
+                  <li>Check that players have status &quot;active&quot; in the Players page</li>
+                  <li>Verify players are assigned to the correct season: {roundsData?.currentSeason}</li>
+                  <li>Import players with the correct season or update existing players</li>
+                </ul>
               </div>
               <button
                 onClick={() => router.push(`/admin/players?league=${selectedLeague?.id || leagueId}`)}
@@ -315,7 +315,7 @@ function GenerateRoundContent() {
           <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-800">
               <strong>💡 Tip:</strong> You can now edit these pairings before creating matches! 
-              Use the "Edit Pairings" button to adjust matches, swap players, or make manual changes.
+              Use the &quot;Edit Pairings&quot; button to adjust matches, swap players, or make manual changes.
             </p>
           </div>
 
