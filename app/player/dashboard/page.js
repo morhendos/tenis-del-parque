@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { useLanguage } from '../../../lib/hooks/useLanguage'
 import { useWelcomeModal } from '../../../lib/hooks/useWelcomeModal'
 import WelcomeModal from '../../../components/ui/WelcomeModal'
+import AnnouncementModal from '../../../components/ui/AnnouncementModal'
+import { announcementContent } from '../../../lib/content/announcementContent'
 
 export default function PlayerDashboard() {
   const { language, isLanguageLoaded } = useLanguage()
@@ -13,6 +15,9 @@ export default function PlayerDashboard() {
   const [loading, setLoading] = useState(true)
   const [recentMatches, setRecentMatches] = useState([])
   const [upcomingMatches, setUpcomingMatches] = useState([])
+  const [firstRoundMatch, setFirstRoundMatch] = useState(null)
+  const [showFirstRoundAnnouncement, setShowFirstRoundAnnouncement] = useState(false)
+  const [session, setSession] = useState(null)
   const router = useRouter()
   const { showWelcome, playerName, closeWelcome } = useWelcomeModal()
 
@@ -27,6 +32,7 @@ export default function PlayerDashboard() {
       
       const authData = await authResponse.json()
       const userEmail = authData.user.email
+      setSession(authData)
       
       // Then get player profile data
       const profileResponse = await fetch('/api/player/profile')
@@ -34,6 +40,18 @@ export default function PlayerDashboard() {
         const profileData = await profileResponse.json()
         if (profileData.player) {
           setPlayer(profileData.player)
+          
+          // Check for first round matches
+          const matchesResponse = await fetch('/api/player/matches/schedule')
+          if (matchesResponse.ok) {
+            const matchesData = await matchesResponse.json()
+            const firstRound = matchesData.matches?.find(match => match.round === 1)
+            
+            if (firstRound && !authData.user.seenAnnouncements?.includes(announcementContent.firstRoundMatch.id)) {
+              setFirstRoundMatch(firstRound)
+              setShowFirstRoundAnnouncement(true)
+            }
+          }
         } else {
           // Profile response was ok but no player data
           setPlayer(null)
@@ -53,6 +71,61 @@ export default function PlayerDashboard() {
   useEffect(() => {
     fetchPlayerData()
   }, [fetchPlayerData])
+
+  const handleCloseFirstRoundAnnouncement = async () => {
+    // Mark announcement as seen
+    try {
+      await fetch('/api/player/messages/mark-seen', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messageId: announcementContent.firstRoundMatch.id })
+      })
+      
+      // Update local state
+      setSession(prev => ({
+        ...prev,
+        user: {
+          ...prev.user,
+          seenAnnouncements: [...(prev.user.seenAnnouncements || []), announcementContent.firstRoundMatch.id]
+        }
+      }))
+    } catch (error) {
+      console.error('Failed to mark announcement as seen:', error)
+    }
+    
+    setShowFirstRoundAnnouncement(false)
+  }
+
+  // Prepare dynamic announcement content
+  const getDynamicFirstRoundAnnouncement = () => {
+    if (!firstRoundMatch || !player) return null
+    
+    const opponent = firstRoundMatch.players.player1._id === player._id 
+      ? firstRoundMatch.players.player2 
+      : firstRoundMatch.players.player1
+    
+    return {
+      ...announcementContent.firstRoundMatch,
+      es: {
+        ...announcementContent.firstRoundMatch.es,
+        content: announcementContent.firstRoundMatch.es.getContent(
+          player.name,
+          opponent.name,
+          opponent.whatsapp,
+          { level: player.level }
+        )
+      },
+      en: {
+        ...announcementContent.firstRoundMatch.en,
+        content: announcementContent.firstRoundMatch.en.getContent(
+          player.name,
+          opponent.name,
+          opponent.whatsapp,
+          { level: player.level }
+        )
+      }
+    }
+  }
 
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
@@ -468,6 +541,15 @@ export default function PlayerDashboard() {
           onClose={closeWelcome}
           playerName={playerName || player?.name || 'Player'}
         />
+        
+        {/* First Round Match Announcement */}
+        {showFirstRoundAnnouncement && (
+          <AnnouncementModal
+            isOpen={true}
+            onClose={handleCloseFirstRoundAnnouncement}
+            announcement={getDynamicFirstRoundAnnouncement()}
+          />
+        )}
       </div>
     </>
   )
