@@ -12,6 +12,7 @@ This update improves and fixes the player match management functionality, ensuri
 - Used simplified format (just set counts) instead of detailed set scores
 - ELO calculation logic was duplicated and different from admin system
 - Did not properly update player match history
+- **Did not update totalPoints field (causing 0 points in standings)**
 
 **Improvements:**
 - Now accepts detailed set scores in the same format as admin system
@@ -20,6 +21,11 @@ This update improves and fixes the player match management functionality, ensuri
 - Supports walkover matches
 - Validates match format (best of 3 sets)
 - Updates sets won/lost statistics
+- **Correctly calculates and updates totalPoints based on match result:**
+  - Win 2-0: 3 points
+  - Win 2-1: 2 points
+  - Lose 1-2: 1 point
+  - Lose 0-2: 0 points
 
 **New API Format:**
 ```javascript
@@ -66,12 +72,22 @@ POST /api/player/matches/result
 - Form validation with user-friendly messages
 - Disabled submit buttons while processing
 
+### 4. Fixed Admin Match Result API (`/api/admin/matches/[id]/route.js`)
+
+**Previous Issues:**
+- Also did not update totalPoints field
+
+**Improvements:**
+- Now calculates and updates totalPoints for both players
+- Uses the same points calculation logic as player API
+
 ## Benefits
 
 1. **Consistency**: Player and admin systems now use the same format and logic
 2. **Accuracy**: ELO calculations and stats updates are consistent across the platform
 3. **User Experience**: Better UI with proper validation and feedback
 4. **Data Integrity**: Results are stored in the same format regardless of who enters them
+5. **Correct Standings**: Points are now properly calculated and displayed in standings
 
 ## Testing Instructions
 
@@ -84,7 +100,7 @@ POST /api/player/matches/result
    - Submit a normal match result with 2-3 sets
    - Submit a walkover
    - Verify ELO changes are reflected
-   - Check that standings are updated correctly
+   - **Check that standings show correct points (not 0)**
 
 3. **Test UI:**
    - Check that opponent names display correctly
@@ -92,6 +108,15 @@ POST /api/player/matches/result
    - Test add/remove set functionality
    - Ensure modals close properly after submission
 
+4. **Test Points Calculation:**
+   - Win 2-0 should give winner 3 points, loser 0 points
+   - Win 2-1 should give winner 2 points, loser 1 point
+   - Verify points appear correctly in standings
+
 ## Migration Notes
 
-No database migration is required as we're using the existing schema. The changes are backward compatible with existing data. 
+No database migration is required as we're using the existing schema. The changes are backward compatible with existing data.
+
+## Bug Fix for Zero Points Issue
+
+The main bug where winners showed 0 points in standings has been fixed. The issue was that the `updateMatchStats` method in the Player model wasn't updating the `totalPoints` field. Both admin and player APIs now properly calculate points based on the match result and update the totalPoints field accordingly. 
