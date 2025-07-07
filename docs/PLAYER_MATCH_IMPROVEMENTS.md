@@ -4,15 +4,50 @@
 
 This update improves and fixes the player match management functionality, ensuring consistency with the admin system and fixing bugs in the UI.
 
+## Major Architectural Improvement: Single Source of Truth
+
+### Previous Architecture
+- Points were stored in `player.stats.totalPoints` field
+- Points were calculated and updated when match results were submitted
+- Risk of data drift between stored points and actual match results
+- If scoring rules changed, historical data wouldn't reflect new rules
+
+### New Architecture
+- **Points are calculated dynamically from match results**
+- Match results are the single source of truth
+- Standings API calculates points on-the-fly using the `Match.calculatePoints()` method
+- No risk of data inconsistency
+- Scoring rules can be changed and will automatically apply to all historical data
+
 ## Changes Made
 
-### 1. Fixed Player Result Submission API (`/api/player/matches/result/route.js`)
+### 1. Enhanced Match Model (`/lib/models/Match.js`)
+
+Added methods for calculating points:
+- `calculatePoints()` - Returns points for both players based on match result
+- `getPointsForPlayer(playerId)` - Returns points for a specific player
+- `calculatePlayerPoints()` - Static method to calculate total points for a player
+
+Points calculation logic:
+- Win 2-0: 3 points
+- Win 2-1: 2 points
+- Lose 1-2: 1 point
+- Lose 0-2: 0 points
+
+### 2. Updated Standings API (`/app/api/leagues/[league]/standings/route.js`)
+
+**Major Change**: Now calculates points from matches instead of reading from database
+- Fetches all completed matches for the league/season
+- Uses `match.calculatePoints()` to get points for each match
+- Aggregates points for each player
+- No longer relies on `player.stats.totalPoints`
+
+### 3. Fixed Player Result Submission API (`/api/player/matches/result/route.js`)
 
 **Previous Issues:**
 - Used simplified format (just set counts) instead of detailed set scores
 - ELO calculation logic was duplicated and different from admin system
 - Did not properly update player match history
-- **Did not update totalPoints field (causing 0 points in standings)**
 
 **Improvements:**
 - Now accepts detailed set scores in the same format as admin system
@@ -21,13 +56,9 @@ This update improves and fixes the player match management functionality, ensuri
 - Supports walkover matches
 - Validates match format (best of 3 sets)
 - Updates sets won/lost statistics
-- **Correctly calculates and updates totalPoints based on match result:**
-  - Win 2-0: 3 points
-  - Win 2-1: 2 points
-  - Lose 1-2: 1 point
-  - Lose 0-2: 0 points
+- **No longer updates totalPoints (calculated from matches)**
 
-**New API Format:**
+**API Format:**
 ```javascript
 POST /api/player/matches/result
 {
@@ -42,7 +73,12 @@ POST /api/player/matches/result
 }
 ```
 
-### 2. Updated Player Schedule API (`/api/player/matches/schedule/route.js`)
+### 4. Updated Admin Match API (`/api/admin/matches/[id]/route.js`)
+
+- **No longer updates totalPoints**
+- Points are calculated from match results when standings are requested
+
+### 5. Updated Player Schedule API (`/api/player/matches/schedule/route.js`)
 
 **Improvements:**
 - Stores schedule data in the correct format matching the Match model schema
@@ -50,7 +86,7 @@ POST /api/player/matches/result
 - Properly validates future dates
 - Stores notes in the match notes field
 
-### 3. Fixed Player Matches UI (`/app/player/matches/page.js`)
+### 6. Fixed Player Matches UI (`/app/player/matches/page.js`)
 
 **Previous Issues:**
 - Accessed non-existent properties (e.g., `match.opponent`)
@@ -72,22 +108,14 @@ POST /api/player/matches/result
 - Form validation with user-friendly messages
 - Disabled submit buttons while processing
 
-### 4. Fixed Admin Match Result API (`/api/admin/matches/[id]/route.js`)
-
-**Previous Issues:**
-- Also did not update totalPoints field
-
-**Improvements:**
-- Now calculates and updates totalPoints for both players
-- Uses the same points calculation logic as player API
-
 ## Benefits
 
-1. **Consistency**: Player and admin systems now use the same format and logic
-2. **Accuracy**: ELO calculations and stats updates are consistent across the platform
-3. **User Experience**: Better UI with proper validation and feedback
-4. **Data Integrity**: Results are stored in the same format regardless of who enters them
-5. **Correct Standings**: Points are now properly calculated and displayed in standings
+1. **Data Integrity**: Points are always consistent with match results
+2. **Flexibility**: Scoring rules can be changed without data migration
+3. **Consistency**: Player and admin systems use the same format and logic
+4. **Accuracy**: ELO calculations and stats updates are consistent across the platform
+5. **User Experience**: Better UI with proper validation and feedback
+6. **Single Source of Truth**: Match results are the authoritative data source
 
 ## Testing Instructions
 
@@ -100,7 +128,7 @@ POST /api/player/matches/result
    - Submit a normal match result with 2-3 sets
    - Submit a walkover
    - Verify ELO changes are reflected
-   - **Check that standings show correct points (not 0)**
+   - **Check that standings show correct points (calculated from matches)**
 
 3. **Test UI:**
    - Check that opponent names display correctly
@@ -109,14 +137,12 @@ POST /api/player/matches/result
    - Ensure modals close properly after submission
 
 4. **Test Points Calculation:**
-   - Win 2-0 should give winner 3 points, loser 0 points
-   - Win 2-1 should give winner 2 points, loser 1 point
-   - Verify points appear correctly in standings
+   - Win 2-0 should show 3 points in standings
+   - Win 2-1 should show 2 points in standings
+   - Loss 1-2 should show 1 point in standings
+   - Loss 0-2 should show 0 points in standings
+   - Points should be calculated dynamically each time standings are loaded
 
 ## Migration Notes
 
-No database migration is required as we're using the existing schema. The changes are backward compatible with existing data.
-
-## Bug Fix for Zero Points Issue
-
-The main bug where winners showed 0 points in standings has been fixed. The issue was that the `updateMatchStats` method in the Player model wasn't updating the `totalPoints` field. Both admin and player APIs now properly calculate points based on the match result and update the totalPoints field accordingly. 
+No database migration is required. The `totalPoints` field in the Player model can remain but is no longer used or updated. Points are now calculated on-demand from match results. 
