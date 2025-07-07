@@ -36,11 +36,23 @@ Points calculation logic:
 
 ### 2. Updated Standings API (`/app/api/leagues/[league]/standings/route.js`)
 
-**Major Change**: Now calculates points from matches instead of reading from database
+**Major Changes**: 
+- Now calculates points from matches instead of reading from database
 - Fetches all completed matches for the league/season
 - Uses `match.calculatePoints()` to get points for each match
 - Aggregates points for each player
 - No longer relies on `player.stats.totalPoints`
+- **NEW: Sorts by player status first**
+  - Active players appear at the top
+  - Inactive/pending players appear below
+  - Within each status group, players are sorted by points
+
+Sorting priority:
+1. Player status (active → confirmed → pending → inactive)
+2. Total points (calculated from matches)
+3. Sets won
+4. Games won
+5. Alphabetical by name
 
 ### 3. Fixed Player Result Submission API (`/api/player/matches/result/route.js`)
 
@@ -116,6 +128,7 @@ POST /api/player/matches/result
 4. **Accuracy**: ELO calculations and stats updates are consistent across the platform
 5. **User Experience**: Better UI with proper validation and feedback
 6. **Single Source of Truth**: Match results are the authoritative data source
+7. **Better Visual Hierarchy**: Active players shown prominently at top of standings
 
 ## Testing Instructions
 
@@ -142,6 +155,11 @@ POST /api/player/matches/result
    - Loss 1-2 should show 1 point in standings
    - Loss 0-2 should show 0 points in standings
    - Points should be calculated dynamically each time standings are loaded
+
+5. **Test Standings Display:**
+   - Active players should appear at the top
+   - Inactive/pending players should appear below
+   - Within each group, players should be sorted by points
 
 ## Migration Notes
 
