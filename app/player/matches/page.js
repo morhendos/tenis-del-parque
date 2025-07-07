@@ -776,8 +776,8 @@ export default function PlayerMatches() {
                             return cleaned
                           })()}?text=${encodeURIComponent(
                             language === 'es' 
-                              ? `Hola ${opponent.name}! También estoy en la liga de tenis. ¿Te gustaría jugar un partido de práctica o programar nuestro partido de liga?`
-                              : `Hi ${opponent.name}! I'm also in the tennis league. Would you like to play a practice match or schedule our league game?`
+                              ? `Hola ${opponent.name}! ¿Cómo estás? Nos toca jugar nuestro partido de liga. ¿Cuándo y dónde te vendría bien?`
+                              : `Hi ${opponent.name}! Hope you're doing well. We're scheduled to play our league match. When and where would work best for you?`
                           )}`}
                           target="_blank"
                           rel="noopener noreferrer"
