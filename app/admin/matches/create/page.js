@@ -7,6 +7,22 @@ import { useRouter, useSearchParams } from 'next/navigation'
 function PlayerCard({ player, isSelected, onSelect, isDragging, matchHistory = [] }) {
   const initials = player.name.split(' ').map(n => n[0]).join('').toUpperCase()
   
+  // Get status color and label
+  const getStatusStyle = () => {
+    switch(player.status) {
+      case 'active':
+        return { bg: 'bg-green-100', text: 'text-green-800', label: 'Active' }
+      case 'confirmed':
+        return { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Confirmed' }
+      case 'pending':
+        return { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Pending' }
+      default:
+        return { bg: 'bg-gray-100', text: 'text-gray-800', label: player.status }
+    }
+  }
+  
+  const statusStyle = getStatusStyle()
+  
   return (
     <div
       className={`
@@ -30,7 +46,12 @@ function PlayerCard({ player, isSelected, onSelect, isDragging, matchHistory = [
           {initials}
         </div>
         <div className="flex-1">
-          <div className="font-semibold text-gray-900">{player.name}</div>
+          <div className="font-semibold text-gray-900 flex items-center gap-2">
+            {player.name}
+            <span className={`text-xs px-2 py-0.5 rounded-full ${statusStyle.bg} ${statusStyle.text}`}>
+              {statusStyle.label}
+            </span>
+          </div>
           <div className="text-sm text-gray-600">
             {player.level} • ELO: {player.stats?.eloRating || 1200}
           </div>
@@ -442,7 +463,7 @@ function CreateMatchContent() {
         </div>
         
         {/* Round Number */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 mb-4">
           <label className="text-sm font-medium text-gray-700">Round:</label>
           <input
             type="number"
@@ -451,6 +472,19 @@ function CreateMatchContent() {
             onChange={(e) => setRoundNumber(parseInt(e.target.value) || 1)}
             className="w-20 px-3 py-1 border border-gray-300 rounded-lg"
           />
+        </div>
+        
+        {/* Status Legend */}
+        <div className="flex items-center space-x-4 text-sm text-gray-600">
+          <span className="font-medium">Player Status:</span>
+          <div className="flex items-center space-x-2">
+            <span className="px-2 py-1 rounded-full bg-green-100 text-green-800">Active</span>
+            <span className="text-gray-400">Players can log in</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="px-2 py-1 rounded-full bg-yellow-100 text-yellow-800">Confirmed</span>
+            <span className="text-gray-400">Invited, not yet activated</span>
+          </div>
         </div>
       </div>
 
@@ -470,7 +504,9 @@ function CreateMatchContent() {
         {/* Player Pool */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-lg font-semibold mb-4">Available Players</h2>
+            <h2 className="text-lg font-semibold mb-4">
+              Available Players ({players.length})
+            </h2>
             
             {mode === 'combined' && (
               <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
