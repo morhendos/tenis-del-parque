@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useLanguage } from '../../lib/hooks/useLanguage'
-import AnnouncementModal from '../../components/ui/AnnouncementModal'
 import { announcementContent } from '../../lib/content/announcementContent'
 
 export default function PlayerLayout({ children }) {
@@ -13,7 +12,6 @@ export default function PlayerLayout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [showAnnouncement, setShowAnnouncement] = useState(false)
   const [hasNewAnnouncement, setHasNewAnnouncement] = useState(false)
   const { language } = useLanguage()
 
@@ -27,16 +25,11 @@ export default function PlayerLayout({ children }) {
       const data = await res.json()
       setUser(data.user)
       
-      // Check if user needs to see the announcement
+      // Check if user needs to see the announcement (for badge only)
       const currentAnnouncement = announcementContent.firstRoundDelay
       const hasSeenAnnouncement = data.user?.seenAnnouncements?.includes(currentAnnouncement.id)
       
       setHasNewAnnouncement(!hasSeenAnnouncement)
-      
-      // Only show announcement modal if they haven't seen it
-      if (!hasSeenAnnouncement) {
-        setShowAnnouncement(true)
-      }
     } catch (error) {
       router.push('/login')
     } finally {
@@ -98,31 +91,6 @@ export default function PlayerLayout({ children }) {
   // Close mobile menu when clicking navigation items
   const handleNavClick = () => {
     setIsSidebarOpen(false)
-  }
-
-  // Handle closing announcement
-  const handleCloseAnnouncement = async () => {
-    setShowAnnouncement(false)
-    
-    // Mark as seen in the backend
-    try {
-      await fetch('/api/player/messages/mark-seen', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messageId: announcementContent.firstRoundDelay.id })
-      })
-      
-      // Update local state to remove the badge
-      setHasNewAnnouncement(false)
-      
-      // Update user state with the seen announcement
-      setUser(prev => ({
-        ...prev,
-        seenAnnouncements: [...(prev?.seenAnnouncements || []), announcementContent.firstRoundDelay.id]
-      }))
-    } catch (error) {
-      console.error('Failed to mark announcement as seen:', error)
-    }
   }
 
   // Prevent body scroll when mobile sidebar is open
@@ -317,13 +285,6 @@ export default function PlayerLayout({ children }) {
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
-
-      {/* Announcement Modal */}
-      <AnnouncementModal
-        isOpen={showAnnouncement}
-        onClose={handleCloseAnnouncement}
-        announcement={announcementContent.firstRoundDelay}
-      />
     </div>
   )
 }
