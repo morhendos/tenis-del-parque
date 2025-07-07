@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import dbConnect from '../../../../../lib/db/mongoose'
 import League from '../../../../../lib/models/League'
 import Player from '../../../../../lib/models/Player'
+import Match from '../../../../../lib/models/Match'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
@@ -39,29 +40,8 @@ export async function GET(request, { params }) {
     }
     if (level) query.level = level
     
-    // Get players with standings - we'll sort manually to handle null/undefined stats
+    // Get players
     let players = await Player.find(query).lean()
-    
-    // Manual sort to ensure consistent handling of null/undefined stats
-    players = players.sort((a, b) => {
-      // Primary: total points (handle null/undefined)
-      const aPoints = a.stats?.totalPoints || 0
-      const bPoints = b.stats?.totalPoints || 0
-      if (aPoints !== bPoints) return bPoints - aPoints
-      
-      // Secondary: sets won
-      const aSets = a.stats?.setsWon || 0
-      const bSets = b.stats?.setsWon || 0
-      if (aSets !== bSets) return bSets - aSets
-      
-      // Tertiary: games won
-      const aGames = a.stats?.gamesWon || 0
-      const bGames = b.stats?.gamesWon || 0
-      if (aGames !== bGames) return bGames - aGames
-      
-      // Quaternary: alphabetical by name
-      return a.name.localeCompare(b.name)
-    })
     
     // FALLBACK: If no players found with exact season, try without season filter
     if (players.length === 0) {
@@ -70,29 +50,84 @@ export async function GET(request, { params }) {
       if (level) fallbackQuery.level = level
       
       players = await Player.find(fallbackQuery).lean()
-      
-      // Apply same manual sort for fallback
-      players = players.sort((a, b) => {
-        const aPoints = a.stats?.totalPoints || 0
-        const bPoints = b.stats?.totalPoints || 0
-        if (aPoints !== bPoints) return bPoints - aPoints
-        
-        const aSets = a.stats?.setsWon || 0
-        const bSets = b.stats?.setsWon || 0
-        if (aSets !== bSets) return bSets - aSets
-        
-        const aGames = a.stats?.gamesWon || 0
-        const bGames = b.stats?.gamesWon || 0
-        if (aGames !== bGames) return bGames - aGames
-        
-        return a.name.localeCompare(b.name)
-      })
-      
       console.log(`Fallback: Found ${players.length} players without season filter`)
     }
     
+    // Get all completed matches for the league and season
+    const matches = await Match.find({
+      league: league._id,
+      season: season,
+      status: 'completed'
+    }).lean()
+    
+    // Calculate points for each player from their matches
+    const playerPointsMap = new Map()
+    
+    // Initialize all players with 0 points
+    players.forEach(player => {
+      playerPointsMap.set(player._id.toString(), 0)
+    })
+    
+    // Calculate points from each match
+    matches.forEach(match => {
+      // Create a temporary Match instance to use the calculatePoints method
+      const matchInstance = new Match(match)
+      const points = matchInstance.calculatePoints()
+      
+      const player1Id = match.players.player1.toString()
+      const player2Id = match.players.player2.toString()
+      
+      // Add points to players
+      if (playerPointsMap.has(player1Id)) {
+        playerPointsMap.set(player1Id, playerPointsMap.get(player1Id) + points.player1)
+      }
+      if (playerPointsMap.has(player2Id)) {
+        playerPointsMap.set(player2Id, playerPointsMap.get(player2Id) + points.player2)
+      }
+    })
+    
+    // Create standings with calculated points
+    const playersWithPoints = players.map(player => ({
+      ...player,
+      calculatedPoints: playerPointsMap.get(player._id.toString()) || 0
+    }))
+    
+    // Sort players with active status first, then by points
+    playersWithPoints.sort((a, b) => {
+      // Primary: Active status (active players first)
+      const statusPriority = {
+        'active': 0,
+        'confirmed': 1,
+        'pending': 2,
+        'inactive': 3
+      }
+      
+      const aStatusPriority = statusPriority[a.status] ?? 99
+      const bStatusPriority = statusPriority[b.status] ?? 99
+      
+      if (aStatusPriority !== bStatusPriority) {
+        return aStatusPriority - bStatusPriority
+      }
+      
+      // Secondary: total points (calculated from matches)
+      if (a.calculatedPoints !== b.calculatedPoints) return b.calculatedPoints - a.calculatedPoints
+      
+      // Tertiary: sets won
+      const aSets = a.stats?.setsWon || 0
+      const bSets = b.stats?.setsWon || 0
+      if (aSets !== bSets) return bSets - aSets
+      
+      // Quaternary: games won
+      const aGames = a.stats?.gamesWon || 0
+      const bGames = b.stats?.gamesWon || 0
+      if (aGames !== bGames) return bGames - aGames
+      
+      // Quinary: alphabetical by name
+      return a.name.localeCompare(b.name)
+    })
+    
     // Calculate additional stats for each player
-    const standings = players.map((player, index) => {
+    const standings = playersWithPoints.map((player, index) => {
       const winPercentage = player.stats.matchesPlayed > 0 
         ? Math.round((player.stats.matchesWon / player.stats.matchesPlayed) * 100)
         : 0
@@ -100,10 +135,6 @@ export async function GET(request, { params }) {
       const setPercentage = (player.stats.setsWon + player.stats.setsLost) > 0
         ? Math.round((player.stats.setsWon / (player.stats.setsWon + player.stats.setsLost)) * 100)
         : 0
-      
-      // Calculate points based on new scoring system:
-      // Win 2-0: 3 points, Win 2-1: 2 points, Lose 1-2: 1 point, Lose 0-2: 0 points
-      const totalPoints = player.stats.totalPoints || 0
       
       return {
         position: index + 1,
@@ -123,7 +154,7 @@ export async function GET(request, { params }) {
           setPercentage,
           gamesWon: player.stats.gamesWon || 0,
           gamesLost: player.stats.gamesLost || 0,
-          totalPoints,
+          totalPoints: player.calculatedPoints, // Use calculated points instead of stored
           eloRating: player.stats.eloRating || 1200,
           eloChange: (player.stats.eloRating || 1200) - 1200 // Change from starting ELO
         }
@@ -131,7 +162,6 @@ export async function GET(request, { params }) {
     })
     
     // Get current round info
-    const Match = (await import('../../../../../lib/models/Match')).default
     const latestRound = await Match.findOne({ 
       league: league._id, 
       season 

@@ -60,19 +60,24 @@ export async function POST(request) {
       }, { status: 400 })
     }
 
-    // Update match schedule
+    // Update match schedule to match the schema
     match.schedule = {
+      ...match.schedule,
       confirmedDate: datetime,
-      date: date,
-      time: time,
-      venue: venue,
+      club: venue,
       court: court || '',
-      notes: notes || '',
-      scheduledBy: userPlayer._id,
-      scheduledAt: new Date()
+      time: time
+    }
+    
+    // Add notes if provided
+    if (notes) {
+      match.notes = notes
     }
 
     await match.save()
+    
+    // Populate match data for response
+    await match.populate('players.player1 players.player2 league')
 
     return NextResponse.json({ 
       success: true, 

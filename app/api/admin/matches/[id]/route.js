@@ -136,6 +136,25 @@ export async function PATCH(request, { params }) {
           }
         }
 
+        // Count sets for statistics
+        let player1SetsWon = 0
+        let player2SetsWon = 0
+
+        if (body.result.score && body.result.score.sets && body.result.score.sets.length > 0) {
+          // Count sets won
+          body.result.score.sets.forEach(set => {
+            if (set.player1 > set.player2) {
+              player1SetsWon++
+            } else {
+              player2SetsWon++
+            }
+          })
+        } else if (body.result.score && body.result.score.walkover) {
+          // For walkover, winner gets 2-0
+          player1SetsWon = player1Won ? 2 : 0
+          player2SetsWon = player1Won ? 0 : 2
+        }
+
         // Update player stats
         await Promise.all([
           player1.updateMatchStats({
@@ -157,6 +176,16 @@ export async function PATCH(request, { params }) {
             date: match.result.playedAt
           })
         ])
+
+        // Update sets won/lost (no longer updating totalPoints)
+        player1.stats.setsWon = (player1.stats.setsWon || 0) + player1SetsWon
+        player1.stats.setsLost = (player1.stats.setsLost || 0) + player2SetsWon
+        
+        player2.stats.setsWon = (player2.stats.setsWon || 0) + player2SetsWon
+        player2.stats.setsLost = (player2.stats.setsLost || 0) + player1SetsWon
+        
+        // Save both players with updated stats
+        await Promise.all([player1.save(), player2.save()])
 
         // Handle wild card usage if specified
         if (body.wildCardUsed) {
