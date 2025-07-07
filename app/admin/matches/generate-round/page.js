@@ -138,6 +138,19 @@ function GenerateRoundContent() {
     }
   }
 
+  const editInMatchCreator = () => {
+    // Store the preview data in sessionStorage for the match creator to use
+    if (preview) {
+      sessionStorage.setItem('swissPairings', JSON.stringify({
+        round: preview.round,
+        pairings: preview.pairings
+      }))
+    }
+    
+    // Navigate to the improved match creation page
+    router.push(`/admin/matches/create?league=${selectedLeague?.id || leagueId}&mode=swiss`)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -156,12 +169,20 @@ function GenerateRoundContent() {
             {selectedLeague?.name || 'League'} - Generate pairings for the next round
           </p>
         </div>
-        <button
-          onClick={() => router.push(`/admin/matches?league=${selectedLeague?.id || leagueId}`)}
-          className="px-4 py-2 text-gray-600 hover:text-gray-900"
-        >
-          ← Back to Matches
-        </button>
+        <div className="flex space-x-3">
+          <button
+            onClick={() => router.push(`/admin/matches/create?league=${selectedLeague?.id || leagueId}`)}
+            className="px-4 py-2 bg-parque-green text-white rounded-lg hover:bg-opacity-90"
+          >
+            Manual Match Creation →
+          </button>
+          <button
+            onClick={() => router.push(`/admin/matches?league=${selectedLeague?.id || leagueId}`)}
+            className="px-4 py-2 text-gray-600 hover:text-gray-900"
+          >
+            ← Back to Matches
+          </button>
+        </div>
       </div>
 
       {/* Error/Success Messages */}
@@ -290,6 +311,14 @@ function GenerateRoundContent() {
             </div>
           </div>
 
+          {/* New info box about editing */}
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <strong>💡 Tip:</strong> You can now edit these pairings before creating matches! 
+              Use the "Edit Pairings" button to adjust matches, swap players, or make manual changes.
+            </p>
+          </div>
+
           {/* Pairings List */}
           <div className="space-y-3">
             <h4 className="font-medium text-gray-700">Pairings:</h4>
@@ -304,14 +333,14 @@ function GenerateRoundContent() {
                   <div className="flex-1">
                     <div className="font-medium">{pairing.player1.name}</div>
                     <div className="text-sm text-gray-600">
-                      ELO: {pairing.player1.elo} • Wins: {pairing.player1.wins}
+                      {pairing.player1.level} • ELO: {pairing.player1.elo} • Wins: {pairing.player1.wins}
                     </div>
                   </div>
                   <div className="mx-4 text-gray-400">VS</div>
                   <div className="flex-1 text-right">
                     <div className="font-medium">{pairing.player2.name}</div>
                     <div className="text-sm text-gray-600">
-                      ELO: {pairing.player2.elo} • Wins: {pairing.player2.wins}
+                      {pairing.player2.level} • ELO: {pairing.player2.elo} • Wins: {pairing.player2.wins}
                     </div>
                   </div>
                 </div>
@@ -324,13 +353,19 @@ function GenerateRoundContent() {
             ))}
           </div>
 
-          {/* Confirm/Cancel Buttons */}
+          {/* Confirm/Cancel/Edit Buttons */}
           <div className="mt-6 flex justify-end space-x-3">
             <button
               onClick={() => setPreview(null)}
               className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
             >
               Cancel
+            </button>
+            <button
+              onClick={editInMatchCreator}
+              className="px-6 py-2 bg-parque-purple text-white rounded-lg hover:bg-opacity-90"
+            >
+              ✏️ Edit Pairings
             </button>
             <button
               onClick={confirmAndGenerate}

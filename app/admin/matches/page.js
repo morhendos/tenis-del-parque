@@ -121,15 +121,21 @@ function AdminMatchesContent() {
         <div className="flex space-x-3">
           <button
             onClick={() => router.push(`/admin/matches/generate-round?league=${leagueId || selectedLeague?.id}`)}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center"
           >
-            Generate Swiss Round
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+            </svg>
+            Swiss Pairing
           </button>
           <button
             onClick={handleCreateMatch}
-            className="px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-opacity-90"
+            className="px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-opacity-90 flex items-center"
           >
-            + Create Match
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Create Match
           </button>
         </div>
       </div>
@@ -137,6 +143,37 @@ function AdminMatchesContent() {
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg p-4">
           {error}
+        </div>
+      )}
+
+      {/* Quick Actions Info */}
+      {matches.length === 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+          <div className="flex items-start">
+            <svg className="w-6 h-6 text-blue-600 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <h3 className="text-lg font-semibold text-blue-900 mb-2">Getting Started</h3>
+              <p className="text-blue-800 mb-3">You can create matches in two ways:</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white rounded-lg p-4 border border-blue-200">
+                  <h4 className="font-semibold text-blue-900 mb-1">🎯 Swiss Pairing</h4>
+                  <p className="text-sm text-blue-700">
+                    Automatically generate a full round of matches using the Swiss tournament system. 
+                    Perfect for regular rounds where players are paired by performance.
+                  </p>
+                </div>
+                <div className="bg-white rounded-lg p-4 border border-blue-200">
+                  <h4 className="font-semibold text-blue-900 mb-1">✋ Manual Creation</h4>
+                  <p className="text-sm text-blue-700">
+                    Create individual matches by selecting players manually. 
+                    Ideal for playoffs, special matches, or when you need full control.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -270,12 +307,20 @@ function AdminMatchesContent() {
       {filteredMatches.length === 0 && (
         <div className="bg-white rounded-lg shadow p-12 text-center">
           <p className="text-gray-600 mb-4">No matches found matching your criteria.</p>
-          <button
-            onClick={handleCreateMatch}
-            className="px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-opacity-90"
-          >
-            Create First Match
-          </button>
+          <div className="flex justify-center space-x-3">
+            <button
+              onClick={() => router.push(`/admin/matches/generate-round?league=${leagueId || selectedLeague?.id}`)}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            >
+              Generate Swiss Round
+            </button>
+            <button
+              onClick={handleCreateMatch}
+              className="px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-opacity-90"
+            >
+              Create Match Manually
+            </button>
+          </div>
         </div>
       )}
     </div>
