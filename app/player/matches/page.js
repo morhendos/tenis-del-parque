@@ -9,7 +9,6 @@ export default function PlayerMatches() {
   const [matches, setMatches] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [filter, setFilter] = useState('all') // all, upcoming, completed, scheduled
   const [player, setPlayer] = useState(null)
   const [leaguePlayers, setLeaguePlayers] = useState([])
   const [showPlayers, setShowPlayers] = useState(false)
@@ -17,7 +16,11 @@ export default function PlayerMatches() {
   const [showResultModal, setShowResultModal] = useState(false)
   const [showScheduleModal, setShowScheduleModal] = useState(false)
   const [selectedMatch, setSelectedMatch] = useState(null)
-  const [resultForm, setResultForm] = useState({ myScore: '', opponentScore: '' })
+  const [resultForm, setResultForm] = useState({ 
+    sets: [{ myScore: '', opponentScore: '' }],
+    walkover: false,
+    retiredPlayer: null
+  })
   const [scheduleForm, setScheduleForm] = useState({
     date: '',
     time: '',
@@ -25,6 +28,7 @@ export default function PlayerMatches() {
     court: '',
     notes: ''
   })
+  const [submitting, setSubmitting] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -36,7 +40,7 @@ export default function PlayerMatches() {
     if (!player?.league?._id) return
     
     try {
-      // For now, we'll extract players from matches - later we can create a dedicated API
+      // Extract unique players from matches
       const allPlayers = new Map()
       
       matches.forEach(match => {
@@ -91,31 +95,93 @@ export default function PlayerMatches() {
     }
   }
 
+  const handleAddSet = () => {
+    if (resultForm.sets.length < 3) {
+      setResultForm({
+        ...resultForm,
+        sets: [...resultForm.sets, { myScore: '', opponentScore: '' }]
+      })
+    }
+  }
+
+  const handleRemoveSet = (index) => {
+    if (resultForm.sets.length > 1) {
+      setResultForm({
+        ...resultForm,
+        sets: resultForm.sets.filter((_, i) => i !== index)
+      })
+    }
+  }
+
+  const handleSetChange = (index, field, value) => {
+    const newSets = [...resultForm.sets]
+    newSets[index][field] = value
+    setResultForm({ ...resultForm, sets: newSets })
+  }
+
   const handleSubmitResult = async (e) => {
     e.preventDefault()
+    setSubmitting(true)
+    
     try {
+      // Validate sets
+      if (!resultForm.walkover) {
+        for (const set of resultForm.sets) {
+          if (set.myScore === '' || set.opponentScore === '') {
+            alert(language === 'es' ? 'Por favor completa todos los sets' : 'Please complete all sets')
+            setSubmitting(false)
+            return
+          }
+          const myScore = parseInt(set.myScore)
+          const oppScore = parseInt(set.opponentScore)
+          if (isNaN(myScore) || isNaN(oppScore) || myScore < 0 || oppScore < 0) {
+            alert(language === 'es' ? 'Puntuaciones inválidas' : 'Invalid scores')
+            setSubmitting(false)
+            return
+          }
+        }
+      }
+      
       const response = await fetch('/api/player/matches/result', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           matchId: selectedMatch._id,
-          myScore: parseInt(resultForm.myScore),
-          opponentScore: parseInt(resultForm.opponentScore)
+          sets: resultForm.walkover ? [] : resultForm.sets.map(set => ({
+            myScore: parseInt(set.myScore),
+            opponentScore: parseInt(set.opponentScore)
+          })),
+          walkover: resultForm.walkover,
+          retiredPlayer: resultForm.retiredPlayer
         })
       })
       
+      const data = await response.json()
+      
       if (response.ok) {
         setShowResultModal(false)
-        setResultForm({ myScore: '', opponentScore: '' })
+        setResultForm({ 
+          sets: [{ myScore: '', opponentScore: '' }],
+          walkover: false,
+          retiredPlayer: null
+        })
         fetchMatches()
+        alert(language === 'es' ? 'Resultado enviado con éxito' : 'Result submitted successfully')
+      } else {
+        alert(data.error || 'Failed to submit result')
       }
     } catch (error) {
       console.error('Error submitting result:', error)
+      alert('Error submitting result')
+    } finally {
+      setSubmitting(false)
     }
   }
 
   const handleScheduleMatch = async (e) => {
     e.preventDefault()
+    setSubmitting(true)
+    
     try {
       const response = await fetch('/api/player/matches/schedule', {
         method: 'POST',
@@ -126,32 +192,27 @@ export default function PlayerMatches() {
         })
       })
       
+      const data = await response.json()
+      
       if (response.ok) {
         setShowScheduleModal(false)
         setScheduleForm({ date: '', time: '', venue: '', court: '', notes: '' })
         fetchMatches()
+        alert(language === 'es' ? 'Partido programado con éxito' : 'Match scheduled successfully')
+      } else {
+        alert(data.error || 'Failed to schedule match')
       }
     } catch (error) {
       console.error('Error scheduling match:', error)
+      alert('Error scheduling match')
+    } finally {
+      setSubmitting(false)
     }
   }
 
-  const filteredMatches = matches.filter(match => {
-    if (filter === 'all') return true
-    if (filter === 'upcoming') return match.status === 'scheduled' && (!match.result || !match.result.winner)
-    if (filter === 'completed') return match.status === 'completed' || (match.result && match.result.winner)
-    if (filter === 'scheduled') return match.status === 'scheduled'
-    return true
-  })
-
   const getMatchResult = (match) => {
-    if (!player) return null
-    
-    if (match.result && match.result.winner) {
-      const won = match.result.winner === player._id
-      return won ? 'won' : 'lost'
-    }
-    return null
+    if (!player || !match.result || !match.result.winner) return null
+    return match.result.winner === player._id ? 'won' : 'lost'
   }
 
   const getOpponent = (match) => {
@@ -183,38 +244,8 @@ export default function PlayerMatches() {
     })
   }
 
-  const getStatusBadge = (match) => {
-    const result = getMatchResult(match)
-    
-    if (result === 'won') {
-      return (
-        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-          ✓ Won
-        </span>
-      )
-    } else if (result === 'lost') {
-      return (
-        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-          ✗ Lost
-        </span>
-      )
-    } else if (match.status === 'scheduled') {
-      return (
-        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-          📅 Scheduled
-        </span>
-      )
-    } else {
-      return (
-        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
-          ⏳ Pending
-        </span>
-      )
-    }
-  }
-
-  const upcomingMatches = matches.filter(m => m.status === 'scheduled' && !m.result)
-  const completedMatches = matches.filter(m => m.result)
+  const upcomingMatches = matches.filter(m => m.status === 'scheduled' && !m.result?.winner)
+  const completedMatches = matches.filter(m => m.status === 'completed' || m.result?.winner)
 
   const tabs = [
     { id: 'upcoming', label: language === 'es' ? 'Próximos' : 'Upcoming', count: upcomingMatches.length },
@@ -261,9 +292,13 @@ export default function PlayerMatches() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Matches</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            {language === 'es' ? 'Mis Partidos' : 'My Matches'}
+          </h1>
           <p className="mt-2 text-gray-600">
-            Track your tennis journey and match history
+            {language === 'es' 
+              ? 'Seguimiento de tu trayectoria y historial de partidos'
+              : 'Track your tennis journey and match history'}
           </p>
         </div>
         <div className="mt-4 sm:mt-0">
@@ -274,7 +309,7 @@ export default function PlayerMatches() {
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Back to Dashboard
+            {language === 'es' ? 'Volver al Panel' : 'Back to Dashboard'}
           </button>
         </div>
       </div>
@@ -309,85 +344,92 @@ export default function PlayerMatches() {
       {activeTab === 'upcoming' && (
         <div className="space-y-4">
           {upcomingMatches.length > 0 ? (
-            upcomingMatches.map((match) => (
-              <div key={match._id} className="bg-gray-50 rounded-xl p-6 border border-gray-200">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-parque-purple rounded-full flex items-center justify-center">
-                      <span className="text-white font-bold">
-                        {match.round}
-                      </span>
+            upcomingMatches.map((match) => {
+              const opponent = getOpponent(match)
+              return (
+                <div key={match._id} className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-parque-purple rounded-full flex items-center justify-center">
+                        <span className="text-white font-bold">
+                          {match.round}
+                        </span>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">
+                          {language === 'es' ? 'Ronda' : 'Round'} {match.round}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          vs {opponent?.name || 'TBD'}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">
-                        {language === 'es' ? 'Ronda' : 'Round'} {match.round}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        {language === 'es' ? 'vs' : 'vs'} {match.opponent?.name || 'TBD'}
-                      </p>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => {
+                          setSelectedMatch(match)
+                          setShowScheduleModal(true)
+                        }}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors"
+                      >
+                        {language === 'es' ? 'Programar' : 'Schedule'}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedMatch(match)
+                          setShowResultModal(true)
+                        }}
+                        className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-600 transition-colors"
+                      >
+                        {language === 'es' ? 'Resultado' : 'Result'}
+                      </button>
                     </div>
                   </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => {
-                        setSelectedMatch(match)
-                        setShowScheduleModal(true)
-                      }}
-                      className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors"
-                    >
-                      {language === 'es' ? 'Programar' : 'Schedule'}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedMatch(match)
-                        setShowResultModal(true)
-                      }}
-                      className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-600 transition-colors"
-                    >
-                      {language === 'es' ? 'Resultado' : 'Result'}
-                    </button>
-                  </div>
+                  
+                  {match.schedule?.confirmedDate && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white rounded-lg p-4">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-lg">📅</span>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            {formatDate(match.schedule.confirmedDate)}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {language === 'es' ? 'Fecha' : 'Date'}
+                          </p>
+                        </div>
+                      </div>
+                      {match.schedule.club && (
+                        <div className="flex items-center space-x-2">
+                          <span className="text-lg">🏟️</span>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              {match.schedule.club}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {language === 'es' ? 'Lugar' : 'Venue'}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {match.schedule.court && (
+                        <div className="flex items-center space-x-2">
+                          <span className="text-lg">🎾</span>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              {match.schedule.court}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {language === 'es' ? 'Cancha' : 'Court'}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-                
-                {match.schedule && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white rounded-lg p-4">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-lg">📅</span>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {match.schedule.date}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {language === 'es' ? 'Fecha' : 'Date'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-lg">🏟️</span>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {match.schedule.venue}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {language === 'es' ? 'Lugar' : 'Venue'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-lg">🎾</span>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {match.schedule.court}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {language === 'es' ? 'Cancha' : 'Court'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))
+              )
+            })
           ) : (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">🎾</div>
@@ -407,80 +449,82 @@ export default function PlayerMatches() {
       {activeTab === 'completed' && (
         <div className="space-y-4">
           {completedMatches.length > 0 ? (
-            completedMatches.map((match) => (
-              <div key={match._id} className="bg-gray-50 rounded-xl p-6 border border-gray-200">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center">
-                      <span className="text-white font-bold">
-                        {match.round}
-                      </span>
+            completedMatches.map((match) => {
+              const opponent = getOpponent(match)
+              const result = getMatchResult(match)
+              const isWinner = result === 'won'
+              
+              // Determine the score display based on who won
+              let myScore, opponentScore
+              if (match.result?.score?.sets) {
+                const isPlayer1 = match.players.player1._id === player._id
+                myScore = match.result.score.sets.filter((set, i) => 
+                  isPlayer1 ? set.player1 > set.player2 : set.player2 > set.player1
+                ).length
+                opponentScore = match.result.score.sets.length - myScore
+              }
+              
+              return (
+                <div key={match._id} className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center">
+                        <span className="text-white font-bold">
+                          {match.round}
+                        </span>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">
+                          {language === 'es' ? 'Ronda' : 'Round'} {match.round}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          vs {opponent?.name || 'TBD'}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">
-                        {language === 'es' ? 'Ronda' : 'Round'} {match.round}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        {language === 'es' ? 'vs' : 'vs'} {match.opponent?.name || 'TBD'}
-                      </p>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-gray-900">
+                        {myScore !== undefined ? `${myScore} - ${opponentScore}` : 'N/A'}
+                      </div>
+                      <div className={`text-sm font-medium ${
+                        isWinner ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {isWinner 
+                          ? (language === 'es' ? 'Victoria' : 'Win')
+                          : (language === 'es' ? 'Derrota' : 'Loss')
+                        }
+                      </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-gray-900">
-                      {match.result.myScore} - {match.result.opponentScore}
+                  
+                  {match.result?.score?.sets && (
+                    <div className="mt-4 bg-white rounded-lg p-4">
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">
+                        {language === 'es' ? 'Detalle de Sets' : 'Set Details'}
+                      </h4>
+                      <div className="flex space-x-4">
+                        {match.result.score.sets.map((set, index) => (
+                          <div key={index} className="text-center">
+                            <div className="text-lg font-bold">
+                              {set.player1}-{set.player2}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              Set {index + 1}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className={`text-sm font-medium ${
-                      match.result.myScore > match.result.opponentScore 
-                        ? 'text-green-600' 
-                        : 'text-red-600'
-                    }`}>
-                      {match.result.myScore > match.result.opponentScore 
-                        ? (language === 'es' ? 'Victoria' : 'Win')
-                        : (language === 'es' ? 'Derrota' : 'Loss')
-                      }
+                  )}
+                  
+                  {match.result?.playedAt && (
+                    <div className="mt-4 text-sm text-gray-600">
+                      {language === 'es' ? 'Jugado el' : 'Played on'} {formatDate(match.result.playedAt)}
                     </div>
-                  </div>
+                  )}
                 </div>
-                
-                {match.schedule && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white rounded-lg p-4">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-lg">📅</span>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {match.schedule.date}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {language === 'es' ? 'Fecha' : 'Date'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-lg">🏟️</span>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {match.schedule.venue}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {language === 'es' ? 'Lugar' : 'Venue'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-lg">🎾</span>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {match.schedule.court}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {language === 'es' ? 'Cancha' : 'Court'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))
+              )
+            })
           ) : (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">🏆</div>
@@ -501,18 +545,24 @@ export default function PlayerMatches() {
       {leaguePlayers.length > 0 && (
         <div className="bg-white rounded-lg border border-gray-200">
           <div className="px-6 py-4 border-b flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">League Players</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              {language === 'es' ? 'Jugadores de la Liga' : 'League Players'}
+            </h3>
             <button
               onClick={() => setShowPlayers(!showPlayers)}
               className="text-sm text-parque-purple hover:text-parque-purple/80 font-medium"
             >
-              {showPlayers ? 'Hide' : 'Show'} ({leaguePlayers.length})
+              {showPlayers 
+                ? (language === 'es' ? 'Ocultar' : 'Hide') 
+                : (language === 'es' ? 'Mostrar' : 'Show')} ({leaguePlayers.length})
             </button>
           </div>
           {showPlayers && (
             <div className="p-6">
               <p className="text-sm text-gray-600 mb-4">
-                Contact other players for practice matches or to schedule your league games
+                {language === 'es' 
+                  ? 'Contacta a otros jugadores para partidos de práctica o para programar tus partidos de liga'
+                  : 'Contact other players for practice matches or to schedule your league games'}
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {leaguePlayers.map((opponent) => (
@@ -542,7 +592,11 @@ export default function PlayerMatches() {
                               cleaned = cleaned.substring(2)
                             }
                             return cleaned
-                          })()}?text=Hi ${opponent.name}! I'm also in the tennis league. Would you like to play a practice match or schedule our league game?`}
+                          })()}?text=${encodeURIComponent(
+                            language === 'es' 
+                              ? `Hola ${opponent.name}! También estoy en la liga de tenis. ¿Te gustaría jugar un partido de práctica o programar nuestro partido de liga?`
+                              : `Hi ${opponent.name}! I'm also in the tennis league. Would you like to play a practice match or schedule our league game?`
+                          )}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="w-full inline-flex items-center justify-center px-3 py-2 text-xs font-medium text-white bg-green-500 rounded-lg hover:bg-green-600 transition-colors"
@@ -550,7 +604,7 @@ export default function PlayerMatches() {
                           <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.487"/>
                           </svg>
-                          Contact
+                          {language === 'es' ? 'Contactar' : 'Contact'}
                         </a>
                       </div>
                     )}
@@ -565,83 +619,160 @@ export default function PlayerMatches() {
       {/* Summary Stats */}
       {matches.length > 0 && (
         <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Match Statistics</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            {language === 'es' ? 'Estadísticas de Partidos' : 'Match Statistics'}
+          </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-gray-900">{matches.length}</div>
-              <div className="text-sm text-gray-500">Total Matches</div>
+              <div className="text-sm text-gray-500">
+                {language === 'es' ? 'Total de Partidos' : 'Total Matches'}
+              </div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
                 {matches.filter(m => getMatchResult(m) === 'won').length}
               </div>
-              <div className="text-sm text-gray-500">Wins</div>
+              <div className="text-sm text-gray-500">
+                {language === 'es' ? 'Victorias' : 'Wins'}
+              </div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-red-600">
                 {matches.filter(m => getMatchResult(m) === 'lost').length}
               </div>
-              <div className="text-sm text-gray-500">Losses</div>
+              <div className="text-sm text-gray-500">
+                {language === 'es' ? 'Derrotas' : 'Losses'}
+              </div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
                 {matches.filter(m => m.status === 'scheduled' && !getMatchResult(m)).length}
               </div>
-              <div className="text-sm text-gray-500">Upcoming</div>
+              <div className="text-sm text-gray-500">
+                {language === 'es' ? 'Próximos' : 'Upcoming'}
+              </div>
             </div>
           </div>
         </div>
       )}
 
       {/* Result Modal */}
-      {showResultModal && (
+      {showResultModal && selectedMatch && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold text-gray-900 mb-4">
               {language === 'es' ? 'Reportar Resultado' : 'Report Result'}
             </h2>
+            
+            {/* Opponent info */}
+            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-600">
+                {language === 'es' ? 'Partido contra' : 'Match against'}
+              </p>
+              <p className="font-semibold">
+                {getOpponent(selectedMatch)?.name || 'Unknown'}
+              </p>
+            </div>
+            
             <form onSubmit={handleSubmitResult} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {language === 'es' ? 'Mi Puntuación (Sets)' : 'My Score (Sets)'}
-                </label>
+              {/* Walkover option */}
+              <div className="flex items-center">
                 <input
-                  type="number"
-                  min="0"
-                  max="2"
-                  value={resultForm.myScore}
-                  onChange={(e) => setResultForm({...resultForm, myScore: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-transparent"
-                  required
+                  type="checkbox"
+                  id="walkover"
+                  checked={resultForm.walkover}
+                  onChange={(e) => setResultForm({...resultForm, walkover: e.target.checked})}
+                  className="h-4 w-4 text-parque-purple border-gray-300 rounded focus:ring-parque-purple"
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {language === 'es' ? 'Puntuación del Oponente (Sets)' : 'Opponent Score (Sets)'}
+                <label htmlFor="walkover" className="ml-2 text-sm text-gray-700">
+                  {language === 'es' ? 'Walkover (Oponente no se presentó)' : 'Walkover (Opponent didn\'t show)'}
                 </label>
-                <input
-                  type="number"
-                  min="0"
-                  max="2"
-                  value={resultForm.opponentScore}
-                  onChange={(e) => setResultForm({...resultForm, opponentScore: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-transparent"
-                  required
-                />
               </div>
+              
+              {!resultForm.walkover && (
+                <>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-gray-700">
+                        {language === 'es' ? 'Puntuación de Sets' : 'Set Scores'}
+                      </label>
+                      {resultForm.sets.length < 3 && (
+                        <button
+                          type="button"
+                          onClick={handleAddSet}
+                          className="text-sm text-parque-purple hover:text-purple-700"
+                        >
+                          {language === 'es' ? '+ Añadir Set' : '+ Add Set'}
+                        </button>
+                      )}
+                    </div>
+                    
+                    {resultForm.sets.map((set, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <span className="text-sm text-gray-500 w-12">Set {index + 1}:</span>
+                        <input
+                          type="number"
+                          min="0"
+                          max="7"
+                          placeholder={language === 'es' ? 'Yo' : 'Me'}
+                          value={set.myScore}
+                          onChange={(e) => handleSetChange(index, 'myScore', e.target.value)}
+                          className="w-16 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-parque-purple focus:border-transparent"
+                          required
+                        />
+                        <span className="text-gray-500">-</span>
+                        <input
+                          type="number"
+                          min="0"
+                          max="7"
+                          placeholder={language === 'es' ? 'Rival' : 'Opp'}
+                          value={set.opponentScore}
+                          onChange={(e) => handleSetChange(index, 'opponentScore', e.target.value)}
+                          className="w-16 px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-parque-purple focus:border-transparent"
+                          required
+                        />
+                        {resultForm.sets.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSet(index)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+              
               <div className="flex space-x-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => setShowResultModal(false)}
-                  className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  onClick={() => {
+                    setShowResultModal(false)
+                    setResultForm({ 
+                      sets: [{ myScore: '', opponentScore: '' }],
+                      walkover: false,
+                      retiredPlayer: null
+                    })
+                  }}
+                  disabled={submitting}
+                  className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
                 >
                   {language === 'es' ? 'Cancelar' : 'Cancel'}
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  disabled={submitting}
+                  className="flex-1 px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
                 >
-                  {language === 'es' ? 'Reportar' : 'Report'}
+                  {submitting 
+                    ? (language === 'es' ? 'Enviando...' : 'Submitting...') 
+                    : (language === 'es' ? 'Reportar' : 'Report')}
                 </button>
               </div>
             </form>
@@ -650,12 +781,23 @@ export default function PlayerMatches() {
       )}
 
       {/* Schedule Modal */}
-      {showScheduleModal && (
+      {showScheduleModal && selectedMatch && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl max-w-md w-full p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">
               {language === 'es' ? 'Programar Partido' : 'Schedule Match'}
             </h2>
+            
+            {/* Opponent info */}
+            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-600">
+                {language === 'es' ? 'Partido contra' : 'Match against'}
+              </p>
+              <p className="font-semibold">
+                {getOpponent(selectedMatch)?.name || 'Unknown'}
+              </p>
+            </div>
+            
             <form onSubmit={handleScheduleMatch} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -665,6 +807,7 @@ export default function PlayerMatches() {
                   type="date"
                   value={scheduleForm.date}
                   onChange={(e) => setScheduleForm({...scheduleForm, date: e.target.value})}
+                  min={new Date().toISOString().split('T')[0]}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-transparent"
                   required
                 />
@@ -721,16 +864,23 @@ export default function PlayerMatches() {
               <div className="flex space-x-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => setShowScheduleModal(false)}
-                  className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  onClick={() => {
+                    setShowScheduleModal(false)
+                    setScheduleForm({ date: '', time: '', venue: '', court: '', notes: '' })
+                  }}
+                  disabled={submitting}
+                  className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
                 >
                   {language === 'es' ? 'Cancelar' : 'Cancel'}
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  disabled={submitting}
+                  className="flex-1 px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
                 >
-                  {language === 'es' ? 'Programar' : 'Schedule'}
+                  {submitting 
+                    ? (language === 'es' ? 'Guardando...' : 'Saving...') 
+                    : (language === 'es' ? 'Programar' : 'Schedule')}
                 </button>
               </div>
             </form>
