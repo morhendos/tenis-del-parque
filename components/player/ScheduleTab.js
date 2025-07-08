@@ -9,7 +9,21 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
   const [selectedMatch, setSelectedMatch] = useState(null)
 
   const getCurrentRoundMatches = () => {
-    return schedule.filter(match => match.round === currentRound)
+    const allMatches = schedule.filter(match => match.round === currentRound)
+    
+    // Separate player's match from other matches
+    const playerMatch = allMatches.find(match => 
+      match.players?.player1?._id === player?._id || 
+      match.players?.player2?._id === player?._id
+    )
+    
+    const otherMatches = allMatches.filter(match => 
+      match.players?.player1?._id !== player?._id && 
+      match.players?.player2?._id !== player?._id
+    )
+    
+    // Return player's match first, then other matches
+    return { playerMatch, otherMatches }
   }
 
   const getAvailableRounds = () => {
@@ -18,7 +32,12 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
     return allRounds.map(round => ({
       round,
       hasMatches: roundsWithMatches.includes(round),
-      matchCount: schedule.filter(match => match.round === round).length
+      matchCount: schedule.filter(match => match.round === round).length,
+      hasPlayerMatch: schedule.some(match => 
+        match.round === round && 
+        (match.players?.player1?._id === player?._id || 
+         match.players?.player2?._id === player?._id)
+      )
     }))
   }
 
@@ -119,6 +138,9 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
     }, 3000)
   }
 
+  const { playerMatch, otherMatches } = getCurrentRoundMatches()
+  const hasMatchesInRound = playerMatch || otherMatches.length > 0
+
   return (
     <>
       <style jsx global>{`
@@ -189,7 +211,7 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
           
           {/* Round selector pills */}
           <div className="flex flex-wrap gap-2">
-            {getAvailableRounds().map(({ round, hasMatches, matchCount }) => (
+            {getAvailableRounds().map(({ round, hasMatches, matchCount, hasPlayerMatch }) => (
               <button
                 key={round}
                 onClick={() => setCurrentRound(round)}
@@ -202,7 +224,12 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
                 }`}
               >
                 {language === 'es' ? 'Ronda' : 'Round'} {round}
-                {hasMatches && (
+                {hasPlayerMatch && (
+                  <span className="absolute -top-1 -right-1 bg-yellow-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    ⭐
+                  </span>
+                )}
+                {hasMatches && !hasPlayerMatch && (
                   <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                     {matchCount}
                   </span>
@@ -213,7 +240,7 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
         </div>
         
         {/* Current Round Matches */}
-        {getCurrentRoundMatches().length > 0 ? (
+        {hasMatchesInRound ? (
           <div className="space-y-4">
             <div className="bg-gradient-to-r from-parque-purple to-parque-purple/80 text-white px-6 py-4 rounded-lg">
               <h3 className="text-xl font-bold mb-2">
@@ -221,20 +248,29 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
               </h3>
               <div className="flex items-center space-x-4 text-sm opacity-90">
                 <span>
-                  {getCurrentRoundMatches().length} {language === 'es' ? 'partidos' : 'matches'}
+                  {(playerMatch ? 1 : 0) + otherMatches.length} {language === 'es' ? 'partidos' : 'matches'}
                 </span>
-                <span>•</span>
-                <span>
-                  {getCurrentRoundMatches().filter(m => m.schedule?.confirmedDate).length} {language === 'es' ? 'confirmados' : 'confirmed'}
-                </span>
+                {playerMatch && (
+                  <>
+                    <span>•</span>
+                    <span className="flex items-center gap-1">
+                      <span className="text-yellow-300">⭐</span>
+                      {language === 'es' ? 'Tu partido' : 'Your match'}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
             
-            <div className="space-y-4">
-              {getCurrentRoundMatches().map((match) => (
+            {/* Player's Match - Interactive */}
+            {playerMatch && (
+              <div className="mb-6">
+                <h4 className="text-sm font-semibold text-gray-600 mb-2 flex items-center gap-2">
+                  <span className="text-yellow-500">⭐</span>
+                  {language === 'es' ? 'Tu Partido' : 'Your Match'}
+                </h4>
                 <MatchCard
-                  key={match._id}
-                  match={match}
+                  match={playerMatch}
                   player={player}
                   language={language}
                   onSchedule={handleSchedule}
@@ -242,9 +278,65 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
                   onWhatsApp={handleWhatsApp}
                   isUpcoming={true}
                   showActions={true}
+                  className="ring-2 ring-parque-purple ring-opacity-50"
                 />
-              ))}
-            </div>
+              </div>
+            )}
+            
+            {/* Other Matches - Read Only */}
+            {otherMatches.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold text-gray-600 mb-2">
+                  {language === 'es' ? 'Otros Partidos' : 'Other Matches'}
+                </h4>
+                <div className="space-y-4">
+                  {otherMatches.map((match) => (
+                    <div 
+                      key={match._id} 
+                      className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden opacity-75"
+                    >
+                      <div className="p-4 bg-gradient-to-r from-gray-50 to-gray-100">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-12 h-12 bg-gray-400 rounded-full flex items-center justify-center shadow-md">
+                              <span className="text-white font-bold text-lg">
+                                {match.round}
+                              </span>
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-gray-900">
+                                {language === 'es' ? 'Ronda' : 'Round'} {match.round}
+                              </h3>
+                              <div className="text-sm text-gray-700 font-medium mt-1">
+                                <span>{match.players?.player1?.name || 'TBD'}</span>
+                                <span className="mx-2 text-gray-500">vs</span>
+                                <span>{match.players?.player2?.name || 'TBD'}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Show schedule info if available */}
+                      {match.schedule?.confirmedDate && (
+                        <div className="p-4 bg-gray-50">
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <span className="text-green-500">✓</span>
+                            <span>{language === 'es' ? 'Confirmado' : 'Confirmed'}</span>
+                            {match.schedule.time && (
+                              <>
+                                <span>•</span>
+                                <span>{match.schedule.time}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="text-center py-16">
