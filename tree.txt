@@ -155,6 +155,8 @@ root/
 │   │   ├── SignupSection.js
 │   │   └── TestimonialsSection.js
 │   ├── layout
+│   ├── player
+│   │   └── QuickMatchActions.js
 │   ├── rules
 │   │   ├── RulesCTASection.js
 │   │   ├── RulesHeroSection.js
@@ -166,7 +168,9 @@ root/
 │       ├── TennisIcons.js
 │       └── WelcomeModal.js
 ├── docs
+│   ├── IMPROVED_MATCH_CREATION.md
 │   ├── MATCH_MANAGEMENT_GUIDE.md
+│   ├── MOBILE_UI_IMPROVEMENTS.md
 │   ├── PLAYER_MATCH_IMPROVEMENTS.md
 │   ├── PLAYER_MESSAGES_SYSTEM.md
 │   └── PR_MATCH_MANAGEMENT.md
