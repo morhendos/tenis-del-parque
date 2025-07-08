@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import MatchCard from './MatchCard'
 import { MatchModals } from './MatchModals'
 
@@ -7,11 +7,42 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
   const [showResultModal, setShowResultModal] = useState(false)
   const [showScheduleModal, setShowScheduleModal] = useState(false)
   const [selectedMatch, setSelectedMatch] = useState(null)
+  const [playerMatches, setPlayerMatches] = useState([])
+  const [loadingPlayerMatches, setLoadingPlayerMatches] = useState(true)
+
+  // Fetch player's matches with full data (including WhatsApp)
+  useEffect(() => {
+    const fetchPlayerMatches = async () => {
+      try {
+        setLoadingPlayerMatches(true)
+        const response = await fetch('/api/player/matches')
+        if (response.ok) {
+          const data = await response.json()
+          setPlayerMatches(data.matches || [])
+        }
+      } catch (error) {
+        console.error('Error fetching player matches:', error)
+      } finally {
+        setLoadingPlayerMatches(false)
+      }
+    }
+
+    if (player) {
+      fetchPlayerMatches()
+    }
+  }, [player])
 
   const getCurrentRoundMatches = () => {
     const allMatches = schedule.filter(match => match.round === currentRound)
     
-    // Separate player's match from other matches
+    // Find player's match from the playerMatches array (which has full data)
+    const playerMatchWithFullData = playerMatches.find(match => 
+      match.round === currentRound &&
+      (match.players?.player1?._id === player?._id || 
+       match.players?.player2?._id === player?._id)
+    )
+    
+    // Find player's match from schedule (for display purposes)
     const playerMatch = allMatches.find(match => 
       match.players?.player1?._id === player?._id || 
       match.players?.player2?._id === player?._id
@@ -22,8 +53,11 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
       match.players?.player2?._id !== player?._id
     )
     
-    // Return player's match first, then other matches
-    return { playerMatch, otherMatches }
+    // Use the match with full data if available, otherwise use the schedule match
+    return { 
+      playerMatch: playerMatchWithFullData || playerMatch, 
+      otherMatches 
+    }
   }
 
   const getAvailableRounds = () => {
@@ -268,6 +302,11 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
                 <h4 className="text-sm font-semibold text-gray-600 mb-2 flex items-center gap-2">
                   <span className="text-yellow-500">⭐</span>
                   {language === 'es' ? 'Tu Partido' : 'Your Match'}
+                  {loadingPlayerMatches && (
+                    <span className="text-xs text-gray-400 animate-pulse">
+                      {language === 'es' ? 'Cargando datos...' : 'Loading data...'}
+                    </span>
+                  )}
                 </h4>
                 <MatchCard
                   match={playerMatch}
