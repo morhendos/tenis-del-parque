@@ -151,6 +151,7 @@ export default function PlayerLeague() {
               schedule={schedule}
               language={language}
               totalRounds={DEFAULT_TOTAL_ROUNDS}
+              player={player}
             />
           )}
           
