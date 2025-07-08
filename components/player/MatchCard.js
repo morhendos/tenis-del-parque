@@ -53,14 +53,6 @@ export default function MatchCard({
   const result = getMatchResult()
   const isWinner = result === 'won'
 
-  // DEBUG: Log the opponent data
-  console.log('MatchCard opponent data:', {
-    opponent,
-    hasWhatsapp: !!opponent?.whatsapp,
-    whatsappNumber: opponent?.whatsapp,
-    matchData: match
-  })
-
   // Determine the score display for completed matches
   let myScore, opponentScore
   if (!isUpcoming && match.result?.score?.sets) {
