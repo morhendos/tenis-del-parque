@@ -71,8 +71,13 @@ export async function PATCH(request, { params }) {
 
   } catch (error) {
     console.error('Error updating player:', error)
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    })
     return NextResponse.json(
-      { error: 'Failed to update player' },
+      { error: 'Failed to update player', details: error.message },
       { status: 500 }
     )
   }
