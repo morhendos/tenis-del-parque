@@ -143,8 +143,8 @@ export default function MatchCard({
         </div>
       </div>
 
-      {/* Match Details - Always visible for upcoming matches */}
-      {(isUpcoming || !isUpcoming && match.result?.score?.sets) && (
+      {/* Match Details - Show when expanded or for completed matches */}
+      {(isExpanded || !isUpcoming) && (
         <div className="p-4">
           {/* Schedule information for upcoming matches */}
           {isUpcoming && match.schedule?.confirmedDate ? (
@@ -216,7 +216,7 @@ export default function MatchCard({
 
           {/* Set details for completed matches */}
           {!isUpcoming && match.result?.score?.sets && (
-            <div className="mb-3 bg-gray-50 rounded-lg p-3">
+            <div className="bg-gray-50 rounded-lg p-3">
               <h4 className="text-sm font-medium text-gray-700 mb-2">
                 {language === 'es' ? 'Detalle de Sets' : 'Set Details'}
               </h4>
