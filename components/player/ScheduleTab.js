@@ -32,6 +32,30 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
     }
   }, [player])
 
+  const formatDateForDisplay = (date) => {
+    if (!date) return null
+    
+    const dateObj = new Date(date)
+    const today = new Date()
+    const tomorrow = new Date(today)
+    tomorrow.setDate(today.getDate() + 1)
+    
+    const isToday = dateObj.toDateString() === today.toDateString()
+    const isTomorrow = dateObj.toDateString() === tomorrow.toDateString()
+    
+    if (isToday) {
+      return language === 'es' ? 'Hoy' : 'Today'
+    } else if (isTomorrow) {
+      return language === 'es' ? 'Mañana' : 'Tomorrow'
+    } else {
+      return dateObj.toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric'
+      })
+    }
+  }
+
   const getCurrentRoundMatches = () => {
     const allMatches = schedule.filter(match => match.round === currentRound)
     
@@ -322,7 +346,7 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
               </div>
             )}
             
-            {/* Other Matches - Read Only */}
+            {/* Other Matches - Read Only with Full Info */}
             {otherMatches.length > 0 && (
               <div>
                 <h4 className="text-sm font-semibold text-gray-600 mb-2">
@@ -332,8 +356,9 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
                   {otherMatches.map((match) => (
                     <div 
                       key={match._id} 
-                      className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden opacity-75"
+                      className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden opacity-90"
                     >
+                      {/* Match Header */}
                       <div className="p-4 bg-gradient-to-r from-gray-50 to-gray-100">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
@@ -356,21 +381,113 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
                         </div>
                       </div>
                       
-                      {/* Show schedule info if available */}
-                      {match.schedule?.confirmedDate && (
-                        <div className="p-4 bg-gray-50">
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <span className="text-green-500">✓</span>
-                            <span>{language === 'es' ? 'Confirmado' : 'Confirmed'}</span>
-                            {match.schedule.time && (
-                              <>
-                                <span>•</span>
-                                <span>{match.schedule.time}</span>
-                              </>
-                            )}
+                      {/* Match Details */}
+                      <div className="p-4">
+                        {/* Confirmed Match Info */}
+                        {match.schedule?.confirmedDate && (
+                          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <div className="flex items-center space-x-3 mb-3">
+                              <div className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center">
+                                <span className="text-sm">✓</span>
+                              </div>
+                              <div>
+                                <div className="font-semibold text-gray-800 text-sm">
+                                  {language === 'es' ? 'Partido Confirmado' : 'Match Confirmed'}
+                                </div>
+                                <div className="text-xs text-gray-600">
+                                  {language === 'es' ? 'Fecha y hora acordadas' : 'Date and time agreed'}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                              <div className="flex items-center space-x-2">
+                                <span className="text-lg">📅</span>
+                                <div>
+                                  <p className="font-medium text-gray-800 text-xs">
+                                    {formatDateForDisplay(match.schedule.confirmedDate)}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {new Date(match.schedule.confirmedDate).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
+                                      month: 'short',
+                                      day: 'numeric'
+                                    })}
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              {match.schedule.time && (
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-lg">🕐</span>
+                                  <div>
+                                    <p className="font-medium text-gray-800">
+                                      {match.schedule.time}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      {language === 'es' ? 'Hora' : 'Time'}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {match.schedule.club && (
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-lg">🏟️</span>
+                                  <div>
+                                    <p className="font-medium text-gray-800 text-xs">
+                                      {match.schedule.club}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      {language === 'es' ? 'Club' : 'Club'}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {(match.schedule.court || match.schedule.courtNumber) && (
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-lg">🎾</span>
+                                  <div>
+                                    <p className="font-medium text-gray-800 text-xs">
+                                      {match.schedule.court || `${language === 'es' ? 'Pista' : 'Court'}`} {match.schedule.courtNumber || ''}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      {language === 'es' ? 'Pista' : 'Court'}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
+                        
+                        {/* Pending Match Info */}
+                        {!match.schedule?.confirmedDate && match.schedule?.deadline && (
+                          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center">
+                                <span className="text-sm">⏰</span>
+                              </div>
+                              <div>
+                                <div className="font-semibold text-amber-800 text-sm">
+                                  {language === 'es' ? 'Pendiente de Confirmación' : 'Pending Confirmation'}
+                                </div>
+                                <div className="text-xs text-amber-600">
+                                  {language === 'es' ? 'Fecha límite: ' : 'Deadline: '}
+                                  {formatDateForDisplay(match.schedule.deadline)}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Not Scheduled Yet */}
+                        {!match.schedule?.confirmedDate && !match.schedule?.deadline && (
+                          <div className="text-center py-3 text-gray-500 text-sm">
+                            {language === 'es' ? 'Por programar' : 'To be scheduled'}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
