@@ -32,15 +32,6 @@ export default function AnnouncementModal({ isOpen, onClose, announcement }) {
             {/* Header */}
             <div className="flex justify-between items-start mb-6">
               <div className="flex items-center space-x-3">
-                <div className="flex-shrink-0">
-                  <Image 
-                    src="/logo.png" 
-                    alt="Liga del Parque" 
-                    width={40}
-                    height={40}
-                    className="h-10 w-auto"
-                  />
-                </div>
                 <div>
                   <h3 className="text-lg leading-6 font-medium text-gray-900">
                     {t.title}

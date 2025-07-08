@@ -156,7 +156,16 @@ root/
 │   │   └── TestimonialsSection.js
 │   ├── layout
 │   ├── player
-│   │   └── QuickMatchActions.js
+│   │   ├── DashboardHeader.js
+│   │   ├── LeagueCard.js
+│   │   ├── MatchActivity.js
+│   │   ├── PlayoffExplanation.js
+│   │   ├── QuickActions.js
+│   │   ├── QuickMatchActions.js
+│   │   ├── ResultsTab.js
+│   │   ├── ScheduleTab.js
+│   │   ├── StandingsTable.js
+│   │   └── StatsCards.js
 │   ├── rules
 │   │   ├── RulesCTASection.js
 │   │   ├── RulesHeroSection.js
@@ -177,6 +186,8 @@ root/
 ├── lib
 │   ├── analytics
 │   │   └── analytics.js
+│   ├── constants
+│   │   └── leagueConstants.js
 │   ├── content
 │   │   ├── activateContent.js
 │   │   ├── announcementContent.js
@@ -194,6 +205,8 @@ root/
 │   ├── hooks
 │   │   ├── useActiveSection.js
 │   │   ├── useLanguage.js
+│   │   ├── useLeagueData.js
+│   │   ├── usePlayerDashboard.js
 │   │   └── useWelcomeModal.js
 │   ├── models
 │   │   ├── League.js
@@ -229,5 +242,7 @@ root/
 │   ├── createTestData.js
 │   ├── seedLeagues.js
 │   └── tree.js
+├── styles
+│   └── dashboard.js
 ├── tailwind.config.js
 └── tree.txt
