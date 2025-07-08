@@ -159,6 +159,8 @@ root/
 │   │   ├── DashboardHeader.js
 │   │   ├── LeagueCard.js
 │   │   ├── MatchActivity.js
+│   │   ├── MatchCard.js
+│   │   ├── MatchModals.js
 │   │   ├── PlayoffExplanation.js
 │   │   ├── QuickActions.js
 │   │   ├── QuickMatchActions.js
@@ -180,6 +182,7 @@ root/
 │   ├── IMPROVED_MATCH_CREATION.md
 │   ├── MATCH_MANAGEMENT_GUIDE.md
 │   ├── MOBILE_UI_IMPROVEMENTS.md
+│   ├── MOBILE_UI_UX_IMPROVEMENTS.md
 │   ├── PLAYER_MATCH_IMPROVEMENTS.md
 │   ├── PLAYER_MESSAGES_SYSTEM.md
 │   └── PR_MATCH_MANAGEMENT.md
