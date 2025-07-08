@@ -1,109 +1,182 @@
-// Helper function for date formatting
-const formatDate = (date, language) => {
-  return new Date(date).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric'
-  })
-}
+import React from 'react'
+import { useRouter } from 'next/navigation'
 
 export function RecentMatches({ matches, language }) {
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden animate-slide-in-left" style={{ animationDelay: '0.6s' }}>
-      <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-gray-100">
-        <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-          <span className="text-xl mr-2">📋</span>
-          {language === 'es' ? 'Partidos Recientes' : 'Recent Matches'}
+  const router = useRouter()
+  
+  if (!matches || matches.length === 0) {
+    return (
+      <div className="bg-white rounded-2xl shadow-sm p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          ⏰ {language === 'es' ? 'Actividad Reciente' : 'Recent Activity'}
         </h3>
+        <div className="text-center py-8">
+          <div className="text-5xl mb-3">🎾</div>
+          <p className="text-gray-500 text-sm">
+            {language === 'es' 
+              ? 'No hay partidos recientes' 
+              : 'No recent matches'}
+          </p>
+        </div>
       </div>
-      <div className="p-6">
-        {matches.length > 0 ? (
-          <div className="space-y-3">
-            {matches.slice(0, 3).map((match, index) => (
-              <div key={index} className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl hover:from-gray-100 hover:to-gray-200 transition-all">
+    )
+  }
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm p-6 hover:shadow-lg transition-shadow">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          ⏰ {language === 'es' ? 'Actividad Reciente' : 'Recent Activity'}
+        </h3>
+        <button
+          onClick={() => router.push('/player/matches')}
+          className="text-sm text-parque-purple hover:text-purple-700 font-medium transition-colors"
+        >
+          {language === 'es' ? 'Ver todos' : 'View all'} →
+        </button>
+      </div>
+      <div className="space-y-3">
+        {matches.slice(0, 3).map((match) => {
+          const isWin = match.result === 'won'
+          const resultText = isWin 
+            ? (language === 'es' ? 'Victoria' : 'Win') 
+            : (language === 'es' ? 'Derrota' : 'Loss')
+          const resultColor = isWin ? 'text-green-600' : 'text-red-600'
+          const bgColor = isWin ? 'bg-green-50' : 'bg-red-50'
+          
+          return (
+            <div 
+              key={match._id} 
+              className={`${bgColor} rounded-xl p-4 hover:bg-opacity-80 transition-all cursor-pointer`}
+              onClick={() => router.push('/player/matches')}
+            >
+              <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    match.result === 'won' 
-                      ? 'bg-gradient-to-br from-green-500 to-emerald-600' 
-                      : 'bg-gradient-to-br from-red-500 to-pink-600'
-                  }`}>
-                    <span className="text-white text-lg">
-                      {match.result === 'won' ? '✓' : '✗'}
-                    </span>
+                    isWin ? 'bg-green-500' : 'bg-red-500'
+                  } text-white font-bold shadow-sm`}>
+                    {match.round}
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">vs {match.opponent}</p>
-                    <p className="text-sm text-gray-600">{formatDate(match.date, language)}</p>
+                    <p className="font-medium text-gray-900">
+                      {match.opponent}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {language === 'es' ? 'Ronda' : 'Round'} {match.round}
+                    </p>
                   </div>
                 </div>
-                <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  match.result === 'won' 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {match.result === 'won' 
-                    ? (language === 'es' ? 'Victoria' : 'Won')
-                    : (language === 'es' ? 'Derrota' : 'Lost')
-                  }
+                <div className="text-right">
+                  <p className={`font-semibold ${resultColor}`}>
+                    {resultText}
+                  </p>
+                  {match.eloChange && (
+                    <p className="text-sm text-gray-600">
+                      ELO {match.eloChange > 0 ? '+' : ''}{match.eloChange}
+                    </p>
+                  )}
                 </div>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <div className="text-5xl mb-3 animate-bounce">🎾</div>
-            <p className="text-gray-500">
-              {language === 'es' 
-                ? 'No hay partidos recientes'
-                : 'No recent matches'}
-            </p>
-          </div>
-        )}
+            </div>
+          )
+        })}
       </div>
     </div>
   )
 }
 
 export function UpcomingMatches({ matches, language }) {
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden animate-slide-in-right" style={{ animationDelay: '0.7s' }}>
-      <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-100">
-        <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-          <span className="text-xl mr-2">📅</span>
-          {language === 'es' ? 'Próximos Partidos' : 'Upcoming Matches'}
+  const router = useRouter()
+  
+  if (!matches || matches.length === 0) {
+    return (
+      <div className="bg-white rounded-2xl shadow-sm p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          📅 {language === 'es' ? 'Próximos Partidos' : 'Upcoming Matches'}
         </h3>
+        <div className="text-center py-8">
+          <div className="text-5xl mb-3">🗓️</div>
+          <p className="text-gray-500 text-sm">
+            {language === 'es' 
+              ? 'No hay partidos programados' 
+              : 'No scheduled matches'}
+          </p>
+        </div>
       </div>
-      <div className="p-6">
-        {matches.length > 0 ? (
-          <div className="space-y-3">
-            {matches.slice(0, 3).map((match, index) => (
-              <div key={index} className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl hover:from-blue-100 hover:to-indigo-100 transition-all">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-                    <span className="text-white text-lg">📅</span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">vs {match.opponent}</p>
-                    <p className="text-sm text-gray-600">{formatDate(match.date, language)}</p>
-                  </div>
+    )
+  }
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm p-6 hover:shadow-lg transition-shadow">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          📅 {language === 'es' ? 'Próximos Partidos' : 'Upcoming Matches'}
+        </h3>
+        <button
+          onClick={() => router.push('/player/matches')}
+          className="text-sm text-parque-purple hover:text-purple-700 font-medium transition-colors"
+        >
+          {language === 'es' ? 'Gestionar' : 'Manage'} →
+        </button>
+      </div>
+      <div className="space-y-3">
+        {matches.slice(0, 3).map((match) => (
+          <div 
+            key={match._id} 
+            className="bg-blue-50 rounded-xl p-4 hover:bg-blue-100 transition-all cursor-pointer"
+            onClick={() => router.push('/player/matches')}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-parque-purple to-purple-700 rounded-full flex items-center justify-center text-white font-bold shadow-sm">
+                  {match.round}
                 </div>
-                <div className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                  {language === 'es' ? 'Programado' : 'Scheduled'}
+                <div>
+                  <p className="font-medium text-gray-900">
+                    {match.opponent}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    {language === 'es' ? 'Ronda' : 'Round'} {match.round}
+                  </p>
                 </div>
               </div>
-            ))}
+              <div className="text-right">
+                {match.scheduled ? (
+                  <>
+                    <p className="font-medium text-green-600">
+                      {language === 'es' ? 'Confirmado' : 'Confirmed'}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {match.date}
+                    </p>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full font-medium">
+                      {language === 'es' ? 'Por programar' : 'To schedule'}
+                    </span>
+                    <button className="text-xs text-parque-purple hover:text-purple-700 font-medium">
+                      {language === 'es' ? 'Contactar →' : 'Contact →'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        ) : (
-          <div className="text-center py-12">
-            <div className="text-5xl mb-3">📅</div>
-            <p className="text-gray-500">
-              {language === 'es' 
-                ? 'No hay partidos programados'
-                : 'No upcoming matches'}
-            </p>
-          </div>
-        )}
+        ))}
       </div>
+      {matches.length > 3 && (
+        <div className="mt-4 text-center">
+          <button
+            onClick={() => router.push('/player/matches')}
+            className="text-sm text-parque-purple hover:text-purple-700 font-medium"
+          >
+            {language === 'es' 
+              ? `Ver ${matches.length - 3} más` 
+              : `View ${matches.length - 3} more`}
+          </button>
+        </div>
+      )}
     </div>
   )
-} 
+}
