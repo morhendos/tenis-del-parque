@@ -48,7 +48,7 @@ export default function MatchDetailPage() {
         <div className="text-center">
           <div className="text-6xl mb-4">🎾</div>
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Match not found</h2>
-          <p className="text-gray-600 mb-4">The match you're looking for doesn't exist or has been removed.</p>
+          <p className="text-gray-600 mb-4">The match you&apos;re looking for doesn&apos;t exist or has been removed.</p>
           <button
             onClick={() => window.history.back()}
             className="px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-opacity-90"
