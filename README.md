@@ -180,6 +180,75 @@ import dbConnect from '../../../../lib/db/mongoose'
 - **Nested Routing**: Next.js file-based routing creates different nesting levels
 - **Consistency**: Following the pattern prevents import errors
 
+## ⚠️ React/JSX Unescaped Entities
+
+**CRITICAL**: React/JSX requires special characters to be escaped. This is a common issue that causes build failures in Vercel deployments.
+
+### The Problem
+When you write text in JSX that contains apostrophes, quotes, or other special characters, React's ESLint rules will throw "unescaped entities" errors:
+
+```javascript
+// ❌ WRONG - Will cause ESLint errors
+<p>You'll need to use the "Users" → "Invite Players" feature.</p>
+<p>Don't forget to check the player's status!</p>
+<p>The price is <5 & >3.</p>
+```
+
+### The Solution
+Always escape special characters using HTML entities:
+
+```javascript
+// ✅ CORRECT - Properly escaped entities
+<p>You&apos;ll need to use the &quot;Users&quot; → &quot;Invite Players&quot; feature.</p>
+<p>Don&apos;t forget to check the player&apos;s status!</p>
+<p>The price is &lt;5 &amp; &gt;3.</p>
+```
+
+### Common HTML Entities
+
+| Character | HTML Entity | Alternative | Description |
+|-----------|------------|-------------|-------------|
+| `'` | `&apos;` | `&#39;` | Apostrophe/Single quote |
+| `"` | `&quot;` | `&ldquo;` / `&rdquo;` | Double quotes |
+| `&` | `&amp;` | - | Ampersand |
+| `<` | `&lt;` | - | Less than |
+| `>` | `&gt;` | - | Greater than |
+| `–` | `&ndash;` | - | En dash |
+| `—` | `&mdash;` | - | Em dash |
+
+### Alternative Solutions
+
+1. **Use Template Literals** (when appropriate):
+```javascript
+// ✅ Using template literals in dynamic content
+<p>{`You'll need to use the "Users" feature.`}</p>
+```
+
+2. **Use Unicode Characters**:
+```javascript
+// ✅ Using actual Unicode characters
+<p>You'll need to use the "Users" → "Invite Players" feature.</p>
+```
+
+3. **Configure ESLint** (NOT recommended for this project):
+```javascript
+// We keep the rules enabled to maintain code quality
+// Only disable if absolutely necessary in specific cases
+```
+
+### Why This Matters
+- **Build Failures**: Unescaped entities cause Vercel deployments to fail
+- **XSS Prevention**: Proper escaping helps prevent security vulnerabilities
+- **Standards Compliance**: Following React/JSX best practices
+- **Consistency**: Ensures all text is properly rendered across browsers
+
+### Quick Reference for Developers
+Before committing any JSX code, scan for these common characters and escape them:
+- Apostrophes in contractions: `don't` → `don&apos;t`
+- Quotes around text: `"example"` → `&quot;example&quot;`
+- Possessives: `player's` → `player&apos;s`
+- Comparisons: `<` → `&lt;`, `>` → `&gt;`
+
 ## 🔐 Authentication & Invitation System
 
 The platform features a comprehensive user management system with JWT authentication and WhatsApp-based invitations:
