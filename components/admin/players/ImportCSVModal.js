@@ -90,7 +90,7 @@ export default function ImportCSVModal({
             <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-sm text-blue-800">
                 <strong>Note:</strong> If a player with the same email already exists, their information will be updated. 
-                Imported players will NOT automatically get user accounts - you'll need to invite them separately via the "Users" → "Invite Players" feature.
+                Imported players will NOT automatically get user accounts - you&apos;ll need to invite them separately via the &quot;Users&quot; → &quot;Invite Players&quot; feature.
               </p>
             </div>
 
