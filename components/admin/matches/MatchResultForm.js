@@ -172,7 +172,7 @@ export default function MatchResultForm({
           />
           <div>
             <span className="text-sm font-medium text-gray-900">Walkover</span>
-            <p className="text-xs text-gray-600">One player didn't show up</p>
+            <p className="text-xs text-gray-600">One player didn&apos;t show up</p>
           </div>
         </label>
 
