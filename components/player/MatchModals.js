@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export function MatchModals({ 
   showResultModal,
@@ -12,7 +12,10 @@ export function MatchModals({
   onSubmitSchedule
 }) {
   const [resultForm, setResultForm] = useState({ 
-    sets: [{ myScore: '', opponentScore: '' }],
+    sets: [
+      { myScore: '', opponentScore: '' },
+      { myScore: '', opponentScore: '' }
+    ],
     walkover: false,
     retiredPlayer: null
   })
@@ -32,28 +35,122 @@ export function MatchModals({
       : match.players.player1
   }
 
-  const handleAddSet = () => {
-    if (resultForm.sets.length < 3) {
-      setResultForm({
-        ...resultForm,
-        sets: [...resultForm.sets, { myScore: '', opponentScore: '' }]
-      })
+  // Check if we need a super tiebreak (1:1 in sets)
+  const checkForSuperTiebreak = () => {
+    if (resultForm.walkover || resultForm.sets.length < 2) return false
+    
+    let mySetWins = 0
+    let oppSetWins = 0
+    
+    for (let i = 0; i < 2; i++) {
+      const set = resultForm.sets[i]
+      if (set.myScore !== '' && set.opponentScore !== '') {
+        const myScore = parseInt(set.myScore)
+        const oppScore = parseInt(set.opponentScore)
+        if (!isNaN(myScore) && !isNaN(oppScore)) {
+          if (myScore > oppScore) mySetWins++
+          else if (oppScore > myScore) oppSetWins++
+        }
+      }
     }
+    
+    return mySetWins === 1 && oppSetWins === 1
   }
 
-  const handleRemoveSet = (index) => {
-    if (resultForm.sets.length > 1) {
-      setResultForm({
-        ...resultForm,
-        sets: resultForm.sets.filter((_, i) => i !== index)
-      })
+  // Auto-add super tiebreak when it's 1:1
+  useEffect(() => {
+    if (checkForSuperTiebreak() && resultForm.sets.length === 2) {
+      setResultForm(prev => ({
+        ...prev,
+        sets: [...prev.sets, { myScore: '', opponentScore: '' }]
+      }))
     }
-  }
+  }, [resultForm.sets])
 
   const handleSetChange = (index, field, value) => {
     const newSets = [...resultForm.sets]
     newSets[index][field] = value
+    
+    // If changing set 1 or 2 and it's no longer 1:1, remove the third set
+    if (index < 2 && resultForm.sets.length === 3) {
+      let mySetWins = 0
+      let oppSetWins = 0
+      
+      for (let i = 0; i < 2; i++) {
+        const set = i === index ? { ...newSets[i], [field]: value } : newSets[i]
+        if (set.myScore !== '' && set.opponentScore !== '') {
+          const myScore = parseInt(set.myScore)
+          const oppScore = parseInt(set.opponentScore)
+          if (!isNaN(myScore) && !isNaN(oppScore)) {
+            if (myScore > oppScore) mySetWins++
+            else if (oppScore > myScore) oppSetWins++
+          }
+        }
+      }
+      
+      // Remove third set if it's not 1:1
+      if (!(mySetWins === 1 && oppSetWins === 1)) {
+        newSets.splice(2, 1)
+      }
+    }
+    
     setResultForm({ ...resultForm, sets: newSets })
+  }
+
+  const validateSetScore = (setIndex, myScore, oppScore) => {
+    const isSupertiebreak = setIndex === 2 // Third set is super tiebreak
+    
+    if (isSupertiebreak) {
+      // Super tiebreak validation: one player must reach at least 10 and win by 2
+      if (myScore >= 10 || oppScore >= 10) {
+        const diff = Math.abs(myScore - oppScore)
+        if (diff < 2) {
+          return language === 'es' 
+            ? 'El super tiebreak debe ganarse por diferencia de 2 puntos' 
+            : 'Super tiebreak must be won by 2 points'
+        }
+      } else if (myScore < 10 && oppScore < 10) {
+        return language === 'es'
+          ? 'En el super tiebreak, un jugador debe llegar a 10 puntos'
+          : 'In super tiebreak, one player must reach 10 points'
+      }
+    } else {
+      // Regular set validation
+      if (myScore === oppScore) {
+        return language === 'es' ? 'El set no puede terminar empatado' : 'Set cannot end in a tie'
+      }
+      
+      if (myScore === 7 || oppScore === 7) {
+        // Tiebreak set
+        const diff = Math.abs(myScore - oppScore)
+        if (myScore === 7 && oppScore === 5) return null // 7-5 is valid
+        if (oppScore === 7 && myScore === 5) return null // 5-7 is valid
+        if (myScore === 7 && oppScore === 6) return null // 7-6 is valid
+        if (oppScore === 7 && myScore === 6) return null // 6-7 is valid
+        if (myScore === 7 && oppScore < 5) return null // 7-0 to 7-4 are valid
+        if (oppScore === 7 && myScore < 5) return null // 0-7 to 4-7 are valid
+        
+        return language === 'es' 
+          ? 'Puntuación de set inválida' 
+          : 'Invalid set score'
+      } else if (myScore === 6 || oppScore === 6) {
+        // Regular set win
+        const winner = myScore === 6 ? myScore : oppScore
+        const loser = myScore === 6 ? oppScore : myScore
+        
+        if (loser > 4 && winner - loser < 2) {
+          return language === 'es' 
+            ? 'Debe ganar por diferencia de 2 juegos' 
+            : 'Must win by 2 games difference'
+        }
+      } else if (myScore > 7 || oppScore > 7) {
+        return language === 'es' 
+          ? 'Puntuación máxima del set es 7' 
+          : 'Maximum set score is 7'
+      }
+    }
+    
+    return null // Valid
   }
 
   const handleSubmitResult = async (e) => {
@@ -63,19 +160,60 @@ export function MatchModals({
     try {
       // Validate sets
       if (!resultForm.walkover) {
-        for (const set of resultForm.sets) {
+        let hasValidScores = false
+        
+        for (let i = 0; i < resultForm.sets.length; i++) {
+          const set = resultForm.sets[i]
           if (set.myScore === '' || set.opponentScore === '') {
-            alert(language === 'es' ? 'Por favor completa todos los sets' : 'Please complete all sets')
+            // For the third set (super tiebreak), it's optional if match is already decided
+            if (i === 2) {
+              // Check if match is already decided after 2 sets
+              let mySetWins = 0
+              let oppSetWins = 0
+              for (let j = 0; j < 2; j++) {
+                const prevSet = resultForm.sets[j]
+                if (prevSet.myScore !== '' && prevSet.opponentScore !== '') {
+                  if (parseInt(prevSet.myScore) > parseInt(prevSet.opponentScore)) mySetWins++
+                  else oppSetWins++
+                }
+              }
+              if (mySetWins === 2 || oppSetWins === 2) {
+                // Match already decided, remove empty third set
+                resultForm.sets.splice(2, 1)
+                continue
+              }
+            }
+            
+            alert(language === 'es' 
+              ? `Por favor completa el set ${i + 1}` 
+              : `Please complete set ${i + 1}`)
             setSubmitting(false)
             return
           }
+          
           const myScore = parseInt(set.myScore)
           const oppScore = parseInt(set.opponentScore)
+          
           if (isNaN(myScore) || isNaN(oppScore) || myScore < 0 || oppScore < 0) {
             alert(language === 'es' ? 'Puntuaciones inválidas' : 'Invalid scores')
             setSubmitting(false)
             return
           }
+          
+          const validationError = validateSetScore(i, myScore, oppScore)
+          if (validationError) {
+            alert(validationError)
+            setSubmitting(false)
+            return
+          }
+          
+          hasValidScores = true
+        }
+        
+        if (!hasValidScores) {
+          alert(language === 'es' ? 'Por favor ingresa al menos un set' : 'Please enter at least one set')
+          setSubmitting(false)
+          return
         }
       }
       
@@ -90,7 +228,10 @@ export function MatchModals({
       })
       
       setResultForm({ 
-        sets: [{ myScore: '', opponentScore: '' }],
+        sets: [
+          { myScore: '', opponentScore: '' },
+          { myScore: '', opponentScore: '' }
+        ],
         walkover: false,
         retiredPlayer: null
       })
@@ -119,6 +260,18 @@ export function MatchModals({
     }
   }
 
+  const getMaxScore = (setIndex) => {
+    // Third set (super tiebreak) can go higher
+    return setIndex === 2 ? 30 : 7
+  }
+
+  const getSetLabel = (index) => {
+    if (index === 2) {
+      return language === 'es' ? 'Super TB' : 'Super TB'
+    }
+    return `Set ${index + 1}`
+  }
+
   return (
     <>
       {/* Result Modal - Mobile Optimized */}
@@ -133,7 +286,10 @@ export function MatchModals({
                 onClick={() => {
                   onCloseResult()
                   setResultForm({ 
-                    sets: [{ myScore: '', opponentScore: '' }],
+                    sets: [
+                      { myScore: '', opponentScore: '' },
+                      { myScore: '', opponentScore: '' }
+                    ],
                     walkover: false,
                     retiredPlayer: null
                   })
@@ -174,55 +330,46 @@ export function MatchModals({
               {!resultForm.walkover && (
                 <>
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-medium text-gray-700">
-                        {language === 'es' ? 'Puntuación de Sets' : 'Set Scores'}
-                      </label>
-                      {resultForm.sets.length < 3 && (
-                        <button
-                          type="button"
-                          onClick={handleAddSet}
-                          className="text-sm text-parque-purple hover:text-purple-700 font-medium"
-                        >
-                          {language === 'es' ? '+ Añadir Set' : '+ Add Set'}
-                        </button>
-                      )}
-                    </div>
+                    <label className="text-sm font-medium text-gray-700">
+                      {language === 'es' ? 'Puntuación de Sets' : 'Set Scores'}
+                    </label>
+                    
+                    {checkForSuperTiebreak() && resultForm.sets.length === 3 && (
+                      <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded-lg">
+                        {language === 'es' 
+                          ? '⚡ Super tiebreak necesario (1-1 en sets)' 
+                          : '⚡ Super tiebreak required (1-1 in sets)'}
+                      </div>
+                    )}
                     
                     {resultForm.sets.map((set, index) => (
                       <div key={index} className="flex items-center space-x-2 bg-gray-50 rounded-xl p-3">
-                        <span className="text-sm text-gray-500 w-12">Set {index + 1}:</span>
+                        <span className="text-sm text-gray-500 w-16">{getSetLabel(index)}:</span>
                         <input
                           type="number"
                           min="0"
-                          max="7"
+                          max={getMaxScore(index)}
                           placeholder={language === 'es' ? 'Yo' : 'Me'}
                           value={set.myScore}
                           onChange={(e) => handleSetChange(index, 'myScore', e.target.value)}
                           className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-transparent text-center font-medium"
-                          required
+                          required={index < 2 || (index === 2 && checkForSuperTiebreak())}
                         />
                         <span className="text-gray-500 font-medium">-</span>
                         <input
                           type="number"
                           min="0"
-                          max="7"
+                          max={getMaxScore(index)}
                           placeholder={language === 'es' ? 'Rival' : 'Opp'}
                           value={set.opponentScore}
                           onChange={(e) => handleSetChange(index, 'opponentScore', e.target.value)}
                           className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-transparent text-center font-medium"
-                          required
+                          required={index < 2 || (index === 2 && checkForSuperTiebreak())}
                         />
-                        {resultForm.sets.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveSet(index)}
-                            className="ml-2 text-red-500 hover:text-red-700 p-2"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
+                        {index === 2 && (
+                          <span className="text-xs text-gray-500 ml-2">
+                            {language === 'es' ? '(a 10+)' : '(to 10+)'}
+                          </span>
                         )}
                       </div>
                     ))}
@@ -236,7 +383,10 @@ export function MatchModals({
                   onClick={() => {
                     onCloseResult()
                     setResultForm({ 
-                      sets: [{ myScore: '', opponentScore: '' }],
+                      sets: [
+                        { myScore: '', opponentScore: '' },
+                        { myScore: '', opponentScore: '' }
+                      ],
                       walkover: false,
                       retiredPlayer: null
                     })
