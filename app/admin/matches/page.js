@@ -13,6 +13,7 @@ function AdminMatchesContent() {
     status: 'all',
     search: ''
   })
+  const [showImportModal, setShowImportModal] = useState(false)
   
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -56,6 +57,31 @@ function AdminMatchesContent() {
 
   const handleEditMatch = (matchId) => {
     router.push(`/admin/matches/${matchId}`)
+  }
+
+  const handleExport = async () => {
+    try {
+      const params = new URLSearchParams({
+        league: leagueId || selectedLeague?.id || '',
+        status: filters.status !== 'all' ? filters.status : ''
+      })
+      
+      const res = await fetch(`/api/admin/matches/export?${params}`)
+      if (!res.ok) throw new Error('Failed to export matches')
+      
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `matches-${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      console.error('Export error:', error)
+      setError('Failed to export matches')
+    }
   }
 
   const getStatusBadgeClass = (status) => {
@@ -111,14 +137,32 @@ function AdminMatchesContent() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Matches</h2>
           <p className="text-gray-600 mt-1">
             {selectedLeague ? `Manage matches and results for ${selectedLeague.name}` : 'Manage matches and results'}
           </p>
         </div>
-        <div className="flex space-x-3">
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={handleExport}
+            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 flex items-center"
+          >
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+            </svg>
+            Export
+          </button>
+          <button
+            onClick={() => setShowImportModal(true)}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center"
+          >
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+            Import
+          </button>
           <button
             onClick={() => router.push(`/admin/matches/generate-round?league=${leagueId || selectedLeague?.id}`)}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center"
@@ -155,20 +199,24 @@ function AdminMatchesContent() {
             </svg>
             <div>
               <h3 className="text-lg font-semibold text-blue-900 mb-2">Getting Started</h3>
-              <p className="text-blue-800 mb-3">You can create matches in two ways:</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <p className="text-blue-800 mb-3">You can create matches in multiple ways:</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white rounded-lg p-4 border border-blue-200">
+                  <h4 className="font-semibold text-blue-900 mb-1">📥 Import Matches</h4>
+                  <p className="text-sm text-blue-700">
+                    Import multiple matches from a CSV file. Perfect for migrating data or bulk creation.
+                  </p>
+                </div>
                 <div className="bg-white rounded-lg p-4 border border-blue-200">
                   <h4 className="font-semibold text-blue-900 mb-1">🎯 Swiss Pairing</h4>
                   <p className="text-sm text-blue-700">
-                    Automatically generate a full round of matches using the Swiss tournament system. 
-                    Perfect for regular rounds where players are paired by performance.
+                    Automatically generate a full round of matches using the Swiss tournament system.
                   </p>
                 </div>
                 <div className="bg-white rounded-lg p-4 border border-blue-200">
                   <h4 className="font-semibold text-blue-900 mb-1">✋ Manual Creation</h4>
                   <p className="text-sm text-blue-700">
-                    Create individual matches by selecting players manually. 
-                    Ideal for playoffs, special matches, or when you need full control.
+                    Create individual matches by selecting players manually.
                   </p>
                 </div>
               </div>
@@ -309,6 +357,12 @@ function AdminMatchesContent() {
           <p className="text-gray-600 mb-4">No matches found matching your criteria.</p>
           <div className="flex justify-center space-x-3">
             <button
+              onClick={() => setShowImportModal(true)}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+            >
+              Import Matches
+            </button>
+            <button
               onClick={() => router.push(`/admin/matches/generate-round?league=${leagueId || selectedLeague?.id}`)}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
             >
@@ -323,6 +377,177 @@ function AdminMatchesContent() {
           </div>
         </div>
       )}
+
+      {/* Import Modal */}
+      {showImportModal && (
+        <ImportMatchesModal
+          onClose={() => setShowImportModal(false)}
+          onSuccess={() => {
+            setShowImportModal(false)
+            fetchMatches()
+          }}
+          leagueId={leagueId || selectedLeague?.id}
+        />
+      )}
+    </div>
+  )
+}
+
+// Import Matches Modal Component
+function ImportMatchesModal({ onClose, onSuccess, leagueId }) {
+  const [file, setFile] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [results, setResults] = useState(null)
+
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0]
+    if (selectedFile && selectedFile.type !== 'text/csv') {
+      setError('Please select a CSV file')
+      return
+    }
+    setFile(selectedFile)
+    setError('')
+  }
+
+  const handleImport = async () => {
+    if (!file) {
+      setError('Please select a file')
+      return
+    }
+
+    try {
+      setLoading(true)
+      setError('')
+      
+      const formData = new FormData()
+      formData.append('file', file)
+      if (leagueId) {
+        formData.append('leagueId', leagueId)
+      }
+
+      const res = await fetch('/api/admin/matches/import', {
+        method: 'POST',
+        body: formData
+      })
+
+      const data = await res.json()
+      
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to import matches')
+      }
+
+      setResults(data)
+      
+      if (data.errors.length === 0) {
+        setTimeout(() => {
+          onSuccess()
+        }, 2000)
+      }
+    } catch (error) {
+      setError(error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <h3 className="text-lg font-semibold mb-4">Import Matches</h3>
+        
+        {error && (
+          <div className="mb-4 bg-red-50 text-red-600 p-3 rounded-lg">
+            {error}
+          </div>
+        )}
+
+        {results ? (
+          <div>
+            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-green-800 font-medium">Import completed!</p>
+              <p className="text-green-600 text-sm mt-1">
+                Created: {results.created}, Updated: {results.updated}
+              </p>
+            </div>
+
+            {results.errors.length > 0 && (
+              <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-yellow-800 font-medium mb-2">Some errors occurred:</p>
+                <ul className="text-sm text-yellow-700 space-y-1">
+                  {results.errors.slice(0, 5).map((error, index) => (
+                    <li key={index}>• {error}</li>
+                  ))}
+                  {results.errors.length > 5 && (
+                    <li>... and {results.errors.length - 5} more errors</li>
+                  )}
+                </ul>
+              </div>
+            )}
+
+            <div className="flex justify-end">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-opacity-90"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                CSV File Format:
+              </label>
+              <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded">
+                <p className="font-medium mb-1">Required columns:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Round</li>
+                  <li>Player 1 Email</li>
+                  <li>Player 2 Email</li>
+                </ul>
+                <p className="font-medium mt-2 mb-1">Optional columns:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>League, Season, Status</li>
+                  <li>Date Played, Winner, Score</li>
+                  <li>Court, Notes</li>
+                  <li>ELO changes and ratings</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select CSV File
+              </label>
+              <input
+                type="file"
+                accept=".csv"
+                onChange={handleFileChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-transparent"
+              />
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleImport}
+                disabled={loading || !file}
+                className="px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-opacity-90 disabled:opacity-50"
+              >
+                {loading ? 'Importing...' : 'Import'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   )
 }
