@@ -7,11 +7,14 @@ import PlayerTable from '../../../components/admin/players/PlayerTable'
 import DeletePlayerModal from '../../../components/admin/players/DeletePlayerModal'
 import InvitationResultModal from '../../../components/admin/players/InvitationResultModal'
 import ImportCSVModal from '../../../components/admin/players/ImportCSVModal'
+import EloRecalculateModal from '../../../components/admin/players/EloRecalculateModal'
 
 function AdminPlayersContent() {
   const [deleteModal, setDeleteModal] = useState({ show: false, player: null })
   const [importModal, setImportModal] = useState({ show: false })
   const [importResult, setImportResult] = useState(null)
+  const [eloRecalculateLoading, setEloRecalculateLoading] = useState({})
+  const [eloRecalculateResult, setEloRecalculateResult] = useState(null)
   
   const {
     players,
@@ -43,6 +46,42 @@ function AdminPlayersContent() {
     const result = await handleImportCSV(file)
     setImportResult(result)
     return result
+  }
+
+  const handleRecalculateElo = async (playerId) => {
+    const loadingKey = `elo-${playerId}`
+    
+    try {
+      setEloRecalculateLoading(prev => ({ ...prev, [loadingKey]: true }))
+      
+      const response = await fetch(`/api/admin/players/${playerId}/recalculate-elo`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      const data = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to recalculate ELO')
+      }
+      
+      // Show the results in a modal
+      setEloRecalculateResult(data)
+      
+    } catch (error) {
+      console.error('Error recalculating ELO:', error)
+      alert(`Failed to recalculate ELO: ${error.message}`)
+    } finally {
+      setEloRecalculateLoading(prev => ({ ...prev, [loadingKey]: false }))
+    }
+  }
+
+  const handleEloModalClose = () => {
+    setEloRecalculateResult(null)
+    // Refresh the page to show updated ELO data
+    window.location.reload()
   }
 
   if (loading) {
@@ -100,8 +139,10 @@ function AdminPlayersContent() {
         onLevelUpdate={handleLevelUpdate}
         onInvite={handleInvitePlayer}
         onDelete={setDeleteModal}
+        onRecalculateElo={handleRecalculateElo}
         updateLoading={updateLoading}
         invitationLoading={invitationLoading}
+        eloRecalculateLoading={eloRecalculateLoading}
       />
 
       {/* Modals */}
@@ -126,6 +167,11 @@ function AdminPlayersContent() {
         leagues={leagues}
         selectedLeague={filters.league || leagueParam}
         importResult={importResult}
+      />
+
+      <EloRecalculateModal
+        result={eloRecalculateResult}
+        onClose={handleEloModalClose}
       />
     </div>
   )

@@ -6,8 +6,10 @@ export default function PlayerTableRow({
   onLevelUpdate, 
   onInvite, 
   onDelete,
+  onRecalculateElo,
   updateLoading,
-  invitationLoading 
+  invitationLoading,
+  eloRecalculateLoading
 }) {
   const getInviteButtonConfig = (player) => {
     const canInvite = player.status === 'pending' && !player.userId
@@ -79,6 +81,16 @@ export default function PlayerTableRow({
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
         <div>ELO: {player.stats?.eloRating || 1200}</div>
         <div>W/L: {player.stats?.matchesWon || 0}/{player.stats?.matchesPlayed - player.stats?.matchesWon || 0}</div>
+        {player.stats?.matchesPlayed > 0 && (
+          <button
+            onClick={() => onRecalculateElo(player._id)}
+            disabled={eloRecalculateLoading[`elo-${player._id}`]}
+            className="mt-1 px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Recalculate ELO based on match history"
+          >
+            {eloRecalculateLoading[`elo-${player._id}`] ? '⟳' : '🔄'} Recalc ELO
+          </button>
+        )}
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <select

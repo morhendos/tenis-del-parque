@@ -189,16 +189,18 @@ export async function POST(request) {
     
     match.status = 'completed'
     
+    // FIXED: Apply ELO changes correctly
+    // eloChange is the amount player1's rating should change
     match.eloChanges = {
       player1: {
         before: player1.stats.eloRating,
-        after: player1.stats.eloRating + (player1Won ? eloChange : -eloChange),
-        change: player1Won ? eloChange : -eloChange
+        after: player1.stats.eloRating + eloChange,
+        change: eloChange
       },
       player2: {
         before: player2.stats.eloRating,
-        after: player2.stats.eloRating + (player1Won ? -eloChange : eloChange),
-        change: player1Won ? -eloChange : eloChange
+        after: player2.stats.eloRating - eloChange,
+        change: -eloChange
       }
     }
 

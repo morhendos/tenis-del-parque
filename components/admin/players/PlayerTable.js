@@ -7,8 +7,10 @@ export default function PlayerTable({
   onLevelUpdate, 
   onInvite, 
   onDelete,
+  onRecalculateElo,
   updateLoading,
-  invitationLoading 
+  invitationLoading,
+  eloRecalculateLoading
 }) {
   if (players.length === 0) {
     return (
@@ -61,8 +63,10 @@ export default function PlayerTable({
                 onLevelUpdate={onLevelUpdate}
                 onInvite={onInvite}
                 onDelete={onDelete}
+                onRecalculateElo={onRecalculateElo}
                 updateLoading={updateLoading}
                 invitationLoading={invitationLoading}
+                eloRecalculateLoading={eloRecalculateLoading}
               />
             ))}
           </tbody>
