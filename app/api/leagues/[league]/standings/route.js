@@ -88,9 +88,28 @@ export async function GET(request, { params }) {
       if (match.result && match.result.score) {
         if (match.result.score.sets && match.result.score.sets.length > 0) {
           // Count games from each set
-          match.result.score.sets.forEach(set => {
-            player1GamesWon += (set.player1 || 0)
-            player2GamesWon += (set.player2 || 0)
+          match.result.score.sets.forEach((set, index) => {
+            const p1Games = set.player1 || 0
+            const p2Games = set.player2 || 0
+            
+            // Check if this is a super tiebreak (third set with scores >= 10)
+            const isThirdSet = index === 2
+            const isSuperTiebreak = isThirdSet && (p1Games >= 10 || p2Games >= 10)
+            
+            if (isSuperTiebreak) {
+              // Super tiebreak counts as 1 game for the winner
+              if (p1Games > p2Games) {
+                player1GamesWon += 1
+                player2GamesWon += 0
+              } else {
+                player1GamesWon += 0
+                player2GamesWon += 1
+              }
+            } else {
+              // Regular set - count actual games
+              player1GamesWon += p1Games
+              player2GamesWon += p2Games
+            }
           })
         } else if (match.result.score.walkover) {
           // For walkover, winner gets 12-0 (6-0, 6-0)
