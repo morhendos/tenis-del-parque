@@ -136,13 +136,20 @@ export async function PATCH(request, { params }) {
           }
         }
 
-        // Count sets for statistics
+        // Count sets and games for statistics
         let player1SetsWon = 0
         let player2SetsWon = 0
+        let player1GamesWon = 0
+        let player2GamesWon = 0
 
         if (body.result.score && body.result.score.sets && body.result.score.sets.length > 0) {
-          // Count sets won
+          // Count sets and games won
           body.result.score.sets.forEach(set => {
+            // Count games in this set
+            player1GamesWon += set.player1
+            player2GamesWon += set.player2
+            
+            // Count sets won
             if (set.player1 > set.player2) {
               player1SetsWon++
             } else {
@@ -150,9 +157,11 @@ export async function PATCH(request, { params }) {
             }
           })
         } else if (body.result.score && body.result.score.walkover) {
-          // For walkover, winner gets 2-0
+          // For walkover, winner gets 2-0 in sets and 12-0 in games (6-0, 6-0)
           player1SetsWon = player1Won ? 2 : 0
           player2SetsWon = player1Won ? 0 : 2
+          player1GamesWon = player1Won ? 12 : 0
+          player2GamesWon = player1Won ? 0 : 12
         }
 
         // Update player stats
@@ -177,12 +186,19 @@ export async function PATCH(request, { params }) {
           })
         ])
 
-        // Update sets won/lost (no longer updating totalPoints)
+        // Update sets won/lost
         player1.stats.setsWon = (player1.stats.setsWon || 0) + player1SetsWon
         player1.stats.setsLost = (player1.stats.setsLost || 0) + player2SetsWon
         
         player2.stats.setsWon = (player2.stats.setsWon || 0) + player2SetsWon
         player2.stats.setsLost = (player2.stats.setsLost || 0) + player1SetsWon
+        
+        // Update games won/lost
+        player1.stats.gamesWon = (player1.stats.gamesWon || 0) + player1GamesWon
+        player1.stats.gamesLost = (player1.stats.gamesLost || 0) + player2GamesWon
+        
+        player2.stats.gamesWon = (player2.stats.gamesWon || 0) + player2GamesWon
+        player2.stats.gamesLost = (player2.stats.gamesLost || 0) + player1GamesWon
         
         // Save both players with updated stats
         await Promise.all([player1.save(), player2.save()])
