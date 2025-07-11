@@ -2,21 +2,20 @@ import React from 'react'
 
 export default function StandingsTable({ players, language, unified = false }) {
   const getPositionStyle = (position) => {
-    // Playoff A qualification (positions 1-8)
-    if (position <= 8) return "bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200 shadow-blue-100"
-    // Playoff B qualification (positions 9-16)  
-    if (position <= 16) return "bg-gradient-to-r from-green-50 to-green-100 border-green-200 shadow-green-100"
-    // Not qualified for playoffs
-    return "bg-white border-gray-200 shadow-gray-100"
+    // Unified subtle violet gradient background with left border indicators
+    const baseStyle = "bg-gradient-to-r from-violet-50/30 via-white to-violet-50/20 border-gray-200 shadow-violet-100/50"
+    
+    // Add subtle left border color for qualification zones
+    if (position <= 8) return `${baseStyle} border-l-4 border-l-blue-500`
+    if (position <= 16) return `${baseStyle} border-l-4 border-l-green-500`
+    return baseStyle
   }
 
   const getPositionBadgeStyle = (position) => {
-    // Playoff A qualification (positions 1-8)
-    if (position <= 8) return 'bg-blue-500 text-white'
-    // Playoff B qualification (positions 9-16)
-    if (position <= 16) return 'bg-green-500 text-white'
-    // Not qualified for playoffs
-    return 'bg-gray-400 text-white'
+    // More prominent badges to compensate for unified row backgrounds
+    if (position <= 8) return 'bg-blue-600 text-white ring-2 ring-blue-200'
+    if (position <= 16) return 'bg-green-600 text-white ring-2 ring-green-200'
+    return 'bg-gray-500 text-white ring-2 ring-gray-200'
   }
 
   const getPositionLabel = (position) => {
@@ -52,6 +51,32 @@ export default function StandingsTable({ players, language, unified = false }) {
 
   return (
     <div className="overflow-x-auto">
+      {/* Playoff Qualification Legend */}
+      <div className="mb-6 bg-gradient-to-r from-violet-50/50 to-violet-50/30 rounded-lg p-4 border border-violet-100/40">
+        <h3 className="text-sm font-semibold text-violet-800 mb-3">
+          {language === 'es' ? 'Clasificación a Playoffs' : 'Playoff Qualification'}
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+          <div className="flex items-center space-x-3">
+            <div className="w-4 h-4 bg-blue-600 rounded"></div>
+            <span className="text-gray-700">
+              <span className="font-medium">1-8:</span> {language === 'es' ? 'Playoff A' : 'Playoff A'}
+            </span>
+          </div>
+          <div className="flex items-center space-x-3">
+            <div className="w-4 h-4 bg-green-600 rounded"></div>
+            <span className="text-gray-700">
+              <span className="font-medium">9-16:</span> {language === 'es' ? 'Playoff B' : 'Playoff B'}
+            </span>
+          </div>
+          <div className="flex items-center space-x-3">
+            <div className="w-4 h-4 bg-gray-500 rounded"></div>
+            <span className="text-gray-700">
+              <span className="font-medium">17+:</span> {language === 'es' ? 'Liga Regular' : 'Regular League'}
+            </span>
+          </div>
+        </div>
+      </div>
       {/* Mobile-first card layout for small screens */}
       <div className="block md:hidden space-y-4">
         {players.map((standing, index) => {
@@ -84,13 +109,9 @@ export default function StandingsTable({ players, language, unified = false }) {
                   </div>
                 </div>
                 
-                {/* Points with playoff zone styling */}
+                {/* Points with unified styling */}
                 <div className="text-right">
-                  <div className={`text-2xl font-bold ${
-                    standing.position <= 8 ? 'text-blue-600' :
-                    standing.position <= 16 ? 'text-green-600' :
-                    'text-gray-600'
-                  }`}>
+                  <div className="text-2xl font-bold text-gray-900">
                     {standing.stats.totalPoints || 0}
                   </div>
                   <div className="text-xs text-gray-500 font-medium">{language === 'es' ? 'puntos' : 'points'}</div>
@@ -132,26 +153,26 @@ export default function StandingsTable({ players, language, unified = false }) {
               
               {/* Enhanced stats grid - More compact for mobile */}
               <div className="grid grid-cols-4 gap-1 text-sm">
-                <div className="text-center bg-white/50 rounded-lg p-2 border border-white/20">
-                  <div className="font-bold text-gray-900 text-base">{standing.stats.matchesPlayed}</div>
-                  <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'P.J.' : 'MP'}</div>
-                </div>
-                <div className="text-center bg-white/50 rounded-lg p-2 border border-white/20">
-                  <div className="font-bold text-green-600 text-base">{standing.stats.matchesWon}</div>
-                  <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'P.G.' : 'MW'}</div>
-                </div>
-                <div className="text-center bg-white/50 rounded-lg p-2 border border-white/20">
-                  <div className="font-bold text-gray-900 text-base">
-                    {standing.stats.setsWon}-{standing.stats.setsLost}
+                                  <div className="text-center bg-white/70 rounded-lg p-2 border border-violet-100/40">
+                    <div className="font-bold text-gray-900 text-base">{standing.stats.matchesPlayed}</div>
+                    <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'P.J.' : 'MP'}</div>
                   </div>
-                  <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'Sets' : 'Sets'}</div>
-                </div>
-                <div className="text-center bg-white/50 rounded-lg p-2 border border-white/20">
-                  <div className="font-bold text-gray-900 text-base">
-                    {standing.stats.gamesWon || 0}-{standing.stats.gamesLost || 0}
+                  <div className="text-center bg-white/70 rounded-lg p-2 border border-violet-100/40">
+                    <div className="font-bold text-green-600 text-base">{standing.stats.matchesWon}</div>
+                    <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'P.G.' : 'MW'}</div>
                   </div>
-                  <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'Juegos' : 'Games'}</div>
-                </div>
+                  <div className="text-center bg-white/70 rounded-lg p-2 border border-violet-100/40">
+                    <div className="font-bold text-gray-900 text-base">
+                      {standing.stats.setsWon}-{standing.stats.setsLost}
+                    </div>
+                    <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'Sets' : 'Sets'}</div>
+                  </div>
+                  <div className="text-center bg-white/70 rounded-lg p-2 border border-violet-100/40">
+                    <div className="font-bold text-gray-900 text-base">
+                      {standing.stats.gamesWon || 0}-{standing.stats.gamesLost || 0}
+                    </div>
+                    <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'Juegos' : 'Games'}</div>
+                  </div>
               </div>
             </div>
           )
@@ -162,7 +183,7 @@ export default function StandingsTable({ players, language, unified = false }) {
       <div className="hidden md:block">
         <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-lg">
           <table className="w-full divide-y divide-gray-200" style={{ minWidth: '1100px' }}>
-            <thead className="bg-gradient-to-r from-parque-purple to-parque-purple/90">
+            <thead className="bg-gradient-to-r from-violet-600 via-parque-purple to-violet-600">
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">
                   {language === 'es' ? 'Posición' : 'Position'}
@@ -238,11 +259,7 @@ export default function StandingsTable({ players, language, unified = false }) {
                       )}
                     </td>
                     <td className="px-6 py-5 whitespace-nowrap text-center">
-                      <div className={`inline-flex items-center px-3 py-1 rounded-full text-lg font-bold ${
-                        standing.position <= 8 ? 'bg-blue-200 text-blue-800' :
-                        standing.position <= 16 ? 'bg-green-200 text-green-800' :
-                        'bg-gray-200 text-gray-800'
-                      }`}>
+                      <div className="text-lg font-bold text-gray-900">
                         {standing.stats.totalPoints || 0}
                       </div>
                     </td>
