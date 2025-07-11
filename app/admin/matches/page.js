@@ -471,13 +471,22 @@ function MatchCard({ match, onEdit }) {
           </div>
         </div>
         
-        <div className="ml-6">
+        <div className="ml-6 flex flex-col gap-2">
           <button
             onClick={() => onEdit(match._id)}
-            className="px-4 py-2 text-sm bg-parque-purple text-white rounded-lg hover:bg-opacity-90"
+            className="px-4 py-2 text-sm bg-parque-purple text-white rounded-lg hover:bg-opacity-90 flex items-center"
           >
-            {match.status === 'scheduled' ? 'Enter Result' : 'View Details'}
+            <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            {match.status === 'scheduled' ? 'Manage Match' : 'View Details'}
           </button>
+          {match.status === 'scheduled' && (
+            <div className="text-xs text-gray-500 text-center">
+              Edit players • Schedule • Enter result
+            </div>
+          )}
         </div>
       </div>
     </div>
