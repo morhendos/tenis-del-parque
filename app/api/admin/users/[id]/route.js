@@ -89,6 +89,24 @@ export async function PATCH(request, { params }) {
       updateData.lockUntil = null
     }
 
+    // Handle manual unlock request
+    if (updates.unlockAccount === true) {
+      await user.unlockAccount()
+      return NextResponse.json({
+        success: true,
+        message: 'Account unlocked successfully',
+        user: {
+          _id: user._id,
+          email: user.email,
+          role: user.role,
+          isActive: user.isActive,
+          emailVerified: user.emailVerified,
+          loginAttempts: 0,
+          isLocked: false
+        }
+      })
+    }
+
     // Update user
     Object.assign(user, updateData)
     await user.save()

@@ -111,24 +111,102 @@ export default function AdminUsersPage() {
     }
   }
 
+  const handleUnlockAccount = async (userId, email) => {
+    if (!confirm(`Unlock account for ${email}?`)) return
+    
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ unlockAccount: true })
+      })
+      
+      if (!res.ok) throw new Error('Failed to unlock account')
+      
+      alert('Account unlocked successfully')
+      // Refresh users list
+      fetchUsers()
+    } catch (error) {
+      console.error('Error unlocking account:', error)
+      setError('Failed to unlock account')
+    }
+  }
+
+  const handleUnlockAllAccounts = async () => {
+    const lockedUsers = filteredUsers.filter(user => user.isLocked)
+    if (lockedUsers.length === 0) {
+      alert('No locked accounts found')
+      return
+    }
+    
+    if (!confirm(`Unlock all ${lockedUsers.length} locked accounts?`)) return
+    
+    try {
+      setLoading(true)
+      let unlockedCount = 0
+      
+      for (const user of lockedUsers) {
+        try {
+          const res = await fetch(`/api/admin/users/${user._id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ unlockAccount: true })
+          })
+          
+          if (res.ok) {
+            unlockedCount++
+          }
+        } catch (error) {
+          console.error(`Failed to unlock ${user.email}:`, error)
+        }
+      }
+      
+      alert(`Successfully unlocked ${unlockedCount} out of ${lockedUsers.length} accounts`)
+      // Refresh users list
+      fetchUsers()
+    } catch (error) {
+      console.error('Error unlocking accounts:', error)
+      setError('Failed to unlock accounts')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const getStatusBadgeClass = (user) => {
-    if (!user.isActive) return 'bg-red-100 text-red-800'
+    if (user.isLocked) return 'bg-red-100 text-red-800'
+    if (!user.isActive) return 'bg-gray-100 text-gray-800'
     if (!user.emailVerified) return 'bg-yellow-100 text-yellow-800'
     return 'bg-green-100 text-green-800'
   }
 
   const getStatusText = (user) => {
+    if (user.isLocked) return 'Locked'
     if (!user.isActive) return 'Inactive'
     if (!user.emailVerified) return 'Unverified'
     return 'Active'
   }
 
+  const getLockInfo = (user) => {
+    if (!user.isLocked) return null
+    
+    const lockUntil = new Date(user.lockUntil)
+    const now = new Date()
+    const remainingMs = lockUntil.getTime() - now.getTime()
+    const remainingMinutes = Math.ceil(remainingMs / (60 * 1000))
+    
+    return {
+      remainingMinutes: Math.max(0, remainingMinutes),
+      attempts: user.loginAttempts || 0
+    }
+  }
+
   const filteredUsers = users.filter(user => {
     if (filters.role !== 'all' && user.role !== filters.role) return false
     if (filters.status !== 'all') {
-      if (filters.status === 'active' && (!user.isActive || !user.emailVerified)) return false
+      if (filters.status === 'active' && (!user.isActive || !user.emailVerified || user.isLocked)) return false
       if (filters.status === 'inactive' && user.isActive) return false
       if (filters.status === 'unverified' && user.emailVerified) return false
+      if (filters.status === 'locked' && !user.isLocked) return false
     }
     if (filters.search) {
       const searchLower = filters.search.toLowerCase()
@@ -165,6 +243,18 @@ export default function AdminUsersPage() {
           </div>
         </div>
         <div className="flex flex-wrap gap-3">
+          {filteredUsers.some(user => user.isLocked) && (
+            <button
+              onClick={handleUnlockAllAccounts}
+              className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 flex items-center"
+              disabled={loading}
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+              </svg>
+              🔓 Unlock All ({filteredUsers.filter(user => user.isLocked).length})
+            </button>
+          )}
           <button
             onClick={handleExport}
             className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 flex items-center"
@@ -248,6 +338,7 @@ export default function AdminUsersPage() {
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
               <option value="unverified">Unverified</option>
+              <option value="locked">Locked</option>
             </select>
           </div>
         </div>
@@ -266,6 +357,9 @@ export default function AdminUsersPage() {
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Lock Status
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Linked Player
@@ -302,6 +396,26 @@ export default function AdminUsersPage() {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
+                  {user.isLocked ? (
+                    <div className="text-sm">
+                      <div className="text-red-600 font-medium">
+                        🔒 Locked
+                      </div>
+                      <div className="text-red-500 text-xs">
+                        {getLockInfo(user)?.remainingMinutes > 0 
+                          ? `${getLockInfo(user).remainingMinutes} min left`
+                          : 'Expired'
+                        }
+                      </div>
+                      <div className="text-gray-500 text-xs">
+                        {getLockInfo(user)?.attempts || 0} attempts
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="text-sm text-green-600">✓ Unlocked</span>
+                  )}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
                   {user.player ? (
                     <div className="text-sm">
                       <div className="font-medium text-gray-900">{user.player.name}</div>
@@ -316,6 +430,14 @@ export default function AdminUsersPage() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex justify-end space-x-2">
+                    {user.isLocked && (
+                      <button
+                        onClick={() => handleUnlockAccount(user._id, user.email)}
+                        className="text-sm text-orange-600 hover:text-orange-900 font-medium"
+                      >
+                        🔓 Unlock
+                      </button>
+                    )}
                     <button
                       onClick={() => handleToggleStatus(user._id, user.isActive)}
                       className={`text-sm ${
