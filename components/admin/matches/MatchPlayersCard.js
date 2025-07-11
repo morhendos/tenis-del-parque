@@ -1,6 +1,6 @@
 import React from 'react'
 
-export default function MatchPlayersCard({ match }) {
+export default function MatchPlayersCard({ match, showEditIndicator = false }) {
   const getPlayerAvatar = (playerName) => {
     const initials = playerName.split(' ').map(n => n[0]).join('').toUpperCase()
     return (
@@ -26,7 +26,19 @@ export default function MatchPlayersCard({ match }) {
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 overflow-hidden">
-      <div className="bg-gradient-to-r from-parque-purple to-parque-green p-6 text-white">
+      <div className="bg-gradient-to-r from-parque-purple to-parque-green p-6 text-white relative">
+        {/* Edit Indicator */}
+        {showEditIndicator && (
+          <div className="absolute top-4 right-4">
+            <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-3 py-1.5 flex items-center space-x-2 text-sm">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+              <span>Players can be edited</span>
+            </div>
+          </div>
+        )}
+        
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
           {/* Player 1 */}
           <div className="text-center">
