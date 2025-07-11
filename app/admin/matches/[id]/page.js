@@ -8,6 +8,7 @@ import MatchPlayersCard from '../../../../components/admin/matches/MatchPlayersC
 import MatchOverviewTab from '../../../../components/admin/matches/MatchOverviewTab'
 import MatchScheduleTab from '../../../../components/admin/matches/MatchScheduleTab'
 import MatchResultTab from '../../../../components/admin/matches/MatchResultTab'
+import MatchPlayersTab from '../../../../components/admin/matches/MatchPlayersTab'
 
 export default function MatchDetailPage() {
   const [activeTab, setActiveTab] = useState('overview')
@@ -22,11 +23,13 @@ export default function MatchDetailPage() {
     setError,
     setSuccess,
     updateSchedule,
-    updateResult
+    updateResult,
+    updatePlayers
   } = useMatchDetail(matchId)
 
   const tabs = [
     { id: 'overview', name: 'Overview', icon: '📊' },
+    { id: 'players', name: 'Players', icon: '👥' },
     { id: 'schedule', name: 'Schedule', icon: '📅' },
     { id: 'result', name: 'Result', icon: '🎾' }
   ]
@@ -106,7 +109,7 @@ export default function MatchDetailPage() {
         )}
 
         {/* Players Card */}
-        <MatchPlayersCard match={match} />
+        <MatchPlayersCard match={match} showEditIndicator={match.status !== 'completed'} />
 
         {/* Tab Navigation */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
@@ -135,6 +138,13 @@ export default function MatchDetailPage() {
               <MatchOverviewTab 
                 match={match} 
                 onTabChange={setActiveTab}
+              />
+            )}
+            
+            {activeTab === 'players' && (
+              <MatchPlayersTab 
+                match={match}
+                onPlayersUpdate={updatePlayers}
               />
             )}
             
