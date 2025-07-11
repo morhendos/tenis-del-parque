@@ -145,7 +145,7 @@ export async function GET(request, { params }) {
       }
     })
     
-    // Sort players with active status first, then by points
+    // Sort players with proper tiebreakers
     playersWithStats.sort((a, b) => {
       // Primary: Active status (active players first)
       const statusPriority = {
@@ -165,13 +165,15 @@ export async function GET(request, { params }) {
       // Secondary: total points (calculated from matches)
       if (a.calculatedPoints !== b.calculatedPoints) return b.calculatedPoints - a.calculatedPoints
       
-      // Tertiary: sets won
-      const aSets = a.stats?.setsWon || 0
-      const bSets = b.stats?.setsWon || 0
-      if (aSets !== bSets) return bSets - aSets
+      // Tertiary: set difference (sets won - sets lost)
+      const aSetDiff = (a.stats?.setsWon || 0) - (a.stats?.setsLost || 0)
+      const bSetDiff = (b.stats?.setsWon || 0) - (b.stats?.setsLost || 0)
+      if (aSetDiff !== bSetDiff) return bSetDiff - aSetDiff
       
-      // Quaternary: games won (calculated from matches)
-      if (a.calculatedGamesWon !== b.calculatedGamesWon) return b.calculatedGamesWon - a.calculatedGamesWon
+      // Quaternary: game difference (games won - games lost)
+      const aGameDiff = a.calculatedGamesWon - a.calculatedGamesLost
+      const bGameDiff = b.calculatedGamesWon - b.calculatedGamesLost
+      if (aGameDiff !== bGameDiff) return bGameDiff - aGameDiff
       
       // Quinary: alphabetical by name
       return a.name.localeCompare(b.name)
