@@ -657,4 +657,5 @@ export default function AdminMatchesPage() {
     <Suspense fallback={<LoadingFallback />}>
       <AdminMatchesContent />
     </Suspense>
-  }
+  )
+}
