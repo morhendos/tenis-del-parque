@@ -64,6 +64,65 @@ export async function PATCH(request, { params }) {
       return NextResponse.json({ error: 'Match not found' }, { status: 404 })
     }
 
+    // Handle player updates
+    if (body.players) {
+      // Don't allow changing players for completed matches
+      if (match.status === 'completed') {
+        return NextResponse.json(
+          { error: 'Cannot change players for completed matches' },
+          { status: 400 }
+        )
+      }
+
+      // Validate player IDs
+      const { player1, player2 } = body.players
+      
+      if (!player1 || !player2) {
+        return NextResponse.json(
+          { error: 'Both player1 and player2 must be provided' },
+          { status: 400 }
+        )
+      }
+
+      if (player1 === player2) {
+        return NextResponse.json(
+          { error: 'Player 1 and Player 2 must be different' },
+          { status: 400 }
+        )
+      }
+
+      // Verify players exist and belong to the same league
+      const [newPlayer1, newPlayer2] = await Promise.all([
+        Player.findById(player1),
+        Player.findById(player2)
+      ])
+
+      if (!newPlayer1 || !newPlayer2) {
+        return NextResponse.json(
+          { error: 'One or both players not found' },
+          { status: 404 }
+        )
+      }
+
+      if (newPlayer1.league.toString() !== match.league.toString() ||
+          newPlayer2.league.toString() !== match.league.toString()) {
+        return NextResponse.json(
+          { error: 'Players must belong to the same league as the match' },
+          { status: 400 }
+        )
+      }
+
+      // Update the players
+      match.players.player1 = player1
+      match.players.player2 = player2
+
+      // Clear any wild card usage records since players changed
+      match.wildCardUsed = {
+        player1: false,
+        player2: false
+      }
+    }
+
     // Update fields based on what's provided
     if (body.schedule) {
       match.schedule = { ...match.schedule, ...body.schedule }
@@ -205,10 +264,10 @@ export async function PATCH(request, { params }) {
     await match.save()
 
     // Return updated match with populated data
-    await match.populate('players.player1 players.player2')
+    await match.populate('players.player1 players.player2 league')
 
     return NextResponse.json({
-      message: 'Match updated successfully',
+      message: body.players ? 'Players updated successfully' : 'Match updated successfully',
       match
     })
 
