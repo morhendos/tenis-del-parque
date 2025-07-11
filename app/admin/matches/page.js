@@ -315,6 +315,7 @@ function AdminMatchesContent() {
                   <MatchCard key={match._id} match={match} onEdit={handleEditMatch} />
                 ))}
               </div>
+<<<<<<< Updated upstream
               
               <div className="ml-6 flex flex-col gap-2">
                 <button
@@ -333,8 +334,33 @@ function AdminMatchesContent() {
                   </div>
                 )}
               </div>
+=======
+            ))}
+        </div>
+      ) : (
+<<<<<<< Updated upstream
+        // Show flat list when filtering by specific round
+        <div className="space-y-4">
+          {filters.round !== 'all' && filteredMatches.length > 0 && (
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Round {filters.round} ({filteredMatches.length} matches)
+              </h3>
+              <button
+                onClick={() => handleCreateMatch(filters.round)}
+                className="px-3 py-1 text-sm bg-parque-purple text-white rounded-lg hover:bg-opacity-90 flex items-center"
+              >
+                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Add More Matches
+              </button>
+>>>>>>> Stashed changes
             </div>
           )}
+=======
+        <div className="space-y-4">
+>>>>>>> Stashed changes
           {filteredMatches.map((match) => (
             <MatchCard key={match._id} match={match} onEdit={handleEditMatch} />
           ))}
