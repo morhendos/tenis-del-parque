@@ -1,0 +1,99 @@
+# Product Design Document (PDD): Local Tennis Club Directory & Multilingual SEO Strategy
+
+**Project Title:** Local Tennis Club Directory & Multilingual SEO Expansion for TenisDelParque  
+**Author:** Tomasz  
+**Date:** July 2025
+
+---
+
+## 1. Overview
+We aim to significantly increase organic traffic and paid user acquisition for TenisDelParque by introducing a high-value content section: a directory of tennis clubs and courts by city. The pages will be localized and SEO-optimized for both Spanish and English speakers, with scalable structure to expand city-by-city.
+
+---
+
+## 2. Goals
+- Drive qualified organic traffic from tennis-related local searches
+- Convert tennis players who are researching clubs into league participants
+- Build topical authority in the Spanish tennis community
+- Enable easy city-level expansion
+
+---
+
+## 3. Features & Scope
+
+### 3.1 Club Directory Pages
+- URL structure: `/es/clubs/malaga/club-name` and `/en/clubs/malaga/club-name`
+- Content per club:
+  - Club name & logo
+  - Address & Google Maps link
+  - Court surfaces (clay, hard, synthetic)
+  - Public/private access, booking links
+  - Photos (if available)
+  - Short description of club
+  - Tags: [Indoor], [Lighting], [Padel-friendly], etc.
+  - CTA box: "Looking for matches nearby? Join our league in Málaga →"
+
+### 3.2 City Pages
+- URL structure: `/es/clubs/malaga`, `/en/clubs/malaga`
+- Dynamic listing of all clubs in that city
+- Intro paragraph optimized for local tennis keywords
+- League CTA block with city-specific league highlights
+
+### 3.3 Multilingual Routing
+- Language-specific routes using Next.js or i18n-compatible solution
+- URL prefixes: `/es/`, `/en/`
+- Use of `hreflang` tags for SEO clarity
+- Manual translation of core pages (no auto-translate)
+
+---
+
+## 4. SEO Strategy
+- Target long-tail keywords like:
+  - "pistas de tenis Málaga"
+  - "tennis clubs in Seville"
+  - "jugar tenis amateur Barcelona"
+- Use structured data (`schema.org` for LocalBusiness)
+- Submit multilingual sitemaps
+- Set up internal linking between city → club → league pages
+
+---
+
+## 5. MVP City Rollout Plan
+Initial rollout cities:
+1. Málaga
+2. Valencia
+3. Sevilla
+
+Subsequent cities: Zaragoza, Alicante, Murcia
+
+---
+
+## 6. Analytics & Success Metrics
+- Organic traffic to directory pages (Google Search Console)
+- CTR from directory pages to league signup
+- Bounce rate of club pages
+- Number of backlinks acquired from club websites
+- Conversion rate from organic visit → signup
+
+---
+
+## 7. Future Ideas
+- Embed booking availability widgets (via APIs or partnerships)
+- Enable clubs to claim/edit their listing
+- Add reviews or player tips per club
+- City-level blog content ("Best tennis courts in Málaga")
+
+---
+
+## 8. Timeline (Rough)
+- Week 1: Create Malaga directory & club pages
+- Week 2: Add multilingual support & city-level page
+- Week 3: SEO tags, sitemap, and GSC integration
+- Week 4: Launch + test conversions + begin content marketing
+
+---
+
+**Owner:** Tomasz  
+**Designer/Dev:** [Your name or placeholder]  
+**SEO Support:** [To be determined]  
+**Translation:** Manual for key pages; leverage bilingual volunteers or tools for drafts
