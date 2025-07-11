@@ -10,6 +10,9 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
   const [playerMatches, setPlayerMatches] = useState([])
   const [loadingPlayerMatches, setLoadingPlayerMatches] = useState(true)
 
+  // Filter out any matches that have results (defensive programming for data inconsistencies)
+  const upcomingSchedule = schedule.filter(match => !match.result?.winner)
+
   // Fetch player's matches with full data (including WhatsApp)
   useEffect(() => {
     const fetchPlayerMatches = async () => {
@@ -18,7 +21,9 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
         const response = await fetch('/api/player/matches')
         if (response.ok) {
           const data = await response.json()
-          setPlayerMatches(data.matches || [])
+          // Also filter out completed matches from player matches
+          const upcomingPlayerMatches = (data.matches || []).filter(match => !match.result?.winner)
+          setPlayerMatches(upcomingPlayerMatches)
         }
       } catch (error) {
         console.error('Error fetching player matches:', error)
@@ -57,7 +62,7 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
   }
 
   const getCurrentRoundMatches = () => {
-    const allMatches = schedule.filter(match => match.round === currentRound)
+    const allMatches = upcomingSchedule.filter(match => match.round === currentRound)
     
     // Find player's match from the playerMatches array (which has full data)
     const playerMatchWithFullData = playerMatches.find(match => 
@@ -85,13 +90,13 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
   }
 
   const getAvailableRounds = () => {
-    const roundsWithMatches = [...new Set(schedule.map(match => match.round))].sort((a, b) => a - b)
+    const roundsWithMatches = [...new Set(upcomingSchedule.map(match => match.round))].sort((a, b) => a - b)
     const allRounds = Array.from({ length: totalRounds }, (_, i) => i + 1)
     return allRounds.map(round => ({
       round,
       hasMatches: roundsWithMatches.includes(round),
-      matchCount: schedule.filter(match => match.round === round).length,
-      hasPlayerMatch: schedule.some(match => 
+      matchCount: upcomingSchedule.filter(match => match.round === round).length,
+      hasPlayerMatch: upcomingSchedule.some(match => 
         match.round === round && 
         (match.players?.player1?._id === player?._id || 
          match.players?.player2?._id === player?._id)
