@@ -176,11 +176,14 @@ function CreateMatchContent() {
   const [roundNumber, setRoundNumber] = useState(1)
   const [playerHistory, setPlayerHistory] = useState({})
   const [isGenerating, setIsGenerating] = useState(false)
+  const [existingRounds, setExistingRounds] = useState([])
+  const [roundMode, setRoundMode] = useState('new') // 'new' or 'existing'
   
   const router = useRouter()
   const searchParams = useSearchParams()
   const leagueId = searchParams.get('league')
   const initialMode = searchParams.get('mode')
+  const targetRound = searchParams.get('round')
 
   const fetchPlayers = useCallback(async () => {
     try {
@@ -217,10 +220,19 @@ function CreateMatchContent() {
         
         setPlayerHistory(history)
         
-        // Determine next round number
-        const rounds = matchData.matches?.map(m => m.round || 0) || []
-        const maxRound = Math.max(0, ...rounds)
-        setRoundNumber(maxRound + 1)
+        // Get existing rounds
+        const rounds = [...new Set(matchData.matches?.map(m => m.round || 0) || [])].sort((a, b) => a - b)
+        setExistingRounds(rounds)
+        
+        // Determine round number based on URL parameter or next available
+        if (targetRound) {
+          setRoundNumber(parseInt(targetRound))
+          setRoundMode('existing')
+        } else {
+          const maxRound = Math.max(0, ...rounds)
+          setRoundNumber(maxRound + 1)
+          setRoundMode('new')
+        }
       }
       
       return data.players || []
@@ -231,7 +243,7 @@ function CreateMatchContent() {
     } finally {
       setLoading(false)
     }
-  }, [leagueId, selectedLeague?.id])
+  }, [leagueId, selectedLeague?.id, targetRound])
 
   useEffect(() => {
     const storedLeague = sessionStorage.getItem('selectedLeague')
@@ -240,6 +252,14 @@ function CreateMatchContent() {
     } else if (!leagueId) {
       router.push('/admin/leagues')
       return
+    }
+
+    // Restore round selection from session storage if available
+    const storedRoundSelection = sessionStorage.getItem('roundSelection')
+    if (storedRoundSelection && !targetRound) {
+      const { round, mode } = JSON.parse(storedRoundSelection)
+      setRoundNumber(round)
+      setRoundMode(mode)
     }
 
     fetchPlayers().then((playerList) => {
@@ -274,7 +294,17 @@ function CreateMatchContent() {
         }
       }
     })
-  }, [leagueId, router, fetchPlayers, initialMode])
+  }, [leagueId, router, fetchPlayers, initialMode, targetRound])
+
+  // Save round selection to session storage whenever it changes
+  useEffect(() => {
+    if (roundNumber && roundMode) {
+      sessionStorage.setItem('roundSelection', JSON.stringify({
+        round: roundNumber,
+        mode: roundMode
+      }))
+    }
+  }, [roundNumber, roundMode])
 
   const handlePlayerSelect = (player) => {
     if (selectedPlayers.some(p => p._id === player._id)) {
@@ -385,6 +415,9 @@ function CreateMatchContent() {
       
       setSuccess(`Successfully created ${matches.length} matches for round ${roundNumber}`)
       
+      // Clear round selection from session storage on success
+      sessionStorage.removeItem('roundSelection')
+      
       setTimeout(() => {
         router.push(`/admin/matches?league=${leagueId || selectedLeague?.id}`)
       }, 2000)
@@ -393,6 +426,16 @@ function CreateMatchContent() {
       setError(error.message || 'Failed to create matches')
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const handleRoundModeChange = (mode) => {
+    setRoundMode(mode)
+    if (mode === 'new') {
+      const maxRound = Math.max(0, ...existingRounds)
+      setRoundNumber(maxRound + 1)
+    } else if (existingRounds.length > 0) {
+      setRoundNumber(existingRounds[existingRounds.length - 1])
     }
   }
 
@@ -462,16 +505,69 @@ function CreateMatchContent() {
           </button>
         </div>
         
-        {/* Round Number */}
-        <div className="flex items-center space-x-4 mb-4">
-          <label className="text-sm font-medium text-gray-700">Round:</label>
-          <input
-            type="number"
-            min="1"
-            value={roundNumber}
-            onChange={(e) => setRoundNumber(parseInt(e.target.value) || 1)}
-            className="w-20 px-3 py-1 border border-gray-300 rounded-lg"
-          />
+        {/* Round Selection */}
+        <div className="bg-gray-50 rounded-lg p-4 mb-4">
+          <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-3">
+              <input
+                type="radio"
+                id="new-round"
+                name="round-mode"
+                value="new"
+                checked={roundMode === 'new'}
+                onChange={() => handleRoundModeChange('new')}
+                className="text-parque-purple focus:ring-parque-purple"
+              />
+              <label htmlFor="new-round" className="text-sm font-medium text-gray-700">
+                Create New Round
+              </label>
+            </div>
+            
+            {existingRounds.length > 0 && (
+              <div className="flex items-center space-x-3">
+                <input
+                  type="radio"
+                  id="existing-round"
+                  name="round-mode"
+                  value="existing"
+                  checked={roundMode === 'existing'}
+                  onChange={() => handleRoundModeChange('existing')}
+                  className="text-parque-purple focus:ring-parque-purple"
+                />
+                <label htmlFor="existing-round" className="text-sm font-medium text-gray-700">
+                  Add to Existing Round
+                </label>
+              </div>
+            )}
+          </div>
+          
+          <div className="mt-4 flex items-center space-x-4">
+            {roundMode === 'new' ? (
+              <>
+                <label className="text-sm font-medium text-gray-700">Round Number:</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={roundNumber}
+                  onChange={(e) => setRoundNumber(parseInt(e.target.value) || 1)}
+                  className="w-20 px-3 py-1 border border-gray-300 rounded-lg"
+                />
+              </>
+            ) : (
+              <>
+                <label className="text-sm font-medium text-gray-700">Select Round:</label>
+                <select
+                  value={roundNumber}
+                  onChange={(e) => setRoundNumber(parseInt(e.target.value))}
+                  className="px-3 py-1 border border-gray-300 rounded-lg"
+                >
+                  {existingRounds.map(round => (
+                    <option key={round} value={round}>Round {round}</option>
+                  ))}
+                </select>
+              </>
+            )}
+          </div>
         </div>
         
         {/* Status Legend */}
