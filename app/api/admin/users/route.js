@@ -60,6 +60,10 @@ export async function GET(request) {
       emailVerified: user.emailVerified,
       lastLogin: user.lastLogin,
       createdAt: user.createdAt,
+      // Lock information
+      loginAttempts: user.loginAttempts || 0,
+      lockUntil: user.lockUntil,
+      isLocked: user.isLocked,
       player: user.playerId ? {
         _id: user.playerId._id,
         name: user.playerId.name,

@@ -29,8 +29,19 @@ export async function POST(request) {
 
     // Check if account is locked
     if (user.isLocked) {
+      const lockInfo = user.getLockInfo()
+      const remainingMinutes = lockInfo.remainingMinutes
+      const timeMessage = remainingMinutes > 1 ? 
+        `${remainingMinutes} minutes` : 'less than 1 minute'
+      
       return NextResponse.json(
-        { error: 'Account is locked due to too many failed attempts. Please try again later.' },
+        { 
+          error: `Account is locked due to too many failed attempts. Please try again in ${timeMessage}.`,
+          lockInfo: {
+            remainingMinutes: lockInfo.remainingMinutes,
+            attempts: lockInfo.attempts
+          }
+        },
         { status: 401 }
       )
     }
