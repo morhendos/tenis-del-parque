@@ -25,7 +25,17 @@ function ActivateContent() {
 
   const validateToken = useCallback(async (tokenToValidate) => {
     try {
-      const response = await fetch(`/api/auth/activate?token=${tokenToValidate}`)
+      // Add timestamp to prevent caching
+      const timestamp = Date.now()
+      const response = await fetch(`/api/auth/activate?token=${tokenToValidate}&t=${timestamp}`, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      })
       const data = await response.json()
 
       if (data.success) {
@@ -84,8 +94,10 @@ function ActivateContent() {
     try {
       const response = await fetch('/api/auth/activate', {
         method: 'POST',
+        cache: 'no-store',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
         },
         body: JSON.stringify({
           token,
@@ -110,6 +122,12 @@ function ActivateContent() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Add retry button for error states
+  const handleRetry = () => {
+    // Force page reload to bypass any caching
+    window.location.reload()
   }
 
   if (validating) {
@@ -205,12 +223,23 @@ function ActivateContent() {
                 {error}
               </p>
               
-              <Link
-                href="/login"
-                className="inline-block bg-parque-purple text-white px-6 py-4 rounded-lg hover:bg-parque-purple/90 transition-colors font-medium touch-manipulation w-full sm:w-auto"
-              >
-                {t.error.goToLogin}
-              </Link>
+              <div className="space-y-3">
+                <button
+                  onClick={handleRetry}
+                  className="inline-block bg-parque-purple text-white px-6 py-4 rounded-lg hover:bg-parque-purple/90 transition-colors font-medium touch-manipulation w-full sm:w-auto"
+                >
+                  {language === 'es' ? 'Intentar de nuevo' : 'Try Again'}
+                </button>
+                
+                <div className="text-center">
+                  <Link
+                    href="/login"
+                    className="text-sm text-parque-purple hover:text-parque-purple/80 transition-colors font-medium touch-manipulation"
+                  >
+                    {t.error.goToLogin}
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
         </div>

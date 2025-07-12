@@ -154,17 +154,33 @@ export async function GET(request) {
         token: decodedToken,
         timestamp: new Date().toISOString()
       })
-      return NextResponse.json(
+      
+      // Create response with no-cache headers
+      const response = NextResponse.json(
         { error: 'Invalid or expired activation token' },
         { status: 400 }
       )
+      
+      // Set headers to prevent caching
+      response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+      response.headers.set('Pragma', 'no-cache')
+      response.headers.set('Expires', '0')
+      
+      return response
     }
 
     if (user.emailVerified) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { error: 'Account is already activated' },
         { status: 400 }
       )
+      
+      // Set headers to prevent caching
+      response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+      response.headers.set('Pragma', 'no-cache')
+      response.headers.set('Expires', '0')
+      
+      return response
     }
 
     console.log('✅ Token validated successfully:', {
@@ -172,7 +188,7 @@ export async function GET(request) {
       expiresAt: user.activationTokenExpiry
     })
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       user: {
         email: user.email,
@@ -184,12 +200,27 @@ export async function GET(request) {
         } : null
       }
     })
+    
+    // Set headers to prevent caching
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+    response.headers.set('Pragma', 'no-cache')
+    response.headers.set('Expires', '0')
+    
+    return response
 
   } catch (error) {
     console.error('Token validation error:', error)
-    return NextResponse.json(
+    
+    const response = NextResponse.json(
       { error: 'Failed to validate token' },
       { status: 500 }
     )
+    
+    // Set headers to prevent caching
+    response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+    response.headers.set('Pragma', 'no-cache')
+    response.headers.set('Expires', '0')
+    
+    return response
   }
 }
