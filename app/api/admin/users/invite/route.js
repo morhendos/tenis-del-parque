@@ -159,11 +159,11 @@ export async function POST(request) {
           
           // Reset activation if needed
           if (!user.emailVerified) {
-            activationToken = user.generateActivationToken()
+            activationToken = await user.generateActivationToken()
             console.log(`📧 Regenerated activation token for ${player.email}`)
           } else {
             // User is already verified, generate new token anyway for re-invite
-            activationToken = user.generateActivationToken()
+            activationToken = await user.generateActivationToken()
             user.emailVerified = false // Reset verification status
             console.log(`📧 Generated new activation token for verified user: ${player.email}`)
           }
@@ -174,10 +174,10 @@ export async function POST(request) {
         } else {
           console.log(`✨ Creating new user for: ${player.email}`)
           
-          // Create user account with temporary password
+          // Create user account with temporary password (will be overwritten on activation)
           user = new User({
             email: player.email.toLowerCase(),
-            password: Math.random().toString(36).substring(2, 15), // Temporary password
+            password: 'temporary_' + Math.random().toString(36).substring(2, 15), // Temporary password
             role: 'player',
             playerId: player._id,
             isActive: true,
@@ -185,7 +185,7 @@ export async function POST(request) {
           })
 
           // Generate activation token
-          activationToken = user.generateActivationToken()
+          activationToken = await user.generateActivationToken()
         }
         
         await user.save()
@@ -195,8 +195,16 @@ export async function POST(request) {
         player.status = 'confirmed' // Player has been invited
         await player.save()
 
-        // Generate activation link
-        const activationLink = `${process.env.NEXT_PUBLIC_URL || 'https://www.tenisdp.es'}/activate?token=${activationToken}`
+        // Generate activation link with proper URL encoding
+        const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://www.tenisdp.es'
+        const encodedToken = encodeURIComponent(activationToken)
+        const activationLink = `${baseUrl}/activate?token=${encodedToken}`
+        
+        console.log(`🔗 Token for ${player.name}:`, {
+          raw: activationToken,
+          encoded: encodedToken,
+          fullLink: activationLink
+        })
         
         // Generate WhatsApp message in both languages - English first, then Spanish
         const whatsappMessage = `Hi ${player.name}!
