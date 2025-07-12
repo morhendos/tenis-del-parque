@@ -34,8 +34,16 @@ export async function POST(request) {
       )
     }
 
+    // Decode the token (in case it was URL encoded)
+    const decodedToken = decodeURIComponent(token)
+    console.log('🔐 Activation attempt:', {
+      tokenLength: token.length,
+      decodedLength: decodedToken.length,
+      tokenChanged: token !== decodedToken
+    })
+
     // Find user by activation token
-    const user = await User.findByActivationToken(token)
+    const user = await User.findByActivationToken(decodedToken)
       .populate({
         path: 'playerId',
         select: 'name league season level',
@@ -46,6 +54,10 @@ export async function POST(request) {
       })
 
     if (!user) {
+      console.log('❌ Token not found or expired:', {
+        token: decodedToken,
+        timestamp: new Date().toISOString()
+      })
       return NextResponse.json(
         { error: 'Invalid or expired activation token' },
         { status: 400 }
@@ -74,6 +86,11 @@ export async function POST(request) {
         status: 'active' 
       })
     }
+
+    console.log('✅ Account activated successfully:', {
+      email: user.email,
+      playerId: user.playerId?._id
+    })
 
     return NextResponse.json({
       success: true,
@@ -113,8 +130,16 @@ export async function GET(request) {
       )
     }
 
+    // Decode the token (in case it was URL encoded)
+    const decodedToken = decodeURIComponent(token)
+    console.log('🔍 Token validation attempt:', {
+      tokenLength: token.length,
+      decodedLength: decodedToken.length,
+      tokenChanged: token !== decodedToken
+    })
+
     // Find user by activation token
-    const user = await User.findByActivationToken(token)
+    const user = await User.findByActivationToken(decodedToken)
       .populate({
         path: 'playerId',
         select: 'name league season level',
@@ -125,6 +150,10 @@ export async function GET(request) {
       })
 
     if (!user) {
+      console.log('❌ Token validation failed:', {
+        token: decodedToken,
+        timestamp: new Date().toISOString()
+      })
       return NextResponse.json(
         { error: 'Invalid or expired activation token' },
         { status: 400 }
@@ -137,6 +166,11 @@ export async function GET(request) {
         { status: 400 }
       )
     }
+
+    console.log('✅ Token validated successfully:', {
+      email: user.email,
+      expiresAt: user.activationTokenExpiry
+    })
 
     return NextResponse.json({
       success: true,
