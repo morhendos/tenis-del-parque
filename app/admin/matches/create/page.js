@@ -166,6 +166,7 @@ function MatchPairing({ match, index, onSwapPlayers, onRemoveMatch, playerHistor
 function CreateMatchContent() {
   const [players, setPlayers] = useState([])
   const [loading, setLoading] = useState(true)
+  const [roundLoading, setRoundLoading] = useState(true) // New state for round loading
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -173,7 +174,7 @@ function CreateMatchContent() {
   const [selectedPlayers, setSelectedPlayers] = useState([])
   const [matches, setMatches] = useState([])
   const [mode, setMode] = useState('manual') // 'manual', 'automatic', 'combined'
-  const [roundNumber, setRoundNumber] = useState(1)
+  const [roundNumber, setRoundNumber] = useState(null) // Start with null instead of 1
   const [playerHistory, setPlayerHistory] = useState({})
   const [isGenerating, setIsGenerating] = useState(false)
   const [existingRounds, setExistingRounds] = useState([])
@@ -188,6 +189,8 @@ function CreateMatchContent() {
   const fetchPlayers = useCallback(async () => {
     try {
       setLoading(true)
+      setRoundLoading(true) // Set round loading to true
+      
       const params = new URLSearchParams({
         league: leagueId || selectedLeague?.id || '',
         status: 'confirmed,active'
@@ -229,16 +232,32 @@ function CreateMatchContent() {
           setRoundNumber(parseInt(targetRound))
           setRoundMode('existing')
         } else {
-          const maxRound = Math.max(0, ...rounds)
-          setRoundNumber(maxRound + 1)
-          setRoundMode('new')
+          // Check if there's a stored round selection
+          const storedRoundSelection = sessionStorage.getItem('roundSelection')
+          if (storedRoundSelection) {
+            const { round, mode } = JSON.parse(storedRoundSelection)
+            setRoundNumber(round)
+            setRoundMode(mode)
+          } else {
+            // Calculate next round number
+            const maxRound = Math.max(0, ...rounds)
+            setRoundNumber(maxRound + 1)
+            setRoundMode('new')
+          }
         }
+      } else {
+        // If match fetch fails, default to round 1
+        setRoundNumber(1)
+        setRoundMode('new')
       }
       
+      setRoundLoading(false) // Round loading complete
       return data.players || []
     } catch (error) {
       console.error('Error fetching players:', error)
       setError('Error loading players')
+      setRoundNumber(1) // Default to round 1 on error
+      setRoundLoading(false)
       return []
     } finally {
       setLoading(false)
@@ -252,14 +271,6 @@ function CreateMatchContent() {
     } else if (!leagueId) {
       router.push('/admin/leagues')
       return
-    }
-
-    // Restore round selection from session storage if available
-    const storedRoundSelection = sessionStorage.getItem('roundSelection')
-    if (storedRoundSelection && !targetRound) {
-      const { round, mode } = JSON.parse(storedRoundSelection)
-      setRoundNumber(round)
-      setRoundMode(mode)
     }
 
     fetchPlayers().then((playerList) => {
@@ -294,11 +305,11 @@ function CreateMatchContent() {
         }
       }
     })
-  }, [leagueId, router, fetchPlayers, initialMode, targetRound])
+  }, [leagueId, router, fetchPlayers, initialMode])
 
   // Save round selection to session storage whenever it changes
   useEffect(() => {
-    if (roundNumber && roundMode) {
+    if (roundNumber !== null && roundMode) {
       sessionStorage.setItem('roundSelection', JSON.stringify({
         round: roundNumber,
         mode: roundMode
@@ -307,6 +318,12 @@ function CreateMatchContent() {
   }, [roundNumber, roundMode])
 
   const handlePlayerSelect = (player) => {
+    // Don't allow player selection until round is determined
+    if (roundNumber === null) {
+      setError('Please wait for round information to load')
+      return
+    }
+    
     if (selectedPlayers.some(p => p._id === player._id)) {
       setSelectedPlayers(selectedPlayers.filter(p => p._id !== player._id))
     } else {
@@ -342,6 +359,11 @@ function CreateMatchContent() {
   }
   
   const generateAutomaticPairings = async () => {
+    if (roundNumber === null) {
+      setError('Round number not determined yet')
+      return
+    }
+    
     setIsGenerating(true)
     setError('')
     
@@ -384,6 +406,11 @@ function CreateMatchContent() {
   const handleSubmit = async () => {
     if (matches.length === 0) {
       setError('Please create at least one match')
+      return
+    }
+    
+    if (roundNumber === null) {
+      setError('Round number not determined')
       return
     }
     
@@ -450,13 +477,22 @@ function CreateMatchContent() {
     !matches.some(m => m.player1._id === player._id || m.player2._id === player._id)
   )
 
-  if (loading) {
+  // Show loading state while determining round
+  if (loading || roundLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-xl text-gray-600">Loading...</div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto mb-4"></div>
+          <div className="text-xl text-gray-600">
+            {roundLoading ? 'Determining round number...' : 'Loading players...'}
+          </div>
+        </div>
       </div>
     )
   }
+
+  // Don't allow any actions until round is determined
+  const isReady = roundNumber !== null
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -466,7 +502,7 @@ function CreateMatchContent() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Create Matches</h1>
             <p className="text-gray-600 mt-1">
-              {selectedLeague?.name || 'League'} - Round {roundNumber}
+              {selectedLeague?.name || 'League'} - Round {roundNumber || '...'}
             </p>
           </div>
           <button
@@ -481,25 +517,28 @@ function CreateMatchContent() {
         <div className="flex space-x-4 mb-6">
           <button
             onClick={() => setMode('manual')}
+            disabled={!isReady}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               mode === 'manual' 
                 ? 'bg-parque-purple text-white' 
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             Manual Pairing
           </button>
           <button
             onClick={() => {
-              setMode('automatic')
-              generateAutomaticPairings()
+              if (isReady) {
+                setMode('automatic')
+                generateAutomaticPairings()
+              }
             }}
-            disabled={isGenerating}
+            disabled={!isReady || isGenerating}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               mode === 'automatic' || mode === 'combined'
                 ? 'bg-parque-purple text-white' 
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            } disabled:opacity-50`}
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             {isGenerating ? 'Generating...' : 'Swiss Pairing'}
           </button>
@@ -516,7 +555,8 @@ function CreateMatchContent() {
                 value="new"
                 checked={roundMode === 'new'}
                 onChange={() => handleRoundModeChange('new')}
-                className="text-parque-purple focus:ring-parque-purple"
+                disabled={!isReady}
+                className="text-parque-purple focus:ring-parque-purple disabled:opacity-50"
               />
               <label htmlFor="new-round" className="text-sm font-medium text-gray-700">
                 Create New Round
@@ -532,7 +572,8 @@ function CreateMatchContent() {
                   value="existing"
                   checked={roundMode === 'existing'}
                   onChange={() => handleRoundModeChange('existing')}
-                  className="text-parque-purple focus:ring-parque-purple"
+                  disabled={!isReady}
+                  className="text-parque-purple focus:ring-parque-purple disabled:opacity-50"
                 />
                 <label htmlFor="existing-round" className="text-sm font-medium text-gray-700">
                   Add to Existing Round
@@ -548,18 +589,20 @@ function CreateMatchContent() {
                 <input
                   type="number"
                   min="1"
-                  value={roundNumber}
+                  value={roundNumber || ''}
                   onChange={(e) => setRoundNumber(parseInt(e.target.value) || 1)}
-                  className="w-20 px-3 py-1 border border-gray-300 rounded-lg"
+                  disabled={!isReady}
+                  className="w-20 px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:bg-gray-100"
                 />
               </>
             ) : (
               <>
                 <label className="text-sm font-medium text-gray-700">Select Round:</label>
                 <select
-                  value={roundNumber}
+                  value={roundNumber || ''}
                   onChange={(e) => setRoundNumber(parseInt(e.target.value))}
-                  className="px-3 py-1 border border-gray-300 rounded-lg"
+                  disabled={!isReady}
+                  className="px-3 py-1 border border-gray-300 rounded-lg disabled:opacity-50 disabled:bg-gray-100"
                 >
                   {existingRounds.map(round => (
                     <option key={round} value={round}>Round {round}</option>
@@ -568,6 +611,15 @@ function CreateMatchContent() {
               </>
             )}
           </div>
+          
+          {!isReady && (
+            <div className="mt-3 text-sm text-yellow-600">
+              <svg className="inline w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              Determining round number...
+            </div>
+          )}
         </div>
         
         {/* Status Legend */}
@@ -640,7 +692,7 @@ function CreateMatchContent() {
                             <PlayerCard
                               player={player}
                               isSelected={isSelected}
-                              onSelect={handlePlayerSelect}
+                              onSelect={isReady ? handlePlayerSelect : () => {}}
                               matchHistory={playerHistory[player._id] || []}
                             />
                           </div>
@@ -679,7 +731,11 @@ function CreateMatchContent() {
               )}
             </div>
             
-            {matches.length === 0 ? (
+            {!isReady ? (
+              <div className="text-center py-12 text-gray-500">
+                Please wait while round information loads...
+              </div>
+            ) : matches.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
                 {mode === 'manual' 
                   ? 'Select two players to create a match'
@@ -713,7 +769,7 @@ function CreateMatchContent() {
                 </button>
                 <button
                   onClick={handleSubmit}
-                  disabled={submitting}
+                  disabled={submitting || !isReady}
                   className="px-6 py-2 bg-parque-purple text-white rounded-lg hover:bg-opacity-90 disabled:opacity-50"
                 >
                   {submitting ? 'Creating...' : `Create ${matches.length} Matches`}
