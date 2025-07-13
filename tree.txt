@@ -47,11 +47,17 @@ root/
 │   │   │   ├── matches
 │   │   │   │   ├── [id]
 │   │   │   │   │   └── route.js
+│   │   │   │   ├── export
+│   │   │   │   │   └── route.js
 │   │   │   │   ├── generate-round
+│   │   │   │   │   └── route.js
+│   │   │   │   ├── import
 │   │   │   │   │   └── route.js
 │   │   │   │   └── route.js
 │   │   │   ├── players
 │   │   │   │   ├── [id]
+│   │   │   │   │   ├── recalculate-elo
+│   │   │   │   │   │   └── route.js
 │   │   │   │   │   └── route.js
 │   │   │   │   ├── export
 │   │   │   │   │   └── route.js
@@ -60,6 +66,10 @@ root/
 │   │   │   │   └── route.js
 │   │   │   └── users
 │   │   │       ├── [id]
+│   │   │       │   └── route.js
+│   │   │       ├── export
+│   │   │       │   └── route.js
+│   │   │       ├── import
 │   │   │       │   └── route.js
 │   │   │       ├── invite
 │   │   │       │   └── route.js
@@ -135,6 +145,27 @@ root/
 │       ├── layout.js
 │       └── page.js
 ├── components
+│   ├── admin
+│   │   ├── matches
+│   │   │   ├── MatchCard.js
+│   │   │   ├── MatchDetailHeader.js
+│   │   │   ├── MatchFilters.js
+│   │   │   ├── MatchOverviewTab.js
+│   │   │   ├── MatchPlayersCard.js
+│   │   │   ├── MatchPlayersTab.js
+│   │   │   ├── MatchResultDisplay.js
+│   │   │   ├── MatchResultForm.js
+│   │   │   ├── MatchResultTab.js
+│   │   │   ├── MatchScheduleTab.js
+│   │   │   └── MatchesHeader.js
+│   │   └── players
+│   │       ├── DeletePlayerModal.js
+│   │       ├── EloRecalculateModal.js
+│   │       ├── ImportCSVModal.js
+│   │       ├── InvitationResultModal.js
+│   │       ├── PlayerFilters.js
+│   │       ├── PlayerTable.js
+│   │       └── PlayerTableRow.js
 │   ├── analytics
 │   │   ├── GoogleAnalytics.js
 │   │   └── MicrosoftClarity.js
@@ -179,13 +210,17 @@ root/
 │       ├── TennisIcons.js
 │       └── WelcomeModal.js
 ├── docs
+│   ├── EDIT_MATCH_PLAYERS.md
+│   ├── GAMES_STATISTICS_FIX_DYNAMIC.md
 │   ├── IMPROVED_MATCH_CREATION.md
+│   ├── IMPROVED_ROUND_MATCH_CREATION.md
 │   ├── MATCH_MANAGEMENT_GUIDE.md
 │   ├── MOBILE_UI_IMPROVEMENTS.md
 │   ├── MOBILE_UI_UX_IMPROVEMENTS.md
 │   ├── PLAYER_MATCH_IMPROVEMENTS.md
 │   ├── PLAYER_MESSAGES_SYSTEM.md
-│   └── PR_MATCH_MANAGEMENT.md
+│   ├── PR_MATCH_MANAGEMENT.md
+│   └── SEO Strategy
 ├── lib
 │   ├── analytics
 │   │   └── analytics.js
@@ -209,7 +244,9 @@ root/
 │   │   ├── useActiveSection.js
 │   │   ├── useLanguage.js
 │   │   ├── useLeagueData.js
+│   │   ├── useMatchDetail.js
 │   │   ├── usePlayerDashboard.js
+│   │   ├── usePlayersData.js
 │   │   └── useWelcomeModal.js
 │   ├── models
 │   │   ├── League.js
@@ -243,8 +280,10 @@ root/
 │   ├── checkAuth.mjs
 │   ├── createAdminUser.js
 │   ├── createTestData.js
+│   ├── migrateActivationTokens.js
 │   ├── seedLeagues.js
-│   └── tree.js
+│   ├── tree.js
+│   └── unlockAccounts.js
 ├── styles
 │   └── dashboard.js
 ├── tailwind.config.js
