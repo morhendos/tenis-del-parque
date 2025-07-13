@@ -1,6 +1,33 @@
 root/
 ├── README.md
 ├── app
+│   ├── [locale]
+│   │   ├── [location]
+│   │   │   └── liga
+│   │   │       └── [season]
+│   │   │           └── page.js
+│   │   ├── activate
+│   │   │   └── page.js
+│   │   ├── elo
+│   │   │   └── page.js
+│   │   ├── layout.js
+│   │   ├── login
+│   │   │   └── page.js
+│   │   ├── not-found.js
+│   │   ├── page.js
+│   │   ├── registro
+│   │   │   └── [ciudad]
+│   │   │       └── page.js
+│   │   ├── reglas
+│   │   │   ├── RulesPageContent.js
+│   │   │   └── page.js
+│   │   ├── rules
+│   │   │   └── page.js
+│   │   ├── signup
+│   │   │   └── [city]
+│   │   │       └── page.js
+│   │   └── swiss
+│   │       └── page.js
 │   ├── [location]
 │   │   └── liga
 │   │       └── [season]
@@ -171,6 +198,7 @@ root/
 │   │   └── MicrosoftClarity.js
 │   ├── common
 │   │   ├── Footer.js
+│   │   ├── LanguageSwitcher.js
 │   │   └── Navigation.js
 │   ├── elo
 │   │   ├── EloCTASection.js
@@ -220,7 +248,9 @@ root/
 │   ├── PLAYER_MATCH_IMPROVEMENTS.md
 │   ├── PLAYER_MESSAGES_SYSTEM.md
 │   ├── PR_MATCH_MANAGEMENT.md
-│   └── SEO Strategy
+│   ├── PR_MULTILINGUAL_IMPLEMENTATION.md
+│   ├── SEO Strategy
+│   └── SEO_IMPLEMENTATION_PLAN.md
 ├── lib
 │   ├── analytics
 │   │   └── analytics.js
@@ -232,6 +262,7 @@ root/
 │   │   ├── eloContent.js
 │   │   ├── homeContent.js
 │   │   ├── loginContent.js
+│   │   ├── multiLeagueHomeContent.js
 │   │   ├── rulesContent.js
 │   │   ├── swissContent.js
 │   │   └── welcomeContent.js
@@ -244,10 +275,13 @@ root/
 │   │   ├── useActiveSection.js
 │   │   ├── useLanguage.js
 │   │   ├── useLeagueData.js
+│   │   ├── useLocale.js
 │   │   ├── useMatchDetail.js
 │   │   ├── usePlayerDashboard.js
 │   │   ├── usePlayersData.js
 │   │   └── useWelcomeModal.js
+│   ├── i18n
+│   │   └── config.js
 │   ├── models
 │   │   ├── League.js
 │   │   ├── Match.js
