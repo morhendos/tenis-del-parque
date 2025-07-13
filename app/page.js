@@ -1,6 +1,5 @@
-import { redirect } from 'next/navigation'
-
 export default function RootPage() {
-  // Redirect all traffic from root to /sotogrande
-  redirect('/sotogrande')
+  // The middleware will handle the redirect to the appropriate locale
+  // This page should not be reached, but just in case:
+  return null;
 }
