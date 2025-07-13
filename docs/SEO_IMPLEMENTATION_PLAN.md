@@ -5,16 +5,16 @@ This implementation plan details how to build a multilingual tennis club directo
 
 ## ✅ Implementation Checklist
 
-### Phase 0: Foundation - Internationalization (CURRENT)
+### Phase 0: Foundation - Internationalization ✅ COMPLETED
 - [x] Implement locale-based routing (/es/, /en/)
 - [x] Update middleware for language detection
 - [x] Create language switcher component
 - [x] Update existing pages to support locales
 - [x] Prepare multi-league homepage
-- [ ] Update signup flow for multiple cities
-- [ ] Create dynamic city-based signup pages
+- [x] Update signup flow for multiple cities
+- [x] Create dynamic city-based signup pages
 
-### Phase 1: Database & Models (Week 1)
+### Phase 1: Database & Models (Week 1) - NEXT
 - [ ] Create Club model with multilingual support
 - [ ] Add city-based league configuration
 - [ ] Create admin interface for clubs
@@ -53,23 +53,33 @@ This implementation plan details how to build a multilingual tennis club directo
 /swiss
 ```
 
-### New Structure (with locales) ✅
+### New Structure (with locales) ✅ IMPLEMENTED
 ```
 /es/                          → Spanish homepage ✅
 /en/                          → English homepage ✅
-/es/registro/[ciudad]         → Spanish signup by city
-/en/signup/[city]            → English signup by city
-/es/clubs                     → Spanish clubs directory
-/en/clubs                     → English clubs directory
-/es/clubs/malaga             → Spanish Málaga clubs
-/en/clubs/malaga             → English Málaga clubs
-/es/clubs/malaga/[club]      → Spanish club page
-/en/clubs/malaga/[club]      → English club page
+/es/registro/[ciudad]         → Spanish signup by city ✅
+/en/signup/[city]            → English signup by city ✅
+/es/login                     → Spanish login ✅
+/en/login                     → English login ✅
+/es/reglas                    → Spanish rules ✅
+/en/rules                     → English rules ✅
+/es/elo                       → Spanish ELO ✅
+/en/elo                       → English ELO ✅
+/es/swiss                     → Spanish Swiss ✅
+/en/swiss                     → English Swiss ✅
+/es/activate                  → Spanish activation ✅
+/en/activate                  → English activation ✅
+/es/clubs                     → Spanish clubs directory (pending)
+/en/clubs                     → English clubs directory (pending)
+/es/clubs/malaga             → Spanish Málaga clubs (pending)
+/en/clubs/malaga             → English Málaga clubs (pending)
+/es/clubs/malaga/[club]      → Spanish club page (pending)
+/en/clubs/malaga/[club]      → English club page (pending)
 ```
 
 ## 🏗️ Technical Architecture
 
-### Internationalization Setup ✅
+### Internationalization Setup ✅ COMPLETED
 1. **Middleware Configuration** ✅
    - Detect user language preference ✅
    - Redirect to appropriate locale ✅
@@ -80,11 +90,18 @@ This implementation plan details how to build a multilingual tennis club directo
    app/
    ├── [locale]/
    │   ├── page.js              → Homepage ✅
-   │   ├── registro/            → Spanish routes
-   │   │   └── [ciudad]/
-   │   ├── signup/              → English routes
-   │   │   └── [city]/
-   │   ├── clubs/
+   │   ├── registro/            → Spanish routes ✅
+   │   │   └── [ciudad]/        ✅
+   │   ├── signup/              → English routes ✅
+   │   │   └── [city]/          ✅
+   │   ├── login/               → Login page ✅
+   │   ├── reglas/              → Spanish rules ✅
+   │   ├── rules/               → English rules ✅
+   │   ├── elo/                 → ELO page ✅
+   │   ├── swiss/               → Swiss page ✅
+   │   ├── activate/            → Activation page ✅
+   │   ├── not-found.js         → 404 page ✅
+   │   ├── clubs/               → (pending)
    │   │   ├── page.js
    │   │   └── [city]/
    │   │       ├── page.js
@@ -124,27 +141,27 @@ This implementation plan details how to build a multilingual tennis club directo
 - Social proof per region ✅
 - Testimonials from each city ✅
 
-## 📱 Signup Flow Updates
+## 📱 Signup Flow Updates ✅
 
 ### Current Flow
 1. User visits /signup/sotogrande
 2. Fills form with league pre-selected
 3. Submits to single league
 
-### New Multi-City Flow
+### New Multi-City Flow ✅
 1. User selects language (auto-detected) ✅
 2. Visits homepage, sees available cities ✅
-3. Clicks city → /[locale]/registro/[city]
-4. Form pre-fills city league
-5. Submit to appropriate league
+3. Clicks city → /[locale]/registro/[city] ✅
+4. Form pre-fills city league ✅
+5. Submit to appropriate league ✅
 
-### Database Considerations
-- League slug matches city name
-- Add city field to League model
-- Update registration API
-- Handle "coming soon" cities
+### Components Updated ✅
+- Navigation component with locale support ✅
+- Language switcher component ✅
+- Footer with locale support ✅
+- Signup forms for each city ✅
 
-## 🔍 SEO Strategy
+## 🔍 SEO Strategy (Next Phase)
 
 ### Target Keywords by City
 **Málaga:**
@@ -174,8 +191,8 @@ This implementation plan details how to build a multilingual tennis club directo
 ## 📊 Success Metrics
 
 ### Phase 1 Goals (Month 1)
-- [x] Multilingual routing live
-- [ ] 3 cities with signup pages
+- [x] Multilingual routing live ✅
+- [x] 3 cities with signup pages ✅
 - [ ] Homepage conversion 5%+
 
 ### Phase 2 Goals (Month 2)
@@ -188,55 +205,56 @@ This implementation plan details how to build a multilingual tennis club directo
 - [ ] Top 10 rankings for city keywords
 - [ ] 100+ monthly signups
 
-## 🚀 Implementation Priority
+## 🚀 Implementation Summary
 
-### Week 1: Foundation
-1. **Internationalization Setup** ✅
-   - Implement [locale] routing ✅
-   - Update middleware ✅
-   - Create language context ✅
-   - Update navigation ✅
+### Completed in Phase 0 ✅
+1. **Internationalization Setup**
+   - Implemented [locale] routing
+   - Updated middleware for language detection
+   - Created language context with useLocale hook
+   - Updated navigation with language switcher
 
-2. **Multi-League Homepage** ✅
-   - Design city selection ✅
-   - Create responsive layout ✅
-   - Implement language switcher ✅
-   - Update hero content ✅
+2. **Multi-League Homepage**
+   - Designed city selection grid
+   - Created responsive layout
+   - Implemented language switcher
+   - Updated hero content for multiple cities
 
-3. **Signup Flow Updates** (IN PROGRESS)
-   - Create [city] dynamic routes
-   - Update registration form
-   - Connect to league system
-   - Test full flow
+3. **Signup Flow Updates**
+   - Created [city] dynamic routes for both languages
+   - Updated registration forms
+   - Connected to league system
+   - Ready for testing
 
-### Week 2: Club Directory
-1. Database setup
-2. Admin interface
-3. Basic directory pages
-4. Club detail pages
+4. **Page Migrations**
+   - Login page with locale support
+   - Rules pages (reglas/rules)
+   - ELO page with locale
+   - Swiss system page
+   - Activation page
+   - 404 page with locale
 
-### Week 3: SEO & Content
-1. Add structured data
-2. Create sitemaps
-3. Write city content
-4. Add club information
+### Next Steps (Week 2)
+1. Database setup for clubs
+2. Create Club model
+3. Admin interface for club management
+4. Basic directory pages
+5. Club detail pages
 
-### Week 4: Launch & Monitor
-1. Final testing
-2. Submit to search engines
-3. Monitor analytics
-4. Iterate based on data
+## 🔧 Technical Notes
+- Using Next.js App Router with [locale] dynamic segments
+- Middleware handles automatic locale detection and redirects
+- Language preference stored in NEXT_LOCALE cookie
+- All content files support both es/en languages
+- Navigation automatically adjusts links based on current locale
+- City signup pages validate city status before showing form
 
-## 🔧 Technical Debt Considerations
-- Maintain backward compatibility
-- Update existing user flows
-- Migrate current Sotogrande data
-- Update email templates
-- Update admin panel routes
-
-## 📝 Notes
-- Start with Spanish as primary language ✅
-- English translations can be basic initially ✅
-- Focus on Málaga as pilot city
-- Use existing design system ✅
-- Leverage current authentication
+## 📝 Testing Checklist
+- [ ] Language switching works correctly
+- [ ] Locale persists across page navigation
+- [ ] City signup forms submit to correct league
+- [ ] 404 pages show in correct language
+- [ ] Navigation links work for both locales
+- [ ] Mobile responsive on all pages
+- [ ] Browser language detection works
+- [ ] Redirects from old URLs work
