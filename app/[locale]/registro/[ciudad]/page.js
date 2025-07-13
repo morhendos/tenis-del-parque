@@ -14,12 +14,6 @@ export default function CitySignupPage() {
   const locale = params.locale || 'es'
   const citySlug = params.ciudad || params.city
   
-  // Check if locale is Spanish - if not, redirect to English route
-  if (locale !== 'es') {
-    router.replace(`/en/signup/${citySlug}`)
-    return null
-  }
-  
   const [league, setLeague] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -37,11 +31,6 @@ export default function CitySignupPage() {
   const t = homeContent[locale]
   const city = cityInfo[citySlug]
   
-  // Check if city exists and is active
-  if (!city || city[locale].status !== 'active') {
-    notFound()
-  }
-
   // Fetch league information
   useEffect(() => {
     async function fetchLeague() {
@@ -63,6 +52,17 @@ export default function CitySignupPage() {
       fetchLeague()
     }
   }, [citySlug])
+  
+  // Check if locale is Spanish - if not, redirect to English route
+  if (locale !== 'es') {
+    router.replace(`/en/signup/${citySlug}`)
+    return null
+  }
+  
+  // Check if city exists and is active
+  if (!city || city[locale].status !== 'active') {
+    notFound()
+  }
 
   // Validate form data
   const validateForm = () => {
