@@ -55,38 +55,40 @@ export default function SwissSystemPage() {
         <section className="pt-32 pb-20 px-4">
           <div className="container mx-auto text-center">
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-light text-parque-purple mb-6 animate-fadeInUp">
-              {content.hero.title}
+              {content?.hero?.title || ''}
             </h1>
             <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto font-light animate-fadeInUp animation-delay-200">
-              {content.hero.subtitle}
+              {content?.hero?.subtitle || ''}
             </p>
           </div>
         </section>
         
         {/* Quick Navigation */}
-        <section className="py-8 border-b border-gray-200 sticky top-16 bg-white/80 backdrop-blur-md z-30">
-          <div className="container mx-auto px-4">
-            <div className="flex flex-wrap justify-center gap-4">
-              {content.sections.map((section) => (
-                <button
-                  key={section.id}
-                  onClick={() => scrollToSection(section.id)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                    activeSection === section.id
-                      ? 'bg-parque-purple text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {section.title}
-                </button>
-              ))}
+        {content?.sections && (
+          <section className="py-8 border-b border-gray-200 sticky top-16 bg-white/80 backdrop-blur-md z-30">
+            <div className="container mx-auto px-4">
+              <div className="flex flex-wrap justify-center gap-4">
+                {content.sections.map((section) => (
+                  <button
+                    key={section.id}
+                    onClick={() => scrollToSection(section.id)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                      activeSection === section.id
+                        ? 'bg-parque-purple text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {section.title}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
         
         {/* Content Sections */}
         <div className="py-16">
-          {content.sections.map((section, index) => (
+          {content?.sections?.map((section, index) => (
             <section 
               key={section.id}
               id={section.id}
@@ -100,7 +102,7 @@ export default function SwissSystemPage() {
                   
                   {section.content && (
                     <div className="prose prose-lg max-w-none">
-                      {section.content.split('\n\n').map((paragraph, idx) => (
+                      {typeof section.content === 'string' && section.content.split('\n\n').map((paragraph, idx) => (
                         <p key={idx} className="text-gray-700 mb-4">
                           {paragraph}
                         </p>
@@ -145,22 +147,24 @@ export default function SwissSystemPage() {
         </div>
         
         {/* CTA Section */}
-        <section className="py-20 px-4 bg-gradient-to-br from-parque-purple to-parque-green text-white">
-          <div className="container mx-auto text-center">
-            <h2 className="text-4xl md:text-5xl font-light mb-4">
-              {content.cta.title}
-            </h2>
-            <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
-              {content.cta.subtitle}
-            </p>
-            <a
-              href={`/${locale}#cities`}
-              className="inline-block bg-white text-parque-purple px-8 py-4 rounded-lg font-medium text-lg hover:bg-gray-100 transition-colors"
-            >
-              {content.cta.button}
-            </a>
-          </div>
-        </section>
+        {content?.cta && (
+          <section className="py-20 px-4 bg-gradient-to-br from-parque-purple to-parque-green text-white">
+            <div className="container mx-auto text-center">
+              <h2 className="text-4xl md:text-5xl font-light mb-4">
+                {content.cta.title}
+              </h2>
+              <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
+                {content.cta.subtitle}
+              </p>
+              <a
+                href={`/${locale}#cities`}
+                className="inline-block bg-white text-parque-purple px-8 py-4 rounded-lg font-medium text-lg hover:bg-gray-100 transition-colors"
+              >
+                {content.cta.button}
+              </a>
+            </div>
+          </section>
+        )}
       </div>
       
       <Footer content={footerContent} />

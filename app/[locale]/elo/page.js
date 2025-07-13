@@ -47,16 +47,19 @@ export default function EloPage() {
       
       <div className="relative z-10">
         {/* Hero Section */}
-        <EloHeroSection content={content.hero} />
+        <EloHeroSection content={content?.hero} />
         
         {/* Main Content */}
-        <EloContentRenderer 
-          sections={content.sections} 
-          activeSection={activeSection} 
-        />
+        {content?.sections && (
+          <EloContentRenderer 
+            contentItems={content.sections} 
+            language={locale}
+            activeSection={activeSection} 
+          />
+        )}
         
         {/* CTA Section */}
-        <EloCTASection content={content.cta} locale={locale} />
+        <EloCTASection content={content?.cta} locale={locale} />
       </div>
       
       <Footer content={footerContent} />
