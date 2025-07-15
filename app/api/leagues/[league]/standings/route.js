@@ -162,20 +162,28 @@ export async function GET(request, { params }) {
         return aStatusPriority - bStatusPriority
       }
       
-      // Secondary: total points (calculated from matches)
+      // Secondary: Has played matches (players with matches first)
+      const aHasPlayed = (a.stats?.matchesPlayed || 0) > 0
+      const bHasPlayed = (b.stats?.matchesPlayed || 0) > 0
+      
+      if (aHasPlayed !== bHasPlayed) {
+        return bHasPlayed ? 1 : -1  // Players who have played come first
+      }
+      
+      // Tertiary: total points (calculated from matches)
       if (a.calculatedPoints !== b.calculatedPoints) return b.calculatedPoints - a.calculatedPoints
       
-      // Tertiary: set difference (sets won - sets lost)
+      // Quaternary: set difference (sets won - sets lost)
       const aSetDiff = (a.stats?.setsWon || 0) - (a.stats?.setsLost || 0)
       const bSetDiff = (b.stats?.setsWon || 0) - (b.stats?.setsLost || 0)
       if (aSetDiff !== bSetDiff) return bSetDiff - aSetDiff
       
-      // Quaternary: game difference (games won - games lost)
+      // Quinary: game difference (games won - games lost)
       const aGameDiff = a.calculatedGamesWon - a.calculatedGamesLost
       const bGameDiff = b.calculatedGamesWon - b.calculatedGamesLost
       if (aGameDiff !== bGameDiff) return bGameDiff - aGameDiff
       
-      // Quinary: alphabetical by name
+      // Senary: alphabetical by name
       return a.name.localeCompare(b.name)
     })
     
