@@ -1,7 +1,3 @@
-'use client';
-
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import Navigation from '@/components/common/Navigation';
 import Footer from '@/components/common/Footer';
 import Link from 'next/link';
@@ -142,17 +138,7 @@ const leaguesData = {
 
 export default function LeaguesPage({ params }) {
   const { locale } = params;
-  const router = useRouter();
-  const [mounted, setMounted] = useState(false);
   const content = leaguesData[locale] || leaguesData['es'];
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return null;
-  }
 
   const activeLeagues = Object.entries(content.cities).filter(([_, city]) => city.status === 'active');
   const comingLeagues = Object.entries(content.cities).filter(([_, city]) => city.status === 'coming');
