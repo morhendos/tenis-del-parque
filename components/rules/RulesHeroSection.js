@@ -1,4 +1,12 @@
-export default function RulesHeroSection({ title, subtitle }) {
+export default function RulesHeroSection({ content }) {
+  // Handle both old prop structure and new content object structure
+  const title = content?.title || ''
+  const subtitle = content?.subtitle || ''
+  
+  if (!content) {
+    return null
+  }
+  
   return (
     <section className="pt-32 pb-16 md:pt-40 md:pb-24 relative overflow-hidden">
       <div className="absolute inset-0">
@@ -17,4 +25,4 @@ export default function RulesHeroSection({ title, subtitle }) {
       </div>
     </section>
   )
-} 
+}
