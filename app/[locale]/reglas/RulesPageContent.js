@@ -9,25 +9,51 @@ import RulesSidebar from '@/components/rules/RulesSidebar'
 import RulesCTASection from '@/components/rules/RulesCTASection'
 import { rulesContent } from '@/lib/content/rulesContent'
 import { homeContent } from '@/lib/content/homeContent'
-import { useActiveSection } from '@/lib/hooks/useActiveSection'
 
 export default function RulesPageContent({ locale }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [activeSection, setActiveSection] = useState(0)
   const content = rulesContent[locale]
   const footerContent = homeContent[locale]?.footer
-  const activeSection = useActiveSection()
 
   // Toggle mobile sidebar
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen)
   }
 
-  // Close sidebar when clicking a link on mobile
-  const handleSectionClick = () => {
+  // Scroll to section
+  const scrollToSection = (index) => {
+    const element = document.querySelector(`.rule-section:nth-of-type(${index + 1})`)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    
+    // Close sidebar on mobile
     if (window.innerWidth < 1024) {
       setIsSidebarOpen(false)
     }
   }
+
+  // Track active section on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = document.querySelectorAll('.rule-section')
+      const scrollPosition = window.scrollY + 200
+
+      sections.forEach((section, index) => {
+        const top = section.offsetTop
+        const height = section.clientHeight
+        
+        if (scrollPosition >= top && scrollPosition < top + height) {
+          setActiveSection(index)
+        }
+      })
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    handleScroll() // Check initial position
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   // Close sidebar on resize if window becomes large
   useEffect(() => {
@@ -58,15 +84,19 @@ export default function RulesPageContent({ locale }) {
               activeSection={activeSection}
               isOpen={isSidebarOpen}
               toggleSidebar={toggleSidebar}
-              onSectionClick={handleSectionClick}
+              onScrollToSection={scrollToSection}
             />
           </aside>
           
           {/* Rules Content */}
           <main className="mt-8 lg:mt-0 lg:col-span-9">
             <div className="prose prose-lg max-w-none">
-              {content.sections.map((section) => (
-                <RulesSection key={section.id} section={section} />
+              {content.sections.map((section, index) => (
+                <RulesSection 
+                  key={section.id} 
+                  section={section} 
+                  index={index}
+                />
               ))}
             </div>
           </main>
