@@ -1,278 +1,275 @@
-import Navigation from '@/components/common/Navigation';
-import Footer from '@/components/common/Footer';
-import Link from 'next/link';
-import { TrophyIcon, CalendarIcon, LocationIcon } from '@/components/ui/TennisIcons';
-import { homeContent } from '@/lib/content/homeContent';
+'use client'
 
-const leaguesData = {
-  es: {
-    title: 'Nuestras Ligas',
-    subtitle: 'Encuentra la liga perfecta para tu nivel',
-    description: 'Únete a una de nuestras ligas de tenis amateur en toda España. Partidos semanales, jugadores de tu nivel y una comunidad apasionada.',
-    activeLeagues: 'Ligas Activas',
-    comingSoon: 'Próximamente',
-    joinButton: 'Unirse a la Liga',
-    learnMore: 'Más Información',
-    features: {
-      weeklyMatches: 'Partidos Semanales',
-      levelBased: 'Por Niveles',
-      community: 'Comunidad Local'
-    },
-    cities: {
-      sotogrande: {
-        name: 'Sotogrande',
-        region: 'Cádiz',
-        players: '150+ jugadores',
-        status: 'active',
-        description: 'La liga original, establecida en 2023'
-      },
-      malaga: {
-        name: 'Málaga',
-        region: 'Costa del Sol',
-        players: '100+ jugadores',
-        status: 'active',
-        description: 'Costa del Sol, sol y tenis todo el año'
-      },
-      valencia: {
-        name: 'Valencia',
-        region: 'Comunidad Valenciana',
-        players: '80+ jugadores',
-        status: 'active',
-        description: 'Mediterráneo y tenis de calidad'
-      },
-      sevilla: {
-        name: 'Sevilla',
-        region: 'Andalucía',
-        players: '60+ jugadores',
-        status: 'active',
-        description: 'Pasión andaluza por el tenis'
-      },
-      barcelona: {
-        name: 'Barcelona',
-        region: 'Cataluña',
-        players: 'Próximamente',
-        status: 'coming',
-        description: 'La capital del tenis catalán'
-      },
-      madrid: {
-        name: 'Madrid',
-        region: 'Comunidad de Madrid',
-        players: 'Próximamente',
-        status: 'coming',
-        description: 'Tenis en el corazón de España'
-      },
-      marbella: {
-        name: 'Marbella',
-        region: 'Costa del Sol',
-        players: 'Próximamente',
-        status: 'coming',
-        description: 'Lujo y tenis en la Costa del Sol'
+import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
+import { homeContent } from '@/lib/content/homeContent'
+import Navigation from '@/components/common/Navigation'
+import Footer from '@/components/common/Footer'
+
+export default function LeaguesPage() {
+  const params = useParams()
+  const locale = params.locale || 'es'
+  const [leagues, setLeagues] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  const t = homeContent[locale] || homeContent['es']
+
+  useEffect(() => {
+    fetchLeagues()
+  }, [])
+
+  const fetchLeagues = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/leagues')
+      if (response.ok) {
+        const data = await response.json()
+        setLeagues(data.leagues || [])
+      } else {
+        // If API fails, show demo leagues
+        setLeagues([
+          {
+            _id: 'demo-sotogrande',
+            name: 'Liga de Sotogrande',
+            slug: 'sotogrande',
+            location: {
+              city: 'Sotogrande',
+              region: 'Andalucía',
+              country: 'España'
+            },
+            description: {
+              es: 'La primera liga amateur de tenis en Sotogrande. Sistema suizo, rankings ELO y ambiente competitivo pero relajado.',
+              en: 'The first amateur tennis league in Sotogrande. Swiss system, ELO rankings and competitive but relaxed atmosphere.'
+            },
+            seasons: [
+              {
+                name: 'Verano 2025',
+                status: 'active',
+                startDate: '2025-07-07',
+                price: { isFree: true }
+              }
+            ],
+            playerCount: 20,
+            status: 'active'
+          }
+        ])
       }
-    }
-  },
-  en: {
-    title: 'Our Leagues',
-    subtitle: 'Find the perfect league for your level',
-    description: 'Join one of our amateur tennis leagues across Spain. Weekly matches, players at your level, and a passionate community.',
-    activeLeagues: 'Active Leagues',
-    comingSoon: 'Coming Soon',
-    joinButton: 'Join League',
-    learnMore: 'Learn More',
-    features: {
-      weeklyMatches: 'Weekly Matches',
-      levelBased: 'Level Based',
-      community: 'Local Community'
-    },
-    cities: {
-      sotogrande: {
-        name: 'Sotogrande',
-        region: 'Cádiz',
-        players: '150+ players',
-        status: 'active',
-        description: 'The original league, established in 2023'
-      },
-      malaga: {
-        name: 'Málaga',
-        region: 'Costa del Sol',
-        players: '100+ players',
-        status: 'active',
-        description: 'Costa del Sol, sun and tennis all year round'
-      },
-      valencia: {
-        name: 'Valencia',
-        region: 'Valencia Region',
-        players: '80+ players',
-        status: 'active',
-        description: 'Mediterranean and quality tennis'
-      },
-      sevilla: {
-        name: 'Seville',
-        region: 'Andalusia',
-        players: '60+ players',
-        status: 'active',
-        description: 'Andalusian passion for tennis'
-      },
-      barcelona: {
-        name: 'Barcelona',
-        region: 'Catalonia',
-        players: 'Coming Soon',
-        status: 'coming',
-        description: 'The capital of Catalan tennis'
-      },
-      madrid: {
-        name: 'Madrid',
-        region: 'Madrid Region',
-        players: 'Coming Soon',
-        status: 'coming',
-        description: 'Tennis in the heart of Spain'
-      },
-      marbella: {
-        name: 'Marbella',
-        region: 'Costa del Sol',
-        players: 'Coming Soon',
-        status: 'coming',
-        description: 'Luxury and tennis on the Costa del Sol'
-      }
+    } catch (err) {
+      console.error('Error fetching leagues:', err)
+      setError(err.message)
+    } finally {
+      setLoading(false)
     }
   }
-};
 
-// Users icon component (since it's not in TennisIcons)
-const UsersIcon = ({ className = "w-6 h-6", ...props }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
-    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-    <circle cx="9" cy="7" r="4" />
-    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-  </svg>
-);
+  const getSeasonUrl = (league, season) => {
+    // Normalize season name to always use Spanish URL slug regardless of language
+    const normalizeSeasonName = (name) => {
+      const seasonMappings = {
+        // Spanish variants
+        'verano 2025': 'verano2025',
+        'invierno 2025': 'invierno2025',
+        'primavera 2025': 'primavera2025',
+        'otoño 2025': 'otono2025',
+        // English variants
+        'summer 2025': 'verano2025',
+        'winter 2025': 'invierno2025',
+        'spring 2025': 'primavera2025',
+        'autumn 2025': 'otono2025',
+        'fall 2025': 'otono2025'
+      }
+      
+      const normalizedName = name.toLowerCase()
+      return seasonMappings[normalizedName] || normalizedName.replace(/\s+/g, '')
+    }
+    
+    const seasonSlug = normalizeSeasonName(season.name)
+    return `/${locale}/${league.slug}/liga/${seasonSlug}`
+  }
 
-export default function LeaguesPage({ params }) {
-  const { locale } = params;
-  const content = leaguesData[locale] || leaguesData['es'];
-  const footerContent = homeContent[locale]?.footer || homeContent['es'].footer;
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'active': return 'bg-green-100 text-green-800'
+      case 'registration_open': return 'bg-blue-100 text-blue-800'
+      case 'upcoming': return 'bg-yellow-100 text-yellow-800'
+      case 'completed': return 'bg-gray-100 text-gray-800'
+      default: return 'bg-gray-100 text-gray-800'
+    }
+  }
 
-  const activeLeagues = Object.entries(content.cities).filter(([_, city]) => city.status === 'active');
-  const comingLeagues = Object.entries(content.cities).filter(([_, city]) => city.status === 'coming');
+  const getStatusText = (status) => {
+    const statusMap = {
+      es: {
+        active: '🎾 Liga Activa',
+        registration_open: '✅ Inscripciones Abiertas',
+        upcoming: '⏳ Próximamente',
+        completed: '🏁 Finalizada'
+      },
+      en: {
+        active: '🎾 League Active',
+        registration_open: '✅ Registration Open',
+        upcoming: '⏳ Coming Soon',
+        completed: '🏁 Completed'
+      }
+    }
+    return statusMap[locale][status] || status
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-parque-bg via-white to-white">
+        <Navigation locale={locale} />
+        <div className="container mx-auto px-4 py-32 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
+          <p className="mt-4 text-gray-600">
+            {locale === 'es' ? 'Cargando ligas...' : 'Loading leagues...'}
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <>
+    <div className="min-h-screen bg-gradient-to-b from-parque-bg via-white to-white">
       <Navigation locale={locale} />
       
-      <main className="min-h-screen bg-gray-50">
-        {/* Hero Section */}
-        <div className="bg-gradient-to-r from-purple-900 to-purple-700 text-white py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">{content.title}</h1>
-            <p className="text-xl mb-6">{content.subtitle}</p>
-            <p className="text-lg opacity-90 max-w-3xl">{content.description}</p>
+      {/* Hero Section */}
+      <section className="relative pt-32 pb-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <div className="text-6xl mb-6">🏆</div>
+            <h1 className="text-5xl font-light text-parque-purple mb-4">
+              {locale === 'es' ? 'Ligas de Tenis' : 'Tennis Leagues'}
+            </h1>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              {locale === 'es' 
+                ? 'Encuentra tu liga perfecta y compite con jugadores de tu nivel en un ambiente divertido y competitivo.'
+                : 'Find your perfect league and compete with players at your level in a fun and competitive environment.'}
+            </p>
           </div>
         </div>
+      </section>
 
-        {/* Features */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-            <div className="bg-white rounded-lg shadow-md p-6 text-center">
-              <CalendarIcon className="w-12 h-12 text-purple-600 mx-auto mb-4" />
-              <h3 className="font-semibold text-lg">{content.features.weeklyMatches}</h3>
-            </div>
-            <div className="bg-white rounded-lg shadow-md p-6 text-center">
-              <TrophyIcon className="w-12 h-12 text-purple-600 mx-auto mb-4" />
-              <h3 className="font-semibold text-lg">{content.features.levelBased}</h3>
-            </div>
-            <div className="bg-white rounded-lg shadow-md p-6 text-center">
-              <UsersIcon className="w-12 h-12 text-purple-600 mx-auto mb-4" />
-              <h3 className="font-semibold text-lg">{content.features.community}</h3>
-            </div>
-          </div>
-
-          {/* Active Leagues */}
-          <div className="mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">{content.activeLeagues}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {activeLeagues.map(([key, city]) => (
-                <div key={key} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-                  <div className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h3 className="text-2xl font-bold text-gray-900">{city.name}</h3>
-                        <p className="text-gray-600 flex items-center mt-1">
-                          <LocationIcon className="w-4 h-4 mr-1" />
-                          {city.region}
-                        </p>
-                      </div>
-                      <span className="bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full">
-                        {city.players}
-                      </span>
-                    </div>
-                    <p className="text-gray-700 mb-6">{city.description}</p>
-                    <div className="flex gap-4">
-                      <Link
-                        href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${key}`}
-                        className="flex-1 bg-purple-600 text-white text-center py-3 rounded-lg hover:bg-purple-700 transition-colors"
-                      >
-                        {content.joinButton}
-                      </Link>
-                      <Link
-                        href={`/${locale}/${key}`}
-                        className="flex-1 bg-gray-200 text-gray-800 text-center py-3 rounded-lg hover:bg-gray-300 transition-colors"
-                      >
-                        {content.learnMore}
-                      </Link>
-                    </div>
+      {/* Leagues Grid */}
+      <section className="container mx-auto px-4 pb-16">
+        {leagues.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 max-w-7xl mx-auto">
+            {leagues.map((league) => (
+              <div key={league._id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                {/* League Header */}
+                <div className="bg-gradient-to-r from-parque-purple to-parque-purple/80 text-white p-6">
+                  <h3 className="text-2xl font-bold mb-2">{league.name}</h3>
+                  <div className="flex items-center space-x-2 text-sm opacity-90">
+                    <span>📍</span>
+                    <span>{league.location?.city}, {league.location?.region}</span>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Coming Soon Leagues */}
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">{content.comingSoon}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {comingLeagues.map(([key, city]) => (
-                <div key={key} className="bg-gray-100 rounded-lg p-6 text-center">
-                  <h3 className="text-xl font-bold text-gray-700 mb-2">{city.name}</h3>
-                  <p className="text-gray-600">{city.region}</p>
-                  <p className="text-purple-600 font-semibold mt-4">{city.players}</p>
+                {/* League Info */}
+                <div className="p-6">
+                  <p className="text-gray-700 mb-4 leading-relaxed">
+                    {league.description?.[locale] || league.description?.es || 
+                     'Liga amateur de tenis con sistema suizo y rankings ELO'}
+                  </p>
+
+                  {/* Stats */}
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="text-center p-3 bg-gray-50 rounded-lg">
+                      <div className="text-2xl font-bold text-parque-purple">
+                        {league.playerCount || 0}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {locale === 'es' ? 'Jugadores' : 'Players'}
+                      </div>
+                    </div>
+                    <div className="text-center p-3 bg-gray-50 rounded-lg">
+                      <div className="text-2xl font-bold text-parque-purple">
+                        {league.seasons?.length || 0}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {locale === 'es' ? 'Temporadas' : 'Seasons'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Active Seasons */}
+                  {league.seasons && league.seasons.length > 0 && (
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-gray-900">
+                        {locale === 'es' ? 'Temporadas' : 'Seasons'}
+                      </h4>
+                      {league.seasons.map((season, index) => (
+                        <div key={index} className="border border-gray-200 rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <h5 className="font-medium text-gray-900">{season.name}</h5>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(season.status)}`}>
+                              {getStatusText(season.status)}
+                            </span>
+                          </div>
+                          
+                          <div className="space-y-2 text-sm text-gray-600">
+                            {season.startDate && (
+                              <div className="flex items-center space-x-2">
+                                <span>📅</span>
+                                <span>
+                                  {locale === 'es' ? 'Inicio:' : 'Start:'} {' '}
+                                  {new Date(season.startDate).toLocaleDateString(locale === 'es' ? 'es-ES' : 'en-US')}
+                                </span>
+                              </div>
+                            )}
+                            {season.price && (
+                              <div className="flex items-center space-x-2">
+                                <span>💰</span>
+                                <span>
+                                  {season.price.isFree 
+                                    ? (locale === 'es' ? 'Gratis' : 'Free')
+                                    : `${season.price.amount || 0}${season.price.currency || 'EUR'}`
+                                  }
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Season Action Button */}
+                          <div className="mt-4">
+                            <a
+                              href={getSeasonUrl(league, season)}
+                              className="block w-full bg-parque-purple text-white text-center py-2 px-4 rounded-lg hover:bg-parque-purple/90 transition-colors font-medium"
+                            >
+                              {locale === 'es' ? 'Ver Liga' : 'View League'}
+                            </a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
-        </div>
-      </main>
-      
-      <Footer content={footerContent} />
-    </>
-  );
-}
+        ) : (
+          <div className="text-center py-16 max-w-2xl mx-auto">
+            <div className="text-6xl mb-6">🎾</div>
+            <h2 className="text-3xl font-light text-gray-900 mb-4">
+              {locale === 'es' ? 'Próximamente más ligas' : 'More leagues coming soon'}
+            </h2>
+            <p className="text-gray-600 mb-8">
+              {locale === 'es' 
+                ? 'Estamos trabajando para traerte más ligas en diferentes ubicaciones. ¡Mantente atento!'
+                : 'We are working to bring you more leagues in different locations. Stay tuned!'}
+            </p>
+            <a 
+              href={`/${locale}/sotogrande`}
+              className="inline-block bg-parque-purple text-white px-8 py-3 rounded-full hover:bg-parque-purple/90 transition-colors font-medium"
+            >
+              {locale === 'es' ? 'Ver Liga Disponible' : 'View Available League'}
+            </a>
+          </div>
+        )}
+      </section>
 
-// Generate static params for both locales
-export async function generateStaticParams() {
-  return [
-    { locale: 'es' },
-    { locale: 'en' }
-  ];
-}
-
-// Metadata for the page
-export async function generateMetadata({ params }) {
-  const { locale } = params;
-  
-  return {
-    title: locale === 'es' ? 'Ligas de Tenis Amateur - Tenis del Parque' : 'Amateur Tennis Leagues - Tenis del Parque',
-    description: locale === 'es' 
-      ? 'Descubre nuestras ligas de tenis amateur en Sotogrande, Málaga, Valencia y Sevilla. Únete a partidos semanales con jugadores de tu nivel.'
-      : 'Discover our amateur tennis leagues in Sotogrande, Málaga, Valencia and Seville. Join weekly matches with players at your level.',
-    keywords: locale === 'es'
-      ? ['ligas tenis', 'tenis amateur', 'tenis sotogrande', 'tenis málaga', 'tenis valencia', 'tenis sevilla']
-      : ['tennis leagues', 'amateur tennis', 'tennis sotogrande', 'tennis malaga', 'tennis valencia', 'tennis seville'],
-    openGraph: {
-      title: locale === 'es' ? 'Ligas de Tenis Amateur en España' : 'Amateur Tennis Leagues in Spain',
-      description: locale === 'es' 
-        ? 'Únete a nuestras ligas de tenis amateur. Partidos semanales en tu ciudad.'
-        : 'Join our amateur tennis leagues. Weekly matches in your city.',
-      images: ['/og-leagues.png']
-    }
-  };
+      <Footer content={t.footer} />
+    </div>
+  )
 }
