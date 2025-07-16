@@ -70,12 +70,80 @@ export async function generateMetadata({ params }) {
 export default function LocaleLayout({ children, params }) {
   const locale = params.locale;
   
+  // Organization schema for SEO
+  const organizationSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'SportsOrganization',
+    name: 'Tenis del Parque',
+    url: 'https://tenisdelparque.com',
+    logo: 'https://tenisdelparque.com/logo.png',
+    description: locale === 'es' 
+      ? 'Liga de tenis amateur organizando partidos semanales en toda España'
+      : 'Amateur tennis league organizing weekly matches across Spain',
+    sport: 'Tennis',
+    areaServed: {
+      '@type': 'Country',
+      name: 'Spain'
+    },
+    location: [
+      {
+        '@type': 'Place',
+        name: 'Sotogrande',
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: 'Sotogrande',
+          addressRegion: 'Cádiz',
+          addressCountry: 'ES'
+        }
+      },
+      {
+        '@type': 'Place',
+        name: 'Málaga',
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: 'Málaga',
+          addressRegion: 'Málaga',
+          addressCountry: 'ES'
+        }
+      },
+      {
+        '@type': 'Place',
+        name: 'Valencia',
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: 'Valencia',
+          addressRegion: 'Valencia',
+          addressCountry: 'ES'
+        }
+      },
+      {
+        '@type': 'Place',
+        name: 'Sevilla',
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: 'Sevilla',
+          addressRegion: 'Sevilla',
+          addressCountry: 'ES'
+        }
+      }
+    ],
+    sameAs: [
+      'https://www.facebook.com/tenisdelparque',
+      'https://www.instagram.com/tenisdelparque',
+      'https://twitter.com/tenisdelparque'
+    ]
+  };
+  
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
         <link rel="alternate" hrefLang="es" href="/es" />
         <link rel="alternate" hrefLang="en" href="/en" />
         <link rel="alternate" hrefLang="x-default" href="/es" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
       </head>
       <body className={`${outfit.variable} ${raleway.variable} font-sans`}>
         {children}
