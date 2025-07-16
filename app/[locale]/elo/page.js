@@ -9,60 +9,55 @@ import EloContentRenderer from '@/components/elo/EloContentRenderer'
 import EloCTASection from '@/components/elo/EloCTASection'
 import { eloContent } from '@/lib/content/eloContent'
 import { homeContent } from '@/lib/content/homeContent'
-import { useActiveSection } from '@/lib/hooks/useActiveSection'
 
 export default function EloPage() {
   const params = useParams()
   const locale = params.locale || 'es'
-  const [scrollY, setScrollY] = useState(0)
-  const activeSection = useActiveSection()
-  
-  const content = eloContent[locale]
-  const footerContent = homeContent[locale]?.footer
+  const [scrolled, setScrolled] = useState(false)
 
-  // Handle parallax scroll
+  // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {
-      setScrollY(window.scrollY)
+      setScrolled(window.scrollY > 20)
     }
-    
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  const t = eloContent[locale]
+  const footerContent = homeContent[locale]?.footer
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-parque-bg to-white relative overflow-x-hidden">
-      {/* Parallax background elements */}
-      <div 
-        className="absolute top-0 left-0 w-full pointer-events-none z-0 opacity-10"
-        style={{
-          transform: `translateY(${scrollY * 0.3}px)`,
-          height: '200vh',
-        }}
-      >
-        <div className="w-full h-full tennis-court-pattern" />
-      </div>
-      
-      <Navigation currentPage="elo" />
-      
-      <div className="relative z-10">
-        {/* Hero Section */}
-        <EloHeroSection content={content?.hero} />
-        
-        {/* Main Content */}
-        {content?.sections && (
-          <EloContentRenderer 
-            contentItems={content.sections} 
-            language={locale}
-            activeSection={activeSection} 
-          />
-        )}
-        
-        {/* CTA Section */}
-        <EloCTASection content={content?.cta} locale={locale} />
-      </div>
-      
+    <main className="min-h-screen bg-gradient-to-br from-parque-bg via-white to-parque-bg">
+      <Navigation 
+        scrolled={scrolled}
+        currentPage="elo"
+      />
+
+      <EloHeroSection content={t?.hero} />
+
+      {/* Sections */}
+      <section className="py-16 md:py-24">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            {t?.sections?.map((section, sectionIndex) => (
+              <div key={section.id} className="mb-24 last:mb-0 animate-fadeInUp" style={{animationDelay: `${sectionIndex * 100}ms`}}>
+                <h2 className="text-3xl md:text-4xl font-light text-parque-purple mb-10">
+                  {section.title}
+                </h2>
+                <EloContentRenderer 
+                  contentItems={section.content}
+                  language={locale}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <EloCTASection content={t?.cta} locale={locale} />
+
       <Footer content={footerContent} />
-    </div>
+    </main>
   )
 }
