@@ -9,10 +9,11 @@ import RulesSidebar from '@/components/rules/RulesSidebar'
 import RulesCTASection from '@/components/rules/RulesCTASection'
 import { rulesContent } from '@/lib/content/rulesContent'
 import { homeContent } from '@/lib/content/homeContent'
+import { useActiveSection } from '@/lib/hooks/useActiveSection'
 
 export default function RulesPageContent({ locale }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [activeSection, setActiveSection] = useState(0)
+  const { activeSection, scrollToSection } = useActiveSection()
   const content = rulesContent[locale]
   const footerContent = homeContent[locale]?.footer
 
@@ -21,39 +22,14 @@ export default function RulesPageContent({ locale }) {
     setIsSidebarOpen(!isSidebarOpen)
   }
 
-  // Scroll to section
-  const scrollToSection = (index) => {
-    const element = document.querySelector(`.rule-section:nth-of-type(${index + 1})`)
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
-    
+  // Handle section click on mobile
+  const handleSectionClick = (index) => {
+    scrollToSection(index)
     // Close sidebar on mobile
     if (window.innerWidth < 1024) {
       setIsSidebarOpen(false)
     }
   }
-
-  // Track active section on scroll
-  useEffect(() => {
-    const handleScroll = () => {
-      const sections = document.querySelectorAll('.rule-section')
-      const scrollPosition = window.scrollY + 200
-
-      sections.forEach((section, index) => {
-        const top = section.offsetTop
-        const height = section.clientHeight
-        
-        if (scrollPosition >= top && scrollPosition < top + height) {
-          setActiveSection(index)
-        }
-      })
-    }
-
-    window.addEventListener('scroll', handleScroll)
-    handleScroll() // Check initial position
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
 
   // Close sidebar on resize if window becomes large
   useEffect(() => {
@@ -68,40 +44,33 @@ export default function RulesPageContent({ locale }) {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-parque-bg to-white">
+    <div className="min-h-screen bg-gradient-to-br from-parque-bg via-white to-parque-bg">
       <Navigation currentPage="rules" />
       
       {/* Hero Section */}
       <RulesHeroSection content={content.hero} />
       
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-12 lg:py-16">
-        <div className="lg:grid lg:grid-cols-12 lg:gap-8">
-          {/* Sidebar */}
-          <aside className="lg:col-span-3">
-            <RulesSidebar 
-              sections={content.sections} 
-              activeSection={activeSection}
-              isOpen={isSidebarOpen}
-              toggleSidebar={toggleSidebar}
-              onScrollToSection={scrollToSection}
-            />
-          </aside>
-          
-          {/* Rules Content */}
-          <main className="mt-8 lg:mt-0 lg:col-span-9">
-            <div className="prose prose-lg max-w-none">
-              {content.sections.map((section, index) => (
-                <RulesSection 
-                  key={section.id} 
-                  section={section} 
-                  index={index}
-                />
-              ))}
-            </div>
-          </main>
+      {/* Sidebar */}
+      <RulesSidebar 
+        sections={content.sections} 
+        activeSection={activeSection}
+        onScrollToSection={handleSectionClick}
+      />
+      
+      {/* Rules Content */}
+      <section className="py-12 md:py-20 relative">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            {content.sections.map((section, index) => (
+              <RulesSection 
+                key={section.id || index} 
+                section={section} 
+                index={index}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
       
       {/* CTA Section */}
       <RulesCTASection content={content.cta} locale={locale} />
