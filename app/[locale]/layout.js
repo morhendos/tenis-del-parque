@@ -1,4 +1,20 @@
-import { i18n } from '@/lib/i18n/config';
+import { Outfit, Raleway } from 'next/font/google'
+import '../globals.css'
+import GoogleAnalytics from '@/components/analytics/GoogleAnalytics'
+import MicrosoftClarity from '@/components/analytics/MicrosoftClarity'
+import { i18n } from '@/lib/i18n/config'
+
+const outfit = Outfit({ 
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-outfit'
+})
+
+const raleway = Raleway({ 
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-raleway'
+})
 
 export async function generateStaticParams() {
   return i18n.locales.map((locale) => ({ locale }));
@@ -61,7 +77,15 @@ export default function LocaleLayout({ children, params }) {
         <link rel="alternate" hrefLang="en" href="/en" />
         <link rel="alternate" hrefLang="x-default" href="/es" />
       </head>
-      <body>{children}</body>
+      <body className={`${outfit.variable} ${raleway.variable} font-sans`}>
+        {children}
+        {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
+          <GoogleAnalytics GA_MEASUREMENT_ID={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
+        )}
+        {process.env.NEXT_PUBLIC_CLARITY_ID && (
+          <MicrosoftClarity clarityId={process.env.NEXT_PUBLIC_CLARITY_ID} />
+        )}
+      </body>
     </html>
   );
 }
