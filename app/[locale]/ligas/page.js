@@ -1,7 +1,8 @@
 import Navigation from '@/components/common/Navigation';
 import Footer from '@/components/common/Footer';
 import Link from 'next/link';
-import { Trophy, Users, Calendar, MapPin } from 'lucide-react';
+import { TrophyIcon, CalendarIcon, LocationIcon } from '@/components/ui/TennisIcons';
+import { homeContent } from '@/lib/content/homeContent';
 
 const leaguesData = {
   es: {
@@ -136,9 +137,20 @@ const leaguesData = {
   }
 };
 
+// Users icon component (since it's not in TennisIcons)
+const UsersIcon = ({ className = "w-6 h-6", ...props }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+);
+
 export default function LeaguesPage({ params }) {
   const { locale } = params;
   const content = leaguesData[locale] || leaguesData['es'];
+  const footerContent = homeContent[locale]?.footer || homeContent['es'].footer;
 
   const activeLeagues = Object.entries(content.cities).filter(([_, city]) => city.status === 'active');
   const comingLeagues = Object.entries(content.cities).filter(([_, city]) => city.status === 'coming');
@@ -161,15 +173,15 @@ export default function LeaguesPage({ params }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
             <div className="bg-white rounded-lg shadow-md p-6 text-center">
-              <Calendar className="w-12 h-12 text-purple-600 mx-auto mb-4" />
+              <CalendarIcon className="w-12 h-12 text-purple-600 mx-auto mb-4" />
               <h3 className="font-semibold text-lg">{content.features.weeklyMatches}</h3>
             </div>
             <div className="bg-white rounded-lg shadow-md p-6 text-center">
-              <Trophy className="w-12 h-12 text-purple-600 mx-auto mb-4" />
+              <TrophyIcon className="w-12 h-12 text-purple-600 mx-auto mb-4" />
               <h3 className="font-semibold text-lg">{content.features.levelBased}</h3>
             </div>
             <div className="bg-white rounded-lg shadow-md p-6 text-center">
-              <Users className="w-12 h-12 text-purple-600 mx-auto mb-4" />
+              <UsersIcon className="w-12 h-12 text-purple-600 mx-auto mb-4" />
               <h3 className="font-semibold text-lg">{content.features.community}</h3>
             </div>
           </div>
@@ -185,7 +197,7 @@ export default function LeaguesPage({ params }) {
                       <div>
                         <h3 className="text-2xl font-bold text-gray-900">{city.name}</h3>
                         <p className="text-gray-600 flex items-center mt-1">
-                          <MapPin className="w-4 h-4 mr-1" />
+                          <LocationIcon className="w-4 h-4 mr-1" />
                           {city.region}
                         </p>
                       </div>
@@ -230,7 +242,7 @@ export default function LeaguesPage({ params }) {
         </div>
       </main>
       
-      <Footer locale={locale} />
+      <Footer content={footerContent} />
     </>
   );
 }
