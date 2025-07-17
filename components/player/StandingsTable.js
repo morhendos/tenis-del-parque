@@ -50,7 +50,7 @@ export default function StandingsTable({ players, language, unified = false }) {
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div>
       {/* Playoff Qualification Legend */}
       <div className="mb-6 bg-gradient-to-r from-violet-50/50 to-violet-50/30 rounded-lg p-4 border border-violet-100/40">
         <h3 className="text-sm font-semibold text-violet-800 mb-3">
@@ -85,7 +85,7 @@ export default function StandingsTable({ players, language, unified = false }) {
           return (
             <div 
               key={standing.player._id} 
-              className={`${getPositionStyle(standing.position)} ${getPlayerStatusStyle(standing.player)} rounded-xl p-3 shadow-lg border transition-all duration-300 hover:shadow-xl hover:scale-[1.02]`}
+              className={`${getPositionStyle(standing.position)} ${getPlayerStatusStyle(standing.player)} rounded-xl p-3 shadow-lg border transition-all duration-300 hover:shadow-xl hover:border-parque-purple/30`}
             >
               {/* Header with position and points */}
               <div className="flex items-center justify-between mb-3">
@@ -180,8 +180,8 @@ export default function StandingsTable({ players, language, unified = false }) {
       </div>
 
       {/* Desktop table layout - Enhanced */}
-      <div className="hidden md:block">
-        <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-lg">
+      <div className="hidden md:block overflow-hidden rounded-xl border border-gray-200 shadow-lg">
+        <div className="overflow-x-auto">
           <table className="w-full divide-y divide-gray-200" style={{ minWidth: '1100px' }}>
             <thead className="bg-gradient-to-r from-violet-600 via-parque-purple to-violet-600">
               <tr>
@@ -220,7 +220,7 @@ export default function StandingsTable({ players, language, unified = false }) {
                 const rowBg = getPositionStyle(standing.position)
                             
                 return (
-                  <tr key={standing.player._id} className={`${rowBg} ${getPlayerStatusStyle(standing.player)} hover:shadow-md hover:scale-[1.01] transition-all duration-200`}>
+                  <tr key={standing.player._id} className={`${rowBg} ${getPlayerStatusStyle(standing.player)} hover:shadow-md hover:bg-violet-50/50 transition-all duration-200`}>
                     <td className="px-6 py-5 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm mr-3 ${getPositionBadgeStyle(standing.position)}`}>
@@ -319,4 +319,4 @@ export default function StandingsTable({ players, language, unified = false }) {
       </div>
     </div>
   )
-} 
+}
