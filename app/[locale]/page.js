@@ -298,7 +298,7 @@ export default function MultiLeagueHomePage() {
                     </svg>
                   ))}
                 </div>
-                <p className="text-gray-700 mb-4">"{testimonial.text}"</p>
+                <p className="text-gray-700 mb-4">&ldquo;{testimonial.text}&rdquo;</p>
                 <div className="font-semibold">{testimonial.name}</div>
                 <div className="text-sm text-gray-500">{testimonial.location}</div>
               </div>

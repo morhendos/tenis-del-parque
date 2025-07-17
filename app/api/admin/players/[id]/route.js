@@ -2,17 +2,15 @@ import { NextResponse } from 'next/server'
 import dbConnect from '../../../../../lib/db/mongoose'
 import Player from '../../../../../lib/models/Player'
 import Match from '../../../../../lib/models/Match'
-import { verifyAdminAuth } from '../../../../../lib/utils/adminAuth'
+import { requireAdmin } from '../../../../../lib/auth/apiAuth'
 
 export const dynamic = 'force-dynamic'
 
 // GET /api/admin/players/[id] - Get player details
 export async function GET(request, { params }) {
   try {
-    const auth = await verifyAdminAuth(request)
-    if (!auth.authenticated) {
-      return NextResponse.json({ error: auth.error }, { status: 401 })
-    }
+    const { session, error } = await requireAdmin(request)
+    if (error) return error
 
     const { id } = params
     await dbConnect()
@@ -39,10 +37,8 @@ export async function GET(request, { params }) {
 // PATCH /api/admin/players/[id] - Update player
 export async function PATCH(request, { params }) {
   try {
-    const auth = await verifyAdminAuth(request)
-    if (!auth.authenticated) {
-      return NextResponse.json({ error: auth.error }, { status: 401 })
-    }
+    const { session, error } = await requireAdmin(request)
+    if (error) return error
 
     const { id } = params
     const body = await request.json()
@@ -86,10 +82,8 @@ export async function PATCH(request, { params }) {
 // DELETE /api/admin/players/[id] - Delete player
 export async function DELETE(request, { params }) {
   try {
-    const auth = await verifyAdminAuth(request)
-    if (!auth.authenticated) {
-      return NextResponse.json({ error: auth.error }, { status: 401 })
-    }
+    const { session, error } = await requireAdmin(request)
+    if (error) return error
 
     const { id } = params
     await dbConnect()

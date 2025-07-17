@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import dbConnect from '../../../../lib/db/mongoose'
 import Player from '../../../../lib/models/Player'
 import User from '../../../../lib/models/User'
-import { verifyAdminAuth } from '../../../../lib/utils/adminAuth'
+import { requireAdmin } from '../../../../lib/auth/apiAuth'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
@@ -10,10 +10,8 @@ export const dynamic = 'force-dynamic'
 export async function GET(request) {
   try {
     // Check authentication
-    const auth = await verifyAdminAuth(request)
-    if (!auth.authenticated) {
-      return NextResponse.json({ error: auth.error }, { status: 401 })
-    }
+    const { session, error } = await requireAdmin(request)
+    if (error) return error
 
     await dbConnect()
 

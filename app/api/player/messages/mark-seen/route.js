@@ -1,32 +1,16 @@
 import { NextResponse } from 'next/server'
 import dbConnect from '../../../../../lib/db/mongoose'
 import User from '../../../../../lib/models/User'
-import { verifyToken } from '../../../../../lib/utils/jwt'
+import { requirePlayer } from '../../../../../lib/auth/apiAuth'
 
-// Force dynamic rendering for this API route
+// Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
 
 export async function POST(req) {
   try {
-    // Get token from cookie
-    const token = req.cookies.get('auth-token')?.value
-
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    // Verify token
-    const decoded = await verifyToken(token)
-    
-    if (!decoded || decoded.role !== 'player') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+    // Use new NextAuth authentication system
+    const { session, error } = await requirePlayer(req)
+    if (error) return error
 
     const { messageId } = await req.json()
 
@@ -40,7 +24,7 @@ export async function POST(req) {
     await dbConnect()
 
     // Find the user and mark announcement as seen
-    const user = await User.findById(decoded.userId)
+    const user = await User.findById(session.user.id)
     if (!user) {
       return NextResponse.json(
         { error: 'User not found' },
