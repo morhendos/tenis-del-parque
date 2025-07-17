@@ -17,7 +17,9 @@ import { dashboardStyles } from '@/styles/dashboard'
 export default function PlayerDashboard() {
   const params = useParams()
   const locale = params.locale || 'es'
-  const { language, isLanguageLoaded } = useLanguage()
+  const language = locale
+  const isLanguageLoaded = true
+  
   const { showWelcome, playerName, closeWelcome } = useWelcomeModal()
   const {
     player,
@@ -29,8 +31,8 @@ export default function PlayerDashboard() {
     getDynamicFirstRoundAnnouncement
   } = usePlayerDashboard()
 
-  // Show loading until both language and data are loaded to prevent flickering
-  if (!isLanguageLoaded || loading) {
+  // Show loading until data is loaded
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -39,7 +41,7 @@ export default function PlayerDashboard() {
             <div className="absolute top-0 left-0 w-16 h-16 border-4 border-parque-purple rounded-full animate-spin border-t-transparent"></div>
           </div>
           <p className="mt-4 text-gray-600 animate-pulse">
-            {locale === 'es' ? 'Cargando...' : 'Loading...'}
+            {language === 'es' ? 'Cargando...' : 'Loading...'}
           </p>
         </div>
       </div>
@@ -56,10 +58,10 @@ export default function PlayerDashboard() {
             </svg>
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            {locale === 'es' ? 'Bienvenido al Portal del Jugador' : 'Welcome to Player Portal'}
+            {language === 'es' ? 'Bienvenido al Portal del Jugador' : 'Welcome to Player Portal'}
           </h2>
           <p className="text-gray-600 mb-6">
-            {locale === 'es' 
+            {language === 'es' 
               ? 'No se encontraron datos del jugador.' 
               : 'No player data found.'}
           </p>
@@ -70,7 +72,7 @@ export default function PlayerDashboard() {
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
-            {locale === 'es' ? 'Configurar Perfil' : 'Set Up Profile'}
+            {language === 'es' ? 'Configurar Perfil' : 'Set Up Profile'}
           </Link>
         </div>
       </div>
@@ -98,7 +100,7 @@ export default function PlayerDashboard() {
         </div>
 
         {/* Quick Actions */}
-        <QuickActions language={language} />
+        <QuickActions language={language} locale={locale} />
 
         {/* Welcome Modal */}
         <WelcomeModal
