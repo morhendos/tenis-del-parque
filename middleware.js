@@ -78,6 +78,16 @@ export async function middleware(request) {
   const playerRouteRegex = /^\/(?:es|en)\/player/;
   if (playerRouteRegex.test(pathname)) {
     
+    // First check if user is an admin (admins can access player routes)
+    const adminTokenCookie = request.cookies.get('admin-token')
+    if (adminTokenCookie?.value) {
+      const adminDecoded = await verifyTokenEdge(adminTokenCookie.value, process.env.JWT_SECRET)
+      if (adminDecoded && adminDecoded.role === 'admin') {
+        // Admin is allowed to access player routes
+        return NextResponse.next()
+      }
+    }
+    
     // Check for player JWT token cookie
     const tokenCookie = request.cookies.get('auth-token')
     
@@ -131,6 +141,16 @@ export async function middleware(request) {
 
   // Player API routes protection
   if (pathname.startsWith('/api/player')) {
+    
+    // First check if user is an admin (admins can access player API routes)
+    const adminTokenCookie = request.cookies.get('admin-token')
+    if (adminTokenCookie?.value) {
+      const adminDecoded = await verifyTokenEdge(adminTokenCookie.value, process.env.JWT_SECRET)
+      if (adminDecoded && adminDecoded.role === 'admin') {
+        // Admin is allowed to access player API routes
+        return NextResponse.next()
+      }
+    }
     
     const tokenCookie = request.cookies.get('auth-token')
     
