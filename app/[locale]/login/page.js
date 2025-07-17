@@ -22,14 +22,7 @@ function LoginForm() {
 
   const checkAuth = useCallback(async () => {
     try {
-      // First check if admin
-      const adminRes = await fetch('/api/admin/auth/check')
-      if (adminRes.ok) {
-        router.push('/admin/dashboard')
-        return
-      }
-
-      // Then check if player
+      // Check if player is already authenticated
       const playerRes = await fetch('/api/auth/check')
       if (playerRes.ok) {
         router.push(`/${locale}/player/dashboard`)
@@ -81,30 +74,16 @@ function LoginForm() {
     setErrors({})
     
     try {
-      // First try admin login
-      const adminRes = await fetch('/api/admin/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      })
-
-      if (adminRes.ok) {
-        const data = await adminRes.json()
-        // Admin login successful
-        router.push(returnUrl || '/admin/dashboard')
-        return
-      }
-
-      // If admin login failed, try player login
-      const playerRes = await fetch('/api/auth/login', {
+      // Only try player login
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       })
       
-      const data = await playerRes.json()
+      const data = await res.json()
       
-      if (playerRes.ok && data.success) {
+      if (res.ok && data.success) {
         // Store user info if needed
         if (data.user) {
           localStorage.setItem('userInfo', JSON.stringify({
@@ -115,12 +94,8 @@ function LoginForm() {
           }))
         }
         
-        // Redirect based on role
-        if (data.user?.role === 'admin') {
-          router.push('/admin/dashboard')
-        } else {
-          router.push(returnUrl)
-        }
+        // Redirect to player dashboard or return URL
+        router.push(returnUrl)
       } else {
         setErrors({ submit: data.error || t.form.errors.generic })
       }
