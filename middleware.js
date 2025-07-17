@@ -1,5 +1,5 @@
+import { withAuth } from 'next-auth/middleware'
 import { NextResponse } from 'next/server'
-import { verifyTokenEdge } from './lib/utils/edgeJwt'
 
 const locales = ['es', 'en'];
 const defaultLocale = 'es';
@@ -41,259 +41,184 @@ function shouldExcludeFromLocale(pathname) {
   return excludedRoutes.some(route => pathname.startsWith(route)) || pathname.includes('.');
 }
 
-export async function middleware(request) {
-  const { pathname } = request.nextUrl;
-  
-  // AUTHENTICATION LOGIC
-  // Check if it's an admin route (excluding auth endpoints)
-  if (pathname.startsWith('/admin') && 
-      !pathname.startsWith('/api/admin/auth')) {
-    
-    // Check for admin JWT token cookie
-    const tokenCookie = request.cookies.get('admin-token')
-    
-    if (!tokenCookie?.value) {
-      // Get locale for redirect
-      const locale = getLocale(request);
-      // Redirect to locale-based login page
-      const url = new URL(`/${locale}/login`, request.url)
-      url.searchParams.set('from', 'admin')
-      return NextResponse.redirect(url)
-    }
+export default withAuth(
+  function middleware(req) {
+    const token = req.nextauth.token
+    const pathname = req.nextUrl.pathname
 
-    // Verify the token (Edge Runtime compatible)
-    const decoded = await verifyTokenEdge(tokenCookie.value, process.env.JWT_SECRET)
-    
-    if (!decoded || decoded.role !== 'admin') {
-      // Get locale for redirect
-      const locale = getLocale(request);
-      // Redirect to locale-based login page if token is invalid or not admin
-      const url = new URL(`/${locale}/login`, request.url)
-      url.searchParams.set('from', 'admin')
-      return NextResponse.redirect(url)
-    }
-  }
+    // Handle authentication for protected routes
+    if (token) {
+      // Admin routes protection
+      if (pathname.startsWith('/admin') && token.role !== 'admin') {
+        const locale = getLocale(req)
+        return NextResponse.redirect(new URL(`/${locale}/login`, req.url))
+      }
 
-  // Check if it's a player route (with locale support)
-  const playerRouteRegex = /^\/(?:es|en)\/player/;
-  if (playerRouteRegex.test(pathname)) {
-    
-    // First check if user is an admin (admins can access player routes)
-    const adminTokenCookie = request.cookies.get('admin-token')
-    if (adminTokenCookie?.value) {
-      const adminDecoded = await verifyTokenEdge(adminTokenCookie.value, process.env.JWT_SECRET)
-      if (adminDecoded && adminDecoded.role === 'admin') {
-        // Admin is allowed to access player routes
-        return NextResponse.next()
+      // Player routes - admins can access player routes too
+      const playerRouteRegex = /^\/(?:es|en)\/player/;
+      if (playerRouteRegex.test(pathname) && !['player', 'admin'].includes(token.role)) {
+        const locale = pathname.split('/')[1]
+        return NextResponse.redirect(new URL(`/${locale}/login`, req.url))
       }
     }
+
+    // INTERNATIONALIZATION LOGIC
+    // Skip locale handling for excluded routes
+    if (shouldExcludeFromLocale(pathname)) {
+      return NextResponse.next();
+    }
     
-    // Check for player JWT token cookie
-    const tokenCookie = request.cookies.get('auth-token')
+    // Check if the pathname already includes a locale
+    const pathnameHasLocale = locales.some(
+      locale => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
+    );
     
-    if (!tokenCookie?.value) {
-      // Extract locale from path
-      const locale = pathname.split('/')[1];
+    // If pathname doesn't have locale, redirect to the same path with locale
+    if (!pathnameHasLocale) {
+      const locale = getLocale(req);
       
-      // Redirect to login with return URL
-      const url = new URL(`/${locale}/login`, request.url)
-      url.searchParams.set('return', pathname)
-      return NextResponse.redirect(url)
-    }
-
-    // Verify the token (Edge Runtime compatible)
-    const decoded = await verifyTokenEdge(tokenCookie.value, process.env.JWT_SECRET)
-    
-    if (!decoded || decoded.role !== 'player') {
-      // Extract locale from path
-      const locale = pathname.split('/')[1];
+      // Special handling for existing routes to maintain compatibility
+      const routeMapping = {
+        '/': `/${locale}`,
+        '/signup': `/${locale}/registro`,
+        '/login': `/${locale}/login`,
+        '/elo': `/${locale}/elo`,
+        '/rules': `/${locale}/${locale === 'es' ? 'reglas' : 'rules'}`,
+        '/swiss': `/${locale}/swiss`,
+        '/activate': `/${locale}/activate`,
+        '/leagues': `/${locale}/${locale === 'es' ? 'ligas' : 'leagues'}`,
+        '/sotogrande': `/${locale}/sotogrande`,
+        // Add player route mappings
+        '/player': `/${locale}/player/dashboard`,
+        '/player/dashboard': `/${locale}/player/dashboard`,
+        '/player/league': `/${locale}/player/league`,
+        '/player/matches': `/${locale}/player/matches`,
+        '/player/messages': `/${locale}/player/messages`,
+        '/player/profile': `/${locale}/player/profile`,
+        '/player/rules': `/${locale}/player/rules`,
+      };
       
-      // Redirect to login if token is invalid or not player
-      const url = new URL(`/${locale}/login`, request.url)
-      url.searchParams.set('return', pathname)
-      return NextResponse.redirect(url)
+      // Check if it's a known route that needs mapping
+      const mappedRoute = routeMapping[pathname];
+      if (mappedRoute) {
+        const response = NextResponse.redirect(new URL(mappedRoute, req.url));
+        
+        // Set locale cookie
+        response.cookies.set('NEXT_LOCALE', locale, {
+          httpOnly: true,
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 * 365, // 1 year
+        });
+        
+        return response;
+      }
+      
+      // For dynamic routes like /signup/[league]
+      if (pathname.startsWith('/signup/')) {
+        const league = pathname.split('/')[2];
+        const newPath = locale === 'es' ? `/es/registro/${league}` : `/en/signup/${league}`;
+        const response = NextResponse.redirect(new URL(newPath, req.url));
+        
+        // Set locale cookie
+        response.cookies.set('NEXT_LOCALE', locale, {
+          httpOnly: true,
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 * 365, // 1 year
+        });
+        
+        return response;
+      }
+      
+      // For [location]/liga/[season] routes
+      const locationMatch = pathname.match(/^\/([^\/]+)\/liga\/([^\/]+)$/);
+      if (locationMatch) {
+        const [, location, season] = locationMatch;
+        const newPath = `/${locale}/${location}/liga/${season}`;
+        const response = NextResponse.redirect(new URL(newPath, req.url));
+        
+        // Set locale cookie
+        response.cookies.set('NEXT_LOCALE', locale, {
+          httpOnly: true,
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 * 365, // 1 year
+        });
+        
+        return response;
+      }
+      
+      // For any other route, just add the locale
+      const newUrl = new URL(`/${locale}${pathname}`, req.url);
+      
+      // Preserve query parameters
+      newUrl.search = req.nextUrl.search;
+      
+      const response = NextResponse.redirect(newUrl);
+      
+      // Set cookie to remember the detected/default locale
+      response.cookies.set('NEXT_LOCALE', locale, {
+        httpOnly: true,
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 365, // 1 year
+      });
+      
+      return response;
     }
-  }
-
-  // API routes protection
-  if (pathname.startsWith('/api/admin') && 
-      !pathname.startsWith('/api/admin/auth')) {
     
-    const tokenCookie = request.cookies.get('admin-token')
-    
-    if (!tokenCookie?.value) {
-      return Response.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+    // If we have a locale in the path, ensure the cookie is set
+    const pathLocale = pathname.split('/')[1];
+    if (locales.includes(pathLocale)) {
+      const response = NextResponse.next();
+      
+      // Update the locale cookie if it's different
+      const currentLocaleCookie = req.cookies.get('NEXT_LOCALE');
+      if (!currentLocaleCookie || currentLocaleCookie.value !== pathLocale) {
+        response.cookies.set('NEXT_LOCALE', pathLocale, {
+          httpOnly: true,
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 * 365, // 1 year
+        });
+      }
+      
+      return response;
     }
 
-    // Verify the token (Edge Runtime compatible)
-    const decoded = await verifyTokenEdge(tokenCookie.value, process.env.JWT_SECRET)
-    
-    if (!decoded || decoded.role !== 'admin') {
-      return Response.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-  }
-
-  // Player API routes protection
-  if (pathname.startsWith('/api/player')) {
-    
-    // First check if user is an admin (admins can access player API routes)
-    const adminTokenCookie = request.cookies.get('admin-token')
-    if (adminTokenCookie?.value) {
-      const adminDecoded = await verifyTokenEdge(adminTokenCookie.value, process.env.JWT_SECRET)
-      if (adminDecoded && adminDecoded.role === 'admin') {
-        // Admin is allowed to access player API routes
-        return NextResponse.next()
+    return NextResponse.next()
+  },
+  {
+    callbacks: {
+      authorized: ({ req, token }) => {
+        const pathname = req.nextUrl.pathname
+        
+        // Public routes that don't require auth
+        const publicRoutes = [
+          '/',
+          '/login',
+          '/signup',
+          '/activate',
+          '/elo',
+          '/rules',
+          '/swiss',
+          '/leagues',
+          '/sotogrande',
+          '/api/auth',
+        ]
+        
+        // Check if it's a public route (with or without locale)
+        const isPublicRoute = publicRoutes.some(route => {
+          return pathname === route || 
+                 pathname.includes(`/es${route}`) || 
+                 pathname.includes(`/en${route}`) ||
+                 pathname.includes('/api/auth')
+        })
+        
+        if (isPublicRoute) return true
+        
+        // All other routes require authentication
+        return !!token
       }
     }
-    
-    const tokenCookie = request.cookies.get('auth-token')
-    
-    if (!tokenCookie?.value) {
-      return Response.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    // Verify the token (Edge Runtime compatible)
-    const decoded = await verifyTokenEdge(tokenCookie.value, process.env.JWT_SECRET)
-    
-    if (!decoded || decoded.role !== 'player') {
-      return Response.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
   }
-  
-  // INTERNATIONALIZATION LOGIC
-  // Skip locale handling for excluded routes
-  if (shouldExcludeFromLocale(pathname)) {
-    return NextResponse.next();
-  }
-  
-  // Check if the pathname already includes a locale
-  const pathnameHasLocale = locales.some(
-    locale => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
-  );
-  
-  // If pathname doesn't have locale, redirect to the same path with locale
-  if (!pathnameHasLocale) {
-    const locale = getLocale(request);
-    
-    // Special handling for existing routes to maintain compatibility
-    const routeMapping = {
-      '/': `/${locale}`,
-      '/signup': `/${locale}/registro`,
-      '/login': `/${locale}/login`,
-      '/elo': `/${locale}/elo`,
-      '/rules': `/${locale}/${locale === 'es' ? 'reglas' : 'rules'}`,
-      '/swiss': `/${locale}/swiss`,
-      '/activate': `/${locale}/activate`,
-      '/leagues': `/${locale}/${locale === 'es' ? 'ligas' : 'leagues'}`,
-      '/sotogrande': `/${locale}/sotogrande`,
-      // Add player route mappings
-      '/player': `/${locale}/player/dashboard`,
-      '/player/dashboard': `/${locale}/player/dashboard`,
-      '/player/league': `/${locale}/player/league`,
-      '/player/matches': `/${locale}/player/matches`,
-      '/player/messages': `/${locale}/player/messages`,
-      '/player/profile': `/${locale}/player/profile`,
-      '/player/rules': `/${locale}/player/rules`,
-    };
-    
-    // Check if it's a known route that needs mapping
-    const mappedRoute = routeMapping[pathname];
-    if (mappedRoute) {
-      const response = NextResponse.redirect(new URL(mappedRoute, request.url));
-      
-      // Set locale cookie
-      response.cookies.set('NEXT_LOCALE', locale, {
-        httpOnly: true,
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 365, // 1 year
-      });
-      
-      return response;
-    }
-    
-    // For dynamic routes like /signup/[league]
-    if (pathname.startsWith('/signup/')) {
-      const league = pathname.split('/')[2];
-      const newPath = locale === 'es' ? `/es/registro/${league}` : `/en/signup/${league}`;
-      const response = NextResponse.redirect(new URL(newPath, request.url));
-      
-      // Set locale cookie
-      response.cookies.set('NEXT_LOCALE', locale, {
-        httpOnly: true,
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 365, // 1 year
-      });
-      
-      return response;
-    }
-    
-    // For [location]/liga/[season] routes
-    const locationMatch = pathname.match(/^\/([^\/]+)\/liga\/([^\/]+)$/);
-    if (locationMatch) {
-      const [, location, season] = locationMatch;
-      const newPath = `/${locale}/${location}/liga/${season}`;
-      const response = NextResponse.redirect(new URL(newPath, request.url));
-      
-      // Set locale cookie
-      response.cookies.set('NEXT_LOCALE', locale, {
-        httpOnly: true,
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 365, // 1 year
-      });
-      
-      return response;
-    }
-    
-    // For any other route, just add the locale
-    const newUrl = new URL(`/${locale}${pathname}`, request.url);
-    
-    // Preserve query parameters
-    newUrl.search = request.nextUrl.search;
-    
-    const response = NextResponse.redirect(newUrl);
-    
-    // Set cookie to remember the detected/default locale
-    response.cookies.set('NEXT_LOCALE', locale, {
-      httpOnly: true,
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 365, // 1 year
-    });
-    
-    return response;
-  }
-  
-  // If we have a locale in the path, ensure the cookie is set
-  const pathLocale = pathname.split('/')[1];
-  if (locales.includes(pathLocale)) {
-    const response = NextResponse.next();
-    
-    // Update the locale cookie if it's different
-    const currentLocaleCookie = request.cookies.get('NEXT_LOCALE');
-    if (!currentLocaleCookie || currentLocaleCookie.value !== pathLocale) {
-      response.cookies.set('NEXT_LOCALE', pathLocale, {
-        httpOnly: true,
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 365, // 1 year
-      });
-    }
-    
-    return response;
-  }
-
-  return NextResponse.next()
-}
+)
 
 export const config = {
   matcher: [
