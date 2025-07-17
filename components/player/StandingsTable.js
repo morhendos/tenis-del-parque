@@ -85,7 +85,7 @@ export default function StandingsTable({ players, language, unified = false }) {
           return (
             <div 
               key={standing.player._id} 
-              className={`${getPositionStyle(standing.position)} ${getPlayerStatusStyle(standing.player)} rounded-xl p-3 shadow-lg border transition-all duration-300 hover:shadow-xl hover:border-parque-purple/30`}
+              className={`${getPositionStyle(standing.position)} ${getPlayerStatusStyle(standing.player)} rounded-xl p-3 shadow-lg border transition-all duration-300 hover:shadow-xl hover:scale-[1.02]`}
             >
               {/* Header with position and points */}
               <div className="flex items-center justify-between mb-3">
@@ -124,64 +124,82 @@ export default function StandingsTable({ players, language, unified = false }) {
                   {standing.player.name}
                   {getPlayerStatusIndicator(standing.player)}
                 </div>
-                {winPercentage > 0 && (
-                  <div className="text-sm text-gray-500">
-                    {winPercentage}% {language === 'es' ? 'victorias' : 'wins'}
-                  </div>
-                )}
+                <div className="text-sm text-gray-500">
+                  {winPercentage}% {language === 'es' ? 'tasa de victorias' : 'win rate'}
+                </div>
               </div>
 
-              {/* Win percentage bar */}
-              {standing.stats.matchesPlayed > 0 && (
-                <div className="mb-3">
-                  <div className="flex justify-between text-xs text-gray-600 mb-1">
-                    <span>{language === 'es' ? 'Progreso' : 'Progress'}</span>
-                    <span>{winPercentage}%</span>
+              {/* Win percentage bar - Always show, even with 0% */}
+              <div className="mb-3">
+                <div className="flex justify-between text-xs text-gray-600 mb-1">
+                  <span>{language === 'es' ? 'Progreso' : 'Progress'}</span>
+                  <span>{winPercentage}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full transition-all duration-500 ${
+                      standing.stats.matchesPlayed === 0 ? 'bg-gray-400' :
+                      winPercentage >= 75 ? 'bg-green-500' :
+                      winPercentage >= 50 ? 'bg-yellow-500' :
+                      'bg-red-500'
+                    }`}
+                    style={{ width: standing.stats.matchesPlayed === 0 ? '0%' : `${winPercentage}%` }}
+                  ></div>
+                </div>
+              </div>
+              
+              {/* Enhanced stats grid - Always show */}
+              <div className="grid grid-cols-4 gap-1 text-sm">
+                <div className="text-center bg-white/70 rounded-lg p-2 border border-violet-100/40">
+                  <div className="font-bold text-gray-900 text-base">{standing.stats.matchesPlayed || 0}</div>
+                  <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'PJ' : 'MP'}</div>
+                </div>
+                <div className="text-center bg-white/70 rounded-lg p-2 border border-violet-100/40">
+                  <div className="font-bold text-green-600 text-base">{standing.stats.matchesWon || 0}</div>
+                  <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'PG' : 'MW'}</div>
+                </div>
+                <div className="text-center bg-white/70 rounded-lg p-2 border border-violet-100/40">
+                  <div className="font-bold text-gray-900 text-base">
+                    {standing.stats.setsWon || 0}-{standing.stats.setsLost || 0}
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className={`h-2 rounded-full transition-all duration-500 ${
-                        winPercentage >= 75 ? 'bg-green-500' :
-                        winPercentage >= 50 ? 'bg-yellow-500' :
-                        'bg-red-500'
-                      }`}
-                      style={{ width: `${winPercentage}%` }}
-                    ></div>
+                  <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'Sets' : 'Sets'}</div>
+                </div>
+                <div className="text-center bg-white/70 rounded-lg p-2 border border-violet-100/40">
+                  <div className="font-bold text-gray-900 text-base">
+                    {standing.stats.gamesWon || 0}-{standing.stats.gamesLost || 0}
+                  </div>
+                  <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'Juegos' : 'Games'}</div>
+                </div>
+              </div>
+
+              {/* Recent form indicator */}
+              {standing.recentForm && standing.recentForm.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-600">{language === 'es' ? 'Forma reciente' : 'Recent form'}</span>
+                    <div className="flex space-x-1">
+                      {standing.recentForm.slice(-3).map((result, idx) => (
+                        <div 
+                          key={idx} 
+                          className={`w-2 h-2 rounded-full ${
+                            result === 'W' ? 'bg-green-500' : 
+                            result === 'L' ? 'bg-red-500' : 
+                            'bg-gray-400'
+                          }`}
+                        ></div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
-              
-              {/* Enhanced stats grid - More compact for mobile */}
-              <div className="grid grid-cols-4 gap-1 text-sm">
-                                  <div className="text-center bg-white/70 rounded-lg p-2 border border-violet-100/40">
-                    <div className="font-bold text-gray-900 text-base">{standing.stats.matchesPlayed}</div>
-                    <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'P.J.' : 'MP'}</div>
-                  </div>
-                  <div className="text-center bg-white/70 rounded-lg p-2 border border-violet-100/40">
-                    <div className="font-bold text-green-600 text-base">{standing.stats.matchesWon}</div>
-                    <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'P.G.' : 'MW'}</div>
-                  </div>
-                  <div className="text-center bg-white/70 rounded-lg p-2 border border-violet-100/40">
-                    <div className="font-bold text-gray-900 text-base">
-                      {standing.stats.setsWon}-{standing.stats.setsLost}
-                    </div>
-                    <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'Sets' : 'Sets'}</div>
-                  </div>
-                  <div className="text-center bg-white/70 rounded-lg p-2 border border-violet-100/40">
-                    <div className="font-bold text-gray-900 text-base">
-                      {standing.stats.gamesWon || 0}-{standing.stats.gamesLost || 0}
-                    </div>
-                    <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'Juegos' : 'Games'}</div>
-                  </div>
-              </div>
             </div>
           )
         })}
       </div>
 
       {/* Desktop table layout - Enhanced */}
-      <div className="hidden md:block overflow-hidden rounded-xl border border-gray-200 shadow-lg">
-        <div className="overflow-x-auto">
+      <div className="hidden md:block">
+        <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-lg">
           <table className="w-full divide-y divide-gray-200" style={{ minWidth: '1100px' }}>
             <thead className="bg-gradient-to-r from-violet-600 via-parque-purple to-violet-600">
               <tr>
@@ -220,7 +238,7 @@ export default function StandingsTable({ players, language, unified = false }) {
                 const rowBg = getPositionStyle(standing.position)
                             
                 return (
-                  <tr key={standing.player._id} className={`${rowBg} ${getPlayerStatusStyle(standing.player)} hover:shadow-md hover:bg-violet-50/50 transition-all duration-200`}>
+                  <tr key={standing.player._id} className={`${rowBg} ${getPlayerStatusStyle(standing.player)} hover:shadow-md hover:scale-[1.01] transition-all duration-200`}>
                     <td className="px-6 py-5 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm mr-3 ${getPositionBadgeStyle(standing.position)}`}>
