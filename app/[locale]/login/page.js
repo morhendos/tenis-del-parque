@@ -10,7 +10,7 @@ function LoginForm() {
   const searchParams = useSearchParams()
   const params = useParams()
   const locale = params.locale || 'es'
-  const returnUrl = searchParams.get('return') || `/${locale}/player/dashboard`
+  const returnUrl = searchParams.get('return')
   const activated = searchParams.get('activated')
   
   const [formData, setFormData] = useState({ email: '', password: '' })
@@ -22,7 +22,14 @@ function LoginForm() {
 
   const checkAuth = useCallback(async () => {
     try {
-      // Check if player is already authenticated
+      // First check if already authenticated as admin
+      const adminRes = await fetch('/api/admin/auth/check')
+      if (adminRes.ok) {
+        router.push('/admin/dashboard')
+        return
+      }
+
+      // Then check if authenticated as player
       const playerRes = await fetch('/api/auth/check')
       if (playerRes.ok) {
         router.push(`/${locale}/player/dashboard`)
@@ -74,31 +81,49 @@ function LoginForm() {
     setErrors({})
     
     try {
-      // Only try player login
-      const res = await fetch('/api/auth/login', {
+      // First try player login (most common case)
+      const playerRes = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       })
       
-      const data = await res.json()
+      const playerData = await playerRes.json()
       
-      if (res.ok && data.success) {
-        // Store user info if needed
-        if (data.user) {
+      if (playerRes.ok && playerData.success) {
+        // Store user info
+        if (playerData.user) {
           localStorage.setItem('userInfo', JSON.stringify({
-            id: data.user.id,
-            email: data.user.email,
-            name: data.user.name,
-            role: data.user.role
+            id: playerData.user.id,
+            email: playerData.user.email,
+            name: playerData.user.name,
+            role: playerData.user.role
           }))
         }
         
-        // Redirect to player dashboard or return URL
-        router.push(returnUrl)
-      } else {
-        setErrors({ submit: data.error || t.form.errors.generic })
+        // Player login successful - redirect to player dashboard or return URL
+        router.push(returnUrl || `/${locale}/player/dashboard`)
+        return
       }
+
+      // If player login failed, try admin login
+      const adminRes = await fetch('/api/admin/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+
+      const adminData = await adminRes.json()
+
+      if (adminRes.ok && adminData.success) {
+        // Admin login successful - always redirect to admin dashboard
+        router.push('/admin/dashboard')
+        return
+      }
+
+      // Both logins failed - show error
+      setErrors({ submit: playerData.error || adminData.error || t.form.errors.generic })
+      
     } catch (error) {
       console.error('Login error:', error)
       setErrors({ submit: t.form.errors.connection })
@@ -251,13 +276,6 @@ function LoginForm() {
                 className="block text-sm text-gray-600 hover:text-gray-800 transition-colors touch-manipulation"
               >
                 {t.forgotPassword}
-              </a>
-              
-              <a 
-                href="/admin-login" 
-                className="block text-sm text-gray-500 hover:text-gray-700 transition-colors touch-manipulation"
-              >
-                {t.adminAccess}
               </a>
             </div>
           </div>
