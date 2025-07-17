@@ -1,11 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useSession, signOut } from 'next-auth/react'
 
 export default function AdminLayout({ children }) {
   const pathname = usePathname()
+  const router = useRouter()
+  const { data: session, status } = useSession()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [selectedLeague, setSelectedLeague] = useState(null)
   const [showLeagueSwitcher, setShowLeagueSwitcher] = useState(false)
@@ -46,6 +49,19 @@ export default function AdminLayout({ children }) {
   useEffect(() => {
     setIsClient(true)
   }, [])
+
+  // Auth check - redirect if not admin
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.role !== 'admin') {
+      // Get locale from cookie or default to 'es'
+      const locale = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('NEXT_LOCALE='))
+        ?.split('=')[1] || 'es'
+      
+      router.push(`/${locale}/login`)
+    }
+  }, [status, session, router])
 
   // Load selected league from sessionStorage (client-side only)
   useEffect(() => {
@@ -115,15 +131,31 @@ export default function AdminLayout({ children }) {
   }
 
   const handleLogout = async () => {
-    await fetch('/api/admin/auth/logout', { method: 'POST' })
-    
     // Get locale from cookie or default to 'es'
     const locale = document.cookie
       .split('; ')
       .find(row => row.startsWith('NEXT_LOCALE='))
       ?.split('=')[1] || 'es'
     
-    window.location.href = `/${locale}/login`
+    await signOut({ redirect: false })
+    router.push(`/${locale}/login`)
+  }
+
+  // Show loading state while checking auth
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-parque-purple"></div>
+          <p className="mt-2 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render if not authenticated or not admin
+  if (status !== 'authenticated' || session?.user?.role !== 'admin') {
+    return null
   }
 
   return (
@@ -179,11 +211,17 @@ export default function AdminLayout({ children }) {
           <div className="p-4 border-t border-gray-200">
             <div className="flex items-center space-x-3 mb-3">
               <div className="w-10 h-10 bg-gradient-to-r from-parque-purple to-parque-green rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-lg">A</span>
+                <span className="text-white font-bold text-lg">
+                  {session?.user?.name?.[0]?.toUpperCase() || 'A'}
+                </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">Admin User</p>
-                <p className="text-xs text-gray-500 truncate">admin@tenisdelparque.com</p>
+                <p className="text-sm font-medium text-gray-900 truncate">
+                  {session?.user?.name || 'Admin User'}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {session?.user?.email || 'admin@tenisdelparque.com'}
+                </p>
               </div>
             </div>
             <button
