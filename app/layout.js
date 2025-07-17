@@ -1,5 +1,6 @@
 import { Inter, Outfit, Raleway } from 'next/font/google'
 import './globals.css'
+import { Providers } from './providers'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -85,7 +86,9 @@ export default function RootLayout({ children }) {
         <link rel="alternate" hrefLang="x-default" href="/es" />
       </head>
       <body className={`${inter.className} ${outfit.variable} ${raleway.variable} font-sans`}>
-        {children}
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   )
