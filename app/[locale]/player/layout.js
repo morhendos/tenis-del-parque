@@ -1,84 +1,51 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, usePathname, useParams } from 'next/navigation'
+import { usePathname, useParams } from 'next/navigation'
+import { useSession, signOut } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 export default function PlayerLayout({ children }) {
   const router = useRouter()
   const pathname = usePathname()
   const params = useParams()
+  const { data: session, status } = useSession()
   const locale = params.locale || 'es'
-  const [isLoading, setIsLoading] = useState(true)
   const [playerName, setPlayerName] = useState('')
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [unreadMessages, setUnreadMessages] = useState(0)
-  const [isAdmin, setIsAdmin] = useState(false)
 
-  // Check authentication and get player info
+  // Redirect if not authenticated
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        // Use unified auth check
-        const authResponse = await fetch('/api/auth/unified-check')
-        if (!authResponse.ok) {
-          window.location.href = `/${locale}/login?return=${pathname}`
-          return
-        }
+    if (status === 'loading') return
+    
+    if (status === 'unauthenticated') {
+      router.push(`/${locale}/login?return=${pathname}`)
+    }
+  }, [status, router, locale, pathname])
 
-        const authData = await authResponse.json()
-        if (authData.user?.isAdmin) {
-          setIsAdmin(true)
-          setPlayerName('Admin')
-        } else {
-          // Get player profile for regular players
-          try {
-            const profileRes = await fetch('/api/player/profile')
-            if (profileRes.ok) {
-              const data = await profileRes.json()
-              if (data.player) {
-                setPlayerName(data.player.name || data.player.email || 'Player')
-              }
-            }
-          } catch (e) {
-            console.error('Profile fetch error:', e)
-          }
-
-          // Check for unread messages
-          try {
-            const messagesRes = await fetch('/api/player/messages')
-            if (messagesRes.ok) {
-              const messages = await messagesRes.json()
-              const unread = messages.filter(m => !m.seen).length
-              setUnreadMessages(unread)
-            }
-          } catch (e) {
-            console.error('Messages fetch error:', e)
-          }
-        }
-      } catch (error) {
-        console.error('Auth check error:', error)
-        window.location.href = `/${locale}/login?return=${pathname}`
-      } finally {
-        setIsLoading(false)
+  // Get player info
+  useEffect(() => {
+    if (session?.user) {
+      setPlayerName(session.user.name || session.user.email || 'Player')
+      
+      // Fetch unread messages for players only
+      if (session.user.role === 'player') {
+        fetch('/api/player/messages')
+          .then(res => res.ok ? res.json() : [])
+          .then(messages => {
+            const unread = messages.filter(m => !m.seen).length
+            setUnreadMessages(unread)
+          })
+          .catch(console.error)
       }
     }
-
-    checkAuth()
-  }, [pathname, locale])
+  }, [session])
 
   const handleLogout = async () => {
-    try {
-      if (isAdmin) {
-        await fetch('/api/admin/auth/logout', { method: 'POST' })
-      } else {
-        await fetch('/api/auth/logout', { method: 'POST' })
-      }
-      localStorage.removeItem('userInfo')
-      window.location.href = `/${locale}/login`
-    } catch (error) {
-      console.error('Logout error:', error)
-    }
+    await signOut({ redirect: false })
+    router.push(`/${locale}/login`)
   }
 
   const navigation = [
@@ -140,7 +107,7 @@ export default function PlayerLayout({ children }) {
   ]
 
   // Add admin dashboard link if user is admin
-  if (isAdmin) {
+  if (session?.user?.role === 'admin') {
     navigation.unshift({
       name: locale === 'es' ? 'Panel Admin' : 'Admin Panel',
       href: '/admin/dashboard',
@@ -155,7 +122,7 @@ export default function PlayerLayout({ children }) {
 
   const isActive = (href) => pathname === href
 
-  if (isLoading) {
+  if (status === 'loading') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -168,7 +135,7 @@ export default function PlayerLayout({ children }) {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Admin Notice */}
-      {isAdmin && (
+      {session?.user?.role === 'admin' && (
         <div className="bg-yellow-50 border-b border-yellow-200">
           <div className="px-4 py-2 text-sm text-yellow-800">
             {locale === 'es' ? 'Estás viendo esta página como administrador' : 'You are viewing this page as an admin'}
@@ -215,7 +182,7 @@ export default function PlayerLayout({ children }) {
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-900">{playerName}</p>
                 <p className="text-xs text-gray-500">
-                  {isAdmin ? 'Admin' : (locale === 'es' ? 'Jugador' : 'Player')}
+                  {session?.user?.role === 'admin' ? 'Admin' : (locale === 'es' ? 'Jugador' : 'Player')}
                 </p>
               </div>
               <button
@@ -289,7 +256,7 @@ export default function PlayerLayout({ children }) {
                 <div className="flex-1">
                   <p className="text-base font-medium text-gray-900">{playerName}</p>
                   <p className="text-sm text-gray-500">
-                    {isAdmin ? 'Admin' : (locale === 'es' ? 'Jugador' : 'Player')}
+                    {session?.user?.role === 'admin' ? 'Admin' : (locale === 'es' ? 'Jugador' : 'Player')}
                   </p>
                 </div>
                 <button
