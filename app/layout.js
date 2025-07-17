@@ -1,7 +1,19 @@
-import { Inter } from 'next/font/google'
+import { Inter, Outfit, Raleway } from 'next/font/google'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
+
+const outfit = Outfit({ 
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-outfit'
+})
+
+const raleway = Raleway({ 
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-raleway'
+})
 
 export const metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_URL || 'https://tenisdelparque.com'),
@@ -67,7 +79,12 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <head>
+        <link rel="alternate" hrefLang="es" href="/es" />
+        <link rel="alternate" hrefLang="en" href="/en" />
+        <link rel="alternate" hrefLang="x-default" href="/es" />
+      </head>
+      <body className={`${inter.className} ${outfit.variable} ${raleway.variable} font-sans`}>
         {children}
       </body>
     </html>
