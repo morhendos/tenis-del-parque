@@ -2,10 +2,14 @@ import { NextResponse } from 'next/server'
 import dbConnect from '../../../../../lib/db/mongoose'
 import User from '../../../../../lib/models/User'
 import Player from '../../../../../lib/models/Player'
+import { requireAdmin } from '../../../../../lib/auth/apiAuth'
 
 // GET /api/admin/users/[id] - Get single user
 export async function GET(request, { params }) {
   try {
+    const { session, error } = await requireAdmin(request)
+    if (error) return error
+
     await dbConnect()
 
     const user = await User.findById(params.id)
@@ -60,6 +64,9 @@ export async function GET(request, { params }) {
 // PATCH /api/admin/users/[id] - Update user
 export async function PATCH(request, { params }) {
   try {
+    const { session, error } = await requireAdmin(request)
+    if (error) return error
+
     await dbConnect()
 
     const updates = await request.json()
@@ -135,6 +142,9 @@ export async function PATCH(request, { params }) {
 // DELETE /api/admin/users/[id] - Delete user
 export async function DELETE(request, { params }) {
   try {
+    const { session, error } = await requireAdmin(request)
+    if (error) return error
+
     await dbConnect()
 
     const user = await User.findById(params.id)
@@ -184,6 +194,9 @@ export async function DELETE(request, { params }) {
 export async function POST(request, { params }) {
   if (request.url.includes('/reset-password')) {
     try {
+      const { session, error } = await requireAdmin(request)
+      if (error) return error
+
       await dbConnect()
 
       const user = await User.findById(params.id)
