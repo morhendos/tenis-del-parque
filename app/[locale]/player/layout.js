@@ -19,48 +19,53 @@ export default function PlayerLayout({ children }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // First check if user is an admin
-        const adminResponse = await fetch('/api/admin/auth/check')
-        if (adminResponse.ok) {
+        // Use unified auth check
+        const authResponse = await fetch('/api/auth/unified-check')
+        if (!authResponse.ok) {
+          window.location.href = `/${locale}/login?return=${pathname}`
+          return
+        }
+
+        const authData = await authResponse.json()
+        if (authData.user?.isAdmin) {
           setIsAdmin(true)
           setPlayerName('Admin')
-          setIsLoading(false)
-          return
-        }
-
-        // Then check player auth
-        const response = await fetch('/api/auth/check')
-        if (!response.ok) {
-          router.push(`/${locale}/login`)
-          return
-        }
-
-        // Get player profile
-        const profileRes = await fetch('/api/player/profile')
-        if (profileRes.ok) {
-          const data = await profileRes.json()
-          if (data.player) {
-            setPlayerName(data.player.name || data.player.email || 'Player')
+        } else {
+          // Get player profile for regular players
+          try {
+            const profileRes = await fetch('/api/player/profile')
+            if (profileRes.ok) {
+              const data = await profileRes.json()
+              if (data.player) {
+                setPlayerName(data.player.name || data.player.email || 'Player')
+              }
+            }
+          } catch (e) {
+            console.error('Profile fetch error:', e)
           }
-        }
 
-        // Check for unread messages
-        const messagesRes = await fetch('/api/player/messages')
-        if (messagesRes.ok) {
-          const messages = await messagesRes.json()
-          const unread = messages.filter(m => !m.seen).length
-          setUnreadMessages(unread)
+          // Check for unread messages
+          try {
+            const messagesRes = await fetch('/api/player/messages')
+            if (messagesRes.ok) {
+              const messages = await messagesRes.json()
+              const unread = messages.filter(m => !m.seen).length
+              setUnreadMessages(unread)
+            }
+          } catch (e) {
+            console.error('Messages fetch error:', e)
+          }
         }
       } catch (error) {
         console.error('Auth check error:', error)
-        router.push(`/${locale}/login`)
+        window.location.href = `/${locale}/login?return=${pathname}`
       } finally {
         setIsLoading(false)
       }
     }
 
     checkAuth()
-  }, [router, locale])
+  }, [pathname, locale])
 
   const handleLogout = async () => {
     try {
@@ -70,7 +75,7 @@ export default function PlayerLayout({ children }) {
         await fetch('/api/auth/logout', { method: 'POST' })
       }
       localStorage.removeItem('userInfo')
-      router.push(`/${locale}/login`)
+      window.location.href = `/${locale}/login`
     } catch (error) {
       console.error('Logout error:', error)
     }
