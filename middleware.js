@@ -56,7 +56,9 @@ export async function middleware(request) {
       // Get locale for redirect
       const locale = getLocale(request);
       // Redirect to locale-based login page
-      return NextResponse.redirect(new URL(`/${locale}/login`, request.url))
+      const url = new URL(`/${locale}/login`, request.url)
+      url.searchParams.set('from', 'admin')
+      return NextResponse.redirect(url)
     }
 
     // Verify the token (Edge Runtime compatible)
@@ -66,12 +68,14 @@ export async function middleware(request) {
       // Get locale for redirect
       const locale = getLocale(request);
       // Redirect to locale-based login page if token is invalid or not admin
-      return NextResponse.redirect(new URL(`/${locale}/login`, request.url))
+      const url = new URL(`/${locale}/login`, request.url)
+      url.searchParams.set('from', 'admin')
+      return NextResponse.redirect(url)
     }
   }
 
   // Check if it's a player route (with locale support)
-  const playerRouteRegex = /^\/(?:es|en)?\/player/;
+  const playerRouteRegex = /^\/(?:es|en)\/player/;
   if (playerRouteRegex.test(pathname)) {
     
     // Check for player JWT token cookie
@@ -80,11 +84,9 @@ export async function middleware(request) {
     if (!tokenCookie?.value) {
       // Extract locale from path
       const locale = pathname.split('/')[1];
-      const isValidLocale = locales.includes(locale);
-      const redirectLocale = isValidLocale ? locale : getLocale(request);
       
       // Redirect to login with return URL
-      const url = new URL(`/${redirectLocale}/login`, request.url)
+      const url = new URL(`/${locale}/login`, request.url)
       url.searchParams.set('return', pathname)
       return NextResponse.redirect(url)
     }
@@ -95,11 +97,9 @@ export async function middleware(request) {
     if (!decoded || decoded.role !== 'player') {
       // Extract locale from path
       const locale = pathname.split('/')[1];
-      const isValidLocale = locales.includes(locale);
-      const redirectLocale = isValidLocale ? locale : getLocale(request);
       
       // Redirect to login if token is invalid or not player
-      const url = new URL(`/${redirectLocale}/login`, request.url)
+      const url = new URL(`/${locale}/login`, request.url)
       url.searchParams.set('return', pathname)
       return NextResponse.redirect(url)
     }
@@ -176,9 +176,16 @@ export async function middleware(request) {
       '/rules': `/${locale}/${locale === 'es' ? 'reglas' : 'rules'}`,
       '/swiss': `/${locale}/swiss`,
       '/activate': `/${locale}/activate`,
-      '/player': `/${locale}/player`,
       '/leagues': `/${locale}/${locale === 'es' ? 'ligas' : 'leagues'}`,
       '/sotogrande': `/${locale}/sotogrande`,
+      // Add player route mappings
+      '/player': `/${locale}/player/dashboard`,
+      '/player/dashboard': `/${locale}/player/dashboard`,
+      '/player/league': `/${locale}/player/league`,
+      '/player/matches': `/${locale}/player/matches`,
+      '/player/messages': `/${locale}/player/messages`,
+      '/player/profile': `/${locale}/player/profile`,
+      '/player/rules': `/${locale}/player/rules`,
     };
     
     // Check if it's a known route that needs mapping
@@ -279,6 +286,6 @@ export const config = {
      * - sitemap.xml
      * - public folder files
      */
-    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|logo.*\\.png|players.*\\.csv).*)',
+    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|logo.*\.png|players.*\.csv).*)',
   ]
 }
