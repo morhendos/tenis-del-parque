@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams, useParams } from 'next/navigation'
+import { signIn, useSession } from 'next-auth/react'
 import Image from 'next/image'
 import { loginContent } from '@/lib/content/loginContent'
 
@@ -9,40 +10,28 @@ function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const params = useParams()
+  const { data: session, status } = useSession()
   const locale = params.locale || 'es'
   const returnUrl = searchParams.get('return')
   const activated = searchParams.get('activated')
+  const error = searchParams.get('error')
   
   const [formData, setFormData] = useState({ email: '', password: '' })
   const [errors, setErrors] = useState({})
   const [isLoading, setIsLoading] = useState(false)
-  const [checking, setChecking] = useState(true)
   
   const t = loginContent[locale]
 
-  const checkAuth = useCallback(async () => {
-    try {
-      // Use unified auth check that handles both admin and player
-      const res = await fetch('/api/auth/unified-check')
-      if (res.ok) {
-        const data = await res.json()
-        if (data.user?.isAdmin) {
-          router.replace('/admin/dashboard')
-        } else {
-          router.push(returnUrl || `/${locale}/player/dashboard`)
-        }
-        return
-      }
-    } catch (error) {
-      console.error('Auth check error:', error)
-    } finally {
-      setChecking(false)
-    }
-  }, [router, locale, returnUrl])
-
+  // Redirect if already authenticated
   useEffect(() => {
-    checkAuth()
-  }, [checkAuth])
+    if (status === 'authenticated' && session?.user) {
+      if (session.user.role === 'admin') {
+        router.replace('/admin/dashboard')
+      } else {
+        router.replace(returnUrl || `/${locale}/player/dashboard`)
+      }
+    }
+  }, [session, status, router, locale, returnUrl])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -79,49 +68,31 @@ function LoginForm() {
     setErrors({})
     
     try {
-      // First try player login (most common case)
-      const playerRes = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+      const result = await signIn('credentials', {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
       })
-      
-      const playerData = await playerRes.json()
-      
-      if (playerRes.ok && playerData.success) {
-        // Store user info
-        if (playerData.user) {
-          localStorage.setItem('userInfo', JSON.stringify({
-            id: playerData.user.id,
-            email: playerData.user.email,
-            name: playerData.user.name,
-            role: playerData.user.role
-          }))
+
+      if (result?.error) {
+        // Map NextAuth errors to user-friendly messages
+        let errorMessage = t.form.errors.generic
+        
+        if (result.error.includes('User not found') || result.error.includes('Invalid password')) {
+          errorMessage = locale === 'es' 
+            ? 'Correo electrónico o contraseña incorrectos'
+            : 'Invalid email or password'
+        } else if (result.error.includes('inactive')) {
+          errorMessage = locale === 'es'
+            ? 'Tu cuenta está inactiva. Por favor, contacta con soporte.'
+            : 'Your account is inactive. Please contact support.'
         }
         
-        // Player login successful
-        window.location.href = returnUrl || `/${locale}/player/dashboard`
-        return
+        setErrors({ submit: errorMessage })
+      } else {
+        // Success - NextAuth will handle the redirect via the useEffect above
+        router.refresh()
       }
-
-      // If player login failed, try admin login
-      const adminRes = await fetch('/api/admin/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      })
-
-      const adminData = await adminRes.json()
-
-      if (adminRes.ok && adminData.success) {
-        // Admin login successful - use hard redirect to avoid any router issues
-        window.location.href = '/admin/dashboard'
-        return
-      }
-
-      // Both logins failed - show error
-      setErrors({ submit: playerData.error || adminData.error || t.form.errors.generic })
-      
     } catch (error) {
       console.error('Login error:', error)
       setErrors({ submit: t.form.errors.connection })
@@ -130,8 +101,8 @@ function LoginForm() {
     }
   }
 
-  // Show loading until auth check is complete
-  if (checking) {
+  // Show loading until auth status is determined
+  if (status === 'loading') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-parque-bg via-white to-parque-bg flex items-center justify-center">
         <div className="text-center">
@@ -168,6 +139,17 @@ function LoginForm() {
                 {locale === 'es' 
                   ? '¡Tu cuenta ha sido activada! Ahora puedes iniciar sesión.'
                   : 'Your account has been activated! You can now log in.'}
+              </p>
+            </div>
+          )}
+
+          {/* Error message from NextAuth */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-800 text-sm text-center">
+                {locale === 'es' 
+                  ? 'Ha ocurrido un error. Por favor, inténtalo de nuevo.'
+                  : 'An error occurred. Please try again.'}
               </p>
             </div>
           )}

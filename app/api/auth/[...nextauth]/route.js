@@ -5,7 +5,7 @@ import dbConnect from '@/lib/db/mongoose'
 import User from '@/lib/models/User'
 import Player from '@/lib/models/Player'
 
-const handler = NextAuth({
+export const authOptions = {
   providers: [
     CredentialsProvider({
       id: 'credentials',
@@ -97,6 +97,8 @@ const handler = NextAuth({
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   secret: process.env.NEXTAUTH_SECRET || process.env.JWT_SECRET,
-})
+}
+
+const handler = NextAuth(authOptions)
 
 export { handler as GET, handler as POST }
