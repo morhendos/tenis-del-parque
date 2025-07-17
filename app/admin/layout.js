@@ -9,6 +9,7 @@ export default function AdminLayout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [selectedLeague, setSelectedLeague] = useState(null)
   const [showLeagueSwitcher, setShowLeagueSwitcher] = useState(false)
+  const [isClient, setIsClient] = useState(false)
 
   const navigation = [
     { 
@@ -41,11 +42,22 @@ export default function AdminLayout({ children }) {
     },
   ]
 
-  // Load selected league from sessionStorage
+  // Set client flag
   useEffect(() => {
-    const storedLeague = sessionStorage.getItem('selectedLeague')
-    if (storedLeague) {
-      setSelectedLeague(JSON.parse(storedLeague))
+    setIsClient(true)
+  }, [])
+
+  // Load selected league from sessionStorage (client-side only)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedLeague = sessionStorage.getItem('selectedLeague')
+      if (storedLeague) {
+        try {
+          setSelectedLeague(JSON.parse(storedLeague))
+        } catch (e) {
+          console.error('Error parsing stored league:', e)
+        }
+      }
     }
   }, [pathname])
 
@@ -104,7 +116,14 @@ export default function AdminLayout({ children }) {
 
   const handleLogout = async () => {
     await fetch('/api/admin/auth/logout', { method: 'POST' })
-    window.location.href = '/login'
+    
+    // Get locale from cookie or default to 'es'
+    const locale = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('NEXT_LOCALE='))
+      ?.split('=')[1] || 'es'
+    
+    window.location.href = `/${locale}/login`
   }
 
   return (
@@ -194,8 +213,8 @@ export default function AdminLayout({ children }) {
           </button>
           
           <div className="flex-1 flex flex-col ml-4 lg:ml-0">
-            {/* Breadcrumbs */}
-            {getBreadcrumbs().length > 0 && (
+            {/* Breadcrumbs - only render on client to avoid hydration issues */}
+            {isClient && getBreadcrumbs().length > 0 && (
               <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-1">
                 {getBreadcrumbs().map((breadcrumb, index) => (
                   <div key={index} className="flex items-center">
@@ -212,33 +231,33 @@ export default function AdminLayout({ children }) {
               </nav>
             )}
             
-                         {/* Page Title */}
-              <h1 className="text-xl font-semibold text-gray-900">
-                {getPageTitle()}
-              </h1>
+            {/* Page Title */}
+            <h1 className="text-xl font-semibold text-gray-900">
+              {getPageTitle()}
+            </h1>
+          </div>
+          
+          {/* League Context & Switcher - only render on client */}
+          {isClient && (pathname.includes('/admin/players') || pathname.includes('/admin/matches')) && selectedLeague && (
+            <div className="flex items-center space-x-3">
+              <span className="text-sm text-gray-500">Current league:</span>
+              <button
+                onClick={() => setShowLeagueSwitcher(!showLeagueSwitcher)}
+                className="flex items-center space-x-2 px-3 py-1 bg-parque-purple text-white text-sm rounded-lg hover:bg-opacity-90"
+              >
+                <span>{selectedLeague.name}</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+                </svg>
+              </button>
+              <Link
+                href="/admin/leagues"
+                className="px-3 py-1 text-sm text-parque-purple hover:bg-parque-purple hover:text-white border border-parque-purple rounded-lg transition-colors"
+              >
+                Switch League
+              </Link>
             </div>
-            
-            {/* League Context & Switcher */}
-            {(pathname.includes('/admin/players') || pathname.includes('/admin/matches')) && selectedLeague && (
-              <div className="flex items-center space-x-3">
-                <span className="text-sm text-gray-500">Current league:</span>
-                <button
-                  onClick={() => setShowLeagueSwitcher(!showLeagueSwitcher)}
-                  className="flex items-center space-x-2 px-3 py-1 bg-parque-purple text-white text-sm rounded-lg hover:bg-opacity-90"
-                >
-                  <span>{selectedLeague.name}</span>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
-                  </svg>
-                </button>
-                <Link
-                  href="/admin/leagues"
-                  className="px-3 py-1 text-sm text-parque-purple hover:bg-parque-purple hover:text-white border border-parque-purple rounded-lg transition-colors"
-                >
-                  Switch League
-                </Link>
-              </div>
-            )}
+          )}
         </div>
 
         {/* Page content */}
