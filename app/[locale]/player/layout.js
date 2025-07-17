@@ -13,11 +13,22 @@ export default function PlayerLayout({ children }) {
   const [playerName, setPlayerName] = useState('')
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [unreadMessages, setUnreadMessages] = useState(0)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   // Check authentication and get player info
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // First check if user is an admin
+        const adminResponse = await fetch('/api/admin/auth/check')
+        if (adminResponse.ok) {
+          setIsAdmin(true)
+          setPlayerName('Admin')
+          setIsLoading(false)
+          return
+        }
+
+        // Then check player auth
         const response = await fetch('/api/auth/check')
         if (!response.ok) {
           router.push(`/${locale}/login`)
@@ -53,7 +64,11 @@ export default function PlayerLayout({ children }) {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' })
+      if (isAdmin) {
+        await fetch('/api/admin/auth/logout', { method: 'POST' })
+      } else {
+        await fetch('/api/auth/logout', { method: 'POST' })
+      }
       localStorage.removeItem('userInfo')
       router.push(`/${locale}/login`)
     } catch (error) {
@@ -119,6 +134,20 @@ export default function PlayerLayout({ children }) {
     }
   ]
 
+  // Add admin dashboard link if user is admin
+  if (isAdmin) {
+    navigation.unshift({
+      name: locale === 'es' ? 'Panel Admin' : 'Admin Panel',
+      href: '/admin/dashboard',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      )
+    })
+  }
+
   const isActive = (href) => pathname === href
 
   if (isLoading) {
@@ -133,6 +162,15 @@ export default function PlayerLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Admin Notice */}
+      {isAdmin && (
+        <div className="bg-yellow-50 border-b border-yellow-200">
+          <div className="px-4 py-2 text-sm text-yellow-800">
+            {locale === 'es' ? 'Estás viendo esta página como administrador' : 'You are viewing this page as an admin'}
+          </div>
+        </div>
+      )}
+
       {/* Desktop Sidebar */}
       <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0">
         <div className="flex-1 flex flex-col min-h-0 bg-white border-r border-gray-200">
@@ -171,7 +209,9 @@ export default function PlayerLayout({ children }) {
             <div className="flex items-center w-full">
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-900">{playerName}</p>
-                <p className="text-xs text-gray-500">{locale === 'es' ? 'Jugador' : 'Player'}</p>
+                <p className="text-xs text-gray-500">
+                  {isAdmin ? 'Admin' : (locale === 'es' ? 'Jugador' : 'Player')}
+                </p>
               </div>
               <button
                 onClick={handleLogout}
@@ -243,7 +283,9 @@ export default function PlayerLayout({ children }) {
               <div className="flex items-center">
                 <div className="flex-1">
                   <p className="text-base font-medium text-gray-900">{playerName}</p>
-                  <p className="text-sm text-gray-500">{locale === 'es' ? 'Jugador' : 'Player'}</p>
+                  <p className="text-sm text-gray-500">
+                    {isAdmin ? 'Admin' : (locale === 'es' ? 'Jugador' : 'Player')}
+                  </p>
                 </div>
                 <button
                   onClick={handleLogout}
