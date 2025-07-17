@@ -22,18 +22,15 @@ function LoginForm() {
 
   const checkAuth = useCallback(async () => {
     try {
-      // First check if already authenticated as admin
-      const adminRes = await fetch('/api/admin/auth/check')
-      if (adminRes.ok) {
-        // Use replace to avoid redirect loop
-        router.replace('/admin/dashboard')
-        return
-      }
-
-      // Then check if authenticated as player
-      const playerRes = await fetch('/api/auth/check')
-      if (playerRes.ok) {
-        router.push(`/${locale}/player/dashboard`)
+      // Use unified auth check that handles both admin and player
+      const res = await fetch('/api/auth/unified-check')
+      if (res.ok) {
+        const data = await res.json()
+        if (data.user?.isAdmin) {
+          router.replace('/admin/dashboard')
+        } else {
+          router.push(returnUrl || `/${locale}/player/dashboard`)
+        }
         return
       }
     } catch (error) {
@@ -41,7 +38,7 @@ function LoginForm() {
     } finally {
       setChecking(false)
     }
-  }, [router, locale])
+  }, [router, locale, returnUrl])
 
   useEffect(() => {
     checkAuth()
@@ -102,8 +99,8 @@ function LoginForm() {
           }))
         }
         
-        // Player login successful - redirect to player dashboard or return URL
-        router.push(returnUrl || `/${locale}/player/dashboard`)
+        // Player login successful
+        window.location.href = returnUrl || `/${locale}/player/dashboard`
         return
       }
 
@@ -117,8 +114,8 @@ function LoginForm() {
       const adminData = await adminRes.json()
 
       if (adminRes.ok && adminData.success) {
-        // Admin login successful - use replace to avoid redirect loop
-        router.replace('/admin/dashboard')
+        // Admin login successful - use hard redirect to avoid any router issues
+        window.location.href = '/admin/dashboard'
         return
       }
 
