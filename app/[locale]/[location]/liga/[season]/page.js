@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import Navigation from '@/components/common/Navigation'
 import Footer from '@/components/common/Footer'
 import { homeContent } from '@/lib/content/homeContent'
+import ScoringSystem from '@/components/league/ScoringSystem'
 
 // Import the existing StandingsTable component
 function StandingsTable({ players, language, unified = false }) {
@@ -188,7 +189,7 @@ function StandingsTable({ players, language, unified = false }) {
                           </div>
                           {winPercentage > 0 && (
                             <div className="text-xs text-gray-500">
-                              {winPercentage}% {language === 'es' ? 'victorias' : 'win rate'}
+                              {winPercentage}% {language === 'es' ? 'victorias' : 'wins'}
                             </div>
                           )}
                         </div>
@@ -639,6 +640,13 @@ export default function LeagueSeasonPage() {
                     players={standings.unifiedStandings} 
                     language={language}
                     unified={true}
+                  />
+                  
+                  {/* Add the Scoring System component here */}
+                  <ScoringSystem 
+                    language={language}
+                    totalPlayers={standings.totalPlayers || standings.unifiedStandings.length}
+                    currentRound={standings.currentRound || currentRound}
                   />
                 </div>
               ) : (
