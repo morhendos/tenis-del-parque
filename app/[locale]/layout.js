@@ -1,20 +1,6 @@
-import { Outfit, Raleway } from 'next/font/google'
-import '../globals.css'
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics'
 import MicrosoftClarity from '@/components/analytics/MicrosoftClarity'
 import { i18n } from '@/lib/i18n/config'
-
-const outfit = Outfit({ 
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-outfit'
-})
-
-const raleway = Raleway({ 
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-raleway'
-})
 
 export async function generateStaticParams() {
   return i18n.locales.map((locale) => ({ locale }));
@@ -135,25 +121,18 @@ export default function LocaleLayout({ children, params }) {
   };
   
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <head>
-        <link rel="alternate" hrefLang="es" href="/es" />
-        <link rel="alternate" hrefLang="en" href="/en" />
-        <link rel="alternate" hrefLang="x-default" href="/es" />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
-        />
-      </head>
-      <body className={`${outfit.variable} ${raleway.variable} font-sans`}>
-        {children}
-        {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
-          <GoogleAnalytics GA_MEASUREMENT_ID={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
-        )}
-        {process.env.NEXT_PUBLIC_CLARITY_ID && (
-          <MicrosoftClarity clarityId={process.env.NEXT_PUBLIC_CLARITY_ID} />
-        )}
-      </body>
-    </html>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+      />
+      {children}
+      {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
+        <GoogleAnalytics GA_MEASUREMENT_ID={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
+      )}
+      {process.env.NEXT_PUBLIC_CLARITY_ID && (
+        <MicrosoftClarity clarityId={process.env.NEXT_PUBLIC_CLARITY_ID} />
+      )}
+    </>
   );
 }
