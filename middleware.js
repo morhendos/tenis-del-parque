@@ -53,16 +53,20 @@ export async function middleware(request) {
     const tokenCookie = request.cookies.get('admin-token')
     
     if (!tokenCookie?.value) {
-      // Redirect to admin login
-      return NextResponse.redirect(new URL('/admin-login', request.url))
+      // Get locale for redirect
+      const locale = getLocale(request);
+      // Redirect to locale-based login page
+      return NextResponse.redirect(new URL(`/${locale}/login`, request.url))
     }
 
     // Verify the token (Edge Runtime compatible)
     const decoded = await verifyTokenEdge(tokenCookie.value, process.env.JWT_SECRET)
     
     if (!decoded || decoded.role !== 'admin') {
-      // Redirect to admin login if token is invalid or not admin
-      return NextResponse.redirect(new URL('/admin-login', request.url))
+      // Get locale for redirect
+      const locale = getLocale(request);
+      // Redirect to locale-based login page if token is invalid or not admin
+      return NextResponse.redirect(new URL(`/${locale}/login`, request.url))
     }
   }
 
