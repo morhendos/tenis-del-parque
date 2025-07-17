@@ -25,7 +25,8 @@ function LoginForm() {
       // First check if already authenticated as admin
       const adminRes = await fetch('/api/admin/auth/check')
       if (adminRes.ok) {
-        router.push('/admin/dashboard')
+        // Use replace to avoid redirect loop
+        router.replace('/admin/dashboard')
         return
       }
 
@@ -116,8 +117,8 @@ function LoginForm() {
       const adminData = await adminRes.json()
 
       if (adminRes.ok && adminData.success) {
-        // Admin login successful - always redirect to admin dashboard
-        router.push('/admin/dashboard')
+        // Admin login successful - use replace to avoid redirect loop
+        router.replace('/admin/dashboard')
         return
       }
 
