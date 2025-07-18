@@ -1,33 +1,22 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import useLeaguesData from '../../../lib/hooks/useLeaguesData'
+import ImportCSVModal from '../../../components/admin/leagues/ImportCSVModal'
 
 export default function AdminLeaguesPage() {
-  const [leagues, setLeagues] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
   const router = useRouter()
-
-  useEffect(() => {
-    fetchLeagues()
-  }, [])
-
-  const fetchLeagues = async () => {
-    try {
-      setLoading(true)
-      const res = await fetch('/api/admin/leagues')
-      if (!res.ok) throw new Error('Failed to fetch leagues')
-      
-      const data = await res.json()
-      setLeagues(data.leagues || [])
-    } catch (error) {
-      console.error('Error fetching leagues:', error)
-      setError('Error loading leagues')
-    } finally {
-      setLoading(false)
-    }
-  }
+  const [importModal, setImportModal] = useState({ show: false })
+  const [importResult, setImportResult] = useState(null)
+  
+  const {
+    leagues,
+    loading,
+    error,
+    handleImportCSV,
+    exportCSV
+  } = useLeaguesData()
 
   const handleLeagueClick = (leagueId, leagueName) => {
     sessionStorage.setItem('selectedLeague', JSON.stringify({ id: leagueId, name: leagueName }))
@@ -46,6 +35,12 @@ export default function AdminLeaguesPage() {
     router.push(`/admin/matches?league=${leagueId}`)
   }
 
+  const handleImport = async (file) => {
+    const result = await handleImportCSV(file)
+    setImportResult(result)
+    return result
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -57,11 +52,27 @@ export default function AdminLeaguesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">Leagues</h2>
-        <div className="mt-1">
-          <p className="text-gray-600">Click on a league card to access its management dashboard</p>
-          <p className="text-sm text-gray-500 mt-1">Or use the quick action buttons to jump directly to Players or Matches</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Leagues</h2>
+          <div className="mt-1">
+            <p className="text-gray-600">Click on a league card to access its management dashboard</p>
+            <p className="text-sm text-gray-500 mt-1">Or use the quick action buttons to jump directly to Players or Matches</p>
+          </div>
+        </div>
+        <div className="flex space-x-3">
+          <button
+            onClick={() => setImportModal({ show: true })}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Import CSV
+          </button>
+          <button
+            onClick={exportCSV}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+          >
+            Export CSV
+          </button>
         </div>
       </div>
 
@@ -138,6 +149,17 @@ export default function AdminLeaguesPage() {
           <p className="text-gray-600">No leagues found. Create leagues using the seed script.</p>
         </div>
       )}
+
+      {/* Import Modal */}
+      <ImportCSVModal
+        show={importModal.show}
+        onClose={() => {
+          setImportModal({ show: false })
+          setImportResult(null)
+        }}
+        onImport={handleImport}
+        importResult={importResult}
+      />
     </div>
   )
 }
