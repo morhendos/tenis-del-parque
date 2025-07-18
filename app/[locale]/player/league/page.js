@@ -30,8 +30,8 @@ export default function LeaguePage() {
         throw new Error('Player not assigned to a league')
       }
 
-      // Fetch league standings
-      const leagueId = profileData.player.league._id || profileData.player.league.slug || profileData.player.league
+      // Fetch league standings using league ID
+      const leagueId = profileData.player.league._id || profileData.player.league
       const standingsRes = await fetch(`/api/leagues/${leagueId}/standings`)
       if (!standingsRes.ok) {
         throw new Error('Failed to fetch league standings')
@@ -40,7 +40,7 @@ export default function LeaguePage() {
       
       setLeagueData({
         league: profileData.player.league,
-        standings: standingsData.standings || standingsData,
+        standings: standingsData.unifiedStandings || standingsData.standings || [],
         player: profileData.player
       })
     } catch (error) {
@@ -139,7 +139,7 @@ export default function LeaguePage() {
       <div className="mt-6">
         {activeTab === 'standings' ? (
           <StandingsTable 
-            standings={standings} 
+            players={standings} 
             currentPlayerId={player._id}
             language={locale}
           />

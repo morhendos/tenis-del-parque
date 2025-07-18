@@ -25,7 +25,7 @@ export default function MatchesPage() {
         throw new Error('Failed to fetch matches')
       }
       const data = await response.json()
-      setMatches(data)
+      setMatches(data.matches || [])  // Extract matches array from response
     } catch (error) {
       console.error('Error fetching matches:', error)
       setError(error.message)
@@ -34,8 +34,8 @@ export default function MatchesPage() {
     }
   }
 
-  const upcomingMatches = matches.filter(match => match.status === 'scheduled')
-  const completedMatches = matches.filter(match => match.status === 'completed')
+  const upcomingMatches = matches?.filter(match => match.status === 'scheduled') || []
+  const completedMatches = matches?.filter(match => match.status === 'completed') || []
 
   const handleResultSubmit = async (matchId, result) => {
     try {
@@ -146,7 +146,7 @@ export default function MatchesPage() {
       <div className="mt-6">
         {activeTab === 'schedule' ? (
           <ScheduleTab 
-            matches={upcomingMatches} 
+            schedule={upcomingMatches} 
             language={locale}
             onResultSubmit={handleResultSubmit}
           />
