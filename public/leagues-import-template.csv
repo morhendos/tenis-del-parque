@@ -1,0 +1,3 @@
+"name","type","location_city","location_region","location_venue","surface","ball_type","match_format","season_name","season_status"
+"Example Tennis League","public","Madrid","Madrid","Central Park Courts","clay","pressurized","best_of_3","Spring 2025","registration_open"
+"Elite Players League","private","Barcelona","Catalonia","Olympic Tennis Center","hard","depressurized","best_of_5","Winter Season","active"
