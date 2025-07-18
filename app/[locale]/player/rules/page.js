@@ -1,137 +1,224 @@
 'use client'
 
 import { useParams } from 'next/navigation'
-import { rulesContent } from '@/lib/content/rulesContent'
 
-export default function PlayerRulesPage() {
+export default function PlayerRules() {
   const params = useParams()
   const locale = params.locale || 'es'
-  const t = rulesContent[locale]
-
-  // Map the sections from rulesContent to the player rules format
-  const sectionsMap = {
-    'match': 'matchFormat',
-    'points': 'scoring',
-    'schedule': 'courtReservation',
-    'conduct': 'conduct',
-    'playoffs': 'playoffs'
-  }
-
-  // Get the relevant sections from rulesContent
-  const getSection = (sectionId) => {
-    return t.sections.find(section => section.id === sectionId)
-  }
-
-  const rules = [
-    {
-      id: 'match-format',
-      title: getSection('match')?.title || (locale === 'es' ? 'Formato de Partidos' : 'Match Format'),
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ),
-      content: getSection('match')?.items || []
+  
+  const content = {
+    es: {
+      title: "📋 Reglas de la Liga",
+      subtitle: "Todo lo que necesitas saber para participar",
+      sections: [
+        {
+          icon: "🏆",
+          title: "Sistema de Puntuación",
+          items: [
+            "Victoria 2-0: 3 puntos",
+            "Victoria 2-1: 2 puntos", 
+            "Derrota 1-2: 1 punto",
+            "Derrota 0-2: 0 puntos"
+          ]
+        },
+        {
+          icon: "📅",
+          title: "Calendario de Partidos",
+          items: [
+            "Nuevos emparejamientos cada domingo por la noche",
+            "Tienes toda la semana para completar tu partido, incluyendo el domingo hasta las 23:00",
+            "Contacta a tu oponente cuando puedas para coordinar",
+            "Acuerden lugar, fecha y hora juntos"
+          ]
+        },
+        {
+          icon: "🎾",
+          title: "Formato de Partidos",
+          items: [
+            "Se juegan 2 sets, si queda 1-1 se juega super tie-break",
+            "Los jugadores pueden acordar jugar un tercer set en lugar del super tie-break",
+            "Tie-break normal si hay 6-6 en un set",
+            "Super tie-break a 10 puntos si hay 1-1 en sets"
+          ]
+        },
+        {
+          icon: "🏅",
+          title: "Clasificación y Playoffs",
+          items: [
+            "Posiciones 1-8: Clasifican a Playoff A (por el título)",
+            "Posiciones 9-16: Clasifican a Playoff B",
+            "Posiciones 17+: Eliminados de playoffs",
+            "Ranking ELO se actualiza después de cada partido"
+          ]
+        },
+        {
+          icon: "📱",
+          title: "Coordinación de Partidos",
+          items: [
+            "Habla con tu oponente para acordar lugar y hora",
+            "Agrega los detalles del partido al sistema",
+            "Comparte el costo de la cancha 50/50 con tu oponente",
+            "Reporta el resultado en la plataforma después del partido"
+          ]
+        },
+        {
+          icon: "⚡",
+          title: "Reglas Especiales",
+          items: [
+            "Puntualidad: 15 minutos de tolerancia máxima",
+            "Walkover: Si el oponente no aparece, ganas 2-0",
+            "Lesión: El partido se suspende, se reprograma",
+            "Disputa de resultado: Contacta al administrador"
+          ]
+        },
+        {
+          icon: "🤝",
+          title: "Fair Play",
+          items: [
+            "Respeta a tu oponente en todo momento",
+            "Acepta las decisiones del contrario de buena fe",
+            "Reporta cualquier problema al administrador"
+          ]
+        }
+      ]
     },
-    {
-      id: 'scoring',
-      title: getSection('points')?.title || (locale === 'es' ? 'Sistema de Puntos' : 'Point System'),
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-      ),
-      content: getSection('points')?.items || []
-    },
-    {
-      id: 'court-reservation',
-      title: getSection('schedule')?.title || (locale === 'es' ? 'Programación de Partidos' : 'Match Scheduling'),
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      ),
-      content: getSection('schedule')?.items || []
-    },
-    {
-      id: 'conduct',
-      title: getSection('conduct')?.title || (locale === 'es' ? 'Reglas de Conducta' : 'Code of Conduct'),
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-        </svg>
-      ),
-      content: getSection('conduct')?.items || []
-    },
-    {
-      id: 'playoffs',
-      title: getSection('playoffs')?.title || (locale === 'es' ? 'Playoffs' : 'Playoffs'),
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-        </svg>
-      ),
-      content: getSection('playoffs')?.items || []
+    en: {
+      title: "📋 League Rules",
+      subtitle: "Everything you need to know to participate",
+      sections: [
+        {
+          icon: "🏆",
+          title: "Scoring System",
+          items: [
+            "2-0 Win: 3 points",
+            "2-1 Win: 2 points",
+            "1-2 Loss: 1 point", 
+            "0-2 Loss: 0 points"
+          ]
+        },
+        {
+          icon: "📅",
+          title: "Match Schedule",
+          items: [
+            "New pairings every Sunday evening",
+            "You have all week to complete your match, including Sunday until 23:00",
+            "Contact your opponent when you can to coordinate",
+            "Agree on place, date and time together"
+          ]
+        },
+        {
+          icon: "🎾",
+          title: "Match Format",
+          items: [
+            "Play 2 sets, if tied 1-1 then play super tie-break",
+            "Players can agree to play a third set instead of super tie-break",
+            "Regular tie-break if 6-6 in a set",
+            "Super tie-break to 10 points if 1-1 in sets"
+          ]
+        },
+        {
+          icon: "🏅",
+          title: "Standings and Playoffs",
+          items: [
+            "Positions 1-8: Qualify for Playoff A (championship)",
+            "Positions 9-16: Qualify for Playoff B",
+            "Positions 17+: Eliminated from playoffs",
+            "ELO ranking updates after each match"
+          ]
+        },
+        {
+          icon: "📱",
+          title: "Match Coordination",
+          items: [
+            "Talk with your opponent to agree on place and time",
+            "Add match details to the system",
+            "Share court costs 50/50 with your opponent",
+            "Report the result on the platform after the match"
+          ]
+        },
+        {
+          icon: "⚡",
+          title: "Special Rules",
+          items: [
+            "Punctuality: 15 minutes maximum tolerance",
+            "Walkover: If opponent doesn't show, you win 2-0",
+            "Injury: Match suspended, rescheduled",
+            "Result dispute: Contact administrator"
+          ]
+        },
+        {
+          icon: "🤝",
+          title: "Fair Play",
+          items: [
+            "Respect your opponent at all times",
+            "Accept opponent's decisions in good faith",
+            "Report any issues to the administrator"
+          ]
+        }
+      ]
     }
-  ]
-
+  }
+  
+  const currentContent = content[locale]
+  
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-          {locale === 'es' ? 'Reglas del Torneo' : 'Tournament Rules'}
-        </h1>
-        <p className="mt-1 text-sm text-gray-600">
-          {locale === 'es' 
-            ? 'Todo lo que necesitas saber para participar'
-            : 'Everything you need to know to participate'}
-        </p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-parque-purple to-purple-600 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold mb-4">{currentContent.title}</h1>
+            <p className="text-xl text-purple-100">{currentContent.subtitle}</p>
+          </div>
+        </div>
       </div>
-
-      {/* Rules Sections */}
-      <div className="space-y-6">
-        {rules.map((rule) => (
-          <div key={rule.id} className="bg-white shadow rounded-lg p-6">
-            <div className="flex items-center mb-4">
-              <div className="flex-shrink-0 text-parque-purple">
-                {rule.icon}
+      
+      {/* Rules Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {currentContent.sections.map((section, index) => (
+            <div key={index} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="text-3xl">{section.icon}</div>
+                <h2 className="text-xl font-bold text-gray-900">{section.title}</h2>
               </div>
-              <h2 className="ml-3 text-lg font-semibold text-gray-900">
-                {rule.title}
-              </h2>
+              <ul className="space-y-3">
+                {section.items.map((item, itemIndex) => (
+                  <li key={itemIndex} className="flex items-start space-x-2">
+                    <div className="w-2 h-2 bg-parque-purple rounded-full mt-2 flex-shrink-0"></div>
+                    <span className="text-gray-700">{item}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <ul className="space-y-2">
-              {rule.content.map((item, index) => (
-                <li key={index} className="flex items-start">
-                  <svg className="w-5 h-5 text-green-500 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="text-gray-600">{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-
-      {/* Additional Info */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-        <div className="flex">
-          <div className="flex-shrink-0">
-            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div className="ml-3">
-            <h3 className="text-sm font-medium text-blue-800">
-              {locale === 'es' ? '¿Tienes preguntas?' : 'Have questions?'}
-            </h3>
-            <p className="mt-2 text-sm text-blue-700">
-              {locale === 'es' 
-                ? 'Si tienes alguna duda sobre las reglas o el formato del torneo, no dudes en contactar con la organización.'
-                : 'If you have any questions about the rules or tournament format, please don\'t hesitate to contact the organization.'}
-            </p>
+          ))}
+        </div>
+        
+        {/* Contact Section */}
+        <div className="mt-12 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-8 text-center">
+          <h3 className="text-2xl font-bold text-gray-900 mb-4">
+            {locale === 'es' ? '¿Preguntas?' : 'Questions?'}
+          </h3>
+          <p className="text-gray-600 mb-6">
+            {locale === 'es' 
+              ? 'Si tienes alguna duda sobre las reglas, no dudes en contactarnos.'
+              : 'If you have any questions about the rules, don\'t hesitate to contact us.'}
+          </p>
+          <div className="flex justify-center space-x-4">
+            <a 
+              href="mailto:morhendos@gmail.com" 
+              className="bg-parque-purple text-white px-6 py-3 rounded-lg font-medium hover:bg-purple-700 transition-colors"
+            >
+              {locale === 'es' ? 'Enviar Email' : 'Send Email'}
+            </a>
+            <a 
+              href="https://wa.me/34652714328" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="bg-green-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-600 transition-colors"
+            >
+              {locale === 'es' ? 'WhatsApp' : 'WhatsApp'}
+            </a>
           </div>
         </div>
       </div>
