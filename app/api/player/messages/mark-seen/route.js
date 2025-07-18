@@ -1,15 +1,11 @@
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import { NextResponse } from 'next/server'
+import { requirePlayer } from '@/lib/auth/apiAuth'
 
 export async function POST(request) {
   try {
-    // Get session
-    const session = await getServerSession(authOptions)
-    
-    if (!session || !session.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    // Use requirePlayer helper for authentication
+    const { session, error } = await requirePlayer(request)
+    if (error) return error
     
     const { messageIds } = await request.json()
     
