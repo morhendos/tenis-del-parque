@@ -83,7 +83,9 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
     }
   }
 
-  const t = navContent[locale]
+  // Add fallback to ensure t is always defined
+  const validLocale = navContent[locale] ? locale : 'es'
+  const t = navContent[validLocale]
 
   const handleMobileMenuToggle = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
@@ -93,7 +95,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
   const handleSectionClick = (sectionId, closeMobileMenu = false) => {
     if (currentPage !== 'home') {
       // If not on home page, navigate to home page with section
-      window.location.href = `/${locale}#${sectionId}`
+      window.location.href = `/${validLocale}#${sectionId}`
     } else {
       // If on home page, scroll to section
       const element = document.getElementById(sectionId)
@@ -110,8 +112,8 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
 
   const NavLink = ({ href, children, onClick }) => {
     // Convert href to locale-based href
-    const localizedHref = href.startsWith('/') ? `/${locale}${href}` : href
-    const isActive = pathname === localizedHref || (href === '/' && pathname === `/${locale}`)
+    const localizedHref = href.startsWith('/') ? `/${validLocale}${href}` : href
+    const isActive = pathname === localizedHref || (href === '/' && pathname === `/${validLocale}`)
     
     return (
       <Link 
@@ -150,7 +152,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <Link href={`/${locale}`} className="group flex items-center space-x-2 transform hover:scale-105 transition-transform">
+              <Link href={`/${validLocale}`} className="group flex items-center space-x-2 transform hover:scale-105 transition-transform">
                 <Image
                   src="/logo-horizontal-big.png"
                   alt="Tenis del Parque"
@@ -182,8 +184,8 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
                     </div>
                   )}
                 </div>
-                <NavLink href={`/${locale === 'es' ? 'ligas' : 'leagues'}`}>{t.leagues}</NavLink>
-                <NavLink href={`/${locale === 'es' ? 'reglas' : 'rules'}`}>{t.rules}</NavLink>
+                <NavLink href={`/${validLocale === 'es' ? 'ligas' : 'leagues'}`}>{t.leagues}</NavLink>
+                <NavLink href={`/${validLocale === 'es' ? 'reglas' : 'rules'}`}>{t.rules}</NavLink>
                 <NavLink href="/swiss">{t.swiss}</NavLink>
                 <NavLink href="/elo">{t.elo}</NavLink>
               </div>
@@ -191,7 +193,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
               {/* Login Button */}
               <div className="ml-4">
                 <a
-                  href={`/${locale}/login`}
+                  href={`/${validLocale}/login`}
                   className="bg-parque-purple text-white px-4 py-2 rounded-lg hover:bg-parque-purple/90 transition-colors font-medium text-sm"
                 >
                   {t.login}
@@ -304,7 +306,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
               </div>
               
               <NavLink 
-                href={`/${locale === 'es' ? 'ligas' : 'leagues'}`} 
+                href={`/${validLocale === 'es' ? 'ligas' : 'leagues'}`} 
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <div className={`flex items-center justify-between py-3 px-4 rounded-xl transition-all duration-200 ${
@@ -320,7 +322,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
               </NavLink>
               
               <NavLink 
-                href={`/${locale === 'es' ? 'reglas' : 'rules'}`} 
+                href={`/${validLocale === 'es' ? 'reglas' : 'rules'}`} 
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <div className={`flex items-center justify-between py-3 px-4 rounded-xl transition-all duration-200 ${
@@ -370,7 +372,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
               {/* Mobile Login Button */}
               <div className="pt-4 border-t border-gray-200">
                 <a
-                  href={`/${locale}/login`}
+                  href={`/${validLocale}/login`}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="block w-full bg-parque-purple text-white text-center py-3 px-4 rounded-xl hover:bg-parque-purple/90 transition-colors font-medium"
                 >
