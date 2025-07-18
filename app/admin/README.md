@@ -50,7 +50,8 @@ Add these to your `.env.local`:
 
 ```bash
 # JWT secret for token authentication
-JWT_SECRET=your-jwt-secret-key-here
+NEXTAUTH_SECRET=your-nextauth-secret-key-here
+NEXTAUTH_URL=http://localhost:3000
 
 # MongoDB connection
 MONGODB_URI=your_mongodb_connection_string
