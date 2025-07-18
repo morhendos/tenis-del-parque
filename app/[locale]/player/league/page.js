@@ -31,7 +31,8 @@ export default function LeaguePage() {
       }
 
       // Fetch league standings
-      const standingsRes = await fetch(`/api/leagues/${profileData.player.league}/standings`)
+      const leagueId = profileData.player.league._id || profileData.player.league.slug || profileData.player.league
+      const standingsRes = await fetch(`/api/leagues/${leagueId}/standings`)
       if (!standingsRes.ok) {
         throw new Error('Failed to fetch league standings')
       }
@@ -103,8 +104,8 @@ export default function LeaguePage() {
         </h1>
         <p className="mt-1 text-sm text-gray-600">
           {locale === 'es' 
-            ? `Clasificación y estadísticas de ${leagueData.league}`
-            : `Standings and statistics for ${leagueData.league}`}
+            ? `Clasificación y estadísticas de ${leagueData.league.name || leagueData.league}`
+            : `Standings and statistics for ${leagueData.league.name || leagueData.league}`}
         </p>
       </div>
 
