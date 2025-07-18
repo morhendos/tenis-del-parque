@@ -16,6 +16,7 @@ export default function PlayerLayout({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [hasNewAnnouncement, setHasNewAnnouncement] = useState(false)
+  const [playerData, setPlayerData] = useState(null)
 
   const checkAuth = useCallback(async () => {
     try {
@@ -29,11 +30,35 @@ export default function PlayerLayout({ children }) {
       if (session?.user) {
         setUser(session.user)
         
-        // Check if user needs to see the announcement (for badge only)
-        const currentAnnouncement = announcementContent.firstRoundDelay
-        const hasSeenAnnouncement = session.user?.seenAnnouncements?.includes(currentAnnouncement.id)
-        
-        setHasNewAnnouncement(!hasSeenAnnouncement)
+        // Fetch player profile to get the latest seenAnnouncements
+        try {
+          const profileResponse = await fetch('/api/player/profile')
+          if (profileResponse.ok) {
+            const profileData = await profileResponse.json()
+            setPlayerData(profileData)
+            
+            // Check for new announcements
+            const allAnnouncementIds = [
+              announcementContent.firstRoundDelay.id,
+              announcementContent.firstRoundMatch.id
+            ]
+            
+            const seenAnnouncements = profileData.user?.preferences?.seenAnnouncements || []
+            const hasUnseen = allAnnouncementIds.some(id => !seenAnnouncements.includes(id))
+            
+            setHasNewAnnouncement(hasUnseen)
+          }
+        } catch (error) {
+          console.error('Error fetching player data:', error)
+          // Fallback to session data
+          const seenAnnouncements = session.user?.seenAnnouncements || []
+          const allAnnouncementIds = [
+            announcementContent.firstRoundDelay.id,
+            announcementContent.firstRoundMatch.id
+          ]
+          const hasUnseen = allAnnouncementIds.some(id => !seenAnnouncements.includes(id))
+          setHasNewAnnouncement(hasUnseen)
+        }
       }
     } finally {
       setLoading(false)
@@ -43,6 +68,13 @@ export default function PlayerLayout({ children }) {
   useEffect(() => {
     checkAuth()
   }, [checkAuth])
+
+  // Re-check for new announcements when pathname changes (user navigates)
+  useEffect(() => {
+    if (session?.user && !loading) {
+      checkAuth()
+    }
+  }, [pathname, session, loading, checkAuth])
 
   const navigation = [
     { 
@@ -159,13 +191,7 @@ export default function PlayerLayout({ children }) {
               <Link
                 key={item.name}
                 href={item.href}
-                onClick={() => {
-                  handleNavClick()
-                  // If clicking on messages, update the badge
-                  if (item.href === `/${locale}/player/messages` && hasNewAnnouncement) {
-                    setHasNewAnnouncement(false)
-                  }
-                }}
+                onClick={handleNavClick}
                 className={`group flex items-center px-4 py-4 text-sm font-medium rounded-xl transition-all duration-200 ${
                   isActive(item.href)
                     ? 'bg-gradient-to-r from-parque-purple to-purple-600 text-white shadow-lg transform scale-105'
@@ -203,7 +229,7 @@ export default function PlayerLayout({ children }) {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-gray-900">
-                    {user?.name || user?.email?.split('@')[0] || (locale === 'es' ? 'Jugador' : 'Player')}
+                    {playerData?.player?.name || user?.name || user?.email?.split('@')[0] || (locale === 'es' ? 'Jugador' : 'Player')}
                   </p>
                   <p className="text-xs text-gray-500">
                     {locale === 'es' ? 'Miembro activo' : 'Active member'}
