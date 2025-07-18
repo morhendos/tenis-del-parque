@@ -189,6 +189,24 @@ export default withAuth(
       authorized: ({ req, token }) => {
         const pathname = req.nextUrl.pathname
         
+        // Always allow API routes and static files
+        if (pathname.startsWith('/api/') || pathname.startsWith('/_next/') || pathname.includes('.')) {
+          return true
+        }
+        
+        // Admin routes always require authentication and admin role
+        if (pathname.startsWith('/admin')) {
+          return token && token.role === 'admin'
+        }
+        
+        // Player routes require authentication
+        if (pathname.includes('/player/')) {
+          return !!token
+        }
+        
+        // Remove locale prefix for easier matching
+        const pathWithoutLocale = pathname.replace(/^\/(es|en)/, '') || '/'
+        
         // Public routes that don't require auth
         const publicRoutes = [
           '/',
@@ -197,19 +215,19 @@ export default withAuth(
           '/activate',
           '/elo',
           '/rules',
+          '/reglas',
           '/swiss',
           '/leagues',
+          '/ligas',
           '/sotogrande',
-          '/api/auth',
+          '/registro'
         ]
         
-        // Check if it's a public route (with or without locale)
-        const isPublicRoute = publicRoutes.some(route => {
-          return pathname === route || 
-                 pathname.includes(`/es${route}`) || 
-                 pathname.includes(`/en${route}`) ||
-                 pathname.includes('/api/auth')
-        })
+        // Check if it's a public route
+        const isPublicRoute = publicRoutes.includes(pathWithoutLocale) || 
+                             pathWithoutLocale.startsWith('/signup/') ||
+                             pathWithoutLocale.startsWith('/registro/') ||
+                             pathWithoutLocale.match(/^\/[^\/]+\/liga\/[^\/]+$/)
         
         if (isPublicRoute) return true
         
