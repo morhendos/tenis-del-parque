@@ -130,6 +130,9 @@ export default function ProfilePage() {
     )
   }
 
+  // Extract league name from the league object
+  const leagueName = profile.player?.league?.name || profile.player?.league || '-'
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Page Header */}
@@ -184,7 +187,7 @@ export default function ProfilePage() {
                 <label className="block text-sm font-medium text-gray-700">
                   {locale === 'es' ? 'Liga' : 'League'}
                 </label>
-                <p className="mt-1 text-sm text-gray-900">{profile.player?.league || '-'}</p>
+                <p className="mt-1 text-sm text-gray-900">{leagueName}</p>
               </div>
             </div>
           </div>
