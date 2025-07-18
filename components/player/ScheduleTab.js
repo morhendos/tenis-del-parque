@@ -11,7 +11,7 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
   const [loadingPlayerMatches, setLoadingPlayerMatches] = useState(true)
 
   // Filter out any matches that have results (defensive programming for data inconsistencies)
-  const upcomingSchedule = schedule.filter(match => !match.result?.winner)
+  const upcomingSchedule = schedule?.filter(match => !match.result?.winner) || []
 
   // Fetch player's matches with full data (including WhatsApp)
   useEffect(() => {

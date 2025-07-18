@@ -13,12 +13,12 @@ export async function GET(request, { params }) {
     
     const { league: slug } = params
     const { searchParams } = new URL(request.url)
-    const season = searchParams.get('season') || 'Verano 2025'
+    const season = searchParams.get('season') || 'summer-2025'  // Use database format
     const level = searchParams.get('level')
     
-    // Find league by slug
+    // Find league by ID
     const league = await League.findOne({ 
-      slug: slug.toLowerCase(),
+      _id: slug,
       status: 'active'
     })
     

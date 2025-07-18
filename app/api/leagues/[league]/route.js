@@ -7,9 +7,9 @@ export async function GET(request, { params }) {
     
     const { league: slug } = params
     
-    // Find league by slug
+    // Find league by ID
     const league = await League.findOne({ 
-      slug: slug.toLowerCase(),
+      _id: slug,
       status: 'active'
     })
     
