@@ -1,13 +1,20 @@
 import { NextResponse } from 'next/server'
-import { requirePlayer } from '@/lib/auth/apiAuth'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import dbConnect from '@/lib/db/mongoose'
 import User from '@/lib/models/User'
 
 export async function POST(request) {
   try {
-    // Use requirePlayer helper for authentication
-    const { session, error } = await requirePlayer(request)
-    if (error) return error
+    // Get session using NextAuth
+    const session = await getServerSession(authOptions)
+    
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
     
     const { messageIds } = await request.json()
     
@@ -21,7 +28,7 @@ export async function POST(request) {
     await dbConnect()
 
     // Find the user and update their seen announcements
-    const user = await User.findById(session.userId)
+    const user = await User.findById(session.user.id)
     if (!user) {
       return NextResponse.json(
         { error: 'User not found' },
