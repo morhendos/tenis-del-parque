@@ -1,15 +1,11 @@
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import { NextResponse } from 'next/server'
+import { requirePlayer } from '@/lib/auth/apiAuth'
 
 export async function GET(request) {
   try {
-    // Get session
-    const session = await getServerSession(authOptions)
-    
-    if (!session || !session.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    // Use requirePlayer helper for authentication
+    const { session, error } = await requirePlayer(request)
+    if (error) return error
     
     // For now, return mock messages
     // In production, this would fetch from database
@@ -17,12 +13,18 @@ export async function GET(request) {
       {
         _id: '1',
         type: 'announcement',
-        title: session.user.language === 'es' ? 'Bienvenido a la Liga' : 'Welcome to the League',
-        content: session.user.language === 'es' 
-          ? 'Tu cuenta ha sido activada correctamente. ¡Ya puedes empezar a jugar!'
-          : 'Your account has been activated successfully. You can start playing now!',
+        title: 'Bienvenido a la Liga',
+        content: 'Tu cuenta ha sido activada correctamente. ¡Ya puedes empezar a jugar!',
         createdAt: new Date().toISOString(),
         seen: false
+      },
+      {
+        _id: '2',
+        type: 'announcement',
+        title: 'Welcome to the League',
+        content: 'Your account has been activated successfully. You can start playing now!',
+        createdAt: new Date(Date.now() - 86400000).toISOString(), // Yesterday
+        seen: true
       }
     ]
     
