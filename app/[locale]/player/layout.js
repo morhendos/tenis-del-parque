@@ -1,197 +1,222 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { usePathname, useParams } from 'next/navigation'
-import { useSession, signOut } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useCallback } from 'react'
+import { usePathname, useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
+import { useSession, signOut } from 'next-auth/react'
+import { announcementContent } from '@/lib/content/announcementContent'
 
 export default function PlayerLayout({ children }) {
-  const router = useRouter()
   const pathname = usePathname()
+  const router = useRouter()
   const params = useParams()
   const { data: session, status } = useSession()
   const locale = params.locale || 'es'
-  const [playerName, setPlayerName] = useState('')
-  const [showMobileMenu, setShowMobileMenu] = useState(false)
-  const [unreadMessages, setUnreadMessages] = useState(0)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [hasNewAnnouncement, setHasNewAnnouncement] = useState(false)
 
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (status === 'loading') return
-    
-    if (status === 'unauthenticated') {
-      router.push(`/${locale}/login?return=${pathname}`)
-    }
-  }, [status, router, locale, pathname])
-
-  // Get player info
-  useEffect(() => {
-    if (session?.user) {
-      setPlayerName(session.user.name || session.user.email || 'Player')
+  const checkAuth = useCallback(async () => {
+    try {
+      if (status === 'loading') return
       
-      // Fetch unread messages for players only
-      if (session.user.role === 'player') {
-        fetch('/api/player/messages')
-          .then(res => res.ok ? res.json() : [])
-          .then(messages => {
-            const unread = messages.filter(m => !m.seen).length
-            setUnreadMessages(unread)
-          })
-          .catch(console.error)
+      if (status === 'unauthenticated') {
+        router.push(`/${locale}/login?return=${pathname}`)
+        return
       }
+      
+      if (session?.user) {
+        setUser(session.user)
+        
+        // Check if user needs to see the announcement (for badge only)
+        const currentAnnouncement = announcementContent.firstRoundDelay
+        const hasSeenAnnouncement = session.user?.seenAnnouncements?.includes(currentAnnouncement.id)
+        
+        setHasNewAnnouncement(!hasSeenAnnouncement)
+      }
+    } finally {
+      setLoading(false)
     }
-  }, [session])
+  }, [router, status, session, locale, pathname])
+
+  useEffect(() => {
+    checkAuth()
+  }, [checkAuth])
+
+  const navigation = [
+    { 
+      name: 'Dashboard', 
+      href: `/${locale}/player/dashboard`, 
+      icon: '🏠', 
+      description: locale === 'es' ? 'Vista general y estadísticas' : 'Overview & stats' 
+    },
+    { 
+      name: locale === 'es' ? 'Mi Liga' : 'My League', 
+      href: `/${locale}/player/league`, 
+      icon: '🏆', 
+      description: locale === 'es' ? 'Clasificación de liga' : 'League standings' 
+    },
+    { 
+      name: locale === 'es' ? 'Partidos' : 'Matches', 
+      href: `/${locale}/player/matches`, 
+      icon: '🎾', 
+      description: locale === 'es' ? 'Historial de partidos' : 'Match history' 
+    },
+    { 
+      name: locale === 'es' ? 'Mensajes' : 'Messages', 
+      href: `/${locale}/player/messages`, 
+      icon: '📬', 
+      description: locale === 'es' ? 'Anuncios importantes' : 'Important announcements',
+      badge: hasNewAnnouncement ? 'new' : null
+    },
+    { 
+      name: locale === 'es' ? 'Perfil' : 'Profile', 
+      href: `/${locale}/player/profile`, 
+      icon: '👤', 
+      description: locale === 'es' ? 'Configuración de cuenta' : 'Account settings' 
+    },
+    { 
+      name: locale === 'es' ? 'Reglas' : 'Rules', 
+      href: `/${locale}/player/rules`, 
+      icon: '📋', 
+      description: locale === 'es' ? 'Reglas de la liga' : 'League rules' 
+    },
+  ]
+
+  const isActive = (href) => pathname === href
 
   const handleLogout = async () => {
     await signOut({ redirect: false })
     router.push(`/${locale}/login`)
   }
 
-  const navigation = [
-    {
-      name: locale === 'es' ? 'Panel' : 'Dashboard',
-      href: `/${locale}/player/dashboard`,
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-        </svg>
-      )
-    },
-    {
-      name: locale === 'es' ? 'Liga' : 'League',
-      href: `/${locale}/player/league`,
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-      )
-    },
-    {
-      name: locale === 'es' ? 'Partidos' : 'Matches',
-      href: `/${locale}/player/matches`,
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      )
-    },
-    {
-      name: locale === 'es' ? 'Mensajes' : 'Messages',
-      href: `/${locale}/player/messages`,
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-        </svg>
-      ),
-      badge: unreadMessages > 0 ? unreadMessages : null
-    },
-    {
-      name: locale === 'es' ? 'Perfil' : 'Profile',
-      href: `/${locale}/player/profile`,
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-        </svg>
-      )
-    },
-    {
-      name: locale === 'es' ? 'Reglas' : 'Rules',
-      href: `/${locale}/player/rules`,
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-        </svg>
-      )
-    }
-  ]
-
-  // Add admin dashboard link if user is admin
-  if (session?.user?.role === 'admin') {
-    navigation.unshift({
-      name: locale === 'es' ? 'Panel Admin' : 'Admin Panel',
-      href: '/admin/dashboard',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-      )
-    })
+  // Close mobile menu when clicking navigation items
+  const handleNavClick = () => {
+    setIsSidebarOpen(false)
   }
 
-  const isActive = (href) => pathname === href
+  // Prevent body scroll when mobile sidebar is open
+  useEffect(() => {
+    if (isSidebarOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [isSidebarOpen])
 
-  if (status === 'loading') {
+  if (loading || status === 'loading') {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
+          <p className="mt-4 text-gray-600">{locale === 'es' ? 'Cargando...' : 'Loading...'}</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Admin Notice */}
-      {session?.user?.role === 'admin' && (
-        <div className="bg-yellow-50 border-b border-yellow-200">
-          <div className="px-4 py-2 text-sm text-yellow-800">
-            {locale === 'es' ? 'Estás viendo esta página como administrador' : 'You are viewing this page as an admin'}
-          </div>
-        </div>
-      )}
-
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0">
-        <div className="flex-1 flex flex-col min-h-0 bg-white border-r border-gray-200">
-          <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
-            <div className="flex items-center flex-shrink-0 px-4">
-              <Link href={`/${locale}`} className="flex items-center">
-                <img className="h-12 w-auto" src="/logo.png" alt="Liga del Parque" />
-                <span className="ml-3 text-xl font-bold text-gray-900">
-                  {locale === 'es' ? 'Liga del Parque' : 'Park League'}
-                </span>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-xl transform ${
+        isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      } transition-transform duration-300 ease-in-out lg:translate-x-0`}>
+        <div className="relative h-full">
+          {/* Simplified Header - Remove tiny logo on mobile */}
+          <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-parque-purple via-purple-600 to-indigo-600 px-6 py-6">
+            <div className="flex items-center justify-between">
+              <Link href={`/${locale}/player/dashboard`} className="group" onClick={handleNavClick}>
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                    <span className="text-2xl">🎾</span>
+                  </div>
+                  <div>
+                    <h1 className="text-xl font-bold text-white">Tenis del Parque</h1>
+                    <p className="text-sm text-purple-200">
+                      {locale === 'es' ? 'Hub de Jugadores' : 'Player Hub'}
+                    </p>
+                  </div>
+                </div>
               </Link>
+              <button
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="lg:hidden text-white hover:text-purple-200 transition-colors p-2"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
-            <nav className="mt-8 flex-1 px-2 space-y-1">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`${
-                    isActive(item.href)
-                      ? 'bg-parque-purple text-white'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  } group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors`}
-                >
-                  {item.icon}
-                  <span className="ml-3">{item.name}</span>
-                  {item.badge && (
-                    <span className="ml-auto inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
-                      {item.badge}
-                    </span>
-                  )}
-                </Link>
-              ))}
-            </nav>
           </div>
-          <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
-            <div className="flex items-center w-full">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">{playerName}</p>
-                <p className="text-xs text-gray-500">
-                  {session?.user?.role === 'admin' ? 'Admin' : (locale === 'es' ? 'Jugador' : 'Player')}
-                </p>
+
+          {/* Navigation - Scrollable area between header and footer */}
+          <nav className="absolute top-28 bottom-20 left-0 right-0 px-4 py-4 space-y-2 overflow-y-auto">
+            {navigation.map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                onClick={() => {
+                  handleNavClick()
+                  // If clicking on messages, update the badge
+                  if (item.href === `/${locale}/player/messages` && hasNewAnnouncement) {
+                    setHasNewAnnouncement(false)
+                  }
+                }}
+                className={`group flex items-center px-4 py-4 text-sm font-medium rounded-xl transition-all duration-200 ${
+                  isActive(item.href)
+                    ? 'bg-gradient-to-r from-parque-purple to-purple-600 text-white shadow-lg transform scale-105'
+                    : 'text-gray-700 hover:bg-purple-50 hover:text-parque-purple'
+                }`}
+              >
+                <span className="text-2xl mr-4">{item.icon}</span>
+                <div className="flex-1">
+                  <div className="font-semibold flex items-center space-x-2">
+                    <span>{item.name}</span>
+                    {item.badge === 'new' && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-500 text-white">
+                        {locale === 'es' ? 'Nuevo' : 'New'}
+                      </span>
+                    )}
+                  </div>
+                  <div className={`text-xs ${
+                    isActive(item.href) ? 'text-purple-200' : 'text-gray-500 group-hover:text-purple-600'
+                  }`}>
+                    {item.description}
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </nav>
+
+          {/* Enhanced User Section - Always visible at bottom */}
+          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-purple-50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-parque-purple to-purple-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold">
+                    {user?.email?.charAt(0)?.toUpperCase() || '?'}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {user?.name || user?.email?.split('@')[0] || (locale === 'es' ? 'Jugador' : 'Player')}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {locale === 'es' ? 'Miembro activo' : 'Active member'}
+                  </p>
+                </div>
               </div>
               <button
                 onClick={handleLogout}
-                className="ml-3 p-2 text-gray-400 hover:text-gray-500 transition-colors"
-                title={locale === 'es' ? 'Cerrar sesión' : 'Logout'}
+                className="text-gray-500 hover:text-red-600 transition-colors p-2 rounded-lg hover:bg-red-50"
+                title={locale === 'es' ? 'Cerrar sesión' : 'Sign out'}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
               </button>
             </div>
@@ -199,88 +224,70 @@ export default function PlayerLayout({ children }) {
         </div>
       </div>
 
-      {/* Mobile Header */}
-      <div className="lg:hidden">
-        <div className="bg-white shadow-sm">
-          <div className="px-4 sm:px-6">
-            <div className="flex items-center justify-between h-16">
-              <Link href={`/${locale}`} className="flex items-center">
-                <img className="h-8 w-auto" src="/logo.png" alt="Liga del Parque" />
-                <span className="ml-2 text-lg font-bold text-gray-900">
-                  {locale === 'es' ? 'Liga del Parque' : 'Park League'}
-                </span>
-              </Link>
+      {/* Main content */}
+      <div className="flex-1 flex flex-col min-w-0 lg:ml-72">
+        {/* Enhanced Top bar */}
+        <div className="sticky top-0 z-40 bg-white shadow-sm border-b border-gray-200">
+          <div className="flex items-center justify-between h-16 px-4 md:px-6">
+            <div className="flex items-center space-x-4">
               <button
-                onClick={() => setShowMobileMenu(!showMobileMenu)}
-                className="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-parque-purple"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="lg:hidden text-gray-600 hover:text-gray-900 p-2 rounded-lg hover:bg-gray-100 transition-colors"
               >
-                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  {showMobileMenu ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                  )}
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Menu */}
-        {showMobileMenu && (
-          <div className="bg-white border-t border-gray-200">
-            <nav className="px-2 pt-2 pb-3 space-y-1">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  onClick={() => setShowMobileMenu(false)}
-                  className={`${
-                    isActive(item.href)
-                      ? 'bg-parque-purple text-white'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  } group flex items-center px-3 py-2 text-base font-medium rounded-md transition-colors`}
-                >
-                  {item.icon}
-                  <span className="ml-3">{item.name}</span>
-                  {item.badge && (
-                    <span className="ml-auto inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
-                      {item.badge}
-                    </span>
-                  )}
-                </Link>
-              ))}
-            </nav>
-            <div className="border-t border-gray-200 pt-3 pb-3 px-4">
-              <div className="flex items-center">
-                <div className="flex-1">
-                  <p className="text-base font-medium text-gray-900">{playerName}</p>
-                  <p className="text-sm text-gray-500">
-                    {session?.user?.role === 'admin' ? 'Admin' : (locale === 'es' ? 'Jugador' : 'Player')}
-                  </p>
-                </div>
-                <button
-                  onClick={handleLogout}
-                  className="ml-3 p-2 text-gray-400 hover:text-gray-500 transition-colors"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                </button>
+              
+              <div>
+                <h1 className="text-lg md:text-xl font-bold text-gray-900">
+                  {pathname.includes('messages') ? 
+                    (locale === 'es' ? 'Mensajes' : 'Messages') :
+                   pathname.includes('matches') ? 
+                    (locale === 'es' ? 'Mis Partidos' : 'My Matches') :
+                   pathname.includes('profile') ? 
+                    (locale === 'es' ? 'Mi Perfil' : 'My Profile') :
+                   pathname.includes('league') ? 
+                    (locale === 'es' ? 'Mi Liga' : 'My League') :
+                   pathname.includes('rules') ? 
+                    (locale === 'es' ? 'Reglas' : 'Rules') :
+                   'Dashboard'}
+                </h1>
+                <p className="text-xs md:text-sm text-gray-500 hidden sm:block">
+                  {pathname.includes('messages') ? 
+                    (locale === 'es' ? 'Anuncios y comunicaciones importantes' : 'Important announcements and communications') :
+                   pathname.includes('matches') ? 
+                    (locale === 'es' ? 'Historial y calendario de partidos' : 'Match history and schedule') :
+                   pathname.includes('profile') ? 
+                    (locale === 'es' ? 'Configuración de cuenta' : 'Account settings') :
+                   pathname.includes('league') ? 
+                    (locale === 'es' ? 'Clasificación y resultados' : 'Standings and results') :
+                   pathname.includes('rules') ? 
+                    (locale === 'es' ? 'Reglas de la liga' : 'League rules') :
+                    (locale === 'es' ? 'Vista general de tu actividad' : 'Overview of your activity')}
+                </p>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+            
 
-      {/* Main Content */}
-      <div className="lg:pl-64">
-        <main className="py-6">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          </div>
+        </div>
+
+        {/* Page content */}
+        <main className="flex-1 overflow-y-auto bg-gray-50">
+          <div className="container mx-auto px-2 md:px-6 py-4 md:py-8 max-w-[1400px]">
             {children}
           </div>
         </main>
       </div>
+
+      {/* Mobile sidebar backdrop */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
     </div>
   )
 }
