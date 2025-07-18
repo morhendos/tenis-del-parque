@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import clientPromise from '../../../../../lib/db'
-import { ObjectId } from 'mongodb'
+import dbConnect from '../../../../../lib/db/mongoose'
+import League from '../../../../../lib/models/League'
 
 function parseCSV(csvText) {
   const lines = csvText.trim().split('\n')
@@ -63,9 +63,7 @@ export async function POST(request) {
       )
     }
     
-    const client = await clientPromise
-    const db = client.db(process.env.MONGODB_DB)
-    const leaguesCollection = db.collection('leagues')
+    await dbConnect()
     
     let created = 0
     let updated = 0
@@ -99,16 +97,21 @@ export async function POST(request) {
       const { basicInfo, seasons } = leagueData
       
       try {
+        // Generate slug from name
+        const slug = leagueName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+        
         // Check if league exists
-        const existingLeague = await leaguesCollection.findOne({ name: leagueName })
+        const existingLeague = await League.findOne({ name: leagueName })
         
         const leagueDoc = {
           name: leagueName,
+          slug,
           type: basicInfo.type || 'public',
           location: {
             city: basicInfo.location_city,
             region: basicInfo.location_region,
-            venue: basicInfo.location_venue || ''
+            venue: basicInfo.location_venue || '',
+            country: 'Spain' // Default country
           },
           settings: {
             surface: basicInfo.surface || 'clay',
@@ -116,32 +119,28 @@ export async function POST(request) {
             matchFormat: basicInfo.match_format || 'best_of_3'
           },
           seasons: seasons.length > 0 ? seasons.map(s => ({
-            _id: new ObjectId(),
-            ...s,
-            createdAt: new Date(),
-            updatedAt: new Date()
+            name: s.name,
+            status: s.status,
+            startDate: new Date(),
+            endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days from now
+            maxPlayers: 100,
+            price: {
+              amount: 0,
+              currency: 'EUR',
+              isFree: true
+            }
           })) : [],
-          updatedAt: new Date()
+          status: 'active'
         }
         
         if (existingLeague) {
           // Update existing league
-          await leaguesCollection.updateOne(
-            { _id: existingLeague._id },
-            { 
-              $set: {
-                ...leagueDoc,
-                seasons: existingLeague.seasons ? [...existingLeague.seasons, ...leagueDoc.seasons] : leagueDoc.seasons
-              }
-            }
-          )
+          Object.assign(existingLeague, leagueDoc)
+          await existingLeague.save()
           updated++
         } else {
           // Create new league
-          await leaguesCollection.insertOne({
-            ...leagueDoc,
-            createdAt: new Date()
-          })
+          await League.create(leagueDoc)
           created++
         }
       } catch (error) {
