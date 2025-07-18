@@ -1,15 +1,13 @@
 import { NextResponse } from 'next/server'
-import clientPromise from '../../../../../lib/db'
+import dbConnect from '../../../../../lib/db/mongoose'
+import League from '../../../../../lib/models/League'
 
 export async function GET() {
   try {
-    const client = await clientPromise
-    const db = client.db(process.env.MONGODB_DB)
+    await dbConnect()
     
     // Get all leagues with their seasons
-    const leagues = await db.collection('leagues')
-      .find({})
-      .toArray()
+    const leagues = await League.find({}).lean()
     
     // Prepare CSV headers
     const headers = [
