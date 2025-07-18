@@ -11,7 +11,7 @@ import { announcementContent } from '@/lib/content/announcementContent'
 export default function MessagesPage() {
   const router = useRouter()
   const params = useParams()
-  const { data: session, status } = useSession()
+  const { data: session, status, update } = useSession()
   const locale = params.locale || 'es'
   
   const [loading, setLoading] = useState(true)
@@ -20,6 +20,7 @@ export default function MessagesPage() {
   const [selectedMessage, setSelectedMessage] = useState(null)
   const [modalType, setModalType] = useState(null)
   const [seenAnnouncements, setSeenAnnouncements] = useState([])
+  const [messages, setMessages] = useState([])
 
   useEffect(() => {
     if (status === 'loading') return
@@ -41,7 +42,8 @@ export default function MessagesPage() {
       if (profileResponse.ok) {
         const profileData = await profileResponse.json()
         setPlayer(profileData.player)
-        setSeenAnnouncements(profileData.user?.preferences?.seenAnnouncements || [])
+        const userSeenAnnouncements = profileData.user?.preferences?.seenAnnouncements || []
+        setSeenAnnouncements(userSeenAnnouncements)
         
         // Check for first round matches
         const matchesResponse = await fetch('/api/player/matches')
@@ -50,6 +52,9 @@ export default function MessagesPage() {
           const firstRound = matchesData.matches?.find(match => match.round === 1)
           setFirstRoundMatch(firstRound)
         }
+        
+        // Generate messages after we have all the data
+        generateMessages(profileData.player, firstRound, userSeenAnnouncements)
       }
     } catch (error) {
       console.error('Error fetching player data:', error)
@@ -58,78 +63,74 @@ export default function MessagesPage() {
     }
   }
 
-  // Prepare dynamic first round match announcement
-  const getFirstRoundMatchMessage = () => {
-    if (!firstRoundMatch || !player) return null
-    
-    const opponent = firstRoundMatch.players.player1._id === player._id 
-      ? firstRoundMatch.players.player2 
-      : firstRoundMatch.players.player1
-    
-    return {
-      id: announcementContent.firstRoundMatch.id,
-      type: 'announcement',
-      date: announcementContent.firstRoundMatch.date,
-      title: announcementContent.firstRoundMatch[locale].title,
-      subtitle: announcementContent.firstRoundMatch[locale].subtitle,
-      icon: '🎾',
-      bgColor: 'from-parque-purple/10 to-green-100',
-      isNew: !seenAnnouncements.includes(announcementContent.firstRoundMatch.id),
-      content: {
-        ...announcementContent.firstRoundMatch,
-        es: {
-          ...announcementContent.firstRoundMatch.es,
-          content: announcementContent.firstRoundMatch.es.getContent(
-            player.name,
-            opponent.name,
-            opponent.whatsapp,
-            { level: player.level }
-          )
-        },
-        en: {
-          ...announcementContent.firstRoundMatch.en,
-          content: announcementContent.firstRoundMatch.en.getContent(
-            player.name,
-            opponent.name,
-            opponent.whatsapp,
-            { level: player.level }
-          )
-        }
+  // Generate messages based on current data
+  const generateMessages = (playerData, firstRoundMatchData, seenAnnouncementsList) => {
+    const generatedMessages = [
+      {
+        id: 'welcome',
+        type: 'welcome',
+        date: session?.user?.createdAt ? new Date(session.user.createdAt) : new Date(),
+        title: locale === 'es' ? 'Mensaje de Bienvenida' : 'Welcome Message',
+        subtitle: locale === 'es' ? 'Tu primera vez en la plataforma' : 'Your first time on the platform',
+        icon: '👋',
+        bgColor: 'from-parque-purple/10 to-green-100'
+      },
+      {
+        id: announcementContent.firstRoundDelay.id,
+        type: 'announcement',
+        date: announcementContent.firstRoundDelay.date,
+        title: announcementContent.firstRoundDelay[locale].title,
+        subtitle: announcementContent.firstRoundDelay[locale].subtitle,
+        icon: '📢',
+        bgColor: 'from-yellow-100 to-orange-100',
+        isNew: !seenAnnouncementsList.includes(announcementContent.firstRoundDelay.id),
+        content: announcementContent.firstRoundDelay
       }
+    ]
+
+    // Add first round match message if available
+    if (firstRoundMatchData && playerData) {
+      const opponent = firstRoundMatchData.players.player1._id === playerData._id 
+        ? firstRoundMatchData.players.player2 
+        : firstRoundMatchData.players.player1
+      
+      generatedMessages.push({
+        id: announcementContent.firstRoundMatch.id,
+        type: 'announcement',
+        date: announcementContent.firstRoundMatch.date,
+        title: announcementContent.firstRoundMatch[locale].title,
+        subtitle: announcementContent.firstRoundMatch[locale].subtitle,
+        icon: '🎾',
+        bgColor: 'from-parque-purple/10 to-green-100',
+        isNew: !seenAnnouncementsList.includes(announcementContent.firstRoundMatch.id),
+        content: {
+          ...announcementContent.firstRoundMatch,
+          es: {
+            ...announcementContent.firstRoundMatch.es,
+            content: announcementContent.firstRoundMatch.es.getContent(
+              playerData.name,
+              opponent.name,
+              opponent.whatsapp,
+              { level: playerData.level }
+            )
+          },
+          en: {
+            ...announcementContent.firstRoundMatch.en,
+            content: announcementContent.firstRoundMatch.en.getContent(
+              playerData.name,
+              opponent.name,
+              opponent.whatsapp,
+              { level: playerData.level }
+            )
+          }
+        }
+      })
     }
+
+    // Sort messages by date (newest first)
+    generatedMessages.sort((a, b) => new Date(b.date) - new Date(a.date))
+    setMessages(generatedMessages)
   }
-
-  const messages = [
-    {
-      id: 'welcome',
-      type: 'welcome',
-      date: session?.user?.createdAt ? new Date(session.user.createdAt) : new Date(),
-      title: locale === 'es' ? 'Mensaje de Bienvenida' : 'Welcome Message',
-      subtitle: locale === 'es' ? 'Tu primera vez en la plataforma' : 'Your first time on the platform',
-      icon: '👋',
-      bgColor: 'from-parque-purple/10 to-green-100'
-    },
-    {
-      id: announcementContent.firstRoundDelay.id,
-      type: 'announcement',
-      date: announcementContent.firstRoundDelay.date,
-      title: announcementContent.firstRoundDelay[locale].title,
-      subtitle: announcementContent.firstRoundDelay[locale].subtitle,
-      icon: '📢',
-      bgColor: 'from-yellow-100 to-orange-100',
-      isNew: !seenAnnouncements.includes(announcementContent.firstRoundDelay.id),
-      content: announcementContent.firstRoundDelay
-    }
-  ]
-
-  // Add first round match message if available
-  const firstRoundMatchMessage = getFirstRoundMatchMessage()
-  if (firstRoundMatchMessage) {
-    messages.push(firstRoundMatchMessage)
-  }
-
-  // Sort messages by date (newest first)
-  messages.sort((a, b) => new Date(b.date) - new Date(a.date))
 
   const handleMessageClick = (message) => {
     setSelectedMessage(message)
@@ -140,14 +141,39 @@ export default function MessagesPage() {
     // Mark announcement as seen if it's an announcement
     if (modalType === 'announcement' && selectedMessage?.id && selectedMessage?.isNew) {
       try {
-        await fetch('/api/player/messages/mark-seen', {
+        const response = await fetch('/api/player/messages/mark-seen', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ messageIds: [selectedMessage.id] })
         })
-        
-        // Update local state
-        setSeenAnnouncements(prev => [...prev, selectedMessage.id])
+
+        if (response.ok) {
+          // Update local state
+          const newSeenAnnouncements = [...seenAnnouncements, selectedMessage.id]
+          setSeenAnnouncements(newSeenAnnouncements)
+          
+          // Update messages to reflect the change
+          setMessages(prevMessages => 
+            prevMessages.map(msg => 
+              msg.id === selectedMessage.id 
+                ? { ...msg, isNew: false }
+                : msg
+            )
+          )
+          
+          // Update session to include the new seen announcements
+          // This will update the badge in the layout
+          await update({
+            ...session,
+            user: {
+              ...session.user,
+              seenAnnouncements: newSeenAnnouncements
+            }
+          })
+
+          // Force router refresh to update the layout badge
+          router.refresh()
+        }
       } catch (error) {
         console.error('Failed to mark message as seen:', error)
       }
