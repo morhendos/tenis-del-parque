@@ -6,13 +6,13 @@ import Image from 'next/image';
 import Navigation from '@/components/common/Navigation';
 import Footer from '@/components/common/Footer';
 import { useParams } from 'next/navigation';
-import { cityInfo } from '@/lib/i18n/config';
+import { cityInfo, i18n } from '@/lib/i18n/config';
 import { multiLeagueHomeContent } from '@/lib/content/multiLeagueHomeContent';
 import { homeContent } from '@/lib/content/homeContent';
 
 // City Card Component
 function CityCard({ city, cityData, content, locale }) {
-  const isAvailable = cityData[locale].status === 'active';
+  const isAvailable = cityData[locale]?.status === 'active';
   const cityContent = content.cities.cityDescriptions[city];
   
   return (
@@ -33,7 +33,7 @@ function CityCard({ city, cityData, content, locale }) {
       {/* City Image */}
       <div className="relative h-48 bg-gradient-to-br from-parque-purple to-parque-green">
         <div className="absolute inset-0 flex items-center justify-center">
-          <h3 className="text-3xl font-bold text-white">{cityData[locale].name}</h3>
+          <h3 className="text-3xl font-bold text-white">{cityData[locale]?.name || cityData[i18n.defaultLocale].name}</h3>
         </div>
       </div>
       
@@ -47,7 +47,7 @@ function CityCard({ city, cityData, content, locale }) {
               <span className="font-semibold text-gray-700">250+</span> {content.cities.playersCount}
             </div>
             <div className="text-sm text-gray-500">
-              {cityData[locale].region}
+              {cityData[locale]?.region || cityData[i18n.defaultLocale].region}
             </div>
           </div>
         )}
@@ -110,19 +110,30 @@ function FeatureCard({ feature }) {
 
 export default function MultiLeagueHomePage() {
   const params = useParams();
-  const locale = params.locale || 'es';
-  const [language, setLanguage] = useState(locale);
+  
+  // Validate and set locale with fallback
+  const rawLocale = params.locale;
+  const validLocale = i18n.locales.includes(rawLocale) ? rawLocale : i18n.defaultLocale;
+  
+  const [language, setLanguage] = useState(validLocale);
   const [isLanguageLoaded, setIsLanguageLoaded] = useState(true);
   
-  const content = multiLeagueHomeContent[locale];
-  const footerContent = homeContent[locale]?.footer;
+  const content = multiLeagueHomeContent[validLocale] || multiLeagueHomeContent[i18n.defaultLocale];
+  const footerContent = homeContent[validLocale]?.footer || homeContent[i18n.defaultLocale]?.footer;
   
-  // Organize cities by status
+  // Organize cities by status with safe access
   const activeCities = Object.entries(cityInfo).filter(
-    ([_, data]) => data[locale].status === 'active'
+    ([_, data]) => {
+      const cityData = data[validLocale] || data[i18n.defaultLocale];
+      return cityData?.status === 'active';
+    }
   );
+  
   const comingSoonCities = Object.entries(cityInfo).filter(
-    ([_, data]) => data[locale].status === 'coming-soon'
+    ([_, data]) => {
+      const cityData = data[validLocale] || data[i18n.defaultLocale];
+      return cityData?.status === 'coming-soon';
+    }
   );
   
   return (
@@ -202,7 +213,7 @@ export default function MultiLeagueHomePage() {
                   city={city}
                   cityData={cityData}
                   content={content}
-                  locale={locale}
+                  locale={validLocale}
                 />
               ))}
             </div>
@@ -221,7 +232,7 @@ export default function MultiLeagueHomePage() {
                     city={city}
                     cityData={cityData}
                     content={content}
-                    locale={locale}
+                    locale={validLocale}
                   />
                 ))}
               </div>
