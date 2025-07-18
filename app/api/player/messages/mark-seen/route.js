@@ -16,11 +16,17 @@ export async function POST(request) {
       )
     }
     
-    const { messageIds } = await request.json()
+    const body = await request.json()
     
-    if (!messageIds || !Array.isArray(messageIds)) {
+    // Support both single messageId and array of messageIds for backward compatibility
+    let messageIds = []
+    if (body.messageId) {
+      messageIds = [body.messageId]
+    } else if (body.messageIds && Array.isArray(body.messageIds)) {
+      messageIds = body.messageIds
+    } else {
       return NextResponse.json(
-        { error: 'Message IDs are required' },
+        { error: 'Message ID(s) are required' },
         { status: 400 }
       )
     }
