@@ -52,15 +52,13 @@ export const authOptions = {
             playerData = await Player.findById(user.playerId)
           }
 
-          // Return user object for JWT
+          // Return user object for JWT - keep it simple!
           return {
             id: user._id.toString(),
             email: user.email,
             role: user.role || 'player',
             name: playerData?.name || user.email.split('@')[0],
-            playerId: user.playerId?.toString() || null,
-            seenAnnouncements: user.preferences?.seenAnnouncements || [],
-            hasSeenWelcomeModal: user.preferences?.hasSeenWelcomeModal || false
+            playerId: user.playerId?.toString() || null
           }
         } catch (error) {
           console.error('Auth error:', error)
@@ -70,43 +68,16 @@ export const authOptions = {
     })
   ],
   callbacks: {
-    async jwt({ token, user, account, trigger, session }) {
+    async jwt({ token, user, account }) {
       // Initial sign in
       if (account && user) {
         return {
           ...token,
           id: user.id,
           role: user.role,
-          playerId: user.playerId,
-          seenAnnouncements: user.seenAnnouncements,
-          hasSeenWelcomeModal: user.hasSeenWelcomeModal
+          playerId: user.playerId
         }
       }
-      
-      // Update token if we update the session
-      if (trigger === "update" && session) {
-        if (session.seenAnnouncements !== undefined) {
-          token.seenAnnouncements = session.seenAnnouncements
-        }
-        if (session.hasSeenWelcomeModal !== undefined) {
-          token.hasSeenWelcomeModal = session.hasSeenWelcomeModal
-        }
-      }
-      
-      // Refresh user data from database on each request
-      if (token.id) {
-        try {
-          await dbConnect()
-          const user = await User.findById(token.id)
-          if (user) {
-            token.seenAnnouncements = user.preferences?.seenAnnouncements || []
-            token.hasSeenWelcomeModal = user.preferences?.hasSeenWelcomeModal || false
-          }
-        } catch (error) {
-          console.error('Error refreshing user data:', error)
-        }
-      }
-      
       return token
     },
     async session({ session, token }) {
@@ -114,14 +85,12 @@ export const authOptions = {
       session.user.id = token.id
       session.user.role = token.role
       session.user.playerId = token.playerId
-      session.user.seenAnnouncements = token.seenAnnouncements || []
-      session.user.hasSeenWelcomeModal = token.hasSeenWelcomeModal || false
       return session
     }
   },
   pages: {
     signIn: '/login',
-    error: '/login', // Error code passed in query string as ?error=
+    error: '/login',
   },
   session: {
     strategy: 'jwt',
