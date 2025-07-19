@@ -42,18 +42,15 @@ export async function POST(request) {
       )
     }
 
-    // Initialize preferences if not exists
-    if (!user.preferences) {
-      user.preferences = {}
-    }
-    if (!user.preferences.seenAnnouncements) {
-      user.preferences.seenAnnouncements = []
+    // Initialize seenAnnouncements if not exists
+    if (!user.seenAnnouncements) {
+      user.seenAnnouncements = []
     }
 
     // Add message IDs to seen announcements
     for (const messageId of messageIds) {
-      if (!user.preferences.seenAnnouncements.includes(messageId)) {
-        user.preferences.seenAnnouncements.push(messageId)
+      if (!user.seenAnnouncements.includes(messageId)) {
+        user.seenAnnouncements.push(messageId)
       }
     }
 
@@ -62,7 +59,7 @@ export async function POST(request) {
 
     return NextResponse.json({ 
       success: true,
-      seenAnnouncements: user.preferences.seenAnnouncements
+      seenAnnouncements: user.seenAnnouncements
     })
   } catch (error) {
     console.error('Error marking messages as seen:', error)
