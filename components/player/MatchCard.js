@@ -9,6 +9,7 @@ export default function MatchCard({
   onWhatsApp,
   isUpcoming = true,
   showActions = true,
+  isPublic = false,
   className = ''
 }) {
   const [isExpanded, setIsExpanded] = useState(false)
@@ -55,7 +56,7 @@ export default function MatchCard({
 
   // Determine the score display for completed matches
   let myScore, opponentScore
-  if (!isUpcoming && match.result?.score?.sets) {
+  if (!isUpcoming && match.result?.score?.sets && player) {
     const isPlayer1 = match.players.player1._id === player._id
     myScore = match.result.score.sets.filter((set) => 
       isPlayer1 ? set.player1 > set.player2 : set.player2 > set.player1
@@ -63,14 +64,19 @@ export default function MatchCard({
     opponentScore = match.result.score.sets.length - myScore
   }
 
+  // For public view, always show match details
+  const showDetails = isPublic || isExpanded || !isUpcoming
+
   return (
     <div 
       className={`bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all hover:shadow-lg ${className}`}
-      onClick={() => showActions && isUpcoming && setIsExpanded(!isExpanded)}
+      onClick={() => !isPublic && showActions && isUpcoming && setIsExpanded(!isExpanded)}
     >
       {/* Match Header */}
       <div className={`p-4 ${
-        isUpcoming 
+        isPublic || !player
+          ? 'bg-gradient-to-r from-gray-50 to-gray-100'
+          : isUpcoming 
           ? 'bg-gradient-to-r from-blue-50 to-indigo-50' 
           : isWinner 
           ? 'bg-gradient-to-r from-green-50 to-emerald-50' 
@@ -79,7 +85,9 @@ export default function MatchCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-md ${
-              isUpcoming 
+              isPublic || !player
+                ? 'bg-gradient-to-br from-gray-400 to-gray-600'
+                : isUpcoming 
                 ? 'bg-gradient-to-br from-parque-purple to-purple-700' 
                 : isWinner 
                 ? 'bg-gradient-to-br from-green-500 to-emerald-600' 
@@ -94,17 +102,33 @@ export default function MatchCard({
                 {language === 'es' ? 'Ronda' : 'Round'} {match.round}
               </h3>
               <div className="text-sm text-gray-700 font-medium mt-1">
-                <span className={isUpcoming ? 'text-parque-purple' : isWinner ? 'text-green-600' : 'text-red-600'}>
-                  {player?.name || 'You'}
-                </span>
-                <span className="mx-2 text-gray-500">vs</span>
-                <span className={!isUpcoming && !isWinner ? 'text-green-600' : 'text-gray-900'}>
-                  {opponent?.name || 'TBD'}
-                </span>
+                {isPublic || !player ? (
+                  // Public view: show both players equally
+                  <>
+                    <span className="text-gray-900">
+                      {match.players?.player1?.name || 'TBD'}
+                    </span>
+                    <span className="mx-2 text-gray-500">vs</span>
+                    <span className="text-gray-900">
+                      {match.players?.player2?.name || 'TBD'}
+                    </span>
+                  </>
+                ) : (
+                  // Player view: highlight player vs opponent
+                  <>
+                    <span className={isUpcoming ? 'text-parque-purple' : isWinner ? 'text-green-600' : 'text-red-600'}>
+                      {player?.name || 'You'}
+                    </span>
+                    <span className="mx-2 text-gray-500">vs</span>
+                    <span className={!isUpcoming && !isWinner ? 'text-green-600' : 'text-gray-900'}>
+                      {opponent?.name || 'TBD'}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
           </div>
-          {!isUpcoming && (
+          {!isUpcoming && !isPublic && player && (
             <div className="text-right">
               <div className="text-2xl font-bold text-gray-900">
                 {myScore !== undefined ? `${myScore} - ${opponentScore}` : 'N/A'}
@@ -130,7 +154,7 @@ export default function MatchCard({
               </div>
             </div>
           )}
-          {isUpcoming && showActions && (
+          {isUpcoming && showActions && !isPublic && (
             <svg 
               className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
               fill="none" 
@@ -143,8 +167,8 @@ export default function MatchCard({
         </div>
       </div>
 
-      {/* Match Details - Show when expanded or for completed matches */}
-      {(isExpanded || !isUpcoming) && (
+      {/* Match Details - Show when expanded or for completed matches or public view */}
+      {showDetails && (
         <div className="p-4">
           {/* Schedule information for upcoming matches */}
           {isUpcoming && match.schedule?.confirmedDate ? (
@@ -193,6 +217,34 @@ export default function MatchCard({
                     </div>
                   </div>
                 )}
+                
+                {match.schedule.club && (
+                  <div className="flex items-center space-x-2 bg-white rounded-lg p-3">
+                    <span className="text-xl">🏟️</span>
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {match.schedule.club}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {language === 'es' ? 'Club' : 'Club'}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
+                {(match.schedule.court || match.schedule.courtNumber) && (
+                  <div className="flex items-center space-x-2 bg-white rounded-lg p-3">
+                    <span className="text-xl">🎾</span>
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {match.schedule.court || `${language === 'es' ? 'Pista' : 'Court'} ${match.schedule.courtNumber || ''}`}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {language === 'es' ? 'Pista' : 'Court'}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ) : isUpcoming && match.schedule?.deadline ? (
@@ -215,7 +267,7 @@ export default function MatchCard({
           ) : null}
 
           {/* Set details for completed matches */}
-          {!isUpcoming && match.result?.score?.sets && (
+          {!isUpcoming && match.result?.score?.sets && !isPublic && player && (
             <div className="bg-gray-50 rounded-lg p-3">
               <h4 className="text-sm font-medium text-gray-700 mb-2">
                 {language === 'es' ? 'Detalle de Sets' : 'Set Details'}
@@ -247,8 +299,8 @@ export default function MatchCard({
             </div>
           )}
 
-          {/* Action buttons for upcoming matches - ALWAYS SHOW 3 BUTTONS */}
-          {isUpcoming && showActions && isExpanded && (
+          {/* Action buttons for upcoming matches - Only show for logged in players */}
+          {isUpcoming && showActions && isExpanded && !isPublic && (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
               <button
                 onClick={(e) => {
