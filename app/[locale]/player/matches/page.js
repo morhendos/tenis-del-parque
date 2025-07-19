@@ -127,15 +127,40 @@ export default function PlayerMatches() {
         setMatches(prevMatches => 
           prevMatches.map(match => {
             if (match._id === data.matchId) {
-              // Update match to completed status
+              // Determine if current player is player1 or player2
+              const isPlayer1 = match.players.player1._id === player._id
+              
+              // Transform the sets data from myScore/opponentScore to player1/player2
+              const transformedSets = data.sets.map(set => ({
+                player1: isPlayer1 ? set.myScore : set.opponentScore,
+                player2: isPlayer1 ? set.opponentScore : set.myScore
+              }))
+              
+              // Calculate who won based on sets
+              let mySetWins = 0
+              let oppSetWins = 0
+              transformedSets.forEach(set => {
+                if (isPlayer1) {
+                  if (set.player1 > set.player2) mySetWins++
+                  else oppSetWins++
+                } else {
+                  if (set.player2 > set.player1) mySetWins++
+                  else oppSetWins++
+                }
+              })
+              
+              const winnerId = mySetWins > oppSetWins ? player._id : 
+                              (isPlayer1 ? match.players.player2._id : match.players.player1._id)
+              
+              // Update match to completed status with properly formatted data
               return {
                 ...match,
                 status: 'completed',
                 result: {
                   ...match.result,
-                  winner: result.winnerId,
+                  winner: winnerId,
                   score: {
-                    sets: data.sets,
+                    sets: transformedSets,
                     walkover: data.walkover
                   },
                   playedAt: new Date().toISOString()
