@@ -30,12 +30,11 @@ export default function PlayerLayout({ children }) {
       if (session?.user) {
         setUser(session.user)
         
-        // Fetch player profile to get the latest seenAnnouncements
+        // Fetch user preferences to get the latest seenAnnouncements
         try {
-          const profileResponse = await fetch('/api/player/profile')
-          if (profileResponse.ok) {
-            const profileData = await profileResponse.json()
-            setPlayerData(profileData)
+          const preferencesResponse = await fetch('/api/player/preferences')
+          if (preferencesResponse.ok) {
+            const preferencesData = await preferencesResponse.json()
             
             // Check for new announcements
             const allAnnouncementIds = [
@@ -43,21 +42,22 @@ export default function PlayerLayout({ children }) {
               announcementContent.firstRoundMatch.id
             ]
             
-            const seenAnnouncements = profileData.user?.preferences?.seenAnnouncements || []
+            const seenAnnouncements = preferencesData.seenAnnouncements || []
             const hasUnseen = allAnnouncementIds.some(id => !seenAnnouncements.includes(id))
             
             setHasNewAnnouncement(hasUnseen)
           }
+          
+          // Also fetch player profile for name display
+          const profileResponse = await fetch('/api/player/profile')
+          if (profileResponse.ok) {
+            const profileData = await profileResponse.json()
+            setPlayerData(profileData)
+          }
         } catch (error) {
-          console.error('Error fetching player data:', error)
-          // Fallback to session data
-          const seenAnnouncements = session.user?.seenAnnouncements || []
-          const allAnnouncementIds = [
-            announcementContent.firstRoundDelay.id,
-            announcementContent.firstRoundMatch.id
-          ]
-          const hasUnseen = allAnnouncementIds.some(id => !seenAnnouncements.includes(id))
-          setHasNewAnnouncement(hasUnseen)
+          console.error('Error fetching user data:', error)
+          // Don't fall back to session data since it doesn't contain seenAnnouncements anymore
+          setHasNewAnnouncement(false)
         }
       }
     } finally {
