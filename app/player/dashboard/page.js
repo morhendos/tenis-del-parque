@@ -45,64 +45,94 @@ export default function PlayerDashboard() {
         
         // Get user preferences to check seen announcements
         const prefsResponse = await fetch('/api/player/preferences')
+        let seenAnnouncements = []
         if (prefsResponse.ok) {
           const prefs = await prefsResponse.json()
+          seenAnnouncements = prefs.seenAnnouncements || []
+        }
+        
+        // Get matches
+        const matchesResponse = await fetch('/api/player/matches')
+        if (matchesResponse.ok) {
+          const matchesData = await matchesResponse.json()
+          const matches = matchesData.matches || []
+          const playerId = profileData.player._id
           
-          // Check for matches
-          const matchesResponse = await fetch('/api/player/matches')
-          if (matchesResponse.ok) {
-            const matchesData = await matchesResponse.json()
-            const matches = matchesData.matches || []
+          // Process matches to separate recent and upcoming
+          const processedMatches = matches.map(match => {
+            const isPlayer1 = match.players.player1._id === playerId
+            const opponent = isPlayer1 ? match.players.player2 : match.players.player1
             
-            // Process matches to separate recent and upcoming
-            const processedMatches = matches.map(match => {
-              const isPlayer1 = match.players.player1._id === profileData.player._id
-              const opponent = isPlayer1 ? match.players.player2 : match.players.player1
+            const baseMatch = {
+              _id: match._id,
+              round: match.round,
+              opponent: opponent.name,
+              opponentId: opponent._id,
+              opponentWhatsapp: opponent.whatsapp
+            }
+            
+            if (match.status === 'completed' && match.result && match.result.winner) {
+              // Recent match
+              const isWinner = match.result.winner === playerId
               
-              // Calculate if match is won/lost
-              let result = null
-              let eloChange = null
-              
-              if (match.result && match.result.winner) {
-                const isWinner = match.result.winner === profileData.player._id
-                result = isWinner ? 'won' : 'lost'
-                
-                // Calculate ELO change if available
-                if (match.result.player1EloAfter && match.result.player2EloAfter) {
-                  const playerEloBefore = isPlayer1 ? match.result.player1EloBefore : match.result.player2EloBefore
-                  const playerEloAfter = isPlayer1 ? match.result.player1EloAfter : match.result.player2EloAfter
-                  eloChange = playerEloAfter - playerEloBefore
+              // Extract ELO change from the correct structure
+              let eloChange = 0
+              if (match.eloChanges) {
+                if (isPlayer1 && match.eloChanges.player1) {
+                  eloChange = match.eloChanges.player1.change || 0
+                } else if (!isPlayer1 && match.eloChanges.player2) {
+                  eloChange = match.eloChanges.player2.change || 0
                 }
               }
               
               return {
-                _id: match._id,
-                round: match.round,
-                opponent: opponent.name,
-                opponentId: opponent._id,
-                opponentWhatsapp: opponent.whatsapp,
-                scheduled: match.scheduledDate,
-                date: match.scheduledDate ? new Date(match.scheduledDate).toLocaleDateString() : null,
-                result: result,
+                ...baseMatch,
+                type: 'recent',
+                result: isWinner ? 'won' : 'lost',
                 eloChange: eloChange,
-                completed: match.status === 'completed',
-                score: match.result?.score
+                playedAt: match.result.playedAt || match.updatedAt,
+                score: match.result.score
               }
-            })
-            
-            // Separate into recent (completed) and upcoming matches
-            const recent = processedMatches.filter(m => m.completed).slice(0, 5)
-            const upcoming = processedMatches.filter(m => !m.completed)
-            
-            setRecentMatches(recent)
-            setUpcomingMatches(upcoming)
-            
-            // Check for first round announcement
-            const firstRound = matches.find(match => match.round === 1)
-            if (firstRound && !prefs.seenAnnouncements?.includes('first-round-match-2025')) {
-              setFirstRoundMatch(firstRound)
-              setShowFirstRoundAnnouncement(true)
+            } else {
+              // Upcoming match
+              return {
+                ...baseMatch,
+                type: 'upcoming',
+                scheduled: !!(match.schedule && match.schedule.confirmedDate),
+                date: match.schedule?.confirmedDate 
+                  ? new Date(match.schedule.confirmedDate).toLocaleDateString() 
+                  : null,
+                status: match.status
+              }
             }
+          })
+          
+          // Separate and sort matches
+          const recent = processedMatches
+            .filter(m => m.type === 'recent')
+            .sort((a, b) => new Date(b.playedAt) - new Date(a.playedAt))
+            .slice(0, 5) // Limit to 5 most recent
+          
+          const upcoming = processedMatches
+            .filter(m => m.type === 'upcoming')
+            .sort((a, b) => {
+              // Sort by confirmed date first, then by round
+              if (a.scheduled && b.scheduled) {
+                return new Date(a.date) - new Date(b.date)
+              }
+              if (a.scheduled) return -1
+              if (b.scheduled) return 1
+              return a.round - b.round
+            })
+          
+          setRecentMatches(recent)
+          setUpcomingMatches(upcoming)
+          
+          // Check for first round announcement
+          const firstRound = matches.find(match => match.round === 1)
+          if (firstRound && !seenAnnouncements.includes('first-round-match-2025')) {
+            setFirstRoundMatch(firstRound)
+            setShowFirstRoundAnnouncement(true)
           }
         }
       }
