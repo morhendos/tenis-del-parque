@@ -41,8 +41,13 @@ export default function MessagesPage() {
       if (profileResponse.ok) {
         const profileData = await profileResponse.json()
         setPlayer(profileData.player)
-        const userSeenAnnouncements = profileData.user?.preferences?.seenAnnouncements || []
-        setSeenAnnouncements(userSeenAnnouncements)
+        
+        // Get user preferences including seenAnnouncements
+        const preferencesResponse = await fetch('/api/player/preferences')
+        if (preferencesResponse.ok) {
+          const preferencesData = await preferencesResponse.json()
+          setSeenAnnouncements(preferencesData.seenAnnouncements || [])
+        }
         
         // Check for first round matches
         const matchesResponse = await fetch('/api/player/matches')
