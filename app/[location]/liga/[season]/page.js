@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import Navigation from '../../../../components/common/Navigation'
 import Footer from '../../../../components/common/Footer'
@@ -372,6 +372,10 @@ export default function LeagueSeasonPage() {
   const [currentRound, setCurrentRound] = useState(1)
   const [totalRounds, setTotalRounds] = useState(8) // Default from league config
   const [viewMode, setViewMode] = useState('byRound') // 'byRound' or 'all'
+  const [matchFilters, setMatchFilters] = useState({
+    search: '',
+    round: 'all'
+  })
 
   const t = homeContent[language]
 
@@ -506,6 +510,35 @@ console.log("standings")
     })
     return matchesByRound
   }
+
+  // Get unique rounds from matches for filter
+  const matchRounds = useMemo(() => {
+    const uniqueRounds = [...new Set(matches.map(match => match.round))].sort((a, b) => b - a)
+    return uniqueRounds
+  }, [matches])
+
+  // Filter matches based on search and round
+  const filteredMatches = useMemo(() => {
+    return matches.filter(match => {
+      // Search filter
+      if (matchFilters.search) {
+        const searchLower = matchFilters.search.toLowerCase()
+        const player1Name = match.players.player1?.name?.toLowerCase() || ''
+        const player2Name = match.players.player2?.name?.toLowerCase() || ''
+        
+        if (!player1Name.includes(searchLower) && !player2Name.includes(searchLower)) {
+          return false
+        }
+      }
+
+      // Round filter
+      if (matchFilters.round !== 'all' && match.round !== parseInt(matchFilters.round)) {
+        return false
+      }
+
+      return true
+    })
+  }, [matches, matchFilters])
 
   // Format date for display
   const formatDateForDisplay = (date, showTime = false) => {
@@ -953,9 +986,54 @@ console.log("standings")
                 {language === 'es' ? 'Partidos Recientes' : 'Recent Matches'}
               </h2>
               
-              {matches && matches.length > 0 ? (
+              {/* Filters Section */}
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Search Input */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {language === 'es' ? 'Buscar Jugadores' : 'Search Players'}
+                    </label>
+                    <input
+                      type="text"
+                      value={matchFilters.search}
+                      onChange={(e) => setMatchFilters({ ...matchFilters, search: e.target.value })}
+                      placeholder={language === 'es' ? 'Buscar por nombre de jugador...' : 'Search by player name...'}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-transparent"
+                    />
+                  </div>
+                  
+                  {/* Round Filter */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {language === 'es' ? 'Ronda' : 'Round'}
+                    </label>
+                    <select
+                      value={matchFilters.round}
+                      onChange={(e) => setMatchFilters({ ...matchFilters, round: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-transparent"
+                    >
+                      <option value="all">
+                        {language === 'es' ? 'Todas las Rondas' : 'All Rounds'}
+                      </option>
+                      {matchRounds.map(round => (
+                        <option key={round} value={round}>
+                          {language === 'es' ? `Ronda ${round}` : `Round ${round}`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              {filteredMatches && filteredMatches.length > 0 ? (
                 <div className="space-y-4">
-                  {matches.map((match) => (
+                  <div className="text-sm text-gray-600 mb-2">
+                    {language === 'es' 
+                      ? `Mostrando ${filteredMatches.length} de ${matches.length} partidos`
+                      : `Showing ${filteredMatches.length} of ${matches.length} matches`}
+                  </div>
+                  {filteredMatches.map((match) => (
                     <div key={match._id} className="border rounded-lg p-6 hover:shadow-md transition-shadow">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
@@ -1021,6 +1099,21 @@ console.log("standings")
                       </div>
                     </div>
                   ))}
+                </div>
+              ) : filteredMatches && filteredMatches.length === 0 && matches.length > 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <span className="text-4xl mb-4 block">🔍</span>
+                  <p className="mb-2">
+                    {language === 'es' 
+                      ? 'No se encontraron partidos con los filtros seleccionados.'
+                      : 'No matches found with the selected filters.'}
+                  </p>
+                  <button
+                    onClick={() => setMatchFilters({ search: '', round: 'all' })}
+                    className="text-parque-purple hover:underline"
+                  >
+                    {language === 'es' ? 'Limpiar filtros' : 'Clear filters'}
+                  </button>
                 </div>
               ) : (
                 <div className="text-center py-12 text-gray-500">
@@ -1245,86 +1338,6 @@ console.log("standings")
                 )}
               </div>
             )}
-            
-            {/* Match Status */}
-            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-              <div className="flex items-center space-x-2">
-                <div className={`w-3 h-3 rounded-full ${
-                  match.status === 'scheduled' ? 'bg-blue-500' :
-                  match.status === 'in_progress' ? 'bg-yellow-500' :
-                  'bg-gray-500'
-                }`}></div>
-                <span className="text-sm font-medium text-gray-700">
-                  {match.status === 'scheduled' ? 
-                    (language === 'es' ? 'Programado' : 'Scheduled') :
-                    match.status === 'in_progress' ? 
-                    (language === 'es' ? 'En progreso' : 'In Progress') :
-                    match.status
-                  }
-                </span>
-              </div>
-              
-              {match.schedule?.confirmedDate && (
-                <div className="text-sm text-gray-500">
-                  {language === 'es' ? 'Confirmado' : 'Confirmed'} ✓
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    )
-  }
-
-  // Helper function to render matches
-  function renderMatches(matchList) {
-    return (
-      <div className="space-y-6">
-        {matchList.map((match) => (
-          <div key={match._id} className="bg-white border-2 border-gray-100 rounded-xl p-6 hover:shadow-lg hover:border-parque-purple/20 transition-all duration-200">
-            {/* Match Players */}
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center mb-6">
-              {/* Player 1 */}
-              <div className="md:col-span-2">
-                <div className="flex items-center space-x-3 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg">
-                  <div className="w-12 h-12 rounded-full bg-parque-purple text-white flex items-center justify-center text-lg font-bold">
-                    {match.players?.player1?.name?.charAt(0) || '?'}
-                  </div>
-                  <div>
-                    <div className="font-bold text-gray-900 text-lg">
-                      {match.players?.player1?.name || 'TBD'}
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {language === 'es' ? 'Jugador 1' : 'Player 1'}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* VS */}
-              <div className="text-center">
-                <div className="bg-parque-purple/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto">
-                  <span className="text-2xl font-bold text-parque-purple">vs</span>
-                </div>
-              </div>
-              
-              {/* Player 2 */}
-              <div className="md:col-span-2">
-                <div className="flex items-center space-x-3 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg">
-                  <div className="w-12 h-12 rounded-full bg-parque-purple text-white flex items-center justify-center text-lg font-bold">
-                    {match.players?.player2?.name?.charAt(0) || '?'}
-                  </div>
-                  <div>
-                    <div className="font-bold text-gray-900 text-lg">
-                      {match.players?.player2?.name || 'TBD'}
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {language === 'es' ? 'Jugador 2' : 'Player 2'}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
             
             {/* Match Status */}
             <div className="flex items-center justify-between pt-4 border-t border-gray-100">
