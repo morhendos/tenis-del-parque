@@ -112,6 +112,9 @@ export default function PlayerDashboard() {
           const matches = matchesData.matches || []
           const playerId = profileData.player._id
           
+          console.log('Fetched matches:', matches.length, 'matches')
+          console.log('Player ID:', playerId)
+          
           // Calculate stats from matches (single source of truth)
           let stats = {
             matchesPlayed: 0,
@@ -124,6 +127,13 @@ export default function PlayerDashboard() {
           const processedMatches = matches.map(match => {
             const isPlayer1 = match.players.player1._id === playerId
             const opponent = isPlayer1 ? match.players.player2 : match.players.player1
+            
+            console.log(`Processing match round ${match.round}:`, {
+              status: match.status,
+              hasResult: !!match.result,
+              hasWinner: match.result?.winner,
+              scheduled: match.schedule?.confirmedDate
+            })
             
             const baseMatch = {
               _id: match._id,
@@ -145,6 +155,12 @@ export default function PlayerDashboard() {
               // Calculate points for this match
               const points = calculatePointsFromMatch(match, playerId)
               stats.totalPoints += points
+              
+              console.log(`Match round ${match.round} completed:`, {
+                isWinner,
+                points,
+                totalPoints: stats.totalPoints
+              })
               
               // Extract ELO change
               let eloChange = 0
@@ -180,6 +196,7 @@ export default function PlayerDashboard() {
           
           // Update calculated stats
           setCalculatedStats(stats)
+          console.log('Calculated stats:', stats)
           
           // Separate and sort matches
           const recent = processedMatches
@@ -198,6 +215,9 @@ export default function PlayerDashboard() {
               return a.round - b.round
             })
           
+          console.log('Recent matches:', recent.length)
+          console.log('Upcoming matches:', upcoming.length)
+          
           setRecentMatches(recent)
           setUpcomingMatches(upcoming)
           
@@ -207,7 +227,11 @@ export default function PlayerDashboard() {
             setFirstRoundMatch(firstRound)
             setShowFirstRoundAnnouncement(true)
           }
+        } else {
+          console.error('Failed to fetch matches:', matchesResponse.status)
         }
+      } else {
+        console.error('Failed to fetch profile:', profileResponse.status)
       }
     } catch (error) {
       console.error('Error fetching data:', error)
