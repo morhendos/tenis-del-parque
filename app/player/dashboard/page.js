@@ -23,8 +23,8 @@ export default function PlayerDashboard() {
   const [loading, setLoading] = useState(true)
   const [showFirstRoundAnnouncement, setShowFirstRoundAnnouncement] = useState(false)
   const [firstRoundMatch, setFirstRoundMatch] = useState(null)
-  const [recentMatches] = useState([])
-  const [upcomingMatches] = useState([])
+  const [recentMatches, setRecentMatches] = useState([])
+  const [upcomingMatches, setUpcomingMatches] = useState([])
 
   useEffect(() => {
     if (status === 'loading') return
@@ -48,12 +48,57 @@ export default function PlayerDashboard() {
         if (prefsResponse.ok) {
           const prefs = await prefsResponse.json()
           
-          // Check for first round matches
+          // Check for matches
           const matchesResponse = await fetch('/api/player/matches')
           if (matchesResponse.ok) {
             const matchesData = await matchesResponse.json()
-            const firstRound = matchesData.matches?.find(match => match.round === 1)
+            const matches = matchesData.matches || []
             
+            // Process matches to separate recent and upcoming
+            const processedMatches = matches.map(match => {
+              const isPlayer1 = match.players.player1._id === profileData.player._id
+              const opponent = isPlayer1 ? match.players.player2 : match.players.player1
+              
+              // Calculate if match is won/lost
+              let result = null
+              let eloChange = null
+              
+              if (match.result && match.result.winner) {
+                const isWinner = match.result.winner === profileData.player._id
+                result = isWinner ? 'won' : 'lost'
+                
+                // Calculate ELO change if available
+                if (match.result.player1EloAfter && match.result.player2EloAfter) {
+                  const playerEloBefore = isPlayer1 ? match.result.player1EloBefore : match.result.player2EloBefore
+                  const playerEloAfter = isPlayer1 ? match.result.player1EloAfter : match.result.player2EloAfter
+                  eloChange = playerEloAfter - playerEloBefore
+                }
+              }
+              
+              return {
+                _id: match._id,
+                round: match.round,
+                opponent: opponent.name,
+                opponentId: opponent._id,
+                opponentWhatsapp: opponent.whatsapp,
+                scheduled: match.scheduledDate,
+                date: match.scheduledDate ? new Date(match.scheduledDate).toLocaleDateString() : null,
+                result: result,
+                eloChange: eloChange,
+                completed: match.status === 'completed',
+                score: match.result?.score
+              }
+            })
+            
+            // Separate into recent (completed) and upcoming matches
+            const recent = processedMatches.filter(m => m.completed).slice(0, 5)
+            const upcoming = processedMatches.filter(m => !m.completed)
+            
+            setRecentMatches(recent)
+            setUpcomingMatches(upcoming)
+            
+            // Check for first round announcement
+            const firstRound = matches.find(match => match.round === 1)
             if (firstRound && !prefs.seenAnnouncements?.includes('first-round-match-2025')) {
               setFirstRoundMatch(firstRound)
               setShowFirstRoundAnnouncement(true)
