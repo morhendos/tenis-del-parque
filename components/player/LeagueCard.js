@@ -6,7 +6,15 @@ export default function LeagueCard({ player, language }) {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden transform transition-all hover:shadow-xl animate-scale-in" style={{ animationDelay: '0.5s' }}>
+    <div 
+      className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden transform transition-all hover:shadow-xl animate-scale-in" 
+      style={{ 
+        animationDelay: '0.5s',
+        animationFillMode: 'both',
+        opacity: 0,
+        transform: 'scale(0.9)'
+      }}
+    >
       <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4">
         <h2 className="text-lg font-semibold text-white flex items-center">
           <span className="text-2xl mr-2">🏆</span>
