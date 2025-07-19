@@ -1,4 +1,12 @@
-export default function EloHeroSection({ title, subtitle }) {
+export default function EloHeroSection({ content }) {
+  // Handle both old prop structure and new content object structure
+  const title = content?.title || ''
+  const subtitle = content?.subtitle || ''
+  
+  if (!content) {
+    return null
+  }
+  
   return (
     <section className="relative pt-32 pb-20 overflow-hidden">
       <div className="absolute inset-0">
@@ -18,4 +26,4 @@ export default function EloHeroSection({ title, subtitle }) {
       </div>
     </section>
   )
-} 
+}

@@ -1,12 +1,52 @@
 root/
 ├── README.md
 ├── app
-│   ├── [location]
-│   │   └── liga
-│   │       └── [season]
-│   │           └── page.js
-│   ├── activate
-│   │   └── page.js
+│   ├── [locale]
+│   │   ├── [location]
+│   │   │   └── liga
+│   │   │       └── [season]
+│   │   │           └── page.js
+│   │   ├── activate
+│   │   │   └── page.js
+│   │   ├── elo
+│   │   │   └── page.js
+│   │   ├── layout.js
+│   │   ├── leagues
+│   │   │   └── page.js
+│   │   ├── ligas
+│   │   │   └── page.js
+│   │   ├── login
+│   │   │   └── page.js
+│   │   ├── not-found.js
+│   │   ├── page.js
+│   │   ├── player
+│   │   │   ├── dashboard
+│   │   │   │   └── page.js
+│   │   │   ├── layout.js
+│   │   │   ├── league
+│   │   │   │   └── page.js
+│   │   │   ├── matches
+│   │   │   │   └── page.js
+│   │   │   ├── messages
+│   │   │   │   └── page.js
+│   │   │   ├── page.js
+│   │   │   ├── profile
+│   │   │   │   └── page.js
+│   │   │   └── rules
+│   │   │       └── page.js
+│   │   ├── registro
+│   │   │   └── [ciudad]
+│   │   │       └── page.js
+│   │   ├── reglas
+│   │   │   ├── RulesPageContent.js
+│   │   │   └── page.js
+│   │   ├── rules
+│   │   │   └── page.js
+│   │   ├── signup
+│   │   │   └── [city]
+│   │   │       └── page.js
+│   │   └── swiss
+│   │       └── page.js
 │   ├── admin
 │   │   ├── README.md
 │   │   ├── dashboard
@@ -33,16 +73,13 @@ root/
 │   │   └── page.js
 │   ├── api
 │   │   ├── admin
-│   │   │   ├── auth
-│   │   │   │   ├── check
-│   │   │   │   │   └── route.js
-│   │   │   │   ├── login
-│   │   │   │   │   └── route.js
-│   │   │   │   └── logout
-│   │   │   │       └── route.js
 │   │   │   ├── dashboard
 │   │   │   │   └── route.js
 │   │   │   ├── leagues
+│   │   │   │   ├── export
+│   │   │   │   │   └── route.js
+│   │   │   │   ├── import
+│   │   │   │   │   └── route.js
 │   │   │   │   └── route.js
 │   │   │   ├── matches
 │   │   │   │   ├── [id]
@@ -75,13 +112,9 @@ root/
 │   │   │       │   └── route.js
 │   │   │       └── route.js
 │   │   ├── auth
-│   │   │   ├── activate
+│   │   │   ├── [...nextauth]
 │   │   │   │   └── route.js
-│   │   │   ├── check
-│   │   │   │   └── route.js
-│   │   │   ├── login
-│   │   │   │   └── route.js
-│   │   │   └── logout
+│   │   │   └── activate
 │   │   │       └── route.js
 │   │   ├── leagues
 │   │   │   ├── [league]
@@ -99,8 +132,11 @@ root/
 │   │   │   │   └── schedule
 │   │   │   │       └── route.js
 │   │   │   ├── messages
-│   │   │   │   └── mark-seen
-│   │   │   │       └── route.js
+│   │   │   │   ├── mark-seen
+│   │   │   │   │   └── route.js
+│   │   │   │   └── route.js
+│   │   │   ├── preferences
+│   │   │   │   └── route.js
 │   │   │   └── profile
 │   │   │       └── route.js
 │   │   ├── players
@@ -108,44 +144,21 @@ root/
 │   │   │       └── route.js
 │   │   └── seed-leagues
 │   │       └── route.js
-│   ├── elo
-│   │   ├── layout.js
-│   │   └── page.js
 │   ├── globals.css
 │   ├── layout.js
-│   ├── leagues
-│   │   └── page.js
-│   ├── login
-│   │   └── page.js
-│   ├── page.js
 │   ├── player
 │   │   ├── dashboard
 │   │   │   └── page.js
-│   │   ├── layout.js
-│   │   ├── league
-│   │   │   └── page.js
-│   │   ├── matches
-│   │   │   └── page.js
-│   │   ├── messages
-│   │   │   └── page.js
-│   │   ├── page.js
-│   │   ├── profile
-│   │   │   └── page.js
-│   │   └── rules
+│   │   └── messages
 │   │       └── page.js
-│   ├── rules
-│   │   ├── layout.js
-│   │   └── page.js
-│   ├── signup
-│   │   └── [league]
-│   │       └── page.js
-│   ├── sotogrande
-│   │   └── page.js
-│   └── swiss
-│       ├── layout.js
-│       └── page.js
+│   ├── providers.js
+│   └── signup
+│       └── [league]
+│           └── page.js
 ├── components
 │   ├── admin
+│   │   ├── leagues
+│   │   │   └── ImportCSVModal.js
 │   │   ├── matches
 │   │   │   ├── MatchCard.js
 │   │   │   ├── MatchDetailHeader.js
@@ -171,6 +184,7 @@ root/
 │   │   └── MicrosoftClarity.js
 │   ├── common
 │   │   ├── Footer.js
+│   │   ├── LanguageSwitcher.js
 │   │   └── Navigation.js
 │   ├── elo
 │   │   ├── EloCTASection.js
@@ -186,6 +200,8 @@ root/
 │   │   ├── SignupSection.js
 │   │   └── TestimonialsSection.js
 │   ├── layout
+│   ├── league
+│   │   └── ScoringSystem.js
 │   ├── player
 │   │   ├── DashboardHeader.js
 │   │   ├── LeagueCard.js
@@ -217,13 +233,23 @@ root/
 │   ├── MATCH_MANAGEMENT_GUIDE.md
 │   ├── MOBILE_UI_IMPROVEMENTS.md
 │   ├── MOBILE_UI_UX_IMPROVEMENTS.md
+│   ├── NEXTAUTH_CLEANUP.md
+│   ├── NEXTAUTH_MIGRATION_PLAN.md
 │   ├── PLAYER_MATCH_IMPROVEMENTS.md
 │   ├── PLAYER_MESSAGES_SYSTEM.md
 │   ├── PR_MATCH_MANAGEMENT.md
-│   └── SEO Strategy
+│   ├── PR_MULTILINGUAL_IMPLEMENTATION.md
+│   ├── SCORING_SYSTEM_INTEGRATION.md
+│   ├── SEO Strategy
+│   ├── SEO_IMPLEMENTATION_PLAN.md
+│   └── STRATEGY_TO_GET_75_FIRST_USERS.md
+├── jsconfig.json
 ├── lib
 │   ├── analytics
 │   │   └── analytics.js
+│   ├── auth
+│   │   └── apiAuth.js
+│   ├── auth.js
 │   ├── constants
 │   │   └── leagueConstants.js
 │   ├── content
@@ -232,6 +258,7 @@ root/
 │   │   ├── eloContent.js
 │   │   ├── homeContent.js
 │   │   ├── loginContent.js
+│   │   ├── multiLeagueHomeContent.js
 │   │   ├── rulesContent.js
 │   │   ├── swissContent.js
 │   │   └── welcomeContent.js
@@ -242,23 +269,24 @@ root/
 │   │   └── mongoose.js
 │   ├── hooks
 │   │   ├── useActiveSection.js
+│   │   ├── useAuth.js
 │   │   ├── useLanguage.js
 │   │   ├── useLeagueData.js
+│   │   ├── useLeaguesData.js
+│   │   ├── useLocale.js
 │   │   ├── useMatchDetail.js
 │   │   ├── usePlayerDashboard.js
 │   │   ├── usePlayersData.js
 │   │   └── useWelcomeModal.js
+│   ├── i18n
+│   │   └── config.js
 │   ├── models
 │   │   ├── League.js
 │   │   ├── Match.js
 │   │   ├── Player.js
 │   │   └── User.js
 │   └── utils
-│       ├── adminAuth.js
 │       ├── apiHelpers.js
-│       ├── authMiddleware.js
-│       ├── edgeJwt.js
-│       ├── jwt.js
 │       ├── phoneUtils.js
 │       ├── rulesIcons.js
 │       └── swissPairing.js
@@ -266,8 +294,11 @@ root/
 ├── next.config.js
 ├── package-lock.json
 ├── package.json
+├── patches
+│   └── add-scoring-system.patch
 ├── postcss.config.js
 ├── public
+│   ├── leagues-import-template.csv
 │   ├── logo-big.png
 │   ├── logo-horizontal-01.png
 │   ├── logo-horizontal-02.png

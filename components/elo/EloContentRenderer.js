@@ -1,6 +1,14 @@
-export default function EloContentRenderer({ contentItems, language }) {
-  const renderContent = (contentItems) => {
-    return contentItems.map((item, index) => {
+export default function EloContentRenderer({ contentItems = [], language = 'es' }) {
+  const renderContent = (items) => {
+    if (!items || !Array.isArray(items)) {
+      return null
+    }
+    
+    return items.map((item, index) => {
+      if (!item || !item.type) {
+        return null
+      }
+      
       switch (item.type) {
         case 'text':
           return (
@@ -12,7 +20,7 @@ export default function EloContentRenderer({ contentItems, language }) {
         case 'cards':
           return (
             <div key={index} className="grid md:grid-cols-3 gap-6 my-12">
-              {item.cards.map((card, cardIndex) => (
+              {item.cards?.map((card, cardIndex) => (
                 <div key={cardIndex} className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transform hover:-translate-y-2 transition-all duration-300 border border-gray-100">
                   <div className="w-16 h-16 bg-gradient-to-br from-parque-purple/20 to-parque-purple/10 rounded-2xl flex items-center justify-center mb-6">
                     {renderIcon(card.icon)}
@@ -29,7 +37,7 @@ export default function EloContentRenderer({ contentItems, language }) {
             <div key={index} className="my-12">
               <div className="relative">
                 <div className="absolute left-1/2 transform -translate-x-1/2 w-1 h-full bg-gradient-to-b from-parque-purple/20 via-parque-purple/40 to-parque-purple/20"></div>
-                {item.events.map((event, eventIndex) => (
+                {item.events?.map((event, eventIndex) => (
                   <div key={eventIndex} className={`relative flex items-center mb-12 ${eventIndex % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
                     <div className={`w-5/12 ${eventIndex % 2 === 0 ? 'text-right pr-8' : 'text-left pl-8'}`}>
                       <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
@@ -50,14 +58,14 @@ export default function EloContentRenderer({ contentItems, language }) {
             <div key={index} className="my-12">
               <h4 className="text-2xl font-light text-center text-parque-purple mb-8">{item.title}</h4>
               <div className="grid md:grid-cols-2 gap-8">
-                {item.items.map((system, sysIndex) => (
+                {item.items?.map((system, sysIndex) => (
                   <div key={sysIndex} className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300">
                     <h5 className="text-xl font-medium text-gray-800 mb-6">{system.system}</h5>
                     <div className="space-y-4">
                       <div>
                         <p className="text-sm font-medium text-green-600 mb-2">{language === 'es' ? 'Ventajas:' : 'Pros:'}</p>
                         <ul className="space-y-2">
-                          {system.pros.map((pro, proIndex) => (
+                          {system.pros?.map((pro, proIndex) => (
                             <li key={proIndex} className="flex items-start">
                               <svg className="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
@@ -67,7 +75,7 @@ export default function EloContentRenderer({ contentItems, language }) {
                           ))}
                         </ul>
                       </div>
-                      {system.cons.length > 0 && (
+                      {system.cons?.length > 0 && (
                         <div>
                           <p className="text-sm font-medium text-red-600 mb-2">{language === 'es' ? 'Desventajas:' : 'Cons:'}</p>
                           <ul className="space-y-2">
@@ -92,7 +100,7 @@ export default function EloContentRenderer({ contentItems, language }) {
         case 'features':
           return (
             <div key={index} className="grid md:grid-cols-2 gap-8 my-12">
-              {item.features.map((feature, featIndex) => (
+              {item.features?.map((feature, featIndex) => (
                 <div key={featIndex} className="bg-gradient-to-br from-parque-purple/5 to-parque-green/5 rounded-2xl p-8 hover:shadow-xl transition-all duration-300 transform hover:scale-105 border border-parque-purple/10">
                   <div className="flex items-start space-x-4">
                     <div className="w-12 h-12 bg-parque-purple/10 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -113,7 +121,7 @@ export default function EloContentRenderer({ contentItems, language }) {
             <div key={index} className="my-12">
               <h4 className="text-2xl font-light text-parque-purple mb-8">{item.title}</h4>
               <div className="grid md:grid-cols-2 gap-6">
-                {item.steps.map((step, stepIndex) => (
+                {item.steps?.map((step, stepIndex) => (
                   <div key={stepIndex} className="flex gap-4">
                     <div className="w-10 h-10 bg-gradient-to-br from-parque-purple to-parque-purple/80 text-white rounded-xl flex items-center justify-center flex-shrink-0 font-medium">
                       {stepIndex + 1}
@@ -133,18 +141,18 @@ export default function EloContentRenderer({ contentItems, language }) {
             <div key={index} className="my-12 bg-gradient-to-br from-parque-purple/5 to-transparent rounded-3xl p-8 shadow-lg">
               <h4 className="text-2xl font-light text-parque-purple mb-6">{item.title}</h4>
               
-              {item.scenario && item.scenario.player && (
+              {item.scenario?.player && (
                 <div className="bg-white/90 rounded-2xl p-6 mb-6">
                   <h5 className="text-lg font-medium text-gray-800 mb-4">{item.scenario.player}</h5>
                   <div className="space-y-3">
-                    {item.scenario.rounds.map((round, roundIndex) => (
+                    {item.scenario.rounds?.map((round, roundIndex) => (
                       <div key={roundIndex} className="flex items-center justify-between p-3 border-b border-gray-100 last:border-0">
                         <div className="flex items-center space-x-4">
                           <span className="text-sm font-medium text-gray-600">{language === 'es' ? 'Ronda' : 'Round'} {round.round}</span>
                           <span className="text-sm text-gray-500">vs {round.opponent}</span>
                         </div>
                         <div className="flex items-center space-x-4">
-                          <span className={`text-sm font-medium ${round.result.includes('Gana') || round.result.includes('Wins') ? 'text-green-600' : 'text-red-600'}`}>
+                          <span className={`text-sm font-medium ${round.result?.includes('Gana') || round.result?.includes('Wins') ? 'text-green-600' : 'text-red-600'}`}>
                             {round.result}
                           </span>
                           <span className="text-lg font-medium text-parque-purple">{round.points} pts</span>
@@ -155,7 +163,7 @@ export default function EloContentRenderer({ contentItems, language }) {
                 </div>
               )}
               
-              {item.scenario && item.scenario.player1 && (
+              {item.scenario?.player1 && (
                 <>
                   <div className="grid md:grid-cols-2 gap-8 mb-8">
                     <div className="bg-white/90 rounded-2xl p-6">
@@ -349,5 +357,11 @@ export default function EloContentRenderer({ contentItems, language }) {
     }
   }
 
-  return renderContent(contentItems)
-} 
+  return (
+    <div className="py-16">
+      <div className="container mx-auto px-4">
+        {renderContent(contentItems)}
+      </div>
+    </div>
+  )
+}

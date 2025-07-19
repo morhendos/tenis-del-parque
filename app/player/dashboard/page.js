@@ -1,6 +1,8 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 import { useLanguage } from '../../../lib/hooks/useLanguage'
 import { useWelcomeModal } from '../../../lib/hooks/useWelcomeModal'
 import { usePlayerDashboard } from '../../../lib/hooks/usePlayerDashboard'
@@ -16,18 +18,104 @@ import { dashboardStyles } from '../../../styles/dashboard'
 export default function PlayerDashboard() {
   const { language, isLanguageLoaded } = useLanguage()
   const { showWelcome, playerName, closeWelcome } = useWelcomeModal()
-  const {
-    player,
-    loading,
-    recentMatches,
-    upcomingMatches,
-    showFirstRoundAnnouncement,
-    handleCloseFirstRoundAnnouncement,
-    getDynamicFirstRoundAnnouncement
-  } = usePlayerDashboard()
+  const { data: session, status } = useSession()
+  const [player, setPlayer] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [showFirstRoundAnnouncement, setShowFirstRoundAnnouncement] = useState(false)
+  const [firstRoundMatch, setFirstRoundMatch] = useState(null)
+  const [recentMatches] = useState([])
+  const [upcomingMatches] = useState([])
 
-  // Show loading until both language and data are loaded to prevent flickering
-  if (!isLanguageLoaded || loading) {
+  useEffect(() => {
+    if (status === 'loading') return
+    if (status === 'unauthenticated') {
+      window.location.href = '/login'
+      return
+    }
+    fetchData()
+  }, [status])
+
+  const fetchData = async () => {
+    try {
+      // Get player profile
+      const profileResponse = await fetch('/api/player/profile')
+      if (profileResponse.ok) {
+        const profileData = await profileResponse.json()
+        setPlayer(profileData.player)
+        
+        // Get user preferences to check seen announcements
+        const prefsResponse = await fetch('/api/player/preferences')
+        if (prefsResponse.ok) {
+          const prefs = await prefsResponse.json()
+          
+          // Check for first round matches
+          const matchesResponse = await fetch('/api/player/matches')
+          if (matchesResponse.ok) {
+            const matchesData = await matchesResponse.json()
+            const firstRound = matchesData.matches?.find(match => match.round === 1)
+            
+            if (firstRound && !prefs.seenAnnouncements?.includes('first-round-match-2025')) {
+              setFirstRoundMatch(firstRound)
+              setShowFirstRoundAnnouncement(true)
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCloseFirstRoundAnnouncement = async () => {
+    setShowFirstRoundAnnouncement(false)
+    
+    // Mark as seen
+    try {
+      await fetch('/api/player/messages/mark-seen', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messageId: 'first-round-match-2025' })
+      })
+    } catch (error) {
+      console.error('Failed to mark announcement as seen:', error)
+    }
+  }
+
+  const getDynamicFirstRoundAnnouncement = () => {
+    if (!firstRoundMatch || !player) return null
+    
+    const opponent = firstRoundMatch.players.player1._id === player._id 
+      ? firstRoundMatch.players.player2 
+      : firstRoundMatch.players.player1
+    
+    const announcementContent = {
+      es: {
+        title: '🎾 ¡Tu Primera Ronda ya está aquí!',
+        subtitle: 'Tu rival te está esperando',
+        buttonText: 'Entendido',
+        content: `<p><strong>¡Hola ${player.name}!</strong></p>
+        <p>Tu rival de primera ronda es <strong>${opponent.name}</strong>.</p>
+        <p>📱 Contacta con ${opponent.name}: <strong>${opponent.whatsapp}</strong></p>
+        <p>¡Mucha suerte y que gane el mejor!</p>`
+      },
+      en: {
+        title: '🎾 Your First Round is here!',
+        subtitle: 'Your opponent is waiting',
+        buttonText: 'Got it',
+        content: `<p><strong>Hello ${player.name}!</strong></p>
+        <p>Your first round opponent is <strong>${opponent.name}</strong>.</p>
+        <p>📱 Contact ${opponent.name}: <strong>${opponent.whatsapp}</strong></p>
+        <p>Good luck and may the best player win!</p>`
+      }
+    }
+    
+    return announcementContent
+  }
+
+  // Show loading until both language and data are loaded
+  if (!isLanguageLoaded || loading || status === 'loading') {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">

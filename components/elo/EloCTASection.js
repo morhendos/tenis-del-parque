@@ -1,6 +1,16 @@
 import Link from 'next/link'
 
-export default function EloCTASection({ title, subtitle, buttonText, link }) {
+export default function EloCTASection({ content, locale = 'es' }) {
+  // Handle both old prop structure and new content object structure
+  const title = content?.title || ''
+  const subtitle = content?.subtitle || ''
+  const buttonText = content?.button || content?.buttonText || ''
+  const link = content?.link || `/${locale}#cities`
+  
+  if (!content) {
+    return null
+  }
+  
   return (
     <section className="py-24 md:py-32 relative overflow-hidden bg-gradient-to-b from-white/70 to-transparent">
       <div className="absolute inset-0">
@@ -28,4 +38,4 @@ export default function EloCTASection({ title, subtitle, buttonText, link }) {
       </div>
     </section>
   )
-} 
+}

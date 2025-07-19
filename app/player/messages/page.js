@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSession, signOut } from 'next-auth/react'
 import { useLanguage } from '../../../lib/hooks/useLanguage'
 import WelcomeModal from '../../../components/ui/WelcomeModal'
 import AnnouncementModal from '../../../components/ui/AnnouncementModal'
@@ -11,36 +12,39 @@ import { announcementContent } from '../../../lib/content/announcementContent'
 export default function MessagesPage() {
   const router = useRouter()
   const { language } = useLanguage()
+  const { data: session, status, update } = useSession()
   const [loading, setLoading] = useState(true)
-  const [session, setSession] = useState(null)
   const [player, setPlayer] = useState(null)
   const [firstRoundMatch, setFirstRoundMatch] = useState(null)
   const [selectedMessage, setSelectedMessage] = useState(null)
   const [modalType, setModalType] = useState(null)
+  const [seenAnnouncements, setSeenAnnouncements] = useState([])
 
   useEffect(() => {
+    if (status === 'loading') return
+    if (status === 'unauthenticated') {
+      router.push('/login')
+      return
+    }
     checkAuth()
-  }, [])
+  }, [status])
+
+  useEffect(() => {
+    // Initialize seenAnnouncements from session
+    if (session?.user?.seenAnnouncements) {
+      setSeenAnnouncements(session.user.seenAnnouncements)
+    }
+  }, [session])
 
   const checkAuth = async () => {
     try {
-      const response = await fetch('/api/auth/check')
-      const data = await response.json()
-      
-      if (!data.authenticated) {
-        router.push('/login')
-        return
-      }
-      
-      setSession(data)
-      
       // Get player profile data
       const profileResponse = await fetch('/api/player/profile')
       if (profileResponse.ok) {
         const profileData = await profileResponse.json()
         setPlayer(profileData.player)
         
-        // Check for first round matches - FIXED ENDPOINT
+        // Check for first round matches
         const matchesResponse = await fetch('/api/player/matches')
         if (matchesResponse.ok) {
           const matchesData = await matchesResponse.json()
@@ -49,8 +53,7 @@ export default function MessagesPage() {
         }
       }
     } catch (error) {
-      console.error('Auth check failed:', error)
-      router.push('/login')
+      console.error('Error fetching data:', error)
     } finally {
       setLoading(false)
     }
@@ -72,7 +75,7 @@ export default function MessagesPage() {
       subtitle: announcementContent.firstRoundMatch[language].subtitle,
       icon: '🎾',
       bgColor: 'from-parque-purple/10 to-green-100',
-      isNew: !session?.user?.seenAnnouncements?.includes(announcementContent.firstRoundMatch.id),
+      isNew: !seenAnnouncements.includes(announcementContent.firstRoundMatch.id),
       content: {
         ...announcementContent.firstRoundMatch,
         es: {
@@ -115,7 +118,7 @@ export default function MessagesPage() {
       subtitle: announcementContent.firstRoundDelay[language].subtitle,
       icon: '📢',
       bgColor: 'from-yellow-100 to-orange-100',
-      isNew: !session?.user?.seenAnnouncements?.includes(announcementContent.firstRoundDelay.id),
+      isNew: !seenAnnouncements.includes(announcementContent.firstRoundDelay.id),
       content: announcementContent.firstRoundDelay
     }
   ]
@@ -138,20 +141,21 @@ export default function MessagesPage() {
     // Mark announcement as seen if it's an announcement
     if (modalType === 'announcement' && selectedMessage?.id && selectedMessage?.isNew) {
       try {
-        await fetch('/api/player/messages/mark-seen', {
+        const response = await fetch('/api/player/messages/mark-seen', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ messageId: selectedMessage.id })
         })
         
-        // Update local state
-        setSession(prev => ({
-          ...prev,
-          user: {
-            ...prev.user,
-            seenAnnouncements: [...(prev.user.seenAnnouncements || []), selectedMessage.id]
-          }
-        }))
+        if (response.ok) {
+          const data = await response.json()
+          // Update local state
+          setSeenAnnouncements(data.seenAnnouncements)
+          // Update NextAuth session
+          await update({
+            seenAnnouncements: data.seenAnnouncements
+          })
+        }
       } catch (error) {
         console.error('Failed to mark message as seen:', error)
       }
@@ -173,7 +177,7 @@ export default function MessagesPage() {
     return messageDate.toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', options)
   }
 
-  if (loading) {
+  if (loading || status === 'loading') {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple"></div>
@@ -181,7 +185,7 @@ export default function MessagesPage() {
     )
   }
 
-  const playerName = session?.player?.name || player?.name || 'Player'
+  const playerName = player?.name || session?.user?.name || 'Player'
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

@@ -1,0 +1,26 @@
+diff --git a/app/[locale]/[location]/liga/[season]/page.js b/app/[locale]/[location]/liga/[season]/page.js
+index 11d8395..abc1234 100644
+--- a/app/[locale]/[location]/liga/[season]/page.js
++++ b/app/[locale]/[location]/liga/[season]/page.js
+@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
+ import Navigation from '@/components/common/Navigation'
+ import Footer from '@/components/common/Footer'
+ import { homeContent } from '@/lib/content/homeContent'
++import ScoringSystem from '@/components/league/ScoringSystem'
+ 
+ // Import the existing StandingsTable component
+ function StandingsTable({ players, language, unified = false }) {
+@@ -460,6 +461,12 @@ export default function LeagueSeasonPage() {
+                     language={language}
+                     unified={true}
+                   />
++                  
++                  {/* Scoring System component */}
++                  <ScoringSystem 
++                    language={language}
++                    totalPlayers={standings.totalPlayers}
++                    currentRound={standings.currentRound}
++                  />
+                 </div>
+               ) : (
+                 <div className="text-center py-12 text-gray-500">

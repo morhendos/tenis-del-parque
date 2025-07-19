@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import dbConnect from '../../../../lib/db/mongoose'
 import Player from '../../../../lib/models/Player'
 import User from '../../../../lib/models/User'
-import { verifyToken } from '../../../../lib/utils/jwt'
+import { requirePlayer } from '../../../../lib/auth/apiAuth'
 
 // Import League model to ensure it's registered
 import '../../../../lib/models/League'
@@ -12,30 +12,14 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(request) {
   try {
-    // Get token from cookie
-    const token = request.cookies.get('auth-token')?.value
-
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    // Verify token
-    const decoded = await verifyToken(token)
-    
-    if (!decoded || decoded.role !== 'player') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+    // Use new NextAuth authentication system
+    const { session, error } = await requirePlayer(request)
+    if (error) return error
 
     await dbConnect()
 
     // Get user details
-    const user = await User.findById(decoded.userId).select('-password')
+    const user = await User.findById(session.user.id).select('-password')
     if (!user) {
       return NextResponse.json(
         { error: 'User not found' },
@@ -90,25 +74,9 @@ export async function GET(request) {
 
 export async function PUT(request) {
   try {
-    // Get token from cookie
-    const token = request.cookies.get('auth-token')?.value
-
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    // Verify token
-    const decoded = await verifyToken(token)
-    
-    if (!decoded || decoded.role !== 'player') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+    // Use new NextAuth authentication system
+    const { session, error } = await requirePlayer(request)
+    if (error) return error
 
     await dbConnect()
 
@@ -117,7 +85,7 @@ export async function PUT(request) {
     const { name, email, phone, preferences } = body
 
     // Get current user
-    const user = await User.findById(decoded.userId)
+    const user = await User.findById(session.user.id)
     if (!user) {
       return NextResponse.json(
         { error: 'User not found' },

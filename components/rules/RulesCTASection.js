@@ -1,4 +1,13 @@
-export default function RulesCTASection({ title, buttonText }) {
+export default function RulesCTASection({ content, locale = 'es' }) {
+  // Handle both old prop structure and new content object structure
+  const title = content?.title || ''
+  const buttonText = content?.button || content?.buttonText || ''
+  const link = content?.link || `/${locale}#cities`
+  
+  if (!content) {
+    return null
+  }
+  
   return (
     <section className="py-24 md:py-32 relative overflow-hidden">
       <div className="absolute inset-0">
@@ -11,7 +20,7 @@ export default function RulesCTASection({ title, buttonText }) {
             {title}
           </h2>
           <a
-            href="/#signup"
+            href={link}
             className="inline-block bg-gradient-to-r from-parque-purple to-parque-purple/80 text-white px-12 py-6 rounded-full text-lg font-medium hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group"
           >
             {buttonText}
@@ -23,4 +32,4 @@ export default function RulesCTASection({ title, buttonText }) {
       </div>
     </section>
   )
-} 
+}

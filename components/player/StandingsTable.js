@@ -50,7 +50,7 @@ export default function StandingsTable({ players, language, unified = false }) {
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div>
       {/* Playoff Qualification Legend */}
       <div className="mb-6 bg-gradient-to-r from-violet-50/50 to-violet-50/30 rounded-lg p-4 border border-violet-100/40">
         <h3 className="text-sm font-semibold text-violet-800 mb-3">
@@ -124,56 +124,74 @@ export default function StandingsTable({ players, language, unified = false }) {
                   {standing.player.name}
                   {getPlayerStatusIndicator(standing.player)}
                 </div>
-                {winPercentage > 0 && (
-                  <div className="text-sm text-gray-500">
-                    {winPercentage}% {language === 'es' ? 'victorias' : 'wins'}
-                  </div>
-                )}
+                <div className="text-sm text-gray-500">
+                  {winPercentage}% {language === 'es' ? 'tasa de victorias' : 'win rate'}
+                </div>
               </div>
 
-              {/* Win percentage bar */}
-              {standing.stats.matchesPlayed > 0 && (
-                <div className="mb-3">
-                  <div className="flex justify-between text-xs text-gray-600 mb-1">
-                    <span>{language === 'es' ? 'Progreso' : 'Progress'}</span>
-                    <span>{winPercentage}%</span>
+              {/* Win percentage bar - Always show, even with 0% */}
+              <div className="mb-3">
+                <div className="flex justify-between text-xs text-gray-600 mb-1">
+                  <span>{language === 'es' ? 'Progreso' : 'Progress'}</span>
+                  <span>{winPercentage}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full transition-all duration-500 ${
+                      standing.stats.matchesPlayed === 0 ? 'bg-gray-400' :
+                      winPercentage >= 75 ? 'bg-green-500' :
+                      winPercentage >= 50 ? 'bg-yellow-500' :
+                      'bg-red-500'
+                    }`}
+                    style={{ width: standing.stats.matchesPlayed === 0 ? '0%' : `${winPercentage}%` }}
+                  ></div>
+                </div>
+              </div>
+              
+              {/* Enhanced stats grid - Always show */}
+              <div className="grid grid-cols-4 gap-1 text-sm">
+                <div className="text-center bg-white/70 rounded-lg p-2 border border-violet-100/40">
+                  <div className="font-bold text-gray-900 text-base">{standing.stats.matchesPlayed || 0}</div>
+                  <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'PJ' : 'MP'}</div>
+                </div>
+                <div className="text-center bg-white/70 rounded-lg p-2 border border-violet-100/40">
+                  <div className="font-bold text-green-600 text-base">{standing.stats.matchesWon || 0}</div>
+                  <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'PG' : 'MW'}</div>
+                </div>
+                <div className="text-center bg-white/70 rounded-lg p-2 border border-violet-100/40">
+                  <div className="font-bold text-gray-900 text-base">
+                    {standing.stats.setsWon || 0}-{standing.stats.setsLost || 0}
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className={`h-2 rounded-full transition-all duration-500 ${
-                        winPercentage >= 75 ? 'bg-green-500' :
-                        winPercentage >= 50 ? 'bg-yellow-500' :
-                        'bg-red-500'
-                      }`}
-                      style={{ width: `${winPercentage}%` }}
-                    ></div>
+                  <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'Sets' : 'Sets'}</div>
+                </div>
+                <div className="text-center bg-white/70 rounded-lg p-2 border border-violet-100/40">
+                  <div className="font-bold text-gray-900 text-base">
+                    {standing.stats.gamesWon || 0}-{standing.stats.gamesLost || 0}
+                  </div>
+                  <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'Juegos' : 'Games'}</div>
+                </div>
+              </div>
+
+              {/* Recent form indicator */}
+              {standing.recentForm && standing.recentForm.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-600">{language === 'es' ? 'Forma reciente' : 'Recent form'}</span>
+                    <div className="flex space-x-1">
+                      {standing.recentForm.slice(-3).map((result, idx) => (
+                        <div 
+                          key={idx} 
+                          className={`w-2 h-2 rounded-full ${
+                            result === 'W' ? 'bg-green-500' : 
+                            result === 'L' ? 'bg-red-500' : 
+                            'bg-gray-400'
+                          }`}
+                        ></div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
-              
-              {/* Enhanced stats grid - More compact for mobile */}
-              <div className="grid grid-cols-4 gap-1 text-sm">
-                                  <div className="text-center bg-white/70 rounded-lg p-2 border border-violet-100/40">
-                    <div className="font-bold text-gray-900 text-base">{standing.stats.matchesPlayed}</div>
-                    <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'P.J.' : 'MP'}</div>
-                  </div>
-                  <div className="text-center bg-white/70 rounded-lg p-2 border border-violet-100/40">
-                    <div className="font-bold text-green-600 text-base">{standing.stats.matchesWon}</div>
-                    <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'P.G.' : 'MW'}</div>
-                  </div>
-                  <div className="text-center bg-white/70 rounded-lg p-2 border border-violet-100/40">
-                    <div className="font-bold text-gray-900 text-base">
-                      {standing.stats.setsWon}-{standing.stats.setsLost}
-                    </div>
-                    <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'Sets' : 'Sets'}</div>
-                  </div>
-                  <div className="text-center bg-white/70 rounded-lg p-2 border border-violet-100/40">
-                    <div className="font-bold text-gray-900 text-base">
-                      {standing.stats.gamesWon || 0}-{standing.stats.gamesLost || 0}
-                    </div>
-                    <div className="text-xs text-gray-600 font-medium">{language === 'es' ? 'Juegos' : 'Games'}</div>
-                  </div>
-              </div>
             </div>
           )
         })}
@@ -319,4 +337,4 @@ export default function StandingsTable({ players, language, unified = false }) {
       </div>
     </div>
   )
-} 
+}
