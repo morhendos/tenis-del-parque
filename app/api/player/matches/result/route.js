@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import dbConnect from '../../../../../lib/db/mongoose'
 import Match from '../../../../../lib/models/Match'
 import Player from '../../../../../lib/models/Player'
-import User from '../../../../../lib/models/User'
 import { requirePlayer } from '../../../../../lib/auth/apiAuth'
 
 export async function POST(request) {
@@ -29,13 +28,12 @@ export async function POST(request) {
       }, { status: 400 })
     }
 
-    // Get user and player from session
-    const user = await User.findById(session.user.id)
-    if (!user || !user.playerId) {
+    // Get player from session's playerId
+    if (!session.user.playerId) {
       return NextResponse.json({ success: false, error: 'Player not found' }, { status: 404 })
     }
 
-    const userPlayer = await Player.findById(user.playerId)
+    const userPlayer = await Player.findById(session.user.playerId)
     if (!userPlayer) {
       return NextResponse.json({ success: false, error: 'Player not found' }, { status: 404 })
     }
