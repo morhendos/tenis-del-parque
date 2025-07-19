@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import MatchCard from '@/components/player/MatchCard'
 import { MatchModals } from '@/components/player/MatchModals'
+import { toast } from '@/components/ui/Toast'
 
 export default function PlayerMatches() {
   const params = useParams()
@@ -122,15 +123,37 @@ export default function PlayerMatches() {
       const result = await response.json()
       
       if (response.ok) {
+        // Optimistically update the match in state
+        setMatches(prevMatches => 
+          prevMatches.map(match => {
+            if (match._id === data.matchId) {
+              // Update match to completed status
+              return {
+                ...match,
+                status: 'completed',
+                result: {
+                  ...match.result,
+                  winner: result.winnerId,
+                  score: {
+                    sets: data.sets,
+                    walkover: data.walkover
+                  },
+                  playedAt: new Date().toISOString()
+                }
+              }
+            }
+            return match
+          })
+        )
+        
         setShowResultModal(false)
-        fetchMatches()
-        showSuccessNotification(locale === 'es' ? 'Resultado enviado con éxito' : 'Result submitted successfully')
+        toast.success(locale === 'es' ? 'Resultado enviado con éxito' : 'Result submitted successfully')
       } else {
-        alert(result.error || 'Failed to submit result')
+        toast.error(result.error || (locale === 'es' ? 'Error al enviar resultado' : 'Failed to submit result'))
       }
     } catch (error) {
       console.error('Error submitting result:', error)
-      alert('Error submitting result')
+      toast.error(locale === 'es' ? 'Error al enviar resultado' : 'Error submitting result')
     }
   }
 
@@ -145,38 +168,35 @@ export default function PlayerMatches() {
       const result = await response.json()
       
       if (response.ok) {
+        // Optimistically update the match in state
+        setMatches(prevMatches => 
+          prevMatches.map(match => {
+            if (match._id === data.matchId) {
+              // Update match schedule
+              return {
+                ...match,
+                schedule: {
+                  ...match.schedule,
+                  confirmedDate: new Date(`${data.date}T${data.time}`).toISOString(),
+                  venue: data.venue,
+                  court: data.court
+                },
+                scheduledDate: new Date(`${data.date}T${data.time}`).toISOString()
+              }
+            }
+            return match
+          })
+        )
+        
         setShowScheduleModal(false)
-        fetchMatches()
-        showSuccessNotification(locale === 'es' ? 'Partido programado con éxito' : 'Match scheduled successfully')
+        toast.success(locale === 'es' ? 'Partido programado con éxito' : 'Match scheduled successfully')
       } else {
-        alert(result.error || 'Failed to schedule match')
+        toast.error(result.error || (locale === 'es' ? 'Error al programar partido' : 'Failed to schedule match'))
       }
     } catch (error) {
       console.error('Error scheduling match:', error)
-      alert('Error scheduling match')
+      toast.error(locale === 'es' ? 'Error al programar partido' : 'Error scheduling match')
     }
-  }
-
-  const showSuccessNotification = (message) => {
-    // Create and show a temporary success notification
-    const notification = document.createElement('div')
-    notification.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-slide-down'
-    notification.innerHTML = `
-      <div class="flex items-center space-x-2">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-        </svg>
-        <span>${message}</span>
-      </div>
-    `
-    document.body.appendChild(notification)
-    
-    setTimeout(() => {
-      notification.classList.add('animate-slide-up')
-      setTimeout(() => {
-        document.body.removeChild(notification)
-      }, 300)
-    }, 3000)
   }
 
   const upcomingMatches = matches.filter(m => m.status === 'scheduled' && !m.result?.winner)
@@ -227,36 +247,6 @@ export default function PlayerMatches() {
   return (
     <>
       <style jsx global>{`
-        @keyframes slide-down {
-          from {
-            opacity: 0;
-            transform: translate(-50%, -1rem);
-          }
-          to {
-            opacity: 1;
-            transform: translate(-50%, 0);
-          }
-        }
-        
-        @keyframes slide-up {
-          from {
-            opacity: 1;
-            transform: translate(-50%, 0);
-          }
-          to {
-            opacity: 0;
-            transform: translate(-50%, -1rem);
-          }
-        }
-        
-        .animate-slide-down {
-          animation: slide-down 0.3s ease-out;
-        }
-        
-        .animate-slide-up {
-          animation: slide-up 0.3s ease-out;
-        }
-        
         @keyframes fade-in-up {
           from {
             opacity: 0;
