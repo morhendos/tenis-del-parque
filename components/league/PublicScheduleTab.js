@@ -23,8 +23,8 @@ export default function PublicScheduleTab({ schedule, language, totalRounds = 8 
       return language === 'es' ? 'Mañana' : 'Tomorrow'
     } else {
       return dateObj.toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
-        weekday: 'long',
-        month: 'long',
+        weekday: 'short',
+        month: 'short',
         day: 'numeric'
       })
     }
@@ -49,88 +49,190 @@ export default function PublicScheduleTab({ schedule, language, totalRounds = 8 
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl md:text-2xl font-bold text-parque-purple">
-          {language === 'es' ? 'Calendario de Partidos' : 'Match Schedule'}
+      <div className="flex items-center justify-between mb-4 md:mb-6">
+        <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-parque-purple">
+          {language === 'es' ? 'Calendario' : 'Schedule'}
         </h2>
-        <div className="text-sm text-gray-600">
-          {language === 'es' ? 'Ronda' : 'Round'} {currentRound} {language === 'es' ? 'de' : 'of'} {totalRounds}
+        <div className="text-xs md:text-sm text-gray-600">
+          {language === 'es' ? 'R' : 'R'}{currentRound}/{totalRounds}
         </div>
       </div>
       
-      {/* Round Navigation */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-800">
-            {language === 'es' ? 'Seleccionar Ronda' : 'Select Round'}
-          </h3>
-          <div className="flex items-center space-x-2">
+      {/* Round Navigation - Mobile Optimized */}
+      <div className="mb-4 md:mb-8">
+        {/* Mobile: Horizontal scroll with compact pills */}
+        <div className="md:hidden">
+          <div className="flex items-center justify-between mb-3">
             <button
               onClick={() => setCurrentRound(Math.max(1, currentRound - 1))}
               disabled={currentRound === 1}
-              className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              ← {language === 'es' ? 'Anterior' : 'Previous'}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
             </button>
+            
+            <h3 className="text-sm font-semibold text-gray-800">
+              {language === 'es' ? 'Ronda' : 'Round'} {currentRound}
+            </h3>
+            
             <button
               onClick={() => setCurrentRound(Math.min(totalRounds, currentRound + 1))}
               disabled={currentRound === totalRounds}
-              className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {language === 'es' ? 'Siguiente' : 'Next'} →
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
             </button>
+          </div>
+          
+          <div className="overflow-x-auto -mx-4 px-4">
+            <div className="flex gap-1.5 pb-2">
+              {getAvailableRounds().map(({ round, hasMatches, matchCount }) => (
+                <button
+                  key={round}
+                  onClick={() => setCurrentRound(round)}
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 relative ${
+                    currentRound === round
+                      ? 'bg-parque-purple text-white shadow-md'
+                      : hasMatches
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'bg-gray-100 text-gray-500'
+                  }`}
+                >
+                  R{round}
+                  {hasMatches && (
+                    <span className="absolute -top-1 -right-1 bg-green-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+                      {matchCount}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
         
-        {/* Round selector pills */}
-        <div className="flex flex-wrap gap-2">
-          {getAvailableRounds().map(({ round, hasMatches, matchCount }) => (
-            <button
-              key={round}
-              onClick={() => setCurrentRound(round)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 relative ${
-                currentRound === round
-                  ? 'bg-parque-purple text-white shadow-lg transform scale-105'
-                  : hasMatches
-                  ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-              }`}
-            >
-              {language === 'es' ? 'Ronda' : 'Round'} {round}
-              {hasMatches && (
-                <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {matchCount}
-                </span>
-              )}
-            </button>
-          ))}
+        {/* Desktop: Original layout */}
+        <div className="hidden md:block">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-800">
+              {language === 'es' ? 'Seleccionar Ronda' : 'Select Round'}
+            </h3>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setCurrentRound(Math.max(1, currentRound - 1))}
+                disabled={currentRound === 1}
+                className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                ← {language === 'es' ? 'Anterior' : 'Previous'}
+              </button>
+              <button
+                onClick={() => setCurrentRound(Math.min(totalRounds, currentRound + 1))}
+                disabled={currentRound === totalRounds}
+                className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {language === 'es' ? 'Siguiente' : 'Next'} →
+              </button>
+            </div>
+          </div>
+          
+          <div className="flex flex-wrap gap-2">
+            {getAvailableRounds().map(({ round, hasMatches, matchCount }) => (
+              <button
+                key={round}
+                onClick={() => setCurrentRound(round)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 relative ${
+                  currentRound === round
+                    ? 'bg-parque-purple text-white shadow-lg transform scale-105'
+                    : hasMatches
+                    ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                }`}
+              >
+                {language === 'es' ? 'Ronda' : 'Round'} {round}
+                {hasMatches && (
+                  <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {matchCount}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
       
       {/* Current Round Matches */}
       {hasMatchesInRound ? (
-        <div className="space-y-4">
-          <div className="bg-gradient-to-r from-parque-purple to-parque-purple/80 text-white px-6 py-4 rounded-lg">
-            <h3 className="text-xl font-bold mb-2">
+        <div className="space-y-3 md:space-y-4">
+          {/* Round Header - More compact on mobile */}
+          <div className="bg-gradient-to-r from-parque-purple to-parque-purple/80 text-white px-4 py-3 md:px-6 md:py-4 rounded-lg">
+            <h3 className="text-base md:text-xl font-bold">
               {language === 'es' ? 'Ronda' : 'Round'} {currentRound}
             </h3>
-            <div className="flex items-center space-x-4 text-sm opacity-90">
-              <span>
-                {currentRoundMatches.length} {language === 'es' ? 'partidos' : 'matches'}
-              </span>
+            <div className="text-xs md:text-sm opacity-90 mt-1">
+              {currentRoundMatches.length} {language === 'es' ? 'partidos' : 'matches'}
             </div>
           </div>
           
           {/* Matches Grid */}
-          <div className="grid gap-4">
+          <div className="grid gap-3 md:gap-4">
             {currentRoundMatches.map((match) => (
               <div 
                 key={match._id} 
-                className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow"
+                className="bg-white rounded-xl md:rounded-2xl shadow-sm md:shadow-md border border-gray-100 overflow-hidden hover:shadow-md md:hover:shadow-lg transition-shadow"
               >
-                {/* Match Players */}
-                <div className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                {/* Match Players - Compact Mobile Layout */}
+                <div className="p-4 md:p-6">
+                  {/* Mobile: Vertical compact layout */}
+                  <div className="md:hidden">
+                    <div className="space-y-3">
+                      {/* Player 1 */}
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded-full bg-parque-purple text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
+                          {match.players?.player1?.name?.charAt(0) || '?'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-sm text-gray-900 truncate">
+                            {match.players?.player1?.name || 'TBD'}
+                          </div>
+                          {match.players?.player1?.level && (
+                            <div className="text-xs text-gray-500">
+                              {language === 'es' ? 'Nivel' : 'Level'} {match.players.player1.level}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* VS Divider */}
+                      <div className="flex items-center">
+                        <div className="flex-1 h-px bg-gray-200"></div>
+                        <span className="px-3 text-xs font-medium text-gray-500">VS</span>
+                        <div className="flex-1 h-px bg-gray-200"></div>
+                      </div>
+                      
+                      {/* Player 2 */}
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded-full bg-parque-purple text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
+                          {match.players?.player2?.name?.charAt(0) || '?'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-sm text-gray-900 truncate">
+                            {match.players?.player2?.name || 'TBD'}
+                          </div>
+                          {match.players?.player2?.level && (
+                            <div className="text-xs text-gray-500">
+                              {language === 'es' ? 'Nivel' : 'Level'} {match.players.player2.level}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Desktop: Original horizontal layout */}
+                  <div className="hidden md:grid md:grid-cols-3 md:gap-4 md:items-center">
                     {/* Player 1 */}
                     <div className="text-center md:text-right">
                       <div className="flex items-center justify-center md:justify-end space-x-3">
@@ -151,7 +253,7 @@ export default function PublicScheduleTab({ schedule, language, totalRounds = 8 
                     </div>
                     
                     {/* VS Divider */}
-                    <div className="text-center my-4 md:my-0">
+                    <div className="text-center">
                       <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100">
                         <span className="text-xl font-bold text-gray-600">VS</span>
                       </div>
@@ -178,22 +280,80 @@ export default function PublicScheduleTab({ schedule, language, totalRounds = 8 
                   </div>
                 </div>
                 
-                {/* Match Details Section */}
+                {/* Match Details Section - Compact on Mobile */}
                 {(match.schedule?.confirmedDate || match.schedule?.deadline) && (
-                  <div className="border-t border-gray-100 px-6 py-4 bg-gray-50">
+                  <div className="border-t border-gray-100 px-4 py-3 md:px-6 md:py-4 bg-gray-50">
                     {/* Confirmed Match Info */}
                     {match.schedule?.confirmedDate ? (
                       <div>
-                        <div className="flex items-center space-x-2 mb-3">
-                          <div className="w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center">
-                            <span className="text-xs">✓</span>
+                        <div className="flex items-center space-x-2 mb-2 md:mb-3">
+                          <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-green-500 text-white flex items-center justify-center">
+                            <span className="text-[10px] md:text-xs">✓</span>
                           </div>
-                          <span className="font-semibold text-green-700 text-sm">
-                            {language === 'es' ? 'Partido Confirmado' : 'Match Confirmed'}
+                          <span className="font-semibold text-green-700 text-xs md:text-sm">
+                            {language === 'es' ? 'Confirmado' : 'Confirmed'}
                           </span>
                         </div>
                         
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {/* Mobile: 2 column grid */}
+                        <div className="grid grid-cols-2 gap-3 md:hidden">
+                          <div className="flex items-start space-x-1.5">
+                            <span className="text-sm mt-0.5">📅</span>
+                            <div className="min-w-0">
+                              <p className="text-[10px] text-gray-500">
+                                {language === 'es' ? 'Fecha' : 'Date'}
+                              </p>
+                              <p className="font-medium text-gray-800 text-xs truncate">
+                                {formatDateForDisplay(match.schedule.confirmedDate)}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          {match.schedule.time && (
+                            <div className="flex items-start space-x-1.5">
+                              <span className="text-sm mt-0.5">🕐</span>
+                              <div className="min-w-0">
+                                <p className="text-[10px] text-gray-500">
+                                  {language === 'es' ? 'Hora' : 'Time'}
+                                </p>
+                                <p className="font-medium text-gray-800 text-xs">
+                                  {match.schedule.time}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {match.schedule.club && (
+                            <div className="flex items-start space-x-1.5">
+                              <span className="text-sm mt-0.5">🏟️</span>
+                              <div className="min-w-0">
+                                <p className="text-[10px] text-gray-500">
+                                  {language === 'es' ? 'Club' : 'Club'}
+                                </p>
+                                <p className="font-medium text-gray-800 text-xs truncate">
+                                  {match.schedule.club}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {(match.schedule.court || match.schedule.courtNumber) && (
+                            <div className="flex items-start space-x-1.5">
+                              <span className="text-sm mt-0.5">🎾</span>
+                              <div className="min-w-0">
+                                <p className="text-[10px] text-gray-500">
+                                  {language === 'es' ? 'Pista' : 'Court'}
+                                </p>
+                                <p className="font-medium text-gray-800 text-xs truncate">
+                                  {match.schedule.court || `${match.schedule.courtNumber || ''}`}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Desktop: 4 column grid */}
+                        <div className="hidden md:grid md:grid-cols-4 md:gap-4">
                           <div className="flex items-start space-x-2">
                             <span className="text-lg mt-0.5">📅</span>
                             <div>
@@ -251,16 +411,16 @@ export default function PublicScheduleTab({ schedule, language, totalRounds = 8 
                       </div>
                     ) : (
                       /* Pending Match Info */
-                      <div className="flex items-center space-x-3">
-                        <div className="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center">
-                          <span className="text-xs">⏰</span>
+                      <div className="flex items-center space-x-2 md:space-x-3">
+                        <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-amber-500 text-white flex items-center justify-center">
+                          <span className="text-[10px] md:text-xs">⏰</span>
                         </div>
-                        <div>
-                          <span className="font-semibold text-amber-700 text-sm">
-                            {language === 'es' ? 'Pendiente de Confirmación' : 'Pending Confirmation'}
+                        <div className="flex-1 min-w-0">
+                          <span className="font-semibold text-amber-700 text-xs md:text-sm">
+                            {language === 'es' ? 'Por confirmar' : 'To be confirmed'}
                           </span>
-                          <p className="text-xs text-amber-600 mt-0.5">
-                            {language === 'es' ? 'Fecha límite: ' : 'Deadline: '}
+                          <p className="text-[10px] md:text-xs text-amber-600 mt-0.5 truncate">
+                            {language === 'es' ? 'Límite: ' : 'Deadline: '}
                             {formatDateForDisplay(match.schedule.deadline)}
                           </p>
                         </div>
@@ -273,20 +433,20 @@ export default function PublicScheduleTab({ schedule, language, totalRounds = 8 
           </div>
         </div>
       ) : (
-        <div className="text-center py-16">
-          <div className="text-6xl mb-4">📅</div>
-          <h3 className="text-xl font-bold text-gray-700 mb-2">
+        <div className="text-center py-8 md:py-16">
+          <div className="text-4xl md:text-6xl mb-3 md:mb-4">📅</div>
+          <h3 className="text-lg md:text-xl font-bold text-gray-700 mb-2">
             {language === 'es' ? 'Ronda' : 'Round'} {currentRound}
           </h3>
-          <p className="text-gray-500 mb-6">
+          <p className="text-sm md:text-base text-gray-500 mb-4 md:mb-6">
             {language === 'es' 
-              ? 'No hay partidos programados para esta ronda todavía.'
-              : 'No matches scheduled for this round yet.'}
+              ? 'Sin partidos programados todavía'
+              : 'No matches scheduled yet'}
           </p>
-          <div className="text-sm text-gray-400">
+          <div className="text-xs md:text-sm text-gray-400">
             {language === 'es' 
-              ? 'Los partidos se programarán una vez que se complete la ronda anterior.'
-              : 'Matches will be scheduled once the previous round is completed.'}
+              ? 'Se programarán al completar la ronda anterior'
+              : 'Will be scheduled after previous round'}
           </div>
         </div>
       )}
