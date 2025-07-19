@@ -8,8 +8,9 @@
 const mongoose = require('mongoose')
 const dotenv = require('dotenv')
 
-// Load environment variables
-dotenv.config()
+// Load environment variables - prioritize .env.local
+dotenv.config({ path: '.env.local' })
+dotenv.config() // fallback to .env if .env.local doesn't have the variable
 
 // Define schemas inline to avoid ES6 import issues
 const PlayerSchema = new mongoose.Schema({
