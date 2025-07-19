@@ -177,76 +177,51 @@ export default function PublicScheduleTab({ schedule, language, totalRounds = 8 
           </div>
           
           {/* Matches Grid */}
-          <div className="grid gap-3 md:gap-4">
+          <div className="space-y-3 md:space-y-4">
             {currentRoundMatches.map((match) => (
               <div 
                 key={match._id} 
-                className="bg-white rounded-xl md:rounded-2xl shadow-sm md:shadow-md border border-gray-100 overflow-hidden hover:shadow-md md:hover:shadow-lg transition-shadow"
+                className="bg-gradient-to-b from-white to-gray-50 rounded-xl md:rounded-2xl shadow-sm md:shadow-md border border-gray-200 overflow-hidden hover:shadow-md md:hover:shadow-lg transition-all"
               >
-                {/* Match Players - Compact Mobile Layout */}
-                <div className="p-4 md:p-6">
-                  {/* Mobile: Vertical compact layout */}
-                  <div className="md:hidden">
-                    <div className="space-y-3">
-                      {/* Player 1 */}
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 rounded-full bg-parque-purple text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
-                          {match.players?.player1?.name?.charAt(0) || '?'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-sm text-gray-900 truncate">
-                            {match.players?.player1?.name || 'TBD'}
-                          </div>
-                          {match.players?.player1?.level && (
-                            <div className="text-xs text-gray-500">
-                              {language === 'es' ? 'Nivel' : 'Level'} {match.players.player1.level}
-                            </div>
-                          )}
-                        </div>
+                {/* Match Players - Centered Row Layout */}
+                <div className="p-4 md:p-6 bg-white">
+                  {/* Mobile: Horizontal centered layout */}
+                  <div className="flex items-center justify-center space-x-4 md:hidden">
+                    {/* Player 1 */}
+                    <div className="flex items-center space-x-2">
+                      <div className="w-10 h-10 rounded-full bg-parque-purple text-white flex items-center justify-center text-sm font-bold">
+                        {match.players?.player1?.name?.charAt(0) || '?'}
                       </div>
-                      
-                      {/* VS Divider */}
-                      <div className="flex items-center">
-                        <div className="flex-1 h-px bg-gray-200"></div>
-                        <span className="px-3 text-xs font-medium text-gray-500">VS</span>
-                        <div className="flex-1 h-px bg-gray-200"></div>
+                      <div className="font-semibold text-sm text-gray-900">
+                        {match.players?.player1?.name?.split(' ')[0] || 'TBD'}
                       </div>
-                      
-                      {/* Player 2 */}
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 rounded-full bg-parque-purple text-white flex items-center justify-center text-sm font-bold flex-shrink-0">
-                          {match.players?.player2?.name?.charAt(0) || '?'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-sm text-gray-900 truncate">
-                            {match.players?.player2?.name || 'TBD'}
-                          </div>
-                          {match.players?.player2?.level && (
-                            <div className="text-xs text-gray-500">
-                              {language === 'es' ? 'Nivel' : 'Level'} {match.players.player2.level}
-                            </div>
-                          )}
-                        </div>
+                    </div>
+                    
+                    {/* VS Badge */}
+                    <div className="bg-gray-100 px-3 py-1 rounded-full">
+                      <span className="text-xs font-bold text-gray-600">VS</span>
+                    </div>
+                    
+                    {/* Player 2 */}
+                    <div className="flex items-center space-x-2">
+                      <div className="font-semibold text-sm text-gray-900 text-right">
+                        {match.players?.player2?.name?.split(' ')[0] || 'TBD'}
+                      </div>
+                      <div className="w-10 h-10 rounded-full bg-parque-purple text-white flex items-center justify-center text-sm font-bold">
+                        {match.players?.player2?.name?.charAt(0) || '?'}
                       </div>
                     </div>
                   </div>
                   
-                  {/* Desktop: Original horizontal layout */}
+                  {/* Desktop: Original centered layout */}
                   <div className="hidden md:grid md:grid-cols-3 md:gap-4 md:items-center">
                     {/* Player 1 */}
-                    <div className="text-center md:text-right">
-                      <div className="flex items-center justify-center md:justify-end space-x-3">
-                        <div className="order-2 md:order-1">
-                          <div className="font-bold text-lg text-gray-900">
-                            {match.players?.player1?.name || 'TBD'}
-                          </div>
-                          {match.players?.player1?.level && (
-                            <div className="text-sm text-gray-500">
-                              {language === 'es' ? 'Nivel' : 'Level'} {match.players.player1.level}
-                            </div>
-                          )}
+                    <div className="text-right">
+                      <div className="flex items-center justify-end space-x-3">
+                        <div className="font-bold text-lg text-gray-900">
+                          {match.players?.player1?.name || 'TBD'}
                         </div>
-                        <div className="order-1 md:order-2 w-12 h-12 rounded-full bg-parque-purple text-white flex items-center justify-center text-lg font-bold">
+                        <div className="w-12 h-12 rounded-full bg-parque-purple text-white flex items-center justify-center text-lg font-bold">
                           {match.players?.player1?.name?.charAt(0) || '?'}
                         </div>
                       </div>
@@ -260,20 +235,13 @@ export default function PublicScheduleTab({ schedule, language, totalRounds = 8 
                     </div>
                     
                     {/* Player 2 */}
-                    <div className="text-center md:text-left">
-                      <div className="flex items-center justify-center md:justify-start space-x-3">
+                    <div className="text-left">
+                      <div className="flex items-center justify-start space-x-3">
                         <div className="w-12 h-12 rounded-full bg-parque-purple text-white flex items-center justify-center text-lg font-bold">
                           {match.players?.player2?.name?.charAt(0) || '?'}
                         </div>
-                        <div>
-                          <div className="font-bold text-lg text-gray-900">
-                            {match.players?.player2?.name || 'TBD'}
-                          </div>
-                          {match.players?.player2?.level && (
-                            <div className="text-sm text-gray-500">
-                              {language === 'es' ? 'Nivel' : 'Level'} {match.players.player2.level}
-                            </div>
-                          )}
+                        <div className="font-bold text-lg text-gray-900">
+                          {match.players?.player2?.name || 'TBD'}
                         </div>
                       </div>
                     </div>
@@ -282,11 +250,11 @@ export default function PublicScheduleTab({ schedule, language, totalRounds = 8 
                 
                 {/* Match Details Section - Compact on Mobile */}
                 {(match.schedule?.confirmedDate || match.schedule?.deadline) && (
-                  <div className="border-t border-gray-100 px-4 py-3 md:px-6 md:py-4 bg-gray-50">
+                  <div className="border-t border-gray-200 px-4 py-3 md:px-6 md:py-4 bg-gradient-to-r from-gray-50 to-gray-100">
                     {/* Confirmed Match Info */}
                     {match.schedule?.confirmedDate ? (
                       <div>
-                        <div className="flex items-center space-x-2 mb-2 md:mb-3">
+                        <div className="flex items-center justify-center space-x-2 mb-2 md:mb-3">
                           <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-green-500 text-white flex items-center justify-center">
                             <span className="text-[10px] md:text-xs">✓</span>
                           </div>
@@ -295,8 +263,8 @@ export default function PublicScheduleTab({ schedule, language, totalRounds = 8 
                           </span>
                         </div>
                         
-                        {/* Mobile: 2 column grid */}
-                        <div className="grid grid-cols-2 gap-3 md:hidden">
+                        {/* Mobile: 2 column grid centered */}
+                        <div className="grid grid-cols-2 gap-3 md:hidden max-w-xs mx-auto">
                           <div className="flex items-start space-x-1.5">
                             <span className="text-sm mt-0.5">📅</span>
                             <div className="min-w-0">
@@ -411,15 +379,15 @@ export default function PublicScheduleTab({ schedule, language, totalRounds = 8 
                       </div>
                     ) : (
                       /* Pending Match Info */
-                      <div className="flex items-center space-x-2 md:space-x-3">
+                      <div className="flex items-center justify-center space-x-2 md:space-x-3">
                         <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-amber-500 text-white flex items-center justify-center">
                           <span className="text-[10px] md:text-xs">⏰</span>
                         </div>
-                        <div className="flex-1 min-w-0">
+                        <div className="text-center">
                           <span className="font-semibold text-amber-700 text-xs md:text-sm">
                             {language === 'es' ? 'Por confirmar' : 'To be confirmed'}
                           </span>
-                          <p className="text-[10px] md:text-xs text-amber-600 mt-0.5 truncate">
+                          <p className="text-[10px] md:text-xs text-amber-600 mt-0.5">
                             {language === 'es' ? 'Límite: ' : 'Deadline: '}
                             {formatDateForDisplay(match.schedule.deadline)}
                           </p>
