@@ -27,6 +27,8 @@ export function MatchModals({
     notes: ''
   })
   const [submitting, setSubmitting] = useState(false)
+  const [validationErrors, setValidationErrors] = useState({})
+  const [formError, setFormError] = useState('')
 
   const getOpponent = (match) => {
     if (!player || !match) return null
@@ -34,6 +36,29 @@ export function MatchModals({
       ? match.players.player2 
       : match.players.player1
   }
+
+  // Reset forms when modals open/close
+  useEffect(() => {
+    if (!showResultModal) {
+      setResultForm({ 
+        sets: [
+          { myScore: '', opponentScore: '' },
+          { myScore: '', opponentScore: '' }
+        ],
+        walkover: false,
+        retiredPlayer: null
+      })
+      setValidationErrors({})
+      setFormError('')
+    }
+  }, [showResultModal])
+
+  useEffect(() => {
+    if (!showScheduleModal) {
+      setScheduleForm({ date: '', time: '', venue: '', court: '', notes: '' })
+      setFormError('')
+    }
+  }, [showScheduleModal])
 
   // Check if we need a super tiebreak (1:1 in sets)
   const checkForSuperTiebreak = () => {
@@ -68,6 +93,10 @@ export function MatchModals({
   }, [resultForm.sets])
 
   const handleSetChange = (index, field, value) => {
+    // Clear error for this set when user starts typing
+    setValidationErrors(prev => ({ ...prev, [`set${index}`]: '' }))
+    setFormError('')
+    
     const newSets = [...resultForm.sets]
     newSets[index][field] = value
     
@@ -156,10 +185,13 @@ export function MatchModals({
   const handleSubmitResult = async (e) => {
     e.preventDefault()
     setSubmitting(true)
+    setValidationErrors({})
+    setFormError('')
     
     try {
       // Validate sets
       if (!resultForm.walkover) {
+        let errors = {}
         let hasValidScores = false
         
         for (let i = 0; i < resultForm.sets.length; i++) {
@@ -184,34 +216,37 @@ export function MatchModals({
               }
             }
             
-            alert(language === 'es' 
+            errors[`set${i}`] = language === 'es' 
               ? `Por favor completa el set ${i + 1}` 
-              : `Please complete set ${i + 1}`)
-            setSubmitting(false)
-            return
+              : `Please complete set ${i + 1}`
+            continue
           }
           
           const myScore = parseInt(set.myScore)
           const oppScore = parseInt(set.opponentScore)
           
           if (isNaN(myScore) || isNaN(oppScore) || myScore < 0 || oppScore < 0) {
-            alert(language === 'es' ? 'Puntuaciones inválidas' : 'Invalid scores')
-            setSubmitting(false)
-            return
+            errors[`set${i}`] = language === 'es' ? 'Puntuaciones inválidas' : 'Invalid scores'
+            continue
           }
           
           const validationError = validateSetScore(i, myScore, oppScore)
           if (validationError) {
-            alert(validationError)
-            setSubmitting(false)
-            return
+            errors[`set${i}`] = validationError
+            continue
           }
           
           hasValidScores = true
         }
         
+        if (Object.keys(errors).length > 0) {
+          setValidationErrors(errors)
+          setSubmitting(false)
+          return
+        }
+        
         if (!hasValidScores) {
-          alert(language === 'es' ? 'Por favor ingresa al menos un set' : 'Please enter at least one set')
+          setFormError(language === 'es' ? 'Por favor ingresa al menos un set' : 'Please enter at least one set')
           setSubmitting(false)
           return
         }
@@ -227,16 +262,9 @@ export function MatchModals({
         retiredPlayer: resultForm.retiredPlayer
       })
       
-      setResultForm({ 
-        sets: [
-          { myScore: '', opponentScore: '' },
-          { myScore: '', opponentScore: '' }
-        ],
-        walkover: false,
-        retiredPlayer: null
-      })
     } catch (error) {
       console.error('Error submitting result:', error)
+      setFormError(language === 'es' ? 'Error al enviar resultado' : 'Error submitting result')
     } finally {
       setSubmitting(false)
     }
@@ -245,16 +273,16 @@ export function MatchModals({
   const handleScheduleMatch = async (e) => {
     e.preventDefault()
     setSubmitting(true)
+    setFormError('')
     
     try {
       await onSubmitSchedule({
         matchId: selectedMatch._id,
         ...scheduleForm
       })
-      
-      setScheduleForm({ date: '', time: '', venue: '', court: '', notes: '' })
     } catch (error) {
       console.error('Error scheduling match:', error)
+      setFormError(language === 'es' ? 'Error al programar partido' : 'Error scheduling match')
     } finally {
       setSubmitting(false)
     }
@@ -283,17 +311,7 @@ export function MatchModals({
                 {language === 'es' ? 'Reportar Resultado' : 'Report Result'}
               </h2>
               <button
-                onClick={() => {
-                  onCloseResult()
-                  setResultForm({ 
-                    sets: [
-                      { myScore: '', opponentScore: '' },
-                      { myScore: '', opponentScore: '' }
-                    ],
-                    walkover: false,
-                    retiredPlayer: null
-                  })
-                }}
+                onClick={onCloseResult}
                 className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
               >
                 <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -312,6 +330,18 @@ export function MatchModals({
               </p>
             </div>
             
+            {/* Error display */}
+            {formError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+                <p className="text-sm text-red-600 flex items-center">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {formError}
+                </p>
+              </div>
+            )}
+            
             <form onSubmit={handleSubmitResult} className="space-y-4">
               {/* Walkover option */}
               <label className="flex items-center p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
@@ -319,7 +349,11 @@ export function MatchModals({
                   type="checkbox"
                   id="walkover"
                   checked={resultForm.walkover}
-                  onChange={(e) => setResultForm({...resultForm, walkover: e.target.checked})}
+                  onChange={(e) => {
+                    setResultForm({...resultForm, walkover: e.target.checked})
+                    setValidationErrors({})
+                    setFormError('')
+                  }}
                   className="h-5 w-5 text-parque-purple border-gray-300 rounded focus:ring-parque-purple"
                 />
                 <span className="ml-3 text-sm text-gray-700">
@@ -343,33 +377,44 @@ export function MatchModals({
                     )}
                     
                     {resultForm.sets.map((set, index) => (
-                      <div key={index} className="flex items-center space-x-2 bg-gray-50 rounded-xl p-3">
-                        <span className="text-sm text-gray-500 w-16">{getSetLabel(index)}:</span>
-                        <input
-                          type="number"
-                          min="0"
-                          max={getMaxScore(index)}
-                          placeholder={language === 'es' ? 'Yo' : 'Me'}
-                          value={set.myScore}
-                          onChange={(e) => handleSetChange(index, 'myScore', e.target.value)}
-                          className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-transparent text-center font-medium"
-                          required={index < 2 || (index === 2 && checkForSuperTiebreak())}
-                        />
-                        <span className="text-gray-500 font-medium">-</span>
-                        <input
-                          type="number"
-                          min="0"
-                          max={getMaxScore(index)}
-                          placeholder={language === 'es' ? 'Rival' : 'Opp'}
-                          value={set.opponentScore}
-                          onChange={(e) => handleSetChange(index, 'opponentScore', e.target.value)}
-                          className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-transparent text-center font-medium"
-                          required={index < 2 || (index === 2 && checkForSuperTiebreak())}
-                        />
-                        {index === 2 && (
-                          <span className="text-xs text-gray-500 ml-2">
-                            {language === 'es' ? '(a 10+)' : '(to 10+)'}
-                          </span>
+                      <div key={index}>
+                        <div className="flex items-center space-x-2 bg-gray-50 rounded-xl p-3">
+                          <span className="text-sm text-gray-500 w-16">{getSetLabel(index)}:</span>
+                          <input
+                            type="number"
+                            min="0"
+                            max={getMaxScore(index)}
+                            placeholder={language === 'es' ? 'Yo' : 'Me'}
+                            value={set.myScore}
+                            onChange={(e) => handleSetChange(index, 'myScore', e.target.value)}
+                            className={`w-20 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-transparent text-center font-medium ${
+                              validationErrors[`set${index}`] ? 'border-red-300' : 'border-gray-300'
+                            }`}
+                            required={index < 2 || (index === 2 && checkForSuperTiebreak())}
+                          />
+                          <span className="text-gray-500 font-medium">-</span>
+                          <input
+                            type="number"
+                            min="0"
+                            max={getMaxScore(index)}
+                            placeholder={language === 'es' ? 'Rival' : 'Opp'}
+                            value={set.opponentScore}
+                            onChange={(e) => handleSetChange(index, 'opponentScore', e.target.value)}
+                            className={`w-20 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-transparent text-center font-medium ${
+                              validationErrors[`set${index}`] ? 'border-red-300' : 'border-gray-300'
+                            }`}
+                            required={index < 2 || (index === 2 && checkForSuperTiebreak())}
+                          />
+                          {index === 2 && (
+                            <span className="text-xs text-gray-500 ml-2">
+                              {language === 'es' ? '(a 10+)' : '(to 10+)'}
+                            </span>
+                          )}
+                        </div>
+                        {validationErrors[`set${index}`] && (
+                          <p className="mt-1 text-xs text-red-600 pl-2">
+                            {validationErrors[`set${index}`]}
+                          </p>
                         )}
                       </div>
                     ))}
@@ -380,17 +425,7 @@ export function MatchModals({
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => {
-                    onCloseResult()
-                    setResultForm({ 
-                      sets: [
-                        { myScore: '', opponentScore: '' },
-                        { myScore: '', opponentScore: '' }
-                      ],
-                      walkover: false,
-                      retiredPlayer: null
-                    })
-                  }}
+                  onClick={onCloseResult}
                   disabled={submitting}
                   className="flex-1 px-4 py-3 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all disabled:opacity-50 font-medium"
                 >
@@ -420,10 +455,7 @@ export function MatchModals({
                 {language === 'es' ? 'Programar Partido' : 'Schedule Match'}
               </h2>
               <button
-                onClick={() => {
-                  onCloseSchedule()
-                  setScheduleForm({ date: '', time: '', venue: '', court: '', notes: '' })
-                }}
+                onClick={onCloseSchedule}
                 className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
               >
                 <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -442,6 +474,18 @@ export function MatchModals({
               </p>
             </div>
             
+            {/* Error display */}
+            {formError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+                <p className="text-sm text-red-600 flex items-center">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {formError}
+                </p>
+              </div>
+            )}
+            
             <form onSubmit={handleScheduleMatch} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -450,7 +494,10 @@ export function MatchModals({
                 <input
                   type="date"
                   value={scheduleForm.date}
-                  onChange={(e) => setScheduleForm({...scheduleForm, date: e.target.value})}
+                  onChange={(e) => {
+                    setScheduleForm({...scheduleForm, date: e.target.value})
+                    setFormError('')
+                  }}
                   min={new Date().toISOString().split('T')[0]}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-parque-purple focus:border-transparent"
                   required
@@ -463,7 +510,10 @@ export function MatchModals({
                 <input
                   type="time"
                   value={scheduleForm.time}
-                  onChange={(e) => setScheduleForm({...scheduleForm, time: e.target.value})}
+                  onChange={(e) => {
+                    setScheduleForm({...scheduleForm, time: e.target.value})
+                    setFormError('')
+                  }}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-parque-purple focus:border-transparent"
                   required
                 />
@@ -475,7 +525,10 @@ export function MatchModals({
                 <input
                   type="text"
                   value={scheduleForm.venue}
-                  onChange={(e) => setScheduleForm({...scheduleForm, venue: e.target.value})}
+                  onChange={(e) => {
+                    setScheduleForm({...scheduleForm, venue: e.target.value})
+                    setFormError('')
+                  }}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-parque-purple focus:border-transparent"
                   placeholder={language === 'es' ? 'Ej: Club Deportivo' : 'Ex: Sports Club'}
                   required
@@ -488,7 +541,10 @@ export function MatchModals({
                 <input
                   type="text"
                   value={scheduleForm.court}
-                  onChange={(e) => setScheduleForm({...scheduleForm, court: e.target.value})}
+                  onChange={(e) => {
+                    setScheduleForm({...scheduleForm, court: e.target.value})
+                    setFormError('')
+                  }}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-parque-purple focus:border-transparent"
                   placeholder={language === 'es' ? 'Ej: Cancha 1' : 'Ex: Court 1'}
                 />
@@ -499,7 +555,10 @@ export function MatchModals({
                 </label>
                 <textarea
                   value={scheduleForm.notes}
-                  onChange={(e) => setScheduleForm({...scheduleForm, notes: e.target.value})}
+                  onChange={(e) => {
+                    setScheduleForm({...scheduleForm, notes: e.target.value})
+                    setFormError('')
+                  }}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-parque-purple focus:border-transparent resize-none"
                   rows="3"
                   placeholder={language === 'es' ? 'Información adicional...' : 'Additional information...'}
@@ -508,10 +567,7 @@ export function MatchModals({
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => {
-                    onCloseSchedule()
-                    setScheduleForm({ date: '', time: '', venue: '', court: '', notes: '' })
-                  }}
+                  onClick={onCloseSchedule}
                   disabled={submitting}
                   className="flex-1 px-4 py-3 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all disabled:opacity-50 font-medium"
                 >
