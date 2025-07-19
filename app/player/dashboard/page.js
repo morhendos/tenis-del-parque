@@ -25,6 +25,12 @@ export default function PlayerDashboard() {
   const [firstRoundMatch, setFirstRoundMatch] = useState(null)
   const [recentMatches, setRecentMatches] = useState([])
   const [upcomingMatches, setUpcomingMatches] = useState([])
+  const [calculatedStats, setCalculatedStats] = useState({
+    matchesPlayed: 0,
+    matchesWon: 0,
+    totalPoints: 0,
+    eloRating: 1200
+  })
 
   useEffect(() => {
     if (status === 'loading') return
@@ -34,6 +40,54 @@ export default function PlayerDashboard() {
     }
     fetchData()
   }, [status])
+
+  const calculatePointsFromMatch = (match, playerId) => {
+    // Logic from Match model's calculatePoints method
+    if (!match.result || !match.result.winner || match.status !== 'completed') {
+      return 0
+    }
+
+    const isPlayer1 = match.players.player1._id === playerId
+    const isWinner = match.result.winner === playerId
+    
+    let playerSetsWon = 0
+    let opponentSetsWon = 0
+
+    if (match.result.score.walkover) {
+      // Walkover counts as 2-0
+      playerSetsWon = isWinner ? 2 : 0
+      opponentSetsWon = isWinner ? 0 : 2
+    } else if (match.result.score.sets && match.result.score.sets.length > 0) {
+      // Count sets won by each player
+      match.result.score.sets.forEach(set => {
+        const player1Score = set.player1 || 0
+        const player2Score = set.player2 || 0
+        
+        if (isPlayer1) {
+          if (player1Score > player2Score) {
+            playerSetsWon++
+          } else {
+            opponentSetsWon++
+          }
+        } else {
+          if (player2Score > player1Score) {
+            playerSetsWon++
+          } else {
+            opponentSetsWon++
+          }
+        }
+      })
+    }
+
+    // Calculate points based on sets won
+    // Win 2-0: 3 points, Win 2-1: 2 points, Lose 1-2: 1 point, Lose 0-2: 0 points
+    if (playerSetsWon === 2 && opponentSetsWon === 0) return 3
+    if (playerSetsWon === 2 && opponentSetsWon === 1) return 2
+    if (playerSetsWon === 1 && opponentSetsWon === 2) return 1
+    if (playerSetsWon === 0 && opponentSetsWon === 2) return 0
+    
+    return 0
+  }
 
   const fetchData = async () => {
     try {
@@ -58,7 +112,15 @@ export default function PlayerDashboard() {
           const matches = matchesData.matches || []
           const playerId = profileData.player._id
           
-          // Process matches to separate recent and upcoming
+          // Calculate stats from matches (single source of truth)
+          let stats = {
+            matchesPlayed: 0,
+            matchesWon: 0,
+            totalPoints: 0,
+            eloRating: profileData.player.stats?.eloRating || 1200
+          }
+          
+          // Process matches and calculate stats
           const processedMatches = matches.map(match => {
             const isPlayer1 = match.players.player1._id === playerId
             const opponent = isPlayer1 ? match.players.player2 : match.players.player1
@@ -72,10 +134,19 @@ export default function PlayerDashboard() {
             }
             
             if (match.status === 'completed' && match.result && match.result.winner) {
-              // Recent match
-              const isWinner = match.result.winner === playerId
+              // Completed match - update stats
+              stats.matchesPlayed++
               
-              // Extract ELO change from the correct structure
+              const isWinner = match.result.winner === playerId
+              if (isWinner) {
+                stats.matchesWon++
+              }
+              
+              // Calculate points for this match
+              const points = calculatePointsFromMatch(match, playerId)
+              stats.totalPoints += points
+              
+              // Extract ELO change
               let eloChange = 0
               if (match.eloChanges) {
                 if (isPlayer1 && match.eloChanges.player1) {
@@ -107,11 +178,13 @@ export default function PlayerDashboard() {
             }
           })
           
+          // Update calculated stats
+          setCalculatedStats(stats)
+          
           // Separate and sort matches
           const recent = processedMatches
             .filter(m => m.type === 'recent')
             .sort((a, b) => new Date(b.playedAt) - new Date(a.playedAt))
-            .slice(0, 5) // Limit to 5 most recent
           
           const upcoming = processedMatches
             .filter(m => m.type === 'upcoming')
@@ -237,19 +310,28 @@ export default function PlayerDashboard() {
     )
   }
 
+  // Create player object with calculated stats
+  const playerWithCalculatedStats = {
+    ...player,
+    stats: {
+      ...player.stats,
+      ...calculatedStats
+    }
+  }
+
   return (
     <>
       <style jsx global>{dashboardStyles}</style>
       
       <div className="space-y-6 sm:space-y-8 animate-fade-in-up">
         {/* Welcome Header */}
-        <DashboardHeader player={player} language={language} />
+        <DashboardHeader player={playerWithCalculatedStats} language={language} />
 
-        {/* Stats Cards */}
-        <StatsCards player={player} language={language} />
+        {/* Stats Cards with calculated stats */}
+        <StatsCards player={playerWithCalculatedStats} language={language} />
 
         {/* League Card */}
-        <LeagueCard player={player} language={language} />
+        <LeagueCard player={playerWithCalculatedStats} language={language} />
 
         {/* Recent Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
