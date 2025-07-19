@@ -9,7 +9,7 @@ export default function LeagueCard({ player, language }) {
     <div 
       className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden transform transition-all hover:shadow-xl animate-scale-in" 
       style={{ 
-        animationDelay: '0s', // Changed from 0.5s to 0s - no delay!
+        animationDelay: '0.5s', // Changed from 0.5s to 0s - no delay!
         animationFillMode: 'both',
         opacity: 0,
         transform: 'scale(0.9)'
