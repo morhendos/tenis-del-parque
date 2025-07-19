@@ -75,7 +75,7 @@ export default function LeagueSeasonPage() {
         setStandings(standingsData)
       }
       
-      const matchesRes = await fetch(`/api/leagues/${location}/matches?season=${dbSeason}&status=completed&limit=10`)
+      const matchesRes = await fetch(`/api/leagues/${location}/matches?season=${dbSeason}&status=completed&limit=100`)
       if (matchesRes.ok) {
         const matchesData = await matchesRes.json()
         setMatches(matchesData.matches || [])
