@@ -3,6 +3,7 @@ import dbConnect from '../../../../../lib/db/mongoose'
 import League from '../../../../../lib/models/League'
 import Player from '../../../../../lib/models/Player'
 import Match from '../../../../../lib/models/Match'
+import mongoose from 'mongoose'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
@@ -11,16 +12,24 @@ export async function GET(request, { params }) {
   try {
     await dbConnect()
     
-    const { league: slug } = params
+    const { league: identifier } = params
     const { searchParams } = new URL(request.url)
     const season = searchParams.get('season') || 'summer-2025'  // Use database format
     const level = searchParams.get('level')
     
-    // Find league by ID
-    const league = await League.findOne({ 
-      _id: slug,
-      status: 'active'
-    })
+    // Build query to support both ID and slug
+    let query = { status: 'active' }
+    
+    // Check if identifier is a valid MongoDB ObjectId
+    if (mongoose.Types.ObjectId.isValid(identifier)) {
+      query._id = identifier
+    } else {
+      // Otherwise, treat it as a slug
+      query.slug = identifier
+    }
+    
+    // Find league by ID or slug
+    const league = await League.findOne(query)
     
     if (!league) {
       return NextResponse.json(
@@ -33,15 +42,15 @@ export async function GET(request, { params }) {
     }
     
     // Build query for players - include ALL players, not just active ones
-    const query = { 
+    const playerQuery = { 
       league: league._id, 
       season: season
       // Removed status filter to show all players
     }
-    if (level) query.level = level
+    if (level) playerQuery.level = level
     
     // Get players
-    let players = await Player.find(query).lean()
+    let players = await Player.find(playerQuery).lean()
     
     // FALLBACK: If no players found with exact season, try without season filter
     if (players.length === 0) {
