@@ -7,6 +7,7 @@ import Footer from '@/components/common/Footer'
 import { homeContent } from '@/lib/content/homeContent'
 import ScoringSystem from '@/components/league/ScoringSystem'
 import StandingsTable from '@/components/player/StandingsTable'
+import ResultsTab from '@/components/player/ResultsTab'
 
 export default function LeagueSeasonPage() {
   const params = useParams()
@@ -209,8 +210,8 @@ export default function LeagueSeasonPage() {
 
   const currentSeason = league.currentSeason
 
-  // Render matches helper function
-  function renderMatches(matchList) {
+  // Render matches helper function for schedule
+  function renderScheduleMatches(matchList) {
     return (
       <div className="space-y-6">
         {matchList.map((match) => (
@@ -407,7 +408,7 @@ export default function LeagueSeasonPage() {
               <h2 className="text-xl md:text-2xl font-bold text-parque-purple mb-6">
                 {language === 'es' ? 'Calendario de Partidos' : 'Match Schedule'}
               </h2>
-              {schedule.length > 0 ? renderMatches(getCurrentRoundMatches()) : (
+              {schedule.length > 0 ? renderScheduleMatches(getCurrentRoundMatches()) : (
                 <div className="text-center py-16">
                   <div className="text-6xl mb-4">📅</div>
                   <p className="text-gray-500">
@@ -424,19 +425,7 @@ export default function LeagueSeasonPage() {
         {activeTab === 'matches' && (
           <div className="max-w-[1200px] mx-auto">
             <div className="bg-white rounded-xl shadow-lg p-4 md:p-8">
-              <h2 className="text-xl md:text-2xl font-bold text-parque-purple mb-4 md:mb-6">
-                {language === 'es' ? 'Partidos Recientes' : 'Recent Matches'}
-              </h2>
-              {matches.length > 0 ? renderMatches(matches) : (
-                <div className="text-center py-12 text-gray-500">
-                  <span className="text-4xl mb-4 block">🎾</span>
-                  <p>
-                    {language === 'es' 
-                      ? 'Los partidos se mostrarán una vez que comience la temporada.'
-                      : 'Matches will be displayed once the season begins.'}
-                  </p>
-                </div>
-              )}
+              <ResultsTab matches={matches} language={language} />
             </div>
           </div>
         )}
