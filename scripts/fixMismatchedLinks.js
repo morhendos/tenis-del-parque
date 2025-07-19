@@ -5,13 +5,27 @@
  * This handles cases where Users have playerId pointing to wrong/non-existent Players
  */
 
-import mongoose from 'mongoose'
-import dotenv from 'dotenv'
-import Player from '../lib/models/Player.js'
-import User from '../lib/models/User.js'
+const mongoose = require('mongoose')
+const dotenv = require('dotenv')
 
 // Load environment variables
 dotenv.config()
+
+// Define schemas inline to avoid ES6 import issues
+const PlayerSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+}, { timestamps: true })
+
+const UserSchema = new mongoose.Schema({
+  email: { type: String, required: true },
+  playerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Player' },
+  role: { type: String, default: 'player' }
+}, { timestamps: true })
+
+const Player = mongoose.model('Player', PlayerSchema)
+const User = mongoose.model('User', UserSchema)
 
 // MongoDB connection
 const MONGODB_URI = process.env.MONGODB_URI || process.env.DATABASE_URL
