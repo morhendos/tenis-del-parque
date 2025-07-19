@@ -433,8 +433,8 @@ export default function LeagueSeasonPage() {
         setStandings(standingsData)
       }
       
-      // Fetch recent matches
-      const matchesRes = await fetch(`/api/leagues/${location}/matches?season=${dbSeason}&status=completed&limit=10`)
+      // Fetch recent matches - INCREASED LIMIT FROM 10 TO 100
+      const matchesRes = await fetch(`/api/leagues/${location}/matches?season=${dbSeason}&status=completed&limit=100`)
       if (matchesRes.ok) {
         const matchesData = await matchesRes.json()
         setMatches(matchesData.matches || [])
