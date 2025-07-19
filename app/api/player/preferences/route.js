@@ -26,7 +26,7 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      seenAnnouncements: user.preferences?.seenAnnouncements || [],
+      seenAnnouncements: user.seenAnnouncements || [],
       hasSeenWelcomeModal: user.preferences?.hasSeenWelcomeModal || false
     })
   } catch (error) {
