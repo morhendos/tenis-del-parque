@@ -15,7 +15,7 @@ export async function GET(request, { params }) {
     const season = searchParams.get('season') || 'Verano 2025'
     const status = searchParams.get('status') // 'completed', 'scheduled', etc.
     const round = searchParams.get('round')
-    const limit = parseInt(searchParams.get('limit')) || 20
+    const limit = parseInt(searchParams.get('limit')) || 100 // INCREASED DEFAULT FROM 20 TO 100
     
     console.log('API: Fetching matches for league:', slug, 'season:', season, 'status:', status)
     
