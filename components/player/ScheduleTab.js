@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import MatchCard from './MatchCard'
 import { MatchModals } from './MatchModals'
 
-export default function ScheduleTab({ schedule, language, totalRounds = 8, player }) {
+export default function ScheduleTab({ schedule, language, totalRounds = 8, player = null, isPublic = false }) {
   const [currentRound, setCurrentRound] = useState(1)
   const [showResultModal, setShowResultModal] = useState(false)
   const [showScheduleModal, setShowScheduleModal] = useState(false)
@@ -13,7 +13,7 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
   // Filter out any matches that have results (defensive programming for data inconsistencies)
   const upcomingSchedule = schedule?.filter(match => !match.result?.winner) || []
 
-  // Fetch player's matches with full data (including WhatsApp)
+  // Fetch player's matches with full data (including WhatsApp) - only if player is provided
   useEffect(() => {
     const fetchPlayerMatches = async () => {
       try {
@@ -32,10 +32,10 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
       }
     }
 
-    if (player) {
+    if (player && !isPublic) {
       fetchPlayerMatches()
     }
-  }, [player])
+  }, [player, isPublic])
 
   const formatDateForDisplay = (date) => {
     if (!date) return null
@@ -63,6 +63,11 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
 
   const getCurrentRoundMatches = () => {
     const allMatches = upcomingSchedule.filter(match => match.round === currentRound)
+    
+    if (!player || isPublic) {
+      // For public view or no player, return all matches
+      return { playerMatch: null, otherMatches: allMatches }
+    }
     
     // Find player's match from the playerMatches array (which has full data)
     const playerMatchWithFullData = playerMatches.find(match => 
@@ -96,11 +101,11 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
       round,
       hasMatches: roundsWithMatches.includes(round),
       matchCount: upcomingSchedule.filter(match => match.round === round).length,
-      hasPlayerMatch: upcomingSchedule.some(match => 
+      hasPlayerMatch: player && !isPublic ? upcomingSchedule.some(match => 
         match.round === round && 
         (match.players?.player1?._id === player?._id || 
          match.players?.player2?._id === player?._id)
-      )
+      ) : false
     }))
   }
 
@@ -206,37 +211,39 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
 
   return (
     <>
-      <style jsx global>{`
-        @keyframes slide-down {
-          from {
-            opacity: 0;
-            transform: translate(-50%, -1rem);
+      {!isPublic && (
+        <style jsx global>{`
+          @keyframes slide-down {
+            from {
+              opacity: 0;
+              transform: translate(-50%, -1rem);
+            }
+            to {
+              opacity: 1;
+              transform: translate(-50%, 0);
+            }
           }
-          to {
-            opacity: 1;
-            transform: translate(-50%, 0);
+          
+          @keyframes slide-up {
+            from {
+              opacity: 1;
+              transform: translate(-50%, 0);
+            }
+            to {
+              opacity: 0;
+              transform: translate(-50%, -1rem);
+            }
           }
-        }
-        
-        @keyframes slide-up {
-          from {
-            opacity: 1;
-            transform: translate(-50%, 0);
+          
+          .animate-slide-down {
+            animation: slide-down 0.3s ease-out;
           }
-          to {
-            opacity: 0;
-            transform: translate(-50%, -1rem);
+          
+          .animate-slide-up {
+            animation: slide-up 0.3s ease-out;
           }
-        }
-        
-        .animate-slide-down {
-          animation: slide-down 0.3s ease-out;
-        }
-        
-        .animate-slide-up {
-          animation: slide-up 0.3s ease-out;
-        }
-      `}</style>
+        `}</style>
+      )}
       
       <div>
         <div className="flex items-center justify-between mb-6">
@@ -313,7 +320,7 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
                 <span>
                   {(playerMatch ? 1 : 0) + otherMatches.length} {language === 'es' ? 'partidos' : 'matches'}
                 </span>
-                {playerMatch && (
+                {playerMatch && !isPublic && (
                   <>
                     <span>•</span>
                     <span className="flex items-center gap-1">
@@ -326,7 +333,7 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
             </div>
             
             {/* Player's Match - Interactive */}
-            {playerMatch && (
+            {playerMatch && !isPublic && (
               <div className="mb-6">
                 <h4 className="text-sm font-semibold text-gray-600 mb-2 flex items-center gap-2">
                   <span className="text-yellow-500">⭐</span>
@@ -351,149 +358,25 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
               </div>
             )}
             
-            {/* Other Matches - Read Only with Full Info */}
+            {/* Other Matches - Read Only */}
             {otherMatches.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold text-gray-600 mb-2">
-                  {language === 'es' ? 'Otros Partidos' : 'Other Matches'}
-                </h4>
+                {!isPublic && (
+                  <h4 className="text-sm font-semibold text-gray-600 mb-2">
+                    {language === 'es' ? 'Otros Partidos' : 'Other Matches'}
+                  </h4>
+                )}
                 <div className="space-y-4">
                   {otherMatches.map((match) => (
-                    <div 
-                      key={match._id} 
-                      className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden opacity-90"
-                    >
-                      {/* Match Header */}
-                      <div className="p-4 bg-gradient-to-r from-gray-50 to-gray-100">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-12 h-12 bg-gray-400 rounded-full flex items-center justify-center shadow-md">
-                              <span className="text-white font-bold text-lg">
-                                {match.round}
-                              </span>
-                            </div>
-                            <div>
-                              <h3 className="font-semibold text-gray-900">
-                                {language === 'es' ? 'Ronda' : 'Round'} {match.round}
-                              </h3>
-                              <div className="text-sm text-gray-700 font-medium mt-1">
-                                <span>{match.players?.player1?.name || 'TBD'}</span>
-                                <span className="mx-2 text-gray-500">vs</span>
-                                <span>{match.players?.player2?.name || 'TBD'}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Match Details */}
-                      <div className="p-4">
-                        {/* Confirmed Match Info */}
-                        {match.schedule?.confirmedDate && (
-                          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                            <div className="flex items-center space-x-3 mb-3">
-                              <div className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center">
-                                <span className="text-sm">✓</span>
-                              </div>
-                              <div>
-                                <div className="font-semibold text-gray-800 text-sm">
-                                  {language === 'es' ? 'Partido Confirmado' : 'Match Confirmed'}
-                                </div>
-                                <div className="text-xs text-gray-600">
-                                  {language === 'es' ? 'Fecha y hora acordadas' : 'Date and time agreed'}
-                                </div>
-                              </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-3 text-sm">
-                              <div className="flex items-center space-x-2">
-                                <span className="text-lg">📅</span>
-                                <div>
-                                  <p className="font-medium text-gray-800 text-xs">
-                                    {formatDateForDisplay(match.schedule.confirmedDate)}
-                                  </p>
-                                  <p className="text-xs text-gray-500">
-                                    {new Date(match.schedule.confirmedDate).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
-                                      month: 'short',
-                                      day: 'numeric'
-                                    })}
-                                  </p>
-                                </div>
-                              </div>
-                              
-                              {match.schedule.time && (
-                                <div className="flex items-center space-x-2">
-                                  <span className="text-lg">🕐</span>
-                                  <div>
-                                    <p className="font-medium text-gray-800">
-                                      {match.schedule.time}
-                                    </p>
-                                    <p className="text-xs text-gray-500">
-                                      {language === 'es' ? 'Hora' : 'Time'}
-                                    </p>
-                                  </div>
-                                </div>
-                              )}
-                              
-                              {match.schedule.club && (
-                                <div className="flex items-center space-x-2">
-                                  <span className="text-lg">🏟️</span>
-                                  <div>
-                                    <p className="font-medium text-gray-800 text-xs">
-                                      {match.schedule.club}
-                                    </p>
-                                    <p className="text-xs text-gray-500">
-                                      {language === 'es' ? 'Club' : 'Club'}
-                                    </p>
-                                  </div>
-                                </div>
-                              )}
-                              
-                              {(match.schedule.court || match.schedule.courtNumber) && (
-                                <div className="flex items-center space-x-2">
-                                  <span className="text-lg">🎾</span>
-                                  <div>
-                                    <p className="font-medium text-gray-800 text-xs">
-                                      {match.schedule.court || `${language === 'es' ? 'Pista' : 'Court'}`} {match.schedule.courtNumber || ''}
-                                    </p>
-                                    <p className="text-xs text-gray-500">
-                                      {language === 'es' ? 'Pista' : 'Court'}
-                                    </p>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                        
-                        {/* Pending Match Info */}
-                        {!match.schedule?.confirmedDate && match.schedule?.deadline && (
-                          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                            <div className="flex items-center space-x-3">
-                              <div className="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center">
-                                <span className="text-sm">⏰</span>
-                              </div>
-                              <div>
-                                <div className="font-semibold text-amber-800 text-sm">
-                                  {language === 'es' ? 'Pendiente de Confirmación' : 'Pending Confirmation'}
-                                </div>
-                                <div className="text-xs text-amber-600">
-                                  {language === 'es' ? 'Fecha límite: ' : 'Deadline: '}
-                                  {formatDateForDisplay(match.schedule.deadline)}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                        
-                        {/* Not Scheduled Yet */}
-                        {!match.schedule?.confirmedDate && !match.schedule?.deadline && (
-                          <div className="text-center py-3 text-gray-500 text-sm">
-                            {language === 'es' ? 'Por programar' : 'To be scheduled'}
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    <MatchCard
+                      key={match._id}
+                      match={match}
+                      player={null}
+                      language={language}
+                      isUpcoming={true}
+                      showActions={false}
+                      isPublic={true}
+                    />
                   ))}
                 </div>
               </div>
@@ -518,19 +401,21 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
           </div>
         )}
 
-        {/* Match Modals */}
-        <MatchModals
-          showResultModal={showResultModal}
-          showScheduleModal={showScheduleModal}
-          selectedMatch={selectedMatch}
-          player={player}
-          language={language}
-          onCloseResult={() => setShowResultModal(false)}
-          onCloseSchedule={() => setShowScheduleModal(false)}
-          onSubmitResult={handleSubmitResult}
-          onSubmitSchedule={handleSubmitSchedule}
-        />
+        {/* Match Modals - Only for logged in players */}
+        {!isPublic && (
+          <MatchModals
+            showResultModal={showResultModal}
+            showScheduleModal={showScheduleModal}
+            selectedMatch={selectedMatch}
+            player={player}
+            language={language}
+            onCloseResult={() => setShowResultModal(false)}
+            onCloseSchedule={() => setShowScheduleModal(false)}
+            onSubmitResult={handleSubmitResult}
+            onSubmitSchedule={handleSubmitSchedule}
+          />
+        )}
       </div>
     </>
   )
-} 
+}
