@@ -8,7 +8,7 @@ import { homeContent } from '@/lib/content/homeContent'
 import ScoringSystem from '@/components/league/ScoringSystem'
 import StandingsTable from '@/components/player/StandingsTable'
 import ResultsTab from '@/components/player/ResultsTab'
-import PublicScheduleTab from '@/components/league/PublicScheduleTab'
+import ScheduleTab from '@/components/player/ScheduleTab'
 
 export default function LeagueSeasonPage() {
   const params = useParams()
@@ -280,10 +280,12 @@ export default function LeagueSeasonPage() {
         {activeTab === 'schedule' && (
           <div className="max-w-[1200px] mx-auto">
             <div className="bg-white rounded-lg md:rounded-xl shadow-md md:shadow-lg p-3 md:p-6 lg:p-8">
-              <PublicScheduleTab 
+              <ScheduleTab 
                 schedule={schedule} 
                 language={language}
                 totalRounds={totalRounds}
+                player={null}
+                isPublic={true}
               />
             </div>
           </div>
