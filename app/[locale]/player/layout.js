@@ -5,6 +5,7 @@ import { usePathname, useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
 import { announcementContent } from '@/lib/content/announcementContent'
+import { ToastContainer } from '@/components/ui/Toast'
 
 export default function PlayerLayout({ children }) {
   const pathname = usePathname()
@@ -314,6 +315,9 @@ export default function PlayerLayout({ children }) {
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
+      
+      {/* Toast Container */}
+      <ToastContainer />
     </div>
   )
 }
