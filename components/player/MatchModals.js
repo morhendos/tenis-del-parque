@@ -9,7 +9,8 @@ export function MatchModals({
   onCloseResult,
   onCloseSchedule,
   onSubmitResult,
-  onSubmitSchedule
+  onSubmitSchedule,
+  isEditingSchedule = false
 }) {
   const [resultForm, setResultForm] = useState({ 
     sets: [
@@ -57,8 +58,20 @@ export function MatchModals({
     if (!showScheduleModal) {
       setScheduleForm({ date: '', time: '', venue: '', court: '', notes: '' })
       setFormError('')
+    } else if (showScheduleModal && isEditingSchedule && selectedMatch) {
+      // Prefill form with existing schedule data when editing
+      const schedule = selectedMatch.schedule || {}
+      const scheduledDate = schedule.confirmedDate || selectedMatch.scheduledDate
+      
+      setScheduleForm({
+        date: scheduledDate ? new Date(scheduledDate).toISOString().split('T')[0] : '',
+        time: schedule.time || '',
+        venue: schedule.venue || schedule.club || '',
+        court: schedule.court || (schedule.courtNumber ? `${language === 'es' ? 'Pista' : 'Court'} ${schedule.courtNumber}` : ''),
+        notes: schedule.notes || ''
+      })
     }
-  }, [showScheduleModal])
+  }, [showScheduleModal, isEditingSchedule, selectedMatch, language])
 
   // Check if we need a super tiebreak (1:1 in sets)
   const checkForSuperTiebreak = () => {
@@ -452,7 +465,9 @@ export function MatchModals({
           <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-md p-6 max-h-[90vh] overflow-y-auto animate-slide-up-mobile sm:animate-fade-in">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900">
-                {language === 'es' ? 'Programar Partido' : 'Schedule Match'}
+                {isEditingSchedule 
+                  ? (language === 'es' ? 'Editar Programación' : 'Edit Schedule')
+                  : (language === 'es' ? 'Programar Partido' : 'Schedule Match')}
               </h2>
               <button
                 onClick={onCloseSchedule}
@@ -580,6 +595,8 @@ export function MatchModals({
                 >
                   {submitting 
                     ? (language === 'es' ? 'Guardando...' : 'Saving...') 
+                    : isEditingSchedule
+                    ? (language === 'es' ? 'Actualizar' : 'Update')
                     : (language === 'es' ? 'Programar' : 'Schedule')}
                 </button>
               </div>
