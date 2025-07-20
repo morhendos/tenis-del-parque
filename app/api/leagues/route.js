@@ -11,42 +11,48 @@ export async function GET(request) {
     // Connect to database (no auth required for public API)
     await dbConnect()
 
-    // Fetch all active leagues with basic info
-    const leagues = await League.find({ status: 'active' })
-      .sort({ 'location.city': 1 })
-      .lean()
+    // Fetch all public leagues (active and coming_soon) using the model method
+    const leagues = await League.findPublicLeagues()
 
     // Get player count for each league (including all players regardless of level)
     const leaguesWithStats = await Promise.all(leagues.map(async (league) => {
-      // Count all players except inactive ones
-      const playerCount = await Player.countDocuments({ 
-        league: league._id,
-        status: { $in: ['pending', 'confirmed', 'active'] }
-      })
+      // Only count players for active leagues
+      let playerCount = 0
+      let playersByLevel = {}
+      
+      if (league.status === 'active') {
+        // Count all players except inactive ones
+        playerCount = await Player.countDocuments({ 
+          league: league._id,
+          status: { $in: ['pending', 'confirmed', 'active'] }
+        })
 
-      // Optional: Get breakdown by level for debugging
-      const playersByLevel = await Player.aggregate([
-        { 
-          $match: { 
-            league: league._id,
-            status: { $in: ['pending', 'confirmed', 'active'] }
+        // Optional: Get breakdown by level for debugging
+        const levelBreakdown = await Player.aggregate([
+          { 
+            $match: { 
+              league: league._id,
+              status: { $in: ['pending', 'confirmed', 'active'] }
+            }
+          },
+          {
+            $group: {
+              _id: '$level',
+              count: { $sum: 1 }
+            }
           }
-        },
-        {
-          $group: {
-            _id: '$level',
-            count: { $sum: 1 }
-          }
-        }
-      ])
+        ])
 
-      return {
-        ...league,
-        playerCount,
-        playersByLevel: playersByLevel.reduce((acc, level) => {
+        playersByLevel = levelBreakdown.reduce((acc, level) => {
           acc[level._id] = level.count
           return acc
         }, {})
+      }
+
+      return {
+        ...league.toObject(),
+        playerCount,
+        playersByLevel
       }
     }))
 
@@ -68,4 +74,4 @@ export async function GET(request) {
       { status: 500 }
     )
   }
-} 
+}
