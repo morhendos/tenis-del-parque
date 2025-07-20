@@ -9,6 +9,7 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
   const [selectedMatch, setSelectedMatch] = useState(null)
   const [playerMatches, setPlayerMatches] = useState([])
   const [loadingPlayerMatches, setLoadingPlayerMatches] = useState(true)
+  const [isEditingSchedule, setIsEditingSchedule] = useState(false)
 
   // Filter out any matches that have results (defensive programming for data inconsistencies)
   const upcomingSchedule = schedule?.filter(match => !match.result?.winner) || []
@@ -109,8 +110,9 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
     }))
   }
 
-  const handleSchedule = (match) => {
+  const handleSchedule = (match, isEditing = false) => {
     setSelectedMatch(match)
+    setIsEditingSchedule(isEditing)
     setShowScheduleModal(true)
   }
 
@@ -172,7 +174,11 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
       
       if (response.ok) {
         setShowScheduleModal(false)
-        showSuccessNotification(language === 'es' ? 'Partido programado con éxito' : 'Match scheduled successfully')
+        showSuccessNotification(
+          isEditingSchedule 
+            ? (language === 'es' ? 'Programación actualizada con éxito' : 'Schedule updated successfully')
+            : (language === 'es' ? 'Partido programado con éxito' : 'Match scheduled successfully')
+        )
         // Refresh the data
         window.location.reload()
       } else {
@@ -410,9 +416,13 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
             player={player}
             language={language}
             onCloseResult={() => setShowResultModal(false)}
-            onCloseSchedule={() => setShowScheduleModal(false)}
+            onCloseSchedule={() => {
+              setShowScheduleModal(false)
+              setIsEditingSchedule(false)
+            }}
             onSubmitResult={handleSubmitResult}
             onSubmitSchedule={handleSubmitSchedule}
+            isEditingSchedule={isEditingSchedule}
           />
         )}
       </div>
