@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import MatchCard from './MatchCard'
 import { MatchModals } from './MatchModals'
+import MatchResultCard from './MatchResultCard'
 import { toast } from '@/components/ui/Toast'
 
 export default function ScheduleTab({ schedule, language, totalRounds = 8, player = null, isPublic = false }) {
@@ -11,6 +12,9 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
   const [playerMatches, setPlayerMatches] = useState([])
   const [loadingPlayerMatches, setLoadingPlayerMatches] = useState(true)
   const [isEditingSchedule, setIsEditingSchedule] = useState(false)
+  const [showResultCard, setShowResultCard] = useState(false)
+  const [submittedMatch, setSubmittedMatch] = useState(null)
+  const [isWinner, setIsWinner] = useState(false)
 
   // Filter out any matches that have results (defensive programming for data inconsistencies)
   const upcomingSchedule = schedule?.filter(match => !match.result?.winner) || []
@@ -150,56 +154,61 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
       const result = await response.json()
       
       if (response.ok) {
-        // Optimistically update the match in playerMatches
-        setPlayerMatches(prevMatches => 
-          prevMatches.map(match => {
-            if (match._id === data.matchId) {
-              // Determine if current player is player1 or player2
-              const isPlayer1 = match.players.player1._id === player._id
-              
-              // Transform the sets data from myScore/opponentScore to player1/player2
-              const transformedSets = data.sets.map(set => ({
-                player1: isPlayer1 ? set.myScore : set.opponentScore,
-                player2: isPlayer1 ? set.opponentScore : set.myScore
-              }))
-              
-              // Calculate who won based on sets
-              let mySetWins = 0
-              let oppSetWins = 0
-              transformedSets.forEach(set => {
-                if (isPlayer1) {
-                  if (set.player1 > set.player2) mySetWins++
-                  else oppSetWins++
-                } else {
-                  if (set.player2 > set.player1) mySetWins++
-                  else oppSetWins++
-                }
-              })
-              
-              const winnerId = mySetWins > oppSetWins ? player._id : 
-                              (isPlayer1 ? match.players.player2._id : match.players.player1._id)
-              
-              // Update match to completed status with properly formatted data
-              return {
-                ...match,
-                status: 'completed',
-                result: {
-                  ...match.result,
-                  winner: winnerId,
-                  score: {
-                    sets: transformedSets,
-                    walkover: data.walkover
-                  },
-                  playedAt: new Date().toISOString()
-                }
-              }
+        // Determine if current player is player1 or player2
+        const match = playerMatches.find(m => m._id === data.matchId)
+        if (match) {
+          const isPlayer1 = match.players.player1._id === player._id
+          
+          // Transform the sets data from myScore/opponentScore to player1/player2
+          const transformedSets = data.sets.map(set => ({
+            player1: isPlayer1 ? set.myScore : set.opponentScore,
+            player2: isPlayer1 ? set.opponentScore : set.myScore
+          }))
+          
+          // Calculate who won based on sets
+          let mySetWins = 0
+          let oppSetWins = 0
+          transformedSets.forEach(set => {
+            if (isPlayer1) {
+              if (set.player1 > set.player2) mySetWins++
+              else oppSetWins++
+            } else {
+              if (set.player2 > set.player1) mySetWins++
+              else oppSetWins++
             }
-            return match
           })
-        )
-        
-        setShowResultModal(false)
-        toast.success(language === 'es' ? 'Resultado enviado con éxito' : 'Result submitted successfully')
+          
+          const winnerId = mySetWins > oppSetWins ? player._id : 
+                          (isPlayer1 ? match.players.player2._id : match.players.player1._id)
+          
+          // Update match to completed status with properly formatted data
+          const updatedMatch = {
+            ...match,
+            status: 'completed',
+            result: {
+              ...match.result,
+              winner: winnerId,
+              score: {
+                sets: transformedSets,
+                walkover: data.walkover
+              },
+              playedAt: new Date().toISOString()
+            }
+          }
+          
+          // Update the match in playerMatches
+          setPlayerMatches(prevMatches => 
+            prevMatches.map(m => 
+              m._id === data.matchId ? updatedMatch : m
+            )
+          )
+          
+          // Set up the result card display
+          setSubmittedMatch(updatedMatch)
+          setIsWinner(winnerId === player._id)
+          setShowResultModal(false)
+          setShowResultCard(true)
+        }
       } else {
         toast.error(result.error || (language === 'es' ? 'Error al enviar resultado' : 'Failed to submit result'))
       }
@@ -433,6 +442,22 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
           onSubmitResult={handleSubmitResult}
           onSubmitSchedule={handleSubmitSchedule}
           isEditingSchedule={isEditingSchedule}
+        />
+      )}
+
+      {/* Match Result Card */}
+      {showResultCard && submittedMatch && (
+        <MatchResultCard
+          match={submittedMatch}
+          player={player}
+          language={language}
+          isWinner={isWinner}
+          onClose={() => {
+            setShowResultCard(false)
+            setSubmittedMatch(null)
+            // Refresh the matches data
+            window.location.reload()
+          }}
         />
       )}
     </div>
