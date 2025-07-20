@@ -5,54 +5,56 @@ import Link from 'next/link';
 import Image from 'next/image';
 import Navigation from '@/components/common/Navigation';
 import Footer from '@/components/common/Footer';
+import EmotionalHeroSection from '@/components/home/EmotionalHeroSection';
+import ProblemSection from '@/components/home/ProblemSection';
+import SolutionSection from '@/components/home/SolutionSection';
 import { useParams } from 'next/navigation';
 import { cityInfo, i18n } from '@/lib/i18n/config';
 import { multiLeagueHomeContent } from '@/lib/content/multiLeagueHomeContent';
 import { homeContent } from '@/lib/content/homeContent';
 
-// City Card Component
-function CityCard({ city, cityData, content, locale }) {
-  const isAvailable = cityData[locale]?.status === 'active';
-  const cityContent = content.cities.cityDescriptions[city];
+// City Card Component - Updated for dynamic data
+function CityCard({ city, cityData, content, locale, isActive, playersCount = 0 }) {
+  const cityContent = content.cities.cityDescriptions?.[city];
   
   return (
     <div className={`relative bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 ${
-      !isAvailable ? 'opacity-80' : ''
+      !isActive ? 'opacity-80' : ''
     }`}>
       {/* Status Badge */}
       <div className="absolute top-4 right-4 z-10">
         <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-          isAvailable 
+          isActive 
             ? 'bg-green-100 text-green-800' 
             : 'bg-gray-100 text-gray-600'
         }`}>
-          {isAvailable ? content.cities.available : content.cities.comingSoon}
+          {isActive ? content.cities.available : content.cities.comingSoon}
         </span>
       </div>
       
       {/* City Image */}
       <div className="relative h-48 bg-gradient-to-br from-parque-purple to-parque-green">
         <div className="absolute inset-0 flex items-center justify-center">
-          <h3 className="text-3xl font-bold text-white">{cityData[locale]?.name || cityData[i18n.defaultLocale].name}</h3>
+          <h3 className="text-3xl font-bold text-white">{cityData[locale]?.name || cityData[i18n.defaultLocale]?.name}</h3>
         </div>
       </div>
       
       {/* Content */}
       <div className="p-6">
-        <p className="text-gray-600 mb-4">{cityContent}</p>
+        {cityContent && <p className="text-gray-600 mb-4">{cityContent}</p>}
         
-        {isAvailable && (
+        {isActive && playersCount > 0 && (
           <div className="flex items-center justify-between mb-4">
             <div className="text-sm text-gray-500">
-              <span className="font-semibold text-gray-700">250+</span> {content.cities.playersCount}
+              <span className="font-semibold text-gray-700">{playersCount}</span> {content.cities.playersCount}
             </div>
             <div className="text-sm text-gray-500">
-              {cityData[locale]?.region || cityData[i18n.defaultLocale].region}
+              {cityData[locale]?.region || cityData[i18n.defaultLocale]?.region}
             </div>
           </div>
         )}
         
-        {isAvailable ? (
+        {isActive ? (
           <Link
             href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${city}`}
             className="block w-full text-center bg-parque-purple text-white px-6 py-3 rounded-lg font-medium hover:bg-parque-purple/90 transition-colors"
@@ -64,7 +66,7 @@ function CityCard({ city, cityData, content, locale }) {
             disabled
             className="block w-full text-center bg-gray-200 text-gray-500 px-6 py-3 rounded-lg font-medium cursor-not-allowed"
           >
-            {content.cities.startingSoon}
+            {content.cities.waitingList}
           </button>
         )}
       </div>
@@ -110,31 +112,37 @@ function FeatureCard({ feature }) {
 
 export default function MultiLeagueHomePage() {
   const params = useParams();
-  
-  // Validate and set locale with fallback
-  const rawLocale = params.locale;
-  const validLocale = i18n.locales.includes(rawLocale) ? rawLocale : i18n.defaultLocale;
+  const validLocale = i18n.locales.includes(params.locale) ? params.locale : i18n.defaultLocale;
   
   const [language, setLanguage] = useState(validLocale);
-  const [isLanguageLoaded, setIsLanguageLoaded] = useState(true);
+  const [leagues, setLeagues] = useState([]);
+  const [loading, setLoading] = useState(true);
   
   const content = multiLeagueHomeContent[validLocale] || multiLeagueHomeContent[i18n.defaultLocale];
   const footerContent = homeContent[validLocale]?.footer || homeContent[i18n.defaultLocale]?.footer;
   
-  // Organize cities by status with safe access
-  const activeCities = Object.entries(cityInfo).filter(
-    ([_, data]) => {
-      const cityData = data[validLocale] || data[i18n.defaultLocale];
-      return cityData?.status === 'active';
-    }
-  );
+  // Fetch leagues from database
+  useEffect(() => {
+    fetchLeagues();
+  }, []);
   
-  const comingSoonCities = Object.entries(cityInfo).filter(
-    ([_, data]) => {
-      const cityData = data[validLocale] || data[i18n.defaultLocale];
-      return cityData?.status === 'coming-soon';
+  const fetchLeagues = async () => {
+    try {
+      const response = await fetch('/api/leagues');
+      if (response.ok) {
+        const data = await response.json();
+        setLeagues(data.leagues || []);
+      }
+    } catch (error) {
+      console.error('Error fetching leagues:', error);
+    } finally {
+      setLoading(false);
     }
-  );
+  };
+  
+  // Organize leagues by status
+  const activeLeagues = leagues.filter(league => league.status === 'active');
+  const comingSoonLeagues = leagues.filter(league => league.status === 'coming_soon');
   
   return (
     <main className="min-h-screen bg-gradient-to-b from-parque-bg to-white">
@@ -145,54 +153,13 @@ export default function MultiLeagueHomePage() {
         showLanguageSwitcher={true}
       />
       
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-20 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-parque-purple/10 to-parque-green/10"></div>
-        <div className="container mx-auto relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6">
-              {content.hero.title}
-            </h1>
-            <p className="text-xl md:text-2xl text-gray-600 mb-8">
-              {content.hero.subtitle}
-            </p>
-            <p className="text-lg text-gray-600 mb-12 max-w-2xl mx-auto">
-              {content.hero.description}
-            </p>
-            
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto mb-12">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-parque-purple">{content.hero.stats.players}</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-parque-purple">{content.hero.stats.cities}</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-parque-purple">{content.hero.stats.matches}</div>
-              </div>
-            </div>
-            
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a
-                href="#cities"
-                className="px-8 py-4 bg-parque-purple text-white rounded-lg font-medium text-lg hover:bg-parque-purple/90 transition-colors"
-              >
-                {content.hero.cta.primary}
-              </a>
-              <a
-                href="#how-it-works"
-                className="px-8 py-4 border-2 border-parque-purple text-parque-purple rounded-lg font-medium text-lg hover:bg-parque-purple/10 transition-colors"
-              >
-                {content.hero.cta.secondary}
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
+      <EmotionalHeroSection content={content} locale={validLocale} />
       
-      {/* Cities Section */}
+      <ProblemSection content={content.problem} />
+      
+      <SolutionSection content={content.solution} />
+      
+      {/* Cities Section - Now Dynamic */}
       <section id="cities" className="py-20 px-4 bg-gray-50">
         <div className="container mx-auto">
           <div className="text-center mb-16">
@@ -204,39 +171,74 @@ export default function MultiLeagueHomePage() {
             </p>
           </div>
           
-          {/* Active Cities */}
-          {activeCities.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-              {activeCities.map(([city, cityData]) => (
-                <CityCard
-                  key={city}
-                  city={city}
-                  cityData={cityData}
-                  content={content}
-                  locale={validLocale}
-                />
-              ))}
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
+              <p className="mt-4 text-gray-600">
+                {validLocale === 'es' ? 'Cargando ligas...' : 'Loading leagues...'}
+              </p>
             </div>
-          )}
-          
-          {/* Coming Soon Cities */}
-          {comingSoonCities.length > 0 && (
-            <div>
-              <h3 className="text-2xl font-semibold text-gray-700 mb-6 text-center">
-                {content.cities.comingSoon}
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {comingSoonCities.map(([city, cityData]) => (
-                  <CityCard
-                    key={city}
-                    city={city}
-                    cityData={cityData}
-                    content={content}
-                    locale={validLocale}
-                  />
-                ))}
-              </div>
-            </div>
+          ) : (
+            <>
+              {/* Active Leagues */}
+              {activeLeagues.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+                  {activeLeagues.map((league) => (
+                    <CityCard
+                      key={league._id}
+                      city={league.slug}
+                      cityData={{
+                        [validLocale]: {
+                          name: league.name,
+                          region: league.location || 'Andalucía'
+                        }
+                      }}
+                      content={content}
+                      locale={validLocale}
+                      isActive={true}
+                      playersCount={league.playerCount || 24}
+                    />
+                  ))}
+                </div>
+              )}
+              
+              {/* Coming Soon Leagues */}
+              {comingSoonLeagues.length > 0 && (
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-700 mb-6 text-center">
+                    {content.cities.comingSoon}
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {comingSoonLeagues.map((league) => (
+                      <CityCard
+                        key={league._id}
+                        city={league.slug}
+                        cityData={{
+                          [validLocale]: {
+                            name: league.name,
+                            region: league.location
+                          }
+                        }}
+                        content={content}
+                        locale={validLocale}
+                        isActive={false}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Fallback if no leagues */}
+              {leagues.length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-gray-600">
+                    {validLocale === 'es' 
+                      ? 'Próximamente anunciaremos nuevas ligas.' 
+                      : 'We will announce new leagues soon.'}
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>
@@ -287,7 +289,7 @@ export default function MultiLeagueHomePage() {
         </div>
       </section>
       
-      {/* Testimonials Section */}
+      {/* Testimonials Section - Updated */}
       <section className="py-20 px-4">
         <div className="container mx-auto">
           <div className="text-center mb-16">
@@ -310,6 +312,11 @@ export default function MultiLeagueHomePage() {
                   ))}
                 </div>
                 <p className="text-gray-700 mb-4">&ldquo;{testimonial.text}&rdquo;</p>
+                {testimonial.highlight && (
+                  <p className="text-sm font-semibold text-parque-purple mb-2">
+                    "{testimonial.highlight}"
+                  </p>
+                )}
                 <div className="font-semibold">{testimonial.name}</div>
                 <div className="text-sm text-gray-500">{testimonial.location}</div>
               </div>
@@ -318,7 +325,7 @@ export default function MultiLeagueHomePage() {
         </div>
       </section>
       
-      {/* CTA Section */}
+      {/* CTA Section - Updated */}
       <section className="py-20 px-4 bg-gradient-to-br from-parque-purple to-parque-green text-white">
         <div className="container mx-auto text-center">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
@@ -333,8 +340,11 @@ export default function MultiLeagueHomePage() {
           >
             {content.cta.button}
           </a>
-          <p className="text-sm opacity-90">
+          <p className="text-sm opacity-90 mb-2">
             {content.cta.guarantee}
+          </p>
+          <p className="text-sm opacity-75">
+            {content.cta.urgency}
           </p>
         </div>
       </section>
