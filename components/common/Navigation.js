@@ -11,9 +11,15 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isHomeSectionsOpen, setIsHomeSectionsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [isClient, setIsClient] = useState(false)
   const params = useParams()
   const pathname = usePathname()
   const locale = params?.locale || language || 'es'
+
+  // Hydration guard - ensure client-side rendering
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   // Handle scroll effect
   useEffect(() => {
@@ -88,11 +94,14 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
   const t = navContent[validLocale]
 
   const handleMobileMenuToggle = () => {
+    if (!isClient) return // Prevent interaction before hydration
     setIsMobileMenuOpen(!isMobileMenuOpen)
     setIsHomeSectionsOpen(false)
   }
 
   const handleSectionClick = (sectionId, closeMobileMenu = false) => {
+    if (!isClient) return // Prevent interaction before hydration
+    
     if (currentPage !== 'home') {
       // If not on home page, navigate to home page with section
       window.location.href = `/${validLocale}#${sectionId}`
@@ -111,9 +120,9 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
   }
 
   const NavLink = ({ href, children, onClick }) => {
-    // Convert href to locale-based href
-    const localizedHref = href.startsWith('/') ? `/${validLocale}${href}` : href
-    const isActive = pathname === localizedHref || (href === '/' && pathname === `/${validLocale}`)
+    // Convert href to locale-based href - only after hydration
+    const localizedHref = isClient && href.startsWith('/') ? `/${validLocale}${href}` : href
+    const isActive = isClient && (pathname === localizedHref || (href === '/' && pathname === `/${validLocale}`))
     
     return (
       <Link 
@@ -138,10 +147,60 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
     <button
       onClick={() => handleSectionClick(sectionId, mobile)}
       className="text-left w-full py-2 px-3 text-gray-600 hover:text-parque-purple hover:bg-parque-purple/5 rounded-lg transition-all duration-200 text-sm"
+      disabled={!isClient}
     >
       {children}
     </button>
   )
+
+  // Don't render interactive elements until hydrated
+  if (!isClient) {
+    return (
+      <nav className="fixed top-0 w-full backdrop-blur-md z-[100] bg-white/95">
+        <div className="container mx-auto px-2 md:px-4">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center">
+              <div className="group flex items-center space-x-2">
+                <Image
+                  src="/logo-horizontal-small.png"
+                  alt="Tenis del Parque"
+                  height={48}
+                  width={200}
+                  className="h-12 w-auto"
+                  priority
+                  quality={100}
+                />
+              </div>
+            </div>
+            
+            <div className="hidden lg:flex items-center space-x-8">
+              <div className="flex space-x-6 text-gray-700">
+                <span>{t.home}</span>
+                <span>{t.leagues}</span>
+                <span>{t.rules}</span>
+                <span>{t.swiss}</span>
+                <span>{t.elo}</span>
+              </div>
+              
+              <div className="ml-4">
+                <span className="bg-parque-purple text-white px-4 py-2 rounded-lg font-medium text-sm">
+                  {t.login}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3 lg:hidden">
+              <div className="flex flex-col justify-center items-center w-10 h-10 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-lg">
+                <span className="block w-5 h-0.5 bg-gray-600 -translate-y-1"></span>
+                <span className="block w-5 h-0.5 bg-gray-600"></span>
+                <span className="block w-5 h-0.5 bg-gray-600 translate-y-1"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+    )
+  }
 
   return (
     <>

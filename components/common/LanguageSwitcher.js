@@ -6,7 +6,13 @@ import { useState, useRef, useEffect } from 'react';
 export default function LanguageSwitcher({ className = '' }) {
   const { locale, switchLocale, t } = useLocale();
   const [isOpen, setIsOpen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const dropdownRef = useRef(null);
+  
+  // Hydration guard
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   
   const languages = [
     { code: 'es', name: 'Español', flag: '🇪🇸' },
@@ -23,19 +29,47 @@ export default function LanguageSwitcher({ className = '' }) {
       }
     }
     
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    if (isClient) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isClient]);
   
   const handleLanguageChange = (langCode) => {
+    if (!isClient) return;
     switchLocale(langCode);
     setIsOpen(false);
   };
+
+  const handleToggleOpen = () => {
+    if (!isClient) return;
+    setIsOpen(!isOpen);
+  };
+  
+  // Return non-interactive version until hydrated
+  if (!isClient) {
+    return (
+      <div className={`relative ${className}`}>
+        <div className="flex items-center space-x-2 px-3 py-2 rounded-lg text-gray-700">
+          <span className="text-lg">🇪🇸</span>
+          <span className="text-sm font-medium">ES</span>
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggleOpen}
         className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 text-gray-700 hover:text-gray-900"
         aria-label={t('navigation', 'switchLanguage')}
         aria-expanded={isOpen}
@@ -93,11 +127,27 @@ export default function LanguageSwitcher({ className = '' }) {
 // Compact version for mobile
 export function LanguageSwitcherCompact({ className = '' }) {
   const { locale, switchLocale } = useLocale();
+  const [isClient, setIsClient] = useState(false);
+  
+  // Hydration guard
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   
   const toggleLanguage = () => {
+    if (!isClient) return;
     const newLocale = locale === 'es' ? 'en' : 'es';
     switchLocale(newLocale);
   };
+  
+  // Return non-interactive version until hydrated
+  if (!isClient) {
+    return (
+      <div className={`flex items-center justify-center w-10 h-10 rounded-lg ${className}`}>
+        <span className="text-lg">🇪🇸</span>
+      </div>
+    );
+  }
   
   return (
     <button
