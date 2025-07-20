@@ -169,6 +169,7 @@ export default function PlayerLeague() {
             <ResultsTab 
               matches={matches}
               language={language}
+              player={player}
             />
           )}
         </div>
