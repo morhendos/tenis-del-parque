@@ -14,8 +14,14 @@ import { multiLeagueHomeContent } from '@/lib/content/multiLeagueHomeContent';
 import { homeContent } from '@/lib/content/homeContent';
 
 // City Card Component - Updated for dynamic data
-function CityCard({ city, cityData, content, locale, isActive, playersCount = 0 }) {
-  const cityContent = content.cities.cityDescriptions?.[city];
+function CityCard({ league, content, locale }) {
+  const isActive = league.status === 'active';
+  const citySlug = league.slug;
+  const cityContent = content.cities.cityDescriptions?.[citySlug];
+  
+  // Extract location string from location object
+  const locationString = league.location?.city || league.location?.region || league.name;
+  const regionString = league.location?.region || 'España';
   
   return (
     <div className={`relative bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 ${
@@ -35,7 +41,7 @@ function CityCard({ city, cityData, content, locale, isActive, playersCount = 0 
       {/* City Image */}
       <div className="relative h-48 bg-gradient-to-br from-parque-purple to-parque-green">
         <div className="absolute inset-0 flex items-center justify-center">
-          <h3 className="text-3xl font-bold text-white">{cityData[locale]?.name || cityData[i18n.defaultLocale]?.name}</h3>
+          <h3 className="text-3xl font-bold text-white">{league.name}</h3>
         </div>
       </div>
       
@@ -43,20 +49,20 @@ function CityCard({ city, cityData, content, locale, isActive, playersCount = 0 
       <div className="p-6">
         {cityContent && <p className="text-gray-600 mb-4">{cityContent}</p>}
         
-        {isActive && playersCount > 0 && (
+        {isActive && league.playerCount > 0 && (
           <div className="flex items-center justify-between mb-4">
             <div className="text-sm text-gray-500">
-              <span className="font-semibold text-gray-700">{playersCount}</span> {content.cities.playersCount}
+              <span className="font-semibold text-gray-700">{league.playerCount}</span> {content.cities.playersCount}
             </div>
             <div className="text-sm text-gray-500">
-              {cityData[locale]?.region || cityData[i18n.defaultLocale]?.region}
+              {regionString}
             </div>
           </div>
         )}
         
         {isActive ? (
           <Link
-            href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${city}`}
+            href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${citySlug}`}
             className="block w-full text-center bg-parque-purple text-white px-6 py-3 rounded-lg font-medium hover:bg-parque-purple/90 transition-colors"
           >
             {content.cities.joinButton}
@@ -186,17 +192,9 @@ export default function MultiLeagueHomePage() {
                   {activeLeagues.map((league) => (
                     <CityCard
                       key={league._id}
-                      city={league.slug}
-                      cityData={{
-                        [validLocale]: {
-                          name: league.name,
-                          region: league.location || 'Andalucía'
-                        }
-                      }}
+                      league={league}
                       content={content}
                       locale={validLocale}
-                      isActive={true}
-                      playersCount={league.playerCount || 24}
                     />
                   ))}
                 </div>
@@ -212,30 +210,30 @@ export default function MultiLeagueHomePage() {
                     {comingSoonLeagues.map((league) => (
                       <CityCard
                         key={league._id}
-                        city={league.slug}
-                        cityData={{
-                          [validLocale]: {
-                            name: league.name,
-                            region: league.location
-                          }
-                        }}
+                        league={league}
                         content={content}
                         locale={validLocale}
-                        isActive={false}
                       />
                     ))}
                   </div>
                 </div>
               )}
               
-              {/* Fallback if no leagues */}
+              {/* Fallback if no leagues from database - show hardcoded Sotogrande */}
               {leagues.length === 0 && (
-                <div className="text-center py-12">
-                  <p className="text-gray-600">
-                    {validLocale === 'es' 
-                      ? 'Próximamente anunciaremos nuevas ligas.' 
-                      : 'We will announce new leagues soon.'}
-                  </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  <CityCard
+                    league={{
+                      _id: 'default-sotogrande',
+                      name: 'Sotogrande',
+                      slug: 'sotogrande',
+                      status: 'active',
+                      playerCount: 24,
+                      location: { city: 'Sotogrande', region: 'Cádiz' }
+                    }}
+                    content={content}
+                    locale={validLocale}
+                  />
                 </div>
               )}
             </>
