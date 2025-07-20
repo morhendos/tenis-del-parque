@@ -76,6 +76,8 @@ root/
 │   │   │   ├── dashboard
 │   │   │   │   └── route.js
 │   │   │   ├── leagues
+│   │   │   │   ├── [id]
+│   │   │   │   │   └── route.js
 │   │   │   │   ├── export
 │   │   │   │   │   └── route.js
 │   │   │   │   ├── import
@@ -153,7 +155,8 @@ root/
 ├── components
 │   ├── admin
 │   │   ├── leagues
-│   │   │   └── ImportCSVModal.js
+│   │   │   ├── ImportCSVModal.js
+│   │   │   └── LeagueFormModal.js
 │   │   ├── matches
 │   │   │   ├── MatchCard.js
 │   │   │   ├── MatchDetailHeader.js
@@ -186,13 +189,16 @@ root/
 │   │   ├── EloContentRenderer.js
 │   │   └── EloHeroSection.js
 │   ├── home
+│   │   ├── EmotionalHeroSection.js
 │   │   ├── FAQSection.js
 │   │   ├── FeaturesSection.js
 │   │   ├── HeroSection.js
 │   │   ├── HowItWorksSection.js
 │   │   ├── LevelsSection.js
 │   │   ├── PlatformPreviewSection.js
+│   │   ├── ProblemSection.js
 │   │   ├── SignupSection.js
+│   │   ├── SolutionSection.js
 │   │   └── TestimonialsSection.js
 │   ├── layout
 │   ├── league
@@ -224,21 +230,9 @@ root/
 │       ├── Toast.js
 │       └── WelcomeModal.js
 ├── docs
-│   ├── EDIT_MATCH_PLAYERS.md
-│   ├── GAMES_STATISTICS_FIX_DYNAMIC.md
-│   ├── IMPROVED_MATCH_CREATION.md
-│   ├── IMPROVED_ROUND_MATCH_CREATION.md
-│   ├── MATCH_MANAGEMENT_GUIDE.md
-│   ├── MATCH_SCHEDULING_UX_IMPROVEMENTS.md
-│   ├── MOBILE_UI_IMPROVEMENTS.md
-│   ├── MOBILE_UI_UX_IMPROVEMENTS.md
-│   ├── NEXTAUTH_CLEANUP.md
-│   ├── NEXTAUTH_MIGRATION_PLAN.md
-│   ├── NEXTAUTH_PLAYER_LINKING.md
-│   ├── PLAYER_MATCH_IMPROVEMENTS.md
+│   ├── HOMEPAGE_LEAGUE_IMPLEMENTATION_PLAN.md
 │   ├── PLAYER_MESSAGES_SYSTEM.md
 │   ├── PRODUCT_LED_GROWTH.md
-│   ├── PR_MATCH_MANAGEMENT.md
 │   ├── PR_MULTILINGUAL_IMPLEMENTATION.md
 │   ├── SCORING_SYSTEM_INTEGRATION.md
 │   ├── SEO Strategy
