@@ -25,18 +25,18 @@ Transform the homepage from showing fake statistics to an inspirational, problem
 - [x] Use icons and visuals to make it scannable
 - [x] Include emotional benefits (confidence, community, fun)
 
-## Phase 2: Admin League Management (Priority: High)
+## Phase 2: Admin League Management ✅ (Priority: High)
 
 ### 2.1 League Model Enhancement
-- [ ] Add fields for league status: 'active', 'coming_soon', 'planning'
-- [ ] Add waiting list count field
-- [ ] Add expected launch date
-- [ ] Add priority/order field for display
+- [x] Add fields for league status: 'active', 'coming_soon', 'planning'
+- [x] Add waiting list count field
+- [x] Add expected launch date
+- [x] Add priority/order field for display
 
 ### 2.2 Admin Interface
-- [ ] Create league management page in admin
-- [ ] Allow creating new leagues with all statuses
-- [ ] Enable editing league details
+- [x] Create league management page in admin
+- [x] Allow creating new leagues with all statuses
+- [x] Enable editing league details
 - [ ] Add waiting list viewer
 - [ ] Export waiting list functionality
 
@@ -115,15 +115,15 @@ components/
 │   └── WaitingListForm.js
 └── admin/
     └── leagues/
-        ├── LeagueManager.js
-        ├── LeagueForm.js
+        ├── LeagueManager.js ✅
+        ├── LeagueFormModal.js ✅
         └── WaitingListViewer.js
 ```
 
 ### API Routes
 ```
 /api/leagues ✅
-  GET - Public endpoint for all leagues
+  GET - Public endpoint for all leagues (includes coming_soon)
   
 /api/leagues/[slug]
   GET - Public endpoint for single league
@@ -131,36 +131,35 @@ components/
 /api/leagues/[slug]/waiting-list
   POST - Join waiting list
   
-/api/admin/leagues
+/api/admin/leagues ✅
   GET, POST - Admin league management
   
-/api/admin/leagues/[id]
+/api/admin/leagues/[id] ✅
   PUT, DELETE - Admin league updates
   
 /api/admin/leagues/[id]/waiting-list
   GET - View waiting list
 ```
 
-### Database Updates
+### Database Updates ✅
 ```javascript
 // League Model additions
 {
   status: {
     type: String,
-    enum: ['active', 'coming_soon', 'planning', 'inactive'],
-    default: 'planning'
+    enum: ['active', 'coming_soon', 'inactive'],
+    default: 'active'
   },
   expectedLaunchDate: Date,
   waitingListCount: { type: Number, default: 0 },
   displayOrder: { type: Number, default: 0 },
-  heroImage: String,
-  cityDescription: {
+  description: {
     es: String,
     en: String
   }
 }
 
-// New WaitingList Model
+// New WaitingList Model (still pending)
 {
   league: { type: ObjectId, ref: 'League' },
   email: { type: String, required: true },
@@ -178,7 +177,7 @@ components/
 
 1. **Week 1**: Homepage redesign with emotional focus ✅
 2. **Week 1-2**: Dynamic league display from database ✅
-3. **Week 2**: Basic admin league management
+3. **Week 2**: Basic admin league management ✅
 4. **Week 3**: Individual league pages (template + Sotogrande)
 5. **Week 3-4**: Waiting list system
 6. **Week 4+**: Enhanced features and polish
@@ -188,14 +187,22 @@ components/
 - [x] Homepage clearly communicates the problem we solve
 - [x] Visitors understand the emotional benefits
 - [x] League information is always accurate (from DB)
-- [ ] Easy for admins to manage leagues
+- [x] Easy for admins to manage leagues
 - [ ] Smooth waiting list signup process
 - [ ] Each league has its own compelling page
 
 ## Notes
 
-- Start with Estepona as the first "coming soon" league
+- Start with Estepona as the first "coming soon" league ✅
 - Keep all components modular and reusable ✅
-- Ensure mobile-first design throughout
+- Ensure mobile-first design throughout ✅
 - Use real data wherever possible ✅
 - Focus on authenticity over impressive numbers ✅
+
+## How to Test Phase 2
+
+1. **Create a new league**: Go to `/admin/leagues` and click "Create League"
+2. **Set Estepona as coming soon**: Name: "Estepona", Slug: "estepona", Status: "Coming Soon"
+3. **Add descriptions**: Spanish and English descriptions for the league
+4. **Set display order**: Lower numbers appear first on homepage
+5. **Check homepage**: New league should appear in "Coming Soon" section
