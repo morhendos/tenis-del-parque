@@ -17,14 +17,14 @@ export default function EmotionalHeroSection({ content, locale }) {
       
       <div className="container mx-auto relative z-10">
         <div className="max-w-5xl mx-auto text-center">
-          {/* Logo */}
-          <div className="mb-8 animate-fade-in">
+          {/* Logo - Much larger now */}
+          <div className="mb-12 animate-fade-in">
             <Image
               src="/logo-01.webp"
               alt="Tenis del Parque"
-              width={200}
-              height={200}
-              className="mx-auto w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 object-contain"
+              width={350}
+              height={350}
+              className="mx-auto w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96 object-contain"
               priority
             />
           </div>
@@ -44,23 +44,8 @@ export default function EmotionalHeroSection({ content, locale }) {
             {content.hero.description}
           </p>
           
-          {/* Badges */}
-          <div className="flex flex-wrap justify-center gap-4 mb-12">
-            {content.hero.badges.map((badge, index) => (
-              <span 
-                key={index}
-                className="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium"
-              >
-                <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                {badge}
-              </span>
-            ))}
-          </div>
-          
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
             <a
               href="#cities"
               className="group px-8 py-4 bg-parque-purple text-white rounded-lg font-medium text-lg hover:bg-parque-purple/90 transition-all transform hover:scale-105 shadow-lg"
@@ -77,7 +62,7 @@ export default function EmotionalHeroSection({ content, locale }) {
           </div>
           
           {/* Trust indicator */}
-          <p className="text-sm text-gray-500 mt-8">
+          <p className="text-sm text-gray-500">
             {locale === 'es' 
               ? 'Jugadores reales en Sotogrande ya están disfrutando' 
               : 'Real players in Sotogrande are already enjoying'}
