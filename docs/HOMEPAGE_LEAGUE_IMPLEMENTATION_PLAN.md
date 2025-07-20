@@ -3,7 +3,7 @@
 ## Overview
 Transform the homepage from showing fake statistics to an inspirational, problem-solving focused design that connects with potential players emotionally. Implement a dynamic league system with proper database integration and individual league landing pages.
 
-## Phase 1: Homepage Redesign ✅ (Priority: High)
+## Phase 1: Homepage Redesign ✅ (Priority: High) - COMPLETED
 
 ### 1.1 New Hero Section
 - [x] Replace fake statistics with emotional value proposition
@@ -25,10 +25,10 @@ Transform the homepage from showing fake statistics to an inspirational, problem
 - [x] Use icons and visuals to make it scannable
 - [x] Include emotional benefits (confidence, community, fun)
 
-## Phase 2: Admin League Management ✅ (Priority: High)
+## Phase 2: Admin League Management ✅ (Priority: High) - COMPLETED
 
 ### 2.1 League Model Enhancement
-- [x] Add fields for league status: 'active', 'coming_soon', 'planning'
+- [x] Add fields for league status: 'active', 'coming_soon', 'inactive'
 - [x] Add waiting list count field
 - [x] Add expected launch date
 - [x] Add priority/order field for display
@@ -40,22 +40,23 @@ Transform the homepage from showing fake statistics to an inspirational, problem
 - [ ] Add waiting list viewer
 - [ ] Export waiting list functionality
 
-## Phase 3: Individual League Pages (Priority: Medium)
+## Phase 3: Individual League Pages (Priority: Medium) - PARTIALLY COMPLETE
 
-### 3.1 League Page Template
-- [ ] Create reusable league page component
-- [ ] Support both active and coming soon states
-- [ ] Include league-specific information
+### 3.1 League Page Template ✅
+- [x] Create reusable league page component (`[locale]/[location]/liga/[season]/page.js`)
+- [x] Support both active and coming soon states
+- [x] Include league-specific information
 - [ ] Add local testimonials/photos when available
 
-### 3.2 Active League Pages (like Sotogrande)
-- [ ] Show current season info
-- [ ] Display real player count
-- [ ] Link to registration
-- [ ] Show recent matches/results
-- [ ] Include league-specific rules
+### 3.2 Active League Pages (like Sotogrande) ✅
+- [x] Show current season info
+- [x] Display real player count
+- [x] Link to registration (when open)
+- [x] Show recent matches/results
+- [x] Include league-specific rules
 
 ### 3.3 Coming Soon League Pages
+- [ ] Create landing page for coming soon leagues (`[locale]/[location]/page.js`)
 - [ ] Explain why we're coming to this city
 - [ ] Show expected launch timeline
 - [ ] Waiting list signup form
@@ -109,15 +110,15 @@ components/
 │   ├── TestimonialsSection.js (real testimonials) ✅
 │   └── CTASection.js (clear next steps) ✅
 ├── leagues/
-│   ├── LeaguePageTemplate.js
-│   ├── ActiveLeagueContent.js
-│   ├── ComingSoonLeagueContent.js
-│   └── WaitingListForm.js
+│   ├── LeaguePageTemplate.js ✅ (as [locale]/[location]/liga/[season]/page.js)
+│   ├── ActiveLeagueContent.js ✅
+│   ├── ComingSoonLeagueContent.js (pending)
+│   └── WaitingListForm.js (pending)
 └── admin/
     └── leagues/
-        ├── LeagueManager.js ✅
+        ├── LeagueManager.js ✅ (admin/leagues/page.js)
         ├── LeagueFormModal.js ✅
-        └── WaitingListViewer.js
+        └── WaitingListViewer.js (pending)
 ```
 
 ### API Routes
@@ -125,11 +126,11 @@ components/
 /api/leagues ✅
   GET - Public endpoint for all leagues (includes coming_soon)
   
-/api/leagues/[slug]
-  GET - Public endpoint for single league
+/api/leagues/[slug] ✅
+  GET - Public endpoint for single league (existing)
   
 /api/leagues/[slug]/waiting-list
-  POST - Join waiting list
+  POST - Join waiting list (pending)
   
 /api/admin/leagues ✅
   GET, POST - Admin league management
@@ -138,12 +139,12 @@ components/
   PUT, DELETE - Admin league updates
   
 /api/admin/leagues/[id]/waiting-list
-  GET - View waiting list
+  GET - View waiting list (pending)
 ```
 
 ### Database Updates ✅
 ```javascript
-// League Model additions
+// League Model additions (COMPLETED)
 {
   status: {
     type: String,
@@ -159,7 +160,7 @@ components/
   }
 }
 
-// New WaitingList Model (still pending)
+// New WaitingList Model (PENDING)
 {
   league: { type: ObjectId, ref: 'League' },
   email: { type: String, required: true },
@@ -173,36 +174,45 @@ components/
 }
 ```
 
-## Implementation Order
+## Current Status Summary
 
-1. **Week 1**: Homepage redesign with emotional focus ✅
-2. **Week 1-2**: Dynamic league display from database ✅
-3. **Week 2**: Basic admin league management ✅
-4. **Week 3**: Individual league pages (template + Sotogrande)
-5. **Week 3-4**: Waiting list system
-6. **Week 4+**: Enhanced features and polish
+### ✅ Completed:
+1. **Homepage redesign** with emotional focus
+2. **Dynamic league display** from database
+3. **Admin league management** (create, edit, status management)
+4. **League page for active leagues** (standings, schedule, results)
+5. **Fixed issues**:
+   - `refreshLeagues` function error
+   - Active leagues now link to league page instead of registration
 
-## Success Metrics
+### 🚧 In Progress / Next Steps:
+1. **Coming Soon League Landing Pages**: Need separate pages for leagues with `coming_soon` status
+2. **Waiting List System**: Complete database model, API, and UI
+3. **Admin Waiting List Viewer**: To see who's interested in new leagues
 
-- [x] Homepage clearly communicates the problem we solve
-- [x] Visitors understand the emotional benefits
-- [x] League information is always accurate (from DB)
-- [x] Easy for admins to manage leagues
-- [ ] Smooth waiting list signup process
-- [ ] Each league has its own compelling page
+## How to Test Current Implementation
+
+1. **Create Estepona as coming soon**:
+   - Go to `/admin/leagues`
+   - Click "+ Create League"
+   - Name: "Estepona", Slug: "estepona", Status: "Coming Soon"
+   - City: "Estepona", Region: "Málaga"
+   - Set expected launch date
+   
+2. **Check homepage**:
+   - New league appears in "Coming Soon" section
+   - Active leagues (Sotogrande) show "Ver Liga" button
+   - Coming soon leagues show "Lista de Espera" button
+
+3. **Test league page**:
+   - Click "Ver Liga" on Sotogrande
+   - Should go to `/es/sotogrande/liga/verano2025`
+   - See standings, schedule, and results
 
 ## Notes
 
-- Start with Estepona as the first "coming soon" league ✅
+- Active leagues direct to league page (`/[locale]/[location]/liga/[season]`)
+- Coming soon leagues need landing pages (`/[locale]/[location]`)
+- Registration only available when season status is `registration_open`
 - Keep all components modular and reusable ✅
-- Ensure mobile-first design throughout ✅
-- Use real data wherever possible ✅
 - Focus on authenticity over impressive numbers ✅
-
-## How to Test Phase 2
-
-1. **Create a new league**: Go to `/admin/leagues` and click "Create League"
-2. **Set Estepona as coming soon**: Name: "Estepona", Slug: "estepona", Status: "Coming Soon"
-3. **Add descriptions**: Spanish and English descriptions for the league
-4. **Set display order**: Lower numbers appear first on homepage
-5. **Check homepage**: New league should appear in "Coming Soon" section
