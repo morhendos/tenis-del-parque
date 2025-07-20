@@ -255,6 +255,7 @@ export default function MatchResultCard({
 
             {/* Action Buttons */}
             <div className="flex gap-3">
+              {/* TODO: Re-enable share button when improved
               {isPlayerMatch && actualIsWinner && (
                 <button
                   onClick={() => {
@@ -278,9 +279,10 @@ export default function MatchResultCard({
                   {language === 'es' ? 'Compartir' : 'Share'}
                 </button>
               )}
+              */}
               <button
                 onClick={onClose}
-                className={`${!isPlayerMatch || !actualIsWinner ? 'flex-1' : ''} bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-medium hover:bg-gray-200 transition-colors`}
+                className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-medium hover:bg-gray-200 transition-colors"
               >
                 {language === 'es' ? 'Cerrar' : 'Close'}
               </button>
@@ -289,9 +291,50 @@ export default function MatchResultCard({
             {/* Motivational Message - Only for player's own losing matches */}
             {isPlayerMatch && !actualIsWinner && (
               <p className="text-center text-sm text-gray-500 mt-4">
-                {language === 'es' 
-                  ? '¡Sigue practicando! La próxima victoria está cerca 💪'
-                  : 'Keep practicing! Your next victory is just around the corner 💪'}
+                {(() => {
+                  const motivationalMessages = {
+                    es: [
+                      '¡Sigue practicando! La próxima victoria está cerca 💪',
+                      'Cada partido es una lección - ¡te estás fortaleciendo! 🎾',
+                      'Los campeones se forjan con derrotas como estas ⭐',
+                      '¡Gran esfuerzo! Los mejores jugadores también pierden 👏',
+                      '¡Tu historia de remontada empieza ahora! 🔥',
+                      'Los partidos difíciles hacen mejores jugadores 🏆',
+                      'Jugaste con el corazón - eso es lo que cuenta ❤️',
+                      'Todos los profesionales han estado donde estás ahora 🎯',
+                      '¡El próximo partido es un nuevo comienzo! ✨',
+                      'Estás forjando tu carácter con cada juego 💎',
+                      'Las derrotas son solo lecciones disfrazadas 🎓',
+                      'Estás coleccionando puntos de experiencia con cada juego 🎮',
+                      'La derrota de hoy es la ventaja de mañana 📈',
+                      '¡No estás perdiendo - estás aprendiendo a ganar! 🧠',
+                      'Los retrocesos son preparación para las remontadas 🎯',
+                      'Acabas de ganar experiencia de partido - ¡no tiene precio! 💰'
+                    ],
+                    en: [
+                      'Keep practicing! Your next victory is just around the corner 💪',
+                      'Every match is a lesson - you\'re getting stronger! 🎾',
+                      'Champions are made through defeats like these ⭐',
+                      'Great effort! The best players lose matches too 👏',
+                      'Your comeback story starts now! 🔥',
+                      'Tough matches make better players 🏆',
+                      'You played your heart out - that\'s what counts ❤️',
+                      'Every pro has been where you are right now 🎯',
+                      'The next match is a fresh start! ✨',
+                      'You\'re building character with every game 💎',
+                      'Losses are just lessons in disguise 🎓',
+                      'You\'re collecting experience points with every game 🎮',
+                      'Today\'s defeat is tomorrow\'s advantage 📈',
+                      'You\'re not losing - you\'re learning to win! 🧠',
+                      'Setbacks are setups for comebacks 🎯',
+                      'You just gained match experience - priceless! 💰'
+                    ]
+                  }
+                  
+                  const messages = motivationalMessages[language === 'es' ? 'es' : 'en']
+                  const randomIndex = Math.floor(Math.random() * messages.length)
+                  return messages[randomIndex]
+                })()}
               </p>
             )}
           </div>

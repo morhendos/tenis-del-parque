@@ -3,6 +3,7 @@ import MatchCard from './MatchCard'
 import { MatchModals } from './MatchModals'
 import MatchResultCard from './MatchResultCard'
 import { toast } from '@/components/ui/Toast'
+import { processMatchResult } from '@/lib/utils/matchResultUtils'
 
 export default function ScheduleTab({ schedule, language, totalRounds = 8, player = null, isPublic = false }) {
   const [currentRound, setCurrentRound] = useState(1)
@@ -161,47 +162,11 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
         console.log('Found match:', match)
         
         if (match) {
-          const isPlayer1 = match.players.player1._id === player._id
-          
-          // Transform the sets data from myScore/opponentScore to player1/player2
-          const transformedSets = data.sets.map(set => ({
-            player1: isPlayer1 ? set.myScore : set.opponentScore,
-            player2: isPlayer1 ? set.opponentScore : set.myScore
-          }))
-          
-          // Calculate who won based on sets
-          let mySetWins = 0
-          let oppSetWins = 0
-          transformedSets.forEach(set => {
-            if (isPlayer1) {
-              if (set.player1 > set.player2) mySetWins++
-              else oppSetWins++
-            } else {
-              if (set.player2 > set.player1) mySetWins++
-              else oppSetWins++
-            }
-          })
-          
-          const winnerId = mySetWins > oppSetWins ? player._id : 
-                          (isPlayer1 ? match.players.player2._id : match.players.player1._id)
-          
-          // Update match to completed status with properly formatted data
-          const updatedMatch = {
-            ...match,
-            status: 'completed',
-            result: {
-              ...match.result,
-              winner: winnerId,
-              score: {
-                sets: transformedSets,
-                walkover: data.walkover
-              },
-              playedAt: new Date().toISOString()
-            }
-          }
+          // Use the reusable utility to process the match result
+          const { updatedMatch, isPlayerWinner } = processMatchResult(match, player, data)
           
           console.log('Updated match:', updatedMatch)
-          console.log('Is winner:', winnerId === player._id)
+          console.log('Is winner:', isPlayerWinner)
           
           // Update the match in playerMatches
           setPlayerMatches(prevMatches => 
@@ -216,7 +181,7 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
           // Set up the result card display with a small delay to ensure modal is closed
           setTimeout(() => {
             setSubmittedMatch(updatedMatch)
-            setIsWinner(winnerId === player._id)
+            setIsWinner(isPlayerWinner)
             setShowResultCard(true)
             console.log('Showing result card')
           }, 100)

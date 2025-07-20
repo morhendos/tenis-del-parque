@@ -4,7 +4,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import MatchCard from '@/components/player/MatchCard'
 import { MatchModals } from '@/components/player/MatchModals'
+import MatchResultCard from '@/components/player/MatchResultCard'
 import { toast } from '@/components/ui/Toast'
+import { processMatchResult } from '@/lib/utils/matchResultUtils'
 
 export default function PlayerMatches() {
   const params = useParams()
@@ -20,6 +22,9 @@ export default function PlayerMatches() {
   const [showScheduleModal, setShowScheduleModal] = useState(false)
   const [selectedMatch, setSelectedMatch] = useState(null)
   const [isEditingSchedule, setIsEditingSchedule] = useState(false)
+  const [showResultCard, setShowResultCard] = useState(false)
+  const [submittedMatch, setSubmittedMatch] = useState(null)
+  const [isWinner, setIsWinner] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -125,56 +130,35 @@ export default function PlayerMatches() {
       const result = await response.json()
       
       if (response.ok) {
-        // Optimistically update the match in state
-        setMatches(prevMatches => 
-          prevMatches.map(match => {
-            if (match._id === data.matchId) {
-              // Determine if current player is player1 or player2
-              const isPlayer1 = match.players.player1._id === player._id
-              
-              // Transform the sets data from myScore/opponentScore to player1/player2
-              const transformedSets = data.sets.map(set => ({
-                player1: isPlayer1 ? set.myScore : set.opponentScore,
-                player2: isPlayer1 ? set.opponentScore : set.myScore
-              }))
-              
-              // Calculate who won based on sets
-              let mySetWins = 0
-              let oppSetWins = 0
-              transformedSets.forEach(set => {
-                if (isPlayer1) {
-                  if (set.player1 > set.player2) mySetWins++
-                  else oppSetWins++
-                } else {
-                  if (set.player2 > set.player1) mySetWins++
-                  else oppSetWins++
-                }
-              })
-              
-              const winnerId = mySetWins > oppSetWins ? player._id : 
-                              (isPlayer1 ? match.players.player2._id : match.players.player1._id)
-              
-              // Update match to completed status with properly formatted data
-              return {
-                ...match,
-                status: 'completed',
-                result: {
-                  ...match.result,
-                  winner: winnerId,
-                  score: {
-                    sets: transformedSets,
-                    walkover: data.walkover
-                  },
-                  playedAt: new Date().toISOString()
-                }
-              }
-            }
-            return match
-          })
-        )
+        // Find the match that was submitted
+        const match = matches.find(m => m._id === data.matchId)
         
-        setShowResultModal(false)
-        toast.success(locale === 'es' ? 'Resultado enviado con éxito' : 'Result submitted successfully')
+        if (match) {
+          // Use the reusable utility to process the match result
+          const { updatedMatch, isPlayerWinner } = processMatchResult(match, player, data)
+          
+          // Update matches state
+          setMatches(prevMatches => 
+            prevMatches.map(m => 
+              m._id === data.matchId ? updatedMatch : m
+            )
+          )
+          
+          // Close the result modal first
+          setShowResultModal(false)
+          
+          // Set up the result card display with a small delay to ensure modal is closed
+          setTimeout(() => {
+            setSubmittedMatch(updatedMatch)
+            setIsWinner(isPlayerWinner)
+            setShowResultCard(true)
+          }, 100)
+          
+          // Show success toast
+          toast.success(locale === 'es' ? 'Resultado enviado con éxito' : 'Result submitted successfully')
+        } else {
+          toast.error(locale === 'es' ? 'Error: Partido no encontrado' : 'Error: Match not found')
+        }
       } else {
         toast.error(result.error || (locale === 'es' ? 'Error al enviar resultado' : 'Failed to submit result'))
       }
@@ -559,6 +543,22 @@ export default function PlayerMatches() {
           onSubmitSchedule={handleSubmitSchedule}
           isEditingSchedule={isEditingSchedule}
         />
+
+        {/* Match Result Card */}
+        {showResultCard && submittedMatch && (
+          <MatchResultCard
+            match={submittedMatch}
+            player={player}
+            language={locale}
+            isWinner={isWinner}
+            onClose={() => {
+              setShowResultCard(false)
+              setSubmittedMatch(null)
+              // Refresh matches data
+              fetchMatches()
+            }}
+          />
+        )}
       </div>
     </>
   )
