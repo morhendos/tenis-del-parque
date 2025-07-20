@@ -27,9 +27,15 @@ export default function MatchResultCard({
 
   const opponent = getOpponent()
 
+  // Check if this is the player's match
+  const isPlayerMatch = player && (
+    match.players.player1._id === player._id || 
+    match.players.player2._id === player._id
+  )
+
   // Calculate final score
   let myScore = 0, opponentScore = 0
-  if (match.result?.score?.sets) {
+  if (match.result?.score?.sets && isPlayerMatch) {
     const isPlayer1 = match.players.player1._id === player._id
     match.result.score.sets.forEach(set => {
       if (isPlayer1) {
@@ -42,10 +48,21 @@ export default function MatchResultCard({
     })
   }
 
+  // For non-player matches, calculate scores differently
+  let p1Score = 0, p2Score = 0
+  if (match.result?.score?.sets) {
+    match.result.score.sets.forEach(set => {
+      if (set.player1 > set.player2) p1Score++
+      else p2Score++
+    })
+  }
+
+  const isPlayer1Winner = match.result?.winner === match.players.player1._id
+
   return (
     <>
-      {/* Confetti Animation */}
-      {showConfetti && (
+      {/* Confetti Animation - Only for player's winning matches */}
+      {showConfetti && isPlayerMatch && (
         <div className="fixed inset-0 pointer-events-none z-[60]">
           <div className="confetti-container">
             {[...Array(50)].map((_, i) => (
@@ -68,17 +85,19 @@ export default function MatchResultCard({
         <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden animate-scale-in">
           {/* Header */}
           <div className={`p-6 text-center ${
-            isWinner 
+            isPlayerMatch && isWinner 
               ? 'bg-gradient-to-br from-green-500 to-emerald-600' 
               : 'bg-gradient-to-br from-gray-500 to-gray-600'
           } text-white`}>
             <div className="text-6xl mb-3">
-              {isWinner ? '🏆' : '🎾'}
+              {isPlayerMatch && isWinner ? '🏆' : '🎾'}
             </div>
             <h2 className="text-3xl font-bold mb-2">
-              {isWinner 
-                ? (language === 'es' ? '¡Victoria!' : 'Victory!') 
-                : (language === 'es' ? 'Partido Completado' : 'Match Complete')}
+              {isPlayerMatch 
+                ? (isWinner 
+                  ? (language === 'es' ? '¡Victoria!' : 'Victory!') 
+                  : (language === 'es' ? 'Partido Completado' : 'Match Complete'))
+                : (language === 'es' ? 'Resultado del Partido' : 'Match Result')}
             </h2>
             <p className="text-lg opacity-90">
               {language === 'es' ? 'Ronda' : 'Round'} {match.round}
@@ -90,23 +109,47 @@ export default function MatchResultCard({
             {/* Players and Score */}
             <div className="bg-gray-50 rounded-xl p-4 mb-4">
               <div className="flex items-center justify-between mb-4">
-                <div className={`text-center ${isWinner ? 'order-1' : 'order-2'}`}>
-                  <div className="text-sm text-gray-600 mb-1">
-                    {player?.name}
-                  </div>
-                  <div className={`text-3xl font-bold ${isWinner ? 'text-green-600' : 'text-gray-700'}`}>
-                    {myScore}
-                  </div>
-                </div>
-                <div className="text-2xl text-gray-400 order-2">vs</div>
-                <div className={`text-center ${isWinner ? 'order-3' : 'order-1'}`}>
-                  <div className="text-sm text-gray-600 mb-1">
-                    {opponent?.name}
-                  </div>
-                  <div className={`text-3xl font-bold ${!isWinner ? 'text-green-600' : 'text-gray-700'}`}>
-                    {opponentScore}
-                  </div>
-                </div>
+                {isPlayerMatch ? (
+                  <>
+                    <div className={`text-center ${isWinner ? 'order-1' : 'order-2'}`}>
+                      <div className="text-sm text-gray-600 mb-1">
+                        {player?.name}
+                      </div>
+                      <div className={`text-3xl font-bold ${isWinner ? 'text-green-600' : 'text-gray-700'}`}>
+                        {myScore}
+                      </div>
+                    </div>
+                    <div className="text-2xl text-gray-400 order-2">vs</div>
+                    <div className={`text-center ${isWinner ? 'order-3' : 'order-1'}`}>
+                      <div className="text-sm text-gray-600 mb-1">
+                        {opponent?.name}
+                      </div>
+                      <div className={`text-3xl font-bold ${!isWinner ? 'text-green-600' : 'text-gray-700'}`}>
+                        {opponentScore}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className={`text-center ${isPlayer1Winner ? 'order-1' : 'order-2'}`}>
+                      <div className="text-sm text-gray-600 mb-1">
+                        {match.players.player1.name}
+                      </div>
+                      <div className={`text-3xl font-bold ${isPlayer1Winner ? 'text-green-600' : 'text-gray-700'}`}>
+                        {p1Score}
+                      </div>
+                    </div>
+                    <div className="text-2xl text-gray-400 order-2">vs</div>
+                    <div className={`text-center ${!isPlayer1Winner ? 'order-1' : 'order-2'}`}>
+                      <div className="text-sm text-gray-600 mb-1">
+                        {match.players.player2.name}
+                      </div>
+                      <div className={`text-3xl font-bold ${!isPlayer1Winner ? 'text-green-600' : 'text-gray-700'}`}>
+                        {p2Score}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Set Details */}
@@ -116,16 +159,26 @@ export default function MatchResultCard({
                 </h4>
                 <div className="flex gap-3 justify-center">
                   {match.result?.score?.sets?.map((set, index) => {
-                    const isPlayer1 = match.players.player1._id === player._id
-                    const mySetScore = isPlayer1 ? set.player1 : set.player2
-                    const oppSetScore = isPlayer1 ? set.player2 : set.player1
-                    const wonSet = mySetScore > oppSetScore
+                    let wonSet, mySetScore, oppSetScore
+                    
+                    if (isPlayerMatch) {
+                      const isPlayer1 = match.players.player1._id === player._id
+                      mySetScore = isPlayer1 ? set.player1 : set.player2
+                      oppSetScore = isPlayer1 ? set.player2 : set.player1
+                      wonSet = mySetScore > oppSetScore
+                    } else {
+                      mySetScore = set.player1
+                      oppSetScore = set.player2
+                      wonSet = isPlayer1Winner ? set.player1 > set.player2 : set.player2 > set.player1
+                    }
                     
                     return (
                       <div 
                         key={index} 
                         className={`text-center px-3 py-2 rounded-lg ${
-                          wonSet ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                          isPlayerMatch 
+                            ? (wonSet ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700')
+                            : 'bg-gray-100 text-gray-700'
                         }`}
                       >
                         <div className="text-lg font-bold">
@@ -168,10 +221,9 @@ export default function MatchResultCard({
 
             {/* Action Buttons */}
             <div className="flex gap-3">
-              {isWinner && (
+              {isPlayerMatch && isWinner && (
                 <button
                   onClick={() => {
-                    // TODO: Implement share functionality
                     const text = language === 'es' 
                       ? `¡Acabo de ganar mi partido de tenis ${myScore}-${opponentScore} en la ronda ${match.round}! 🎾🏆`
                       : `Just won my tennis match ${myScore}-${opponentScore} in round ${match.round}! 🎾🏆`
@@ -194,14 +246,14 @@ export default function MatchResultCard({
               )}
               <button
                 onClick={onClose}
-                className={`${!isWinner ? 'flex-1' : ''} bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-medium hover:bg-gray-200 transition-colors`}
+                className={`${!isPlayerMatch || !isWinner ? 'flex-1' : ''} bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-medium hover:bg-gray-200 transition-colors`}
               >
                 {language === 'es' ? 'Cerrar' : 'Close'}
               </button>
             </div>
 
-            {/* Motivational Message */}
-            {!isWinner && (
+            {/* Motivational Message - Only for player's own losing matches */}
+            {isPlayerMatch && !isWinner && (
               <p className="text-center text-sm text-gray-500 mt-4">
                 {language === 'es' 
                   ? '¡Sigue practicando! La próxima victoria está cerca 💪'
