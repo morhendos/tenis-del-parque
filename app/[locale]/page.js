@@ -36,8 +36,8 @@ function CityCard({ league, content, locale }) {
     year: 'numeric' 
   }) : null;
   
-  // Check if it's Sotogrande and use the special image
-  const isSotogrande = citySlug === 'sotogrande';
+  // Check if league has a custom image (expand this list as needed)
+  const hasCustomImage = ['liga-de-sotogrande', 'liga-de-malaga', 'liga-de-estepona', 'liga-de-marbella'].includes(citySlug);
   
   return (
     <div className={`relative bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 w-full max-w-sm ${
@@ -56,12 +56,16 @@ function CityCard({ league, content, locale }) {
         </span>
       </div>
       
-      {/* City Image */}
-      <div className="relative h-48 overflow-hidden">
-        {isSotogrande ? (
+              {/* City Image */}
+        <div className="relative h-48 overflow-hidden">
+          {hasCustomImage ? (
           <>
             <Image
-              src="/sotogrande-01.jpg"
+              src={`/${citySlug === 'liga-de-sotogrande' ? 'sotogrande-01.jpg' : 
+                citySlug === 'liga-de-estepona' ? 'estepona-01.webp' :
+                citySlug === 'liga-de-malaga' ? 'malaga-01.avif' : 
+                citySlug === 'liga-de-marbella' ? 'marbella-02.webp' : 
+                     `${citySlug}-01.jpg`}`}
               alt={league.name}
               fill
               className="object-cover"

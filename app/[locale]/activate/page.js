@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams, useParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -9,7 +9,7 @@ import Footer from '@/components/common/Footer'
 import { activateContent } from '@/lib/content/activateContent'
 import { homeContent } from '@/lib/content/homeContent'
 
-export default function ActivatePage() {
+function ActivateContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const params = useParams()
@@ -239,5 +239,26 @@ export default function ActivatePage() {
       
       <Footer content={footerContent} />
     </div>
+  )
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-parque-bg to-white flex items-center justify-center">
+      <div className="text-center">
+        <div className="w-16 h-16 tennis-ball mb-4 animate-bounce mx-auto"></div>
+        <div className="text-parque-purple/60 text-lg font-light">
+          Loading...
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function ActivatePage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <ActivateContent />
+    </Suspense>
   )
 }
