@@ -39,9 +39,22 @@ export default function MatchResultCard({
     })
   }
 
-  // Determine actual winner: for player matches, use calculated score; otherwise use prop
-  const actualIsWinner = isPlayerMatch && match.result?.score?.sets 
-    ? myScore > opponentScore 
+  // For non-player matches, calculate scores differently
+  let p1Score = 0, p2Score = 0
+  if (match.result?.score?.sets) {
+    match.result.score.sets.forEach(set => {
+      if (set.player1 > set.player2) p1Score++
+      else p2Score++
+    })
+  }
+
+  // Use the same winner logic as ResultsTab - always use API winner
+  const isPlayer1Winner = match.result?.winner?._id === match.players.player1._id
+  const isPlayer2Winner = match.result?.winner?._id === match.players.player2._id
+  
+  // For player matches, determine if current player won
+  const actualIsWinner = isPlayerMatch 
+    ? (match.players.player1._id === player._id ? isPlayer1Winner : isPlayer2Winner)
     : isWinner
 
   useEffect(() => {
@@ -52,17 +65,6 @@ export default function MatchResultCard({
       return () => clearTimeout(timer)
     }
   }, [isPlayerMatch, actualIsWinner])
-
-  // For non-player matches, calculate scores differently
-  let p1Score = 0, p2Score = 0
-  if (match.result?.score?.sets) {
-    match.result.score.sets.forEach(set => {
-      if (set.player1 > set.player2) p1Score++
-      else p2Score++
-    })
-  }
-
-  const isPlayer1Winner = match.result?.winner === match.players.player1._id
 
   return (
     <>
@@ -116,27 +118,52 @@ export default function MatchResultCard({
               <div className="flex items-center justify-between mb-4">
                 {isPlayerMatch ? (
                   <>
-                    <div className={`text-center ${actualIsWinner ? 'order-1' : 'order-3'}`}>
-                      <div className="text-sm text-gray-600 mb-1">
-                        {player?.name}
-                      </div>
-                      <div className={`text-3xl font-bold ${actualIsWinner ? 'text-green-600' : 'text-gray-700'}`}>
-                        {myScore}
-                      </div>
-                    </div>
-                    <div className="text-2xl text-gray-400 order-2">vs</div>
-                    <div className={`text-center ${actualIsWinner ? 'order-3' : 'order-1'}`}>
-                      <div className="text-sm text-gray-600 mb-1">
-                        {opponent?.name}
-                      </div>
-                      <div className={`text-3xl font-bold ${!actualIsWinner ? 'text-green-600' : 'text-gray-700'}`}>
-                        {opponentScore}
-                      </div>
-                    </div>
+                    {/* Show in natural order: player1 vs player2 */}
+                    {match.players.player1._id === player._id ? (
+                      <>
+                        <div className="text-center">
+                          <div className="text-sm text-gray-600 mb-1">
+                            {player?.name}
+                          </div>
+                          <div className={`text-3xl font-bold ${actualIsWinner ? 'text-green-600' : 'text-gray-700'}`}>
+                            {myScore}
+                          </div>
+                        </div>
+                        <div className="text-2xl text-gray-400">vs</div>
+                        <div className="text-center">
+                          <div className="text-sm text-gray-600 mb-1">
+                            {opponent?.name}
+                          </div>
+                          <div className={`text-3xl font-bold ${!actualIsWinner ? 'text-green-600' : 'text-gray-700'}`}>
+                            {opponentScore}
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-center">
+                          <div className="text-sm text-gray-600 mb-1">
+                            {opponent?.name}
+                          </div>
+                          <div className={`text-3xl font-bold ${!actualIsWinner ? 'text-green-600' : 'text-gray-700'}`}>
+                            {opponentScore}
+                          </div>
+                        </div>
+                        <div className="text-2xl text-gray-400">vs</div>
+                        <div className="text-center">
+                          <div className="text-sm text-gray-600 mb-1">
+                            {player?.name}
+                          </div>
+                          <div className={`text-3xl font-bold ${actualIsWinner ? 'text-green-600' : 'text-gray-700'}`}>
+                            {myScore}
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </>
                 ) : (
                   <>
-                    <div className={`text-center ${isPlayer1Winner ? 'order-1' : 'order-3'}`}>
+                    <div className="text-center">
                       <div className="text-sm text-gray-600 mb-1">
                         {match.players.player1.name}
                       </div>
@@ -144,12 +171,12 @@ export default function MatchResultCard({
                         {p1Score}
                       </div>
                     </div>
-                    <div className="text-2xl text-gray-400 order-2">vs</div>
-                    <div className={`text-center ${!isPlayer1Winner ? 'order-1' : 'order-3'}`}>
+                    <div className="text-2xl text-gray-400">vs</div>
+                    <div className="text-center">
                       <div className="text-sm text-gray-600 mb-1">
                         {match.players.player2.name}
                       </div>
-                      <div className={`text-3xl font-bold ${!isPlayer1Winner ? 'text-green-600' : 'text-gray-700'}`}>
+                      <div className={`text-3xl font-bold ${isPlayer2Winner ? 'text-green-600' : 'text-gray-700'}`}>
                         {p2Score}
                       </div>
                     </div>
@@ -164,16 +191,18 @@ export default function MatchResultCard({
                 </h4>
                 <div className="flex gap-3 justify-center">
                   {match.result?.score?.sets?.map((set, index) => {
-                    let wonSet, mySetScore, oppSetScore
+                    // Always show natural order: player1 vs player2
+                    const leftScore = set.player1
+                    const rightScore = set.player2
                     
+                    let wonSet
                     if (isPlayerMatch) {
                       const isPlayer1 = match.players.player1._id === player._id
-                      mySetScore = isPlayer1 ? set.player1 : set.player2
-                      oppSetScore = isPlayer1 ? set.player2 : set.player1
-                      wonSet = mySetScore > oppSetScore
+                      wonSet = isPlayer1 
+                        ? set.player1 > set.player2  // Player is player1, won if player1 score higher
+                        : set.player2 > set.player1  // Player is player2, won if player2 score higher
                     } else {
-                      mySetScore = set.player1
-                      oppSetScore = set.player2
+                      // For non-player matches, color based on who won the set
                       wonSet = isPlayer1Winner ? set.player1 > set.player2 : set.player2 > set.player1
                     }
                     
@@ -187,7 +216,7 @@ export default function MatchResultCard({
                         }`}
                       >
                         <div className="text-lg font-bold">
-                          {mySetScore}-{oppSetScore}
+                          {leftScore}-{rightScore}
                         </div>
                         <div className="text-xs opacity-75">
                           {index === 2 ? 'Super TB' : `Set ${index + 1}`}

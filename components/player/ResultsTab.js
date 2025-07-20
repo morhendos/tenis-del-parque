@@ -113,7 +113,9 @@ export default function ResultsTab({ matches, language, player = null }) {
           </div>
           {filteredMatches.map((match) => {
             const scoreData = getMatchScore(match)
-            const isPlayer1Winner = match.result?.winner === match.players.player1._id
+            
+            const isPlayer1Winner = match.result?.winner?._id === match.players.player1._id
+            const isPlayer2Winner = match.result?.winner?._id === match.players.player2._id
             
             return (
               <div 
@@ -149,7 +151,7 @@ export default function ResultsTab({ matches, language, player = null }) {
                     
                     {/* Players and Score */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                      {/* Player 1 */}
+                      {/* Player 1 (Left) */}
                       <div className={`text-center p-3 rounded-lg ${
                         isPlayer1Winner
                           ? 'bg-green-50 border border-green-200' 
@@ -187,15 +189,15 @@ export default function ResultsTab({ matches, language, player = null }) {
                         )}
                       </div>
                       
-                      {/* Player 2 */}
+                      {/* Player 2 (Right) */}
                       <div className={`text-center p-3 rounded-lg ${
-                        !isPlayer1Winner && match.result?.winner
+                        isPlayer2Winner
                           ? 'bg-green-50 border border-green-200' 
                           : 'bg-gray-50'
                       }`}>
                         <div className="font-medium text-gray-900">
                           {match.players.player2.name}
-                          {!isPlayer1Winner && match.result?.winner && 
+                          {isPlayer2Winner && 
                             <span className="ml-2">🏆</span>}
                         </div>
                         {scoreData && (
