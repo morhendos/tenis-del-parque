@@ -176,35 +176,18 @@ export default function MatchCard({
           {/* Schedule information for upcoming matches */}
           {isUpcoming && isScheduled ? (
             <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center">
-                    <span className="text-lg">✓</span>
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center">
+                  <span className="text-lg">✓</span>
+                </div>
+                <div>
+                  <div className="font-semibold text-green-800">
+                    {language === 'es' ? 'Partido Confirmado' : 'Match Confirmed'}
                   </div>
-                  <div>
-                    <div className="font-semibold text-green-800">
-                      {language === 'es' ? 'Partido Confirmado' : 'Match Confirmed'}
-                    </div>
-                    <div className="text-sm text-green-600">
-                      {language === 'es' ? 'Fecha y hora acordadas' : 'Date and time agreed'}
-                    </div>
+                  <div className="text-sm text-green-600">
+                    {language === 'es' ? 'Fecha y hora acordadas' : 'Date and time agreed'}
                   </div>
                 </div>
-                {/* Edit button for scheduled matches */}
-                {!isPublic && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onSchedule && onSchedule(match, true) // Pass true to indicate editing
-                    }}
-                    className="text-green-600 hover:text-green-700 transition-colors"
-                    title={language === 'es' ? 'Editar programación' : 'Edit schedule'}
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                  </button>
-                )}
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
@@ -338,22 +321,26 @@ export default function MatchCard({
 
           {/* Action buttons for upcoming matches - Only show for logged in players */}
           {isUpcoming && showActions && isExpanded && !isPublic && (
-            <div className={`grid ${isScheduled ? 'grid-cols-2' : 'grid-cols-1 sm:grid-cols-3'} gap-3 mt-4`}>
-              {!isScheduled ? (
-                // Show Schedule button if not scheduled
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onSchedule && onSchedule(match, false) // Pass false for new schedule
-                  }}
-                  className="bg-blue-500 text-white px-4 py-3 rounded-xl text-sm font-medium hover:bg-blue-600 transition-all transform hover:scale-105 active:scale-95 shadow-sm flex items-center justify-center"
-                >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  {language === 'es' ? 'Programar' : 'Schedule'}
-                </button>
-              ) : null}
+            <div className={`grid ${isScheduled ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-1 sm:grid-cols-3'} gap-3 mt-4`}>
+              {/* Schedule/Reschedule button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onSchedule && onSchedule(match, isScheduled) // Pass true if already scheduled
+                }}
+                className={`${
+                  isScheduled 
+                    ? 'bg-orange-500 hover:bg-orange-600' 
+                    : 'bg-blue-500 hover:bg-blue-600'
+                } text-white px-4 py-3 rounded-xl text-sm font-medium transition-all transform hover:scale-105 active:scale-95 shadow-sm flex items-center justify-center`}
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                {isScheduled 
+                  ? (language === 'es' ? 'Reprogramar' : 'Reschedule')
+                  : (language === 'es' ? 'Programar' : 'Schedule')}
+              </button>
               
               {/* WHATSAPP BUTTON - ALWAYS VISIBLE */}
               <button
