@@ -71,7 +71,7 @@ export async function GET(request, { params }) {
     
     // Format matches for frontend
     const formattedMatches = matches.map(match => {
-      const score = match.result?.score?.sets?.map(set => 
+      const scoreString = match.result?.score?.sets?.map(set => 
         `${set.player1}-${set.player2}`
       ).join(', ') || ''
       
@@ -105,7 +105,8 @@ export async function GET(request, { params }) {
             _id: match.result.winner._id,
             name: match.result.winner.name
           } : null,
-          score,
+          score: match.result.score, // Keep original score structure with sets array
+          scoreString: scoreString, // Also provide string representation for display
           playedAt: match.result.playedAt
         } : null,
         eloChanges: match.eloChanges || null,

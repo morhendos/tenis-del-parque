@@ -9,15 +9,6 @@ export default function MatchResultCard({
 }) {
   const [showConfetti, setShowConfetti] = useState(false)
   
-  useEffect(() => {
-    if (isWinner) {
-      setShowConfetti(true)
-      // Stop confetti after 5 seconds
-      const timer = setTimeout(() => setShowConfetti(false), 5000)
-      return () => clearTimeout(timer)
-    }
-  }, [isWinner])
-
   const getOpponent = () => {
     if (!player || !match) return null
     return match.players.player1._id === player._id 
@@ -33,7 +24,7 @@ export default function MatchResultCard({
     match.players.player2._id === player._id
   )
 
-  // Calculate final score
+  // Calculate final score and determine actual winner for player matches
   let myScore = 0, opponentScore = 0
   if (match.result?.score?.sets && isPlayerMatch) {
     const isPlayer1 = match.players.player1._id === player._id
@@ -47,6 +38,20 @@ export default function MatchResultCard({
       }
     })
   }
+
+  // Determine actual winner: for player matches, use calculated score; otherwise use prop
+  const actualIsWinner = isPlayerMatch && match.result?.score?.sets 
+    ? myScore > opponentScore 
+    : isWinner
+
+  useEffect(() => {
+    if (isPlayerMatch && actualIsWinner) {
+      setShowConfetti(true)
+      // Stop confetti after 5 seconds
+      const timer = setTimeout(() => setShowConfetti(false), 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [isPlayerMatch, actualIsWinner])
 
   // For non-player matches, calculate scores differently
   let p1Score = 0, p2Score = 0
@@ -62,7 +67,7 @@ export default function MatchResultCard({
   return (
     <>
       {/* Confetti Animation - Only for player's winning matches */}
-      {showConfetti && isPlayerMatch && (
+      {showConfetti && isPlayerMatch && actualIsWinner && (
         <div className="fixed inset-0 pointer-events-none z-[60]">
           <div className="confetti-container">
             {[...Array(50)].map((_, i) => (
@@ -85,16 +90,16 @@ export default function MatchResultCard({
         <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden animate-scale-in">
           {/* Header */}
           <div className={`p-6 text-center ${
-            isPlayerMatch && isWinner 
+            isPlayerMatch && actualIsWinner 
               ? 'bg-gradient-to-br from-green-500 to-emerald-600' 
               : 'bg-gradient-to-br from-gray-500 to-gray-600'
           } text-white`}>
             <div className="text-6xl mb-3">
-              {isPlayerMatch && isWinner ? '🏆' : '🎾'}
+              {isPlayerMatch && actualIsWinner ? '🏆' : '🎾'}
             </div>
             <h2 className="text-3xl font-bold mb-2">
               {isPlayerMatch 
-                ? (isWinner 
+                ? (actualIsWinner 
                   ? (language === 'es' ? '¡Victoria!' : 'Victory!') 
                   : (language === 'es' ? 'Partido Completado' : 'Match Complete'))
                 : (language === 'es' ? 'Resultado del Partido' : 'Match Result')}
@@ -111,27 +116,27 @@ export default function MatchResultCard({
               <div className="flex items-center justify-between mb-4">
                 {isPlayerMatch ? (
                   <>
-                    <div className={`text-center ${isWinner ? 'order-1' : 'order-2'}`}>
+                    <div className={`text-center ${actualIsWinner ? 'order-1' : 'order-3'}`}>
                       <div className="text-sm text-gray-600 mb-1">
                         {player?.name}
                       </div>
-                      <div className={`text-3xl font-bold ${isWinner ? 'text-green-600' : 'text-gray-700'}`}>
+                      <div className={`text-3xl font-bold ${actualIsWinner ? 'text-green-600' : 'text-gray-700'}`}>
                         {myScore}
                       </div>
                     </div>
                     <div className="text-2xl text-gray-400 order-2">vs</div>
-                    <div className={`text-center ${isWinner ? 'order-3' : 'order-1'}`}>
+                    <div className={`text-center ${actualIsWinner ? 'order-3' : 'order-1'}`}>
                       <div className="text-sm text-gray-600 mb-1">
                         {opponent?.name}
                       </div>
-                      <div className={`text-3xl font-bold ${!isWinner ? 'text-green-600' : 'text-gray-700'}`}>
+                      <div className={`text-3xl font-bold ${!actualIsWinner ? 'text-green-600' : 'text-gray-700'}`}>
                         {opponentScore}
                       </div>
                     </div>
                   </>
                 ) : (
                   <>
-                    <div className={`text-center ${isPlayer1Winner ? 'order-1' : 'order-2'}`}>
+                    <div className={`text-center ${isPlayer1Winner ? 'order-1' : 'order-3'}`}>
                       <div className="text-sm text-gray-600 mb-1">
                         {match.players.player1.name}
                       </div>
@@ -140,7 +145,7 @@ export default function MatchResultCard({
                       </div>
                     </div>
                     <div className="text-2xl text-gray-400 order-2">vs</div>
-                    <div className={`text-center ${!isPlayer1Winner ? 'order-1' : 'order-2'}`}>
+                    <div className={`text-center ${!isPlayer1Winner ? 'order-1' : 'order-3'}`}>
                       <div className="text-sm text-gray-600 mb-1">
                         {match.players.player2.name}
                       </div>
@@ -221,7 +226,7 @@ export default function MatchResultCard({
 
             {/* Action Buttons */}
             <div className="flex gap-3">
-              {isPlayerMatch && isWinner && (
+              {isPlayerMatch && actualIsWinner && (
                 <button
                   onClick={() => {
                     const text = language === 'es' 
@@ -246,14 +251,14 @@ export default function MatchResultCard({
               )}
               <button
                 onClick={onClose}
-                className={`${!isPlayerMatch || !isWinner ? 'flex-1' : ''} bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-medium hover:bg-gray-200 transition-colors`}
+                className={`${!isPlayerMatch || !actualIsWinner ? 'flex-1' : ''} bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-medium hover:bg-gray-200 transition-colors`}
               >
                 {language === 'es' ? 'Cerrar' : 'Close'}
               </button>
             </div>
 
             {/* Motivational Message - Only for player's own losing matches */}
-            {isPlayerMatch && !isWinner && (
+            {isPlayerMatch && !actualIsWinner && (
               <p className="text-center text-sm text-gray-500 mt-4">
                 {language === 'es' 
                   ? '¡Sigue practicando! La próxima victoria está cerca 💪'
