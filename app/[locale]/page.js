@@ -40,7 +40,7 @@ function CityCard({ league, content, locale }) {
   const isSotogrande = citySlug === 'sotogrande';
   
   return (
-    <div className={`relative bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 ${
+    <div className={`relative bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 w-full max-w-sm ${
       !isActive && !isComingSoon ? 'opacity-60' : ''
     }`}>
       {/* Status Badge */}
@@ -246,8 +246,8 @@ export default function MultiLeagueHomePage() {
             <>
               {/* Active Leagues - Centered */}
               {activeLeagues.length > 0 && (
-                <div className="flex justify-center mb-12">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl">
+                <div className="mb-12">
+                  <div className="flex flex-wrap justify-center gap-8">
                     {activeLeagues.map((league) => (
                       <CityCard
                         key={league._id}
@@ -266,17 +266,15 @@ export default function MultiLeagueHomePage() {
                   <h3 className="text-2xl font-semibold text-gray-700 mb-6 text-center">
                     {content.cities.launching} {validLocale === 'es' ? 'Próximamente' : 'Soon'}
                   </h3>
-                  <div className="flex justify-center">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl">
-                      {comingSoonLeagues.map((league) => (
-                        <CityCard
-                          key={league._id}
-                          league={league}
-                          content={content}
-                          locale={validLocale}
-                        />
-                      ))}
-                    </div>
+                  <div className="flex flex-wrap justify-center gap-8">
+                    {comingSoonLeagues.map((league) => (
+                      <CityCard
+                        key={league._id}
+                        league={league}
+                        content={content}
+                        locale={validLocale}
+                      />
+                    ))}
                   </div>
                 </div>
               )}
@@ -284,20 +282,18 @@ export default function MultiLeagueHomePage() {
               {/* Fallback if no leagues from database - show hardcoded Sotogrande */}
               {leagues.length === 0 && (
                 <div className="flex justify-center">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl">
-                    <CityCard
-                      league={{
-                        _id: 'default-sotogrande',
-                        name: 'Sotogrande',
-                        slug: 'sotogrande',
-                        status: 'active',
-                        playerCount: 24,
-                        location: { city: 'Sotogrande', region: 'Cádiz' }
-                      }}
-                      content={content}
-                      locale={validLocale}
-                    />
-                  </div>
+                  <CityCard
+                    league={{
+                      _id: 'default-sotogrande',
+                      name: 'Sotogrande',
+                      slug: 'sotogrande',
+                      status: 'active',
+                      playerCount: 24,
+                      location: { city: 'Sotogrande', region: 'Cádiz' }
+                    }}
+                    content={content}
+                    locale={validLocale}
+                  />
                 </div>
               )}
             </>
