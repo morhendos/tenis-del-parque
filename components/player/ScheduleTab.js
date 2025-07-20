@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import MatchCard from './MatchCard'
 import { MatchModals } from './MatchModals'
+import { toast } from '@/components/ui/Toast'
 
 export default function ScheduleTab({ schedule, language, totalRounds = 8, player = null, isPublic = false }) {
   const [currentRound, setCurrentRound] = useState(1)
@@ -149,16 +150,62 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
       const result = await response.json()
       
       if (response.ok) {
+        // Optimistically update the match in playerMatches
+        setPlayerMatches(prevMatches => 
+          prevMatches.map(match => {
+            if (match._id === data.matchId) {
+              // Determine if current player is player1 or player2
+              const isPlayer1 = match.players.player1._id === player._id
+              
+              // Transform the sets data from myScore/opponentScore to player1/player2
+              const transformedSets = data.sets.map(set => ({
+                player1: isPlayer1 ? set.myScore : set.opponentScore,
+                player2: isPlayer1 ? set.opponentScore : set.myScore
+              }))
+              
+              // Calculate who won based on sets
+              let mySetWins = 0
+              let oppSetWins = 0
+              transformedSets.forEach(set => {
+                if (isPlayer1) {
+                  if (set.player1 > set.player2) mySetWins++
+                  else oppSetWins++
+                } else {
+                  if (set.player2 > set.player1) mySetWins++
+                  else oppSetWins++
+                }
+              })
+              
+              const winnerId = mySetWins > oppSetWins ? player._id : 
+                              (isPlayer1 ? match.players.player2._id : match.players.player1._id)
+              
+              // Update match to completed status with properly formatted data
+              return {
+                ...match,
+                status: 'completed',
+                result: {
+                  ...match.result,
+                  winner: winnerId,
+                  score: {
+                    sets: transformedSets,
+                    walkover: data.walkover
+                  },
+                  playedAt: new Date().toISOString()
+                }
+              }
+            }
+            return match
+          })
+        )
+        
         setShowResultModal(false)
-        showSuccessNotification(language === 'es' ? 'Resultado enviado con éxito' : 'Result submitted successfully')
-        // Refresh the data
-        window.location.reload()
+        toast.success(language === 'es' ? 'Resultado enviado con éxito' : 'Result submitted successfully')
       } else {
-        alert(result.error || 'Failed to submit result')
+        toast.error(result.error || (language === 'es' ? 'Error al enviar resultado' : 'Failed to submit result'))
       }
     } catch (error) {
       console.error('Error submitting result:', error)
-      alert('Error submitting result')
+      toast.error(language === 'es' ? 'Error al enviar resultado' : 'Error submitting result')
     }
   }
 
@@ -173,259 +220,221 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
       const result = await response.json()
       
       if (response.ok) {
+        // Optimistically update the match in playerMatches
+        setPlayerMatches(prevMatches => 
+          prevMatches.map(match => {
+            if (match._id === data.matchId) {
+              // Update match schedule
+              return {
+                ...match,
+                schedule: {
+                  ...match.schedule,
+                  confirmedDate: new Date(`${data.date}T${data.time}`).toISOString(),
+                  venue: data.venue,
+                  court: data.court,
+                  time: data.time,
+                  notes: data.notes
+                },
+                scheduledDate: new Date(`${data.date}T${data.time}`).toISOString()
+              }
+            }
+            return match
+          })
+        )
+        
         setShowScheduleModal(false)
-        showSuccessNotification(
+        toast.success(
           isEditingSchedule 
             ? (language === 'es' ? 'Programación actualizada con éxito' : 'Schedule updated successfully')
             : (language === 'es' ? 'Partido programado con éxito' : 'Match scheduled successfully')
         )
-        // Refresh the data
-        window.location.reload()
       } else {
-        alert(result.error || 'Failed to schedule match')
+        toast.error(result.error || (language === 'es' ? 'Error al programar partido' : 'Failed to schedule match'))
       }
     } catch (error) {
       console.error('Error scheduling match:', error)
-      alert('Error scheduling match')
+      toast.error(language === 'es' ? 'Error al programar partido' : 'Error scheduling match')
     }
-  }
-
-  const showSuccessNotification = (message) => {
-    // Create and show a temporary success notification
-    const notification = document.createElement('div')
-    notification.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-slide-down'
-    notification.innerHTML = `
-      <div class="flex items-center space-x-2">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-        </svg>
-        <span>${message}</span>
-      </div>
-    `
-    document.body.appendChild(notification)
-    
-    setTimeout(() => {
-      notification.classList.add('animate-slide-up')
-      setTimeout(() => {
-        document.body.removeChild(notification)
-      }, 300)
-    }, 3000)
   }
 
   const { playerMatch, otherMatches } = getCurrentRoundMatches()
   const hasMatchesInRound = playerMatch || otherMatches.length > 0
 
   return (
-    <>
-      {!isPublic && (
-        <style jsx global>{`
-          @keyframes slide-down {
-            from {
-              opacity: 0;
-              transform: translate(-50%, -1rem);
-            }
-            to {
-              opacity: 1;
-              transform: translate(-50%, 0);
-            }
-          }
-          
-          @keyframes slide-up {
-            from {
-              opacity: 1;
-              transform: translate(-50%, 0);
-            }
-            to {
-              opacity: 0;
-              transform: translate(-50%, -1rem);
-            }
-          }
-          
-          .animate-slide-down {
-            animation: slide-down 0.3s ease-out;
-          }
-          
-          .animate-slide-up {
-            animation: slide-up 0.3s ease-out;
-          }
-        `}</style>
-      )}
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl md:text-2xl font-bold text-parque-purple">
+          {language === 'es' ? 'Calendario de Partidos' : 'Match Schedule'}
+        </h2>
+        <div className="text-sm text-gray-600">
+          {language === 'es' ? 'Ronda' : 'Round'} {currentRound} {language === 'es' ? 'de' : 'of'} {totalRounds}
+        </div>
+      </div>
       
-      <div>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl md:text-2xl font-bold text-parque-purple">
-            {language === 'es' ? 'Calendario de Partidos' : 'Match Schedule'}
-          </h2>
-          <div className="text-sm text-gray-600">
-            {language === 'es' ? 'Ronda' : 'Round'} {currentRound} {language === 'es' ? 'de' : 'of'} {totalRounds}
+      {/* Round Navigation */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-800">
+            {language === 'es' ? 'Seleccionar Ronda' : 'Select Round'}
+          </h3>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setCurrentRound(Math.max(1, currentRound - 1))}
+              disabled={currentRound === 1}
+              className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              ← {language === 'es' ? 'Anterior' : 'Previous'}
+            </button>
+            <button
+              onClick={() => setCurrentRound(Math.min(totalRounds, currentRound + 1))}
+              disabled={currentRound === totalRounds}
+              className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {language === 'es' ? 'Siguiente' : 'Next'} →
+            </button>
           </div>
         </div>
         
-        {/* Round Navigation */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-800">
-              {language === 'es' ? 'Seleccionar Ronda' : 'Select Round'}
-            </h3>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setCurrentRound(Math.max(1, currentRound - 1))}
-                disabled={currentRound === 1}
-                className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                ← {language === 'es' ? 'Anterior' : 'Previous'}
-              </button>
-              <button
-                onClick={() => setCurrentRound(Math.min(totalRounds, currentRound + 1))}
-                disabled={currentRound === totalRounds}
-                className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {language === 'es' ? 'Siguiente' : 'Next'} →
-              </button>
-            </div>
-          </div>
-          
-          {/* Round selector pills */}
-          <div className="flex flex-wrap gap-2">
-            {getAvailableRounds().map(({ round, hasMatches, matchCount, hasPlayerMatch }) => (
-              <button
-                key={round}
-                onClick={() => setCurrentRound(round)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 relative ${
-                  currentRound === round
-                    ? 'bg-parque-purple text-white shadow-lg transform scale-105'
-                    : hasMatches
-                    ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                }`}
-              >
-                {language === 'es' ? 'Ronda' : 'Round'} {round}
-                {hasPlayerMatch && (
-                  <span className="absolute -top-1 -right-1 bg-yellow-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    ⭐
-                  </span>
-                )}
-                {hasMatches && !hasPlayerMatch && (
-                  <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {matchCount}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-        
-        {/* Current Round Matches */}
-        {hasMatchesInRound ? (
-          <div className="space-y-4">
-            <div className="bg-gradient-to-r from-parque-purple to-parque-purple/80 text-white px-6 py-4 rounded-lg">
-              <h3 className="text-xl font-bold mb-2">
-                {language === 'es' ? 'Ronda' : 'Round'} {currentRound}
-              </h3>
-              <div className="flex items-center space-x-4 text-sm opacity-90">
-                <span>
-                  {(playerMatch ? 1 : 0) + otherMatches.length} {language === 'es' ? 'partidos' : 'matches'}
+        {/* Round selector pills */}
+        <div className="flex flex-wrap gap-2">
+          {getAvailableRounds().map(({ round, hasMatches, matchCount, hasPlayerMatch }) => (
+            <button
+              key={round}
+              onClick={() => setCurrentRound(round)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 relative ${
+                currentRound === round
+                  ? 'bg-parque-purple text-white shadow-lg transform scale-105'
+                  : hasMatches
+                  ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+              }`}
+            >
+              {language === 'es' ? 'Ronda' : 'Round'} {round}
+              {hasPlayerMatch && (
+                <span className="absolute -top-1 -right-1 bg-yellow-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  ⭐
                 </span>
-                {playerMatch && !isPublic && (
-                  <>
-                    <span>•</span>
-                    <span className="flex items-center gap-1">
-                      <span className="text-yellow-300">⭐</span>
-                      {language === 'es' ? 'Tu partido' : 'Your match'}
-                    </span>
-                  </>
-                )}
-              </div>
-            </div>
-            
-            {/* Player's Match - Interactive */}
-            {playerMatch && !isPublic && (
-              <div className="mb-6">
-                <h4 className="text-sm font-semibold text-gray-600 mb-2 flex items-center gap-2">
-                  <span className="text-yellow-500">⭐</span>
-                  {language === 'es' ? 'Tu Partido' : 'Your Match'}
-                  {loadingPlayerMatches && (
-                    <span className="text-xs text-gray-400 animate-pulse">
-                      {language === 'es' ? 'Cargando datos...' : 'Loading data...'}
-                    </span>
-                  )}
-                </h4>
-                <MatchCard
-                  match={playerMatch}
-                  player={player}
-                  language={language}
-                  onSchedule={handleSchedule}
-                  onResult={handleResult}
-                  onWhatsApp={handleWhatsApp}
-                  isUpcoming={true}
-                  showActions={true}
-                  className="ring-2 ring-parque-purple ring-opacity-50"
-                />
-              </div>
-            )}
-            
-            {/* Other Matches - Read Only */}
-            {otherMatches.length > 0 && (
-              <div>
-                {!isPublic && (
-                  <h4 className="text-sm font-semibold text-gray-600 mb-2">
-                    {language === 'es' ? 'Otros Partidos' : 'Other Matches'}
-                  </h4>
-                )}
-                <div className="space-y-4">
-                  {otherMatches.map((match) => (
-                    <MatchCard
-                      key={match._id}
-                      match={match}
-                      player={null}
-                      language={language}
-                      isUpcoming={true}
-                      showActions={false}
-                      isPublic={true}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="text-center py-16">
-            <div className="text-6xl mb-4">📅</div>
-            <h3 className="text-xl font-bold text-gray-700 mb-2">
+              )}
+              {hasMatches && !hasPlayerMatch && (
+                <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {matchCount}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+      
+      {/* Current Round Matches */}
+      {hasMatchesInRound ? (
+        <div className="space-y-4">
+          <div className="bg-gradient-to-r from-parque-purple to-parque-purple/80 text-white px-6 py-4 rounded-lg">
+            <h3 className="text-xl font-bold mb-2">
               {language === 'es' ? 'Ronda' : 'Round'} {currentRound}
             </h3>
-            <p className="text-gray-500 mb-6">
-              {language === 'es' 
-                ? 'No hay partidos programados para esta ronda todavía.'
-                : 'No matches scheduled for this round yet.'}
-            </p>
-            <div className="text-sm text-gray-400">
-              {language === 'es' 
-                ? 'Los partidos se programarán una vez que se complete la ronda anterior.'
-                : 'Matches will be scheduled once the previous round is completed.'}
+            <div className="flex items-center space-x-4 text-sm opacity-90">
+              <span>
+                {(playerMatch ? 1 : 0) + otherMatches.length} {language === 'es' ? 'partidos' : 'matches'}
+              </span>
+              {playerMatch && !isPublic && (
+                <>
+                  <span>•</span>
+                  <span className="flex items-center gap-1">
+                    <span className="text-yellow-300">⭐</span>
+                    {language === 'es' ? 'Tu partido' : 'Your match'}
+                  </span>
+                </>
+              )}
             </div>
           </div>
-        )}
+          
+          {/* Player's Match - Interactive */}
+          {playerMatch && !isPublic && (
+            <div className="mb-6">
+              <h4 className="text-sm font-semibold text-gray-600 mb-2 flex items-center gap-2">
+                <span className="text-yellow-500">⭐</span>
+                {language === 'es' ? 'Tu Partido' : 'Your Match'}
+                {loadingPlayerMatches && (
+                  <span className="text-xs text-gray-400 animate-pulse">
+                    {language === 'es' ? 'Cargando datos...' : 'Loading data...'}
+                  </span>
+                )}
+              </h4>
+              <MatchCard
+                match={playerMatch}
+                player={player}
+                language={language}
+                onSchedule={handleSchedule}
+                onResult={handleResult}
+                onWhatsApp={handleWhatsApp}
+                isUpcoming={true}
+                showActions={true}
+                className="ring-2 ring-parque-purple ring-opacity-50"
+              />
+            </div>
+          )}
+          
+          {/* Other Matches - Read Only */}
+          {otherMatches.length > 0 && (
+            <div>
+              {!isPublic && (
+                <h4 className="text-sm font-semibold text-gray-600 mb-2">
+                  {language === 'es' ? 'Otros Partidos' : 'Other Matches'}
+                </h4>
+              )}
+              <div className="space-y-4">
+                {otherMatches.map((match) => (
+                  <MatchCard
+                    key={match._id}
+                    match={match}
+                    player={null}
+                    language={language}
+                    isUpcoming={true}
+                    showActions={false}
+                    isPublic={true}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="text-center py-16">
+          <div className="text-6xl mb-4">📅</div>
+          <h3 className="text-xl font-bold text-gray-700 mb-2">
+            {language === 'es' ? 'Ronda' : 'Round'} {currentRound}
+          </h3>
+          <p className="text-gray-500 mb-6">
+            {language === 'es' 
+              ? 'No hay partidos programados para esta ronda todavía.'
+              : 'No matches scheduled for this round yet.'}
+          </p>
+          <div className="text-sm text-gray-400">
+            {language === 'es' 
+              ? 'Los partidos se programarán una vez que se complete la ronda anterior.'
+              : 'Matches will be scheduled once the previous round is completed.'}
+          </div>
+        </div>
+      )}
 
-        {/* Match Modals - Only for logged in players */}
-        {!isPublic && (
-          <MatchModals
-            showResultModal={showResultModal}
-            showScheduleModal={showScheduleModal}
-            selectedMatch={selectedMatch}
-            player={player}
-            language={language}
-            onCloseResult={() => setShowResultModal(false)}
-            onCloseSchedule={() => {
-              setShowScheduleModal(false)
-              setIsEditingSchedule(false)
-            }}
-            onSubmitResult={handleSubmitResult}
-            onSubmitSchedule={handleSubmitSchedule}
-            isEditingSchedule={isEditingSchedule}
-          />
-        )}
-      </div>
-    </>
+      {/* Match Modals - Only for logged in players */}
+      {!isPublic && (
+        <MatchModals
+          showResultModal={showResultModal}
+          showScheduleModal={showScheduleModal}
+          selectedMatch={selectedMatch}
+          player={player}
+          language={language}
+          onCloseResult={() => setShowResultModal(false)}
+          onCloseSchedule={() => {
+            setShowScheduleModal(false)
+            setIsEditingSchedule(false)
+          }}
+          onSubmitResult={handleSubmitResult}
+          onSubmitSchedule={handleSubmitSchedule}
+          isEditingSchedule={isEditingSchedule}
+        />
+      )}
+    </div>
   )
 }
