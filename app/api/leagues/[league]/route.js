@@ -1,17 +1,26 @@
 import dbConnect from '../../../../lib/db/mongoose'
 import League from '../../../../lib/models/League'
+import mongoose from 'mongoose'
 
 export async function GET(request, { params }) {
   try {
     await dbConnect()
     
-    const { league: slug } = params
+    const { league: identifier } = params
     
-    // Find league by slug
-    const league = await League.findOne({ 
-      slug: slug.toLowerCase(),
-      status: 'active'
-    })
+    // Build query to support both ID and slug
+    let query = { status: 'active' }
+    
+    // Check if identifier is a valid MongoDB ObjectId
+    if (mongoose.Types.ObjectId.isValid(identifier)) {
+      query._id = identifier
+    } else {
+      // Otherwise, treat it as a slug
+      query.slug = identifier
+    }
+    
+    // Find league by ID or slug
+    const league = await League.findOne(query)
     
     if (!league) {
       return Response.json(

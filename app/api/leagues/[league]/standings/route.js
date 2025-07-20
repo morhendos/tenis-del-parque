@@ -3,6 +3,7 @@ import dbConnect from '../../../../../lib/db/mongoose'
 import League from '../../../../../lib/models/League'
 import Player from '../../../../../lib/models/Player'
 import Match from '../../../../../lib/models/Match'
+import mongoose from 'mongoose'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
@@ -11,16 +12,24 @@ export async function GET(request, { params }) {
   try {
     await dbConnect()
     
-    const { league: slug } = params
+    const { league: identifier } = params
     const { searchParams } = new URL(request.url)
-    const season = searchParams.get('season') || 'Verano 2025'
+    const season = searchParams.get('season') || 'summer-2025'  // Use database format
     const level = searchParams.get('level')
     
-    // Find league by slug
-    const league = await League.findOne({ 
-      slug: slug.toLowerCase(),
-      status: 'active'
-    })
+    // Build query to support both ID and slug
+    let query = { status: 'active' }
+    
+    // Check if identifier is a valid MongoDB ObjectId
+    if (mongoose.Types.ObjectId.isValid(identifier)) {
+      query._id = identifier
+    } else {
+      // Otherwise, treat it as a slug
+      query.slug = identifier
+    }
+    
+    // Find league by ID or slug
+    const league = await League.findOne(query)
     
     if (!league) {
       return NextResponse.json(
@@ -33,15 +42,15 @@ export async function GET(request, { params }) {
     }
     
     // Build query for players - include ALL players, not just active ones
-    const query = { 
+    const playerQuery = { 
       league: league._id, 
       season: season
       // Removed status filter to show all players
     }
-    if (level) query.level = level
+    if (level) playerQuery.level = level
     
     // Get players
-    let players = await Player.find(query).lean()
+    let players = await Player.find(playerQuery).lean()
     
     // FALLBACK: If no players found with exact season, try without season filter
     if (players.length === 0) {
@@ -60,19 +69,23 @@ export async function GET(request, { params }) {
       status: 'completed'
     }).lean()
     
-    // Calculate points and games for each player from their matches
+    // Calculate ALL stats for each player from their matches
     const playerStatsMap = new Map()
     
-    // Initialize all players with 0 points and games
+    // Initialize all players with 0 stats
     players.forEach(player => {
       playerStatsMap.set(player._id.toString(), {
         points: 0,
+        matchesPlayed: 0,
+        matchesWon: 0,
+        setsWon: 0,
+        setsLost: 0,
         gamesWon: 0,
         gamesLost: 0
       })
     })
     
-    // Calculate points and games from each match
+    // Calculate stats from each match
     matches.forEach(match => {
       // Create a temporary Match instance to use the calculatePoints method
       const matchInstance = new Match(match)
@@ -81,67 +94,104 @@ export async function GET(request, { params }) {
       const player1Id = match.players.player1.toString()
       const player2Id = match.players.player2.toString()
       
-      // Calculate games from match score
+      // Determine winner
+      const player1Won = match.result?.winner?.toString() === player1Id
+      
+      // Calculate sets won/lost
+      let player1SetsWon = 0
+      let player2SetsWon = 0
+      
+      if (match.result?.score?.sets && match.result.score.sets.length > 0) {
+        match.result.score.sets.forEach(set => {
+          const p1Games = set.player1 || 0
+          const p2Games = set.player2 || 0
+          
+          if (p1Games > p2Games) {
+            player1SetsWon++
+          } else if (p2Games > p1Games) {
+            player2SetsWon++
+          }
+        })
+      } else if (match.result?.score?.walkover) {
+        // For walkover, winner gets 2-0 in sets
+        player1SetsWon = player1Won ? 2 : 0
+        player2SetsWon = player1Won ? 0 : 2
+      }
+      
+      // Calculate games won/lost
       let player1GamesWon = 0
       let player2GamesWon = 0
       
-      if (match.result && match.result.score) {
-        if (match.result.score.sets && match.result.score.sets.length > 0) {
-          // Count games from each set
-          match.result.score.sets.forEach((set, index) => {
-            const p1Games = set.player1 || 0
-            const p2Games = set.player2 || 0
-            
-            // Check if this is a super tiebreak (third set with scores >= 10)
-            const isThirdSet = index === 2
-            const isSuperTiebreak = isThirdSet && (p1Games >= 10 || p2Games >= 10)
-            
-            if (isSuperTiebreak) {
-              // Super tiebreak counts as 1 game for the winner
-              if (p1Games > p2Games) {
-                player1GamesWon += 1
-                player2GamesWon += 0
-              } else {
-                player1GamesWon += 0
-                player2GamesWon += 1
-              }
+      if (match.result?.score?.sets && match.result.score.sets.length > 0) {
+        // Count games from each set
+        match.result.score.sets.forEach((set, index) => {
+          const p1Games = set.player1 || 0
+          const p2Games = set.player2 || 0
+          
+          // Check if this is a super tiebreak (third set with scores >= 10)
+          const isThirdSet = index === 2
+          const isSuperTiebreak = isThirdSet && (p1Games >= 10 || p2Games >= 10)
+          
+          if (isSuperTiebreak) {
+            // Super tiebreak counts as 1 game for the winner
+            if (p1Games > p2Games) {
+              player1GamesWon += 1
+              player2GamesWon += 0
             } else {
-              // Regular set - count actual games
-              player1GamesWon += p1Games
-              player2GamesWon += p2Games
+              player1GamesWon += 0
+              player2GamesWon += 1
             }
-          })
-        } else if (match.result.score.walkover) {
-          // For walkover, winner gets 12-0 (6-0, 6-0)
-          const player1Won = match.result.winner.toString() === player1Id
-          player1GamesWon = player1Won ? 12 : 0
-          player2GamesWon = player1Won ? 0 : 12
-        }
+          } else {
+            // Regular set - count actual games
+            player1GamesWon += p1Games
+            player2GamesWon += p2Games
+          }
+        })
+      } else if (match.result?.score?.walkover) {
+        // For walkover, winner gets 12-0 (6-0, 6-0)
+        player1GamesWon = player1Won ? 12 : 0
+        player2GamesWon = player1Won ? 0 : 12
       }
       
-      // Update player stats
+      // Update player 1 stats
       if (playerStatsMap.has(player1Id)) {
         const stats = playerStatsMap.get(player1Id)
         stats.points += points.player1
+        stats.matchesPlayed += 1
+        stats.matchesWon += player1Won ? 1 : 0
+        stats.setsWon += player1SetsWon
+        stats.setsLost += player2SetsWon
         stats.gamesWon += player1GamesWon
         stats.gamesLost += player2GamesWon
       }
+      
+      // Update player 2 stats
       if (playerStatsMap.has(player2Id)) {
         const stats = playerStatsMap.get(player2Id)
         stats.points += points.player2
+        stats.matchesPlayed += 1
+        stats.matchesWon += player1Won ? 0 : 1
+        stats.setsWon += player2SetsWon
+        stats.setsLost += player1SetsWon
         stats.gamesWon += player2GamesWon
         stats.gamesLost += player1GamesWon
       }
     })
     
-    // Create standings with calculated points and games
+    // Create standings with calculated stats
     const playersWithStats = players.map(player => {
-      const stats = playerStatsMap.get(player._id.toString()) || { points: 0, gamesWon: 0, gamesLost: 0 }
+      const stats = playerStatsMap.get(player._id.toString()) || {
+        points: 0,
+        matchesPlayed: 0,
+        matchesWon: 0,
+        setsWon: 0,
+        setsLost: 0,
+        gamesWon: 0,
+        gamesLost: 0
+      }
       return {
         ...player,
-        calculatedPoints: stats.points,
-        calculatedGamesWon: stats.gamesWon,
-        calculatedGamesLost: stats.gamesLost
+        calculatedStats: stats
       }
     })
     
@@ -163,38 +213,41 @@ export async function GET(request, { params }) {
       }
       
       // Secondary: Has played matches (players with matches first)
-      const aHasPlayed = (a.stats?.matchesPlayed || 0) > 0
-      const bHasPlayed = (b.stats?.matchesPlayed || 0) > 0
+      const aHasPlayed = a.calculatedStats.matchesPlayed > 0
+      const bHasPlayed = b.calculatedStats.matchesPlayed > 0
       
       if (aHasPlayed !== bHasPlayed) {
         return bHasPlayed ? 1 : -1  // Players who have played come first
       }
       
-      // Tertiary: total points (calculated from matches)
-      if (a.calculatedPoints !== b.calculatedPoints) return b.calculatedPoints - a.calculatedPoints
+      // Tertiary: total points
+      if (a.calculatedStats.points !== b.calculatedStats.points) {
+        return b.calculatedStats.points - a.calculatedStats.points
+      }
       
-      // Quaternary: set difference (sets won - sets lost)
-      const aSetDiff = (a.stats?.setsWon || 0) - (a.stats?.setsLost || 0)
-      const bSetDiff = (b.stats?.setsWon || 0) - (b.stats?.setsLost || 0)
+      // Quaternary: set difference
+      const aSetDiff = a.calculatedStats.setsWon - a.calculatedStats.setsLost
+      const bSetDiff = b.calculatedStats.setsWon - b.calculatedStats.setsLost
       if (aSetDiff !== bSetDiff) return bSetDiff - aSetDiff
       
-      // Quinary: game difference (games won - games lost)
-      const aGameDiff = a.calculatedGamesWon - a.calculatedGamesLost
-      const bGameDiff = b.calculatedGamesWon - b.calculatedGamesLost
+      // Quinary: game difference
+      const aGameDiff = a.calculatedStats.gamesWon - a.calculatedStats.gamesLost
+      const bGameDiff = b.calculatedStats.gamesWon - b.calculatedStats.gamesLost
       if (aGameDiff !== bGameDiff) return bGameDiff - aGameDiff
       
       // Senary: alphabetical by name
       return a.name.localeCompare(b.name)
     })
     
-    // Calculate additional stats for each player
+    // Create final standings
     const standings = playersWithStats.map((player, index) => {
-      const winPercentage = player.stats.matchesPlayed > 0 
-        ? Math.round((player.stats.matchesWon / player.stats.matchesPlayed) * 100)
+      const stats = player.calculatedStats
+      const winPercentage = stats.matchesPlayed > 0 
+        ? Math.round((stats.matchesWon / stats.matchesPlayed) * 100)
         : 0
       
-      const setPercentage = (player.stats.setsWon + player.stats.setsLost) > 0
-        ? Math.round((player.stats.setsWon / (player.stats.setsWon + player.stats.setsLost)) * 100)
+      const setPercentage = (stats.setsWon + stats.setsLost) > 0
+        ? Math.round((stats.setsWon / (stats.setsWon + stats.setsLost)) * 100)
         : 0
       
       return {
@@ -206,18 +259,18 @@ export async function GET(request, { params }) {
           status: player.status  // Include player status for frontend styling
         },
         stats: {
-          matchesPlayed: player.stats.matchesPlayed || 0,
-          matchesWon: player.stats.matchesWon || 0,
-          matchesLost: (player.stats.matchesPlayed || 0) - (player.stats.matchesWon || 0),
+          matchesPlayed: stats.matchesPlayed,
+          matchesWon: stats.matchesWon,
+          matchesLost: stats.matchesPlayed - stats.matchesWon,
           winPercentage,
-          setsWon: player.stats.setsWon || 0,
-          setsLost: player.stats.setsLost || 0,
+          setsWon: stats.setsWon,
+          setsLost: stats.setsLost,
           setPercentage,
-          gamesWon: player.calculatedGamesWon,    // Use calculated games
-          gamesLost: player.calculatedGamesLost,  // Use calculated games
-          totalPoints: player.calculatedPoints,    // Use calculated points
-          eloRating: player.stats.eloRating || 1200,
-          eloChange: (player.stats.eloRating || 1200) - 1200 // Change from starting ELO
+          gamesWon: stats.gamesWon,
+          gamesLost: stats.gamesLost,
+          totalPoints: stats.points,
+          eloRating: player.stats?.eloRating || 1200,
+          eloChange: (player.stats?.eloRating || 1200) - 1200 // Change from starting ELO
         }
       }
     })

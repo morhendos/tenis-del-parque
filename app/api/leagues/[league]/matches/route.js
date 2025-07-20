@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import dbConnect from '../../../../../lib/db/mongoose'
 import League from '../../../../../lib/models/League'
 import Match from '../../../../../lib/models/Match'
+import mongoose from 'mongoose'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
@@ -10,27 +11,36 @@ export async function GET(request, { params }) {
   try {
     await dbConnect()
     
-    const { league: slug } = params
+    const { league: identifier } = params
     const { searchParams } = new URL(request.url)
-    const season = searchParams.get('season') || 'Verano 2025'
+    const season = searchParams.get('season') || 'summer-2025'  // Use database format
     const status = searchParams.get('status') // 'completed', 'scheduled', etc.
     const round = searchParams.get('round')
     const limit = parseInt(searchParams.get('limit')) || 100 // INCREASED DEFAULT FROM 20 TO 100
     
-    console.log('API: Fetching matches for league:', slug, 'season:', season, 'status:', status)
+    console.log('API: Fetching matches for league:', identifier, 'season:', season, 'status:', status)
     
-    // Find league by slug - Remove status filter to be more lenient
-    const league = await League.findOne({ 
-      slug: slug.toLowerCase()
-    })
+    // Build query to support both ID and slug
+    let query = {}
+    
+    // Check if identifier is a valid MongoDB ObjectId
+    if (mongoose.Types.ObjectId.isValid(identifier)) {
+      query._id = identifier
+    } else {
+      // Otherwise, treat it as a slug
+      query.slug = identifier
+    }
+    
+    // Find league by ID or slug - Remove status filter to be more lenient
+    const league = await League.findOne(query)
     
     if (!league) {
-      console.error('API: League not found for slug:', slug)
+      console.error('API: League not found for identifier:', identifier)
       return NextResponse.json(
         { 
           success: false, 
           error: 'League not found',
-          debug: { slug: slug.toLowerCase() }
+          debug: { identifier: identifier.toLowerCase() }
         },
         { status: 404 }
       )
@@ -39,17 +49,17 @@ export async function GET(request, { params }) {
     console.log('API: Found league:', league.name, 'with ID:', league._id)
     
     // Build query for matches
-    const query = { 
+    const matchQuery = { 
       league: league._id, 
       season: season
     }
-    if (status) query.status = status
-    if (round) query.round = parseInt(round)
+    if (status) matchQuery.status = status
+    if (round) matchQuery.round = parseInt(round)
     
-    console.log('API: Match query:', JSON.stringify(query))
+    console.log('API: Match query:', JSON.stringify(matchQuery))
     
     // Get matches with player details
-    const matches = await Match.find(query)
+    const matches = await Match.find(matchQuery)
       .populate('players.player1', 'name level stats.eloRating')
       .populate('players.player2', 'name level stats.eloRating')
       .populate('result.winner', 'name')
@@ -61,7 +71,7 @@ export async function GET(request, { params }) {
     
     // Format matches for frontend
     const formattedMatches = matches.map(match => {
-      const score = match.result?.score?.sets?.map(set => 
+      const scoreString = match.result?.score?.sets?.map(set => 
         `${set.player1}-${set.player2}`
       ).join(', ') || ''
       
@@ -95,7 +105,8 @@ export async function GET(request, { params }) {
             _id: match.result.winner._id,
             name: match.result.winner.name
           } : null,
-          score,
+          score: match.result.score, // Keep original score structure with sets array
+          scoreString: scoreString, // Also provide string representation for display
           playedAt: match.result.playedAt
         } : null,
         eloChanges: match.eloChanges || null,
@@ -145,7 +156,7 @@ export async function GET(request, { params }) {
         limit
       },
       debug: {
-        query,
+        query: matchQuery,
         matchCount: matches.length,
         leagueStatus: league.status
       },

@@ -3,13 +3,17 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useParams, usePathname } from 'next/navigation'
+import LanguageSwitcher from './LanguageSwitcher'
 import { TennisBallIcon } from '../ui/TennisIcons'
 
-export default function Navigation({ currentPage = 'home', language, onLanguageChange }) {
-  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false)
+export default function Navigation({ currentPage = 'home', language, onLanguageChange, showLanguageSwitcher = true }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isHomeSectionsOpen, setIsHomeSectionsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const params = useParams()
+  const pathname = usePathname()
+  const locale = params?.locale || language || 'es'
 
   // Handle scroll effect
   useEffect(() => {
@@ -20,12 +24,11 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Close menus when route changes or clicking outside
+  // Close menus when route changes
   useEffect(() => {
     setIsMobileMenuOpen(false)
-    setIsLangMenuOpen(false)
     setIsHomeSectionsOpen(false)
-  }, [currentPage])
+  }, [pathname])
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -80,25 +83,19 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
     }
   }
 
-  const t = navContent[language]
-
-  const handleLanguageChange = (lang) => {
-    onLanguageChange(lang)
-    setIsLangMenuOpen(false)
-    setIsMobileMenuOpen(false)
-    setIsHomeSectionsOpen(false)
-  }
+  // Add fallback to ensure t is always defined
+  const validLocale = navContent[locale] ? locale : 'es'
+  const t = navContent[validLocale]
 
   const handleMobileMenuToggle = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)
-    setIsLangMenuOpen(false)
     setIsHomeSectionsOpen(false)
   }
 
   const handleSectionClick = (sectionId, closeMobileMenu = false) => {
     if (currentPage !== 'home') {
       // If not on home page, navigate to home page with section
-      window.location.href = `/sotogrande#${sectionId}`
+      window.location.href = `/${validLocale}#${sectionId}`
     } else {
       // If on home page, scroll to section
       const element = document.getElementById(sectionId)
@@ -113,23 +110,29 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
     setIsHomeSectionsOpen(false)
   }
 
-  const NavLink = ({ href, children, onClick }) => (
-    <Link 
-      href={href} 
-      onClick={onClick}
-      className={`relative transition-colors font-medium group block py-2 md:py-0 ${
-        currentPage === href.slice(1) || (href === '/sotogrande' && currentPage === 'home')
-          ? 'text-parque-purple' 
-          : 'text-gray-700 hover:text-parque-purple'
-      }`}
-    >
-      {children}
-      {(currentPage === href.slice(1) || (href === '/sotogrande' && currentPage === 'home')) && (
-        <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-parque-purple hidden md:block"></div>
-      )}
-      <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-parque-purple scale-x-0 group-hover:scale-x-100 transition-transform origin-left hidden md:block"></div>
-    </Link>
-  )
+  const NavLink = ({ href, children, onClick }) => {
+    // Convert href to locale-based href
+    const localizedHref = href.startsWith('/') ? `/${validLocale}${href}` : href
+    const isActive = pathname === localizedHref || (href === '/' && pathname === `/${validLocale}`)
+    
+    return (
+      <Link 
+        href={localizedHref} 
+        onClick={onClick}
+        className={`relative transition-colors font-medium group block py-2 md:py-0 ${
+          isActive
+            ? 'text-parque-purple' 
+            : 'text-gray-700 hover:text-parque-purple'
+        }`}
+      >
+        {children}
+        {isActive && (
+          <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-parque-purple hidden md:block"></div>
+        )}
+        <div className="absolute -bottom-1 left-0 right-0 h-0.5 bg-parque-purple scale-x-0 group-hover:scale-x-100 transition-transform origin-left hidden md:block"></div>
+      </Link>
+    )
+  }
 
   const SectionLink = ({ sectionId, children, mobile = false }) => (
     <button
@@ -149,9 +152,9 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <Link href="/sotogrande" className="group flex items-center space-x-2 transform hover:scale-105 transition-transform">
+              <Link href={`/${validLocale}`} className="group flex items-center space-x-2 transform hover:scale-105 transition-transform">
                 <Image
-                  src="/logo-horizontal-big.png"
+                  src="/logo-horizontal-small.png"
                   alt="Tenis del Parque"
                   height={48}
                   width={200}
@@ -167,7 +170,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
               <div className="flex space-x-6">
                 {/* Home with dropdown for sections */}
                 <div className="relative group">
-                  <NavLink href="/sotogrande">{t.home}</NavLink>
+                  <NavLink href="/">{t.home}</NavLink>
                   {/* Home sections dropdown */}
                   {currentPage === 'home' && (
                     <div className="absolute top-full left-0 mt-2 w-48 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-gray-100 py-2 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
@@ -181,8 +184,8 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
                     </div>
                   )}
                 </div>
-                <NavLink href="/leagues">{t.leagues}</NavLink>
-                <NavLink href="/rules">{t.rules}</NavLink>
+                <NavLink href={`/${validLocale === 'es' ? 'ligas' : 'leagues'}`}>{t.leagues}</NavLink>
+                <NavLink href={`/${validLocale === 'es' ? 'reglas' : 'rules'}`}>{t.rules}</NavLink>
                 <NavLink href="/swiss">{t.swiss}</NavLink>
                 <NavLink href="/elo">{t.elo}</NavLink>
               </div>
@@ -190,7 +193,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
               {/* Login Button */}
               <div className="ml-4">
                 <a
-                  href="/login"
+                  href={`/${validLocale}/login`}
                   className="bg-parque-purple text-white px-4 py-2 rounded-lg hover:bg-parque-purple/90 transition-colors font-medium text-sm"
                 >
                   {t.login}
@@ -198,109 +201,17 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
               </div>
               
               {/* Desktop Language Selector */}
-              <div className="relative">
-                <button
-                  onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
-                  className="flex items-center space-x-2 bg-white/80 backdrop-blur-sm border border-gray-200 px-4 py-2 rounded-xl hover:border-parque-purple hover:shadow-md transition-all duration-300 group"
-                >
-                  <span className="text-gray-700 font-medium">
-                    {language === 'es' ? 'ES' : 'EN'}
-                  </span>
-                  <svg className={`w-4 h-4 text-gray-500 transition-transform ${isLangMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                
-                {isLangMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-gray-100 py-2 animate-fadeIn">
-                    <button
-                      onClick={() => handleLanguageChange('es')}
-                      className={`w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center justify-between transition-all duration-200 group ${
-                        language === 'es' ? 'bg-gradient-to-r from-parque-purple/10 to-transparent' : ''
-                      }`}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <span className="text-2xl">🇪🇸</span>
-                        <span className={`font-medium ${language === 'es' ? 'text-parque-purple' : 'text-gray-700'}`}>
-                          Español
-                        </span>
-                      </div>
-                      {language === 'es' && (
-                        <div className="flex items-center justify-center w-5 h-5 rounded-full bg-parque-purple text-white animate-scaleIn">
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => handleLanguageChange('en')}
-                      className={`w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center justify-between transition-all duration-200 group ${
-                        language === 'en' ? 'bg-gradient-to-r from-parque-purple/10 to-transparent' : ''
-                      }`}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <span className="text-2xl">🇬🇧</span>
-                        <span className={`font-medium ${language === 'en' ? 'text-parque-purple' : 'text-gray-700'}`}>
-                          English
-                        </span>
-                      </div>
-                      {language === 'en' && (
-                        <div className="flex items-center justify-center w-5 h-5 rounded-full bg-parque-purple text-white animate-scaleIn">
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                      )}
-                    </button>
-                  </div>
-                )}
-              </div>
+              {showLanguageSwitcher && (
+                <LanguageSwitcher className="ml-2" />
+              )}
             </div>
 
             {/* Mobile Menu Button & Language Selector */}
             <div className="flex items-center space-x-3 lg:hidden">
               {/* Mobile Language Selector */}
-              <div className="relative">
-                <button
-                  onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
-                  className="flex items-center space-x-1 bg-white/80 backdrop-blur-sm border border-gray-200 px-3 py-2 rounded-lg hover:border-parque-purple transition-all duration-300"
-                >
-                  <span className="text-gray-700 font-medium text-sm">
-                    {language === 'es' ? 'ES' : 'EN'}
-                  </span>
-                  <svg className={`w-3 h-3 text-gray-500 transition-transform ${isLangMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                
-                {isLangMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-40 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-gray-100 py-2 animate-fadeIn">
-                    <button
-                      onClick={() => handleLanguageChange('es')}
-                      className={`w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 transition-all duration-200 ${
-                        language === 'es' ? 'bg-gradient-to-r from-parque-purple/10 to-transparent' : ''
-                      }`}
-                    >
-                      <span className="text-lg">🇪🇸</span>
-                      <span className={`font-medium text-sm ${language === 'es' ? 'text-parque-purple' : 'text-gray-700'}`}>
-                        Español
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => handleLanguageChange('en')}
-                      className={`w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 transition-all duration-200 ${
-                        language === 'en' ? 'bg-gradient-to-r from-parque-purple/10 to-transparent' : ''
-                      }`}
-                    >
-                      <span className="text-lg">🇬🇧</span>
-                      <span className={`font-medium text-sm ${language === 'en' ? 'text-parque-purple' : 'text-gray-700'}`}>
-                        English
-                      </span>
-                    </button>
-                  </div>
-                )}
-              </div>
+              {showLanguageSwitcher && (
+                <LanguageSwitcher className="" />
+              )}
 
               {/* Hamburger Menu Button */}
               <button
@@ -345,7 +256,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
               {/* Home Page Link */}
               <div>
                 <NavLink 
-                  href="/sotogrande" 
+                  href="/" 
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <div className={`flex items-center justify-between py-3 px-4 rounded-xl transition-all duration-200 ${
@@ -358,20 +269,20 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
                       {currentPage === 'home' && (
                         <div className="w-2 h-2 bg-parque-purple rounded-full"></div>
                       )}
-                                             {currentPage === 'home' && (
-                         <button
-                           onClick={(e) => {
-                             e.preventDefault()
-                             e.stopPropagation()
-                             setIsHomeSectionsOpen(!isHomeSectionsOpen)
-                           }}
-                           className="flex items-center justify-center w-6 h-6 hover:bg-parque-purple/10 rounded-md transition-colors"
-                         >
-                           <svg className={`w-4 h-4 text-parque-purple transition-transform ${isHomeSectionsOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                           </svg>
-                         </button>
-                       )}
+                      {currentPage === 'home' && (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            setIsHomeSectionsOpen(!isHomeSectionsOpen)
+                          }}
+                          className="flex items-center justify-center w-6 h-6 hover:bg-parque-purple/10 rounded-md transition-colors"
+                        >
+                          <svg className={`w-4 h-4 text-parque-purple transition-transform ${isHomeSectionsOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                      )}
                     </div>
                   </div>
                 </NavLink>
@@ -395,7 +306,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
               </div>
               
               <NavLink 
-                href="/leagues" 
+                href={`/${validLocale === 'es' ? 'ligas' : 'leagues'}`} 
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <div className={`flex items-center justify-between py-3 px-4 rounded-xl transition-all duration-200 ${
@@ -411,7 +322,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
               </NavLink>
               
               <NavLink 
-                href="/rules" 
+                href={`/${validLocale === 'es' ? 'reglas' : 'rules'}`} 
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <div className={`flex items-center justify-between py-3 px-4 rounded-xl transition-all duration-200 ${
@@ -461,7 +372,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
               {/* Mobile Login Button */}
               <div className="pt-4 border-t border-gray-200">
                 <a
-                  href="/login"
+                  href={`/${validLocale}/login`}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="block w-full bg-parque-purple text-white text-center py-3 px-4 rounded-xl hover:bg-parque-purple/90 transition-colors font-medium"
                 >
@@ -472,14 +383,6 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
           </div>
         </div>
       </div>
-
-      {/* Click outside to close language menu (desktop) */}
-      {isLangMenuOpen && (
-        <div 
-          className="fixed inset-0 z-[85]" 
-          onClick={() => setIsLangMenuOpen(false)}
-        />
-      )}
     </>
   )
 }

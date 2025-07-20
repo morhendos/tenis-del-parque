@@ -2,18 +2,15 @@ import { NextResponse } from 'next/server'
 import dbConnect from '../../../../../lib/db/mongoose'
 import Match from '../../../../../lib/models/Match'
 import Player from '../../../../../lib/models/Player'
-import User from '../../../../../lib/models/User'
-import { verifyAuth } from '../../../../../lib/utils/authMiddleware'
+import { requirePlayer } from '../../../../../lib/auth/apiAuth'
 
 export async function POST(request) {
   try {
     await dbConnect()
     
-    // Use existing JWT authentication system
-    const auth = await verifyAuth(request, { role: 'player' })
-    if (!auth.authenticated) {
-      return auth.response
-    }
+    // Use new NextAuth authentication system
+    const { session, error } = await requirePlayer(request)
+    if (error) return error
 
     const { matchId, sets, walkover, retiredPlayer } = await request.json()
 
@@ -31,15 +28,35 @@ export async function POST(request) {
       }, { status: 400 })
     }
 
-    // Get user and player from JWT token
-    const user = await User.findById(auth.user.userId)
-    if (!user || !user.playerId) {
-      return NextResponse.json({ success: false, error: 'Player not found' }, { status: 404 })
+    // Get player from session's playerId
+    if (!session.user.playerId) {
+      // Try to find player by email as fallback
+      const playerByEmail = await Player.findOne({ email: session.user.email.toLowerCase() })
+      
+      if (!playerByEmail) {
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Your user account is not linked to a player profile. Please contact support to resolve this issue.',
+          details: 'No playerId found in session and no player found with your email address.'
+        }, { status: 404 })
+      }
+      
+      // If we found a player with matching email, we could link them here
+      // but for now just return an error to maintain data integrity
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Your user account is not properly linked to your player profile. Please contact support.',
+        details: `Found player with email ${session.user.email} but accounts are not linked.`
+      }, { status: 404 })
     }
 
-    const userPlayer = await Player.findById(user.playerId)
+    const userPlayer = await Player.findById(session.user.playerId)
     if (!userPlayer) {
-      return NextResponse.json({ success: false, error: 'Player not found' }, { status: 404 })
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Player profile not found. Please contact support.',
+        details: `PlayerId ${session.user.playerId} not found in database.`
+      }, { status: 404 })
     }
 
     const isPlayer1 = match.players.player1.equals(userPlayer._id)

@@ -1,46 +1,40 @@
 import { NextResponse } from 'next/server'
-import dbConnect from '../../../../../lib/db/mongoose'
-import User from '../../../../../lib/models/User'
-import { verifyToken } from '../../../../../lib/utils/jwt'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import dbConnect from '@/lib/db/mongoose'
+import User from '@/lib/models/User'
 
-// Force dynamic rendering for this API route
-export const dynamic = 'force-dynamic'
-
-export async function POST(req) {
+export async function POST(request) {
   try {
-    // Get token from cookie
-    const token = req.cookies.get('auth-token')?.value
-
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    // Verify token
-    const decoded = await verifyToken(token)
+    // Get session using NextAuth
+    const session = await getServerSession(authOptions)
     
-    if (!decoded || decoded.role !== 'player') {
+    if (!session) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Authentication required' },
         { status: 401 }
       )
     }
-
-    const { messageId } = await req.json()
-
-    if (!messageId) {
+    
+    const body = await request.json()
+    
+    // Support both single messageId and array of messageIds for backward compatibility
+    let messageIds = []
+    if (body.messageId) {
+      messageIds = [body.messageId]
+    } else if (body.messageIds && Array.isArray(body.messageIds)) {
+      messageIds = body.messageIds
+    } else {
       return NextResponse.json(
-        { error: 'Message ID is required' },
+        { error: 'Message ID(s) are required' },
         { status: 400 }
       )
     }
 
     await dbConnect()
 
-    // Find the user and mark announcement as seen
-    const user = await User.findById(decoded.userId)
+    // Find the user and update their seen announcements
+    const user = await User.findById(session.user.id)
     if (!user) {
       return NextResponse.json(
         { error: 'User not found' },
@@ -48,19 +42,27 @@ export async function POST(req) {
       )
     }
 
-    // Mark the announcement as seen
-    await user.markAnnouncementSeen(messageId)
+    // Initialize seenAnnouncements if not exists
+    if (!user.seenAnnouncements) {
+      user.seenAnnouncements = []
+    }
 
-    return NextResponse.json({
+    // Add message IDs to seen announcements
+    for (const messageId of messageIds) {
+      if (!user.seenAnnouncements.includes(messageId)) {
+        user.seenAnnouncements.push(messageId)
+      }
+    }
+
+    // Save the user
+    await user.save()
+
+    return NextResponse.json({ 
       success: true,
-      message: 'Announcement marked as seen'
+      seenAnnouncements: user.seenAnnouncements
     })
-
   } catch (error) {
-    console.error('Mark seen error:', error)
-    return NextResponse.json(
-      { error: 'Failed to mark message as seen' },
-      { status: 500 }
-    )
+    console.error('Error marking messages as seen:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

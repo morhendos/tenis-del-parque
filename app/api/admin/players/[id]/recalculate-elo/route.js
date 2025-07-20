@@ -2,23 +2,23 @@ import { NextResponse } from 'next/server'
 import dbConnect from '../../../../../../lib/db/mongoose'
 import Player from '../../../../../../lib/models/Player'
 import Match from '../../../../../../lib/models/Match'
-import { verifyAdminAuth } from '../../../../../../lib/utils/adminAuth'
+import { requireAdmin } from '../../../../../../lib/auth/apiAuth'
+
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
 
 // POST /api/admin/players/[id]/recalculate-elo - Recalculate ELO for a player
 export async function POST(request, { params }) {
   try {
-    // Check authentication
-    const auth = await verifyAdminAuth(request)
-    if (!auth.authenticated) {
-      return NextResponse.json({ error: auth.error }, { status: 401 })
-    }
+    const { session, error } = await requireAdmin(request)
+    if (error) return error
+
+    const { id } = params
 
     await dbConnect()
 
-    const { id: playerId } = params
-
     // Find the player
-    const player = await Player.findById(playerId)
+    const player = await Player.findById(id)
     if (!player) {
       return NextResponse.json(
         { error: 'Player not found' },
@@ -53,8 +53,8 @@ export async function POST(request, { params }) {
     // Get all completed matches for this player in chronological order
     const matches = await Match.find({
       $or: [
-        { 'players.player1': playerId },
-        { 'players.player2': playerId }
+        { 'players.player1': id },
+        { 'players.player2': id }
       ],
       status: 'completed',
       'result.playedAt': { $exists: true }
@@ -71,13 +71,13 @@ export async function POST(request, { params }) {
 
     // Process each match in chronological order
     for (const match of matches) {
-      const isPlayer1 = match.players.player1._id.toString() === playerId
-      const isPlayer2 = match.players.player2._id.toString() === playerId
+      const isPlayer1 = match.players.player1._id.toString() === id
+      const isPlayer2 = match.players.player2._id.toString() === id
       
       if (!isPlayer1 && !isPlayer2) continue
 
       const opponent = isPlayer1 ? match.players.player2 : match.players.player1
-      const playerWon = match.result.winner.toString() === playerId
+      const playerWon = match.result.winner.toString() === id
 
       // Get opponent's current ELO (we need to recalculate in proper order)
       // For now, use their stored ELO rating - in a full system recompute, 
@@ -144,7 +144,7 @@ export async function POST(request, { params }) {
       const historyEntry = eloHistory[i]
       updatedMatchHistory.push({
         match: historyEntry.matchId,
-        opponent: matches[i].players.player1._id.toString() === playerId ? 
+        opponent: matches[i].players.player1._id.toString() === id ? 
                   matches[i].players.player2._id : matches[i].players.player1._id,
         result: historyEntry.won ? 'won' : 'lost',
         score: matches[i].getScoreDisplay ? matches[i].getScoreDisplay() : 'N/A',
