@@ -19,6 +19,7 @@ export default function PlayerMatches() {
   const [showResultModal, setShowResultModal] = useState(false)
   const [showScheduleModal, setShowScheduleModal] = useState(false)
   const [selectedMatch, setSelectedMatch] = useState(null)
+  const [isEditingSchedule, setIsEditingSchedule] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -85,8 +86,9 @@ export default function PlayerMatches() {
     }
   }
 
-  const handleSchedule = (match) => {
+  const handleSchedule = (match, isEditing = false) => {
     setSelectedMatch(match)
+    setIsEditingSchedule(isEditing)
     setShowScheduleModal(true)
   }
 
@@ -204,7 +206,9 @@ export default function PlayerMatches() {
                   ...match.schedule,
                   confirmedDate: new Date(`${data.date}T${data.time}`).toISOString(),
                   venue: data.venue,
-                  court: data.court
+                  court: data.court,
+                  time: data.time,
+                  notes: data.notes
                 },
                 scheduledDate: new Date(`${data.date}T${data.time}`).toISOString()
               }
@@ -214,7 +218,11 @@ export default function PlayerMatches() {
         )
         
         setShowScheduleModal(false)
-        toast.success(locale === 'es' ? 'Partido programado con éxito' : 'Match scheduled successfully')
+        toast.success(
+          isEditingSchedule 
+            ? (locale === 'es' ? 'Programación actualizada con éxito' : 'Schedule updated successfully')
+            : (locale === 'es' ? 'Partido programado con éxito' : 'Match scheduled successfully')
+        )
       } else {
         toast.error(result.error || (locale === 'es' ? 'Error al programar partido' : 'Failed to schedule match'))
       }
@@ -543,9 +551,13 @@ export default function PlayerMatches() {
           player={player}
           language={locale}
           onCloseResult={() => setShowResultModal(false)}
-          onCloseSchedule={() => setShowScheduleModal(false)}
+          onCloseSchedule={() => {
+            setShowScheduleModal(false)
+            setIsEditingSchedule(false)
+          }}
           onSubmitResult={handleSubmitResult}
           onSubmitSchedule={handleSubmitSchedule}
+          isEditingSchedule={isEditingSchedule}
         />
       </div>
     </>
