@@ -146,11 +146,6 @@ root/
 │   │       └── route.js
 │   ├── globals.css
 │   ├── layout.js
-│   ├── player
-│   │   ├── dashboard
-│   │   │   └── page.js
-│   │   └── messages
-│   │       └── page.js
 │   ├── providers.js
 │   └── signup
 │       └── [league]
@@ -201,6 +196,7 @@ root/
 │   │   └── TestimonialsSection.js
 │   ├── layout
 │   ├── league
+│   │   ├── PublicScheduleTab.js
 │   │   └── ScoringSystem.js
 │   ├── player
 │   │   ├── DashboardHeader.js
@@ -208,6 +204,7 @@ root/
 │   │   ├── MatchActivity.js
 │   │   ├── MatchCard.js
 │   │   ├── MatchModals.js
+│   │   ├── MatchResultCard.js
 │   │   ├── PlayoffExplanation.js
 │   │   ├── QuickActions.js
 │   │   ├── QuickMatchActions.js
@@ -224,6 +221,7 @@ root/
 │       ├── AnnouncementModal.js
 │       ├── TennisDividers.js
 │       ├── TennisIcons.js
+│       ├── Toast.js
 │       └── WelcomeModal.js
 ├── docs
 │   ├── EDIT_MATCH_PLAYERS.md
@@ -231,12 +229,15 @@ root/
 │   ├── IMPROVED_MATCH_CREATION.md
 │   ├── IMPROVED_ROUND_MATCH_CREATION.md
 │   ├── MATCH_MANAGEMENT_GUIDE.md
+│   ├── MATCH_SCHEDULING_UX_IMPROVEMENTS.md
 │   ├── MOBILE_UI_IMPROVEMENTS.md
 │   ├── MOBILE_UI_UX_IMPROVEMENTS.md
 │   ├── NEXTAUTH_CLEANUP.md
 │   ├── NEXTAUTH_MIGRATION_PLAN.md
+│   ├── NEXTAUTH_PLAYER_LINKING.md
 │   ├── PLAYER_MATCH_IMPROVEMENTS.md
 │   ├── PLAYER_MESSAGES_SYSTEM.md
+│   ├── PRODUCT_LED_GROWTH.md
 │   ├── PR_MATCH_MANAGEMENT.md
 │   ├── PR_MULTILINGUAL_IMPLEMENTATION.md
 │   ├── SCORING_SYSTEM_INTEGRATION.md
@@ -287,6 +288,7 @@ root/
 │   │   └── User.js
 │   └── utils
 │       ├── apiHelpers.js
+│       ├── matchResultUtils.js
 │       ├── phoneUtils.js
 │       ├── rulesIcons.js
 │       └── swissPairing.js
@@ -311,6 +313,10 @@ root/
 │   ├── checkAuth.mjs
 │   ├── createAdminUser.js
 │   ├── createTestData.js
+│   ├── diagnoseLinkIssues.js
+│   ├── directFix.js
+│   ├── fixMismatchedLinks.js
+│   ├── linkPlayersToUsers.js
 │   ├── migrateActivationTokens.js
 │   ├── seedLeagues.js
 │   ├── tree.js
