@@ -5,8 +5,8 @@ import { useParams, useRouter, notFound } from 'next/navigation'
 import Navigation from '@/components/common/Navigation'
 import SignupSection from '@/components/home/SignupSection'
 import Footer from '@/components/common/Footer'
-import { cityInfo } from '@/lib/i18n/config'
 import { homeContent } from '@/lib/content/homeContent'
+import { multiLeagueHomeContent } from '@/lib/content/multiLeagueHomeContent'
 
 export default function CitySignupPage() {
   const params = useParams()
@@ -29,7 +29,7 @@ export default function CitySignupPage() {
   const [errors, setErrors] = useState({})
 
   const t = homeContent[locale]
-  const city = cityInfo[citySlug]
+  const content = multiLeagueHomeContent[locale]
   
   // Fetch league information
   useEffect(() => {
@@ -57,11 +57,6 @@ export default function CitySignupPage() {
   if (locale !== 'es') {
     router.replace(`/en/signup/${citySlug}`)
     return null
-  }
-  
-  // Check if city exists and is active
-  if (!city || city[locale].status !== 'active') {
-    notFound()
   }
 
   // Validate form data
@@ -194,8 +189,8 @@ export default function CitySignupPage() {
     )
   }
 
-  // Show error if league not found
-  if (error || !league) {
+  // Show error if league not found or inactive
+  if (error || !league || league.status === 'inactive') {
     return (
       <div className="min-h-screen bg-gradient-to-b from-parque-bg via-white to-white">
         <Navigation currentPage="signup" />
@@ -218,11 +213,31 @@ export default function CitySignupPage() {
     )
   }
 
+  // Check if it's a coming soon league
+  const isComingSoon = league.status === 'coming_soon'
+  const launchDate = league.expectedLaunchDate ? new Date(league.expectedLaunchDate) : null
+  const formattedDate = launchDate ? launchDate.toLocaleDateString(locale, { 
+    month: 'long', 
+    year: 'numeric' 
+  }) : null
+
   // Custom content for the signup page
   const signupContent = {
     ...t.signup,
-    title: `Únete a la Liga de ${city[locale].name}`,
-    subtitle: `Juega al tenis en ${city[locale].name} con jugadores de tu nivel`
+    title: isComingSoon 
+      ? `Pre-regístrate para ${league.name}`
+      : `Únete a la Liga de ${league.name}`,
+    subtitle: isComingSoon
+      ? `Sé de los primeros en jugar cuando lancemos en ${league.name}`
+      : `Juega al tenis en ${league.name} con jugadores de tu nivel`
+  }
+
+  // Update success message for coming soon leagues
+  if (isComingSoon && isSubmitted) {
+    signupContent.success = {
+      title: '¡Estás en la lista!',
+      message: `Te contactaremos cuando la liga de ${league.name} esté lista para lanzar. ¡Prepárate para jugar!`
+    }
   }
 
   return (
@@ -234,12 +249,19 @@ export default function CitySignupPage() {
         <div className="bg-gradient-to-br from-parque-purple/10 to-parque-green/10 py-16">
           <div className="container mx-auto px-4 text-center">
             <h1 className="text-5xl md:text-6xl font-light text-parque-purple mb-4">
-              Liga de {city[locale].name}
+              Liga de {league.name}
             </h1>
             <p className="text-xl text-gray-600 mb-2">
-              {city[locale].region}
+              {league.location?.region || 'España'}
             </p>
-            {league?.seasons?.[0] && (
+            {isComingSoon ? (
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 backdrop-blur-sm rounded-full text-sm">
+                <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                <span className="text-blue-800">
+                  {content.cities.comingSoon} {formattedDate && `- ${content.cities.launching} ${formattedDate}`}
+                </span>
+              </div>
+            ) : league?.seasons?.[0] && (
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full text-sm">
                 <span className="w-2 h-2 bg-parque-green rounded-full animate-pulse"></span>
                 <span className="text-gray-700">
@@ -249,6 +271,27 @@ export default function CitySignupPage() {
             )}
           </div>
         </div>
+
+        {/* Coming Soon Notice */}
+        {isComingSoon && (
+          <div className="container mx-auto px-4 pt-8">
+            <div className="max-w-2xl mx-auto">
+              <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-6 text-center">
+                <h3 className="text-xl font-semibold text-blue-900 mb-2">
+                  ¡Próximamente!
+                </h3>
+                <p className="text-blue-700">
+                  Estamos preparando el lanzamiento de la liga en {league.name}. Pre-regístrate ahora para ser de los primeros en jugar.
+                </p>
+                {league.waitingListCount > 0 && (
+                  <p className="text-sm text-blue-600 mt-2">
+                    <span className="font-semibold">{league.waitingListCount}</span> {content.cities.interested}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Error Alert */}
         {errors.submit && (
