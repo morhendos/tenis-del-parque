@@ -23,6 +23,11 @@ function CityCard({ league, content, locale }) {
   const locationString = league.location?.city || league.location?.region || league.name;
   const regionString = league.location?.region || 'España';
   
+  // Check if registration is open for active leagues
+  const hasOpenRegistration = league.seasons?.some(season => 
+    season.status === 'registration_open'
+  );
+  
   return (
     <div className={`relative bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 ${
       !isActive ? 'opacity-80' : ''
@@ -61,13 +66,15 @@ function CityCard({ league, content, locale }) {
         )}
         
         {isActive ? (
+          // Active leagues: Show league page button (registration is closed)
           <Link
-            href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${citySlug}`}
+            href={`/${locale}/${citySlug}/liga/verano2025`}
             className="block w-full text-center bg-parque-purple text-white px-6 py-3 rounded-lg font-medium hover:bg-parque-purple/90 transition-colors"
           >
-            {content.cities.joinButton}
+            {locale === 'es' ? 'Ver Liga' : 'View League'}
           </Link>
         ) : (
+          // Coming soon leagues: Show waiting list button
           <button
             disabled
             className="block w-full text-center bg-gray-200 text-gray-500 px-6 py-3 rounded-lg font-medium cursor-not-allowed"
