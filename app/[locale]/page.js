@@ -36,6 +36,9 @@ function CityCard({ league, content, locale }) {
     year: 'numeric' 
   }) : null;
   
+  // Check if it's Sotogrande and use the special image
+  const isSotogrande = citySlug === 'sotogrande';
+  
   return (
     <div className={`relative bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 ${
       !isActive && !isComingSoon ? 'opacity-60' : ''
@@ -54,9 +57,24 @@ function CityCard({ league, content, locale }) {
       </div>
       
       {/* City Image */}
-      <div className="relative h-48 bg-gradient-to-br from-parque-purple to-parque-green">
+      <div className="relative h-48 overflow-hidden">
+        {isSotogrande ? (
+          <>
+            <Image
+              src="/sotogrande-01.jpg"
+              alt={league.name}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
+            {/* Gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-parque-purple/80 via-parque-purple/40 to-transparent"></div>
+          </>
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-parque-purple to-parque-green"></div>
+        )}
         <div className="absolute inset-0 flex items-center justify-center">
-          <h3 className="text-3xl font-bold text-white">{league.name}</h3>
+          <h3 className="text-3xl font-bold text-white drop-shadow-lg">{league.name}</h3>
         </div>
       </div>
       
@@ -226,53 +244,60 @@ export default function MultiLeagueHomePage() {
             </div>
           ) : (
             <>
-              {/* Active Leagues */}
+              {/* Active Leagues - Centered */}
               {activeLeagues.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-                  {activeLeagues.map((league) => (
-                    <CityCard
-                      key={league._id}
-                      league={league}
-                      content={content}
-                      locale={validLocale}
-                    />
-                  ))}
-                </div>
-              )}
-              
-              {/* Coming Soon Leagues */}
-              {comingSoonLeagues.length > 0 && (
-                <div>
-                  <h3 className="text-2xl font-semibold text-gray-700 mb-6 text-center">
-                    {content.cities.launching} {validLocale === 'es' ? 'Próximamente' : 'Soon'}
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {comingSoonLeagues.map((league) => (
+                <div className="flex justify-center mb-12">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl">
+                    {activeLeagues.map((league) => (
                       <CityCard
                         key={league._id}
                         league={league}
                         content={content}
                         locale={validLocale}
                       />
-                    ))}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Coming Soon Leagues - Centered */}
+              {comingSoonLeagues.length > 0 && (
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-700 mb-6 text-center">
+                    {content.cities.launching} {validLocale === 'es' ? 'Próximamente' : 'Soon'}
+                  </h3>
+                  <div className="flex justify-center">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl">
+                      {comingSoonLeagues.map((league) => (
+                        <CityCard
+                          key={league._id}
+                          league={league}
+                          content={content}
+                          locale={validLocale}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
               
               {/* Fallback if no leagues from database - show hardcoded Sotogrande */}
               {leagues.length === 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  <CityCard
-                    league={{
-                      _id: 'default-sotogrande',
-                      name: 'Sotogrande',
-                      slug: 'sotogrande',
-                      status: 'active',
-                      playerCount: 24,
-                      location: { city: 'Sotogrande', region: 'Cádiz' }
-                    }}
-                    content={content}
-                    locale={validLocale}
-                  />
+                <div className="flex justify-center">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl">
+                    <CityCard
+                      league={{
+                        _id: 'default-sotogrande',
+                        name: 'Sotogrande',
+                        slug: 'sotogrande',
+                        status: 'active',
+                        playerCount: 24,
+                        location: { city: 'Sotogrande', region: 'Cádiz' }
+                      }}
+                      content={content}
+                      locale={validLocale}
+                    />
+                  </div>
                 </div>
               )}
             </>
