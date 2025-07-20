@@ -145,6 +145,7 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
 
   const handleSubmitResult = async (data) => {
     try {
+      console.log('Submitting result:', data)
       const response = await fetch('/api/player/matches/result', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -152,10 +153,13 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
       })
       
       const result = await response.json()
+      console.log('Result response:', result)
       
       if (response.ok) {
-        // Determine if current player is player1 or player2
+        // Find the match that was submitted
         const match = playerMatches.find(m => m._id === data.matchId)
+        console.log('Found match:', match)
+        
         if (match) {
           const isPlayer1 = match.players.player1._id === player._id
           
@@ -196,6 +200,9 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
             }
           }
           
+          console.log('Updated match:', updatedMatch)
+          console.log('Is winner:', winnerId === player._id)
+          
           // Update the match in playerMatches
           setPlayerMatches(prevMatches => 
             prevMatches.map(m => 
@@ -203,13 +210,25 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
             )
           )
           
-          // Set up the result card display
-          setSubmittedMatch(updatedMatch)
-          setIsWinner(winnerId === player._id)
+          // Close the result modal first
           setShowResultModal(false)
-          setShowResultCard(true)
+          
+          // Set up the result card display with a small delay to ensure modal is closed
+          setTimeout(() => {
+            setSubmittedMatch(updatedMatch)
+            setIsWinner(winnerId === player._id)
+            setShowResultCard(true)
+            console.log('Showing result card')
+          }, 100)
+          
+          // Show success toast
+          toast.success(language === 'es' ? 'Resultado enviado con éxito' : 'Result submitted successfully')
+        } else {
+          console.error('Match not found in playerMatches')
+          toast.error(language === 'es' ? 'Error: Partido no encontrado' : 'Error: Match not found')
         }
       } else {
+        console.error('Server error:', result)
         toast.error(result.error || (language === 'es' ? 'Error al enviar resultado' : 'Failed to submit result'))
       }
     } catch (error) {
@@ -455,7 +474,7 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
           onClose={() => {
             setShowResultCard(false)
             setSubmittedMatch(null)
-            // Refresh the matches data
+            // Refresh the page to update all data
             window.location.reload()
           }}
         />
