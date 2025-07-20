@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function EmotionalHeroSection({ content, locale }) {
   return (
@@ -16,6 +17,18 @@ export default function EmotionalHeroSection({ content, locale }) {
       
       <div className="container mx-auto relative z-10">
         <div className="max-w-5xl mx-auto text-center">
+          {/* Logo */}
+          <div className="mb-8 animate-fade-in">
+            <Image
+              src="/logo-01.webp"
+              alt="Tenis del Parque"
+              width={200}
+              height={200}
+              className="mx-auto w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 object-contain"
+              priority
+            />
+          </div>
+          
           {/* Main title */}
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
             {content.hero.title}
@@ -71,6 +84,24 @@ export default function EmotionalHeroSection({ content, locale }) {
           </p>
         </div>
       </div>
+      
+      {/* Add CSS animation */}
+      <style jsx>{`
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .animate-fade-in {
+          animation: fade-in 0.8s ease-out;
+        }
+      `}</style>
     </section>
   );
 }
