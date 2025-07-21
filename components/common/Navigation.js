@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
 import { useParams, usePathname } from 'next/navigation'
 import LanguageSwitcher from './LanguageSwitcher'
 import { TennisBallIcon } from '../ui/TennisIcons'
@@ -85,10 +84,23 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
     const isActive = isClient && (pathname === localizedHref || (href === '/' && pathname === `/${validLocale}`))
     const isHovered = hoveredButton === buttonKey
     
+    const handleClick = (e) => {
+      console.log('NavLink clicked:', { buttonKey, href, localizedHref })
+      
+      if (onClick) onClick(e)
+      
+      // Force hard navigation as fallback
+      if (!e.defaultPrevented) {
+        console.log('Forcing navigation to:', localizedHref)
+        window.location.href = localizedHref
+      }
+    }
+    
+    // Use regular <a> tag as fallback for production issues
     return (
-      <Link 
-        href={localizedHref} 
-        onClick={onClick}
+      <a
+        href={localizedHref}
+        onClick={handleClick}
         onMouseEnter={() => setHoveredButton(buttonKey)}
         onMouseLeave={() => setHoveredButton(null)}
         className={`relative transition-colors font-medium group block py-2 md:py-0 ${
@@ -97,7 +109,10 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
             : 'text-gray-700'
         }`}
         style={{
-          color: isHovered && !isActive ? '#563380' : undefined
+          color: isHovered && !isActive ? '#563380' : undefined,
+          cursor: 'pointer',
+          userSelect: 'none',
+          textDecoration: 'none'
         }}
       >
         {children}
@@ -110,7 +125,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
             transform: isHovered ? 'scaleX(1)' : 'scaleX(0)'
           }}
         ></div>
-      </Link>
+      </a>
     )
   }
 
@@ -172,7 +187,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <Link 
+              <a 
                 href={`/${validLocale}`} 
                 className="group flex items-center space-x-2 transition-transform"
                 onMouseEnter={() => setHoveredButton('logo')}
@@ -190,7 +205,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
                   priority
                   quality={100}
                 />
-              </Link>
+              </a>
             </div>
             
             {/* Desktop Navigation */}
