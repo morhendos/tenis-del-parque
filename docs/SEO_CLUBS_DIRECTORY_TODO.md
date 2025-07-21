@@ -22,28 +22,32 @@ Build a comprehensive tennis club directory to drive organic traffic and convert
   - [x] Add proper loading states
 
 ## 📋 Phase 1 - Database & Models (Week 1) - IN PROGRESS
-- [ ] **Create Club Model**
-  - [ ] Define schema with multilingual support
-  - [ ] Fields: name, slug, description (es/en), address, coordinates
-  - [ ] Court details: surfaces, number of courts, amenities
-  - [ ] Contact info: phone, email, website
-  - [ ] Operating hours, pricing info
-  - [ ] Tags: indoor, lighting, padel, parking, etc.
+- [x] **Create Club Model**
+  - [x] Define schema with multilingual support
+  - [x] Fields: name, slug, description (es/en), address, coordinates
+  - [x] Court details: surfaces, number of courts, amenities
+  - [x] Contact info: phone, email, website
+  - [x] Operating hours, pricing info
+  - [x] Tags: indoor, lighting, padel, parking, etc.
 
-- [ ] **Admin Interface for Clubs**
-  - [ ] CRUD operations for clubs
+- [x] **Admin Interface for Clubs**
+  - [x] CRUD operations for clubs
   - [ ] Bulk import functionality
   - [ ] Image upload for club photos
   - [ ] Preview functionality
+  - [x] Basic table view with filtering by city
+  - [x] Stats summary
+  - [ ] Club form modal (placeholder created)
 
-- [ ] **Data Collection & Import**
-  - [ ] Research Málaga tennis clubs (30+ clubs)
-  - [ ] Research Marbella tennis clubs (20+ clubs)
-  - [ ] Research Estepona tennis clubs (10+ clubs)
-  - [ ] Create import scripts
-  - [ ] Set up proper database indexes
+- [x] **Data Collection & Import**
+  - [x] Sample data for Málaga tennis clubs (2 clubs)
+  - [x] Sample data for Marbella tennis clubs (2 clubs)
+  - [x] Sample data for Estepona tennis clubs (2 clubs)
+  - [x] Create seed script
+  - [ ] Research and add more clubs (30+ for Málaga, 20+ for Marbella, 10+ for Estepona)
+  - [ ] Set up proper database indexes (basic indexes created)
 
-## 📋 Phase 2 - Club Directory Pages (Week 1-2)
+## 📋 Phase 2 - Club Directory Pages (Week 1-2) - NEXT PRIORITY
 - [ ] **Main Clubs Landing Page** (`/[locale]/clubs`)
   - [ ] Hero section with value proposition
   - [ ] City selector with club counts
@@ -179,6 +183,7 @@ Build a comprehensive tennis club directory to drive organic traffic and convert
 - [ ] Player dashboard routes need locale support
 - [ ] Some API endpoints may need locale updates
 - [ ] Mobile navigation improvements needed
+- [ ] Club form modal needs to be implemented
 
 ## 📝 Notes
 - Priority cities: Málaga → Marbella → Estepona
@@ -187,9 +192,10 @@ Build a comprehensive tennis club directory to drive organic traffic and convert
 - Ensure all content is manually translated (no auto-translate)
 - Keep CTAs contextual and compelling
 - These cities are all in the Costa del Sol region, perfect for year-round tennis
+- Run seed script: `node scripts/seedClubs.js`
 
 ---
 
 **Last Updated:** July 2025
-**Current Sprint:** Phase 1 - Database & Models Setup
-**Next Review:** End of Week 1
+**Current Sprint:** Phase 1 - Database & Models Setup (90% complete)
+**Next Priority:** Complete club form modal, then move to Phase 2 - Club Directory Pages
