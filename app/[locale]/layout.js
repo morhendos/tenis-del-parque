@@ -45,10 +45,9 @@ export async function generateMetadata({ params }) {
         ? 'Únete a la liga de tenis amateur más grande de España'
         : 'Join Spain\'s largest amateur tennis league',
     },
-    icons: {
-      icon: '/favicon.ico',
-      apple: '/apple-touch-icon.png',
-    },
+          icons: {
+        apple: '/apple-touch-icon.png',
+      },
     manifest: '/manifest.json',
   };
 }
