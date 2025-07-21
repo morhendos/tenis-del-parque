@@ -8,6 +8,12 @@ root/
 │   │   │           └── page.js
 │   │   ├── activate
 │   │   │   └── page.js
+│   │   ├── clubs
+│   │   │   ├── [city]
+│   │   │   │   ├── [slug]
+│   │   │   │   │   └── page.js
+│   │   │   │   └── page.js
+│   │   │   └── page.js
 │   │   ├── elo
 │   │   │   └── page.js
 │   │   ├── layout.js
@@ -49,6 +55,8 @@ root/
 │   │       └── page.js
 │   ├── admin
 │   │   ├── README.md
+│   │   ├── clubs
+│   │   │   └── page.js
 │   │   ├── dashboard
 │   │   │   └── page.js
 │   │   ├── layout.js
@@ -73,6 +81,10 @@ root/
 │   │   └── page.js
 │   ├── api
 │   │   ├── admin
+│   │   │   ├── clubs
+│   │   │   │   ├── [id]
+│   │   │   │   │   └── route.js
+│   │   │   │   └── route.js
 │   │   │   ├── dashboard
 │   │   │   │   └── route.js
 │   │   │   ├── leagues
@@ -118,6 +130,11 @@ root/
 │   │   │   │   └── route.js
 │   │   │   └── activate
 │   │   │       └── route.js
+│   │   ├── clubs
+│   │   │   ├── [city]
+│   │   │   │   └── [slug]
+│   │   │   │       └── route.js
+│   │   │   └── route.js
 │   │   ├── leagues
 │   │   │   ├── [league]
 │   │   │   │   ├── matches
@@ -180,6 +197,8 @@ root/
 │   ├── analytics
 │   │   ├── GoogleAnalytics.js
 │   │   └── MicrosoftClarity.js
+│   ├── clubs
+│   │   └── ClubCard.js
 │   ├── common
 │   │   ├── Footer.js
 │   │   ├── LanguageSwitcher.js
@@ -202,6 +221,7 @@ root/
 │   │   └── TestimonialsSection.js
 │   ├── layout
 │   ├── league
+│   │   ├── LeagueCard.js
 │   │   ├── PublicScheduleTab.js
 │   │   └── ScoringSystem.js
 │   ├── player
@@ -231,11 +251,13 @@ root/
 │       └── WelcomeModal.js
 ├── docs
 │   ├── HOMEPAGE_LEAGUE_IMPLEMENTATION_PLAN.md
+│   ├── PHASE_1_2_SUMMARY.md
 │   ├── PLAYER_MESSAGES_SYSTEM.md
 │   ├── PRODUCT_LED_GROWTH.md
 │   ├── PR_MULTILINGUAL_IMPLEMENTATION.md
 │   ├── SCORING_SYSTEM_INTEGRATION.md
 │   ├── SEO Strategy
+│   ├── SEO_CLUBS_DIRECTORY_TODO.md
 │   ├── SEO_IMPLEMENTATION_PLAN.md
 │   └── STRATEGY_TO_GET_75_FIRST_USERS.md
 ├── jsconfig.json
@@ -276,6 +298,7 @@ root/
 │   ├── i18n
 │   │   └── config.js
 │   ├── models
+│   │   ├── Club.js
 │   │   ├── League.js
 │   │   ├── Match.js
 │   │   ├── Player.js
@@ -294,15 +317,22 @@ root/
 │   └── add-scoring-system.patch
 ├── postcss.config.js
 ├── public
+│   ├── estepona-01.webp
 │   ├── leagues-import-template.csv
+│   ├── logo-01.webp
 │   ├── logo-big.png
 │   ├── logo-horizontal-01.png
 │   ├── logo-horizontal-02.png
 │   ├── logo-horizontal-big.png
+│   ├── logo-horizontal-small.png
 │   ├── logo-old.png
 │   ├── logo.png
+│   ├── malaga-01.avif
+│   ├── marbella-01.jpg
+│   ├── marbella-02.webp
 │   ├── players-2025-06-28.csv
-│   └── players-import-template.csv
+│   ├── players-import-template.csv
+│   └── sotogrande-01.jpg
 ├── scripts
 │   ├── checkAuth.mjs
 │   ├── createAdminUser.js
@@ -312,6 +342,7 @@ root/
 │   ├── fixMismatchedLinks.js
 │   ├── linkPlayersToUsers.js
 │   ├── migrateActivationTokens.js
+│   ├── seedClubs.js
 │   ├── seedLeagues.js
 │   ├── tree.js
 │   └── unlockAccounts.js
