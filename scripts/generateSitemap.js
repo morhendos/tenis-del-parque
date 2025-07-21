@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename)
 
 dotenv.config({ path: '.env.local' })
 
-const DOMAIN = 'https://www.tenisdelparque.com'
+const DOMAIN = 'https://www.tenisdp.es'
 const LOCALES = ['es', 'en']
 
 // Static pages configuration
