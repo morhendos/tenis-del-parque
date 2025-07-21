@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { homeContent } from '@/lib/content/homeContent'
+import { multiLeagueHomeContent } from '@/lib/content/multiLeagueHomeContent'
 import Navigation from '@/components/common/Navigation'
 import Footer from '@/components/common/Footer'
+import LeagueCard from '@/components/league/LeagueCard'
 
 export default function LeaguesPage() {
   const params = useParams()
@@ -14,6 +16,7 @@ export default function LeaguesPage() {
   const [error, setError] = useState(null)
 
   const t = homeContent[locale] || homeContent['es']
+  const content = multiLeagueHomeContent[locale] || multiLeagueHomeContent['es']
 
   useEffect(() => {
     fetchLeagues()
@@ -63,58 +66,10 @@ export default function LeaguesPage() {
     }
   }
 
-  const getSeasonUrl = (league, season) => {
-    // Normalize season name to always use Spanish URL slug regardless of language
-    const normalizeSeasonName = (name) => {
-      const seasonMappings = {
-        // Spanish variants
-        'verano 2025': 'verano2025',
-        'invierno 2025': 'invierno2025',
-        'primavera 2025': 'primavera2025',
-        'otoño 2025': 'otono2025',
-        // English variants
-        'summer 2025': 'verano2025',
-        'winter 2025': 'invierno2025',
-        'spring 2025': 'primavera2025',
-        'autumn 2025': 'otono2025',
-        'fall 2025': 'otono2025'
-      }
-      
-      const normalizedName = name.toLowerCase()
-      return seasonMappings[normalizedName] || normalizedName.replace(/\s+/g, '')
-    }
-    
-    const seasonSlug = normalizeSeasonName(season.name)
-    return `/${locale}/${league.slug}/liga/${seasonSlug}`
-  }
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'active': return 'bg-green-100 text-green-800'
-      case 'registration_open': return 'bg-blue-100 text-blue-800'
-      case 'upcoming': return 'bg-yellow-100 text-yellow-800'
-      case 'completed': return 'bg-gray-100 text-gray-800'
-      default: return 'bg-gray-100 text-gray-800'
-    }
-  }
-
-  const getStatusText = (status) => {
-    const statusMap = {
-      es: {
-        active: '🎾 Liga Activa',
-        registration_open: '✅ Inscripciones Abiertas',
-        upcoming: '⏳ Próximamente',
-        completed: '🏁 Finalizada'
-      },
-      en: {
-        active: '🎾 League Active',
-        registration_open: '✅ Registration Open',
-        upcoming: '⏳ Coming Soon',
-        completed: '🏁 Completed'
-      }
-    }
-    return statusMap[locale][status] || status
-  }
+  // Organize leagues by status
+  const activeLeagues = leagues.filter(league => league.status === 'active')
+  const comingSoonLeagues = leagues.filter(league => league.status === 'coming_soon')
+  const inactiveLeagues = leagues.filter(league => league.status === 'inactive')
 
   if (loading) {
     return (
@@ -154,99 +109,63 @@ export default function LeaguesPage() {
       {/* Leagues Grid */}
       <section className="container mx-auto px-4 pb-16">
         {leagues.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 max-w-7xl mx-auto">
-            {leagues.map((league) => (
-              <div key={league._id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-                {/* League Header */}
-                <div className="bg-gradient-to-r from-parque-purple to-parque-purple/80 text-white p-6">
-                  <h3 className="text-2xl font-bold mb-2">{league.name}</h3>
-                  <div className="flex items-center space-x-2 text-sm opacity-90">
-                    <span>📍</span>
-                    <span>{league.location?.city}, {league.location?.region}</span>
-                  </div>
-                </div>
-
-                {/* League Info */}
-                <div className="p-6">
-                  <p className="text-gray-700 mb-4 leading-relaxed">
-                    {league.description?.[locale] || league.description?.es || 
-                     'Liga amateur de tenis con sistema suizo y rankings ELO'}
-                  </p>
-
-                  {/* Stats */}
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <div className="text-2xl font-bold text-parque-purple">
-                        {league.playerCount || 0}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {locale === 'es' ? 'Jugadores' : 'Players'}
-                      </div>
-                    </div>
-                    <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <div className="text-2xl font-bold text-parque-purple">
-                        {league.seasons?.length || 0}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {locale === 'es' ? 'Temporadas' : 'Seasons'}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Active Seasons */}
-                  {league.seasons && league.seasons.length > 0 && (
-                    <div className="space-y-3">
-                      <h4 className="font-semibold text-gray-900">
-                        {locale === 'es' ? 'Temporadas' : 'Seasons'}
-                      </h4>
-                      {league.seasons.map((season, index) => (
-                        <div key={index} className="border border-gray-200 rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <h5 className="font-medium text-gray-900">{season.name}</h5>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(season.status)}`}>
-                              {getStatusText(season.status)}
-                            </span>
-                          </div>
-                          
-                          <div className="space-y-2 text-sm text-gray-600">
-                            {season.startDate && (
-                              <div className="flex items-center space-x-2">
-                                <span>📅</span>
-                                <span>
-                                  {locale === 'es' ? 'Inicio:' : 'Start:'} {' '}
-                                  {new Date(season.startDate).toLocaleDateString(locale === 'es' ? 'es-ES' : 'en-US')}
-                                </span>
-                              </div>
-                            )}
-                            {season.price && (
-                              <div className="flex items-center space-x-2">
-                                <span>💰</span>
-                                <span>
-                                  {season.price.isFree 
-                                    ? (locale === 'es' ? 'Gratis' : 'Free')
-                                    : `${season.price.amount || 0}${season.price.currency || 'EUR'}`
-                                  }
-                                </span>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Season Action Button */}
-                          <div className="mt-4">
-                            <a
-                              href={getSeasonUrl(league, season)}
-                              className="block w-full bg-parque-purple text-white text-center py-2 px-4 rounded-lg hover:bg-parque-purple/90 transition-colors font-medium"
-                            >
-                              {locale === 'es' ? 'Ver Liga' : 'View League'}
-                            </a>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+          <div className="space-y-12">
+            {/* Active Leagues */}
+            {activeLeagues.length > 0 && (
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+                  {locale === 'es' ? 'Ligas Activas' : 'Active Leagues'}
+                </h2>
+                <div className="flex flex-wrap justify-center gap-8">
+                  {activeLeagues.map((league) => (
+                    <LeagueCard
+                      key={league._id}
+                      league={league}
+                      content={content}
+                      locale={locale}
+                    />
+                  ))}
                 </div>
               </div>
-            ))}
+            )}
+
+            {/* Coming Soon Leagues */}
+            {comingSoonLeagues.length > 0 && (
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+                  {locale === 'es' ? 'Próximamente' : 'Coming Soon'}
+                </h2>
+                <div className="flex flex-wrap justify-center gap-8">
+                  {comingSoonLeagues.map((league) => (
+                    <LeagueCard
+                      key={league._id}
+                      league={league}
+                      content={content}
+                      locale={locale}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Inactive Leagues */}
+            {inactiveLeagues.length > 0 && (
+              <div className="opacity-60">
+                <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+                  {locale === 'es' ? 'Ligas Anteriores' : 'Past Leagues'}
+                </h2>
+                <div className="flex flex-wrap justify-center gap-8">
+                  {inactiveLeagues.map((league) => (
+                    <LeagueCard
+                      key={league._id}
+                      league={league}
+                      content={content}
+                      locale={locale}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="text-center py-16 max-w-2xl mx-auto">
@@ -267,6 +186,28 @@ export default function LeaguesPage() {
             </a>
           </div>
         )}
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16 px-4 bg-gradient-to-br from-parque-purple to-parque-green text-white">
+        <div className="container mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            {locale === 'es' 
+              ? '¿No encuentras una liga en tu ciudad?'
+              : "Can't find a league in your city?"}
+          </h2>
+          <p className="text-lg mb-8 max-w-2xl mx-auto">
+            {locale === 'es'
+              ? 'Únete a nuestra lista de espera y te avisaremos cuando lancemos una liga cerca de ti.'
+              : 'Join our waiting list and we\'ll notify you when we launch a league near you.'}
+          </p>
+          <a
+            href={`/${locale}`}
+            className="inline-block px-8 py-3 bg-white text-parque-purple rounded-lg font-medium hover:bg-gray-100 transition-colors"
+          >
+            {locale === 'es' ? 'Ver Ciudades Disponibles' : 'View Available Cities'}
+          </a>
+        </div>
       </section>
 
       <Footer content={t.footer} />
