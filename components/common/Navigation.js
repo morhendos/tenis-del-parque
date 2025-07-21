@@ -50,6 +50,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
     es: {
       home: 'Inicio',
       leagues: 'Ligas',
+      clubs: 'Clubs',
       rules: 'Reglamento',
       elo: 'ELO Puntos',
       swiss: 'Sistema Suizo',
@@ -60,6 +61,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
     en: {
       home: 'Home',
       leagues: 'Leagues',
+      clubs: 'Clubs',
       rules: 'Rules',
       elo: 'ELO Points',
       swiss: 'Swiss System',
@@ -81,7 +83,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
   const NavLink = ({ href, children, onClick, buttonKey }) => {
     // Convert href to locale-based href - only after hydration
     const localizedHref = isClient && href.startsWith('/') ? `/${validLocale}${href}` : href
-    const isActive = isClient && (pathname === localizedHref || (href === '/' && pathname === `/${validLocale}`))
+    const isActive = isClient && (pathname === localizedHref || (href === '/' && pathname === `/${validLocale}`) || pathname.startsWith(localizedHref + '/'))
     const isHovered = hoveredButton === buttonKey
     
     const handleClick = (e) => {
@@ -153,6 +155,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
               <div className="flex space-x-6 text-gray-700">
                 <span>{t.home}</span>
                 <span>{t.leagues}</span>
+                <span>{t.clubs}</span>
                 <span>{t.rules}</span>
                 <span>{t.swiss}</span>
                 <span>{t.elo}</span>
@@ -212,6 +215,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
             <div className="hidden lg:flex items-center space-x-6">
               <NavLink href="/" buttonKey="home">{t.home}</NavLink>
               <NavLink href={`/${validLocale === 'es' ? 'ligas' : 'leagues'}`} buttonKey="leagues">{t.leagues}</NavLink>
+              <NavLink href="/clubs" buttonKey="clubs">{t.clubs}</NavLink>
               <NavLink href={`/${validLocale === 'es' ? 'reglas' : 'rules'}`} buttonKey="rules">{t.rules}</NavLink>
               <NavLink href="/swiss" buttonKey="swiss">{t.swiss}</NavLink>
               <NavLink href="/elo" buttonKey="elo">{t.elo}</NavLink>
@@ -321,6 +325,23 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
                 }`}>
                   <span className="text-lg font-medium">{t.leagues}</span>
                   {currentPage === 'leagues' && (
+                    <div className="w-2 h-2 bg-parque-purple rounded-full"></div>
+                  )}
+                </div>
+              </NavLink>
+              
+              <NavLink 
+                href="/clubs" 
+                onClick={() => setIsMobileMenuOpen(false)}
+                buttonKey="mobile-clubs"
+              >
+                <div className={`flex items-center justify-between py-3 px-4 rounded-xl transition-all duration-200 ${
+                  currentPage === 'clubs' 
+                    ? 'bg-gradient-to-r from-parque-purple/10 to-transparent border-l-4 border-parque-purple' 
+                    : 'hover:bg-gray-50'
+                }`}>
+                  <span className="text-lg font-medium">{t.clubs}</span>
+                  {currentPage === 'clubs' && (
                     <div className="w-2 h-2 bg-parque-purple rounded-full"></div>
                   )}
                 </div>
