@@ -88,6 +88,7 @@ export default withAuth(
         '/activate': `/${locale}/activate`,
         '/leagues': `/${locale}/${locale === 'es' ? 'ligas' : 'leagues'}`,
         '/sotogrande': `/${locale}/sotogrande`,
+        '/clubs': `/${locale}/clubs`,
         // Add player route mappings
         '/player': `/${locale}/player/dashboard`,
         '/player/dashboard': `/${locale}/player/dashboard`,
@@ -220,13 +221,15 @@ export default withAuth(
           '/leagues',
           '/ligas',
           '/sotogrande',
-          '/registro'
+          '/registro',
+          '/clubs'
         ]
         
         // Check if it's a public route
         const isPublicRoute = publicRoutes.includes(pathWithoutLocale) || 
                              pathWithoutLocale.startsWith('/signup/') ||
                              pathWithoutLocale.startsWith('/registro/') ||
+                             pathWithoutLocale.startsWith('/clubs/') ||
                              pathWithoutLocale.match(/^\/[^\/]+\/liga\/[^\/]+$/)
         
         if (isPublicRoute) return true

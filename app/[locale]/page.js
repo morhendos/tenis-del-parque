@@ -8,139 +8,11 @@ import Footer from '@/components/common/Footer';
 import EmotionalHeroSection from '@/components/home/EmotionalHeroSection';
 import ProblemSection from '@/components/home/ProblemSection';
 import SolutionSection from '@/components/home/SolutionSection';
+import LeagueCard from '@/components/league/LeagueCard';
 import { useParams } from 'next/navigation';
 import { cityInfo, i18n } from '@/lib/i18n/config';
 import { multiLeagueHomeContent } from '@/lib/content/multiLeagueHomeContent';
 import { homeContent } from '@/lib/content/homeContent';
-
-// City Card Component - Updated for dynamic data
-function CityCard({ league, content, locale }) {
-  const isActive = league.status === 'active';
-  const isComingSoon = league.status === 'coming_soon';
-  const citySlug = league.slug;
-  const cityContent = content.cities.cityDescriptions?.[citySlug];
-  
-  // Extract location string from location object
-  const locationString = league.location?.city || league.location?.region || league.name;
-  const regionString = league.location?.region || 'España';
-  
-  // Check if registration is open for active leagues
-  const hasOpenRegistration = league.seasons?.some(season => 
-    season.status === 'registration_open'
-  );
-  
-  // Format launch date if available
-  const launchDate = league.expectedLaunchDate ? new Date(league.expectedLaunchDate) : null;
-  const formattedDate = launchDate ? launchDate.toLocaleDateString(locale, { 
-    month: 'long', 
-    year: 'numeric' 
-  }) : null;
-  
-  // Check if league has a custom image (expand this list as needed)
-  const hasCustomImage = ['liga-de-sotogrande', 'liga-de-malaga', 'liga-de-estepona', 'liga-de-marbella'].includes(citySlug);
-  
-  return (
-    <div className={`relative bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 w-full max-w-sm ${
-      !isActive && !isComingSoon ? 'opacity-60' : ''
-    }`}>
-      {/* Status Badge */}
-      <div className="absolute top-4 right-4 z-10">
-        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-          isActive 
-            ? 'bg-green-100 text-green-800' 
-            : isComingSoon
-            ? 'bg-blue-100 text-blue-800'
-            : 'bg-gray-100 text-gray-600'
-        }`}>
-          {isActive ? content.cities.available : content.cities.comingSoon}
-        </span>
-      </div>
-      
-              {/* City Image */}
-        <div className="relative h-48 overflow-hidden">
-          {hasCustomImage ? (
-          <>
-            <Image
-              src={`/${citySlug === 'liga-de-sotogrande' ? 'sotogrande-01.jpg' : 
-                citySlug === 'liga-de-estepona' ? 'estepona-01.webp' :
-                citySlug === 'liga-de-malaga' ? 'malaga-01.avif' : 
-                citySlug === 'liga-de-marbella' ? 'marbella-02.webp' : 
-                     `${citySlug}-01.jpg`}`}
-              alt={league.name}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            />
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-parque-purple/80 via-parque-purple/40 to-transparent"></div>
-          </>
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-parque-purple to-parque-green"></div>
-        )}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <h3 className="text-3xl font-bold text-white drop-shadow-lg">{league.name}</h3>
-        </div>
-      </div>
-      
-      {/* Content */}
-      <div className="p-6">
-        {cityContent && <p className="text-gray-600 mb-4">{cityContent}</p>}
-        
-        {/* Show player count for active leagues */}
-        {isActive && league.playerCount > 0 && (
-          <div className="flex items-center justify-between mb-4">
-            <div className="text-sm text-gray-500">
-              <span className="font-semibold text-gray-700">{league.playerCount}</span> {content.cities.playersCount}
-            </div>
-            <div className="text-sm text-gray-500">
-              {regionString}
-            </div>
-          </div>
-        )}
-        
-        {/* Show launch date for coming soon leagues */}
-        {isComingSoon && formattedDate && (
-          <div className="mb-4">
-            <p className="text-sm text-gray-500">
-              {content.cities.startsIn}: <span className="font-semibold text-gray-700">{formattedDate}</span>
-            </p>
-            {league.waitingListCount > 0 && (
-              <p className="text-sm text-gray-500 mt-1">
-                <span className="font-semibold text-gray-700">{league.waitingListCount}</span> {content.cities.interested}
-              </p>
-            )}
-          </div>
-        )}
-        
-        {isActive ? (
-          // Active leagues: Show league page button
-          <Link
-            href={`/${locale}/${citySlug}/liga/verano2025`}
-            className="block w-full text-center bg-parque-purple text-white px-6 py-3 rounded-lg font-medium hover:bg-parque-purple/90 transition-colors"
-          >
-            {locale === 'es' ? 'Ver Liga' : 'View League'}
-          </Link>
-        ) : isComingSoon ? (
-          // Coming soon leagues: Show pre-registration button (clickable!)
-          <Link
-            href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${citySlug}`}
-            className="block w-full text-center bg-parque-green text-white px-6 py-3 rounded-lg font-medium hover:bg-parque-green/90 transition-colors"
-          >
-            {content.cities.preRegister}
-          </Link>
-        ) : (
-          // Inactive leagues: Show disabled button
-          <button
-            disabled
-            className="block w-full text-center bg-gray-200 text-gray-500 px-6 py-3 rounded-lg font-medium cursor-not-allowed"
-          >
-            {locale === 'es' ? 'No disponible' : 'Not available'}
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
 
 // Feature Card Component
 function FeatureCard({ feature }) {
@@ -253,7 +125,7 @@ export default function MultiLeagueHomePage() {
                 <div className="mb-12">
                   <div className="flex flex-wrap justify-center gap-8">
                     {activeLeagues.map((league) => (
-                      <CityCard
+                      <LeagueCard
                         key={league._id}
                         league={league}
                         content={content}
@@ -272,7 +144,7 @@ export default function MultiLeagueHomePage() {
                   </h3>
                   <div className="flex flex-wrap justify-center gap-8">
                     {comingSoonLeagues.map((league) => (
-                      <CityCard
+                      <LeagueCard
                         key={league._id}
                         league={league}
                         content={content}
@@ -286,7 +158,7 @@ export default function MultiLeagueHomePage() {
               {/* Fallback if no leagues from database - show hardcoded Sotogrande */}
               {leagues.length === 0 && (
                 <div className="flex justify-center">
-                  <CityCard
+                  <LeagueCard
                     league={{
                       _id: 'default-sotogrande',
                       name: 'Sotogrande',

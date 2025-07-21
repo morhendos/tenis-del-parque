@@ -81,6 +81,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <meta name="apple-mobile-web-app-title" content="TenisDP" />
         <link rel="alternate" hrefLang="es" href="/es" />
         <link rel="alternate" hrefLang="en" href="/en" />
         <link rel="alternate" hrefLang="x-default" href="/es" />

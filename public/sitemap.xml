@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  
+  <!-- Homepage - both languages -->
+  <url>
+    <loc>https://www.tenisdp.es/es</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.tenisdp.es/es"/>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/en</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es"/>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Rules pages -->
+  <url>
+    <loc>https://www.tenisdp.es/es/reglas</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/rules"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/reglas"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/en/rules</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/rules"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/reglas"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- ELO pages -->
+  <url>
+    <loc>https://www.tenisdp.es/es/elo</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/elo"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/elo"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/en/elo</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/elo"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/elo"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Swiss system pages -->
+  <url>
+    <loc>https://www.tenisdp.es/es/swiss</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/swiss"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/swiss"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/en/swiss</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/swiss"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/swiss"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Leagues pages -->
+  <url>
+    <loc>https://www.tenisdp.es/es/ligas</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/leagues"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/ligas"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/en/leagues</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/leagues"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/ligas"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Clubs directory -->
+  <url>
+    <loc>https://www.tenisdp.es/es/clubs</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubs"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/en/clubs</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubs"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- City-specific club pages -->
+  <url>
+    <loc>https://www.tenisdp.es/es/clubs/malaga</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/malaga"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubs/malaga"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/en/clubs/malaga</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/malaga"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubs/malaga"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://www.tenisdp.es/es/clubs/marbella</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubs/marbella"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/en/clubs/marbella</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubs/marbella"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://www.tenisdp.es/es/clubs/estepona</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/estepona"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubs/estepona"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/en/clubs/estepona</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/estepona"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubs/estepona"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Signup pages -->
+  <url>
+    <loc>https://www.tenisdp.es/es/registro/malaga</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/signup/malaga"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/registro/malaga"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/en/signup/malaga</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/signup/malaga"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/registro/malaga"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.tenisdp.es/es/registro/marbella</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/signup/marbella"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/registro/marbella"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/en/signup/marbella</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/signup/marbella"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/registro/marbella"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.tenisdp.es/es/registro/estepona</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/signup/estepona"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/registro/estepona"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/en/signup/estepona</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/signup/estepona"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/registro/estepona"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.tenisdp.es/es/registro/sotogrande</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/signup/sotogrande"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/registro/sotogrande"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/en/signup/sotogrande</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/signup/sotogrande"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/registro/sotogrande"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Login pages -->
+  <url>
+    <loc>https://www.tenisdp.es/es/login</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/login"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/login"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/en/login</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/login"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/login"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+</urlset>

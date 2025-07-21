@@ -4,6 +4,9 @@ import dbConnect from '@/lib/db/mongoose'
 import Match from '@/lib/models/Match'
 import Player from '@/lib/models/Player'
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
+
 export async function GET(request) {
   try {
     const { session, error } = await requirePlayer(request)

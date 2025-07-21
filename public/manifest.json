@@ -1,0 +1,31 @@
+{
+  "name": "Tenis del Parque - Liga de Tenis Amateur",
+  "short_name": "TenisDelParque",
+  "description": "Liga de tenis amateur en Costa del Sol. Juega partidos competitivos, mejora tu nivel y conoce nuevos jugadores.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#7c3aed",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo-manifest.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["sports", "games", "social"],
+  "lang": "es",
+  "dir": "ltr"
+}
