@@ -51,8 +51,8 @@ node scripts/generateSitemap.js
 ```
 
 ### 2. Submit to Google Search Console
-1. Verify domain ownership
-2. Submit sitemap: https://www.tenisdelparque.com/sitemap.xml
+1. Verify domain ownership for www.tenisdp.es
+2. Submit sitemap: https://www.tenisdp.es/sitemap.xml
 3. Request indexing for key pages
 
 ### 3. Add Structured Data
@@ -76,7 +76,7 @@ const structuredData = {
     "latitude": club.location.coordinates.lat,
     "longitude": club.location.coordinates.lng
   },
-  "url": `https://www.tenisdelparque.com/${locale}/clubs/${club.location.city}/${club.slug}`,
+  "url": `https://www.tenisdp.es/${locale}/clubs/${club.location.city}/${club.slug}`,
   "telephone": club.contact.phone,
   "email": club.contact.email
 }
