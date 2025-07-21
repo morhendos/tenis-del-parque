@@ -14,14 +14,14 @@ Build a comprehensive tennis club directory to drive organic traffic and convert
 - [x] Add Organization schema
 - [x] Implement hreflang tags
 
-## 🚧 Current Sprint - UI Improvements
-- [ ] **Improve Leagues Page** (IN PROGRESS)
-  - [ ] Create reusable LeagueCard component if not exists
-  - [ ] Use consistent league cards across homepage and leagues page
-  - [ ] Ensure responsive design
-  - [ ] Add proper loading states
+## 🚧 Current Sprint - UI Improvements (COMPLETED)
+- [x] **Improve Leagues Page**
+  - [x] Create reusable LeagueCard component
+  - [x] Use consistent league cards across homepage and leagues page
+  - [x] Ensure responsive design
+  - [x] Add proper loading states
 
-## 📋 Phase 1 - Database & Models (Week 1)
+## 📋 Phase 1 - Database & Models (Week 1) - NEXT PRIORITY
 - [ ] **Create Club Model**
   - [ ] Define schema with multilingual support
   - [ ] Fields: name, slug, description (es/en), address, coordinates
@@ -188,5 +188,5 @@ Build a comprehensive tennis club directory to drive organic traffic and convert
 ---
 
 **Last Updated:** July 2025
-**Sprint:** UI Improvements → Database Setup
+**Current Sprint:** Database & Models Setup
 **Next Review:** End of Week 1
