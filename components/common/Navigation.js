@@ -9,7 +9,7 @@ import { TennisBallIcon } from '../ui/TennisIcons'
 
 export default function Navigation({ currentPage = 'home', language, onLanguageChange, showLanguageSwitcher = true }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isHomeSectionsOpen, setIsHomeSectionsOpen] = useState(false)
+
   const [scrolled, setScrolled] = useState(false)
   const [isClient, setIsClient] = useState(false)
   const params = useParams()
@@ -33,7 +33,6 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
   // Close menus when route changes
   useEffect(() => {
     setIsMobileMenuOpen(false)
-    setIsHomeSectionsOpen(false)
   }, [pathname])
 
   // Prevent body scroll when mobile menu is open
@@ -57,16 +56,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
       swiss: 'Sistema Suizo',
       login: 'Iniciar Sesión',
       about: 'Acerca de',
-      contact: 'Contacto',
-      sections: {
-        features: 'Características',
-        howItWorks: 'Cómo funciona',
-        levels: 'Niveles',
-        platform: 'Plataforma',
-        testimonials: 'Testimonios',
-        faq: 'Preguntas',
-        signup: 'Inscripción'
-      }
+      contact: 'Contacto'
     },
     en: {
       home: 'Home',
@@ -76,16 +66,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
       swiss: 'Swiss System',
       login: 'Login',
       about: 'About',
-      contact: 'Contact',
-      sections: {
-        features: 'Features',
-        howItWorks: 'How it works',
-        levels: 'Levels',
-        platform: 'Platform',
-        testimonials: 'Testimonials',
-        faq: 'FAQ',
-        signup: 'Sign up'
-      }
+      contact: 'Contact'
     }
   }
 
@@ -96,28 +77,8 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
   const handleMobileMenuToggle = () => {
     if (!isClient) return // Prevent interaction before hydration
     setIsMobileMenuOpen(!isMobileMenuOpen)
-    setIsHomeSectionsOpen(false)
   }
 
-  const handleSectionClick = (sectionId, closeMobileMenu = false) => {
-    if (!isClient) return // Prevent interaction before hydration
-    
-    if (currentPage !== 'home') {
-      // If not on home page, navigate to home page with section
-      window.location.href = `/${validLocale}#${sectionId}`
-    } else {
-      // If on home page, scroll to section
-      const element = document.getElementById(sectionId)
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }
-    }
-    
-    if (closeMobileMenu) {
-      setIsMobileMenuOpen(false)
-    }
-    setIsHomeSectionsOpen(false)
-  }
 
   const NavLink = ({ href, children, onClick }) => {
     // Convert href to locale-based href - only after hydration
@@ -143,15 +104,56 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
     )
   }
 
-  const SectionLink = ({ sectionId, children, mobile = false }) => (
-    <button
-      onClick={() => handleSectionClick(sectionId, mobile)}
-      className="text-left w-full py-2 px-3 text-gray-600 hover:text-parque-purple hover:bg-parque-purple/5 rounded-lg transition-all duration-200 text-sm"
-      disabled={!isClient}
-    >
-      {children}
-    </button>
-  )
+
+
+  // Don't render interactive elements until hydrated
+  if (!isClient) {
+    return (
+      <nav className="fixed top-0 w-full backdrop-blur-md z-[100] bg-white/95">
+        <div className="container mx-auto px-2 md:px-4">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center">
+              <div className="group flex items-center space-x-2">
+                <Image
+                  src="/logo-horizontal-small.png"
+                  alt="Tenis del Parque"
+                  height={48}
+                  width={200}
+                  className="h-12 w-auto"
+                  priority
+                  quality={100}
+                />
+              </div>
+            </div>
+            
+            <div className="hidden lg:flex items-center space-x-8">
+              <div className="flex space-x-6 text-gray-700">
+                <span>{t.home}</span>
+                <span>{t.leagues}</span>
+                <span>{t.rules}</span>
+                <span>{t.swiss}</span>
+                <span>{t.elo}</span>
+              </div>
+              
+              <div className="ml-4">
+                <span className="bg-parque-purple text-white px-4 py-2 rounded-lg font-medium text-sm">
+                  {t.login}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3 lg:hidden">
+              <div className="flex flex-col justify-center items-center w-10 h-10 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-lg">
+                <span className="block w-5 h-0.5 bg-gray-600 -translate-y-1"></span>
+                <span className="block w-5 h-0.5 bg-gray-600"></span>
+                <span className="block w-5 h-0.5 bg-gray-600 translate-y-1"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+    )
+  }
 
   // Don't render interactive elements until hydrated
   if (!isClient) {
@@ -227,22 +229,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center space-x-8">
               <div className="flex space-x-6">
-                {/* Home with dropdown for sections */}
-                <div className="relative group">
-                  <NavLink href="/">{t.home}</NavLink>
-                  {/* Home sections dropdown */}
-                  {currentPage === 'home' && (
-                    <div className="absolute top-full left-0 mt-2 w-48 bg-white/95 backdrop-blur-md rounded-xl shadow-2xl border border-gray-100 py-2 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-                      <SectionLink sectionId="features">{t.sections.features}</SectionLink>
-                      <SectionLink sectionId="how-it-works">{t.sections.howItWorks}</SectionLink>
-                      <SectionLink sectionId="levels">{t.sections.levels}</SectionLink>
-                      <SectionLink sectionId="platform">{t.sections.platform}</SectionLink>
-                      <SectionLink sectionId="testimonials">{t.sections.testimonials}</SectionLink>
-                      <SectionLink sectionId="faq">{t.sections.faq}</SectionLink>
-                      <SectionLink sectionId="signup">{t.sections.signup}</SectionLink>
-                    </div>
-                  )}
-                </div>
+                <NavLink href="/">{t.home}</NavLink>
                 <NavLink href={`/${validLocale === 'es' ? 'ligas' : 'leagues'}`}>{t.leagues}</NavLink>
                 <NavLink href={`/${validLocale === 'es' ? 'reglas' : 'rules'}`}>{t.rules}</NavLink>
                 <NavLink href="/swiss">{t.swiss}</NavLink>
@@ -324,44 +311,11 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
                       : 'hover:bg-gray-50'
                   }`}>
                     <span className="text-lg font-medium">{t.home}</span>
-                    <div className="flex items-center gap-2">
-                      {currentPage === 'home' && (
-                        <div className="w-2 h-2 bg-parque-purple rounded-full"></div>
-                      )}
-                      {currentPage === 'home' && (
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            setIsHomeSectionsOpen(!isHomeSectionsOpen)
-                          }}
-                          className="flex items-center justify-center w-6 h-6 hover:bg-parque-purple/10 rounded-md transition-colors"
-                        >
-                          <svg className={`w-4 h-4 text-parque-purple transition-transform ${isHomeSectionsOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </button>
-                      )}
-                    </div>
+                    {currentPage === 'home' && (
+                      <div className="w-2 h-2 bg-parque-purple rounded-full"></div>
+                    )}
                   </div>
                 </NavLink>
-                
-                {/* Home Page Sections - Mobile */}
-                {currentPage === 'home' && (
-                  <div className={`transition-all duration-300 overflow-hidden ml-4 ${
-                    isHomeSectionsOpen ? 'max-h-screen opacity-100 mt-2' : 'max-h-0 opacity-0'
-                  }`}>
-                    <div className="bg-gray-50/50 rounded-xl p-3 space-y-1">
-                      <SectionLink sectionId="features" mobile>{t.sections.features}</SectionLink>
-                      <SectionLink sectionId="how-it-works" mobile>{t.sections.howItWorks}</SectionLink>
-                      <SectionLink sectionId="levels" mobile>{t.sections.levels}</SectionLink>
-                      <SectionLink sectionId="platform" mobile>{t.sections.platform}</SectionLink>
-                      <SectionLink sectionId="testimonials" mobile>{t.sections.testimonials}</SectionLink>
-                      <SectionLink sectionId="faq" mobile>{t.sections.faq}</SectionLink>
-                      <SectionLink sectionId="signup" mobile>{t.sections.signup}</SectionLink>
-                    </div>
-                  </div>
-                )}
               </div>
               
               <NavLink 
