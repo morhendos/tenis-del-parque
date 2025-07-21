@@ -127,8 +127,8 @@ export async function POST(request) {
             ? '¡Estás en la lista de espera! Te contactaremos cuando la liga esté lista.'
             : '¡Registro exitoso! Te contactaremos pronto.'
           : league.status === 'coming_soon'
-            ? 'You\\'re on the waiting list! We\\'ll contact you when the league is ready.'
-            : 'Registration successful! We\\'ll contact you soon.',
+            ? 'You\'re on the waiting list! We\'ll contact you when the league is ready.'
+            : 'Registration successful! We\'ll contact you soon.',
         player: {
           id: player._id,
           name: player.name,
