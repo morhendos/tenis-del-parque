@@ -1,56 +1,61 @@
 # Robots.txt for TenisDP.es
 # https://www.tenisdp.es
 
-# Allow all crawlers
+# TEMPORARY: Block all crawlers until real content is ready
+# TODO: Remove this block when launching with real clubs
 User-agent: *
-Allow: /
-
-# Disallow admin and API routes
-Disallow: /admin/
-Disallow: /admin-login
-Disallow: /api/
-Disallow: /player/
-
-# Sitemap location
-Sitemap: https://www.tenisdp.es/sitemap.xml
-
-# Crawl delay (in seconds) - be nice to servers
-Crawl-delay: 1
-
-# Specific rules for major search engines
-User-agent: Googlebot
-Allow: /
-Disallow: /admin/
-Disallow: /api/
-Crawl-delay: 0
-
-User-agent: Bingbot
-Allow: /
-Disallow: /admin/
-Disallow: /api/
-Crawl-delay: 1
-
-# Block bad bots
-User-agent: AhrefsBot
 Disallow: /
 
-User-agent: SemrushBot
-Disallow: /
-
-User-agent: DotBot
-Disallow: /
-
-User-agent: MJ12bot
-Disallow: /
-
-# Allow search engines to see our CSS and JS
-User-agent: *
-Allow: /*.css
-Allow: /*.js
-Allow: /_next/static/
-Allow: /_next/image
-
-# Disallow old/test pages if any
-Disallow: /test/
-Disallow: /temp/
-Disallow: /tmp/
+# Future configuration (uncomment when ready to launch):
+# User-agent: *
+# Allow: /
+# 
+# # Disallow admin and API routes
+# Disallow: /admin/
+# Disallow: /admin-login
+# Disallow: /api/
+# Disallow: /player/
+# 
+# # Sitemap location
+# Sitemap: https://www.tenisdp.es/sitemap.xml
+# 
+# # Crawl delay (in seconds) - be nice to servers
+# Crawl-delay: 1
+# 
+# # Specific rules for major search engines
+# User-agent: Googlebot
+# Allow: /
+# Disallow: /admin/
+# Disallow: /api/
+# Crawl-delay: 0
+# 
+# User-agent: Bingbot
+# Allow: /
+# Disallow: /admin/
+# Disallow: /api/
+# Crawl-delay: 1
+# 
+# # Block bad bots
+# User-agent: AhrefsBot
+# Disallow: /
+# 
+# User-agent: SemrushBot
+# Disallow: /
+# 
+# User-agent: DotBot
+# Disallow: /
+# 
+# User-agent: MJ12bot
+# Disallow: /
+# 
+# # Allow search engines to see our CSS and JS
+# User-agent: *
+# Allow: /*.css
+# Allow: /*.js
+# Allow: /_next/static/
+# Allow: /_next/image
+# 
+# # Disallow old/test pages if any
+# Disallow: /test/
+# Disallow: /temp/
+# Disallow: /tmp/
