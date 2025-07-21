@@ -1,6 +1,6 @@
-const mongoose = require('mongoose')
-const dotenv = require('dotenv')
-const Club = require('../lib/models/Club.js')
+import mongoose from 'mongoose'
+import dotenv from 'dotenv'
+import Club from '../lib/models/Club.js'
 
 dotenv.config({ path: '.env.local' })
 
