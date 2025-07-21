@@ -48,7 +48,7 @@ export default function AdminDashboard() {
         <p className="text-gray-600 mt-1">Welcome to Tennis del Parque Admin</p>
       </div>
 
-      {/* Quick Actions - Updated to 4 columns */}
+      {/* Quick Actions - First Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Link
           href="/admin/leagues"
@@ -94,6 +94,33 @@ export default function AdminDashboard() {
             <div className="text-4xl mb-2">🏢</div>
             <h3 className="text-lg font-semibold">Manage Clubs</h3>
             <p className="text-sm opacity-90 mt-1">Tennis clubs directory</p>
+          </div>
+          <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 rounded-lg transition-opacity" />
+        </Link>
+      </div>
+
+      {/* Quick Actions - Second Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Link
+          href="/admin/users"
+          className="group relative bg-gradient-to-br from-indigo-600 to-indigo-700 p-6 rounded-lg shadow-md hover:shadow-lg transition-all"
+        >
+          <div className="text-white">
+            <div className="text-4xl mb-2">🔐</div>
+            <h3 className="text-lg font-semibold">Manage Users</h3>
+            <p className="text-sm opacity-90 mt-1">User accounts & invitations</p>
+          </div>
+          <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 rounded-lg transition-opacity" />
+        </Link>
+        
+        <Link
+          href="/admin/docs"
+          className="group relative bg-gradient-to-br from-pink-600 to-pink-700 p-6 rounded-lg shadow-md hover:shadow-lg transition-all"
+        >
+          <div className="text-white">
+            <div className="text-4xl mb-2">📚</div>
+            <h3 className="text-lg font-semibold">Documentation</h3>
+            <p className="text-sm opacity-90 mt-1">View project documentation</p>
           </div>
           <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 rounded-lg transition-opacity" />
         </Link>
