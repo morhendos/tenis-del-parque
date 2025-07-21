@@ -1,5 +1,5 @@
-# Robots.txt for TenisDelParque.com
-# https://www.tenisdelparque.com
+# Robots.txt for TenisDP.es
+# https://www.tenisdp.es
 
 # Allow all crawlers
 User-agent: *
@@ -12,7 +12,7 @@ Disallow: /api/
 Disallow: /player/
 
 # Sitemap location
-Sitemap: https://www.tenisdelparque.com/sitemap.xml
+Sitemap: https://www.tenisdp.es/sitemap.xml
 
 # Crawl delay (in seconds) - be nice to servers
 Crawl-delay: 1
