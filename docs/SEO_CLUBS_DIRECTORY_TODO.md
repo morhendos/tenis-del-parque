@@ -14,14 +14,14 @@ Build a comprehensive tennis club directory to drive organic traffic and convert
 - [x] Add Organization schema
 - [x] Implement hreflang tags
 
-## 🚧 Current Sprint - UI Improvements (COMPLETED)
+## ✅ Current Sprint - UI Improvements (COMPLETED)
 - [x] **Improve Leagues Page**
   - [x] Create reusable LeagueCard component
   - [x] Use consistent league cards across homepage and leagues page
   - [x] Ensure responsive design
   - [x] Add proper loading states
 
-## 📋 Phase 1 - Database & Models (Week 1) - NEXT PRIORITY
+## 📋 Phase 1 - Database & Models (Week 1) - IN PROGRESS
 - [ ] **Create Club Model**
   - [ ] Define schema with multilingual support
   - [ ] Fields: name, slug, description (es/en), address, coordinates
@@ -38,8 +38,8 @@ Build a comprehensive tennis club directory to drive organic traffic and convert
 
 - [ ] **Data Collection & Import**
   - [ ] Research Málaga tennis clubs (30+ clubs)
-  - [ ] Research Valencia tennis clubs
-  - [ ] Research Sevilla tennis clubs
+  - [ ] Research Marbella tennis clubs (20+ clubs)
+  - [ ] Research Estepona tennis clubs (10+ clubs)
   - [ ] Create import scripts
   - [ ] Set up proper database indexes
 
@@ -151,19 +151,21 @@ Build a comprehensive tennis club directory to drive organic traffic and convert
 - [ ] clases tenis málaga
 - [ ] torneos tenis málaga
 
-### Valencia
-- [ ] pistas de tenis valencia
-- [ ] clubs tenis valencia
-- [ ] tenis amateur valencia
-- [ ] valencia tennis courts
-- [ ] escuela tenis valencia
+### Marbella
+- [ ] pistas de tenis marbella
+- [ ] clubs de tenis marbella
+- [ ] tennis marbella
+- [ ] tennis clubs marbella spain
+- [ ] jugar tenis marbella
+- [ ] clases tenis marbella
 
-### Sevilla
-- [ ] pistas de tenis sevilla
-- [ ] clubs de tenis sevilla
-- [ ] donde jugar tenis sevilla
-- [ ] seville tennis clubs
-- [ ] tenis sevilla precios
+### Estepona
+- [ ] pistas de tenis estepona
+- [ ] clubs de tenis estepona
+- [ ] tennis estepona
+- [ ] canchas tenis estepona
+- [ ] donde jugar tenis estepona
+- [ ] tenis estepona precios
 
 ## 📊 Success Metrics
 - [ ] Set up tracking for:
@@ -179,14 +181,15 @@ Build a comprehensive tennis club directory to drive organic traffic and convert
 - [ ] Mobile navigation improvements needed
 
 ## 📝 Notes
-- Priority cities: Málaga → Valencia → Sevilla
-- Each city should have 20-30 clubs minimum
+- Priority cities: Málaga → Marbella → Estepona
+- Each city should have sufficient clubs (Málaga: 30+, Marbella: 20+, Estepona: 10+)
 - Focus on long-tail local keywords
 - Ensure all content is manually translated (no auto-translate)
 - Keep CTAs contextual and compelling
+- These cities are all in the Costa del Sol region, perfect for year-round tennis
 
 ---
 
 **Last Updated:** July 2025
-**Current Sprint:** Database & Models Setup
+**Current Sprint:** Phase 1 - Database & Models Setup
 **Next Review:** End of Week 1
