@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server'
 import Club from '@/lib/models/Club'
-import connectDB from '@/lib/db/mongodb'
+import dbConnect from '@/lib/db/mongoose'
+
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
 
 export async function GET(request, { params }) {
   try {
-    await connectDB()
+    await dbConnect()
 
     const { city, slug } = params
 

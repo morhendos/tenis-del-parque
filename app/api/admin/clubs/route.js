@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import Club from '@/lib/models/Club'
-import connectDB from '@/lib/db/mongodb'
+import dbConnect from '@/lib/db/mongoose'
 
 export async function GET(request) {
   try {
@@ -12,7 +12,7 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    await connectDB()
+    await dbConnect()
 
     const { searchParams } = new URL(request.url)
     const city = searchParams.get('city')
@@ -48,7 +48,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    await connectDB()
+    await dbConnect()
 
     const data = await request.json()
 

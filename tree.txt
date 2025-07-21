@@ -257,8 +257,10 @@ root/
 │   ├── PR_MULTILINGUAL_IMPLEMENTATION.md
 │   ├── SCORING_SYSTEM_INTEGRATION.md
 │   ├── SEO Strategy
+│   ├── SEO_CHECKLIST.md
 │   ├── SEO_CLUBS_DIRECTORY_TODO.md
 │   ├── SEO_IMPLEMENTATION_PLAN.md
+│   ├── SEO_LAUNCH_CHECKLIST.md
 │   └── STRATEGY_TO_GET_75_FIRST_USERS.md
 ├── jsconfig.json
 ├── lib
@@ -318,7 +320,7 @@ root/
 ├── postcss.config.js
 ├── public
 │   ├── estepona-01.webp
-│   ├── leagues-import-template.csv
+│   ├── favicon.svg
 │   ├── logo-01.webp
 │   ├── logo-big.png
 │   ├── logo-horizontal-01.png
@@ -328,10 +330,12 @@ root/
 │   ├── logo-old.png
 │   ├── logo.png
 │   ├── malaga-01.avif
+│   ├── manifest.json
 │   ├── marbella-01.jpg
 │   ├── marbella-02.webp
-│   ├── players-2025-06-28.csv
-│   ├── players-import-template.csv
+│   ├── og-image.svg
+│   ├── robots.txt
+│   ├── sitemap.xml
 │   └── sotogrande-01.jpg
 ├── scripts
 │   ├── checkAuth.mjs
@@ -340,9 +344,9 @@ root/
 │   ├── diagnoseLinkIssues.js
 │   ├── directFix.js
 │   ├── fixMismatchedLinks.js
+│   ├── generateSitemap.js
 │   ├── linkPlayersToUsers.js
 │   ├── migrateActivationTokens.js
-│   ├── seedClubs.js
 │   ├── seedLeagues.js
 │   ├── tree.js
 │   └── unlockAccounts.js
