@@ -209,17 +209,15 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
             </div>
             
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-8">
-              <div className="flex space-x-6">
-                <NavLink href="/" buttonKey="home">{t.home}</NavLink>
-                <NavLink href={`/${validLocale === 'es' ? 'ligas' : 'leagues'}`} buttonKey="leagues">{t.leagues}</NavLink>
-                <NavLink href={`/${validLocale === 'es' ? 'reglas' : 'rules'}`} buttonKey="rules">{t.rules}</NavLink>
-                <NavLink href="/swiss" buttonKey="swiss">{t.swiss}</NavLink>
-                <NavLink href="/elo" buttonKey="elo">{t.elo}</NavLink>
-              </div>
+            <div className="hidden lg:flex items-center space-x-6">
+              <NavLink href="/" buttonKey="home">{t.home}</NavLink>
+              <NavLink href={`/${validLocale === 'es' ? 'ligas' : 'leagues'}`} buttonKey="leagues">{t.leagues}</NavLink>
+              <NavLink href={`/${validLocale === 'es' ? 'reglas' : 'rules'}`} buttonKey="rules">{t.rules}</NavLink>
+              <NavLink href="/swiss" buttonKey="swiss">{t.swiss}</NavLink>
+              <NavLink href="/elo" buttonKey="elo">{t.elo}</NavLink>
               
               {/* Login Button */}
-              <div className="ml-4">
+              <div className="ml-8">
                 <a
                   href={`/${validLocale}/login`}
                   onMouseEnter={() => setHoveredButton('login')}
