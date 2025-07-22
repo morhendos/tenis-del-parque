@@ -9,7 +9,8 @@ export async function GET(request, { params }) {
     const { league: identifier } = params
     
     // Build query to support both ID and slug
-    let query = { status: 'active' }
+    // Include both active and coming_soon leagues
+    let query = { status: { $in: ['active', 'coming_soon'] } }
     
     // Check if identifier is a valid MongoDB ObjectId
     if (mongoose.Types.ObjectId.isValid(identifier)) {
@@ -47,6 +48,8 @@ export async function GET(request, { params }) {
         config: league.config,
         contact: league.contact,
         status: league.status,
+        expectedLaunchDate: league.expectedLaunchDate,
+        waitingListCount: league.waitingListCount,
         isRegistrationOpen
       }
     })

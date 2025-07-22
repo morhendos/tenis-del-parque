@@ -33,12 +33,15 @@ export async function POST(request) {
       )
     }
 
-    // Validate league exists
+    // Validate league exists (include both active and coming_soon leagues)
     let league
     if (leagueId) {
       league = await League.findById(leagueId)
     } else if (leagueSlug) {
-      league = await League.findOne({ slug: leagueSlug, status: 'active' })
+      league = await League.findOne({ 
+        slug: leagueSlug, 
+        status: { $in: ['active', 'coming_soon'] } 
+      })
     } else {
       // Default to Sotogrande if no league specified
       league = await League.findOne({ slug: 'sotogrande', status: 'active' })
@@ -89,6 +92,8 @@ export async function POST(request) {
       level,
       league: league._id,
       season,
+      // For coming soon leagues, set status to 'waiting'
+      status: league.status === 'coming_soon' ? 'waiting' : 'pending',
       metadata: {
         language,
         source: 'web',
@@ -100,18 +105,30 @@ export async function POST(request) {
     // Save to database
     await player.save()
 
-    // Update league stats
-    await League.findByIdAndUpdate(league._id, {
-      $inc: { 'stats.totalPlayers': 1 }
-    })
+    // Update league stats based on league status
+    if (league.status === 'coming_soon') {
+      // For coming soon leagues, increment waiting list count
+      await League.findByIdAndUpdate(league._id, {
+        $inc: { 'waitingListCount': 1 }
+      })
+    } else {
+      // For active leagues, increment total players
+      await League.findByIdAndUpdate(league._id, {
+        $inc: { 'stats.totalPlayers': 1 }
+      })
+    }
 
     // Return success response
     return Response.json(
       {
         success: true,
         message: language === 'es'
-          ? '¡Registro exitoso! Te contactaremos pronto.'
-          : 'Registration successful! We\'ll contact you soon.',
+          ? league.status === 'coming_soon' 
+            ? '¡Estás en la lista de espera! Te contactaremos cuando la liga esté lista.'
+            : '¡Registro exitoso! Te contactaremos pronto.'
+          : league.status === 'coming_soon'
+            ? 'You\'re on the waiting list! We\'ll contact you when the league is ready.'
+            : 'Registration successful! We\'ll contact you soon.',
         player: {
           id: player._id,
           name: player.name,
@@ -120,7 +137,8 @@ export async function POST(request) {
           league: {
             id: league._id,
             name: league.name,
-            slug: league.slug
+            slug: league.slug,
+            status: league.status
           }
         }
       },
@@ -159,15 +177,17 @@ export async function GET() {
   try {
     await dbConnect()
     
-    // Get stats for all leagues
-    const leagues = await League.find({ status: 'active' })
+    // Get stats for all leagues (including coming soon)
+    const leagues = await League.find({ status: { $in: ['active', 'coming_soon'] } })
     const stats = {}
     
     for (const league of leagues) {
       const playerCount = await Player.countDocuments({ league: league._id })
       stats[league.slug] = {
         name: league.name,
-        totalPlayers: playerCount
+        status: league.status,
+        totalPlayers: league.status === 'active' ? playerCount : 0,
+        waitingList: league.status === 'coming_soon' ? playerCount : 0
       }
     }
     
