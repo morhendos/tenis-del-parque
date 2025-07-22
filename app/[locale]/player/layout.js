@@ -12,7 +12,8 @@ export default function PlayerLayout({ children }) {
   const router = useRouter()
   const params = useParams()
   const { data: session, status } = useSession()
-  const locale = params.locale || 'es'
+  const urlLocale = params.locale || 'es'
+  const [locale, setLocale] = useState(urlLocale) // Use state for locale instead of const
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -24,7 +25,7 @@ export default function PlayerLayout({ children }) {
       if (status === 'loading') return
       
       if (status === 'unauthenticated') {
-        router.push(`/${locale}/login?return=${pathname}`)
+        router.push(`/${urlLocale}/login?return=${pathname}`)
         return
       }
       
@@ -49,11 +50,28 @@ export default function PlayerLayout({ children }) {
             setHasNewAnnouncement(hasUnseen)
           }
           
-          // Also fetch player profile for name display
+          // Also fetch player profile for name display AND language preference
           const profileResponse = await fetch('/api/player/profile')
           if (profileResponse.ok) {
             const profileData = await profileResponse.json()
             setPlayerData(profileData)
+            
+            // Check if user has a language preference
+            const userLanguage = profileData.user?.preferences?.language
+            
+            if (userLanguage && userLanguage !== urlLocale) {
+              // User's preferred language differs from URL locale
+              // Redirect to the correct locale while preserving the rest of the path
+              const pathWithoutLocale = pathname.replace(`/${urlLocale}`, '')
+              const newPath = `/${userLanguage}${pathWithoutLocale}`
+              
+              console.log(`[Player Layout] Redirecting from ${pathname} to ${newPath} based on user preference`)
+              router.replace(newPath)
+              return // Don't continue loading, we're redirecting
+            } else {
+              // Use the user's preference or URL locale
+              setLocale(userLanguage || urlLocale)
+            }
           }
         } catch (error) {
           console.error('Error fetching user data:', error)
@@ -64,7 +82,7 @@ export default function PlayerLayout({ children }) {
     } finally {
       setLoading(false)
     }
-  }, [router, status, session, locale, pathname])
+  }, [router, status, session, urlLocale, pathname])
 
   useEffect(() => {
     checkAuth()
@@ -146,7 +164,7 @@ export default function PlayerLayout({ children }) {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
-          <p className="mt-4 text-gray-600">{locale === 'es' ? 'Cargando...' : 'Loading...'}</p>
+          <p className="mt-4 text-gray-600">{urlLocale === 'es' ? 'Cargando...' : 'Loading...'}</p>
         </div>
       </div>
     )
