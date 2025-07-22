@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 const locales = ['es', 'en'];
 const defaultLocale = 'es';
 
-// Get the preferred locale from the request
+// Get the preferred locale from the request with improved parsing
 function getLocale(request) {
   // Check if there's a locale cookie from user preference
   const localeCookie = request.cookies.get('NEXT_LOCALE');
@@ -12,16 +12,35 @@ function getLocale(request) {
     return localeCookie.value;
   }
   
-  // Check Accept-Language header
+  // Check Accept-Language header with improved parsing
   const acceptLanguage = request.headers.get('Accept-Language');
   if (acceptLanguage) {
-    // Get the first language that matches our supported locales
-    const detectedLocale = acceptLanguage
+    // Parse Accept-Language header properly
+    // Example: "en-US,en;q=0.9,es;q=0.8" or "en-GB,en;q=0.5"
+    const languages = acceptLanguage
       .split(',')
-      .map(lang => lang.split('-')[0].trim())
-      .find(lang => locales.includes(lang));
+      .map(lang => {
+        const parts = lang.trim().split(';');
+        const code = parts[0].trim();
+        const quality = parts[1] ? parseFloat(parts[1].split('=')[1]) : 1.0;
+        return { code, quality };
+      })
+      .sort((a, b) => b.quality - a.quality); // Sort by quality (priority)
     
-    if (detectedLocale) return detectedLocale;
+    // Find the first language that matches our supported locales
+    for (const { code } of languages) {
+      // Extract the primary language code (e.g., "en" from "en-US")
+      const primaryCode = code.split('-')[0].toLowerCase();
+      
+      if (locales.includes(primaryCode)) {
+        console.log(`[Language Detection] Detected language: ${primaryCode} from Accept-Language: ${acceptLanguage}`);
+        return primaryCode;
+      }
+    }
+    
+    console.log(`[Language Detection] No supported language found in Accept-Language: ${acceptLanguage}, using default: ${defaultLocale}`);
+  } else {
+    console.log('[Language Detection] No Accept-Language header found, using default:', defaultLocale);
   }
   
   return defaultLocale;
