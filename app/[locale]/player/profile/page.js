@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter, useParams, usePathname } from 'next/navigation'
 
 export default function PlayerProfile() {
   const [player, setPlayer] = useState(null)
@@ -12,6 +12,7 @@ export default function PlayerProfile() {
   const [success, setSuccess] = useState('')
   const [isEditing, setIsEditing] = useState(false)
   const params = useParams()
+  const pathname = usePathname()
   const locale = params.locale || 'es'
   const language = locale
   
@@ -138,16 +139,18 @@ export default function PlayerProfile() {
       // If language changed, redirect to the new locale
       if (isLanguageChanging) {
         const newLocale = formData.preferences.language
-        const currentPath = `/player/profile` // Remove locale prefix
-        const newPath = `/${newLocale}${currentPath}`
         
-        // Show success message briefly, then redirect
+        // Get the current path without locale
+        const pathWithoutLocale = pathname.replace(`/${locale}`, '')
+        const newPath = `/${newLocale}${pathWithoutLocale}`
+        
+        // Show success message briefly
         setSuccess(newLocale === 'es' ? '¡Perfil actualizado! Cambiando idioma...' : 'Profile updated! Changing language...')
         
-        // Redirect after a short delay to show the success message
+        // Use window.location for a full page navigation to ensure URL updates
         setTimeout(() => {
-          router.replace(newPath)
-        }, 1000)
+          window.location.href = newPath
+        }, 500)
       } else {
         // No language change, just show success
         setSuccess(language === 'es' ? '¡Perfil actualizado exitosamente!' : 'Profile updated successfully!')
