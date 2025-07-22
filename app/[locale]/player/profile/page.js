@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter, useParams, usePathname } from 'next/navigation'
 
 export default function PlayerProfile() {
   const [player, setPlayer] = useState(null)
@@ -12,6 +12,7 @@ export default function PlayerProfile() {
   const [success, setSuccess] = useState('')
   const [isEditing, setIsEditing] = useState(false)
   const params = useParams()
+  const pathname = usePathname()
   const locale = params.locale || 'es'
   const language = locale
   
@@ -109,6 +110,9 @@ export default function PlayerProfile() {
       setError('')
       setSuccess('')
 
+      // Check if language is changing
+      const isLanguageChanging = user?.preferences?.language !== formData.preferences.language
+
       const response = await fetch('/api/player/profile', {
         method: 'PUT',
         headers: {
@@ -132,10 +136,28 @@ export default function PlayerProfile() {
       setUser(data.user)
       setIsEditing(false)
       
-      setSuccess(language === 'es' ? '¡Perfil actualizado exitosamente!' : 'Profile updated successfully!')
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(''), 3000)
+      // If language changed, redirect to the new locale
+      if (isLanguageChanging) {
+        const newLocale = formData.preferences.language
+        
+        // Get the current path without locale
+        const pathWithoutLocale = pathname.replace(`/${locale}`, '')
+        const newPath = `/${newLocale}${pathWithoutLocale}`
+        
+        // Show success message briefly
+        setSuccess(newLocale === 'es' ? '¡Perfil actualizado! Cambiando idioma...' : 'Profile updated! Changing language...')
+        
+        // Use window.location for a full page navigation to ensure URL updates
+        setTimeout(() => {
+          window.location.href = newPath
+        }, 500)
+      } else {
+        // No language change, just show success
+        setSuccess(language === 'es' ? '¡Perfil actualizado exitosamente!' : 'Profile updated successfully!')
+        
+        // Clear success message after 3 seconds
+        setTimeout(() => setSuccess(''), 3000)
+      }
       
     } catch (error) {
       console.error('Error updating profile:', error)
