@@ -109,6 +109,9 @@ export default function PlayerProfile() {
       setError('')
       setSuccess('')
 
+      // Check if language is changing
+      const isLanguageChanging = user?.preferences?.language !== formData.preferences.language
+
       const response = await fetch('/api/player/profile', {
         method: 'PUT',
         headers: {
@@ -132,10 +135,26 @@ export default function PlayerProfile() {
       setUser(data.user)
       setIsEditing(false)
       
-      setSuccess(language === 'es' ? '¡Perfil actualizado exitosamente!' : 'Profile updated successfully!')
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(''), 3000)
+      // If language changed, redirect to the new locale
+      if (isLanguageChanging) {
+        const newLocale = formData.preferences.language
+        const currentPath = `/player/profile` // Remove locale prefix
+        const newPath = `/${newLocale}${currentPath}`
+        
+        // Show success message briefly, then redirect
+        setSuccess(newLocale === 'es' ? '¡Perfil actualizado! Cambiando idioma...' : 'Profile updated! Changing language...')
+        
+        // Redirect after a short delay to show the success message
+        setTimeout(() => {
+          router.replace(newPath)
+        }, 1000)
+      } else {
+        // No language change, just show success
+        setSuccess(language === 'es' ? '¡Perfil actualizado exitosamente!' : 'Profile updated successfully!')
+        
+        // Clear success message after 3 seconds
+        setTimeout(() => setSuccess(''), 3000)
+      }
       
     } catch (error) {
       console.error('Error updating profile:', error)
