@@ -28,10 +28,44 @@ function LoginForm() {
       if (session.user.role === 'admin') {
         router.replace('/admin/dashboard')
       } else {
-        router.replace(returnUrl || `/${locale}/player/dashboard`)
+        // For players, check if they have a saved language preference
+        checkUserLanguageAndRedirect()
       }
     }
   }, [session, status, router, locale, returnUrl])
+
+  const checkUserLanguageAndRedirect = async () => {
+    try {
+      // Fetch user profile to get language preference
+      const response = await fetch('/api/player/profile')
+      if (response.ok) {
+        const data = await response.json()
+        const userLanguage = data.user?.preferences?.language
+        
+        if (userLanguage && userLanguage !== locale) {
+          // User prefers a different language than the current URL locale
+          // Redirect to their preferred language
+          if (returnUrl) {
+            // Update the return URL to use the user's preferred language
+            const updatedReturnUrl = returnUrl.replace(`/${locale}/`, `/${userLanguage}/`)
+            router.replace(updatedReturnUrl)
+          } else {
+            router.replace(`/${userLanguage}/player/dashboard`)
+          }
+        } else {
+          // Use the current locale or user's preference (they match)
+          router.replace(returnUrl || `/${locale}/player/dashboard`)
+        }
+      } else {
+        // If profile fetch fails, just use the URL locale
+        router.replace(returnUrl || `/${locale}/player/dashboard`)
+      }
+    } catch (error) {
+      console.error('Error fetching user language preference:', error)
+      // Fallback to URL locale
+      router.replace(returnUrl || `/${locale}/player/dashboard`)
+    }
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target
