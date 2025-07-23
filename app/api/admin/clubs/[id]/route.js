@@ -99,7 +99,7 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    await connectDB()
+    await dbConnect()
 
     const club = await Club.findByIdAndDelete(params.id)
 
