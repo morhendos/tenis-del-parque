@@ -294,6 +294,13 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
         newData.slug = generateSlug(value)
       }
       
+      // Auto-calculate total courts when indoor or outdoor changes
+      if (field === 'courts.indoor' || field === 'courts.outdoor') {
+        const indoor = field === 'courts.indoor' ? value : newData.courts.indoor
+        const outdoor = field === 'courts.outdoor' ? value : newData.courts.outdoor
+        newData.courts.total = (indoor || 0) + (outdoor || 0)
+      }
+      
       return newData
     })
   }
@@ -304,8 +311,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
         ...prev,
         courts: {
           ...prev.courts,
-          surfaces: [...prev.courts.surfaces, newSurface],
-          total: prev.courts.total + newSurface.count
+          surfaces: [...prev.courts.surfaces, newSurface]
         }
       }))
       setNewSurface({ type: 'clay', count: 1 })
@@ -315,13 +321,12 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
   const removeSurface = (index) => {
     setFormData(prev => {
       const surfaces = [...prev.courts.surfaces]
-      const removed = surfaces.splice(index, 1)[0]
+      surfaces.splice(index, 1)
       return {
         ...prev,
         courts: {
           ...prev.courts,
-          surfaces,
-          total: prev.courts.total - removed.count
+          surfaces
         }
       }
     })
@@ -347,6 +352,13 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       return false
     }
     
+    // Check if at least one court is added
+    if (formData.courts.total === 0) {
+      setError('At least one court (indoor or outdoor) is required')
+      setCurrentStep(3)
+      return false
+    }
+    
     return true
   }
 
@@ -359,6 +371,9 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
     setError(null)
 
     try {
+      // Calculate total courts from indoor + outdoor
+      const totalCourts = (formData.courts.indoor || 0) + (formData.courts.outdoor || 0)
+      
       // Clean up the data before sending
       const dataToSend = {
         ...formData,
@@ -367,9 +382,9 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
         courts: {
           ...formData.courts,
           surfaces: formData.courts.surfaces || [],
-          total: formData.courts.total || 0,
+          total: totalCourts, // Use calculated total
           indoor: formData.courts.indoor || 0,
-          outdoor: formData.courts.outdoor || formData.courts.total || 0
+          outdoor: formData.courts.outdoor || 0
         },
         images: {
           main: formData.images.main || '',
@@ -646,7 +661,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Indoor Courts
+            Indoor Courts *
           </label>
           <input
             type="number"
@@ -659,7 +674,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
         
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Outdoor Courts
+            Outdoor Courts *
           </label>
           <input
             type="number"
@@ -671,9 +686,16 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
         </div>
       </div>
       
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+        <p className="text-sm text-yellow-800">
+          <strong>Total Courts: {formData.courts.total}</strong> 
+          <span className="text-xs ml-2">(Automatically calculated from indoor + outdoor)</span>
+        </p>
+      </div>
+      
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Court Surfaces
+          Court Surfaces (Optional)
         </label>
         
         {formData.courts.surfaces.map((surface, index) => (
@@ -721,11 +743,9 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
             Add
           </button>
         </div>
-      </div>
-      
-      <div className="bg-gray-50 p-3 rounded-lg">
-        <p className="text-sm font-medium text-gray-700">
-          Total Courts: {formData.courts.total}
+        
+        <p className="text-xs text-gray-500 mt-2">
+          Note: Court surfaces provide additional detail but don't affect the total court count.
         </p>
       </div>
     </div>
