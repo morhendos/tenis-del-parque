@@ -46,6 +46,50 @@ export default function AdminDocViewerPage() {
     }
   }
 
+  // Normalize file names to proper titles
+  const normalizeTitle = (fileName) => {
+    if (!fileName) return ''
+    
+    // Remove .md extension
+    let title = fileName.replace('.md', '')
+    
+    // Replace underscores with spaces
+    title = title.replace(/_/g, ' ')
+    
+    // Handle common abbreviations and patterns
+    title = title.replace(/^SEO\s+/i, 'SEO: ')
+    title = title.replace(/\bTO\b/g, 'to')
+    title = title.replace(/\bLED\b/g, 'Led')
+    title = title.replace(/\bPR\b/g, 'PR:')
+    
+    // Convert to title case but preserve uppercase abbreviations
+    title = title.replace(/\b\w+/g, (word) => {
+      // Keep certain words uppercase
+      if (['SEO', 'TODO', 'API', 'UI', 'URL', 'CSV', 'JSON', 'XML', 'HTML', 'CSS', 'JS'].includes(word.toUpperCase())) {
+        return word.toUpperCase()
+      }
+      // Keep certain words lowercase
+      if (['to', 'of', 'and', 'the', 'in', 'for', 'a', 'an'].includes(word.toLowerCase()) && word !== title.split(' ')[0]) {
+        return word.toLowerCase()
+      }
+      // Capitalize first letter of other words
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    })
+    
+    return title
+  }
+
+  const getCategoryFromFileName = (fileName) => {
+    if (!fileName) return 'Documentation'
+    if (fileName.includes('SEO')) return '🔍 SEO & Marketing'
+    if (fileName.includes('PHASE') || fileName.includes('STATUS')) return '📋 Project Management'
+    if (fileName.includes('PLAN') || fileName.includes('STRATEGY')) return '🎯 Strategy & Planning'
+    if (fileName.includes('IMPLEMENTATION') || fileName.includes('INTEGRATION')) return '🚀 Technical Implementation'
+    if (fileName.includes('MESSAGES') || fileName.includes('PRODUCT')) return '🛍️ Product Features'
+    if (fileName.includes('TODO') || fileName.includes('CHECKLIST')) return '✅ Tasks & Checklists'
+    return '📄 General Documentation'
+  }
+
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -103,9 +147,18 @@ export default function AdminDocViewerPage() {
           Back to Documentation
         </Link>
         
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-900">{doc?.fileName}</h1>
-          <div className="flex items-center space-x-4">
+        {/* Category Badge */}
+        <div className="mb-4">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700">
+            {getCategoryFromFileName(doc?.fileName)}
+          </span>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h1 className="text-3xl font-bold text-gray-900 break-words">
+            {normalizeTitle(doc?.fileName)}
+          </h1>
+          <div className="flex items-center space-x-4 flex-shrink-0">
             <a
               href={`https://github.com/morhendos/tenis-del-parque/blob/main/docs/${doc?.fileName}`}
               target="_blank"
