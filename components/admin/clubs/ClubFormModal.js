@@ -132,6 +132,179 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
   // Surface type being added
   const [newSurface, setNewSurface] = useState({ type: 'clay', count: 1 })
 
+  // Random data generator
+  const generateRandomData = () => {
+    // Random club names
+    const prefixes = ['Club de Tenis', 'Tennis Club', 'Real Club', 'Centro Deportivo', 'Complejo Tenis']
+    const names = ['El Paraíso', 'Costa del Sol', 'Marina', 'Las Palmeras', 'Los Naranjos', 'La Quinta', 'Vista Hermosa', 'Sol y Mar', 'Monte Alto', 'Puente Romano']
+    const cities = ['malaga', 'marbella', 'estepona', 'sotogrande']
+    
+    const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)]
+    const randomName = names[Math.floor(Math.random() * names.length)]
+    const clubName = `${randomPrefix} ${randomName}`
+    const selectedCity = cities[Math.floor(Math.random() * cities.length)]
+    
+    // Random address components
+    const streets = ['Calle ', 'Avenida ', 'Paseo ', 'Camino ', 'Urbanización ']
+    const streetNames = ['del Mar', 'de la Playa', 'del Sol', 'de los Deportes', 'del Tenis', 'Nueva Andalucía', 'de la Costa', 'del Mediterráneo']
+    const streetType = streets[Math.floor(Math.random() * streets.length)]
+    const streetName = streetNames[Math.floor(Math.random() * streetNames.length)]
+    const streetNumber = Math.floor(Math.random() * 200) + 1
+    
+    // Random postal codes by city
+    const postalCodes = {
+      malaga: ['29001', '29002', '29003', '29004', '29016', '29017'],
+      marbella: ['29600', '29601', '29602', '29603', '29604'],
+      estepona: ['29680', '29688', '29689'],
+      sotogrande: ['11310', '11311']
+    }
+    
+    // Random coordinates (approximate for each city)
+    const cityCoordinates = {
+      malaga: { lat: 36.7213 + (Math.random() - 0.5) * 0.1, lng: -4.4214 + (Math.random() - 0.5) * 0.1 },
+      marbella: { lat: 36.5099 + (Math.random() - 0.5) * 0.1, lng: -4.8863 + (Math.random() - 0.5) * 0.1 },
+      estepona: { lat: 36.4276 + (Math.random() - 0.5) * 0.1, lng: -5.1463 + (Math.random() - 0.5) * 0.1 },
+      sotogrande: { lat: 36.2874 + (Math.random() - 0.5) * 0.05, lng: -5.2687 + (Math.random() - 0.5) * 0.05 }
+    }
+    
+    // Random courts
+    const totalOutdoor = Math.floor(Math.random() * 12) + 2 // 2-13 outdoor courts
+    const totalIndoor = Math.random() > 0.7 ? Math.floor(Math.random() * 4) + 1 : 0 // 30% chance of indoor courts
+    
+    // Random surfaces
+    const surfaceTypes = ['clay', 'hard', 'synthetic', 'padel']
+    const surfaces = []
+    let remainingCourts = totalOutdoor + totalIndoor
+    
+    while (remainingCourts > 0) {
+      const surfaceType = surfaceTypes[Math.floor(Math.random() * surfaceTypes.length)]
+      const count = Math.min(remainingCourts, Math.floor(Math.random() * 4) + 1)
+      surfaces.push({ type: surfaceType, count })
+      remainingCourts -= count
+    }
+    
+    // Random amenities (more likely for premium clubs)
+    const isPremium = Math.random() > 0.5
+    const randomAmenities = {
+      parking: Math.random() > 0.2,
+      lighting: Math.random() > 0.3,
+      proShop: isPremium && Math.random() > 0.4,
+      restaurant: isPremium && Math.random() > 0.5,
+      changingRooms: Math.random() > 0.1,
+      showers: Math.random() > 0.1,
+      lockers: Math.random() > 0.3,
+      wheelchair: Math.random() > 0.4,
+      swimming: isPremium && Math.random() > 0.6,
+      gym: isPremium && Math.random() > 0.7,
+      sauna: isPremium && Math.random() > 0.8,
+      physio: isPremium && Math.random() > 0.8
+    }
+    
+    // Random services
+    const randomServices = {
+      lessons: Math.random() > 0.2,
+      coaching: Math.random() > 0.3,
+      stringing: Math.random() > 0.5,
+      tournaments: Math.random() > 0.4,
+      summerCamps: Math.random() > 0.6
+    }
+    
+    // Random tags
+    const allTags = ['family-friendly', 'professional', 'beginner-friendly', 'tournaments', 
+                     'social-club', 'hotel-club', 'municipal', 'private', 'academy']
+    const randomTags = allTags.filter(() => Math.random() > 0.7)
+    
+    // Random pricing
+    const basePrice = isPremium ? 25 : 15
+    const minPrice = basePrice + Math.floor(Math.random() * 10)
+    const maxPrice = minPrice + Math.floor(Math.random() * 15) + 5
+    
+    // Generate phone number
+    const phonePrefix = Math.random() > 0.5 ? '+34 952' : '+34 951'
+    const phoneNumber = `${phonePrefix} ${Math.floor(Math.random() * 900) + 100} ${Math.floor(Math.random() * 900) + 100}`
+    
+    const generatedData = {
+      name: clubName,
+      slug: clubName.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, ''),
+      status: 'active',
+      featured: Math.random() > 0.8,
+      displayOrder: Math.floor(Math.random() * 10),
+      location: {
+        address: `${streetType}${streetName}, ${streetNumber}`,
+        city: selectedCity,
+        postalCode: postalCodes[selectedCity][Math.floor(Math.random() * postalCodes[selectedCity].length)],
+        coordinates: cityCoordinates[selectedCity],
+        googleMapsUrl: `https://maps.google.com/?q=${clubName.replace(/\s+/g, '+')}+${selectedCity}`
+      },
+      description: {
+        es: `${clubName} es un ${isPremium ? 'prestigioso' : 'acogedor'} club de tenis ubicado en ${selectedCity.charAt(0).toUpperCase() + selectedCity.slice(1)}. Contamos con ${totalOutdoor + totalIndoor} pistas ${totalIndoor > 0 ? '(incluyendo ' + totalIndoor + ' cubiertas)' : ''} y ofrecemos una experiencia de tenis ${isPremium ? 'premium' : 'excepcional'} para jugadores de todos los niveles. Nuestras instalaciones ${isPremium ? 'de primera clase' : 'modernas'} y nuestro equipo profesional garantizan una experiencia deportiva inolvidable.`,
+        en: `${clubName} is a ${isPremium ? 'prestigious' : 'welcoming'} tennis club located in ${selectedCity.charAt(0).toUpperCase() + selectedCity.slice(1)}. We feature ${totalOutdoor + totalIndoor} courts ${totalIndoor > 0 ? '(including ' + totalIndoor + ' indoor)' : ''} and offer ${isPremium ? 'a premium' : 'an exceptional'} tennis experience for players of all levels. Our ${isPremium ? 'world-class' : 'modern'} facilities and professional staff ensure an unforgettable sporting experience.`
+      },
+      courts: {
+        total: totalOutdoor + totalIndoor,
+        surfaces: surfaces,
+        indoor: totalIndoor,
+        outdoor: totalOutdoor
+      },
+      amenities: randomAmenities,
+      services: randomServices,
+      contact: {
+        phone: phoneNumber,
+        email: `info@${clubName.toLowerCase().replace(/\s+/g, '').replace(/[^\w]+/g, '')}.com`,
+        website: `https://www.${clubName.toLowerCase().replace(/\s+/g, '').replace(/[^\w]+/g, '')}.com`,
+        facebook: Math.random() > 0.3 ? `https://facebook.com/${clubName.toLowerCase().replace(/\s+/g, '')}` : '',
+        instagram: Math.random() > 0.2 ? `@${clubName.toLowerCase().replace(/\s+/g, '').replace(/[^\w]+/g, '')}` : ''
+      },
+      operatingHours: {
+        monday: { open: '08:00', close: isPremium ? '23:00' : '22:00' },
+        tuesday: { open: '08:00', close: isPremium ? '23:00' : '22:00' },
+        wednesday: { open: '08:00', close: isPremium ? '23:00' : '22:00' },
+        thursday: { open: '08:00', close: isPremium ? '23:00' : '22:00' },
+        friday: { open: '08:00', close: isPremium ? '23:00' : '22:00' },
+        saturday: { open: '08:00', close: isPremium ? '23:00' : '21:00' },
+        sunday: { open: '08:00', close: isPremium ? '22:00' : '20:00' }
+      },
+      pricing: {
+        courtRental: {
+          hourly: {
+            min: minPrice,
+            max: maxPrice,
+            currency: 'EUR'
+          },
+          membership: {
+            monthly: isPremium ? Math.floor(Math.random() * 100) + 150 : Math.floor(Math.random() * 50) + 50,
+            annual: isPremium ? Math.floor(Math.random() * 1000) + 1500 : Math.floor(Math.random() * 500) + 500,
+            currency: 'EUR'
+          }
+        },
+        publicAccess: !isPremium || Math.random() > 0.3,
+        membershipRequired: isPremium && Math.random() > 0.7
+      },
+      tags: randomTags,
+      images: {
+        main: '',
+        gallery: []
+      },
+      seo: {
+        metaTitle: {
+          es: `${clubName} - Club de Tenis en ${selectedCity.charAt(0).toUpperCase() + selectedCity.slice(1)}`,
+          en: `${clubName} - Tennis Club in ${selectedCity.charAt(0).toUpperCase() + selectedCity.slice(1)}`
+        },
+        metaDescription: {
+          es: `Descubre ${clubName}, ${isPremium ? 'el mejor club de tenis' : 'tu club de tenis'} en ${selectedCity.charAt(0).toUpperCase() + selectedCity.slice(1)}. ${totalOutdoor + totalIndoor} pistas, ${Object.values(randomServices).filter(Boolean).length} servicios disponibles. ¡Reserva ahora!`,
+          en: `Discover ${clubName}, ${isPremium ? 'the premier tennis club' : 'your tennis club'} in ${selectedCity.charAt(0).toUpperCase() + selectedCity.slice(1)}. ${totalOutdoor + totalIndoor} courts, ${Object.values(randomServices).filter(Boolean).length} services available. Book now!`
+        },
+        keywords: {
+          es: [`tenis ${selectedCity}`, `club tenis ${selectedCity}`, 'pistas tenis', 'clases tenis', selectedCity],
+          en: [`tennis ${selectedCity}`, `tennis club ${selectedCity}`, 'tennis courts', 'tennis lessons', selectedCity]
+        }
+      }
+    }
+    
+    setFormData(generatedData)
+    setCurrentStep(1)
+  }
+
   // Initialize form data when editing
   useEffect(() => {
     if (club) {
@@ -903,14 +1076,28 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
             <h3 className="text-xl font-semibold text-gray-900">
               {club ? 'Edit Club' : 'Add New Club'}
             </h3>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            <div className="flex items-center space-x-2">
+              {!club && (
+                <button
+                  onClick={generateRandomData}
+                  className="px-3 py-1 text-sm bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors flex items-center space-x-1"
+                  title="Fill with random test data"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                  </svg>
+                  <span>Test Data</span>
+                </button>
+              )}
+              <button
+                onClick={onClose}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
           
           {/* Step indicator */}
