@@ -84,21 +84,27 @@ export async function POST(request) {
       )
     }
 
-    // Ensure courts structure is valid
-    if (!data.courts || typeof data.courts.total !== 'number') {
-      data.courts = {
-        total: 0,
-        surfaces: [],
-        indoor: 0,
-        outdoor: 0,
-        ...data.courts
-      }
+    // Ensure courts structure is valid and calculate total
+    const indoor = parseInt(data.courts?.indoor) || 0
+    const outdoor = parseInt(data.courts?.outdoor) || 0
+    const total = indoor + outdoor
+    
+    if (total < 1) {
+      return NextResponse.json(
+        { error: 'At least one court (indoor or outdoor) is required' },
+        { status: 400 }
+      )
+    }
+    
+    data.courts = {
+      ...data.courts,
+      total,
+      indoor,
+      outdoor,
+      surfaces: data.courts?.surfaces || []
     }
 
     // Ensure arrays are arrays
-    if (!Array.isArray(data.courts.surfaces)) {
-      data.courts.surfaces = []
-    }
     if (!Array.isArray(data.tags)) {
       data.tags = []
     }
