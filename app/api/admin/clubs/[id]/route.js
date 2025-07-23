@@ -41,6 +41,7 @@ export async function PUT(request, { params }) {
     await dbConnect()
 
     const data = await request.json()
+    console.log('Updating club with data:', JSON.stringify(data, null, 2))
 
     // Validate required fields
     if (!data.name || !data.slug || !data.location?.city) {
@@ -61,6 +62,26 @@ export async function PUT(request, { params }) {
         { error: 'A club with this slug already exists' },
         { status: 400 }
       )
+    }
+
+    // Ensure courts structure is valid and calculate total
+    const indoor = parseInt(data.courts?.indoor) || 0
+    const outdoor = parseInt(data.courts?.outdoor) || 0
+    const total = indoor + outdoor
+    
+    if (total < 1) {
+      return NextResponse.json(
+        { error: 'At least one court (indoor or outdoor) is required' },
+        { status: 400 }
+      )
+    }
+    
+    data.courts = {
+      ...data.courts,
+      total,
+      indoor,
+      outdoor,
+      surfaces: data.courts?.surfaces || []
     }
 
     const club = await Club.findByIdAndUpdate(
