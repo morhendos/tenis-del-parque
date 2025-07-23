@@ -135,16 +135,134 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
   // Initialize form data when editing
   useEffect(() => {
     if (club) {
-      setFormData(club)
+      setFormData({
+        ...club,
+        // Ensure arrays are arrays
+        tags: club.tags || [],
+        courts: {
+          ...club.courts,
+          surfaces: club.courts?.surfaces || []
+        },
+        images: {
+          main: club.images?.main || '',
+          gallery: club.images?.gallery || []
+        },
+        seo: {
+          metaTitle: {
+            es: club.seo?.metaTitle?.es || '',
+            en: club.seo?.metaTitle?.en || ''
+          },
+          metaDescription: {
+            es: club.seo?.metaDescription?.es || '',
+            en: club.seo?.metaDescription?.en || ''
+          },
+          keywords: {
+            es: club.seo?.keywords?.es || [],
+            en: club.seo?.keywords?.en || []
+          }
+        }
+      })
     } else {
       // Reset to initial state for new club
-      setFormData(prev => ({
-        ...prev,
+      setFormData({
         name: '',
         slug: '',
-        description: { es: '', en: '' },
-        location: { ...prev.location, address: '' }
-      }))
+        status: 'active',
+        featured: false,
+        displayOrder: 0,
+        location: {
+          address: '',
+          city: 'malaga',
+          postalCode: '',
+          coordinates: {
+            lat: null,
+            lng: null
+          },
+          googleMapsUrl: ''
+        },
+        description: {
+          es: '',
+          en: ''
+        },
+        courts: {
+          total: 0,
+          surfaces: [],
+          indoor: 0,
+          outdoor: 0
+        },
+        amenities: {
+          parking: false,
+          lighting: false,
+          proShop: false,
+          restaurant: false,
+          changingRooms: false,
+          showers: false,
+          lockers: false,
+          wheelchair: false,
+          swimming: false,
+          gym: false,
+          sauna: false,
+          physio: false
+        },
+        services: {
+          lessons: false,
+          coaching: false,
+          stringing: false,
+          tournaments: false,
+          summerCamps: false
+        },
+        contact: {
+          phone: '',
+          email: '',
+          website: '',
+          facebook: '',
+          instagram: ''
+        },
+        operatingHours: {
+          monday: { open: '08:00', close: '22:00' },
+          tuesday: { open: '08:00', close: '22:00' },
+          wednesday: { open: '08:00', close: '22:00' },
+          thursday: { open: '08:00', close: '22:00' },
+          friday: { open: '08:00', close: '22:00' },
+          saturday: { open: '08:00', close: '22:00' },
+          sunday: { open: '08:00', close: '22:00' }
+        },
+        pricing: {
+          courtRental: {
+            hourly: {
+              min: null,
+              max: null,
+              currency: 'EUR'
+            },
+            membership: {
+              monthly: null,
+              annual: null,
+              currency: 'EUR'
+            }
+          },
+          publicAccess: true,
+          membershipRequired: false
+        },
+        tags: [],
+        images: {
+          main: '',
+          gallery: []
+        },
+        seo: {
+          metaTitle: {
+            es: '',
+            en: ''
+          },
+          metaDescription: {
+            es: '',
+            en: ''
+          },
+          keywords: {
+            es: [],
+            en: []
+          }
+        }
+      })
     }
     setCurrentStep(1)
     setError(null)
@@ -209,20 +327,71 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
     })
   }
 
+  const validateForm = () => {
+    // Check required fields
+    if (!formData.name || !formData.slug) {
+      setError('Club name and slug are required')
+      setCurrentStep(1)
+      return false
+    }
+    
+    if (!formData.description.es || !formData.description.en) {
+      setError('Description in both Spanish and English is required')
+      setCurrentStep(1)
+      return false
+    }
+    
+    if (!formData.location.city || !formData.location.address) {
+      setError('City and address are required')
+      setCurrentStep(2)
+      return false
+    }
+    
+    return true
+  }
+
   const handleSubmit = async () => {
+    if (!validateForm()) {
+      return
+    }
+
     setLoading(true)
     setError(null)
 
     try {
-      // Update court totals
-      const updatedFormData = {
+      // Clean up the data before sending
+      const dataToSend = {
         ...formData,
+        // Ensure arrays are arrays
+        tags: formData.tags || [],
         courts: {
           ...formData.courts,
+          surfaces: formData.courts.surfaces || [],
+          total: formData.courts.total || 0,
           indoor: formData.courts.indoor || 0,
-          outdoor: formData.courts.outdoor || formData.courts.total
+          outdoor: formData.courts.outdoor || formData.courts.total || 0
+        },
+        images: {
+          main: formData.images.main || '',
+          gallery: formData.images.gallery || []
+        },
+        seo: {
+          metaTitle: {
+            es: formData.seo.metaTitle.es || '',
+            en: formData.seo.metaTitle.en || ''
+          },
+          metaDescription: {
+            es: formData.seo.metaDescription.es || '',
+            en: formData.seo.metaDescription.en || ''
+          },
+          keywords: {
+            es: formData.seo.keywords.es || [],
+            en: formData.seo.keywords.en || []
+          }
         }
       }
+
+      console.log('Sending club data:', dataToSend)
 
       const url = club 
         ? `/api/admin/clubs/${club._id}` 
@@ -235,18 +404,28 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(updatedFormData)
+        body: JSON.stringify(dataToSend)
       })
 
+      const data = await response.json()
+
       if (!response.ok) {
-        const data = await response.json()
+        console.error('Server error:', data)
+        if (data.details) {
+          if (Array.isArray(data.details)) {
+            throw new Error(data.details.map(d => `${d.field}: ${d.message}`).join(', '))
+          } else {
+            throw new Error(data.details)
+          }
+        }
         throw new Error(data.error || `Failed to ${club ? 'update' : 'create'} club`)
       }
 
-      const data = await response.json()
+      console.log('Club saved successfully:', data.club)
       onSuccess(data.club)
       onClose()
     } catch (err) {
+      console.error('Error saving club:', err)
       setError(err.message)
     } finally {
       setLoading(false)
