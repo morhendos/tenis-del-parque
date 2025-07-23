@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import ClubFormModal from '@/components/admin/clubs/ClubFormModal'
 
 export default function AdminClubsPage() {
   const router = useRouter()
@@ -55,6 +56,12 @@ export default function AdminClubsPage() {
   const handleCreate = () => {
     setEditingClub(null)
     setShowFormModal(true)
+  }
+
+  const handleFormSuccess = (savedClub) => {
+    fetchClubs()
+    setShowFormModal(false)
+    setEditingClub(null)
   }
 
   const getStatusBadgeColor = (status) => {
@@ -156,6 +163,16 @@ export default function AdminClubsPage() {
               }`}
             >
               Estepona ({clubsByCity.estepona || 0})
+            </button>
+            <button
+              onClick={() => setSelectedCity('sotogrande')}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                selectedCity === 'sotogrande'
+                  ? 'bg-parque-purple text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Sotogrande ({clubsByCity.sotogrande || 0})
             </button>
           </div>
         </div>
@@ -278,25 +295,16 @@ export default function AdminClubsPage() {
         </div>
       </div>
 
-      {/* Form Modal Placeholder */}
-      {showFormModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold mb-4">
-              {editingClub ? 'Edit Club' : 'Add New Club'}
-            </h3>
-            <p className="text-gray-600 mb-4">
-              Club form modal will be implemented next...
-            </p>
-            <button
-              onClick={() => setShowFormModal(false)}
-              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Club Form Modal */}
+      <ClubFormModal
+        isOpen={showFormModal}
+        onClose={() => {
+          setShowFormModal(false)
+          setEditingClub(null)
+        }}
+        club={editingClub}
+        onSuccess={handleFormSuccess}
+      />
     </div>
   )
 }
