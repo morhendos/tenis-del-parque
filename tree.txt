@@ -59,6 +59,10 @@ root/
 │   │   │   └── page.js
 │   │   ├── dashboard
 │   │   │   └── page.js
+│   │   ├── docs
+│   │   │   ├── [slug]
+│   │   │   │   └── page.js
+│   │   │   └── page.js
 │   │   ├── layout.js
 │   │   ├── leagues
 │   │   │   ├── [id]
@@ -86,6 +90,8 @@ root/
 │   │   │   │   │   └── route.js
 │   │   │   │   └── route.js
 │   │   │   ├── dashboard
+│   │   │   │   └── route.js
+│   │   │   ├── docs
 │   │   │   │   └── route.js
 │   │   │   ├── leagues
 │   │   │   │   ├── [id]
@@ -163,7 +169,10 @@ root/
 │   │   │       └── route.js
 │   │   └── seed-leagues
 │   │       └── route.js
+│   ├── apple-icon.png
 │   ├── globals.css
+│   ├── icon0.svg
+│   ├── icon1.png
 │   ├── layout.js
 │   ├── providers.js
 │   └── signup
@@ -250,11 +259,15 @@ root/
 │       ├── Toast.js
 │       └── WelcomeModal.js
 ├── docs
+│   ├── ADMIN_DOCS_VIEWER.md
+│   ├── CURRENT_STATUS.md
+│   ├── FEE_SYSTEM.md
 │   ├── HOMEPAGE_LEAGUE_IMPLEMENTATION_PLAN.md
 │   ├── PHASE_1_2_SUMMARY.md
 │   ├── PLAYER_MESSAGES_SYSTEM.md
 │   ├── PRODUCT_LED_GROWTH.md
 │   ├── PR_MULTILINGUAL_IMPLEMENTATION.md
+│   ├── README.md
 │   ├── SCORING_SYSTEM_INTEGRATION.md
 │   ├── SEO Strategy
 │   ├── SEO_CHECKLIST.md
@@ -319,24 +332,29 @@ root/
 │   └── add-scoring-system.patch
 ├── postcss.config.js
 ├── public
+│   ├── apple-touch-icon.png
 │   ├── estepona-01.webp
-│   ├── favicon.svg
+│   ├── favicon.ico
 │   ├── logo-01.webp
 │   ├── logo-big.png
 │   ├── logo-horizontal-01.png
 │   ├── logo-horizontal-02.png
 │   ├── logo-horizontal-big.png
 │   ├── logo-horizontal-small.png
+│   ├── logo-manifest.png
 │   ├── logo-old.png
 │   ├── logo.png
 │   ├── malaga-01.avif
 │   ├── manifest.json
 │   ├── marbella-01.jpg
 │   ├── marbella-02.webp
-│   ├── og-image.svg
+│   ├── og-image.png
 │   ├── robots.txt
 │   ├── sitemap.xml
-│   └── sotogrande-01.jpg
+│   ├── sotogrande-01.jpg
+│   ├── twitter-image.png
+│   ├── web-app-manifest-192x192.png
+│   └── web-app-manifest-512x512.png
 ├── scripts
 │   ├── checkAuth.mjs
 │   ├── createAdminUser.js
