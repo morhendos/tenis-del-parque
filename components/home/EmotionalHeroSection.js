@@ -74,14 +74,16 @@ export default function EmotionalHeroSection({ content, locale }) {
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fadeInUp animation-delay-800">
             <a
               href="#cities"
-              className="inline-flex items-center bg-gradient-to-r from-parque-purple to-parque-purple/90 text-white px-6 py-3 sm:px-8 sm:py-4 md:px-10 md:py-5 rounded-full text-base sm:text-lg font-medium hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group relative glow-purple hover:glow min-h-[48px] touch-manipulation"
+              className="inline-flex items-center bg-gradient-to-r from-parque-purple to-parque-purple/90 text-white px-6 py-3 sm:px-8 sm:py-4 md:px-10 md:py-5 rounded-full text-base sm:text-lg font-medium hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group relative min-h-[48px] touch-manipulation overflow-hidden"
             >
               <span className="relative z-10">{content.hero.cta.primary}</span>
               <svg className="w-4 h-4 sm:w-5 sm:h-5 ml-2 group-hover:translate-x-2 transition-transform relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
+              {/* Glow effect - contained within button */}
+              <div className="absolute inset-0 rounded-full glow-purple group-hover:glow transition-all duration-150"></div>
               {/* Shimmer effect on hover */}
-              <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-10">
                 <div className="absolute inset-0 rounded-full shimmer"></div>
               </div>
             </a>
@@ -169,9 +171,12 @@ export default function EmotionalHeroSection({ content, locale }) {
         
         .glow-purple {
           box-shadow: 0 0 20px rgba(86, 51, 128, 0.3);
+          opacity: 0;
+          transition: opacity 0.15s ease-out;
         }
         
-        .hover\\:glow:hover {
+        .group:hover .glow-purple {
+          opacity: 1;
           box-shadow: 0 0 30px rgba(86, 51, 128, 0.5);
         }
         
@@ -182,16 +187,12 @@ export default function EmotionalHeroSection({ content, locale }) {
             rgba(255, 255, 255, 0.5) 50%,
             transparent 60%
           );
-          animation: shimmer 1s;
+          transform: translateX(-100%);
+          transition: transform 0.6s ease-out;
         }
         
-        @keyframes shimmer {
-          0% {
-            transform: translateX(-100%);
-          }
-          100% {
-            transform: translateX(100%);
-          }
+        .group:hover .shimmer {
+          transform: translateX(100%);
         }
         
         .particle {
