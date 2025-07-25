@@ -2,22 +2,46 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 
+// Dynamically import to handle if package is not installed
+let Client
+try {
+  const googleMapsModule = require('@googlemaps/google-maps-services-js')
+  Client = googleMapsModule.Client
+} catch (error) {
+  console.warn('@googlemaps/google-maps-services-js not installed. Please run: npm install @googlemaps/google-maps-services-js')
+}
+
+const googleMapsClient = Client ? new Client({}) : null
+
 // Helper function to generate slug from name
 function generateSlug(name) {
   return name
     .toLowerCase()
     .replace(/\s+/g, '-')
-    .replace(/[^\w-]+/g, '')
+    .replace(/[^\\w-]+/g, '')
 }
 
 // Helper function to extract city from address
 function extractCity(address) {
-  const cities = ['malaga', 'marbella', 'estepona', 'sotogrande']
+  const cities = ['malaga', 'marbella', 'estepona', 'sotogrande', 'benalmadena', 'fuengirola', 'mijas']
   const addressLower = address.toLowerCase()
   
+  // Try to find city in address
   for (const city of cities) {
     if (addressLower.includes(city)) {
       return city
+    }
+  }
+  
+  // Try to extract from Spanish address format (city usually after postal code)
+  const spanishCityMatch = address.match(/\d{5}\s+([^,]+),?\s*(?:Málaga|Cádiz)?/i)
+  if (spanishCityMatch && spanishCityMatch[1]) {
+    const extractedCity = spanishCityMatch[1].toLowerCase().trim()
+    // Check if it's one of our known cities
+    for (const city of cities) {
+      if (extractedCity.includes(city)) {
+        return city
+      }
     }
   }
   
@@ -55,6 +79,47 @@ function mapGooglePlaceToClub(place) {
     sunday: { open: '08:00', close: isPremium ? '22:00' : '20:00' }
   }
   
+  // Process opening hours if available
+  if (place.opening_hours?.weekday_text) {
+    const dayMapping = {
+      'Monday': 'monday',
+      'Tuesday': 'tuesday',
+      'Wednesday': 'wednesday',
+      'Thursday': 'thursday',
+      'Friday': 'friday',
+      'Saturday': 'saturday',
+      'Sunday': 'sunday'
+    }
+    
+    place.opening_hours.weekday_text.forEach(dayText => {
+      // Parse format like "Monday: 8:00 AM – 10:00 PM"
+      const match = dayText.match(/^(\w+):\s*(\d{1,2}:\d{2}\s*[AP]M)\s*[–-]\s*(\d{1,2}:\d{2}\s*[AP]M)/i)
+      if (match) {
+        const dayName = match[1]
+        const dayKey = dayMapping[dayName]
+        if (dayKey) {
+          // Convert to 24h format (simplified - you might want a more robust converter)
+          const convertTo24h = (time) => {
+            const [hourMin, period] = time.split(/\s+/)
+            let [hour, min] = hourMin.split(':').map(Number)
+            if (period?.toUpperCase() === 'PM' && hour !== 12) hour += 12
+            if (period?.toUpperCase() === 'AM' && hour === 12) hour = 0
+            return `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`
+          }
+          
+          try {
+            operatingHours[dayKey] = {
+              open: convertTo24h(match[2]),
+              close: convertTo24h(match[3])
+            }
+          } catch (e) {
+            // Keep default hours if parsing fails
+          }
+        }
+      }
+    })
+  }
+  
   // Estimate pricing based on price level
   const basePrices = {
     0: 10,
@@ -70,19 +135,19 @@ function mapGooglePlaceToClub(place) {
     name: place.name,
     slug: generateSlug(place.name),
     status: 'active',
-    featured: place.rating >= 4.5,
+    featured: place.rating >= 4.5 && place.user_ratings_total >= 50,
     displayOrder: 0,
     
     // Location
     location: {
-      address: place.formatted_address.split(',')[0], // Get street address only
+      address: place.vicinity || place.formatted_address.split(',')[0], // Get street address only
       city: city,
       postalCode: postalCode,
       coordinates: {
         lat: place.geometry?.location?.lat || null,
         lng: place.geometry?.location?.lng || null
       },
-      googleMapsUrl: `https://maps.google.com/?q=place_id:${place.place_id}`
+      googleMapsUrl: place.url || `https://maps.google.com/?q=place_id:${place.place_id}`
     },
     
     // Description
@@ -99,18 +164,18 @@ function mapGooglePlaceToClub(place) {
       outdoor: 6
     },
     
-    // Amenities (estimated based on price level)
+    // Amenities (estimated based on price level and types)
     amenities: {
       parking: true,
       lighting: true,
       proShop: isPremium,
-      restaurant: place.price_level >= 2,
+      restaurant: place.price_level >= 2 || place.types?.includes('restaurant'),
       changingRooms: true,
       showers: true,
       lockers: place.price_level >= 2,
-      wheelchair: place.price_level >= 3,
+      wheelchair: place.price_level >= 3 || place.wheelchair_accessible_entrance,
       swimming: isPremium && place.price_level >= 3,
-      gym: isPremium && place.price_level >= 3,
+      gym: isPremium && place.price_level >= 3 || place.types?.includes('gym'),
       sauna: place.price_level >= 4,
       physio: place.price_level >= 4
     },
@@ -126,7 +191,7 @@ function mapGooglePlaceToClub(place) {
     
     // Contact
     contact: {
-      phone: place.formatted_phone_number || '',
+      phone: place.international_phone_number || place.formatted_phone_number || '',
       email: '', // Not available from Google
       website: place.website || '',
       facebook: '', // Not available from Google
@@ -158,12 +223,13 @@ function mapGooglePlaceToClub(place) {
     tags: [
       place.price_level <= 2 ? 'family-friendly' : 'professional',
       place.rating >= 4 ? 'beginner-friendly' : null,
-      isPremium ? 'private' : 'social-club'
+      isPremium ? 'private' : 'social-club',
+      place.types?.includes('school') ? 'academy' : null
     ].filter(Boolean),
     
     // Images
     images: {
-      main: '', // Would need to fetch from Google Photos API
+      main: '', // Would need to fetch from Google Photos API separately
       gallery: []
     },
     
@@ -185,8 +251,13 @@ function mapGooglePlaceToClub(place) {
     
     // Google data (for reference)
     googlePlaceId: place.place_id,
-    googleRating: place.rating || null,
-    googleUserRatingsTotal: place.user_ratings_total || 0,
+    googleData: {
+      rating: place.rating || null,
+      userRatingsTotal: place.user_ratings_total || 0,
+      priceLevel: place.price_level || null,
+      types: place.types || [],
+      url: place.url || null
+    },
     importSource: 'google'
   }
 }
@@ -211,107 +282,77 @@ export async function POST(request) {
 
     console.log('Getting details for places:', placeIds)
 
-    // TODO: In production, fetch actual details from Google Places API
-    // For now, return mock detailed data
+    // Check if Google Maps client is available
+    if (!googleMapsClient) {
+      return NextResponse.json(
+        { error: 'Google Maps integration not configured. Please install @googlemaps/google-maps-services-js' },
+        { status: 500 }
+      )
+    }
 
-    // Mock Google Places data (same as search results but with full details)
-    const mockPlaces = {
-      'ChIJ1234567890': {
-        place_id: 'ChIJ1234567890',
-        name: 'Club de Tenis Marbella',
-        formatted_address: 'Calle del Mar 15, 29600 Marbella, Málaga, Spain',
-        rating: 4.5,
-        user_ratings_total: 127,
-        opening_hours: { open_now: true },
-        geometry: {
-          location: {
-            lat: 36.5099,
-            lng: -4.8863
+    // Check for API key
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY
+    if (!apiKey) {
+      console.error('Google Maps API key not configured')
+      return NextResponse.json(
+        { error: 'Google Maps API key not configured. Please add GOOGLE_MAPS_API_KEY to your environment variables.' },
+        { status: 500 }
+      )
+    }
+
+    const clubs = []
+    const errors = []
+
+    // Fetch details for each place ID
+    for (const placeId of placeIds) {
+      try {
+        const response = await googleMapsClient.placeDetails({
+          params: {
+            key: apiKey,
+            place_id: placeId,
+            language: 'es',
+            fields: [
+              'place_id', 
+              'name', 
+              'formatted_address',
+              'vicinity',
+              'geometry', 
+              'rating', 
+              'user_ratings_total', 
+              'opening_hours', 
+              'formatted_phone_number',
+              'international_phone_number',
+              'website', 
+              'photos', 
+              'price_level', 
+              'types',
+              'url',
+              'wheelchair_accessible_entrance'
+            ]
           }
-        },
-        formatted_phone_number: '+34 952 123 456',
-        website: 'https://www.clubdetenismarbella.com',
-        photos: [
-          { photo_reference: 'photo1' },
-          { photo_reference: 'photo2' }
-        ],
-        price_level: 3
-      },
-      'ChIJ0987654321': {
-        place_id: 'ChIJ0987654321',
-        name: 'Real Club de Tenis Costa del Sol',
-        formatted_address: 'Avenida del Golf 23, 29602 Marbella, Málaga, Spain',
-        rating: 4.2,
-        user_ratings_total: 89,
-        opening_hours: { open_now: false },
-        geometry: {
-          location: {
-            lat: 36.5150,
-            lng: -4.8900
-          }
-        },
-        formatted_phone_number: '+34 952 789 012',
-        website: 'https://www.rctcostadelsol.es',
-        photos: [
-          { photo_reference: 'photo3' }
-        ],
-        price_level: 4
-      },
-      'ChIJ2468135790': {
-        place_id: 'ChIJ2468135790',
-        name: 'Tennis Academy Marbella',
-        formatted_address: 'Urbanización Las Brisas, 29660 Marbella, Málaga, Spain',
-        rating: 4.8,
-        user_ratings_total: 234,
-        opening_hours: { open_now: true },
-        geometry: {
-          location: {
-            lat: 36.5020,
-            lng: -4.9100
-          }
-        },
-        formatted_phone_number: '+34 952 456 789',
-        website: 'https://www.tennisacademymarbella.com',
-        photos: [
-          { photo_reference: 'photo4' },
-          { photo_reference: 'photo5' },
-          { photo_reference: 'photo6' }
-        ],
-        price_level: 2
-      },
-      'ChIJ9876543210': {
-        place_id: 'ChIJ9876543210',
-        name: 'Club de Tenis Estepona',
-        formatted_address: 'Calle Deportes 10, 29680 Estepona, Málaga, Spain',
-        rating: 4.3,
-        user_ratings_total: 67,
-        opening_hours: { open_now: true },
-        geometry: {
-          location: {
-            lat: 36.4276,
-            lng: -5.1463
-          }
-        },
-        formatted_phone_number: '+34 952 111 222',
-        website: 'https://www.tenisestepona.es',
-        photos: [{ photo_reference: 'photo7' }],
-        price_level: 2
+        })
+
+        if (response.data.result) {
+          const clubData = mapGooglePlaceToClub(response.data.result)
+          clubs.push(clubData)
+          console.log(`Fetched details for: ${response.data.result.name}`)
+        }
+      } catch (error) {
+        console.error(`Error fetching details for place ${placeId}:`, error.response?.data || error)
+        errors.push({
+          placeId,
+          error: error.response?.data?.error_message || error.message
+        })
       }
     }
 
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500))
-
-    // Get details for requested places and map to club format
-    const clubs = placeIds
-      .map(placeId => mockPlaces[placeId])
-      .filter(Boolean)
-      .map(place => mapGooglePlaceToClub(place))
+    console.log(`Successfully fetched ${clubs.length} clubs, ${errors.length} errors`)
 
     return NextResponse.json({
       clubs,
       requested: placeIds.length,
-      found: clubs.length
+      found: clubs.length,
+      errors: errors.length > 0 ? errors : undefined
     })
 
   } catch (error) {
