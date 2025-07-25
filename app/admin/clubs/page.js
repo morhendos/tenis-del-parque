@@ -5,6 +5,117 @@ import { useRouter } from 'next/navigation'
 import ClubFormModal from '@/components/admin/clubs/ClubFormModal'
 import GoogleMapsImporter from '@/components/admin/clubs/GoogleMapsImporter'
 
+// Google Import Legend Component
+const GoogleImportLegend = () => {
+  const [showDetails, setShowDetails] = useState(false)
+  
+  return (
+    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+          </svg>
+          <h3 className="text-sm font-medium text-blue-900">
+            Google Maps Import Data Guide
+          </h3>
+        </div>
+        <button
+          onClick={() => setShowDetails(!showDetails)}
+          className="text-sm text-blue-600 hover:text-blue-800"
+        >
+          {showDetails ? 'Hide' : 'Show'} Details
+        </button>
+      </div>
+      
+      {showDetails && (
+        <div className="mt-4 space-y-3">
+          <div className="grid grid-cols-3 gap-4 text-sm">
+            <div>
+              <div className="flex items-center space-x-2 mb-1">
+                <span className="text-green-600">✓</span>
+                <span className="font-medium text-gray-700">Verified Data</span>
+              </div>
+              <ul className="space-y-0.5 text-xs text-gray-600 ml-5">
+                <li>• Name & Address</li>
+                <li>• GPS Coordinates</li>
+                <li>• Phone & Website</li>
+                <li>• Ratings & Reviews</li>
+                <li>• Operating Hours</li>
+              </ul>
+            </div>
+            
+            <div>
+              <div className="flex items-center space-x-2 mb-1">
+                <span className="text-yellow-600">≈</span>
+                <span className="font-medium text-gray-700">Estimated Data</span>
+              </div>
+              <ul className="space-y-0.5 text-xs text-gray-600 ml-5">
+                <li>• Courts (default: 6)</li>
+                <li>• Surfaces (default: clay)</li>
+                <li>• Amenities (by price)</li>
+                <li>• Services (by price)</li>
+                <li>• Price ranges</li>
+              </ul>
+            </div>
+            
+            <div>
+              <div className="flex items-center space-x-2 mb-1">
+                <span className="text-gray-500">—</span>
+                <span className="font-medium text-gray-700">Not Available</span>
+              </div>
+              <ul className="space-y-0.5 text-xs text-gray-600 ml-5">
+                <li>• Email address</li>
+                <li>• Social media</li>
+                <li>• Photos</li>
+                <li>• Membership fees</li>
+                <li>• Court specifics</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="mt-3 pt-3 border-t border-blue-200">
+            <p className="text-xs text-blue-800">
+              <strong>Tip:</strong> After importing, click on each club to verify and complete the estimated data. 
+              Look for the <span className="text-yellow-600">≈</span> symbol to identify fields that need verification.
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Data quality calculation function
+const getDataQualityScore = (club) => {
+  let verified = 0
+  let estimated = 0
+  let missing = 0
+  
+  // Verified fields from Google
+  if (club.googlePlaceId) verified += 3
+  if (club.contact?.phone) verified += 1
+  if (club.contact?.website) verified += 1
+  if (club.googleData?.rating) verified += 1
+  
+  // Estimated fields (need verification)
+  if (club.courts?.total === 6 && club.importSource === 'google') estimated += 2
+  if (club.amenities && !club.amenitiesVerified && club.importSource === 'google') estimated += 2
+  
+  // Missing fields
+  if (!club.contact?.email) missing += 1
+  if (!club.images?.main) missing += 1
+  if (!club.contact?.facebook && !club.contact?.instagram) missing += 1
+  
+  const total = verified + estimated + missing || 1 // Avoid division by zero
+  return {
+    verified: Math.round((verified / total) * 100),
+    estimated: Math.round((estimated / total) * 100),
+    missing: Math.round((missing / total) * 100),
+    total: Math.round((verified / total) * 100) // Overall completeness
+  }
+}
+
 export default function AdminClubsPage() {
   const router = useRouter()
   const [clubs, setClubs] = useState([])
@@ -164,6 +275,9 @@ export default function AdminClubsPage() {
         </div>
       </div>
 
+      {/* Google Import Legend - Show if any clubs are from Google */}
+      {clubs.some(c => c.importSource === 'google') && <GoogleImportLegend />}
+
       {/* City Filter */}
       <div className="bg-white rounded-lg shadow p-4">
         <div className="flex items-center space-x-4">
@@ -258,58 +372,93 @@ export default function AdminClubsPage() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredClubs.map((club) => (
-              <tr key={club._id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">{club.name}</div>
-                    <div className="text-sm text-gray-500">{club.slug}</div>
-                    {club.googleData?.rating && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        ⭐ {club.googleData.rating} ({club.googleData.userRatingsTotal} reviews)
-                      </div>
+            {filteredClubs.map((club) => {
+              const quality = getDataQualityScore(club)
+              
+              return (
+                <tr key={club._id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">{club.name}</div>
+                      <div className="text-sm text-gray-500">{club.slug}</div>
+                      {club.googleData?.rating && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          ⭐ {club.googleData.rating} ({club.googleData.userRatingsTotal} reviews)
+                        </div>
+                      )}
+                      
+                      {/* Data quality mini bar for Google imports */}
+                      {club.importSource === 'google' && (
+                        <div className="mt-2 flex items-center space-x-1">
+                          <div className="flex h-1.5 w-24 bg-gray-200 rounded overflow-hidden">
+                            <div 
+                              className="bg-green-500" 
+                              style={{width: `${quality.verified}%`}}
+                              title={`${quality.verified}% verified`}
+                            />
+                            <div 
+                              className="bg-yellow-500" 
+                              style={{width: `${quality.estimated}%`}}
+                              title={`${quality.estimated}% estimated`}
+                            />
+                            <div 
+                              className="bg-gray-400" 
+                              style={{width: `${quality.missing}%`}}
+                              title={`${quality.missing}% missing`}
+                            />
+                          </div>
+                          <span className="text-xs text-gray-500">
+                            {quality.total}% complete
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900 capitalize">{club.location.city}</div>
+                    <div className="text-sm text-gray-500">{club.location.address}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {club.courts.total} courts
+                      {club.courts.total === 6 && club.importSource === 'google' && (
+                        <span className="ml-1 text-yellow-600" title="Default value - needs verification">≈</span>
+                      )}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {club.courts.surfaces.map(s => `${s.count} ${s.type}`).join(', ')}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(club.status)}`}>
+                      {club.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {getImportSourceBadge(club.importSource)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                    {club.featured && (
+                      <span className="text-yellow-400">⭐</span>
                     )}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900 capitalize">{club.location.city}</div>
-                  <div className="text-sm text-gray-500">{club.location.address}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{club.courts.total} courts</div>
-                  <div className="text-sm text-gray-500">
-                    {club.courts.surfaces.map(s => `${s.count} ${s.type}`).join(', ')}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(club.status)}`}>
-                    {club.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {getImportSourceBadge(club.importSource)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-center">
-                  {club.featured && (
-                    <span className="text-yellow-400">⭐</span>
-                  )}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button
-                    onClick={() => handleEdit(club)}
-                    className="text-indigo-600 hover:text-indigo-900 mr-4"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(club._id)}
-                    className="text-red-600 hover:text-red-900"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button
+                      onClick={() => handleEdit(club)}
+                      className="text-indigo-600 hover:text-indigo-900 mr-4"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(club._id)}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
 
