@@ -2,6 +2,43 @@
 
 import { useState, useEffect } from 'react'
 
+// Data source indicator component
+const DataSourceIndicator = ({ source }) => {
+  const indicators = {
+    google_verified: {
+      icon: '✓',
+      color: 'text-green-600',
+      tooltip: 'Verified from Google Maps'
+    },
+    google_estimated: {
+      icon: '≈',
+      color: 'text-yellow-600',
+      tooltip: 'Estimated based on Google data'
+    },
+    manual: {
+      icon: '✏️',
+      color: 'text-blue-600',
+      tooltip: 'Manually entered'
+    },
+    default: {
+      icon: '•',
+      color: 'text-gray-400',
+      tooltip: 'Default value'
+    }
+  }
+
+  const indicator = indicators[source] || indicators.default
+
+  return (
+    <span 
+      className={`ml-1 ${indicator.color} cursor-help text-xs`}
+      title={indicator.tooltip}
+    >
+      {indicator.icon}
+    </span>
+  )
+}
+
 export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -126,11 +163,34 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
         es: [],
         en: []
       }
-    }
+    },
+    
+    // Verification flags
+    amenitiesVerified: false,
+    servicesVerified: false
   })
 
   // Surface type being added
   const [newSurface, setNewSurface] = useState({ type: 'clay', count: 1 })
+
+  // Check if this is a Google import
+  const isGoogleImport = club?.importSource === 'google' || club?.googlePlaceId
+
+  // Get data source for a field
+  const getFieldSource = (fieldName) => {
+    if (!club) return 'manual'
+    if (!isGoogleImport) return 'manual'
+    
+    // Fields that come from Google
+    const googleVerifiedFields = ['name', 'location.address', 'location.coordinates', 'contact.phone', 'contact.website']
+    if (googleVerifiedFields.includes(fieldName)) return 'google_verified'
+    
+    // Fields that are estimated
+    const estimatedFields = ['courts', 'amenities', 'services', 'pricing']
+    if (estimatedFields.some(field => fieldName.startsWith(field))) return 'google_estimated'
+    
+    return 'manual'
+  }
 
   // Random data generator
   const generateRandomData = () => {
@@ -225,7 +285,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
     
     const generatedData = {
       name: clubName,
-      slug: clubName.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, ''),
+      slug: clubName.toLowerCase().replace(/\s+/g, '-').replace(/[^\\w-]+/g, ''),
       status: 'active',
       featured: Math.random() > 0.8,
       displayOrder: Math.floor(Math.random() * 10),
@@ -250,10 +310,10 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       services: randomServices,
       contact: {
         phone: phoneNumber,
-        email: `info@${clubName.toLowerCase().replace(/\s+/g, '').replace(/[^\w]+/g, '')}.com`,
-        website: `https://www.${clubName.toLowerCase().replace(/\s+/g, '').replace(/[^\w]+/g, '')}.com`,
+        email: `info@${clubName.toLowerCase().replace(/\s+/g, '').replace(/[^\\w]+/g, '')}.com`,
+        website: `https://www.${clubName.toLowerCase().replace(/\s+/g, '').replace(/[^\\w]+/g, '')}.com`,
         facebook: Math.random() > 0.3 ? `https://facebook.com/${clubName.toLowerCase().replace(/\s+/g, '')}` : '',
-        instagram: Math.random() > 0.2 ? `@${clubName.toLowerCase().replace(/\s+/g, '').replace(/[^\w]+/g, '')}` : ''
+        instagram: Math.random() > 0.2 ? `@${clubName.toLowerCase().replace(/\s+/g, '').replace(/[^\\w]+/g, '')}` : ''
       },
       operatingHours: {
         monday: { open: '08:00', close: isPremium ? '23:00' : '22:00' },
@@ -298,7 +358,9 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
           es: [`tenis ${selectedCity}`, `club tenis ${selectedCity}`, 'pistas tenis', 'clases tenis', selectedCity],
           en: [`tennis ${selectedCity}`, `tennis club ${selectedCity}`, 'tennis courts', 'tennis lessons', selectedCity]
         }
-      }
+      },
+      amenitiesVerified: true,
+      servicesVerified: true
     }
     
     setFormData(generatedData)
@@ -333,7 +395,9 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
             es: club.seo?.keywords?.es || [],
             en: club.seo?.keywords?.en || []
           }
-        }
+        },
+        amenitiesVerified: club.amenitiesVerified || false,
+        servicesVerified: club.servicesVerified || false
       })
     } else {
       // Reset to initial state for new club
@@ -434,7 +498,9 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
             es: [],
             en: []
           }
-        }
+        },
+        amenitiesVerified: false,
+        servicesVerified: false
       })
     }
     setCurrentStep(1)
@@ -446,7 +512,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
     return name
       .toLowerCase()
       .replace(/\s+/g, '-')
-      .replace(/[^\w-]+/g, '')
+      .replace(/[^\\w-]+/g, '')
   }
 
   const handleChange = (field, value) => {
@@ -639,9 +705,17 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
 
   const renderBasicInfo = () => (
     <div className="space-y-4">
+      {isGoogleImport && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
+          <p className="font-medium text-blue-900 mb-1">Google Maps Import</p>
+          <p className="text-blue-700">Fields marked with ✓ are verified from Google. Fields with ≈ are estimated and should be verified.</p>
+        </div>
+      )}
+      
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Club Name *
+          <DataSourceIndicator source={getFieldSource('name')} />
         </label>
         <input
           type="text"
@@ -711,6 +785,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Description (Spanish) *
+          <DataSourceIndicator source={getFieldSource('description')} />
         </label>
         <textarea
           value={formData.description.es}
@@ -725,6 +800,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Description (English) *
+          <DataSourceIndicator source={getFieldSource('description')} />
         </label>
         <textarea
           value={formData.description.en}
@@ -743,6 +819,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           City *
+          <DataSourceIndicator source={getFieldSource('location.city')} />
         </label>
         <select
           value={formData.location.city}
@@ -760,6 +837,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Address *
+          <DataSourceIndicator source={getFieldSource('location.address')} />
         </label>
         <input
           type="text"
@@ -788,6 +866,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Latitude
+            <DataSourceIndicator source={getFieldSource('location.coordinates')} />
           </label>
           <input
             type="number"
@@ -802,6 +881,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Longitude
+            <DataSourceIndicator source={getFieldSource('location.coordinates')} />
           </label>
           <input
             type="number"
@@ -831,10 +911,18 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
 
   const renderCourtsInfo = () => (
     <div className="space-y-4">
+      {isGoogleImport && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm">
+          <p className="font-medium text-yellow-900 mb-1">⚠️ Estimated Data</p>
+          <p className="text-yellow-700">Court information is estimated. Please verify and update with actual court counts.</p>
+        </div>
+      )}
+      
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Indoor Courts *
+            <DataSourceIndicator source={getFieldSource('courts')} />
           </label>
           <input
             type="number"
@@ -848,6 +936,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Outdoor Courts *
+            <DataSourceIndicator source={getFieldSource('courts')} />
           </label>
           <input
             type="number"
@@ -927,7 +1016,30 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
   const renderAmenitiesServices = () => (
     <div className="space-y-4">
       <div>
-        <h4 className="text-sm font-medium text-gray-700 mb-2">Amenities</h4>
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="text-sm font-medium text-gray-700">
+            Amenities
+            {isGoogleImport && <DataSourceIndicator source="google_estimated" />}
+          </h4>
+          {isGoogleImport && (
+            <label className="flex items-center text-xs">
+              <input
+                type="checkbox"
+                checked={formData.amenitiesVerified || false}
+                onChange={(e) => handleChange('amenitiesVerified', e.target.checked)}
+                className="mr-1 rounded text-parque-purple focus:ring-parque-purple"
+              />
+              <span className="text-gray-600">Verified</span>
+            </label>
+          )}
+        </div>
+        
+        {isGoogleImport && !formData.amenitiesVerified && (
+          <div className="mb-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
+            These amenities are estimated based on Google's price level. Please verify.
+          </div>
+        )}
+        
         <div className="grid grid-cols-2 gap-2">
           {Object.keys(formData.amenities).map(amenity => (
             <label key={amenity} className="flex items-center space-x-2">
@@ -946,7 +1058,24 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       </div>
       
       <div>
-        <h4 className="text-sm font-medium text-gray-700 mb-2">Services</h4>
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="text-sm font-medium text-gray-700">
+            Services
+            {isGoogleImport && <DataSourceIndicator source="google_estimated" />}
+          </h4>
+          {isGoogleImport && (
+            <label className="flex items-center text-xs">
+              <input
+                type="checkbox"
+                checked={formData.servicesVerified || false}
+                onChange={(e) => handleChange('servicesVerified', e.target.checked)}
+                className="mr-1 rounded text-parque-purple focus:ring-parque-purple"
+              />
+              <span className="text-gray-600">Verified</span>
+            </label>
+          )}
+        </div>
+        
         <div className="grid grid-cols-2 gap-2">
           {Object.keys(formData.services).map(service => (
             <label key={service} className="flex items-center space-x-2">
@@ -992,35 +1121,65 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
 
   const renderContactPricing = () => (
     <div className="space-y-4">
+      {isGoogleImport && (
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm">
+          <p className="font-medium text-gray-900 mb-1">Missing Data</p>
+          <p className="text-gray-700">Email, social media, and membership prices are not available from Google. Please add manually.</p>
+        </div>
+      )}
+      
       <div>
         <h4 className="text-sm font-medium text-gray-700 mb-2">Contact Information</h4>
         <div className="space-y-2">
-          <input
-            type="tel"
-            value={formData.contact.phone}
-            onChange={(e) => handleChange('contact.phone', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple"
-            placeholder="Phone number"
-          />
-          <input
-            type="email"
-            value={formData.contact.email}
-            onChange={(e) => handleChange('contact.email', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple"
-            placeholder="Email address"
-          />
-          <input
-            type="url"
-            value={formData.contact.website}
-            onChange={(e) => handleChange('contact.website', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple"
-            placeholder="Website URL"
-          />
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">
+              Phone
+              {isGoogleImport && <DataSourceIndicator source="google_verified" />}
+            </label>
+            <input
+              type="tel"
+              value={formData.contact.phone}
+              onChange={(e) => handleChange('contact.phone', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple"
+              placeholder="Phone number"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">
+              Email
+              <DataSourceIndicator source="manual" />
+            </label>
+            <input
+              type="email"
+              value={formData.contact.email}
+              onChange={(e) => handleChange('contact.email', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple"
+              placeholder="Email address"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">
+              Website
+              {isGoogleImport && <DataSourceIndicator source="google_verified" />}
+            </label>
+            <input
+              type="url"
+              value={formData.contact.website}
+              onChange={(e) => handleChange('contact.website', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple"
+              placeholder="Website URL"
+            />
+          </div>
         </div>
       </div>
       
       <div>
-        <h4 className="text-sm font-medium text-gray-700 mb-2">Pricing</h4>
+        <h4 className="text-sm font-medium text-gray-700 mb-2">
+          Pricing
+          {isGoogleImport && <DataSourceIndicator source="google_estimated" />}
+        </h4>
         <div className="space-y-2">
           <div className="grid grid-cols-2 gap-2">
             <input
