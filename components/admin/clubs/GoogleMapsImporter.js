@@ -2,6 +2,36 @@
 
 import { useState } from 'react'
 
+// Data quality badge component
+const DataQualityBadge = ({ type }) => {
+  const badges = {
+    verified: {
+      color: 'bg-green-100 text-green-800 border-green-200',
+      icon: '✓',
+      text: 'From Google'
+    },
+    estimated: {
+      color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      icon: '≈',
+      text: 'Estimated'
+    },
+    missing: {
+      color: 'bg-gray-100 text-gray-600 border-gray-200',
+      icon: '—',
+      text: 'Not Available'
+    }
+  }
+
+  const badge = badges[type] || badges.missing
+
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${badge.color}`}>
+      <span className="mr-1">{badge.icon}</span>
+      {badge.text}
+    </span>
+  )
+}
+
 export default function GoogleMapsImporter({ onClose, onImportComplete }) {
   const [step, setStep] = useState('search') // search, preview, importing, complete
   const [searchQuery, setSearchQuery] = useState('')
@@ -138,6 +168,60 @@ export default function GoogleMapsImporter({ onClose, onImportComplete }) {
     }
   }
 
+  // Enhanced club preview with data quality indicators
+  const renderClubPreview = (club) => (
+    <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+      <div className="flex justify-between items-start">
+        <div>
+          <h4 className="font-medium text-gray-900">{club.name}</h4>
+          <p className="text-sm text-gray-600">{club.formatted_address}</p>
+        </div>
+        <DataQualityBadge type="verified" />
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4 text-sm">
+        <div>
+          <span className="text-gray-500">Rating:</span>
+          <span className="ml-2 font-medium">
+            {club.rating ? `⭐ ${club.rating} (${club.user_ratings_total} reviews)` : 'No rating'}
+          </span>
+          <DataQualityBadge type="verified" />
+        </div>
+        
+        <div>
+          <span className="text-gray-500">Phone:</span>
+          <span className="ml-2 font-medium">
+            {club.formatted_phone_number || 'Not available'}
+          </span>
+          <DataQualityBadge type={club.formatted_phone_number ? 'verified' : 'missing'} />
+        </div>
+        
+        <div>
+          <span className="text-gray-500">Website:</span>
+          <span className="ml-2 font-medium">
+            {club.website ? 'Available' : 'Not listed'}
+          </span>
+          <DataQualityBadge type={club.website ? 'verified' : 'missing'} />
+        </div>
+        
+        <div>
+          <span className="text-gray-500">Price Level:</span>
+          <span className="ml-2 font-medium">
+            {club.price_level !== undefined ? '€'.repeat(club.price_level + 1) : 'Unknown'}
+          </span>
+          <DataQualityBadge type={club.price_level !== undefined ? 'verified' : 'missing'} />
+        </div>
+      </div>
+      
+      <div className="mt-3 pt-3 border-t border-gray-200">
+        <p className="text-xs text-gray-500">
+          <strong>Note:</strong> Courts, amenities, and services will be estimated based on available data. 
+          You can update these after import.
+        </p>
+      </div>
+    </div>
+  )
+
   // Render search step
   const renderSearchStep = () => (
     <div className="space-y-4">
@@ -234,7 +318,7 @@ export default function GoogleMapsImporter({ onClose, onImportComplete }) {
     </div>
   )
 
-  // Render preview step
+  // Enhanced preview step with data quality information
   const renderPreviewStep = () => (
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-4">
@@ -247,6 +331,14 @@ export default function GoogleMapsImporter({ onClose, onImportComplete }) {
         >
           {selectedClubs.length === searchResults.length ? 'Deselect All' : 'Select All'}
         </button>
+      </div>
+
+      {/* Data source legend */}
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm">
+        <span className="font-medium">Data Sources:</span>
+        <span className="ml-4">✓ From Google</span>
+        <span className="ml-4">≈ Will be estimated</span>
+        <span className="ml-4">— Not available</span>
       </div>
 
       <div className="max-h-96 overflow-y-auto space-y-2 border border-gray-200 rounded-lg p-2">
@@ -275,6 +367,12 @@ export default function GoogleMapsImporter({ onClose, onImportComplete }) {
                     {club.opening_hours.open_now ? '🟢 Open now' : '🔴 Closed'}
                   </span>
                 )}
+                {club.website && (
+                  <span className="text-sm text-blue-600">🌐 Website</span>
+                )}
+                {club.formatted_phone_number && (
+                  <span className="text-sm text-gray-600">📞 Phone</span>
+                )}
               </div>
             </div>
           </div>
@@ -282,8 +380,18 @@ export default function GoogleMapsImporter({ onClose, onImportComplete }) {
       </div>
 
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-        <p className="text-sm text-yellow-800">
-          <strong>Note:</strong> After import, you'll need to manually add court information and verify other details.
+        <p className="text-sm text-yellow-800 font-medium mb-2">
+          ⚠️ Important: The following data will be estimated or unavailable:
+        </p>
+        <ul className="text-sm text-yellow-700 space-y-1">
+          <li>• Number of courts (defaults to 6)</li>
+          <li>• Court surfaces (defaults to clay)</li>
+          <li>• Amenities (estimated from price level)</li>
+          <li>• Email addresses and social media</li>
+          <li>• Photos and membership prices</li>
+        </ul>
+        <p className="text-sm text-yellow-800 mt-2">
+          You'll need to verify and complete this information after import.
         </p>
       </div>
     </div>
@@ -310,15 +418,18 @@ export default function GoogleMapsImporter({ onClose, onImportComplete }) {
     </div>
   )
 
-  // Render complete step
+  // Enhanced complete step with data summary
   const renderCompleteStep = () => (
-    <div className="text-center py-8">
-      <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-        <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-        </svg>
+    <div className="space-y-6">
+      <div className="text-center">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+          <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Import Complete!</h3>
       </div>
-      <h3 className="text-lg font-medium text-gray-900 mb-2">Import Complete!</h3>
+
       {importResults && (
         <div className="space-y-2 mb-6">
           <p className="text-green-600">
@@ -336,12 +447,51 @@ export default function GoogleMapsImporter({ onClose, onImportComplete }) {
           )}
         </div>
       )}
-      <button
-        onClick={onClose}
-        className="px-6 py-2 bg-parque-purple text-white rounded-lg hover:bg-parque-purple/90"
-      >
-        Done
-      </button>
+
+      {/* Import summary */}
+      <div className="space-y-4">
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <h4 className="font-medium text-green-900 mb-2">✓ Successfully Imported Data:</h4>
+          <ul className="space-y-1 text-sm text-green-800">
+            <li>• Club names and addresses</li>
+            <li>• Exact GPS coordinates</li>
+            <li>• Google ratings and reviews</li>
+            <li>• Phone numbers and websites (where available)</li>
+            <li>• Operating hours (where set)</li>
+          </ul>
+        </div>
+        
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <h4 className="font-medium text-yellow-900 mb-2">≈ Estimated Data (Please Verify):</h4>
+          <ul className="space-y-1 text-sm text-yellow-800">
+            <li>• Number of courts (defaulted to 6)</li>
+            <li>• Court surfaces (defaulted to clay)</li>
+            <li>• Amenities (based on price level)</li>
+            <li>• Services offered</li>
+            <li>• Pricing ranges</li>
+          </ul>
+        </div>
+        
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <h4 className="font-medium text-gray-900 mb-2">— Not Available (Add Manually):</h4>
+          <ul className="space-y-1 text-sm text-gray-700">
+            <li>• Email addresses</li>
+            <li>• Social media links</li>
+            <li>• Photos and galleries</li>
+            <li>• Membership prices</li>
+            <li>• Detailed court information</li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="text-center pt-4">
+        <button
+          onClick={onClose}
+          className="px-6 py-2 bg-parque-purple text-white rounded-lg hover:bg-parque-purple/90"
+        >
+          Done
+        </button>
+      </div>
     </div>
   )
 
@@ -372,7 +522,7 @@ export default function GoogleMapsImporter({ onClose, onImportComplete }) {
         </div>
 
         {/* Content */}
-        <div className="px-6 py-4">
+        <div className="px-6 py-4 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 140px)' }}>
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg">
               {error}
