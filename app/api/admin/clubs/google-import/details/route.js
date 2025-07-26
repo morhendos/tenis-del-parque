@@ -18,7 +18,7 @@ function generateSlug(name) {
   return name
     .toLowerCase()
     .replace(/\s+/g, '-')
-    .replace(/[^\\w-]+/g, '')
+    .replace(/[^\w-]+/g, '')
 }
 
 // Helper function to extract city from address
@@ -49,8 +49,14 @@ function extractCity(address) {
   return 'marbella'
 }
 
+// Helper function to get photo URL from Google Places photo reference
+function getGooglePhotoUrl(photoReference, apiKey, maxWidth = 800) {
+  if (!photoReference || !apiKey) return null
+  return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${maxWidth}&photo_reference=${photoReference}&key=${apiKey}`
+}
+
 // Helper function to map Google place to club format - ONLY REAL DATA
-function mapGooglePlaceToClub(place) {
+function mapGooglePlaceToClub(place, apiKey) {
   const city = extractCity(place.formatted_address)
   
   // Extract postal code from address
@@ -103,12 +109,18 @@ function mapGooglePlaceToClub(place) {
     })
   }
   
+  // Get first photo if available
+  let mainPhotoUrl = ''
+  if (place.photos && place.photos.length > 0 && place.photos[0].photo_reference) {
+    mainPhotoUrl = getGooglePhotoUrl(place.photos[0].photo_reference, apiKey)
+  }
+  
   return {
     // Basic Information - ONLY FROM GOOGLE
     name: place.name,
     slug: generateSlug(place.name),
     status: 'active',
-    featured: false, // Never auto-feature
+    featured: false,
     displayOrder: 0,
     
     // Location - REAL DATA FROM GOOGLE
@@ -131,44 +143,44 @@ function mapGooglePlaceToClub(place) {
     
     // Courts - LEAVE EMPTY FOR MANUAL ENTRY
     courts: {
-      total: 0,
+      total: null, // Use null instead of 0 to indicate no data
       surfaces: [],
-      indoor: 0,
-      outdoor: 0
+      indoor: null,
+      outdoor: null
     },
     
-    // Amenities - ALL FALSE UNTIL VERIFIED
+    // Amenities - LEAVE EMPTY FOR MANUAL ENTRY
     amenities: {
-      parking: false,
-      lighting: false,
-      proShop: false,
-      restaurant: false,
-      changingRooms: false,
-      showers: false,
-      lockers: false,
-      wheelchair: false,
-      swimming: false,
-      gym: false,
-      sauna: false,
-      physio: false
+      parking: null,
+      lighting: null,
+      proShop: null,
+      restaurant: null,
+      changingRooms: null,
+      showers: null,
+      lockers: null,
+      wheelchair: place.wheelchair_accessible_entrance || null,
+      swimming: null,
+      gym: null,
+      sauna: null,
+      physio: null
     },
     
-    // Services - ALL FALSE UNTIL VERIFIED
+    // Services - LEAVE EMPTY FOR MANUAL ENTRY
     services: {
-      lessons: false,
-      coaching: false,
-      stringing: false,
-      tournaments: false,
-      summerCamps: false
+      lessons: null,
+      coaching: null,
+      stringing: null,
+      tournaments: null,
+      summerCamps: null
     },
     
     // Contact - ONLY REAL DATA FROM GOOGLE
     contact: {
       phone: place.international_phone_number || place.formatted_phone_number || '',
-      email: '', // Not available from Google
+      email: '',
       website: place.website || '',
-      facebook: '', // Not available from Google
-      instagram: '' // Not available from Google
+      facebook: '',
+      instagram: ''
     },
     
     // Operating Hours - ONLY IF AVAILABLE FROM GOOGLE
@@ -196,20 +208,21 @@ function mapGooglePlaceToClub(place) {
           currency: 'EUR'
         }
       },
-      publicAccess: true, // Default to true
-      membershipRequired: false // Default to false
+      publicAccess: null,
+      membershipRequired: null
     },
     
     // Tags - EMPTY UNTIL MANUALLY ADDED
     tags: [],
     
-    // Images - EMPTY UNTIL MANUALLY ADDED
+    // Images - Add Google photo if available
     images: {
-      main: '',
-      gallery: []
+      main: mainPhotoUrl,
+      gallery: [],
+      googlePhotoReference: place.photos && place.photos.length > 0 ? place.photos[0].photo_reference : null
     },
     
-    // SEO - BASIC ONLY
+    // SEO - LEAVE EMPTY FOR MANUAL ENTRY
     seo: {
       metaTitle: {
         es: '',
@@ -233,7 +246,13 @@ function mapGooglePlaceToClub(place) {
       priceLevel: place.price_level || null,
       types: place.types || [],
       url: place.url || null,
-      openingHours: place.opening_hours || null
+      openingHours: place.opening_hours || null,
+      photos: place.photos ? place.photos.slice(0, 5).map(photo => ({
+        photo_reference: photo.photo_reference,
+        height: photo.height,
+        width: photo.width,
+        html_attributions: photo.html_attributions
+      })) : []
     },
     importSource: 'google',
     importedAt: new Date()
@@ -311,7 +330,7 @@ export async function POST(request) {
         })
 
         if (response.data.result) {
-          const clubData = mapGooglePlaceToClub(response.data.result)
+          const clubData = mapGooglePlaceToClub(response.data.result, apiKey)
           clubs.push(clubData)
           console.log(`Fetched details for: ${response.data.result.name}`)
         }
