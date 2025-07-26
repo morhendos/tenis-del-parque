@@ -192,12 +192,25 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
     return 'manual'
   }
 
+  // Generate slug from name - properly handles accented characters
+  const generateSlug = (name) => {
+    return name
+      .toLowerCase()
+      .normalize('NFD') // Normalize to decomposed form
+      .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+      .trim()
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+      .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
+  }
+
   // Random data generator
   const generateRandomData = () => {
     // Random club names
     const prefixes = ['Club de Tenis', 'Tennis Club', 'Real Club', 'Centro Deportivo', 'Complejo Tenis']
     const names = ['El Paraíso', 'Costa del Sol', 'Marina', 'Las Palmeras', 'Los Naranjos', 'La Quinta', 'Vista Hermosa', 'Sol y Mar', 'Monte Alto', 'Puente Romano']
-    const cities = ['malaga', 'marbella', 'estepona', 'sotogrande']
+    const cities = ['malaga', 'marbella', 'estepona', 'sotogrande', 'mijas', 'benalmadena', 'fuengirola']
     
     const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)]
     const randomName = names[Math.floor(Math.random() * names.length)]
@@ -216,7 +229,10 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       malaga: ['29001', '29002', '29003', '29004', '29016', '29017'],
       marbella: ['29600', '29601', '29602', '29603', '29604'],
       estepona: ['29680', '29688', '29689'],
-      sotogrande: ['11310', '11311']
+      sotogrande: ['11310', '11311'],
+      mijas: ['29650', '29651'],
+      benalmadena: ['29630', '29631'],
+      fuengirola: ['29640']
     }
     
     // Random coordinates (approximate for each city)
@@ -224,7 +240,10 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       malaga: { lat: 36.7213 + (Math.random() - 0.5) * 0.1, lng: -4.4214 + (Math.random() - 0.5) * 0.1 },
       marbella: { lat: 36.5099 + (Math.random() - 0.5) * 0.1, lng: -4.8863 + (Math.random() - 0.5) * 0.1 },
       estepona: { lat: 36.4276 + (Math.random() - 0.5) * 0.1, lng: -5.1463 + (Math.random() - 0.5) * 0.1 },
-      sotogrande: { lat: 36.2874 + (Math.random() - 0.5) * 0.05, lng: -5.2687 + (Math.random() - 0.5) * 0.05 }
+      sotogrande: { lat: 36.2874 + (Math.random() - 0.5) * 0.05, lng: -5.2687 + (Math.random() - 0.5) * 0.05 },
+      mijas: { lat: 36.5959 + (Math.random() - 0.5) * 0.05, lng: -4.6372 + (Math.random() - 0.5) * 0.05 },
+      benalmadena: { lat: 36.5991 + (Math.random() - 0.5) * 0.05, lng: -4.5161 + (Math.random() - 0.5) * 0.05 },
+      fuengirola: { lat: 36.5397 + (Math.random() - 0.5) * 0.05, lng: -4.6249 + (Math.random() - 0.5) * 0.05 }
     }
     
     // Random courts
@@ -285,7 +304,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
     
     const generatedData = {
       name: clubName,
-      slug: clubName.toLowerCase().replace(/\s+/g, '-').replace(/[^\\w-]+/g, ''),
+      slug: generateSlug(clubName),
       status: 'active',
       featured: Math.random() > 0.8,
       displayOrder: Math.floor(Math.random() * 10),
@@ -310,10 +329,10 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       services: randomServices,
       contact: {
         phone: phoneNumber,
-        email: `info@${clubName.toLowerCase().replace(/\s+/g, '').replace(/[^\\w]+/g, '')}.com`,
-        website: `https://www.${clubName.toLowerCase().replace(/\s+/g, '').replace(/[^\\w]+/g, '')}.com`,
-        facebook: Math.random() > 0.3 ? `https://facebook.com/${clubName.toLowerCase().replace(/\s+/g, '')}` : '',
-        instagram: Math.random() > 0.2 ? `@${clubName.toLowerCase().replace(/\s+/g, '').replace(/[^\\w]+/g, '')}` : ''
+        email: `info@${generateSlug(clubName)}.com`,
+        website: `https://www.${generateSlug(clubName)}.com`,
+        facebook: Math.random() > 0.3 ? `https://facebook.com/${generateSlug(clubName)}` : '',
+        instagram: Math.random() > 0.2 ? `@${generateSlug(clubName).replace(/-/g, '')}` : ''
       },
       operatingHours: {
         monday: { open: '08:00', close: isPremium ? '23:00' : '22:00' },
@@ -507,14 +526,6 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
     setError(null)
   }, [club, isOpen])
 
-  // Generate slug from name
-  const generateSlug = (name) => {
-    return name
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^\\w-]+/g, '')
-  }
-
   const handleChange = (field, value) => {
     setFormData(prev => {
       const keys = field.split('.')
@@ -579,7 +590,8 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       return false
     }
     
-    if (!formData.description.es || !formData.description.en) {
+    // For Google imports, descriptions are optional
+    if (!isGoogleImport && (!formData.description.es || !formData.description.en)) {
       setError('Description in both Spanish and English is required')
       setCurrentStep(1)
       return false
@@ -784,7 +796,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Description (Spanish) *
+          Description (Spanish) {!isGoogleImport && '*'}
           <DataSourceIndicator source={getFieldSource('description')} />
         </label>
         <textarea
@@ -793,13 +805,13 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple"
           rows={3}
           placeholder="Descripción del club en español..."
-          required
+          required={!isGoogleImport}
         />
       </div>
       
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Description (English) *
+          Description (English) {!isGoogleImport && '*'}
           <DataSourceIndicator source={getFieldSource('description')} />
         </label>
         <textarea
@@ -808,7 +820,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple"
           rows={3}
           placeholder="Club description in English..."
-          required
+          required={!isGoogleImport}
         />
       </div>
     </div>
@@ -831,6 +843,12 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
           <option value="marbella">Marbella</option>
           <option value="estepona">Estepona</option>
           <option value="sotogrande">Sotogrande</option>
+          <option value="mijas">Mijas</option>
+          <option value="benalmadena">Benalmádena</option>
+          <option value="fuengirola">Fuengirola</option>
+          <option value="torremolinos">Torremolinos</option>
+          <option value="manilva">Manilva</option>
+          <option value="casares">Casares</option>
         </select>
       </div>
       
@@ -913,8 +931,8 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
     <div className="space-y-4">
       {isGoogleImport && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm">
-          <p className="font-medium text-yellow-900 mb-1">⚠️ Estimated Data</p>
-          <p className="text-yellow-700">Court information is estimated. Please verify and update with actual court counts.</p>
+          <p className="font-medium text-yellow-900 mb-1">⚠️ Default Data</p>
+          <p className="text-yellow-700">Court information is set to default values (6 clay courts). Please update with actual court details.</p>
         </div>
       )}
       
@@ -1036,7 +1054,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
         
         {isGoogleImport && !formData.amenitiesVerified && (
           <div className="mb-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
-            These amenities are estimated based on Google's price level. Please verify.
+            These amenities need to be verified. Please check with the club.
           </div>
         )}
         
