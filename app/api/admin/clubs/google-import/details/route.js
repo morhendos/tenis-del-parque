@@ -17,8 +17,13 @@ const googleMapsClient = Client ? new Client({}) : null
 function generateSlug(name) {
   return name
     .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w-]+/g, '')
+    .normalize('NFD') // Normalize to decomposed form
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+    .trim()
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+    .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
 }
 
 // Helper function to extract city from address
@@ -331,6 +336,7 @@ export async function POST(request) {
 
         if (response.data.result) {
           const clubData = mapGooglePlaceToClub(response.data.result, apiKey)
+          console.log(`Generated slug for "${response.data.result.name}": "${clubData.slug}"`)
           clubs.push(clubData)
           console.log(`Fetched details for: ${response.data.result.name}`)
         }
