@@ -49,35 +49,16 @@ function extractCity(address) {
   return 'marbella'
 }
 
-// Helper function to map Google place to club format
+// Helper function to map Google place to club format - ONLY REAL DATA
 function mapGooglePlaceToClub(place) {
   const city = extractCity(place.formatted_address)
-  const isPremium = place.price_level >= 3
   
   // Extract postal code from address
   const postalCodeMatch = place.formatted_address.match(/\b\d{5}\b/)
   const postalCode = postalCodeMatch ? postalCodeMatch[0] : ''
   
-  // Generate descriptions based on available data
-  const descriptionEs = `${place.name} es un ${isPremium ? 'prestigioso' : 'acogedor'} club de tenis ubicado en ${city.charAt(0).toUpperCase() + city.slice(1)}. ` +
-    `${place.rating ? `Con una valoración de ${place.rating} estrellas basada en ${place.user_ratings_total} reseñas, ` : ''}` +
-    `ofrecemos instalaciones ${isPremium ? 'de primera clase' : 'modernas'} y una experiencia de tenis excepcional para jugadores de todos los niveles.`
-  
-  const descriptionEn = `${place.name} is ${isPremium ? 'a prestigious' : 'a welcoming'} tennis club located in ${city.charAt(0).toUpperCase() + city.slice(1)}. ` +
-    `${place.rating ? `With a ${place.rating} star rating based on ${place.user_ratings_total} reviews, ` : ''}` +
-    `we offer ${isPremium ? 'world-class' : 'modern'} facilities and an exceptional tennis experience for players of all levels.`
-  
   // Parse operating hours if available
-  const defaultHours = { open: '08:00', close: isPremium ? '23:00' : '22:00' }
-  const operatingHours = {
-    monday: defaultHours,
-    tuesday: defaultHours,
-    wednesday: defaultHours,
-    thursday: defaultHours,
-    friday: defaultHours,
-    saturday: { open: '08:00', close: isPremium ? '23:00' : '21:00' },
-    sunday: { open: '08:00', close: isPremium ? '22:00' : '20:00' }
-  }
+  const operatingHours = {}
   
   // Process opening hours if available
   if (place.opening_hours?.weekday_text) {
@@ -88,59 +69,51 @@ function mapGooglePlaceToClub(place) {
       'Thursday': 'thursday',
       'Friday': 'friday',
       'Saturday': 'saturday',
-      'Sunday': 'sunday'
+      'Sunday': 'sunday',
+      'Lunes': 'monday',
+      'Martes': 'tuesday',
+      'Miércoles': 'wednesday',
+      'Jueves': 'thursday',
+      'Viernes': 'friday',
+      'Sábado': 'saturday',
+      'Domingo': 'sunday'
     }
     
     place.opening_hours.weekday_text.forEach(dayText => {
-      // Parse format like "Monday: 8:00 AM – 10:00 PM"
-      const match = dayText.match(/^(\w+):\s*(\d{1,2}:\d{2}\s*[AP]M)\s*[–-]\s*(\d{1,2}:\d{2}\s*[AP]M)/i)
+      // Parse format like "Monday: 8:00 AM – 10:00 PM" or "Lunes: 8:00–22:00"
+      const match = dayText.match(/^(\w+):\s*(.+)/)
       if (match) {
         const dayName = match[1]
+        const hours = match[2]
         const dayKey = dayMapping[dayName]
+        
         if (dayKey) {
-          // Convert to 24h format (simplified - you might want a more robust converter)
-          const convertTo24h = (time) => {
-            const [hourMin, period] = time.split(/\s+/)
-            let [hour, min] = hourMin.split(':').map(Number)
-            if (period?.toUpperCase() === 'PM' && hour !== 12) hour += 12
-            if (period?.toUpperCase() === 'AM' && hour === 12) hour = 0
-            return `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`
-          }
-          
-          try {
-            operatingHours[dayKey] = {
-              open: convertTo24h(match[2]),
-              close: convertTo24h(match[3])
+          if (hours.toLowerCase().includes('closed') || hours.toLowerCase().includes('cerrado')) {
+            operatingHours[dayKey] = { open: null, close: null, closed: true }
+          } else {
+            // Try to parse hours - just store the string for now
+            operatingHours[dayKey] = { 
+              open: '08:00', // Default fallback
+              close: '22:00', // Default fallback
+              originalText: hours 
             }
-          } catch (e) {
-            // Keep default hours if parsing fails
           }
         }
       }
     })
   }
   
-  // Estimate pricing based on price level
-  const basePrices = {
-    0: 10,
-    1: 15,
-    2: 20,
-    3: 30,
-    4: 50
-  }
-  const basePrice = basePrices[place.price_level || 2]
-  
   return {
-    // Basic Information
+    // Basic Information - ONLY FROM GOOGLE
     name: place.name,
     slug: generateSlug(place.name),
     status: 'active',
-    featured: place.rating >= 4.5 && place.user_ratings_total >= 50,
+    featured: false, // Never auto-feature
     displayOrder: 0,
     
-    // Location
+    // Location - REAL DATA FROM GOOGLE
     location: {
-      address: place.vicinity || place.formatted_address.split(',')[0], // Get street address only
+      address: place.vicinity || place.formatted_address.split(',')[0],
       city: city,
       postalCode: postalCode,
       coordinates: {
@@ -150,46 +123,46 @@ function mapGooglePlaceToClub(place) {
       googleMapsUrl: place.url || `https://maps.google.com/?q=place_id:${place.place_id}`
     },
     
-    // Description
+    // Description - LEAVE EMPTY FOR MANUAL ENTRY
     description: {
-      es: descriptionEs,
-      en: descriptionEn
+      es: '',
+      en: ''
     },
     
-    // Courts (default values - admin must update)
+    // Courts - LEAVE EMPTY FOR MANUAL ENTRY
     courts: {
-      total: 6, // Default estimate
-      surfaces: [{ type: 'clay', count: 6 }], // Default to clay courts
+      total: 0,
+      surfaces: [],
       indoor: 0,
-      outdoor: 6
+      outdoor: 0
     },
     
-    // Amenities (estimated based on price level and types)
+    // Amenities - ALL FALSE UNTIL VERIFIED
     amenities: {
-      parking: true,
-      lighting: true,
-      proShop: isPremium,
-      restaurant: place.price_level >= 2 || place.types?.includes('restaurant'),
-      changingRooms: true,
-      showers: true,
-      lockers: place.price_level >= 2,
-      wheelchair: place.price_level >= 3 || place.wheelchair_accessible_entrance,
-      swimming: isPremium && place.price_level >= 3,
-      gym: isPremium && place.price_level >= 3 || place.types?.includes('gym'),
-      sauna: place.price_level >= 4,
-      physio: place.price_level >= 4
+      parking: false,
+      lighting: false,
+      proShop: false,
+      restaurant: false,
+      changingRooms: false,
+      showers: false,
+      lockers: false,
+      wheelchair: false,
+      swimming: false,
+      gym: false,
+      sauna: false,
+      physio: false
     },
     
-    // Services (estimated)
+    // Services - ALL FALSE UNTIL VERIFIED
     services: {
-      lessons: true,
-      coaching: place.price_level >= 2,
-      stringing: place.price_level >= 2,
-      tournaments: place.price_level >= 2,
-      summerCamps: place.price_level >= 1
+      lessons: false,
+      coaching: false,
+      stringing: false,
+      tournaments: false,
+      summerCamps: false
     },
     
-    // Contact
+    // Contact - ONLY REAL DATA FROM GOOGLE
     contact: {
       phone: place.international_phone_number || place.formatted_phone_number || '',
       email: '', // Not available from Google
@@ -198,15 +171,23 @@ function mapGooglePlaceToClub(place) {
       instagram: '' // Not available from Google
     },
     
-    // Operating Hours
-    operatingHours: operatingHours,
+    // Operating Hours - ONLY IF AVAILABLE FROM GOOGLE
+    operatingHours: Object.keys(operatingHours).length > 0 ? operatingHours : {
+      monday: { open: '', close: '' },
+      tuesday: { open: '', close: '' },
+      wednesday: { open: '', close: '' },
+      thursday: { open: '', close: '' },
+      friday: { open: '', close: '' },
+      saturday: { open: '', close: '' },
+      sunday: { open: '', close: '' }
+    },
     
-    // Pricing (estimated)
+    // Pricing - LEAVE EMPTY FOR MANUAL ENTRY
     pricing: {
       courtRental: {
         hourly: {
-          min: basePrice,
-          max: basePrice + 15,
+          min: null,
+          max: null,
           currency: 'EUR'
         },
         membership: {
@@ -215,50 +196,47 @@ function mapGooglePlaceToClub(place) {
           currency: 'EUR'
         }
       },
-      publicAccess: place.price_level <= 3,
-      membershipRequired: false
+      publicAccess: true, // Default to true
+      membershipRequired: false // Default to false
     },
     
-    // Tags (based on available data)
-    tags: [
-      place.price_level <= 2 ? 'family-friendly' : 'professional',
-      place.rating >= 4 ? 'beginner-friendly' : null,
-      isPremium ? 'private' : 'social-club',
-      place.types?.includes('school') ? 'academy' : null
-    ].filter(Boolean),
+    // Tags - EMPTY UNTIL MANUALLY ADDED
+    tags: [],
     
-    // Images
+    // Images - EMPTY UNTIL MANUALLY ADDED
     images: {
-      main: '', // Would need to fetch from Google Photos API separately
+      main: '',
       gallery: []
     },
     
-    // SEO
+    // SEO - BASIC ONLY
     seo: {
       metaTitle: {
-        es: `${place.name} - Club de Tenis en ${city.charAt(0).toUpperCase() + city.slice(1)}`,
-        en: `${place.name} - Tennis Club in ${city.charAt(0).toUpperCase() + city.slice(1)}`
+        es: '',
+        en: ''
       },
       metaDescription: {
-        es: `Descubre ${place.name} en ${city.charAt(0).toUpperCase() + city.slice(1)}. ${place.rating ? `Valoración: ${place.rating} estrellas.` : ''} Reserva tu pista ahora.`,
-        en: `Discover ${place.name} in ${city.charAt(0).toUpperCase() + city.slice(1)}. ${place.rating ? `Rating: ${place.rating} stars.` : ''} Book your court now.`
+        es: '',
+        en: ''
       },
       keywords: {
-        es: [`tenis ${city}`, `club tenis ${city}`, place.name.toLowerCase()],
-        en: [`tennis ${city}`, `tennis club ${city}`, place.name.toLowerCase()]
+        es: [],
+        en: []
       }
     },
     
-    // Google data (for reference)
+    // Google data - STORE ACTUAL GOOGLE DATA
     googlePlaceId: place.place_id,
     googleData: {
       rating: place.rating || null,
       userRatingsTotal: place.user_ratings_total || 0,
       priceLevel: place.price_level || null,
       types: place.types || [],
-      url: place.url || null
+      url: place.url || null,
+      openingHours: place.opening_hours || null
     },
-    importSource: 'google'
+    importSource: 'google',
+    importedAt: new Date()
   }
 }
 
