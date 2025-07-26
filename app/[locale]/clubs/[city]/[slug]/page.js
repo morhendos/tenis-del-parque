@@ -76,13 +76,57 @@ export default function ClubDetailPage() {
     return `${hours.open} - ${hours.close}`
   }
 
+  // Helper to check if any amenity exists
+  const hasAmenities = Object.values(club.amenities || {}).some(v => v === true)
+  
+  // Helper to check if any service exists
+  const hasServices = Object.values(club.services || {}).some(v => v === true)
+  
+  // Helper to check if courts data exists
+  const hasCourtsData = club.courts?.total > 0
+  
+  // Helper to check if pricing exists
+  const hasPricing = (club.pricing?.courtRental?.hourly?.min !== null && club.pricing?.courtRental?.hourly?.max !== null) ||
+                     (club.pricing?.courtRental?.membership?.monthly !== null || club.pricing?.courtRental?.membership?.annual !== null)
+  
+  // Helper to check if schedule exists
+  const hasSchedule = club.operatingHours && Object.values(club.operatingHours).some(hours => hours?.open || hours?.close)
+  
+  // Filter tabs based on available data
+  const availableTabs = [
+    { id: 'info', label: { es: 'Información', en: 'Information' }, show: true },
+    { id: 'courts', label: { es: 'Pistas', en: 'Courts' }, show: hasCourtsData },
+    { id: 'pricing', label: { es: 'Precios', en: 'Pricing' }, show: hasPricing },
+    { id: 'schedule', label: { es: 'Horarios', en: 'Schedule' }, show: hasSchedule },
+    { id: 'contact', label: { es: 'Contacto', en: 'Contact' }, show: true }
+  ].filter(tab => tab.show)
+
+  // Set initial tab to first available
+  useEffect(() => {
+    if (availableTabs.length > 0 && !availableTabs.find(tab => tab.id === activeTab)) {
+      setActiveTab(availableTabs[0].id)
+    }
+  }, [availableTabs])
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation locale={locale} />
       
       {/* Hero Section */}
       <section className="relative pt-32 pb-12 px-4 bg-gradient-to-br from-parque-purple to-parque-green text-white">
-        <div className="container mx-auto">
+        {/* Background image if available */}
+        {club.images?.main && (
+          <div className="absolute inset-0 overflow-hidden">
+            <img 
+              src={club.images.main} 
+              alt={club.name}
+              className="w-full h-full object-cover opacity-20"
+            />
+            <div className="absolute inset-0 bg-gradient-to-br from-parque-purple/80 to-parque-green/80"></div>
+          </div>
+        )}
+        
+        <div className="container mx-auto relative z-10">
           <div className="max-w-6xl">
             {/* Breadcrumb */}
             <nav className="flex items-center space-x-2 text-sm mb-4 text-white/80">
@@ -106,9 +150,11 @@ export default function ClubDetailPage() {
                 <h1 className="text-4xl md:text-5xl font-bold mb-4">
                   {club.name}
                 </h1>
-                <p className="text-xl text-white/90 mb-6">
-                  {club.description[locale] || club.description.es}
-                </p>
+                {(club.description?.[locale] || club.description?.es) && (
+                  <p className="text-xl text-white/90 mb-6">
+                    {club.description[locale] || club.description.es}
+                  </p>
+                )}
                 <div className="flex flex-wrap gap-4">
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">📍</span>
@@ -117,6 +163,11 @@ export default function ClubDetailPage() {
                   {club.featured && (
                     <span className="bg-yellow-400 text-gray-900 px-4 py-2 rounded-full font-semibold">
                       ⭐ {locale === 'es' ? 'Club Destacado' : 'Featured Club'}
+                    </span>
+                  )}
+                  {club.googleData?.rating && (
+                    <span className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
+                      ⭐ {club.googleData.rating} ({club.googleData.userRatingsTotal} {locale === 'es' ? 'reseñas' : 'reviews'})
                     </span>
                   )}
                 </div>
@@ -128,25 +179,31 @@ export default function ClubDetailPage() {
                       {locale === 'es' ? 'Información Rápida' : 'Quick Info'}
                     </h3>
                     <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span>{locale === 'es' ? 'Pistas totales:' : 'Total courts:'}</span>
-                        <span className="font-semibold">{club.courts.total}</span>
-                      </div>
-                      {club.courts.indoor > 0 && (
+                      {hasCourtsData && (
+                        <>
+                          <div className="flex justify-between">
+                            <span>{locale === 'es' ? 'Pistas totales:' : 'Total courts:'}</span>
+                            <span className="font-semibold">{club.courts.total}</span>
+                          </div>
+                          {club.courts.indoor > 0 && (
+                            <div className="flex justify-between">
+                              <span>{locale === 'es' ? 'Pistas cubiertas:' : 'Indoor courts:'}</span>
+                              <span className="font-semibold">{club.courts.indoor}</span>
+                            </div>
+                          )}
+                        </>
+                      )}
+                      {club.pricing?.publicAccess !== null && (
                         <div className="flex justify-between">
-                          <span>{locale === 'es' ? 'Pistas cubiertas:' : 'Indoor courts:'}</span>
-                          <span className="font-semibold">{club.courts.indoor}</span>
+                          <span>{locale === 'es' ? 'Acceso:' : 'Access:'}</span>
+                          <span className="font-semibold">
+                            {club.pricing.publicAccess 
+                              ? (locale === 'es' ? 'Público' : 'Public')
+                              : (locale === 'es' ? 'Solo socios' : 'Members only')
+                            }
+                          </span>
                         </div>
                       )}
-                      <div className="flex justify-between">
-                        <span>{locale === 'es' ? 'Acceso:' : 'Access:'}</span>
-                        <span className="font-semibold">
-                          {club.pricing?.publicAccess 
-                            ? (locale === 'es' ? 'Público' : 'Public')
-                            : (locale === 'es' ? 'Solo socios' : 'Members only')
-                          }
-                        </span>
-                      </div>
                     </div>
                   </div>
                   {club.contact.phone && (
@@ -178,13 +235,7 @@ export default function ClubDetailPage() {
       <section className="bg-white shadow-sm sticky top-0 z-40">
         <div className="container mx-auto px-4">
           <div className="flex space-x-8 overflow-x-auto">
-            {[
-              { id: 'info', label: { es: 'Información', en: 'Information' } },
-              { id: 'courts', label: { es: 'Pistas', en: 'Courts' } },
-              { id: 'pricing', label: { es: 'Precios', en: 'Pricing' } },
-              { id: 'schedule', label: { es: 'Horarios', en: 'Schedule' } },
-              { id: 'contact', label: { es: 'Contacto', en: 'Contact' } }
-            ].map(tab => (
+            {availableTabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
@@ -209,52 +260,67 @@ export default function ClubDetailPage() {
             <div className="lg:col-span-2">
               {activeTab === 'info' && (
                 <div className="bg-white rounded-xl shadow-md p-6 space-y-6">
-                  <div>
-                    <h2 className="text-2xl font-bold mb-4">
-                      {locale === 'es' ? 'Acerca del Club' : 'About the Club'}
-                    </h2>
-                    <p className="text-gray-600 leading-relaxed">
-                      {club.description[locale] || club.description.es}
-                    </p>
-                  </div>
-
-                  {/* Amenities */}
-                  <div>
-                    <h3 className="text-xl font-semibold mb-4">
-                      {locale === 'es' ? 'Instalaciones y Servicios' : 'Facilities & Services'}
-                    </h3>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {Object.entries(club.amenities).filter(([_, value]) => value).map(([key]) => (
-                        <div key={key} className="flex items-center gap-2 text-sm">
-                          <span className="text-green-500">✓</span>
-                          <span>
-                            {key === 'parking' ? (locale === 'es' ? 'Parking' : 'Parking') :
-                             key === 'lighting' ? (locale === 'es' ? 'Iluminación' : 'Lighting') :
-                             key === 'proShop' ? (locale === 'es' ? 'Tienda Pro' : 'Pro Shop') :
-                             key === 'restaurant' ? (locale === 'es' ? 'Restaurante' : 'Restaurant') :
-                             key === 'changingRooms' ? (locale === 'es' ? 'Vestuarios' : 'Changing Rooms') :
-                             key === 'showers' ? (locale === 'es' ? 'Duchas' : 'Showers') :
-                             key === 'lockers' ? (locale === 'es' ? 'Taquillas' : 'Lockers') :
-                             key === 'wheelchair' ? (locale === 'es' ? 'Acceso silla de ruedas' : 'Wheelchair Access') :
-                             key === 'swimming' ? (locale === 'es' ? 'Piscina' : 'Swimming Pool') :
-                             key === 'gym' ? (locale === 'es' ? 'Gimnasio' : 'Gym') :
-                             key === 'sauna' ? (locale === 'es' ? 'Sauna' : 'Sauna') :
-                             key === 'physio' ? (locale === 'es' ? 'Fisioterapia' : 'Physiotherapy') :
-                             key}
-                          </span>
-                        </div>
-                      ))}
+                  {/* Main image if available and no description */}
+                  {club.images?.main && !club.description?.[locale] && !club.description?.es && (
+                    <div className="mb-6">
+                      <img 
+                        src={club.images.main} 
+                        alt={club.name}
+                        className="w-full h-64 object-cover rounded-lg"
+                      />
                     </div>
-                  </div>
+                  )}
 
-                  {/* Services */}
-                  {Object.values(club.services).some(v => v) && (
+                  {(club.description?.[locale] || club.description?.es) && (
+                    <div>
+                      <h2 className="text-2xl font-bold mb-4">
+                        {locale === 'es' ? 'Acerca del Club' : 'About the Club'}
+                      </h2>
+                      <p className="text-gray-600 leading-relaxed">
+                        {club.description[locale] || club.description.es}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Amenities - only show if any exist */}
+                  {hasAmenities && (
+                    <div>
+                      <h3 className="text-xl font-semibold mb-4">
+                        {locale === 'es' ? 'Instalaciones' : 'Facilities'}
+                      </h3>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {Object.entries(club.amenities).filter(([_, value]) => value === true).map(([key]) => (
+                          <div key={key} className="flex items-center gap-2 text-sm">
+                            <span className="text-green-500">✓</span>
+                            <span>
+                              {key === 'parking' ? (locale === 'es' ? 'Parking' : 'Parking') :
+                               key === 'lighting' ? (locale === 'es' ? 'Iluminación' : 'Lighting') :
+                               key === 'proShop' ? (locale === 'es' ? 'Tienda Pro' : 'Pro Shop') :
+                               key === 'restaurant' ? (locale === 'es' ? 'Restaurante' : 'Restaurant') :
+                               key === 'changingRooms' ? (locale === 'es' ? 'Vestuarios' : 'Changing Rooms') :
+                               key === 'showers' ? (locale === 'es' ? 'Duchas' : 'Showers') :
+                               key === 'lockers' ? (locale === 'es' ? 'Taquillas' : 'Lockers') :
+                               key === 'wheelchair' ? (locale === 'es' ? 'Acceso silla de ruedas' : 'Wheelchair Access') :
+                               key === 'swimming' ? (locale === 'es' ? 'Piscina' : 'Swimming Pool') :
+                               key === 'gym' ? (locale === 'es' ? 'Gimnasio' : 'Gym') :
+                               key === 'sauna' ? (locale === 'es' ? 'Sauna' : 'Sauna') :
+                               key === 'physio' ? (locale === 'es' ? 'Fisioterapia' : 'Physiotherapy') :
+                               key}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Services - only show if any exist */}
+                  {hasServices && (
                     <div>
                       <h3 className="text-xl font-semibold mb-4">
                         {locale === 'es' ? 'Servicios Disponibles' : 'Available Services'}
                       </h3>
                       <div className="grid grid-cols-2 gap-4">
-                        {Object.entries(club.services).filter(([_, value]) => value).map(([key]) => (
+                        {Object.entries(club.services).filter(([_, value]) => value === true).map(([key]) => (
                           <div key={key} className="flex items-center gap-2 text-sm">
                             <span className="text-blue-500">✓</span>
                             <span>
@@ -270,10 +336,26 @@ export default function ClubDetailPage() {
                       </div>
                     </div>
                   )}
+
+                  {/* Show message if no information available */}
+                  {!club.description?.[locale] && !club.description?.es && !hasAmenities && !hasServices && !club.images?.main && (
+                    <div className="text-center py-8 text-gray-500">
+                      <p className="mb-2">
+                        {locale === 'es' 
+                          ? 'Información adicional próximamente' 
+                          : 'Additional information coming soon'}
+                      </p>
+                      <p className="text-sm">
+                        {locale === 'es'
+                          ? 'Estamos trabajando para completar la información de este club'
+                          : 'We are working to complete the information for this club'}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {activeTab === 'courts' && (
+              {activeTab === 'courts' && hasCourtsData && (
                 <div className="bg-white rounded-xl shadow-md p-6">
                   <h2 className="text-2xl font-bold mb-6">
                     {locale === 'es' ? 'Pistas de Tenis' : 'Tennis Courts'}
@@ -296,39 +378,41 @@ export default function ClubDetailPage() {
                       )}
                     </div>
                     
-                    <div>
-                      <h3 className="font-semibold mb-3">
-                        {locale === 'es' ? 'Tipos de Superficie' : 'Surface Types'}
-                      </h3>
-                      <div className="space-y-2">
-                        {club.courts.surfaces.map((surface, idx) => (
-                          <div key={idx} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
-                            <span className="font-medium">
-                              {surface.type === 'clay' ? (locale === 'es' ? 'Tierra batida' : 'Clay') :
-                               surface.type === 'hard' ? (locale === 'es' ? 'Pista dura' : 'Hard court') :
-                               surface.type === 'grass' ? (locale === 'es' ? 'Césped' : 'Grass') :
-                               surface.type === 'synthetic' ? (locale === 'es' ? 'Sintética' : 'Synthetic') :
-                               surface.type === 'padel' ? 'Padel' :
-                               surface.type}
-                            </span>
-                            <span className="text-sm text-gray-600">
-                              {surface.count} {locale === 'es' ? 'pistas' : 'courts'}
-                            </span>
-                          </div>
-                        ))}
+                    {club.courts.surfaces?.length > 0 && (
+                      <div>
+                        <h3 className="font-semibold mb-3">
+                          {locale === 'es' ? 'Tipos de Superficie' : 'Surface Types'}
+                        </h3>
+                        <div className="space-y-2">
+                          {club.courts.surfaces.map((surface, idx) => (
+                            <div key={idx} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                              <span className="font-medium">
+                                {surface.type === 'clay' ? (locale === 'es' ? 'Tierra batida' : 'Clay') :
+                                 surface.type === 'hard' ? (locale === 'es' ? 'Pista dura' : 'Hard court') :
+                                 surface.type === 'grass' ? (locale === 'es' ? 'Césped' : 'Grass') :
+                                 surface.type === 'synthetic' ? (locale === 'es' ? 'Sintética' : 'Synthetic') :
+                                 surface.type === 'padel' ? 'Padel' :
+                                 surface.type}
+                              </span>
+                              <span className="text-sm text-gray-600">
+                                {surface.count} {locale === 'es' ? 'pistas' : 'courts'}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               )}
 
-              {activeTab === 'pricing' && (
+              {activeTab === 'pricing' && hasPricing && (
                 <div className="bg-white rounded-xl shadow-md p-6">
                   <h2 className="text-2xl font-bold mb-6">
                     {locale === 'es' ? 'Precios' : 'Pricing'}
                   </h2>
                   
-                  {club.pricing?.courtRental?.hourly && (
+                  {club.pricing?.courtRental?.hourly?.min !== null && club.pricing?.courtRental?.hourly?.max !== null && (
                     <div className="mb-6">
                       <h3 className="font-semibold mb-3">
                         {locale === 'es' ? 'Alquiler de Pistas' : 'Court Rental'}
@@ -344,13 +428,13 @@ export default function ClubDetailPage() {
                     </div>
                   )}
 
-                  {club.pricing?.courtRental?.membership && (
+                  {(club.pricing?.courtRental?.membership?.monthly !== null || club.pricing?.courtRental?.membership?.annual !== null) && (
                     <div>
                       <h3 className="font-semibold mb-3">
                         {locale === 'es' ? 'Membresía' : 'Membership'}
                       </h3>
                       <div className="grid grid-cols-2 gap-4">
-                        {club.pricing.courtRental.membership.monthly && (
+                        {club.pricing.courtRental.membership.monthly !== null && (
                           <div className="bg-gray-50 p-4 rounded-lg">
                             <div className="text-xl font-bold">
                               {club.pricing.courtRental.membership.monthly}€
@@ -360,7 +444,7 @@ export default function ClubDetailPage() {
                             </div>
                           </div>
                         )}
-                        {club.pricing.courtRental.membership.annual && (
+                        {club.pricing.courtRental.membership.annual !== null && (
                           <div className="bg-gray-50 p-4 rounded-lg">
                             <div className="text-xl font-bold">
                               {club.pricing.courtRental.membership.annual}€
@@ -374,41 +458,48 @@ export default function ClubDetailPage() {
                     </div>
                   )}
 
-                  <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                    <p className="text-sm text-blue-800">
-                      {club.pricing?.publicAccess 
-                        ? (locale === 'es' 
-                          ? '✓ Este club permite acceso público para alquiler de pistas' 
-                          : '✓ This club allows public access for court rental')
-                        : (locale === 'es'
-                          ? '⚠️ Se requiere membresía para jugar en este club'
-                          : '⚠️ Membership required to play at this club')
-                      }
-                    </p>
-                  </div>
+                  {club.pricing?.publicAccess !== null && (
+                    <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                      <p className="text-sm text-blue-800">
+                        {club.pricing.publicAccess 
+                          ? (locale === 'es' 
+                            ? '✓ Este club permite acceso público para alquiler de pistas' 
+                            : '✓ This club allows public access for court rental')
+                          : (locale === 'es'
+                            ? '⚠️ Se requiere membresía para jugar en este club'
+                            : '⚠️ Membership required to play at this club')
+                        }
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {activeTab === 'schedule' && (
+              {activeTab === 'schedule' && hasSchedule && (
                 <div className="bg-white rounded-xl shadow-md p-6">
                   <h2 className="text-2xl font-bold mb-6">
                     {locale === 'es' ? 'Horario de Apertura' : 'Opening Hours'}
                   </h2>
                   <div className="space-y-2">
-                    {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => (
-                      <div key={day} className="flex justify-between py-2 border-b">
-                        <span className="font-medium capitalize">
-                          {locale === 'es' 
-                            ? {monday: 'Lunes', tuesday: 'Martes', wednesday: 'Miércoles', 
-                               thursday: 'Jueves', friday: 'Viernes', saturday: 'Sábado', 
-                               sunday: 'Domingo'}[day]
-                            : day}
-                        </span>
-                        <span className="text-gray-600">
-                          {formatSchedule(club.operatingHours?.[day])}
-                        </span>
-                      </div>
-                    ))}
+                    {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => {
+                      const hours = club.operatingHours?.[day]
+                      if (!hours || (!hours.open && !hours.close)) return null
+                      
+                      return (
+                        <div key={day} className="flex justify-between py-2 border-b">
+                          <span className="font-medium capitalize">
+                            {locale === 'es' 
+                              ? {monday: 'Lunes', tuesday: 'Martes', wednesday: 'Miércoles', 
+                                 thursday: 'Jueves', friday: 'Viernes', saturday: 'Sábado', 
+                                 sunday: 'Domingo'}[day]
+                              : day}
+                          </span>
+                          <span className="text-gray-600">
+                            {formatSchedule(hours)}
+                          </span>
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
               )}
@@ -528,6 +619,27 @@ export default function ClubDetailPage() {
                 </Link>
               </div>
 
+              {/* Import Source Info */}
+              {club.importSource === 'google' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
+                  <div className="flex items-start gap-2">
+                    <span className="text-blue-500 mt-0.5">ℹ️</span>
+                    <div>
+                      <p className="text-blue-800 mb-1">
+                        {locale === 'es' 
+                          ? 'Información verificada de Google Maps' 
+                          : 'Verified information from Google Maps'}
+                      </p>
+                      {club.googleData?.rating && (
+                        <p className="text-blue-700">
+                          ⭐ {club.googleData.rating}/5 ({club.googleData.userRatingsTotal} {locale === 'es' ? 'reseñas' : 'reviews'})
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Nearby Clubs */}
               {nearbyClubs.length > 0 && (
                 <div>
@@ -544,9 +656,11 @@ export default function ClubDetailPage() {
                         <h4 className="font-semibold text-gray-900 mb-1">{nearbyClub.name}</h4>
                         <p className="text-sm text-gray-600 mb-2">{nearbyClub.location.address}</p>
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-500">
-                            {nearbyClub.courts.total} {locale === 'es' ? 'pistas' : 'courts'}
-                          </span>
+                          {nearbyClub.courts?.total > 0 && (
+                            <span className="text-gray-500">
+                              {nearbyClub.courts.total} {locale === 'es' ? 'pistas' : 'courts'}
+                            </span>
+                          )}
                           <span className="text-parque-purple">→</span>
                         </div>
                       </Link>
