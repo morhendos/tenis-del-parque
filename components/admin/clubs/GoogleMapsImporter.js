@@ -10,11 +10,6 @@ const DataQualityBadge = ({ type }) => {
       icon: '✓',
       text: 'From Google'
     },
-    estimated: {
-      color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      icon: '≈',
-      text: 'Estimated'
-    },
     missing: {
       color: 'bg-gray-100 text-gray-600 border-gray-200',
       icon: '—',
@@ -205,19 +200,12 @@ export default function GoogleMapsImporter({ onClose, onImportComplete }) {
         </div>
         
         <div>
-          <span className="text-gray-500">Price Level:</span>
+          <span className="text-gray-500">Photos:</span>
           <span className="ml-2 font-medium">
-            {club.price_level !== undefined ? '€'.repeat(club.price_level + 1) : 'Unknown'}
+            {club.photos && club.photos.length > 0 ? `${club.photos.length} available` : 'None'}
           </span>
-          <DataQualityBadge type={club.price_level !== undefined ? 'verified' : 'missing'} />
+          <DataQualityBadge type={club.photos && club.photos.length > 0 ? 'verified' : 'missing'} />
         </div>
-      </div>
-      
-      <div className="mt-3 pt-3 border-t border-gray-200">
-        <p className="text-xs text-gray-500">
-          <strong>Note:</strong> Courts, amenities, and services will be estimated based on available data. 
-          You can update these after import.
-        </p>
       </div>
     </div>
   )
@@ -335,10 +323,12 @@ export default function GoogleMapsImporter({ onClose, onImportComplete }) {
 
       {/* Data source legend */}
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm">
-        <span className="font-medium">Data Sources:</span>
-        <span className="ml-4">✓ From Google</span>
-        <span className="ml-4">≈ Will be estimated</span>
-        <span className="ml-4">— Not available</span>
+        <span className="font-medium">Data that will be imported:</span>
+        <span className="ml-4">✓ Name & Address</span>
+        <span className="ml-4">✓ Coordinates</span>
+        <span className="ml-4">✓ Phone & Website</span>
+        <span className="ml-4">✓ Google Rating</span>
+        <span className="ml-4">✓ Photos (if available)</span>
       </div>
 
       <div className="max-h-96 overflow-y-auto space-y-2 border border-gray-200 rounded-lg p-2">
@@ -373,6 +363,9 @@ export default function GoogleMapsImporter({ onClose, onImportComplete }) {
                 {club.formatted_phone_number && (
                   <span className="text-sm text-gray-600">📞 Phone</span>
                 )}
+                {club.photos && club.photos.length > 0 && (
+                  <span className="text-sm text-purple-600">📷 {club.photos.length} photos</span>
+                )}
               </div>
             </div>
           </div>
@@ -381,17 +374,18 @@ export default function GoogleMapsImporter({ onClose, onImportComplete }) {
 
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
         <p className="text-sm text-yellow-800 font-medium mb-2">
-          ⚠️ Important: The following data will be estimated or unavailable:
+          ⚠️ Important: You'll need to add the following manually after import:
         </p>
         <ul className="text-sm text-yellow-700 space-y-1">
-          <li>• Number of courts (defaults to 6)</li>
-          <li>• Court surfaces (defaults to clay)</li>
-          <li>• Amenities (estimated from price level)</li>
-          <li>• Email addresses and social media</li>
-          <li>• Photos and membership prices</li>
+          <li>• Club description and details</li>
+          <li>• Number and type of courts</li>
+          <li>• Amenities and facilities</li>
+          <li>• Services offered</li>
+          <li>• Pricing information</li>
+          <li>• Email and social media links</li>
         </ul>
-        <p className="text-sm text-yellow-800 mt-2">
-          You'll need to verify and complete this information after import.
+        <p className="text-sm text-yellow-800 mt-2 font-medium">
+          Only verified data from Google will be imported. All other fields will remain empty until you add them.
         </p>
       </div>
     </div>
@@ -451,35 +445,27 @@ export default function GoogleMapsImporter({ onClose, onImportComplete }) {
       {/* Import summary */}
       <div className="space-y-4">
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <h4 className="font-medium text-green-900 mb-2">✓ Successfully Imported Data:</h4>
+          <h4 className="font-medium text-green-900 mb-2">✓ Successfully Imported:</h4>
           <ul className="space-y-1 text-sm text-green-800">
             <li>• Club names and addresses</li>
             <li>• Exact GPS coordinates</li>
-            <li>• Google ratings and reviews</li>
-            <li>• Phone numbers and websites (where available)</li>
-            <li>• Operating hours (where set)</li>
+            <li>• Google ratings and review counts</li>
+            <li>• Phone numbers (where available)</li>
+            <li>• Websites (where available)</li>
+            <li>• Google Maps links</li>
+            <li>• Photos from Google (where available)</li>
           </ul>
         </div>
         
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <h4 className="font-medium text-yellow-900 mb-2">≈ Estimated Data (Please Verify):</h4>
-          <ul className="space-y-1 text-sm text-yellow-800">
-            <li>• Number of courts (defaulted to 6)</li>
-            <li>• Court surfaces (defaulted to clay)</li>
-            <li>• Amenities (based on price level)</li>
-            <li>• Services offered</li>
-            <li>• Pricing ranges</li>
-          </ul>
-        </div>
-        
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-          <h4 className="font-medium text-gray-900 mb-2">— Not Available (Add Manually):</h4>
-          <ul className="space-y-1 text-sm text-gray-700">
-            <li>• Email addresses</li>
-            <li>• Social media links</li>
-            <li>• Photos and galleries</li>
-            <li>• Membership prices</li>
-            <li>• Detailed court information</li>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h4 className="font-medium text-blue-900 mb-2">Next Steps:</h4>
+          <ul className="space-y-1 text-sm text-blue-800">
+            <li>1. Edit each club to add missing information</li>
+            <li>2. Add court details (number, type, surface)</li>
+            <li>3. Specify amenities and services</li>
+            <li>4. Set pricing information</li>
+            <li>5. Upload additional photos if needed</li>
+            <li>6. Add club descriptions in Spanish/English</li>
           </ul>
         </div>
       </div>
