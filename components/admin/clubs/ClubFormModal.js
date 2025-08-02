@@ -43,6 +43,8 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [currentStep, setCurrentStep] = useState(1)
+  const [cities, setCities] = useState([])
+  const [citiesLoading, setCitiesLoading] = useState(true)
   const [formData, setFormData] = useState({
     // Basic Information
     name: '',
@@ -176,6 +178,33 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
   // Check if this is a Google import
   const isGoogleImport = club?.importSource === 'google' || club?.googlePlaceId
 
+  // Fetch cities when component mounts
+  useEffect(() => {
+    fetchCities()
+  }, [])
+
+  const fetchCities = async () => {
+    try {
+      setCitiesLoading(true)
+      const response = await fetch('/api/admin/cities?status=active')
+      if (!response.ok) throw new Error('Failed to fetch cities')
+      
+      const data = await response.json()
+      setCities(data.cities || [])
+    } catch (err) {
+      console.error('Error fetching cities:', err)
+      // Fallback to default cities if API fails
+      setCities([
+        { slug: 'malaga', name: { es: 'Málaga', en: 'Malaga' } },
+        { slug: 'marbella', name: { es: 'Marbella', en: 'Marbella' } },
+        { slug: 'estepona', name: { es: 'Estepona', en: 'Estepona' } },
+        { slug: 'sotogrande', name: { es: 'Sotogrande', en: 'Sotogrande' } }
+      ])
+    } finally {
+      setCitiesLoading(false)
+    }
+  }
+
   // Get data source for a field
   const getFieldSource = (fieldName) => {
     if (!club) return 'manual'
@@ -210,12 +239,15 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
     // Random club names
     const prefixes = ['Club de Tenis', 'Tennis Club', 'Real Club', 'Centro Deportivo', 'Complejo Tenis']
     const names = ['El Paraíso', 'Costa del Sol', 'Marina', 'Las Palmeras', 'Los Naranjos', 'La Quinta', 'Vista Hermosa', 'Sol y Mar', 'Monte Alto', 'Puente Romano']
-    const cities = ['malaga', 'marbella', 'estepona', 'sotogrande', 'mijas', 'benalmadena', 'fuengirola']
     
     const randomPrefix = prefixes[Math.floor(Math.random() * prefixes.length)]
     const randomName = names[Math.floor(Math.random() * names.length)]
     const clubName = `${randomPrefix} ${randomName}`
-    const selectedCity = cities[Math.floor(Math.random() * cities.length)]
+    
+    // Select random city from available cities
+    const selectedCity = cities.length > 0 
+      ? cities[Math.floor(Math.random() * cities.length)]
+      : { slug: 'marbella', name: { es: 'Marbella', en: 'Marbella' } }
     
     // Random address components
     const streets = ['Calle ', 'Avenida ', 'Paseo ', 'Camino ', 'Urbanización ']
@@ -240,10 +272,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       malaga: { lat: 36.7213 + (Math.random() - 0.5) * 0.1, lng: -4.4214 + (Math.random() - 0.5) * 0.1 },
       marbella: { lat: 36.5099 + (Math.random() - 0.5) * 0.1, lng: -4.8863 + (Math.random() - 0.5) * 0.1 },
       estepona: { lat: 36.4276 + (Math.random() - 0.5) * 0.1, lng: -5.1463 + (Math.random() - 0.5) * 0.1 },
-      sotogrande: { lat: 36.2874 + (Math.random() - 0.5) * 0.05, lng: -5.2687 + (Math.random() - 0.5) * 0.05 },
-      mijas: { lat: 36.5959 + (Math.random() - 0.5) * 0.05, lng: -4.6372 + (Math.random() - 0.5) * 0.05 },
-      benalmadena: { lat: 36.5991 + (Math.random() - 0.5) * 0.05, lng: -4.5161 + (Math.random() - 0.5) * 0.05 },
-      fuengirola: { lat: 36.5397 + (Math.random() - 0.5) * 0.05, lng: -4.6249 + (Math.random() - 0.5) * 0.05 }
+      sotogrande: { lat: 36.2874 + (Math.random() - 0.5) * 0.05, lng: -5.2687 + (Math.random() - 0.5) * 0.05 }
     }
     
     // Random courts
@@ -302,6 +331,9 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
     const phonePrefix = Math.random() > 0.5 ? '+34 952' : '+34 951'
     const phoneNumber = `${phonePrefix} ${Math.floor(Math.random() * 900) + 100} ${Math.floor(Math.random() * 900) + 100}`
     
+    const cityName = selectedCity.name.es || selectedCity.name.en || selectedCity.slug
+    const cityDisplayName = cityName.charAt(0).toUpperCase() + cityName.slice(1)
+    
     const generatedData = {
       name: clubName,
       slug: generateSlug(clubName),
@@ -310,14 +342,14 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       displayOrder: Math.floor(Math.random() * 10),
       location: {
         address: `${streetType}${streetName}, ${streetNumber}`,
-        city: selectedCity,
-        postalCode: postalCodes[selectedCity][Math.floor(Math.random() * postalCodes[selectedCity].length)],
-        coordinates: cityCoordinates[selectedCity],
-        googleMapsUrl: `https://maps.google.com/?q=${clubName.replace(/\s+/g, '+')}+${selectedCity}`
+        city: selectedCity.slug,
+        postalCode: postalCodes[selectedCity.slug]?.[Math.floor(Math.random() * (postalCodes[selectedCity.slug]?.length || 1))] || '29600',
+        coordinates: cityCoordinates[selectedCity.slug] || { lat: 36.5099, lng: -4.8863 },
+        googleMapsUrl: `https://maps.google.com/?q=${clubName.replace(/\s+/g, '+')}+${cityDisplayName}`
       },
       description: {
-        es: `${clubName} es un ${isPremium ? 'prestigioso' : 'acogedor'} club de tenis ubicado en ${selectedCity.charAt(0).toUpperCase() + selectedCity.slice(1)}. Contamos con ${totalOutdoor + totalIndoor} pistas ${totalIndoor > 0 ? '(incluyendo ' + totalIndoor + ' cubiertas)' : ''} y ofrecemos una experiencia de tenis ${isPremium ? 'premium' : 'excepcional'} para jugadores de todos los niveles. Nuestras instalaciones ${isPremium ? 'de primera clase' : 'modernas'} y nuestro equipo profesional garantizan una experiencia deportiva inolvidable.`,
-        en: `${clubName} is a ${isPremium ? 'prestigious' : 'welcoming'} tennis club located in ${selectedCity.charAt(0).toUpperCase() + selectedCity.slice(1)}. We feature ${totalOutdoor + totalIndoor} courts ${totalIndoor > 0 ? '(including ' + totalIndoor + ' indoor)' : ''} and offer ${isPremium ? 'a premium' : 'an exceptional'} tennis experience for players of all levels. Our ${isPremium ? 'world-class' : 'modern'} facilities and professional staff ensure an unforgettable sporting experience.`
+        es: `${clubName} es un ${isPremium ? 'prestigioso' : 'acogedor'} club de tenis ubicado en ${cityDisplayName}. Contamos con ${totalOutdoor + totalIndoor} pistas ${totalIndoor > 0 ? '(incluyendo ' + totalIndoor + ' cubiertas)' : ''} y ofrecemos una experiencia de tenis ${isPremium ? 'premium' : 'excepcional'} para jugadores de todos los niveles. Nuestras instalaciones ${isPremium ? 'de primera clase' : 'modernas'} y nuestro equipo profesional garantizan una experiencia deportiva inolvidable.`,
+        en: `${clubName} is a ${isPremium ? 'prestigious' : 'welcoming'} tennis club located in ${cityDisplayName}. We feature ${totalOutdoor + totalIndoor} courts ${totalIndoor > 0 ? '(including ' + totalIndoor + ' indoor)' : ''} and offer ${isPremium ? 'a premium' : 'an exceptional'} tennis experience for players of all levels. Our ${isPremium ? 'world-class' : 'modern'} facilities and professional staff ensure an unforgettable sporting experience.`
       },
       courts: {
         total: totalOutdoor + totalIndoor,
@@ -366,16 +398,16 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       },
       seo: {
         metaTitle: {
-          es: `${clubName} - Club de Tenis en ${selectedCity.charAt(0).toUpperCase() + selectedCity.slice(1)}`,
-          en: `${clubName} - Tennis Club in ${selectedCity.charAt(0).toUpperCase() + selectedCity.slice(1)}`
+          es: `${clubName} - Club de Tenis en ${cityDisplayName}`,
+          en: `${clubName} - Tennis Club in ${cityDisplayName}`
         },
         metaDescription: {
-          es: `Descubre ${clubName}, ${isPremium ? 'el mejor club de tenis' : 'tu club de tenis'} en ${selectedCity.charAt(0).toUpperCase() + selectedCity.slice(1)}. ${totalOutdoor + totalIndoor} pistas, ${Object.values(randomServices).filter(Boolean).length} servicios disponibles. ¡Reserva ahora!`,
-          en: `Discover ${clubName}, ${isPremium ? 'the premier tennis club' : 'your tennis club'} in ${selectedCity.charAt(0).toUpperCase() + selectedCity.slice(1)}. ${totalOutdoor + totalIndoor} courts, ${Object.values(randomServices).filter(Boolean).length} services available. Book now!`
+          es: `Descubre ${clubName}, ${isPremium ? 'el mejor club de tenis' : 'tu club de tenis'} en ${cityDisplayName}. ${totalOutdoor + totalIndoor} pistas, ${Object.values(randomServices).filter(Boolean).length} servicios disponibles. ¡Reserva ahora!`,
+          en: `Discover ${clubName}, ${isPremium ? 'the premier tennis club' : 'your tennis club'} in ${cityDisplayName}. ${totalOutdoor + totalIndoor} courts, ${Object.values(randomServices).filter(Boolean).length} services available. Book now!`
         },
         keywords: {
-          es: [`tenis ${selectedCity}`, `club tenis ${selectedCity}`, 'pistas tenis', 'clases tenis', selectedCity],
-          en: [`tennis ${selectedCity}`, `tennis club ${selectedCity}`, 'tennis courts', 'tennis lessons', selectedCity]
+          es: [`tenis ${selectedCity.slug}`, `club tenis ${selectedCity.slug}`, 'pistas tenis', 'clases tenis', selectedCity.slug],
+          en: [`tennis ${selectedCity.slug}`, `tennis club ${selectedCity.slug}`, 'tennis courts', 'tennis lessons', selectedCity.slug]
         }
       },
       amenitiesVerified: true,
@@ -428,7 +460,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
         displayOrder: 0,
         location: {
           address: '',
-          city: 'malaga',
+          city: cities.length > 0 ? cities[0].slug : 'malaga',
           postalCode: '',
           coordinates: {
             lat: null,
@@ -524,7 +556,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
     }
     setCurrentStep(1)
     setError(null)
-  }, [club, isOpen])
+  }, [club, isOpen, cities])
 
   const handleChange = (field, value) => {
     setFormData(prev => {
@@ -833,23 +865,33 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
           City *
           <DataSourceIndicator source={getFieldSource('location.city')} />
         </label>
-        <select
-          value={formData.location.city}
-          onChange={(e) => handleChange('location.city', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple"
-          required
-        >
-          <option value="malaga">Málaga</option>
-          <option value="marbella">Marbella</option>
-          <option value="estepona">Estepona</option>
-          <option value="sotogrande">Sotogrande</option>
-          <option value="mijas">Mijas</option>
-          <option value="benalmadena">Benalmádena</option>
-          <option value="fuengirola">Fuengirola</option>
-          <option value="torremolinos">Torremolinos</option>
-          <option value="manilva">Manilva</option>
-          <option value="casares">Casares</option>
-        </select>
+        {citiesLoading ? (
+          <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500">
+            Loading cities...
+          </div>
+        ) : (
+          <select
+            value={formData.location.city}
+            onChange={(e) => handleChange('location.city', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple"
+            required
+          >
+            {cities.map(city => (
+              <option key={city.slug} value={city.slug}>
+                {city.name.es || city.name.en}
+              </option>
+            ))}
+            {/* Add option to create new city if not in list */}
+            <option value="_new" disabled>
+              ── Other cities will be auto-created ──
+            </option>
+          </select>
+        )}
+        {formData.location.city && !cities.find(c => c.slug === formData.location.city) && (
+          <p className="text-xs text-yellow-600 mt-1">
+            This city will be created automatically when you save the club.
+          </p>
+        )}
       </div>
       
       <div>
