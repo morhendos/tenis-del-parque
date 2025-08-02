@@ -9,6 +9,7 @@
     "lint": "next lint",
     "tree": "node scripts/tree.js",
     "seed:leagues": "node scripts/seedLeagues.js",
+    "seed:cities": "node scripts/seedCities.js",
     "create-admin": "node scripts/createAdminUser.js",
     "unlock-accounts": "node scripts/unlockAccounts.js"
   },
