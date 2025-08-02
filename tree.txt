@@ -63,6 +63,8 @@ root/
 │   │   │   ├── [slug]
 │   │   │   │   └── page.js
 │   │   │   └── page.js
+│   │   ├── documentation
+│   │   │   └── page.js
 │   │   ├── layout.js
 │   │   ├── leagues
 │   │   │   ├── [id]
@@ -88,6 +90,13 @@ root/
 │   │   │   ├── clubs
 │   │   │   │   ├── [id]
 │   │   │   │   │   └── route.js
+│   │   │   │   ├── google-import
+│   │   │   │   │   ├── create
+│   │   │   │   │   │   └── route.js
+│   │   │   │   │   ├── details
+│   │   │   │   │   │   └── route.js
+│   │   │   │   │   └── search
+│   │   │   │   │       └── route.js
 │   │   │   │   └── route.js
 │   │   │   ├── dashboard
 │   │   │   │   └── route.js
@@ -180,6 +189,9 @@ root/
 │           └── page.js
 ├── components
 │   ├── admin
+│   │   ├── clubs
+│   │   │   ├── ClubFormModal.js
+│   │   │   └── GoogleMapsImporter.js
 │   │   ├── leagues
 │   │   │   ├── ImportCSVModal.js
 │   │   │   └── LeagueFormModal.js
@@ -262,7 +274,11 @@ root/
 │   ├── ADMIN_DOCS_VIEWER.md
 │   ├── CURRENT_STATUS.md
 │   ├── FEE_SYSTEM.md
+│   ├── GOOGLE_MAPS_IMPORT_FEATURE.md
+│   ├── GOOGLE_MAPS_IMPORT_SPEC.md
+│   ├── GOOGLE_MAPS_SETUP.md
 │   ├── HOMEPAGE_LEAGUE_IMPLEMENTATION_PLAN.md
+│   ├── NUMBER_OF_PLAYERS_IN_COSTA_DEL_SOL.md
 │   ├── PHASE_1_2_SUMMARY.md
 │   ├── PLAYER_MESSAGES_SYSTEM.md
 │   ├── PRODUCT_LED_GROWTH.md
@@ -274,7 +290,8 @@ root/
 │   ├── SEO_CLUBS_DIRECTORY_TODO.md
 │   ├── SEO_IMPLEMENTATION_PLAN.md
 │   ├── SEO_LAUNCH_CHECKLIST.md
-│   └── STRATEGY_TO_GET_75_FIRST_USERS.md
+│   ├── STRATEGY_TO_GET_75_FIRST_USERS.md
+│   └── as
 ├── jsconfig.json
 ├── lib
 │   ├── analytics
