@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import City from '@/lib/models/City'
+import dbConnect from '@/lib/db/mongoose'
 
 // Dynamically import to handle if package is not installed
 let Client
@@ -26,32 +28,95 @@ function generateSlug(name) {
     .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
 }
 
-// Helper function to extract city from address
-function extractCity(address) {
-  const cities = ['malaga', 'marbella', 'estepona', 'sotogrande', 'mijas', 'benalmadena', 'fuengirola', 'torremolinos', 'manilva', 'casares']
-  const addressLower = address.toLowerCase()
+// Helper function to extract city from Google's formatted address
+async function extractAndCreateCity(formattedAddress, vicinity) {
+  await dbConnect()
   
-  // Try to find city in address
-  for (const city of cities) {
-    if (addressLower.includes(city)) {
-      return city
+  // Common Spanish address patterns
+  // Format 1: "Street, Number, PostalCode City, Province, Spain"
+  // Format 2: "Street, City, Province, Spain"
+  // Format 3: "Street, PostalCode, City Province, Spain"
+  
+  let cityName = null
+  let postalCode = null
+  
+  // Try to extract postal code first
+  const postalCodeMatch = formattedAddress.match(/\b(\d{5})\b/)
+  if (postalCodeMatch) {
+    postalCode = postalCodeMatch[1]
+  }
+  
+  // Method 1: Extract city after postal code
+  if (postalCode) {
+    const afterPostalCode = formattedAddress.match(new RegExp(`${postalCode}\\s+([^,]+)(?:,|$)`))
+    if (afterPostalCode && afterPostalCode[1]) {
+      cityName = afterPostalCode[1].trim()
     }
   }
   
-  // Try to extract from Spanish address format (city usually after postal code)
-  const spanishCityMatch = address.match(/\d{5}\s+([^,]+),?\s*(?:Málaga|Cádiz)?/i)
-  if (spanishCityMatch && spanishCityMatch[1]) {
-    const extractedCity = spanishCityMatch[1].toLowerCase().trim()
-    // Check if it's one of our known cities
-    for (const city of cities) {
-      if (extractedCity.includes(city)) {
-        return city
+  // Method 2: Use vicinity (usually contains city name)
+  if (!cityName && vicinity) {
+    // Vicinity often is like "City" or "Area, City"
+    const vicinitySplit = vicinity.split(',')
+    cityName = vicinitySplit[vicinitySplit.length - 1].trim()
+  }
+  
+  // Method 3: Parse formatted address parts
+  if (!cityName) {
+    const parts = formattedAddress.split(',').map(p => p.trim())
+    
+    // Remove country (usually last part)
+    if (parts[parts.length - 1].toLowerCase().includes('spain') || 
+        parts[parts.length - 1].toLowerCase().includes('españa')) {
+      parts.pop()
+    }
+    
+    // Remove province if present
+    const provinces = ['málaga', 'cádiz', 'granada', 'almería', 'sevilla', 'córdoba', 'jaén', 'huelva']
+    const lastPart = parts[parts.length - 1]?.toLowerCase()
+    if (lastPart && provinces.some(p => lastPart.includes(p))) {
+      parts.pop()
+    }
+    
+    // The remaining last part might be the city
+    if (parts.length > 0) {
+      const potentialCity = parts[parts.length - 1]
+      // Check if it contains postal code, if so, extract city from it
+      if (postalCode && potentialCity.includes(postalCode)) {
+        cityName = potentialCity.replace(postalCode, '').trim()
+      } else if (!potentialCity.match(/^\d/)) { // Don't use if it starts with numbers
+        cityName = potentialCity
       }
     }
   }
   
-  // Default to marbella if city not found
-  return 'marbella'
+  // Default fallback
+  if (!cityName) {
+    console.warn(`Could not extract city from address: ${formattedAddress}`)
+    cityName = 'Marbella' // Default fallback
+  }
+  
+  // Clean up the city name
+  cityName = cityName.replace(/^([0-9]+\s+)/, '') // Remove leading numbers
+  const citySlug = generateSlug(cityName)
+  
+  // Check if city exists, if not create it
+  try {
+    const city = await City.findOrCreate({
+      slug: citySlug,
+      name: cityName.charAt(0).toUpperCase() + cityName.slice(1),
+      nameEs: cityName.charAt(0).toUpperCase() + cityName.slice(1),
+      nameEn: cityName.charAt(0).toUpperCase() + cityName.slice(1),
+      importSource: 'google'
+    })
+    
+    console.log(`City "${cityName}" mapped to slug: "${citySlug}"`)
+    return citySlug
+  } catch (error) {
+    console.error('Error creating city:', error)
+    // Return the slug anyway, even if city creation failed
+    return citySlug
+  }
 }
 
 // Helper function to get photo URL from Google Places photo reference
@@ -61,8 +126,8 @@ function getGooglePhotoUrl(photoReference, apiKey, maxWidth = 800) {
 }
 
 // Helper function to map Google place to club format - ONLY REAL DATA
-function mapGooglePlaceToClub(place, apiKey) {
-  const city = extractCity(place.formatted_address)
+async function mapGooglePlaceToClub(place, apiKey) {
+  const citySlug = await extractAndCreateCity(place.formatted_address, place.vicinity)
   
   // Extract postal code from address
   const postalCodeMatch = place.formatted_address.match(/\b\d{5}\b/)
@@ -131,7 +196,7 @@ function mapGooglePlaceToClub(place, apiKey) {
     // Location - REAL DATA FROM GOOGLE
     location: {
       address: place.vicinity || place.formatted_address.split(',')[0],
-      city: city,
+      city: citySlug,
       postalCode: postalCode,
       coordinates: {
         lat: place.geometry?.location?.lat || null,
@@ -335,8 +400,10 @@ export async function POST(request) {
         })
 
         if (response.data.result) {
-          const clubData = mapGooglePlaceToClub(response.data.result, apiKey)
+          const clubData = await mapGooglePlaceToClub(response.data.result, apiKey)
           console.log(`Generated slug for "${response.data.result.name}": "${clubData.slug}"`)
+          console.log(`Address: ${response.data.result.formatted_address}`)
+          console.log(`City extracted: ${clubData.location.city}`)
           clubs.push(clubData)
           console.log(`Fetched details for: ${response.data.result.name}`)
         }
