@@ -5,16 +5,28 @@ import { useState, useRef } from 'react'
 export default function CityImageManager({ city, onImagesUpdate, readOnly = false }) {
   const [selectedImage, setSelectedImage] = useState(null)
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const [showGallery, setShowGallery] = useState(false)
+  const [imageErrors, setImageErrors] = useState(new Set())
   const fileInputRef = useRef(null)
 
-  // Helper function to get Google Photo URL
+  // Helper function to get Google Photo URL without exposing API key
   const getGooglePhotoUrl = (photoReference, maxWidth = 800) => {
     if (!photoReference) return null
-    return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${maxWidth}&photo_reference=${photoReference}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
+    // Use our backend API endpoint to get Google Photos
+    return `/api/admin/cities/google-photo?photo_reference=${photoReference}&maxwidth=${maxWidth}`
   }
 
-  // Get all available images
+  // Helper function to handle image load errors
+  const handleImageError = (imageId, fallbackUrl = null) => {
+    setImageErrors(prev => new Set(prev).add(imageId))
+    if (fallbackUrl) {
+      return fallbackUrl
+    }
+    return `https://images.unsplash.com/800x600/?city,spain,landscape`
+  }
+
+  // Get all available images with better error handling
   const getAllImages = () => {
     const images = []
     
@@ -25,7 +37,8 @@ export default function CityImageManager({ city, onImagesUpdate, readOnly = fals
         url: city.images.main,
         type: 'main',
         source: city.images.googlePhotoReference ? 'google' : 'upload',
-        title: 'Main Image'
+        title: 'Main Image',
+        reference: city.images.googlePhotoReference
       })
     }
     
@@ -66,16 +79,18 @@ export default function CityImageManager({ city, onImagesUpdate, readOnly = fals
 
   const allImages = getAllImages()
 
-  // Handle file upload
+  // Handle file upload with progress
   const handleFileUpload = async (files) => {
     if (!files || files.length === 0) return
     
     setUploading(true)
+    setUploadProgress(0)
     const uploadedUrls = []
     const errors = []
     
     try {
-      for (const file of files) {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
         try {
           // Validate file size (5MB max)
           if (file.size > 5 * 1024 * 1024) {
@@ -88,6 +103,9 @@ export default function CityImageManager({ city, onImagesUpdate, readOnly = fals
             errors.push(`${file.name}: Invalid file type (only JPEG, PNG, WebP allowed)`)
             continue
           }
+          
+          // Update progress
+          setUploadProgress(Math.round((i / files.length) * 100))
           
           // Create FormData for file upload
           const formData = new FormData()
@@ -112,17 +130,22 @@ export default function CityImageManager({ city, onImagesUpdate, readOnly = fals
         }
       }
       
+      setUploadProgress(100)
+      
       // Update city images if any uploads succeeded
       if (uploadedUrls.length > 0) {
-        const updatedCity = {
-          ...city,
-          images: {
-            ...city.images,
-            gallery: [...(city.images?.gallery || []), ...uploadedUrls]
-          }
+        const updatedImages = {
+          ...city.images,
+          gallery: [...(city.images?.gallery || []), ...uploadedUrls]
         }
         
-        onImagesUpdate(updatedCity)
+        // If no main image exists, set the first uploaded image as main
+        if (!city.images?.main && uploadedUrls.length > 0) {
+          updatedImages.main = uploadedUrls[0]
+          updatedImages.googlePhotoReference = null
+        }
+        
+        onImagesUpdate(updatedImages)
       }
       
       // Show results
@@ -137,6 +160,7 @@ export default function CityImageManager({ city, onImagesUpdate, readOnly = fals
       alert('Failed to upload images. Please try again.')
     } finally {
       setUploading(false)
+      setUploadProgress(0)
       // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
@@ -146,43 +170,34 @@ export default function CityImageManager({ city, onImagesUpdate, readOnly = fals
 
   // Set image as main
   const setAsMain = (image) => {
-    const updatedCity = {
-      ...city,
-      images: {
-        ...city.images,
-        main: image.url,
-        googlePhotoReference: image.source === 'google' ? image.reference : null
-      }
+    const updatedImages = {
+      ...city.images,
+      main: image.url,
+      googlePhotoReference: image.source === 'google' ? image.reference : null
     }
-    onImagesUpdate(updatedCity)
+    onImagesUpdate(updatedImages)
   }
 
   // Remove image
   const removeImage = (image) => {
     if (image.type === 'main') {
-      const updatedCity = {
-        ...city,
-        images: {
-          ...city.images,
-          main: '',
-          googlePhotoReference: null
-        }
+      const updatedImages = {
+        ...city.images,
+        main: '',
+        googlePhotoReference: null
       }
-      onImagesUpdate(updatedCity)
+      onImagesUpdate(updatedImages)
     } else if (image.type === 'gallery') {
       const updatedGallery = city.images.gallery.filter(url => url !== image.url)
-      const updatedCity = {
-        ...city,
-        images: {
-          ...city.images,
-          gallery: updatedGallery
-        }
+      const updatedImages = {
+        ...city.images,
+        gallery: updatedGallery
       }
-      onImagesUpdate(updatedCity)
+      onImagesUpdate(updatedImages)
     }
   }
 
-  // Image preview component
+  // Image preview component with better error handling
   const ImagePreview = ({ image, size = 'md' }) => {
     const sizeClasses = {
       sm: 'w-16 h-16',
@@ -191,19 +206,44 @@ export default function CityImageManager({ city, onImagesUpdate, readOnly = fals
       xl: 'w-48 h-48'
     }
 
+    const [imgSrc, setImgSrc] = useState(image.url)
+    const [isLoading, setIsLoading] = useState(true)
+    const [hasError, setHasError] = useState(false)
+
+    const handleError = () => {
+      setHasError(true)
+      setIsLoading(false)
+      // Use a city-themed fallback image
+      const fallbackUrl = `https://images.unsplash.com/800x600/?city,${city?.name?.es || 'spain'},landscape`
+      setImgSrc(fallbackUrl)
+    }
+
     return (
       <div className={`relative ${sizeClasses[size]} rounded-lg overflow-hidden border-2 ${
         image.type === 'main' ? 'border-green-500' : 'border-gray-200'
-      } group`}>
+      } group bg-gray-100`}>
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+            <svg className="w-6 h-6 text-gray-400 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+        )}
+        
         <img
-          src={image.url}
+          src={imgSrc}
           alt={image.title}
           className="w-full h-full object-cover"
-          onError={(e) => {
-            e.target.src = '/api/placeholder/400/300'
-            e.target.onerror = null
-          }}
+          onLoad={() => setIsLoading(false)}
+          onError={handleError}
         />
+        
+        {hasError && (
+          <div className="absolute top-1 right-1">
+            <span className="px-1 py-0.5 bg-yellow-500 text-white text-xs rounded">Fallback</span>
+          </div>
+        )}
         
         {/* Overlay with actions */}
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center">
@@ -268,9 +308,24 @@ export default function CityImageManager({ city, onImagesUpdate, readOnly = fals
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center space-x-1"
             >
-              {uploading ? 'Uploading...' : 'Upload Images'}
+              {uploading ? (
+                <>
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>{uploadProgress}%</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  <span>Upload Images</span>
+                </>
+              )}
             </button>
             {allImages.length > 4 && (
               <button
@@ -296,6 +351,23 @@ export default function CityImageManager({ city, onImagesUpdate, readOnly = fals
         />
       )}
 
+      {/* Upload progress */}
+      {uploading && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <div className="flex items-center space-x-2">
+            <div className="flex-1">
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                  style={{ width: `${uploadProgress}%` }}
+                ></div>
+              </div>
+            </div>
+            <span className="text-sm text-blue-700">{uploadProgress}%</span>
+          </div>
+        </div>
+      )}
+
       {/* Main image */}
       {city?.images?.main ? (
         <div>
@@ -315,9 +387,12 @@ export default function CityImageManager({ city, onImagesUpdate, readOnly = fals
               {!readOnly && (
                 <button
                   onClick={() => removeImage(allImages.find(img => img.type === 'main'))}
-                  className="px-3 py-1 bg-red-100 text-red-700 text-sm rounded hover:bg-red-200"
+                  className="px-3 py-1 bg-red-100 text-red-700 text-sm rounded hover:bg-red-200 flex items-center space-x-1"
                 >
-                  Remove Main Image
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <span>Remove Main Image</span>
                 </button>
               )}
             </div>
@@ -395,6 +470,17 @@ export default function CityImageManager({ city, onImagesUpdate, readOnly = fals
         </div>
       )}
 
+      {/* No images state */}
+      {allImages.length === 0 && (!city?.googleData?.photos || city.googleData.photos.length === 0) && (
+        <div className="text-center py-8 text-gray-500">
+          <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <p className="mt-2 text-sm">No images available for this city</p>
+          <p className="text-xs mt-1">Try searching for the city again to fetch Google Photos, or upload custom images.</p>
+        </div>
+      )}
+
       {/* Image viewer modal */}
       {selectedImage && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
@@ -403,6 +489,9 @@ export default function CityImageManager({ city, onImagesUpdate, readOnly = fals
               src={selectedImage.url}
               alt={selectedImage.title}
               className="max-w-full max-h-full object-contain"
+              onError={(e) => {
+                e.target.src = `https://images.unsplash.com/800x600/?city,${city?.name?.es || 'spain'},landscape`
+              }}
             />
             <button
               onClick={() => setSelectedImage(null)}
@@ -434,6 +523,7 @@ export default function CityImageManager({ city, onImagesUpdate, readOnly = fals
           <li>• <strong>Gallery:</strong> Additional photos for the city page</li>
           <li>• Click any image to view full size or set as main</li>
           <li>• Supported formats: JPEG, PNG, WebP (max 5MB each)</li>
+          <li>• Images may use fallbacks if Google Photos fail to load</li>
         </ul>
       </div>
     </div>
