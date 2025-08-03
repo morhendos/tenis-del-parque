@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import Club from '@/lib/models/Club'
+import City from '@/lib/models/City'
 import dbConnect from '@/lib/db/mongoose'
 
 export async function GET(request) {
@@ -66,8 +67,9 @@ export async function POST(request) {
       )
     }
 
-    // Validate description fields
-    if (!data.description?.es || !data.description?.en) {
+    // For Google imports, descriptions are optional, but for manual entry they're required
+    const isGoogleImport = data.importSource === 'google'
+    if (!isGoogleImport && (!data.description?.es || !data.description?.en)) {
       console.error('Missing description fields')
       return NextResponse.json(
         { error: 'Missing required description in Spanish and English' },
@@ -82,6 +84,23 @@ export async function POST(request) {
         { error: 'A club with this slug already exists' },
         { status: 400 }
       )
+    }
+
+    // Auto-create city if it doesn't exist
+    const citySlug = data.location.city.toLowerCase().trim()
+    try {
+      const city = await City.findOrCreate({
+        slug: citySlug,
+        name: data.location.cityName || citySlug.charAt(0).toUpperCase() + citySlug.slice(1),
+        importSource: data.importSource === 'google' ? 'google' : 'manual'
+      })
+      
+      if (city && city.isNew) {
+        console.log(`Created new city: ${city.name.es}`)
+      }
+    } catch (cityError) {
+      console.warn(`City creation failed for ${citySlug}:`, cityError.message)
+      // Continue with club creation even if city creation fails
     }
 
     // Ensure courts structure is valid and calculate total
@@ -107,6 +126,12 @@ export async function POST(request) {
     // Ensure arrays are arrays
     if (!Array.isArray(data.tags)) {
       data.tags = []
+    }
+
+    // Ensure the city is stored as lowercase slug
+    data.location = {
+      ...data.location,
+      city: citySlug
     }
 
     // Create the club
