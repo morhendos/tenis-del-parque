@@ -25,19 +25,25 @@ export async function POST(request) {
       )
     }
 
-    console.log(`Attempting to import ${clubs.length} clubs from Google Maps`)
+    console.log(`🚀 Attempting to import ${clubs.length} clubs with area mapping...`)
 
     const results = {
       created: 0,
       failed: 0,
       duplicates: 0,
       citiesCreated: 0,
+      areasProcessed: [],
       errors: []
     }
 
     // Process each club
     for (const clubData of clubs) {
       try {
+        console.log(`\n📍 Processing: ${clubData.name}`)
+        console.log(`   Area: ${clubData.location?.area || 'none'}`)
+        console.log(`   City: ${clubData.location?.city || 'none'}`)
+        console.log(`   Display: ${clubData.location?.displayName || 'none'}`)
+
         // Check for duplicates by slug or Google Place ID
         const existingClub = await Club.findOne({
           $or: [
@@ -47,7 +53,7 @@ export async function POST(request) {
         })
 
         if (existingClub) {
-          console.log(`Duplicate found: ${clubData.name} (${existingClub.slug})`)
+          console.log(`⚠️  Duplicate found: ${clubData.name} (${existingClub.slug})`)
           results.duplicates++
           results.errors.push({
             name: clubData.name,
@@ -57,31 +63,38 @@ export async function POST(request) {
           continue
         }
 
-        // Validate required fields
+        // Validate required fields with enhanced location structure
         if (!clubData.name || !clubData.slug || !clubData.location?.city) {
+          console.log(`❌ Missing required fields for: ${clubData.name || 'Unknown'}`)
           results.failed++
           results.errors.push({
             name: clubData.name || 'Unknown',
-            error: 'Missing required fields'
+            error: 'Missing required fields (name, slug, location.city)'
           })
           continue
         }
 
-        // Auto-create city if it doesn't exist
-        const citySlug = clubData.location.city.toLowerCase().trim()
+        // Auto-create main city if it doesn't exist
+        const mainCitySlug = clubData.location.city.toLowerCase().trim()
         try {
+          const cityDisplayName = clubData.location.city.charAt(0).toUpperCase() + 
+                                clubData.location.city.slice(1)
+          
           const city = await City.findOrCreate({
-            slug: citySlug,
-            name: clubData.location.cityName || citySlug.charAt(0).toUpperCase() + citySlug.slice(1),
+            slug: mainCitySlug,
+            name: {
+              es: cityDisplayName,
+              en: cityDisplayName
+            },
             importSource: 'google'
           })
           
-          if (city && !city.createdAt) {
-            console.log(`Created new city: ${city.name.es}`)
+          if (city && city.isNew) {
+            console.log(`🏙️  Created new city: ${cityDisplayName}`)
             results.citiesCreated++
           }
         } catch (cityError) {
-          console.warn(`City creation failed for ${citySlug}:`, cityError.message)
+          console.warn(`⚠️  City creation failed for ${mainCitySlug}:`, cityError.message)
           // Continue with club creation even if city creation fails
         }
 
@@ -109,42 +122,94 @@ export async function POST(request) {
           }
         }
 
-        // Create the club
+        // Validate and clean location data
+        const locationData = {
+          address: clubData.location.address,
+          city: mainCitySlug,
+          postalCode: clubData.location.postalCode || '',
+          coordinates: clubData.location.coordinates,
+          googleMapsUrl: clubData.location.googleMapsUrl,
+          
+          // Enhanced area fields
+          area: clubData.location.area || null,
+          displayName: clubData.location.displayName || null,
+          administrativeCity: clubData.location.administrativeCity || null
+        }
+
+        // Create the club with enhanced location data
         const club = new Club({
           ...clubData,
+          location: locationData,
           stats: { views: 0, clicks: 0 },
           createdBy: session.user.id,
-          importedAt: new Date(),
-          // Ensure the city is stored as lowercase slug
-          location: {
-            ...clubData.location,
-            city: citySlug
-          }
+          importedAt: new Date()
         })
 
         await club.save()
-        console.log(`Successfully imported: ${club.name} (${club.slug})`)
+        
+        console.log(`✅ Successfully imported: ${club.name}`)
+        console.log(`   → Slug: ${club.slug}`)
+        console.log(`   → Display: ${club.location.displayName}`)
+        console.log(`   → League City: ${club.location.city}`)
+        
         results.created++
+        
+        // Track area processing for reporting
+        results.areasProcessed.push({
+          name: club.name,
+          area: club.location.area,
+          city: club.location.city,
+          displayName: club.location.displayName,
+          slug: club.slug
+        })
 
       } catch (error) {
-        console.error(`Error importing club ${clubData.name}:`, error)
+        console.error(`❌ Error importing club ${clubData.name}:`, error)
         results.failed++
         results.errors.push({
           name: clubData.name || 'Unknown',
-          error: error.message
+          error: error.message,
+          details: error.stack?.split('\n')[0]
         })
       }
     }
 
-    console.log('Import complete:', results)
+    // Summary logging
+    console.log(`\n🎉 Import complete!`)
+    console.log(`   ✅ Created: ${results.created}`)
+    console.log(`   ⚠️  Duplicates: ${results.duplicates}`)
+    console.log(`   ❌ Failed: ${results.failed}`)
+    console.log(`   🏙️  Cities created: ${results.citiesCreated}`)
+    console.log(`   📍 Areas processed: ${results.areasProcessed.length}`)
 
-    // Return results
-    return NextResponse.json(results)
+    // Log area mapping results
+    if (results.areasProcessed.length > 0) {
+      console.log(`\n📋 Area Mapping Results:`)
+      results.areasProcessed.forEach(item => {
+        console.log(`   • ${item.name}: ${item.area || 'N/A'} → ${item.city}`)
+        console.log(`     Display: "${item.displayName}"`)
+      })
+    }
+
+    // Return enhanced results
+    return NextResponse.json({
+      ...results,
+      summary: {
+        totalProcessed: clubs.length,
+        successRate: clubs.length > 0 ? Math.round((results.created / clubs.length) * 100) : 0,
+        areasDetected: results.areasProcessed.filter(item => item.area).length,
+        citiesAffected: [...new Set(results.areasProcessed.map(item => item.city))].length
+      }
+    })
 
   } catch (error) {
-    console.error('Error in bulk club import:', error)
+    console.error('💥 Error in bulk club import:', error)
     return NextResponse.json(
-      { error: 'Failed to import clubs', details: error.message },
+      { 
+        error: 'Failed to import clubs', 
+        details: error.message,
+        stack: error.stack?.split('\n').slice(0, 3)
+      },
       { status: 500 }
     )
   }
