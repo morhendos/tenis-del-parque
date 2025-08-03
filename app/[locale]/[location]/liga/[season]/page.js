@@ -23,12 +23,33 @@ export default function LeagueSeasonPage() {
   const [error, setError] = useState(null)
   const [activeTab, setActiveTab] = useState('standings')
   const [totalRounds, setTotalRounds] = useState(8)
+  const [showNavigation, setShowNavigation] = useState(false)
+  const [isTabsSticky, setIsTabsSticky] = useState(false)
 
   const t = homeContent[language]
 
   useEffect(() => {
     fetchLeagueData()
   }, [location, season, locale])
+
+  // If register tab is active but registration is closed, switch to standings
+  useEffect(() => {
+    if (activeTab === 'register' && league && league.currentSeason && league.currentSeason.status !== 'registration_open') {
+      setActiveTab('standings')
+    }
+  }, [activeTab, league])
+
+  // Handle scroll effect for sticky tabs
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY
+      // Make tabs sticky when we scroll past the hero section (roughly 150px since it's more compact now)
+      setIsTabsSticky(scrollTop > 150)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const fetchLeagueData = async () => {
     try {
@@ -121,8 +142,22 @@ export default function LeagueSeasonPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-parque-bg via-white to-white">
-        <Navigation currentPage="league" />
-        <div className="container mx-auto px-4 py-32 text-center">
+        {showNavigation && <Navigation currentPage="league" />}
+        
+        {/* Navigation Toggle Button */}
+        <button
+          onClick={() => setShowNavigation(!showNavigation)}
+          className="fixed top-4 right-4 z-50 bg-white/90 backdrop-blur-md p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200"
+          aria-label={showNavigation ? (language === 'es' ? 'Ocultar menú' : 'Hide menu') : (language === 'es' ? 'Mostrar menú' : 'Show menu')}
+        >
+          <div className="w-5 h-5 flex flex-col justify-center items-center space-y-1">
+            <span className={`block w-4 h-0.5 bg-parque-purple transition-all duration-300 ${showNavigation ? 'rotate-45 translate-y-1.5' : ''}`}></span>
+            <span className={`block w-4 h-0.5 bg-parque-purple transition-all duration-300 ${showNavigation ? 'opacity-0' : ''}`}></span>
+            <span className={`block w-4 h-0.5 bg-parque-purple transition-all duration-300 ${showNavigation ? '-rotate-45 -translate-y-1.5' : ''}`}></span>
+          </div>
+        </button>
+
+        <div className={`container mx-auto px-4 text-center transition-all duration-300 ${showNavigation ? 'py-24' : 'py-12'}`}>
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
           <p className="mt-4 text-gray-600">
             {language === 'es' ? 'Cargando información de la liga...' : 'Loading league information...'}
@@ -135,8 +170,22 @@ export default function LeagueSeasonPage() {
   if (error || !league) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-parque-bg via-white to-white">
-        <Navigation currentPage="league" />
-        <div className="container mx-auto px-4 py-32 text-center">
+        {showNavigation && <Navigation currentPage="league" />}
+        
+        {/* Navigation Toggle Button */}
+        <button
+          onClick={() => setShowNavigation(!showNavigation)}
+          className="fixed top-4 right-4 z-50 bg-white/90 backdrop-blur-md p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200"
+          aria-label={showNavigation ? (language === 'es' ? 'Ocultar menú' : 'Hide menu') : (language === 'es' ? 'Mostrar menú' : 'Show menu')}
+        >
+          <div className="w-5 h-5 flex flex-col justify-center items-center space-y-1">
+            <span className={`block w-4 h-0.5 bg-parque-purple transition-all duration-300 ${showNavigation ? 'rotate-45 translate-y-1.5' : ''}`}></span>
+            <span className={`block w-4 h-0.5 bg-parque-purple transition-all duration-300 ${showNavigation ? 'opacity-0' : ''}`}></span>
+            <span className={`block w-4 h-0.5 bg-parque-purple transition-all duration-300 ${showNavigation ? '-rotate-45 -translate-y-1.5' : ''}`}></span>
+          </div>
+        </button>
+
+        <div className={`container mx-auto px-4 text-center transition-all duration-300 ${showNavigation ? 'py-24' : 'py-12'}`}>
           <div className="text-6xl mb-6">🎾</div>
           <h1 className="text-4xl font-light text-parque-purple mb-4">
             {language === 'es' ? 'Liga no encontrada' : 'League not found'}
@@ -162,71 +211,64 @@ export default function LeagueSeasonPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-parque-bg via-white to-white">
-      <Navigation currentPage="league" />
+      {/* Navigation - Only show when toggled */}
+      <div className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${showNavigation ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
+        <Navigation currentPage="league" />
+      </div>
       
-      {/* Hero Section - More compact on mobile */}
-      <section className="relative pt-16 md:pt-20 lg:pt-32 pb-4 md:pb-8 lg:pb-16">
+      {/* Navigation Toggle Button */}
+      <button
+        onClick={() => setShowNavigation(!showNavigation)}
+        className={`fixed right-4 z-[60] bg-white/90 backdrop-blur-md p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-parque-purple/30 ${
+          isTabsSticky ? 'top-20' : 'top-4'
+        }`}
+        aria-label={showNavigation ? (language === 'es' ? 'Ocultar menú' : 'Hide menu') : (language === 'es' ? 'Mostrar menú' : 'Show menu')}
+      >
+        <div className="w-5 h-5 flex flex-col justify-center items-center space-y-1">
+          <span className={`block w-4 h-0.5 bg-parque-purple transition-all duration-300 ${showNavigation ? 'rotate-45 translate-y-1.5' : ''}`}></span>
+          <span className={`block w-4 h-0.5 bg-parque-purple transition-all duration-300 ${showNavigation ? 'opacity-0' : ''}`}></span>
+          <span className={`block w-4 h-0.5 bg-parque-purple transition-all duration-300 ${showNavigation ? '-rotate-45 -translate-y-1.5' : ''}`}></span>
+        </div>
+      </button>
+      
+      {/* Hero Section - Logo only, much more prominent */}
+      <section className={`relative transition-all duration-300 ${showNavigation ? 'pt-16 md:pt-20 lg:pt-24' : 'pt-8 md:pt-12 lg:pt-16'} pb-4 md:pb-6`}>
         <div className="container mx-auto px-4">
-          <div className="text-center mb-4 md:mb-8 lg:mb-12">
-            <div className="mb-3 md:mb-4 lg:mb-6">
-              <img 
-                src="/logo.png" 
-                alt="Tenis del Parque - Sotogrande League" 
-                className="h-20 md:h-24 lg:h-32 xl:h-40 w-auto mx-auto"
-              />
-            </div>
-            
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 md:gap-3 lg:gap-4 mb-2 md:mb-4">
-              <p className="text-base md:text-lg lg:text-xl text-gray-600 font-medium">
-                {getSeasonDisplayName(season)}
-              </p>
-              <span className={`inline-flex items-center px-2 md:px-3 lg:px-4 py-1 md:py-2 rounded-full text-xs md:text-sm font-medium ${
-                currentSeason.status === 'registration_open' 
-                  ? 'bg-green-100 text-green-800' 
-                  : currentSeason.status === 'active'
-                  ? 'bg-blue-100 text-blue-800'
-                  : 'bg-gray-100 text-gray-800'
-              }`}>
-                {currentSeason.status === 'registration_open' && 
-                  (language === 'es' ? '✅ Inscripciones Abiertas' : '✅ Registration Open')
-                }
-                {currentSeason.status === 'active' && 
-                  (language === 'es' ? '🎾 Liga Activa' : '🎾 League Active')
-                }
-                {currentSeason.status === 'completed' && 
-                  (language === 'es' ? '🏁 Temporada Finalizada' : '🏁 Season Completed')
-                }
-                {currentSeason.status === 'upcoming' && 
-                  (language === 'es' ? '⏳ Próximamente' : '⏳ Coming Soon')
-                }
-              </span>
-            </div>
+          <div className="text-center">
+            <img 
+              src="/logo.png" 
+              alt="Tenis del Parque - Sotogrande League" 
+              className="h-24 md:h-32 lg:h-40 xl:h-48 w-auto mx-auto"
+            />
           </div>
         </div>
       </section>
 
-      {/* Navigation Tabs - More compact on mobile */}
-      <section className="container mx-auto px-2 md:px-4 mb-4 md:mb-6 lg:mb-8">
-        <div className="flex justify-center">
-          <div className="bg-white rounded-lg p-0.5 md:p-1 shadow-md md:shadow-lg w-full max-w-md md:max-w-none md:w-auto">
-            <nav className="flex space-x-0.5 md:space-x-1 lg:space-x-2">
+      {/* Navigation Tabs - Clean and Simple */}
+      <section className={`transition-all duration-300 ${
+        isTabsSticky 
+          ? 'fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-lg' 
+          : 'relative'
+      }`}>
+        <div className="container mx-auto px-4 py-3">
+          <nav className="flex justify-center">
+            <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
               {[
-                { id: 'standings', label: language === 'es' ? 'Clasificación' : 'Standings', icon: '🏆' },
-                { id: 'schedule', label: language === 'es' ? 'Calendario' : 'Schedule', icon: '📅' },
-                { id: 'matches', label: language === 'es' ? 'Resultados' : 'Results', icon: '🎾' },
-                { id: 'register', label: language === 'es' ? 'Inscribirse' : 'Register', icon: '✍️' }
+                { id: 'standings', label: language === 'es' ? 'Clasificación' : 'Standings' },
+                { id: 'schedule', label: language === 'es' ? 'Calendario' : 'Schedule' },
+                { id: 'matches', label: language === 'es' ? 'Resultados' : 'Results' },
+                ...(currentSeason.status === 'registration_open' ? [{ id: 'register', label: language === 'es' ? 'Inscribirse' : 'Register' }] : [])
               ].map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center justify-center space-x-1 md:space-x-2 px-2 md:px-4 lg:px-6 py-2 md:py-3 rounded-lg font-medium transition-all duration-200 ${
+                  className={`px-4 md:px-6 py-2 rounded-md font-medium transition-all duration-200 pointer-events-auto cursor-pointer ${
                     activeTab === tab.id
-                      ? 'bg-parque-purple text-white shadow-md'
-                      : 'text-gray-600 hover:text-parque-purple hover:bg-parque-bg/50'
+                      ? 'bg-white text-parque-purple shadow-sm' 
+                      : 'text-gray-600 hover:text-gray-800'
                   }`}
                 >
-                  <span className="text-xs md:text-sm lg:text-lg">{tab.icon}</span>
-                  <span className="text-[10px] md:text-xs lg:text-sm font-semibold">
+                  <span className="text-sm font-semibold">
                     {/* Mobile: Show abbreviated labels */}
                     <span className="sm:hidden">
                       {tab.id === 'standings' && (language === 'es' ? 'Clas.' : 'Stand.')}
@@ -239,19 +281,49 @@ export default function LeagueSeasonPage() {
                   </span>
                 </button>
               ))}
-            </nav>
-          </div>
+            </div>
+          </nav>
         </div>
       </section>
 
-      {/* Content Sections - Adjusted padding for mobile */}
-      <section className="container mx-auto px-2 md:px-4 pb-4 md:pb-8 lg:pb-16">
+      {/* Spacer when tabs are sticky to prevent content jump */}
+      {isTabsSticky && <div className="h-16 md:h-20"></div>}
+
+      {/* Content Sections - Adjusted padding for mobile and sticky tabs */}
+      <section className={`container mx-auto px-2 md:px-4 pb-4 md:pb-8 lg:pb-16 ${isTabsSticky ? 'pt-4' : ''}`}>
         {activeTab === 'standings' && (
           <div className="max-w-[1400px] mx-auto">
             <div className="bg-white rounded-lg md:rounded-xl shadow-md md:shadow-lg p-3 md:p-6 lg:p-8">
-              <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-parque-purple mb-3 md:mb-4 lg:mb-6">
-                {language === 'es' ? 'Clasificación General' : 'League Standings'}
-              </h2>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6">
+                <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-parque-purple mb-2 sm:mb-0">
+                  {language === 'es' ? 'Clasificación General' : 'League Standings'}
+                </h2>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm md:text-base text-gray-600 font-medium">
+                    {getSeasonDisplayName(season)}
+                  </span>
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    currentSeason.status === 'registration_open' 
+                      ? 'bg-green-100 text-green-800' 
+                      : currentSeason.status === 'active'
+                      ? 'bg-blue-100 text-blue-800'
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {currentSeason.status === 'registration_open' && 
+                      (language === 'es' ? 'Inscripciones Abiertas' : 'Registration Open')
+                    }
+                    {currentSeason.status === 'active' && 
+                      (language === 'es' ? 'Liga Activa' : 'League Active')
+                    }
+                    {currentSeason.status === 'completed' && 
+                      (language === 'es' ? 'Temporada Finalizada' : 'Season Completed')
+                    }
+                    {currentSeason.status === 'upcoming' && 
+                      (language === 'es' ? 'Próximamente' : 'Coming Soon')
+                    }
+                  </span>
+                </div>
+              </div>
               
               {standings && standings.unifiedStandings ? (
                 <div>
@@ -285,6 +357,36 @@ export default function LeagueSeasonPage() {
         {activeTab === 'schedule' && (
           <div className="max-w-[1200px] mx-auto">
             <div className="bg-white rounded-lg md:rounded-xl shadow-md md:shadow-lg p-3 md:p-6 lg:p-8">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6">
+                <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-parque-purple mb-2 sm:mb-0">
+                  {language === 'es' ? 'Calendario de Partidos' : 'Match Schedule'}
+                </h2>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm md:text-base text-gray-600 font-medium">
+                    {getSeasonDisplayName(season)}
+                  </span>
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    currentSeason.status === 'registration_open' 
+                      ? 'bg-green-100 text-green-800' 
+                      : currentSeason.status === 'active'
+                      ? 'bg-blue-100 text-blue-800'
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {currentSeason.status === 'registration_open' && 
+                      (language === 'es' ? 'Inscripciones Abiertas' : 'Registration Open')
+                    }
+                    {currentSeason.status === 'active' && 
+                      (language === 'es' ? 'Liga Activa' : 'League Active')
+                    }
+                    {currentSeason.status === 'completed' && 
+                      (language === 'es' ? 'Temporada Finalizada' : 'Season Completed')
+                    }
+                    {currentSeason.status === 'upcoming' && 
+                      (language === 'es' ? 'Próximamente' : 'Coming Soon')
+                    }
+                  </span>
+                </div>
+              </div>
               <ScheduleTab 
                 schedule={schedule} 
                 language={language}
@@ -299,6 +401,36 @@ export default function LeagueSeasonPage() {
         {activeTab === 'matches' && (
           <div className="max-w-[1200px] mx-auto">
             <div className="bg-white rounded-lg md:rounded-xl shadow-md md:shadow-lg p-3 md:p-6 lg:p-8">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6">
+                <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-parque-purple mb-2 sm:mb-0">
+                  {language === 'es' ? 'Resultados de Partidos' : 'Match Results'}
+                </h2>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm md:text-base text-gray-600 font-medium">
+                    {getSeasonDisplayName(season)}
+                  </span>
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    currentSeason.status === 'registration_open' 
+                      ? 'bg-green-100 text-green-800' 
+                      : currentSeason.status === 'active'
+                      ? 'bg-blue-100 text-blue-800'
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {currentSeason.status === 'registration_open' && 
+                      (language === 'es' ? 'Inscripciones Abiertas' : 'Registration Open')
+                    }
+                    {currentSeason.status === 'active' && 
+                      (language === 'es' ? 'Liga Activa' : 'League Active')
+                    }
+                    {currentSeason.status === 'completed' && 
+                      (language === 'es' ? 'Temporada Finalizada' : 'Season Completed')
+                    }
+                    {currentSeason.status === 'upcoming' && 
+                      (language === 'es' ? 'Próximamente' : 'Coming Soon')
+                    }
+                  </span>
+                </div>
+              </div>
               <ResultsTab matches={matches} language={language} />
             </div>
           </div>
@@ -307,9 +439,36 @@ export default function LeagueSeasonPage() {
         {activeTab === 'register' && (
           <div className="max-w-4xl mx-auto">
             <div className="bg-white rounded-lg md:rounded-xl shadow-md md:shadow-lg p-3 md:p-6 lg:p-8">
-              <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-parque-purple mb-3 md:mb-4 lg:mb-6 text-center">
-                {language === 'es' ? 'Inscribirse en la Liga' : 'Register for the League'}
-              </h2>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6">
+                <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-parque-purple mb-2 sm:mb-0">
+                  {language === 'es' ? 'Inscribirse en la Liga' : 'Register for the League'}
+                </h2>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm md:text-base text-gray-600 font-medium">
+                    {getSeasonDisplayName(season)}
+                  </span>
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    currentSeason.status === 'registration_open' 
+                      ? 'bg-green-100 text-green-800' 
+                      : currentSeason.status === 'active'
+                      ? 'bg-blue-100 text-blue-800'
+                      : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {currentSeason.status === 'registration_open' && 
+                      (language === 'es' ? 'Inscripciones Abiertas' : 'Registration Open')
+                    }
+                    {currentSeason.status === 'active' && 
+                      (language === 'es' ? 'Liga Activa' : 'League Active')
+                    }
+                    {currentSeason.status === 'completed' && 
+                      (language === 'es' ? 'Temporada Finalizada' : 'Season Completed')
+                    }
+                    {currentSeason.status === 'upcoming' && 
+                      (language === 'es' ? 'Próximamente' : 'Coming Soon')
+                    }
+                  </span>
+                </div>
+              </div>
               
               {currentSeason.status === 'registration_open' ? (
                 <div className="text-center">
