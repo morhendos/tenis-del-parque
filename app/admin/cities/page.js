@@ -129,6 +129,20 @@ export default function AdminCitiesPage() {
     }
   }
 
+  // Helper to check if city has images
+  const hasImages = (city) => {
+    return !!(city.images?.main || (city.images?.gallery && city.images.gallery.length > 0) || (city.googleData?.photos && city.googleData.photos.length > 0))
+  }
+
+  // Helper to get image count
+  const getImageCount = (city) => {
+    let count = 0
+    if (city.images?.main) count++
+    if (city.images?.gallery) count += city.images.gallery.length
+    if (city.googleData?.photos) count += city.googleData.photos.length
+    return count
+  }
+
   // Filter and sort cities
   const filteredCities = cities
     .filter(city => {
@@ -163,7 +177,8 @@ export default function AdminCitiesPage() {
     totalClubs: cities.reduce((sum, c) => sum + c.clubCount, 0),
     provinces: [...new Set(cities.map(c => c.province))].length,
     withCoordinates: cities.filter(c => c.coordinates?.lat && c.coordinates?.lng).length,
-    googleEnhanced: cities.filter(c => c.importSource === 'google').length
+    googleEnhanced: cities.filter(c => c.importSource === 'google').length,
+    withImages: cities.filter(c => hasImages(c)).length
   }
 
   if (loading && cities.length === 0) {
@@ -215,7 +230,7 @@ export default function AdminCitiesPage() {
       </div>
 
       {/* Enhanced Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-8 gap-4">
         <div className="bg-white rounded-lg shadow p-6">
           <div className="text-3xl font-bold text-parque-purple">{stats.total}</div>
           <div className="text-sm text-gray-600">Total Cities</div>
@@ -244,7 +259,30 @@ export default function AdminCitiesPage() {
           <div className="text-3xl font-bold text-blue-700">{stats.googleEnhanced}</div>
           <div className="text-sm text-gray-600">Google Enhanced</div>
         </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="text-3xl font-bold text-purple-600">{stats.withImages}</div>
+          <div className="text-sm text-gray-600">With Images</div>
+        </div>
       </div>
+
+      {/* Image Management Info */}
+      {stats.total > 0 && stats.withImages < stats.total && (
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+          <div className="flex items-start space-x-3">
+            <svg className="w-5 h-5 text-purple-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+            </svg>
+            <div className="flex-1">
+              <h4 className="font-medium text-purple-900">
+                {stats.total - stats.withImages} cities need images
+              </h4>
+              <p className="text-sm text-purple-800 mt-1">
+                Cities with images provide better user experience on the frontend. Edit each city to manage images or use "Enhance with Google" to automatically fetch photos.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Google Enhancement Info */}
       {stats.total > 0 && stats.withCoordinates < stats.total && (
@@ -346,6 +384,9 @@ export default function AdminCitiesPage() {
                 Clubs
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Images
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -399,6 +440,38 @@ export default function AdminCitiesPage() {
                     >
                       View clubs →
                     </button>
+                  )}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {hasImages(city) ? (
+                    <div className="flex items-center space-x-2">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                        <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                        </svg>
+                        {getImageCount(city)}
+                      </span>
+                      {city.images?.main && (
+                        <img
+                          src={city.images.main.includes('google-photo') 
+                            ? city.images.main 
+                            : city.images.main
+                          }
+                          alt={city.name.es}
+                          className="w-8 h-8 rounded object-cover"
+                          onError={(e) => {
+                            e.target.src = `https://images.unsplash.com/100x100/?city,${city.name.es},landscape`
+                          }}
+                        />
+                      )}
+                    </div>
+                  ) : (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      No Images
+                    </span>
                   )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
