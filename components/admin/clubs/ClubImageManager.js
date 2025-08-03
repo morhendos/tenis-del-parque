@@ -72,42 +72,75 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
     
     setUploading(true)
     const uploadedUrls = []
+    const errors = []
     
     try {
       for (const file of files) {
-        // Create FormData for file upload
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('type', 'club_image')
-        
-        // TODO: Replace with actual upload endpoint
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData
-        })
-        
-        if (response.ok) {
+        try {
+          // Validate file size (5MB max)
+          if (file.size > 5 * 1024 * 1024) {
+            errors.push(`${file.name}: File too large (max 5MB)`)
+            continue
+          }
+          
+          // Validate file type
+          if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type)) {
+            errors.push(`${file.name}: Invalid file type (only JPEG, PNG, WebP allowed)`)
+            continue
+          }
+          
+          // Create FormData for file upload
+          const formData = new FormData()
+          formData.append('file', file)
+          formData.append('type', 'club_image')
+          
+          const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData
+          })
+          
           const data = await response.json()
-          uploadedUrls.push(data.url)
+          
+          if (response.ok && data.success) {
+            uploadedUrls.push(data.url)
+          } else {
+            errors.push(`${file.name}: ${data.error || 'Upload failed'}`)
+          }
+        } catch (fileError) {
+          console.error(`Error uploading ${file.name}:`, fileError)
+          errors.push(`${file.name}: Upload failed`)
         }
       }
       
-      // Update club images
-      const updatedClub = {
-        ...club,
-        images: {
-          ...club.images,
-          gallery: [...(club.images?.gallery || []), ...uploadedUrls]
+      // Update club images if any uploads succeeded
+      if (uploadedUrls.length > 0) {
+        const updatedClub = {
+          ...club,
+          images: {
+            ...club.images,
+            gallery: [...(club.images?.gallery || []), ...uploadedUrls]
+          }
         }
+        
+        onImagesUpdate(updatedClub)
       }
       
-      onImagesUpdate(updatedClub)
+      // Show results
+      if (errors.length > 0) {
+        alert(`Upload completed with errors:\n${errors.join('\n')}`)
+      } else if (uploadedUrls.length > 0) {
+        alert(`Successfully uploaded ${uploadedUrls.length} image(s)`)
+      }
       
     } catch (error) {
       console.error('Upload error:', error)
       alert('Failed to upload images. Please try again.')
     } finally {
       setUploading(false)
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
     }
   }
 
@@ -400,6 +433,7 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
           <li>• <strong>Google Photos:</strong> Automatically imported from Google Maps</li>
           <li>• <strong>Gallery:</strong> Additional photos for the club page</li>
           <li>• Click any image to view full size or set as main</li>
+          <li>• Supported formats: JPEG, PNG, WebP (max 5MB each)</li>
         </ul>
       </div>
     </div>
