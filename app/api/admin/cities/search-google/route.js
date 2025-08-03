@@ -27,17 +27,6 @@ function generateSearchVariations(query) {
   const baseQuery = query.toLowerCase().trim()
   const normalizedQuery = normalizeText(baseQuery)
   
-  // Common Spanish city name patterns and accent variations
-  const accentVariations = {
-    'a': ['a', 'á'],
-    'e': ['e', 'é'],
-    'i': ['i', 'í'],
-    'o': ['o', 'ó'],
-    'u': ['u', 'ú'],
-    'n': ['n', 'ñ'],
-    'c': ['c', 'ç']
-  }
-  
   const variations = new Set([
     baseQuery,
     normalizedQuery
@@ -45,8 +34,10 @@ function generateSearchVariations(query) {
   
   // Generate common Spanish city patterns
   const commonPrefixes = ['', 'el ', 'la ', 'los ', 'las ']
-  const commonSuffixes = ['', ' de la costa', ' del sol', ' de mar']
+  const commonSuffixes = ['', ' de la costa', ' del sol', ' de mar', ' de la concepcion', ' de la frontera']
+  const commonMiddleParts = ['', ' de la ', ' del ', ' de los ', ' de las ']
   
+  // Add variations with prefixes and suffixes
   commonPrefixes.forEach(prefix => {
     commonSuffixes.forEach(suffix => {
       variations.add(prefix + baseQuery + suffix)
@@ -54,31 +45,40 @@ function generateSearchVariations(query) {
     })
   })
   
+  // Handle multi-part city names (like "La Línea de la Concepción")
+  commonMiddleParts.forEach(middle => {
+    const withMiddle = baseQuery + middle + 'concepcion'
+    const withMiddleNorm = normalizedQuery + middle + 'concepcion'
+    variations.add(withMiddle)
+    variations.add(withMiddleNorm)
+  })
+  
   // Add specific accent variations for common cases
-  if (normalizedQuery.includes('malag')) {
-    variations.add('málaga')
-    variations.add('malaga')
-  }
-  if (normalizedQuery.includes('cordoba')) {
-    variations.add('córdoba')
-  }
-  if (normalizedQuery.includes('cadiz')) {
-    variations.add('cádiz')
-  }
-  if (normalizedQuery.includes('almeria')) {
-    variations.add('almería')
-  }
-  if (normalizedQuery.includes('leon')) {
-    variations.add('león')
-  }
-  if (normalizedQuery.includes('avila')) {
-    variations.add('ávila')
+  const accentVariations = {
+    'malag': 'málaga',
+    'cordoba': 'córdoba', 
+    'cadiz': 'cádiz',
+    'almeria': 'almería',
+    'leon': 'león',
+    'avila': 'ávila',
+    'jaen': 'jaén',
+    'linea': 'línea',
+    'concepcion': 'concepción',
+    'la linea': 'la línea de la concepción',
+    'linea de la concepcion': 'línea de la concepción'
   }
   
-  return Array.from(variations).slice(0, 5) // Limit to prevent too many API calls
+  Object.entries(accentVariations).forEach(([without, with_]) => {
+    if (normalizedQuery.includes(without.split(' ')[0])) {
+      variations.add(with_)
+      variations.add(without)
+    }
+  })
+  
+  return Array.from(variations).slice(0, 10) // Increased limit for complex names
 }
 
-// Enhanced mock data with more Spanish cities for testing
+// Enhanced mock data with more Spanish cities including complex names
 function getMockCities() {
   return [
     {
@@ -120,8 +120,27 @@ function getMockCities() {
       types: ['locality', 'political']
     },
     {
+      name: 'La Línea de la Concepción',
+      place_id: 'mock_lalinea_789',
+      formatted_address: 'La Línea de la Concepción, Cádiz, Spain',
+      geometry: {
+        location: { lat: 36.1661, lng: -5.3447 },
+        viewport: {
+          northeast: { lat: 36.2000, lng: -5.3000 },
+          southwest: { lat: 36.1300, lng: -5.3900 }
+        }
+      },
+      address_components: [
+        { long_name: 'La Línea de la Concepción', short_name: 'La Línea', types: ['locality'] },
+        { long_name: 'Cádiz', short_name: 'CA', types: ['administrative_area_level_2'] },
+        { long_name: 'Andalusia', short_name: 'AN', types: ['administrative_area_level_1'] },
+        { long_name: 'Spain', short_name: 'ES', types: ['country'] }
+      ],
+      types: ['locality', 'political']
+    },
+    {
       name: 'Estepona',
-      place_id: 'mock_estepona_789',
+      place_id: 'mock_estepona_101',
       formatted_address: 'Estepona, Málaga, Spain',
       geometry: {
         location: { lat: 36.4272, lng: -5.1448 },
@@ -140,7 +159,7 @@ function getMockCities() {
     },
     {
       name: 'Benalmádena',
-      place_id: 'mock_benalmadena_101',
+      place_id: 'mock_benalmadena_102',
       formatted_address: 'Benalmádena, Málaga, Spain',
       geometry: {
         location: { lat: 36.5994, lng: -4.5161 },
@@ -159,7 +178,7 @@ function getMockCities() {
     },
     {
       name: 'Córdoba',
-      place_id: 'mock_cordoba_102',
+      place_id: 'mock_cordoba_103',
       formatted_address: 'Córdoba, Spain',
       geometry: {
         location: { lat: 37.8882, lng: -4.7794 },
@@ -178,7 +197,7 @@ function getMockCities() {
     },
     {
       name: 'Cádiz',
-      place_id: 'mock_cadiz_103',
+      place_id: 'mock_cadiz_104',
       formatted_address: 'Cádiz, Spain',
       geometry: {
         location: { lat: 36.5297, lng: -6.2921 },
@@ -194,12 +213,50 @@ function getMockCities() {
         { long_name: 'Spain', short_name: 'ES', types: ['country'] }
       ],
       types: ['locality', 'political']
+    },
+    {
+      name: 'Jerez de la Frontera',
+      place_id: 'mock_jerez_105',
+      formatted_address: 'Jerez de la Frontera, Cádiz, Spain',
+      geometry: {
+        location: { lat: 36.6866, lng: -6.1369 },
+        viewport: {
+          northeast: { lat: 36.7200, lng: -6.1000 },
+          southwest: { lat: 36.6500, lng: -6.1700 }
+        }
+      },
+      address_components: [
+        { long_name: 'Jerez de la Frontera', short_name: 'Jerez', types: ['locality'] },
+        { long_name: 'Cádiz', short_name: 'CA', types: ['administrative_area_level_2'] },
+        { long_name: 'Andalusia', short_name: 'AN', types: ['administrative_area_level_1'] },
+        { long_name: 'Spain', short_name: 'ES', types: ['country'] }
+      ],
+      types: ['locality', 'political']
+    },
+    {
+      name: 'Algeciras',
+      place_id: 'mock_algeciras_106',
+      formatted_address: 'Algeciras, Cádiz, Spain',
+      geometry: {
+        location: { lat: 36.1322, lng: -5.4548 },
+        viewport: {
+          northeast: { lat: 36.1700, lng: -5.4100 },
+          southwest: { lat: 36.0900, lng: -5.5000 }
+        }
+      },
+      address_components: [
+        { long_name: 'Algeciras', short_name: 'Algeciras', types: ['locality'] },
+        { long_name: 'Cádiz', short_name: 'CA', types: ['administrative_area_level_2'] },
+        { long_name: 'Andalusia', short_name: 'AN', types: ['administrative_area_level_1'] },
+        { long_name: 'Spain', short_name: 'ES', types: ['country'] }
+      ],
+      types: ['locality', 'political']
     }
   ]
 }
 
-// Improved fuzzy matching function
-function fuzzyMatch(query, cityName, threshold = 0.6) {
+// Enhanced fuzzy matching function for multi-part names
+function fuzzyMatch(query, cityName, threshold = 0.5) {
   const normalizedQuery = normalizeText(query)
   const normalizedCity = normalizeText(cityName)
   
@@ -208,15 +265,41 @@ function fuzzyMatch(query, cityName, threshold = 0.6) {
   
   // Starts with match (high score)
   if (normalizedCity.startsWith(normalizedQuery)) {
-    return 0.9 - (normalizedCity.length - normalizedQuery.length) * 0.1
+    return Math.max(0.8, 0.95 - (normalizedCity.length - normalizedQuery.length) * 0.02)
   }
   
-  // Contains match (medium score)
+  // Contains match (medium-high score)
   if (normalizedCity.includes(normalizedQuery)) {
-    return 0.7 - Math.abs(normalizedCity.length - normalizedQuery.length) * 0.05
+    return Math.max(0.7, 0.85 - Math.abs(normalizedCity.length - normalizedQuery.length) * 0.01)
   }
   
-  // Character-by-character similarity (low score)
+  // For multi-part names, check if query matches beginning of any word
+  const cityWords = normalizedCity.split(/\s+/)
+  const queryWords = normalizedQuery.split(/\s+/)
+  
+  // Check if any query word starts any city word
+  for (const queryWord of queryWords) {
+    for (const cityWord of cityWords) {
+      if (cityWord.startsWith(queryWord) && queryWord.length >= 2) {
+        return Math.max(0.6, 0.8 - (cityWord.length - queryWord.length) * 0.03)
+      }
+    }
+  }
+  
+  // Check if query matches the first significant words
+  const significantCityWords = cityWords.filter(word => 
+    !['de', 'la', 'del', 'las', 'los', 'el'].includes(word) && word.length > 2
+  )
+  
+  for (const queryWord of queryWords) {
+    for (const cityWord of significantCityWords) {
+      if (cityWord.includes(queryWord) && queryWord.length >= 3) {
+        return 0.6
+      }
+    }
+  }
+  
+  // Character-by-character similarity (fallback)
   let matches = 0
   const maxLen = Math.max(normalizedQuery.length, normalizedCity.length)
   const minLen = Math.min(normalizedQuery.length, normalizedCity.length)
@@ -228,7 +311,7 @@ function fuzzyMatch(query, cityName, threshold = 0.6) {
   }
   
   const similarity = matches / maxLen
-  return similarity >= threshold ? similarity * 0.5 : 0
+  return similarity >= threshold ? similarity * 0.4 : 0
 }
 
 export async function POST(request) {
@@ -268,6 +351,9 @@ export async function POST(request) {
       const filteredResults = scoredResults.map(({ score, ...city }) => city)
 
       console.log(`Mock search for "${cleanQuery}" found ${filteredResults.length} results`)
+      if (filteredResults.length > 0) {
+        console.log('Top result:', filteredResults[0].name, 'Score:', scoredResults[0].score)
+      }
 
       return NextResponse.json({
         results: filteredResults,
