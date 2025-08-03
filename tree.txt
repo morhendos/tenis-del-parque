@@ -194,6 +194,9 @@ root/
 │   │   ├── players
 │   │   │   └── register
 │   │   │       └── route.js
+│   │   ├── seasons
+│   │   │   └── [slug]
+│   │   │       └── route.js
 │   │   ├── seed-leagues
 │   │   │   └── route.js
 │   │   └── upload
@@ -211,7 +214,8 @@ root/
 │   ├── admin
 │   │   ├── cities
 │   │   │   ├── CityFormModal.js
-│   │   │   └── CityGoogleEnhancer.js
+│   │   │   ├── CityGoogleEnhancer.js
+│   │   │   └── CityImageManager.js
 │   │   ├── clubs
 │   │   │   ├── ClubFormModal.js
 │   │   │   ├── ClubImageManager.js
@@ -378,6 +382,7 @@ root/
 │       ├── matchResultUtils.js
 │       ├── phoneUtils.js
 │       ├── rulesIcons.js
+│       ├── seasonUtils.client.js
 │       ├── seasonUtils.js
 │       ├── spanishTextUtils.js
 │       └── swissPairing.js
@@ -412,8 +417,8 @@ root/
 │   ├── twitter-image.png
 │   ├── uploads
 │   │   ├── README.md
+│   │   ├── cities
 │   │   └── clubs
-│   │       └── .gitkeep
 │   ├── web-app-manifest-192x192.png
 │   └── web-app-manifest-512x512.png
 ├── scripts
