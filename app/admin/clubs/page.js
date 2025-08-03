@@ -2,6 +2,119 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import ClubFormModal from '@/components/admin/clubs/ClubFormModal'
+import GoogleMapsImporter from '@/components/admin/clubs/GoogleMapsImporter'
+
+// Google Import Legend Component
+const GoogleImportLegend = () => {
+  const [showDetails, setShowDetails] = useState(false)
+  
+  return (
+    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+          </svg>
+          <h3 className="text-sm font-medium text-blue-900">
+            Google Maps Import Data Guide
+          </h3>
+        </div>
+        <button
+          onClick={() => setShowDetails(!showDetails)}
+          className="text-sm text-blue-600 hover:text-blue-800"
+        >
+          {showDetails ? 'Hide' : 'Show'} Details
+        </button>
+      </div>
+      
+      {showDetails && (
+        <div className="mt-4 space-y-3">
+          <div className="grid grid-cols-3 gap-4 text-sm">
+            <div>
+              <div className="flex items-center space-x-2 mb-1">
+                <span className="text-green-600">✓</span>
+                <span className="font-medium text-gray-700">Verified Data</span>
+              </div>
+              <ul className="space-y-0.5 text-xs text-gray-600 ml-5">
+                <li>• Name & Address</li>
+                <li>• GPS Coordinates</li>
+                <li>• Phone & Website</li>
+                <li>• Ratings & Reviews</li>
+                <li>• Operating Hours</li>
+              </ul>
+            </div>
+            
+            <div>
+              <div className="flex items-center space-x-2 mb-1">
+                <span className="text-yellow-600">≈</span>
+                <span className="font-medium text-gray-700">Estimated Data</span>
+              </div>
+              <ul className="space-y-0.5 text-xs text-gray-600 ml-5">
+                <li>• Courts (default: 6)</li>
+                <li>• Surfaces (default: clay)</li>
+                <li>• Amenities (by price)</li>
+                <li>• Services (by price)</li>
+                <li>• Price ranges</li>
+              </ul>
+            </div>
+            
+            <div>
+              <div className="flex items-center space-x-2 mb-1">
+                <span className="text-gray-500">—</span>
+                <span className="font-medium text-gray-700">Not Available</span>
+              </div>
+              <ul className="space-y-0.5 text-xs text-gray-600 ml-5">
+                <li>• Email address</li>
+                <li>• Social media</li>
+                <li>• Photos</li>
+                <li>• Membership fees</li>
+                <li>• Court specifics</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="mt-3 pt-3 border-t border-blue-200">
+            <p className="text-xs text-blue-800">
+              <strong>Tip:</strong> After importing, click on each club to verify and complete the estimated data. 
+              Look for the <span className="text-yellow-600">≈</span> symbol to identify fields that need verification.
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Data quality calculation function
+const getDataQualityScore = (club) => {
+  let verified = 0
+  let estimated = 0
+  let missing = 0
+  
+  // Verified fields from Google
+  if (club.googlePlaceId) verified += 3
+  if (club.contact?.phone) verified += 1
+  if (club.contact?.website) verified += 1
+  if (club.googleData?.rating) verified += 1
+  
+  // Estimated fields (need verification)
+  if (club.courts?.total === 6 && club.importSource === 'google') estimated += 2
+  if (club.amenities && !club.amenitiesVerified && club.importSource === 'google') estimated += 2
+  
+  // Missing fields
+  if (!club.contact?.email) missing += 1
+  if (!club.images?.main) missing += 1
+  if (!club.contact?.facebook && !club.contact?.instagram) missing += 1
+  
+  const total = verified + estimated + missing || 1 // Avoid division by zero
+  return {
+    verified: Math.round((verified / total) * 100),
+    estimated: Math.round((estimated / total) * 100),
+    missing: Math.round((missing / total) * 100),
+    total: Math.round((verified / total) * 100) // Overall completeness
+  }
+}
 
 export default function AdminClubsPage() {
   const router = useRouter()
@@ -9,6 +122,7 @@ export default function AdminClubsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [showFormModal, setShowFormModal] = useState(false)
+  const [showImportModal, setShowImportModal] = useState(false)
   const [editingClub, setEditingClub] = useState(null)
   const [selectedCity, setSelectedCity] = useState('all')
 
@@ -57,6 +171,18 @@ export default function AdminClubsPage() {
     setShowFormModal(true)
   }
 
+  const handleFormSuccess = (savedClub) => {
+    fetchClubs()
+    setShowFormModal(false)
+    setEditingClub(null)
+  }
+
+  const handleImportComplete = (results) => {
+    console.log('Import completed:', results)
+    fetchClubs()
+    setShowImportModal(false)
+  }
+
   const getStatusBadgeColor = (status) => {
     switch (status) {
       case 'active':
@@ -67,6 +193,28 @@ export default function AdminClubsPage() {
         return 'bg-gray-100 text-gray-800'
       default:
         return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const getImportSourceBadge = (source) => {
+    switch (source) {
+      case 'google':
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+            <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+            </svg>
+            Google
+          </span>
+        )
+      case 'csv':
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+            CSV
+          </span>
+        )
+      default:
+        return null
     }
   }
 
@@ -99,18 +247,36 @@ export default function AdminClubsPage() {
         <div className="flex space-x-3">
           <button
             onClick={handleCreate}
-            className="px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-parque-purple/90"
+            className="px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-parque-purple/90 flex items-center space-x-2"
           >
-            + Add Club
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Add Club</span>
           </button>
           <button
-            onClick={() => alert('Import functionality coming soon')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            onClick={() => setShowImportModal(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
           >
-            Import CSV
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+            </svg>
+            <span>Import from Google Maps</span>
+          </button>
+          <button
+            onClick={() => alert('CSV import functionality coming soon')}
+            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 flex items-center space-x-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+            <span>Import CSV</span>
           </button>
         </div>
       </div>
+
+      {/* Google Import Legend - Show if any clubs are from Google */}
+      {clubs.some(c => c.importSource === 'google') && <GoogleImportLegend />}
 
       {/* City Filter */}
       <div className="bg-white rounded-lg shadow p-4">
@@ -157,6 +323,16 @@ export default function AdminClubsPage() {
             >
               Estepona ({clubsByCity.estepona || 0})
             </button>
+            <button
+              onClick={() => setSelectedCity('sotogrande')}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                selectedCity === 'sotogrande'
+                  ? 'bg-parque-purple text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Sotogrande ({clubsByCity.sotogrande || 0})
+            </button>
           </div>
         </div>
       </div>
@@ -185,6 +361,9 @@ export default function AdminClubsPage() {
                 Status
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Source
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Featured
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -193,50 +372,93 @@ export default function AdminClubsPage() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredClubs.map((club) => (
-              <tr key={club._id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">{club.name}</div>
-                    <div className="text-sm text-gray-500">{club.slug}</div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900 capitalize">{club.location.city}</div>
-                  <div className="text-sm text-gray-500">{club.location.address}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{club.courts.total} courts</div>
-                  <div className="text-sm text-gray-500">
-                    {club.courts.surfaces.map(s => `${s.count} ${s.type}`).join(', ')}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(club.status)}`}>
-                    {club.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-center">
-                  {club.featured && (
-                    <span className="text-yellow-400">⭐</span>
-                  )}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button
-                    onClick={() => handleEdit(club)}
-                    className="text-indigo-600 hover:text-indigo-900 mr-4"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(club._id)}
-                    className="text-red-600 hover:text-red-900"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {filteredClubs.map((club) => {
+              const quality = getDataQualityScore(club)
+              
+              return (
+                <tr key={club._id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">{club.name}</div>
+                      <div className="text-sm text-gray-500">{club.slug}</div>
+                      {club.googleData?.rating && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          ⭐ {club.googleData.rating} ({club.googleData.userRatingsTotal} reviews)
+                        </div>
+                      )}
+                      
+                      {/* Data quality mini bar for Google imports */}
+                      {club.importSource === 'google' && (
+                        <div className="mt-2 flex items-center space-x-1">
+                          <div className="flex h-1.5 w-24 bg-gray-200 rounded overflow-hidden">
+                            <div 
+                              className="bg-green-500" 
+                              style={{width: `${quality.verified}%`}}
+                              title={`${quality.verified}% verified`}
+                            />
+                            <div 
+                              className="bg-yellow-500" 
+                              style={{width: `${quality.estimated}%`}}
+                              title={`${quality.estimated}% estimated`}
+                            />
+                            <div 
+                              className="bg-gray-400" 
+                              style={{width: `${quality.missing}%`}}
+                              title={`${quality.missing}% missing`}
+                            />
+                          </div>
+                          <span className="text-xs text-gray-500">
+                            {quality.total}% complete
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900 capitalize">{club.location.city}</div>
+                    <div className="text-sm text-gray-500">{club.location.address}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {club.courts.total} courts
+                      {club.courts.total === 6 && club.importSource === 'google' && (
+                        <span className="ml-1 text-yellow-600" title="Default value - needs verification">≈</span>
+                      )}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {club.courts.surfaces.map(s => `${s.count} ${s.type}`).join(', ')}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(club.status)}`}>
+                      {club.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {getImportSourceBadge(club.importSource)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                    {club.featured && (
+                      <span className="text-yellow-400">⭐</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button
+                      onClick={() => handleEdit(club)}
+                      className="text-indigo-600 hover:text-indigo-900 mr-4"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(club._id)}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
 
@@ -253,7 +475,7 @@ export default function AdminClubsPage() {
       </div>
 
       {/* Stats Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="bg-white rounded-lg shadow p-6">
           <div className="text-3xl font-bold text-parque-purple">{clubs.length}</div>
           <div className="text-sm text-gray-600">Total Clubs</div>
@@ -265,37 +487,42 @@ export default function AdminClubsPage() {
           <div className="text-sm text-gray-600">Active Clubs</div>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
+          <div className="text-3xl font-bold text-blue-600">
+            {clubs.filter(c => c.importSource === 'google').length}
+          </div>
+          <div className="text-sm text-gray-600">From Google</div>
+        </div>
+        <div className="bg-white rounded-lg shadow p-6">
           <div className="text-3xl font-bold text-yellow-600">
             {clubs.filter(c => c.featured).length}
           </div>
           <div className="text-sm text-gray-600">Featured Clubs</div>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-3xl font-bold text-blue-600">
+          <div className="text-3xl font-bold text-indigo-600">
             {clubs.reduce((sum, club) => sum + club.courts.total, 0)}
           </div>
           <div className="text-sm text-gray-600">Total Courts</div>
         </div>
       </div>
 
-      {/* Form Modal Placeholder */}
-      {showFormModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold mb-4">
-              {editingClub ? 'Edit Club' : 'Add New Club'}
-            </h3>
-            <p className="text-gray-600 mb-4">
-              Club form modal will be implemented next...
-            </p>
-            <button
-              onClick={() => setShowFormModal(false)}
-              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
-            >
-              Close
-            </button>
-          </div>
-        </div>
+      {/* Club Form Modal */}
+      <ClubFormModal
+        isOpen={showFormModal}
+        onClose={() => {
+          setShowFormModal(false)
+          setEditingClub(null)
+        }}
+        club={editingClub}
+        onSuccess={handleFormSuccess}
+      />
+
+      {/* Google Maps Import Modal */}
+      {showImportModal && (
+        <GoogleMapsImporter
+          onClose={() => setShowImportModal(false)}
+          onImportComplete={handleImportComplete}
+        />
       )}
     </div>
   )

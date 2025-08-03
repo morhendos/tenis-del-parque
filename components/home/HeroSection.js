@@ -78,13 +78,15 @@ export default function HeroSection({ content }) {
           </p>
           
           {/* Enhanced CTA - MOBILE OPTIMIZED */}
-          <Link href="/rules" className="inline-flex items-center bg-gradient-to-r from-parque-purple to-parque-purple/90 text-white px-6 py-3 sm:px-8 sm:py-4 md:px-10 md:py-5 rounded-full text-base sm:text-lg font-medium hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 animate-fadeInUp animation-delay-800 group relative glow-purple hover:glow min-h-[48px] touch-manipulation">
+          <Link href="/rules" className="inline-flex items-center bg-gradient-to-r from-parque-purple to-parque-purple/90 text-white px-6 py-3 sm:px-8 sm:py-4 md:px-10 md:py-5 rounded-full text-base sm:text-lg font-medium hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 animate-fadeInUp animation-delay-800 group relative min-h-[48px] touch-manipulation overflow-hidden">
             <span className="relative z-10">{content.cta}</span>
             <svg className="w-4 h-4 sm:w-5 sm:h-5 ml-2 group-hover:translate-x-2 transition-transform relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
+            {/* Glow effect - contained within button */}
+            <div className="absolute inset-0 rounded-full glow-purple group-hover:glow transition-all duration-150"></div>
             {/* Shimmer effect on hover */}
-            <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-100">
               <div className="absolute inset-0 rounded-full shimmer"></div>
             </div>
           </Link>

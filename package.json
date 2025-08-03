@@ -9,6 +9,7 @@
     "lint": "next lint",
     "tree": "node scripts/tree.js",
     "seed:leagues": "node scripts/seedLeagues.js",
+    "seed:cities": "node scripts/seedCities.js",
     "create-admin": "node scripts/createAdminUser.js",
     "unlock-accounts": "node scripts/unlockAccounts.js"
   },
@@ -24,7 +25,8 @@
     "react": "^18",
     "react-dom": "^18",
     "react-markdown": "^9.0.1",
-    "remark-gfm": "^4.0.0"
+    "remark-gfm": "^4.0.0",
+    "resend": "^4.7.0"
   },
   "devDependencies": {
     "autoprefixer": "^10.0.1",

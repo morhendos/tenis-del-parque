@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams, useParams } from 'next/navigation'
 import { signIn, useSession } from 'next-auth/react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { loginContent } from '@/lib/content/loginContent'
 
 function LoginForm() {
@@ -285,12 +286,12 @@ function LoginForm() {
                 {t.signUp}
               </a>
               
-              <a 
+              <Link 
                 href={`/${locale}/forgot-password`} 
                 className="block text-sm text-gray-600 hover:text-gray-800 transition-colors touch-manipulation"
               >
                 {t.forgotPassword}
-              </a>
+              </Link>
             </div>
           </div>
         </div>
