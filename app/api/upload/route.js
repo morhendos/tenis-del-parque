@@ -8,11 +8,17 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024
 // Allowed image types
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
 
+// Valid upload types and their directories
+const UPLOAD_TYPES = {
+  'club_image': 'clubs',
+  'city_image': 'cities'
+}
+
 // Generate secure filename
 const generateFilename = (originalName, type) => {
   const timestamp = Date.now()
   const random = Math.random().toString(36).substring(2, 8)
-  const extension = type === 'club_image' ? getExtensionFromMimeType(originalName) : 'jpg'
+  const extension = getExtensionFromMimeType(originalName)
   return `${type}_${timestamp}_${random}.${extension}`
 }
 
@@ -35,6 +41,11 @@ const isValidFileSize = (file) => {
   return file.size <= MAX_FILE_SIZE
 }
 
+// Validate upload type
+const isValidUploadType = (type) => {
+  return UPLOAD_TYPES.hasOwnProperty(type)
+}
+
 export async function POST(request) {
   try {
     const formData = await request.formData()
@@ -45,6 +56,14 @@ export async function POST(request) {
     if (!file) {
       return NextResponse.json(
         { error: 'No file provided' },
+        { status: 400 }
+      )
+    }
+    
+    // Validate upload type
+    if (!isValidUploadType(type)) {
+      return NextResponse.json(
+        { error: `Invalid upload type. Allowed types: ${Object.keys(UPLOAD_TYPES).join(', ')}` },
         { status: 400 }
       )
     }
@@ -67,7 +86,8 @@ export async function POST(request) {
     
     // Generate filename and paths
     const filename = generateFilename(file.name, type)
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'clubs')
+    const subDir = UPLOAD_TYPES[type]
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads', subDir)
     const filepath = path.join(uploadDir, filename)
     
     // Ensure upload directory exists
@@ -92,7 +112,7 @@ export async function POST(request) {
       await writeFile(filepath, buffer)
       
       // Return the public URL
-      const publicUrl = `/uploads/clubs/${filename}`
+      const publicUrl = `/uploads/${subDir}/${filename}`
       
       return NextResponse.json({
         success: true,
@@ -100,7 +120,9 @@ export async function POST(request) {
         filename: filename,
         size: file.size,
         type: file.type,
-        originalName: file.name
+        originalName: file.name,
+        uploadType: type,
+        directory: subDir
       })
       
     } catch (writeError) {
@@ -123,7 +145,12 @@ export async function POST(request) {
 // Handle other HTTP methods
 export async function GET() {
   return NextResponse.json(
-    { error: 'Method not allowed' },
+    { 
+      error: 'Method not allowed',
+      allowedTypes: Object.keys(UPLOAD_TYPES),
+      maxFileSize: `${MAX_FILE_SIZE / 1024 / 1024}MB`,
+      allowedFormats: ALLOWED_TYPES
+    },
     { status: 405 }
   )
 }
