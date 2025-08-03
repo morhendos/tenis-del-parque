@@ -38,6 +38,40 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
     importSource: 'manual'
   })
 
+  // Helper function to normalize text for accent-insensitive comparison
+  const normalizeText = (text) => {
+    return text
+      .toLowerCase()
+      .normalize('NFD') // Decompose accented characters
+      .replace(/[\u0300-\u036f]/g, '') // Remove accents/diacritics
+      .trim()
+  }
+
+  // Helper function to highlight matching text
+  const highlightMatch = (text, query) => {
+    if (!query.trim()) return text
+    
+    const normalizedText = normalizeText(text)
+    const normalizedQuery = normalizeText(query)
+    
+    // Find the start index of the match
+    const matchIndex = normalizedText.indexOf(normalizedQuery)
+    if (matchIndex === -1) return text
+    
+    // Extract the original text parts
+    const beforeMatch = text.substring(0, matchIndex)
+    const match = text.substring(matchIndex, matchIndex + normalizedQuery.length)
+    const afterMatch = text.substring(matchIndex + normalizedQuery.length)
+    
+    return (
+      <>
+        {beforeMatch}
+        <span className="bg-yellow-200 font-semibold">{match}</span>
+        {afterMatch}
+      </>
+    )
+  }
+
   // Initialize form data when editing
   useEffect(() => {
     if (city) {
@@ -104,7 +138,7 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          query: query + ', Spain',
+          query: query, // Don't add ", Spain" here - the API will handle it
           types: ['locality', 'administrative_area_level_2']
         })
       })
@@ -132,10 +166,10 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
       clearTimeout(debounceRef.current)
     }
     
-    // Set new debounce
+    // Set new debounce - reduced to 250ms for better responsiveness
     debounceRef.current = setTimeout(() => {
       performAutocompleteSearch(value)
-    }, 300) // 300ms delay
+    }, 250)
   }
 
   // Handle keyboard navigation in autocomplete
@@ -219,7 +253,7 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          query: searchQuery + ', Spain',
+          query: searchQuery, // API will handle adding ", Spain"
           types: ['locality', 'administrative_area_level_2']
         })
       })
@@ -233,7 +267,7 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
       setSearchResults(data.results || [])
       
       if (data.results?.length === 0) {
-        setError('No cities found. Try a different search term.')
+        setError('No cities found. Try a different search term or check spelling.')
       }
 
     } catch (err) {
@@ -453,7 +487,7 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
               </h3>
               {!city && searchMode && (
                 <p className="text-sm text-gray-600 mt-1">
-                  Type to get instant city suggestions from Google Maps
+                  Smart search with accent-insensitive matching - type "Malag" to find "Málaga"
                 </p>
               )}
             </div>
@@ -485,10 +519,15 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
                     <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                   </svg>
                   <div className="flex-1">
-                    <h4 className="font-medium text-blue-900">Smart City Search with Autocomplete</h4>
+                    <h4 className="font-medium text-blue-900">🚀 Enhanced Smart City Search</h4>
                     <p className="text-sm text-blue-800 mt-1">
-                      Start typing a Spanish city name to see instant suggestions. Use arrow keys to navigate and Enter to select.
+                      Now supports accent-insensitive search! Type "Malag" to find "Málaga", "Cordoba" to find "Córdoba", etc.
                     </p>
+                    <ul className="text-xs text-blue-700 mt-2 space-y-1">
+                      <li>• Works without accents: Malaga, Cordoba, Cadiz</li>
+                      <li>• Fuzzy matching for typos</li>
+                      <li>• Use arrow keys ↑↓ to navigate, Enter to select</li>
+                    </ul>
                   </div>
                 </div>
               </div>
@@ -506,7 +545,7 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
                       onChange={(e) => handleSearchQueryChange(e.target.value)}
                       onKeyDown={handleKeyDown}
                       onFocus={() => searchQuery.length >= 2 && setShowAutocomplete(true)}
-                      placeholder="Type city name... (e.g., Marbella)"
+                      placeholder="Try: Malag, Cordoba, Cadiz..."
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-8"
                     />
                     
@@ -534,13 +573,15 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
                             } ${index !== autocompleteResults.length - 1 ? 'border-b border-gray-100' : ''}`}
                           >
                             <div className="flex items-center justify-between">
-                              <div>
-                                <div className="font-medium text-gray-900">{result.name}</div>
+                              <div className="flex-1">
+                                <div className="font-medium text-gray-900">
+                                  {highlightMatch(result.name, searchQuery)}
+                                </div>
                                 <div className="text-sm text-gray-600">
                                   {result.address_components?.find(c => c.types.includes('administrative_area_level_2'))?.long_name || 'Spain'}
                                 </div>
                               </div>
-                              <div className="text-xs text-gray-400">
+                              <div className="text-xs text-gray-400 ml-2">
                                 📍 {result.geometry?.location?.lat?.toFixed(2)}, {result.geometry?.location?.lng?.toFixed(2)}
                               </div>
                             </div>
@@ -565,10 +606,11 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
                   </button>
                 </div>
                 
-                {/* Keyboard shortcuts hint */}
-                <p className="text-xs text-gray-500 mt-1">
-                  💡 Use ↑↓ arrows to navigate suggestions, Enter to select, Esc to close
-                </p>
+                {/* Enhanced help text */}
+                <div className="text-xs text-gray-500 mt-1 space-y-1">
+                  <p>💡 Use ↑↓ arrows to navigate suggestions, Enter to select, Esc to close</p>
+                  <p>🎯 Accent-insensitive: "Malag" finds "Málaga", "Cordoba" finds "Córdoba"</p>
+                </div>
               </div>
 
               {/* Search Results */}
@@ -588,7 +630,9 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
                             : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'
                         }`}
                       >
-                        <div className="font-medium text-gray-900">{result.name}</div>
+                        <div className="font-medium text-gray-900">
+                          {highlightMatch(result.name, searchQuery)}
+                        </div>
                         <div className="text-sm text-gray-600">{result.formatted_address}</div>
                         <div className="text-xs text-gray-500 mt-1">
                           📍 {result.geometry?.location?.lat?.toFixed(4)}, {result.geometry?.location?.lng?.toFixed(4)}
