@@ -4,16 +4,17 @@ import { useState } from 'react'
 
 export default function CityGoogleEnhancer({ isOpen, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false)
-  const [progress, setProgress] = useState({ current: 0, total: 0, currentCity: '' })
+  const [progress, setProgress] = useState({ current: 0, total: 0, currentCity: '', stage: '' })
   const [results, setResults] = useState(null)
   const [error, setError] = useState(null)
   const [enhancementType, setEnhancementType] = useState('missing') // 'all', 'missing', 'selected'
+  const [includePhotos, setIncludePhotos] = useState(true) // New option for photo enhancement
 
   const handleEnhancement = async () => {
     setLoading(true)
     setError(null)
     setResults(null)
-    setProgress({ current: 0, total: 0, currentCity: '' })
+    setProgress({ current: 0, total: 0, currentCity: '', stage: '' })
 
     try {
       const response = await fetch('/api/admin/cities/enhance-google', {
@@ -22,7 +23,8 @@ export default function CityGoogleEnhancer({ isOpen, onClose, onSuccess }) {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ 
-          type: enhancementType 
+          type: enhancementType,
+          includePhotos: includePhotos
         })
       })
 
@@ -73,6 +75,20 @@ export default function CityGoogleEnhancer({ isOpen, onClose, onSuccess }) {
     onClose()
   }
 
+  // Helper to get stage description
+  const getStageDescription = (stage) => {
+    switch (stage) {
+      case 'starting':
+        return 'Initializing enhancement process...'
+      case 'enhancing':
+        return 'Fetching GPS coordinates and Google data...'
+      case 'fetching_photos':
+        return 'Downloading city photos...'
+      default:
+        return 'Processing...'
+    }
+  }
+
   if (!isOpen) return null
 
   return (
@@ -86,7 +102,7 @@ export default function CityGoogleEnhancer({ isOpen, onClose, onSuccess }) {
                 🗺️ Enhance Cities with Google Maps
               </h3>
               <p className="text-sm text-gray-600 mt-1">
-                Automatically fetch GPS coordinates and details from Google Maps API
+                Automatically fetch GPS coordinates, details, and photos from Google Maps API
               </p>
             </div>
             <button
@@ -140,6 +156,28 @@ export default function CityGoogleEnhancer({ isOpen, onClose, onSuccess }) {
                 </div>
               </div>
 
+              {/* Photo Enhancement Option */}
+              <div className="border-t border-gray-200 pt-4">
+                <label className="flex items-start space-x-3">
+                  <input
+                    type="checkbox"
+                    checked={includePhotos}
+                    onChange={(e) => setIncludePhotos(e.target.checked)}
+                    className="mt-1 text-parque-purple focus:ring-parque-purple"
+                  />
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900">📸 Include Photo Enhancement</div>
+                    <div className="text-sm text-gray-500 mt-1">
+                      Automatically fetch and set city photos from Google Maps for frontend display. 
+                      This will only add photos to cities that don't have a main image yet.
+                    </div>
+                    <div className="text-xs text-blue-600 mt-1">
+                      ⚡ Recommended: Photos enhance the visual appeal of the frontend leagues page
+                    </div>
+                  </div>
+                </label>
+              </div>
+
               {/* What will be enhanced */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <h4 className="font-medium text-blue-900 mb-2">🔍 What will be enhanced:</h4>
@@ -149,6 +187,9 @@ export default function CityGoogleEnhancer({ isOpen, onClose, onSuccess }) {
                   <li>• <strong>Place IDs</strong> - Unique Google identifiers for future use</li>
                   <li>• <strong>Geographic Data</strong> - Viewport bounds and location types</li>
                   <li>• <strong>Google Maps URLs</strong> - Direct links to Google Maps</li>
+                  {includePhotos && (
+                    <li>• <strong>📸 City Photos</strong> - High-quality images for frontend display</li>
+                  )}
                 </ul>
               </div>
 
@@ -158,9 +199,23 @@ export default function CityGoogleEnhancer({ isOpen, onClose, onSuccess }) {
                 <ul className="text-sm text-yellow-800 space-y-1">
                   <li>• Google Maps API key must be configured in environment variables</li>
                   <li>• Geocoding API must be enabled in Google Cloud Console</li>
-                  <li>• Process respects rate limits (100ms delay between requests)</li>
+                  {includePhotos && (
+                    <li>• Places API must be enabled for photo downloads</li>
+                  )}
+                  <li>• Process respects rate limits ({includePhotos ? '150ms' : '100ms'} delay between requests)</li>
                 </ul>
               </div>
+
+              {/* Performance Note */}
+              {includePhotos && (
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                  <h4 className="font-medium text-orange-900 mb-2">🕒 Performance Note:</h4>
+                  <p className="text-sm text-orange-800">
+                    Photo enhancement will take longer as it makes additional API calls to fetch images. 
+                    Each city requires 2 API calls (geocoding + photo details) instead of 1.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -169,7 +224,9 @@ export default function CityGoogleEnhancer({ isOpen, onClose, onSuccess }) {
             <div className="space-y-4">
               <div className="text-center">
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-parque-purple"></div>
-                <p className="mt-2 text-gray-600">Enhancing cities with Google Maps data...</p>
+                <p className="mt-2 text-gray-600">
+                  Enhancing cities with Google Maps data{includePhotos && ' and photos'}...
+                </p>
               </div>
 
               {progress.total > 0 && (
@@ -185,9 +242,16 @@ export default function CityGoogleEnhancer({ isOpen, onClose, onSuccess }) {
                     ></div>
                   </div>
                   {progress.currentCity && (
-                    <p className="text-sm text-gray-600 mt-2">
-                      Currently processing: <strong>{progress.currentCity}</strong>
-                    </p>
+                    <div className="text-sm text-gray-600 mt-2">
+                      <p>
+                        Currently processing: <strong>{progress.currentCity}</strong>
+                      </p>
+                      {progress.stage && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          {getStageDescription(progress.stage)}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
@@ -233,6 +297,12 @@ export default function CityGoogleEnhancer({ isOpen, onClose, onSuccess }) {
                     <span className="text-green-700">API Calls:</span>
                     <span className="ml-2 font-medium">{results.apiCalls || 0}</span>
                   </div>
+                  {includePhotos && results.photosAdded !== undefined && (
+                    <div className="col-span-2">
+                      <span className="text-green-700">Photos Added:</span>
+                      <span className="ml-2 font-medium">{results.photosAdded} cities</span>
+                    </div>
+                  )}
                 </div>
 
                 {results.enhancedCities && results.enhancedCities.length > 0 && (
@@ -241,6 +311,15 @@ export default function CityGoogleEnhancer({ isOpen, onClose, onSuccess }) {
                     <div className="text-xs text-green-700 max-h-20 overflow-y-auto">
                       {results.enhancedCities.join(', ')}
                     </div>
+                  </div>
+                )}
+
+                {includePhotos && results.photosAdded > 0 && (
+                  <div className="mt-3 p-3 bg-blue-50 rounded border border-blue-200">
+                    <p className="text-sm text-blue-800">
+                      📸 <strong>{results.photosAdded}</strong> cities now have main images that will be displayed 
+                      on the frontend leagues page.
+                    </p>
                   </div>
                 )}
               </div>
@@ -273,7 +352,9 @@ export default function CityGoogleEnhancer({ isOpen, onClose, onSuccess }) {
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
               </svg>
-              <span>Start Enhancement</span>
+              <span>
+                Start Enhancement{includePhotos && ' + Photos'}
+              </span>
             </button>
           </div>
         )}
