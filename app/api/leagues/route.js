@@ -11,10 +11,10 @@ export async function GET(request) {
     // Connect to database (no auth required for public API)
     await dbConnect()
 
-    // Fetch all public leagues (active and coming_soon) using the model method
+    // Fetch all public leagues (active and coming_soon) with city data
     const leagues = await League.findPublicLeagues()
 
-    // Get player count for each league (including all players regardless of level)
+    // Get player count for each league and format city data
     const leaguesWithStats = await Promise.all(leagues.map(async (league) => {
       // Only count players for active leagues
       let playerCount = 0
@@ -49,10 +49,23 @@ export async function GET(request) {
         }, {})
       }
 
+      // Format league data with city information
+      const leagueData = league.toObject()
+      
+      // Add cityData for frontend consumption
+      const cityData = {
+        name: league.getCityName ? league.getCityName() : (league.location?.city || 'Unknown'),
+        slug: league.getCitySlug ? league.getCitySlug() : league.slug,
+        images: league.getCityImages ? league.getCityImages() : null,
+        coordinates: league.city?.coordinates || null,
+        googleData: league.city?.googleData || null
+      }
+
       return {
-        ...league.toObject(),
+        ...leagueData,
         playerCount,
-        playersByLevel
+        playersByLevel,
+        cityData // Add formatted city data for frontend
       }
     }))
 
