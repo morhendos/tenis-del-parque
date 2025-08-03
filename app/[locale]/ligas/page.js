@@ -65,7 +65,8 @@ export default function LeaguesPage() {
     } catch (err) {
       console.error('Error fetching leagues:', err)
       setError(err.message)
-    } finally {\n      setLoading(false)
+    } finally {
+      setLoading(false)
     }
   }
 
