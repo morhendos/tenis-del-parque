@@ -1,5 +1,8 @@
 const mongoose = require('mongoose')
 
+// Load environment variables from .env.local
+require('dotenv').config({ path: '.env.local' })
+
 // Season Schema (inline, no imports needed)
 const SeasonSchema = new mongoose.Schema({
   year: { type: Number, required: true, min: 2024, max: 2050 },
@@ -79,10 +82,17 @@ function createSeasonsForYear(year) {
 async function seedSeasons() {
   console.log('🌱 Creating seasons...')
   
+  const dbUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/tenis-del-parque'
+  
+  // Show which database we're connecting to (hide password for security)
+  const safeUri = dbUri.replace(/:([^:@]+)@/, ':***@')
+  console.log(`🔗 Connecting to: ${safeUri}`)
+  
   try {
     // Connect to MongoDB
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/tenis-del-parque')
+    await mongoose.connect(dbUri)
     console.log('✅ Connected to MongoDB')
+    console.log(`📁 Database name: ${mongoose.connection.db.databaseName}`)
     
     const years = [2024, 2025, 2026]
     
