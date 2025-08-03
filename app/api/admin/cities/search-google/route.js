@@ -78,7 +78,7 @@ function generateSearchVariations(query) {
   return Array.from(variations).slice(0, 10) // Increased limit for complex names
 }
 
-// Enhanced mock data with more Spanish cities including complex names
+// Enhanced mock data with more Spanish cities including complex names and photos
 function getMockCities() {
   return [
     {
@@ -98,7 +98,23 @@ function getMockCities() {
         { long_name: 'Andalusia', short_name: 'AN', types: ['administrative_area_level_1'] },
         { long_name: 'Spain', short_name: 'ES', types: ['country'] }
       ],
-      types: ['locality', 'political']
+      types: ['locality', 'political'],
+      photos: [
+        {
+          photo_reference: 'mock_marbella_photo_1',
+          width: 1920,
+          height: 1080,
+          html_attributions: ['<a href="https://unsplash.com">Unsplash</a>'],
+          url: 'https://images.unsplash.com/1920x1080/?marbella,costa,del,sol'
+        },
+        {
+          photo_reference: 'mock_marbella_photo_2',
+          width: 1600,
+          height: 900,
+          html_attributions: ['<a href="https://unsplash.com">Unsplash</a>'],
+          url: 'https://images.unsplash.com/1600x900/?marbella,beach,spain'
+        }
+      ]
     },
     {
       name: 'Málaga',
@@ -117,7 +133,23 @@ function getMockCities() {
         { long_name: 'Andalusia', short_name: 'AN', types: ['administrative_area_level_1'] },
         { long_name: 'Spain', short_name: 'ES', types: ['country'] }
       ],
-      types: ['locality', 'political']
+      types: ['locality', 'political'],
+      photos: [
+        {
+          photo_reference: 'mock_malaga_photo_1',
+          width: 1920,
+          height: 1080,
+          html_attributions: ['<a href="https://unsplash.com">Unsplash</a>'],
+          url: 'https://images.unsplash.com/1920x1080/?malaga,cathedral,spain'
+        },
+        {
+          photo_reference: 'mock_malaga_photo_2',
+          width: 1600,
+          height: 900,
+          html_attributions: ['<a href="https://unsplash.com">Unsplash</a>'],
+          url: 'https://images.unsplash.com/1600x900/?malaga,port,city'
+        }
+      ]
     },
     {
       name: 'La Línea de la Concepción',
@@ -136,7 +168,16 @@ function getMockCities() {
         { long_name: 'Andalusia', short_name: 'AN', types: ['administrative_area_level_1'] },
         { long_name: 'Spain', short_name: 'ES', types: ['country'] }
       ],
-      types: ['locality', 'political']
+      types: ['locality', 'political'],
+      photos: [
+        {
+          photo_reference: 'mock_lalinea_photo_1',
+          width: 1920,
+          height: 1080,
+          html_attributions: ['<a href="https://unsplash.com">Unsplash</a>'],
+          url: 'https://images.unsplash.com/1920x1080/?la,linea,gibraltar,border'
+        }
+      ]
     },
     {
       name: 'Estepona',
@@ -155,7 +196,16 @@ function getMockCities() {
         { long_name: 'Andalusia', short_name: 'AN', types: ['administrative_area_level_1'] },
         { long_name: 'Spain', short_name: 'ES', types: ['country'] }
       ],
-      types: ['locality', 'political']
+      types: ['locality', 'political'],
+      photos: [
+        {
+          photo_reference: 'mock_estepona_photo_1',
+          width: 1920,
+          height: 1080,
+          html_attributions: ['<a href="https://unsplash.com">Unsplash</a>'],
+          url: 'https://images.unsplash.com/1920x1080/?estepona,white,village,spain'
+        }
+      ]
     },
     {
       name: 'Benalmádena',
@@ -174,7 +224,16 @@ function getMockCities() {
         { long_name: 'Andalusia', short_name: 'AN', types: ['administrative_area_level_1'] },
         { long_name: 'Spain', short_name: 'ES', types: ['country'] }
       ],
-      types: ['locality', 'political']
+      types: ['locality', 'political'],
+      photos: [
+        {
+          photo_reference: 'mock_benalmadena_photo_1',
+          width: 1920,
+          height: 1080,
+          html_attributions: ['<a href="https://unsplash.com">Unsplash</a>'],
+          url: 'https://images.unsplash.com/1920x1080/?benalmadena,marina,costa,del,sol'
+        }
+      ]
     },
     {
       name: 'Córdoba',
@@ -193,7 +252,16 @@ function getMockCities() {
         { long_name: 'Andalusia', short_name: 'AN', types: ['administrative_area_level_1'] },
         { long_name: 'Spain', short_name: 'ES', types: ['country'] }
       ],
-      types: ['locality', 'political']
+      types: ['locality', 'political'],
+      photos: [
+        {
+          photo_reference: 'mock_cordoba_photo_1',
+          width: 1920,
+          height: 1080,
+          html_attributions: ['<a href="https://unsplash.com">Unsplash</a>'],
+          url: 'https://images.unsplash.com/1920x1080/?cordoba,mezquita,spain,cathedral'
+        }
+      ]
     },
     {
       name: 'Cádiz',
@@ -212,7 +280,16 @@ function getMockCities() {
         { long_name: 'Andalusia', short_name: 'AN', types: ['administrative_area_level_1'] },
         { long_name: 'Spain', short_name: 'ES', types: ['country'] }
       ],
-      types: ['locality', 'political']
+      types: ['locality', 'political'],
+      photos: [
+        {
+          photo_reference: 'mock_cadiz_photo_1',
+          width: 1920,
+          height: 1080,
+          html_attributions: ['<a href="https://unsplash.com">Unsplash</a>'],
+          url: 'https://images.unsplash.com/1920x1080/?cadiz,ocean,ancient,city'
+        }
+      ]
     },
     {
       name: 'Jerez de la Frontera',
@@ -231,7 +308,16 @@ function getMockCities() {
         { long_name: 'Andalusia', short_name: 'AN', types: ['administrative_area_level_1'] },
         { long_name: 'Spain', short_name: 'ES', types: ['country'] }
       ],
-      types: ['locality', 'political']
+      types: ['locality', 'political'],
+      photos: [
+        {
+          photo_reference: 'mock_jerez_photo_1',
+          width: 1920,
+          height: 1080,
+          html_attributions: ['<a href="https://unsplash.com">Unsplash</a>'],
+          url: 'https://images.unsplash.com/1920x1080/?jerez,sherry,vineyards,spain'
+        }
+      ]
     },
     {
       name: 'Algeciras',
@@ -250,7 +336,16 @@ function getMockCities() {
         { long_name: 'Andalusia', short_name: 'AN', types: ['administrative_area_level_1'] },
         { long_name: 'Spain', short_name: 'ES', types: ['country'] }
       ],
-      types: ['locality', 'political']
+      types: ['locality', 'political'],
+      photos: [
+        {
+          photo_reference: 'mock_algeciras_photo_1',
+          width: 1920,
+          height: 1080,
+          html_attributions: ['<a href="https://unsplash.com">Unsplash</a>'],
+          url: 'https://images.unsplash.com/1920x1080/?algeciras,port,gibraltar,strait'
+        }
+      ]
     }
   ]
 }
@@ -314,6 +409,43 @@ function fuzzyMatch(query, cityName, threshold = 0.5) {
   return similarity >= threshold ? similarity * 0.4 : 0
 }
 
+// Helper function to fetch photos for a place
+async function fetchPhotosForPlace(placeId, cityName) {
+  try {
+    if (!googleMapsClient || !process.env.GOOGLE_MAPS_API_KEY) {
+      // Return mock photos for development
+      return getMockCities().find(city => city.name.toLowerCase().includes(cityName.toLowerCase()))?.photos || []
+    }
+
+    const response = await googleMapsClient.placeDetails({
+      params: {
+        place_id: placeId,
+        key: process.env.GOOGLE_MAPS_API_KEY,
+        fields: 'photos'
+      }
+    })
+
+    const placeDetails = response.data.result
+    
+    if (!placeDetails.photos || placeDetails.photos.length === 0) {
+      return []
+    }
+
+    // Process Google Photos
+    return placeDetails.photos.slice(0, 5).map(photo => ({
+      photo_reference: photo.photo_reference,
+      width: photo.width,
+      height: photo.height,
+      html_attributions: photo.html_attributions || [],
+      url: `https://maps.googleapis.com/maps/api/place/photo?maxwidth=1600&photo_reference=${photo.photo_reference}&key=${process.env.GOOGLE_MAPS_API_KEY}`
+    }))
+
+  } catch (error) {
+    console.error('Error fetching photos:', error)
+    return []
+  }
+}
+
 export async function POST(request) {
   try {
     const session = await getServerSession(authOptions)
@@ -322,7 +454,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { query, types = ['locality', 'administrative_area_level_2'] } = await request.json()
+    const { query, types = ['locality', 'administrative_area_level_2'], includePhotos = false } = await request.json()
 
     if (!query) {
       return NextResponse.json({ error: 'Search query is required' }, { status: 400 })
@@ -444,6 +576,20 @@ export async function POST(request) {
         })
         .sort((a, b) => b.score - a.score) // Sort by relevance
         .slice(0, 10) // Limit to 10 results
+
+      // Fetch photos for each city if requested
+      if (includePhotos) {
+        for (let i = 0; i < spanishCities.length; i++) {
+          const city = spanishCities[i]
+          try {
+            const photos = await fetchPhotosForPlace(city.place_id, city.name)
+            city.photos = photos
+          } catch (photoError) {
+            console.warn(`Failed to fetch photos for ${city.name}:`, photoError.message)
+            city.photos = []
+          }
+        }
+      }
 
       // Remove score from final results
       const finalResults = spanishCities.map(({ score, ...city }) => city)
