@@ -98,6 +98,8 @@ root/
 │   │   │   │   │   └── route.js
 │   │   │   │   ├── fetch-photos
 │   │   │   │   │   └── route.js
+│   │   │   │   ├── google-photo
+│   │   │   │   │   └── route.js
 │   │   │   │   ├── route.js
 │   │   │   │   └── search-google
 │   │   │   │       └── route.js
