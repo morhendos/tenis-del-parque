@@ -27,6 +27,8 @@ export default function LeagueSeasonPage() {
   const [totalRounds, setTotalRounds] = useState(8)
   const [showNavigation, setShowNavigation] = useState(false)
   const [isTabsSticky, setIsTabsSticky] = useState(false)
+  const [tabsRef, setTabsRef] = useState(null)
+  const [tabsOriginalTop, setTabsOriginalTop] = useState(0)
 
   const t = homeContent[language]
 
@@ -41,17 +43,39 @@ export default function LeagueSeasonPage() {
     }
   }, [activeTab, currentSeason])
 
-  // Handle scroll effect for sticky tabs
+  // Calculate original position of tabs when component mounts
   useEffect(() => {
+    if (tabsRef && !isTabsSticky) {
+      const rect = tabsRef.getBoundingClientRect()
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+      setTabsOriginalTop(rect.top + scrollTop)
+    }
+  }, [tabsRef, isTabsSticky])
+
+  // Handle scroll effect for sticky tabs - precise positioning
+  useEffect(() => {
+    let ticking = false
+    
     const handleScroll = () => {
-      const scrollTop = window.scrollY
-      // Make tabs sticky when we scroll past the hero section (roughly 150px since it's more compact now)
-      setIsTabsSticky(scrollTop > 150)
+      if (!ticking && tabsOriginalTop > 0) {
+        requestAnimationFrame(() => {
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+          // Make tabs sticky when scroll position reaches the original tabs position (with small offset for smoother UX)
+          setIsTabsSticky(scrollTop >= tabsOriginalTop + 1)
+          ticking = false
+        })
+        ticking = true
+      }
     }
 
-    window.addEventListener('scroll', handleScroll)
+    if (tabsOriginalTop > 0) {
+      window.addEventListener('scroll', handleScroll, { passive: true })
+      // Check initial position
+      handleScroll()
+    }
+
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+  }, [tabsOriginalTop])
 
   const fetchLeagueData = async () => {
     try {
@@ -219,11 +243,14 @@ export default function LeagueSeasonPage() {
       </section>
 
       {/* Navigation Tabs - Clean and Simple */}
-      <section className={`transition-all duration-300 ${
-        isTabsSticky 
-          ? 'fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-lg' 
-          : 'relative'
-      }`}>
+      <section 
+        ref={(el) => setTabsRef(el)}
+        className={`transition-all duration-300 ${
+          isTabsSticky 
+            ? 'fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-lg' 
+            : 'relative'
+        }`}
+      >
         <div className="container mx-auto px-4 py-3">
           <nav className="flex justify-center">
             <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">

@@ -226,7 +226,7 @@ export default function CitySignupPage() {
     ...t.signup,
     title: isComingSoon 
       ? `Pre-regístrate para ${league.name}`
-      : `Únete a la Liga de ${league.name}`,
+      : `Únete a ${league.name}`,
     subtitle: isComingSoon
       ? `Sé de los primeros en jugar cuando lancemos en ${league.name}`
       : `Juega al tenis en ${league.name} con jugadores de tu nivel`
@@ -236,7 +236,7 @@ export default function CitySignupPage() {
   if (isComingSoon && isSubmitted) {
     signupContent.success = {
       title: '¡Estás en la lista!',
-      message: `Te contactaremos cuando la liga de ${league.name} esté lista para lanzar. ¡Prepárate para jugar!`
+      message: `Te contactaremos cuando ${league.name} esté lista para lanzar. ¡Prepárate para jugar!`
     }
   }
 
@@ -249,7 +249,7 @@ export default function CitySignupPage() {
         <div className="bg-gradient-to-br from-parque-purple/10 to-parque-green/10 py-16">
           <div className="container mx-auto px-4 text-center">
             <h1 className="text-5xl md:text-6xl font-light text-parque-purple mb-4">
-              Liga de {league.name}
+              {league.name}
             </h1>
             <p className="text-xl text-gray-600 mb-2">
               {league.location?.region || 'España'}
