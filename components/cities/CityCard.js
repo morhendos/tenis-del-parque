@@ -17,9 +17,9 @@ export default function CityCard({ city, leagueCount = 0, className = '' }) {
   // Get the main city image with proper fallback handling
   const getCityImage = () => {
     if (city.images?.main && !imageError) {
-      // If it's a Google photo reference, use the secure proxy
+      // If it's a Google photo reference, use the public proxy
       if (city.images.googlePhotoReference) {
-        return `/api/admin/cities/google-photo?photo_reference=${city.images.googlePhotoReference}&maxwidth=800`
+        return `/api/cities/photo?photo_reference=${city.images.googlePhotoReference}&maxwidth=800`
       }
       // Otherwise use the direct image URL
       return city.images.main
