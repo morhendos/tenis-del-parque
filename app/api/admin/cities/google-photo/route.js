@@ -12,8 +12,8 @@ export async function GET(request) {
 
     // Check if Google Maps API is available
     if (!process.env.GOOGLE_MAPS_API_KEY) {
-      // Return a fallback/placeholder image
-      const fallbackUrl = `https://images.unsplash.com/${maxwidth}x${Math.round(maxwidth * 0.75)}/?city,spain,landscape`
+      // Return a proper fallback/placeholder image
+      const fallbackUrl = `https://picsum.photos/${maxwidth}/${Math.round(maxwidth * 0.75)}?random=1`
       return NextResponse.redirect(fallbackUrl)
     }
 
@@ -43,16 +43,16 @@ export async function GET(request) {
     } catch (apiError) {
       console.error('Google Photos API error:', apiError.message)
       
-      // Fallback to placeholder image
-      const fallbackUrl = `https://images.unsplash.com/${maxwidth}x${Math.round(maxwidth * 0.75)}/?city,spain,landscape`
+      // Fallback to proper placeholder image
+      const fallbackUrl = `https://picsum.photos/${maxwidth}/${Math.round(maxwidth * 0.75)}?random=1`
       return NextResponse.redirect(fallbackUrl)
     }
 
   } catch (error) {
     console.error('Error serving Google Photo:', error)
     
-    // Return a generic fallback image
-    const fallbackUrl = `https://images.unsplash.com/800x600/?city,spain,landscape`
+    // Return a proper fallback image
+    const fallbackUrl = `https://picsum.photos/800/600?random=1`
     return NextResponse.redirect(fallbackUrl)
   }
 }
