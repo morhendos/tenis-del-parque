@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import ClubImageManager from './ClubImageManager'
 
 // Data source indicator component
 const DataSourceIndicator = ({ source }) => {
@@ -148,7 +149,8 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
     // Images
     images: {
       main: '',
-      gallery: []
+      gallery: [],
+      googlePhotoReference: null
     },
     
     // SEO
@@ -181,6 +183,9 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
   // Check if selected city exists in the cities list
   const isCityInList = cities.some(c => c.slug === formData.location.city)
   const willCreateNewCity = formData.location.city && !isCityInList && formData.location.city !== 'malaga'
+
+  // Total number of steps
+  const totalSteps = 6
 
   // Fetch cities when component mounts
   useEffect(() => {
@@ -238,7 +243,15 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
   }
 
-  // Random data generator
+  // Handle image updates from ClubImageManager
+  const handleImagesUpdate = (updatedClub) => {
+    setFormData(prev => ({
+      ...prev,
+      images: updatedClub.images
+    }))
+  }
+
+  // Random data generator (previous implementation...)
   const generateRandomData = () => {
     // Random club names
     const prefixes = ['Club de Tenis', 'Tennis Club', 'Real Club', 'Centro Deportivo', 'Complejo Tenis']
@@ -398,7 +411,8 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       tags: randomTags,
       images: {
         main: '',
-        gallery: []
+        gallery: [],
+        googlePhotoReference: null
       },
       seo: {
         metaTitle: {
@@ -435,7 +449,8 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
         },
         images: {
           main: club.images?.main || '',
-          gallery: club.images?.gallery || []
+          gallery: club.images?.gallery || [],
+          googlePhotoReference: club.images?.googlePhotoReference || null
         },
         seo: {
           metaTitle: {
@@ -538,7 +553,8 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
         tags: [],
         images: {
           main: '',
-          gallery: []
+          gallery: [],
+          googlePhotoReference: null
         },
         seo: {
           metaTitle: {
@@ -675,7 +691,8 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
         },
         images: {
           main: formData.images.main || '',
-          gallery: formData.images.gallery || []
+          gallery: formData.images.gallery || [],
+          googlePhotoReference: formData.images.googlePhotoReference || null
         },
         seo: {
           metaTitle: {
@@ -746,10 +763,40 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
         return renderAmenitiesServices()
       case 5:
         return renderContactPricing()
+      case 6:
+        return renderImagesStep()
       default:
         return null
     }
   }
+
+  const renderImagesStep = () => (
+    <div className="space-y-4">
+      <div className="text-center mb-4">
+        <h4 className="text-lg font-medium text-gray-900 mb-2">Club Images</h4>
+        <p className="text-sm text-gray-600">
+          Upload or manage images for your club. The main image will be used in listings and club pages.
+        </p>
+      </div>
+      
+      <ClubImageManager
+        club={{ ...formData, _id: club?._id }}
+        onImagesUpdate={handleImagesUpdate}
+        readOnly={false}
+      />
+      
+      {formData.images.main && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm">
+          <p className="text-green-800">
+            ✅ Main image set! Your club will look great in the directory.
+          </p>
+        </div>
+      )}
+    </div>
+  )
+
+  // ... All other render methods remain the same (renderBasicInfo, renderLocationInfo, etc.)
+  // [Previous render methods would be here - I'll include them in the full file]
 
   const renderBasicInfo = () => (
     <div className="space-y-4">
@@ -1334,7 +1381,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
           
           {/* Step indicator */}
           <div className="flex items-center justify-center mt-4 space-x-2">
-            {[1, 2, 3, 4, 5].map(step => (
+            {[1, 2, 3, 4, 5, 6].map(step => (
               <button
                 key={step}
                 onClick={() => setCurrentStep(step)}
@@ -1351,12 +1398,13 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
           
           <div className="text-center mt-2">
             <p className="text-sm text-gray-600">
-              Step {currentStep} of 5: {[
+              Step {currentStep} of {totalSteps}: {[
                 'Basic Information',
                 'Location',
                 'Courts',
                 'Amenities & Services',
-                'Contact & Pricing'
+                'Contact & Pricing',
+                'Images'
               ][currentStep - 1]}
             </p>
           </div>
@@ -1391,7 +1439,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
               Cancel
             </button>
             
-            {currentStep < 5 ? (
+            {currentStep < totalSteps ? (
               <button
                 onClick={() => setCurrentStep(currentStep + 1)}
                 className="px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-parque-purple/90"
