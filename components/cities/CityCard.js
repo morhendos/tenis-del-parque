@@ -3,11 +3,22 @@
 import { useState } from 'react'
 import Image from 'next/image'
 
-// Helper function to generate deterministic fallback images
-const getFallbackImageUrl = (cityName, width = 800, height = 600) => {
-  // Create a seed from city name for consistent images
-  const seed = cityName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 10)
-  return `https://picsum.photos/${width}/${height}?seed=${seed}`
+// Generic fallback for city images - consistent and professional
+const getGenericCityFallback = () => {
+  // Use a consistent gradient background for all cities without images
+  return 'data:image/svg+xml;base64,' + btoa(`
+    <svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="cityGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#10B981;stop-opacity:1" />
+        </linearGradient>
+      </defs>
+      <rect width="800" height="600" fill="url(#cityGrad)"/>
+      <text x="400" y="280" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="white" opacity="0.9">🏙️</text>
+      <text x="400" y="340" font-family="Arial, sans-serif" font-size="24" text-anchor="middle" fill="white" opacity="0.8">Ciudad</text>
+    </svg>
+  `)
 }
 
 export default function CityCard({ city, leagueCount = 0, className = '' }) {
@@ -25,9 +36,8 @@ export default function CityCard({ city, leagueCount = 0, className = '' }) {
       return city.images.main
     }
     
-    // Fallback to deterministic placeholder based on city name
-    const cityName = city.name?.es || city.displayName || city.slug || 'city'
-    return getFallbackImageUrl(cityName, 800, 600)
+    // Generic, consistent fallback for all cities
+    return getGenericCityFallback()
   }
 
   const handleImageError = () => {
@@ -66,32 +76,11 @@ export default function CityCard({ city, leagueCount = 0, className = '' }) {
         {/* Overlay gradient */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
         
-        {/* Google Photo Attribution (if from Google) */}
-        {city.images?.googlePhotoReference && !imageError && (
-          <div className="absolute top-2 right-2">
-            <div className="bg-white/90 rounded px-2 py-1 text-xs text-gray-600 flex items-center space-x-1">
-              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-              </svg>
-              <span>Google</span>
-            </div>
-          </div>
-        )}
-        
-        {/* League count badge */}
+        {/* League count badge - only show if there are leagues */}
         {displayLeagueCount > 0 && (
           <div className="absolute top-2 left-2">
             <div className="bg-parque-purple text-white rounded-full px-3 py-1 text-sm font-medium shadow-lg">
               {displayLeagueCount} liga{displayLeagueCount !== 1 ? 's' : ''}
-            </div>
-          </div>
-        )}
-
-        {/* "Coming Soon" badge for cities without leagues */}
-        {displayLeagueCount === 0 && (
-          <div className="absolute top-2 left-2">
-            <div className="bg-amber-500 text-white rounded-full px-3 py-1 text-sm font-medium shadow-lg">
-              Próximamente
             </div>
           </div>
         )}
@@ -124,12 +113,13 @@ export default function CityCard({ city, leagueCount = 0, className = '' }) {
             <span>{city.clubCount || 0} clubes</span>
           </div>
           
-          {((city.coordinates?.lat && city.coordinates?.lng) || city.hasCoordinates) && (
+          {/* Show league availability instead of GPS */}
+          {displayLeagueCount > 0 && (
             <div className="flex items-center text-green-600">
               <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
               </svg>
-              <span className="text-xs">GPS</span>
+              <span className="text-xs">Con Ligas</span>
             </div>
           )}
         </div>
@@ -141,8 +131,8 @@ export default function CityCard({ city, leagueCount = 0, className = '' }) {
               Ver Ligas de Tenis
             </button>
           ) : (
-            <button className="w-full bg-gray-100 text-gray-600 py-2 px-4 rounded-lg cursor-default font-medium">
-              Próximamente
+            <button className="w-full bg-gray-100 text-gray-600 py-2 px-4 rounded-lg font-medium">
+              Explorar Clubes
             </button>
           )}
         </div>
