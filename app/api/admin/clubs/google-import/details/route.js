@@ -3,6 +3,11 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import City from '@/lib/models/City'
 import dbConnect from '@/lib/db/mongoose'
+import { 
+  extractAreaFromGoogle, 
+  determineMainCity, 
+  generateDisplayName 
+} from '@/lib/utils/areaMapping'
 
 // Dynamically import to handle if package is not installed
 let Client
@@ -15,9 +20,9 @@ try {
 
 const googleMapsClient = Client ? new Client({}) : null
 
-// Helper function to generate slug from name
-function generateSlug(name) {
-  return name
+// Helper function to generate slug from name and area
+function generateSlug(name, area = null) {
+  const baseName = name
     .toLowerCase()
     .normalize('NFD') // Normalize to decomposed form
     .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
@@ -26,109 +31,87 @@ function generateSlug(name) {
     .replace(/\s+/g, '-') // Replace spaces with hyphens
     .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
     .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
+
+  // Include area in slug for better uniqueness
+  if (area && area !== 'unknown') {
+    return `${baseName}-${area}`
+  }
+  
+  return baseName
 }
 
-// Helper function to extract city from Google's formatted address
-async function extractAndCreateCity(formattedAddress, vicinity) {
+// Enhanced function to extract and process location data using our area mapping
+async function processLocationFromGoogle(place) {
   await dbConnect()
   
-  // Common Spanish address patterns
-  // Format 1: "Street, Number, PostalCode City, Province, Spain"
-  // Format 2: "Street, City, Province, Spain"
-  // Format 3: "Street, PostalCode, City Province, Spain"
+  console.log('Processing place:', place.name)
+  console.log('Formatted address:', place.formatted_address)
+  console.log('Address components:', place.address_components)
   
-  let cityName = null
-  let postalCode = null
+  // Extract area information using our new system
+  const areaInfo = extractAreaFromGoogle(place.address_components)
+  console.log('Extracted area info:', areaInfo)
   
-  // Try to extract postal code first
-  const postalCodeMatch = formattedAddress.match(/\b(\d{5})\b/)
-  if (postalCodeMatch) {
-    postalCode = postalCodeMatch[1]
-  }
+  // Determine main city for league organization
+  const mainCity = determineMainCity(areaInfo.area, areaInfo.city)
+  console.log('Determined main city:', mainCity)
   
-  // Method 1: Extract city after postal code
-  if (postalCode) {
-    const afterPostalCode = formattedAddress.match(new RegExp(`${postalCode}\\s+([^,]+)(?:,|$)`))
-    if (afterPostalCode && afterPostalCode[1]) {
-      cityName = afterPostalCode[1].trim()
-    }
-  }
-  
-  // Method 2: Use vicinity (usually contains city name)
-  if (!cityName && vicinity) {
-    // Vicinity often is like "City" or "Area, City"
-    const vicinitySplit = vicinity.split(',')
-    cityName = vicinitySplit[vicinitySplit.length - 1].trim()
-  }
-  
-  // Method 3: Parse formatted address parts
-  if (!cityName) {
-    const parts = formattedAddress.split(',').map(p => p.trim())
-    
-    // Remove country (usually last part)
-    if (parts[parts.length - 1].toLowerCase().includes('spain') || 
-        parts[parts.length - 1].toLowerCase().includes('españa')) {
-      parts.pop()
-    }
-    
-    // Remove province if present
-    const provinces = ['málaga', 'cádiz', 'granada', 'almería', 'sevilla', 'córdoba', 'jaén', 'huelva']
-    const lastPart = parts[parts.length - 1]?.toLowerCase()
-    if (lastPart && provinces.some(p => lastPart.includes(p))) {
-      parts.pop()
-    }
-    
-    // The remaining last part might be the city
-    if (parts.length > 0) {
-      const potentialCity = parts[parts.length - 1]
-      // Check if it contains postal code, if so, extract city from it
-      if (postalCode && potentialCity.includes(postalCode)) {
-        cityName = potentialCity.replace(postalCode, '').trim()
-      } else if (!potentialCity.match(/^\d/)) { // Don't use if it starts with numbers
-        cityName = potentialCity
-      }
-    }
-  }
-  
-  // Default fallback
-  if (!cityName) {
-    console.warn(`Could not extract city from address: ${formattedAddress}`)
-    cityName = 'Marbella' // Default fallback
-  }
-  
-  // Clean up the city name
-  cityName = cityName.replace(/^([0-9]+\s+)/, '') // Remove leading numbers
-  const citySlug = generateSlug(cityName)
-  
-  // Check if city exists, if not create it
-  try {
-    const city = await City.findOrCreate({
-      slug: citySlug,
-      name: cityName.charAt(0).toUpperCase() + cityName.slice(1),
-      nameEs: cityName.charAt(0).toUpperCase() + cityName.slice(1),
-      nameEn: cityName.charAt(0).toUpperCase() + cityName.slice(1),
-      importSource: 'google'
-    })
-    
-    console.log(`City "${cityName}" mapped to slug: "${citySlug}"`)
-    return citySlug
-  } catch (error) {
-    console.error('Error creating city:', error)
-    // Return the slug anyway, even if city creation failed
-    return citySlug
-  }
-}
-
-// Note: We no longer generate full Google Photos URLs during import
-// Photo references are stored and URLs are generated via API endpoint when needed
-
-// Helper function to map Google place to club format - ONLY REAL DATA
-async function mapGooglePlaceToClub(place, apiKey) {
-  const citySlug = await extractAndCreateCity(place.formatted_address, place.vicinity)
+  // Generate display name
+  const displayName = generateDisplayName(areaInfo.area, mainCity)
+  console.log('Generated display name:', displayName)
   
   // Extract postal code from address
   const postalCodeMatch = place.formatted_address.match(/\b\d{5}\b/)
   const postalCode = postalCodeMatch ? postalCodeMatch[0] : ''
+  
+  // Create or ensure main city exists
+  try {
+    const city = await City.findOrCreate({
+      slug: mainCity,
+      name: mainCity.charAt(0).toUpperCase() + mainCity.slice(1),
+      nameEs: mainCity.charAt(0).toUpperCase() + mainCity.slice(1),
+      nameEn: mainCity.charAt(0).toUpperCase() + mainCity.slice(1),
+      importSource: 'google'
+    })
+    
+    console.log(`City "${mainCity}" ensured in database`)
+  } catch (error) {
+    console.error('Error creating city:', error)
+  }
+  
+  return {
+    area: areaInfo.area,
+    city: mainCity,
+    administrativeCity: areaInfo.city,
+    displayName: displayName,
+    address: place.vicinity || place.formatted_address.split(',')[0],
+    postalCode: postalCode,
+    coordinates: {
+      lat: place.geometry?.location?.lat || null,
+      lng: place.geometry?.location?.lng || null
+    },
+    googleMapsUrl: place.url || `https://maps.google.com/?q=place_id:${place.place_id}`,
+    // Keep original data for debugging
+    originalData: {
+      formattedAddress: place.formatted_address,
+      vicinity: place.vicinity,
+      extractedArea: areaInfo.originalArea,
+      extractedCity: areaInfo.originalCity
+    }
+  }
+}
+
+// Enhanced function to map Google place to club format with area support
+async function mapGooglePlaceToClub(place, apiKey) {
+  // Process location with our enhanced area mapping
+  const locationData = await processLocationFromGoogle(place)
+  
+  // Generate slug with area for better uniqueness
+  const slug = generateSlug(place.name, locationData.area)
+  
+  console.log(`Generated slug for "${place.name}": "${slug}"`)
+  console.log(`Location mapping: ${locationData.area} → ${locationData.city}`)
+  console.log(`Display name: ${locationData.displayName}`)
   
   // Parse operating hours if available
   const operatingHours = {}
@@ -185,21 +168,23 @@ async function mapGooglePlaceToClub(place, apiKey) {
   return {
     // Basic Information - ONLY FROM GOOGLE
     name: place.name,
-    slug: generateSlug(place.name),
+    slug: slug,
     status: 'active',
     featured: false,
     displayOrder: 0,
     
-    // Location - REAL DATA FROM GOOGLE
+    // Enhanced Location with Area Support
     location: {
-      address: place.vicinity || place.formatted_address.split(',')[0],
-      city: citySlug,
-      postalCode: postalCode,
-      coordinates: {
-        lat: place.geometry?.location?.lat || null,
-        lng: place.geometry?.location?.lng || null
-      },
-      googleMapsUrl: place.url || `https://maps.google.com/?q=place_id:${place.place_id}`
+      address: locationData.address,
+      area: locationData.area,
+      city: locationData.city,
+      administrativeCity: locationData.administrativeCity,
+      displayName: locationData.displayName,
+      postalCode: locationData.postalCode,
+      coordinates: locationData.coordinates,
+      googleMapsUrl: locationData.googleMapsUrl,
+      // Store original data for debugging/reference
+      _debug: locationData.originalData
     },
     
     // Description - LEAVE EMPTY FOR MANUAL ENTRY
@@ -319,7 +304,8 @@ async function mapGooglePlaceToClub(place, apiKey) {
         height: photo.height,
         width: photo.width,
         html_attributions: photo.html_attributions
-      })) : []
+      })) : [],
+      lastSynced: new Date()
     },
     importSource: 'google',
     importedAt: new Date()
@@ -379,6 +365,7 @@ export async function POST(request) {
               'place_id', 
               'name', 
               'formatted_address',
+              'address_components',
               'vicinity',
               'geometry', 
               'rating', 
@@ -398,11 +385,12 @@ export async function POST(request) {
 
         if (response.data.result) {
           const clubData = await mapGooglePlaceToClub(response.data.result, apiKey)
-          console.log(`Generated slug for "${response.data.result.name}": "${clubData.slug}"`)
-          console.log(`Address: ${response.data.result.formatted_address}`)
-          console.log(`City extracted: ${clubData.location.city}`)
           clubs.push(clubData)
-          console.log(`Fetched details for: ${response.data.result.name}`)
+          console.log(`✅ Processed: ${response.data.result.name}`)
+          console.log(`   → Area: ${clubData.location.area}`)
+          console.log(`   → City: ${clubData.location.city}`)
+          console.log(`   → Display: ${clubData.location.displayName}`)
+          console.log(`   → Slug: ${clubData.slug}`)
         }
       } catch (error) {
         console.error(`Error fetching details for place ${placeId}:`, error.response?.data || error)
@@ -413,13 +401,21 @@ export async function POST(request) {
       }
     }
 
-    console.log(`Successfully fetched ${clubs.length} clubs, ${errors.length} errors`)
+    console.log(`🎉 Successfully processed ${clubs.length} clubs with area mapping!`)
 
     return NextResponse.json({
       clubs,
       requested: placeIds.length,
       found: clubs.length,
-      errors: errors.length > 0 ? errors : undefined
+      errors: errors.length > 0 ? errors : undefined,
+      mappingInfo: {
+        areasProcessed: clubs.map(club => ({
+          name: club.name,
+          area: club.location.area,
+          city: club.location.city,
+          displayName: club.location.displayName
+        }))
+      }
     })
 
   } catch (error) {
