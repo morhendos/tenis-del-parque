@@ -143,6 +143,12 @@ export default function AdminCitiesPage() {
     return count
   }
 
+  // Helper to get proper fallback image
+  const getFallbackImageUrl = (city, width = 100, height = 100) => {
+    const seed = city?.name?.es ? city.name.es.charCodeAt(0) + city.slug.length : Math.floor(Math.random() * 1000)
+    return `https://picsum.photos/${width}/${height}?random=${seed}`
+  }
+
   // Filter and sort cities
   const filteredCities = cities
     .filter(city => {
@@ -460,7 +466,7 @@ export default function AdminCitiesPage() {
                           alt={city.name.es}
                           className="w-8 h-8 rounded object-cover"
                           onError={(e) => {
-                            e.target.src = `https://images.unsplash.com/100x100/?city,${city.name.es},landscape`
+                            e.target.src = getFallbackImageUrl(city, 100, 100)
                           }}
                         />
                       )}
