@@ -1,5 +1,26 @@
 import { NextResponse } from 'next/server'
 
+// Generate consistent fallback image for all cities
+const getConsistentFallback = (photoReference) => {
+  // Create a generic city fallback using SVG
+  const svgFallback = `
+    <svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="cityGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#10B981;stop-opacity:1" />
+        </linearGradient>
+      </defs>
+      <rect width="800" height="600" fill="url(#cityGrad)"/>
+      <text x="400" y="280" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="white" opacity="0.9">🏙️</text>
+      <text x="400" y="340" font-family="Arial, sans-serif" font-size="24" text-anchor="middle" fill="white" opacity="0.8">Ciudad</text>
+    </svg>
+  `
+  
+  const base64Svg = Buffer.from(svgFallback).toString('base64')
+  return `data:image/svg+xml;base64,${base64Svg}`
+}
+
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -12,9 +33,8 @@ export async function GET(request) {
 
     // Check if Google Maps API is available
     if (!process.env.GOOGLE_MAPS_API_KEY) {
-      // Return a proper fallback/placeholder image
-      const fallbackUrl = `https://picsum.photos/${maxwidth}/${Math.round(maxwidth * 0.75)}?random=${photoReference.slice(-5)}`
-      return NextResponse.redirect(fallbackUrl)
+      // Return consistent fallback image
+      return NextResponse.redirect(getConsistentFallback(photoReference))
     }
 
     // Construct Google Photos URL
@@ -43,17 +63,14 @@ export async function GET(request) {
     } catch (apiError) {
       console.error('Google Photos API error:', apiError.message)
       
-      // Fallback to deterministic placeholder image based on photo reference
-      const seed = photoReference.slice(-10).replace(/[^a-z0-9]/gi, '')
-      const fallbackUrl = `https://picsum.photos/${maxwidth}/${Math.round(maxwidth * 0.75)}?seed=${seed}`
-      return NextResponse.redirect(fallbackUrl)
+      // Return consistent fallback on error
+      return NextResponse.redirect(getConsistentFallback(photoReference))
     }
 
   } catch (error) {
     console.error('Error serving Google Photo:', error)
     
-    // Return a proper fallback image
-    const fallbackUrl = `https://picsum.photos/800/600?random=1`
-    return NextResponse.redirect(fallbackUrl)
+    // Return consistent fallback on any error
+    return NextResponse.redirect(getConsistentFallback('default'))
   }
 }
