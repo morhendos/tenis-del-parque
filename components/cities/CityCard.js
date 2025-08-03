@@ -2,11 +2,13 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
+import { useLocale } from '@/lib/hooks/useLocale'
 
 // Generic fallback for city images - consistent and professional
 const getGenericCityFallback = () => {
   // Use a consistent gradient background for all cities without images
-  return 'data:image/svg+xml;base64,' + btoa(`
+  const svgContent = `
     <svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="cityGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -18,12 +20,18 @@ const getGenericCityFallback = () => {
       <text x="400" y="280" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="white" opacity="0.9">🏙️</text>
       <text x="400" y="340" font-family="Arial, sans-serif" font-size="24" text-anchor="middle" fill="white" opacity="0.8">Ciudad</text>
     </svg>
-  `)
+  `.trim()
+  
+  // Use URL encoding instead of base64 - more efficient and no environment issues
+  const encodedSvg = encodeURIComponent(svgContent)
+    
+  return `data:image/svg+xml,${encodedSvg}`
 }
 
 export default function CityCard({ city, leagueCount = 0, className = '' }) {
   const [imageError, setImageError] = useState(false)
   const [imageLoading, setImageLoading] = useState(true)
+  const { locale } = useLocale()
 
   // Get the main city image with proper fallback handling
   const getCityImage = () => {
@@ -127,13 +135,19 @@ export default function CityCard({ city, leagueCount = 0, className = '' }) {
         {/* Action button */}
         <div className="mt-4">
           {displayLeagueCount > 0 ? (
-            <button className="w-full bg-parque-purple text-white py-2 px-4 rounded-lg hover:bg-parque-purple/90 transition-colors font-medium">
-              Ver Ligas de Tenis
-            </button>
+            <Link 
+              href={`/${locale}/${locale === 'es' ? 'ligas' : 'leagues'}`}
+              className="block w-full bg-parque-purple text-white py-2 px-4 rounded-lg hover:bg-parque-purple/90 transition-colors font-medium text-center"
+            >
+              {locale === 'es' ? 'Ver Ligas de Tenis' : 'View Tennis Leagues'}
+            </Link>
           ) : (
-            <button className="w-full bg-gray-100 text-gray-600 py-2 px-4 rounded-lg font-medium">
-              Explorar Clubes
-            </button>
+            <Link 
+              href={`/${locale}/clubs/${city.slug || city.name?.es?.toLowerCase() || 'ciudad'}`}
+              className="block w-full bg-gray-100 text-gray-600 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium text-center"
+            >
+              {locale === 'es' ? 'Explorar Clubes' : 'Explore Clubs'}
+            </Link>
           )}
         </div>
       </div>
