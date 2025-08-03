@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import Club from '@/lib/models/Club'
+import City from '@/lib/models/City'
 import dbConnect from '@/lib/db/mongoose'
 
 export async function POST(request) {
@@ -30,6 +31,7 @@ export async function POST(request) {
       created: 0,
       failed: 0,
       duplicates: 0,
+      citiesCreated: 0,
       errors: []
     }
 
@@ -65,6 +67,24 @@ export async function POST(request) {
           continue
         }
 
+        // Auto-create city if it doesn't exist
+        const citySlug = clubData.location.city.toLowerCase().trim()
+        try {
+          const city = await City.findOrCreate({
+            slug: citySlug,
+            name: clubData.location.cityName || citySlug.charAt(0).toUpperCase() + citySlug.slice(1),
+            importSource: 'google'
+          })
+          
+          if (city && !city.createdAt) {
+            console.log(`Created new city: ${city.name.es}`)
+            results.citiesCreated++
+          }
+        } catch (cityError) {
+          console.warn(`City creation failed for ${citySlug}:`, cityError.message)
+          // Continue with club creation even if city creation fails
+        }
+
         // Ensure courts structure is valid
         const indoor = parseInt(clubData.courts?.indoor) || 0
         const outdoor = parseInt(clubData.courts?.outdoor) || 0
@@ -94,7 +114,12 @@ export async function POST(request) {
           ...clubData,
           stats: { views: 0, clicks: 0 },
           createdBy: session.user.id,
-          importedAt: new Date()
+          importedAt: new Date(),
+          // Ensure the city is stored as lowercase slug
+          location: {
+            ...clubData.location,
+            city: citySlug
+          }
         })
 
         await club.save()
