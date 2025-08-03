@@ -61,8 +61,24 @@ function isTennisRelated(place) {
   return nameHasTennis || isSportsFacility
 }
 
-// Format place data to match frontend expectations
+// Enhanced format place data to include area information preview
 function formatPlaceData(place) {
+  // Basic area detection for preview (will be enhanced in details route)
+  let areaPreview = null
+  if (place.address_components) {
+    const sublocality = place.address_components.find(comp => 
+      comp.types.includes('sublocality') || comp.types.includes('sublocality_level_1')
+    )
+    const locality = place.address_components.find(comp => 
+      comp.types.includes('locality')
+    )
+    
+    areaPreview = {
+      specific: sublocality?.long_name || null,
+      locality: locality?.long_name || null
+    }
+  }
+  
   return {
     place_id: place.place_id,
     name: place.name,
@@ -75,7 +91,12 @@ function formatPlaceData(place) {
     website: place.website || null,
     photos: place.photos || [],
     price_level: place.price_level || null,
-    types: place.types || []
+    types: place.types || [],
+    // Enhanced for area mapping
+    address_components: place.address_components || [],
+    vicinity: place.vicinity,
+    // Preview area information
+    areaPreview: areaPreview
   }
 }
 
@@ -115,7 +136,7 @@ export async function POST(request) {
       )
     }
 
-    console.log('Google Maps search request:', { query, type, radius })
+    console.log('🔍 Google Maps search request:', { query, type, radius })
 
     let searchParams = {
       key: apiKey,
@@ -128,7 +149,7 @@ export async function POST(request) {
       if (type === 'city') {
         // Text search for tennis clubs in a city
         const searchQuery = `club de tenis en ${query}`
-        console.log('Searching for:', searchQuery)
+        console.log('🎾 Searching for:', searchQuery)
         
         const response = await googleMapsClient.textSearch({
           params: {
@@ -142,6 +163,7 @@ export async function POST(request) {
         
         // If not enough results, try with English
         if (results.length < 3) {
+          console.log('🔄 Expanding search with English terms...')
           const englishResponse = await googleMapsClient.textSearch({
             params: {
               ...searchParams,
@@ -156,6 +178,7 @@ export async function POST(request) {
             .filter(r => !existingIds.has(r.place_id))
           
           results = [...results, ...newResults]
+          console.log(`📈 Added ${newResults.length} more results from English search`)
         }
         
       } else if (type === 'coordinates') {
@@ -166,7 +189,7 @@ export async function POST(request) {
         }
         
         const [lat, lng] = coords
-        console.log('Searching around coordinates:', { lat, lng, radius })
+        console.log('📍 Searching around coordinates:', { lat, lng, radius })
         
         // Nearby search around coordinates
         const response = await googleMapsClient.placesNearby({
@@ -189,6 +212,8 @@ export async function POST(request) {
           throw new Error('Could not extract place information from URL')
         }
         
+        console.log('🔗 Extracted from URL:', extracted)
+        
         // Check if it's coordinates
         if (extracted.includes(',')) {
           // It's coordinates, do a nearby search
@@ -210,8 +235,8 @@ export async function POST(request) {
               ...searchParams,
               place_id: extracted,
               fields: [
-                'place_id', 'name', 'formatted_address', 'geometry', 
-                'rating', 'user_ratings_total', 'opening_hours', 
+                'place_id', 'name', 'formatted_address', 'address_components',
+                'geometry', 'rating', 'user_ratings_total', 'opening_hours', 
                 'formatted_phone_number', 'website', 'photos', 
                 'price_level', 'types', 'vicinity'
               ]
@@ -230,9 +255,9 @@ export async function POST(request) {
       // If no tennis places found, include all results but warn
       const finalResults = tennisPlaces.length > 0 ? tennisPlaces : results
       
-      console.log(`Found ${results.length} total places, ${tennisPlaces.length} tennis-related`)
+      console.log(`📊 Found ${results.length} total places, ${tennisPlaces.length} tennis-related`)
       
-      // Format results for frontend
+      // Enhanced formatting with area information
       const formattedResults = finalResults.map(formatPlaceData)
       
       // Sort by rating and number of reviews
@@ -252,20 +277,38 @@ export async function POST(request) {
         return b.user_ratings_total - a.user_ratings_total
       })
       
-      // Return formatted response
+      // Log area preview information
+      if (formattedResults.length > 0) {
+        console.log('\n📍 Area Preview for found clubs:')
+        formattedResults.forEach(club => {
+          if (club.areaPreview?.specific || club.areaPreview?.locality) {
+            console.log(`   • ${club.name}: ${club.areaPreview.specific || 'N/A'} / ${club.areaPreview.locality || 'N/A'}`)
+          }
+        })
+      }
+      
+      // Return formatted response with enhanced area information
       return NextResponse.json({
         clubs: formattedResults,
         totalResults: formattedResults.length,
         query,
         type,
         radius,
+        areaInfo: {
+          hasAreaData: formattedResults.some(club => 
+            club.areaPreview?.specific || club.areaPreview?.locality
+          ),
+          areasFound: formattedResults
+            .filter(club => club.areaPreview?.specific)
+            .map(club => club.areaPreview.specific)
+        },
         warning: tennisPlaces.length === 0 && results.length > 0 
           ? 'No tennis-specific venues found. Showing all sports facilities.'
           : null
       })
 
     } catch (apiError) {
-      console.error('Google Maps API error:', apiError.response?.data || apiError)
+      console.error('❌ Google Maps API error:', apiError.response?.data || apiError)
       
       // Handle specific API errors
       if (apiError.response?.data?.error_message) {
@@ -295,7 +338,7 @@ export async function POST(request) {
     }
 
   } catch (error) {
-    console.error('Error searching clubs:', error)
+    console.error('💥 Error searching clubs:', error)
     return NextResponse.json(
       { error: 'Failed to search clubs', details: error.message },
       { status: 500 }
