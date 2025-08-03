@@ -3,22 +3,35 @@
 import { useState } from 'react'
 import Image from 'next/image'
 
+// Helper function to generate deterministic fallback images
+const getFallbackImageUrl = (cityName, width = 800, height = 600) => {
+  // Create a seed from city name for consistent images
+  const seed = cityName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 10)
+  return `https://picsum.photos/${width}/${height}?seed=${seed}`
+}
+
 export default function CityCard({ city, leagueCount = 0, className = '' }) {
   const [imageError, setImageError] = useState(false)
   const [imageLoading, setImageLoading] = useState(true)
 
-  // Get the main city image or fallback to a default
+  // Get the main city image with proper fallback handling
   const getCityImage = () => {
     if (city.images?.main && !imageError) {
+      // If it's a Google photo reference, use the secure proxy
+      if (city.images.googlePhotoReference) {
+        return `/api/admin/cities/google-photo?photo_reference=${city.images.googlePhotoReference}&maxwidth=800`
+      }
+      // Otherwise use the direct image URL
       return city.images.main
     }
     
-    // Fallback to a default city image based on city name
-    const citySlug = city.slug || city.name?.es?.toLowerCase().replace(/\s+/g, '-')
-    return `https://images.unsplash.com/1200x800/?${citySlug},spain,city,landscape`
+    // Fallback to deterministic placeholder based on city name
+    const cityName = city.name?.es || city.displayName || city.slug || 'city'
+    return getFallbackImageUrl(cityName, 800, 600)
   }
 
   const handleImageError = () => {
+    console.log('Image failed to load for city:', city.name?.es || city.displayName)
     setImageError(true)
     setImageLoading(false)
   }
@@ -27,8 +40,11 @@ export default function CityCard({ city, leagueCount = 0, className = '' }) {
     setImageLoading(false)
   }
 
+  // Handle missing league count
+  const displayLeagueCount = leagueCount || city.leagueCount || 0
+
   return (
-    <div className={`bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 ${className}`}>
+    <div className={`bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 ${className}`}>
       {/* City Image */}
       <div className="relative h-48 bg-gray-200">
         {imageLoading && (
@@ -63,10 +79,19 @@ export default function CityCard({ city, leagueCount = 0, className = '' }) {
         )}
         
         {/* League count badge */}
-        {leagueCount > 0 && (
+        {displayLeagueCount > 0 && (
           <div className="absolute top-2 left-2">
-            <div className="bg-parque-purple text-white rounded-full px-3 py-1 text-sm font-medium">
-              {leagueCount} league{leagueCount !== 1 ? 's' : ''}
+            <div className="bg-parque-purple text-white rounded-full px-3 py-1 text-sm font-medium shadow-lg">
+              {displayLeagueCount} liga{displayLeagueCount !== 1 ? 's' : ''}
+            </div>
+          </div>
+        )}
+
+        {/* "Coming Soon" badge for cities without leagues */}
+        {displayLeagueCount === 0 && (
+          <div className="absolute top-2 left-2">
+            <div className="bg-amber-500 text-white rounded-full px-3 py-1 text-sm font-medium shadow-lg">
+              Próximamente
             </div>
           </div>
         )}
@@ -87,19 +112,19 @@ export default function CityCard({ city, leagueCount = 0, className = '' }) {
           <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
           </svg>
-          <span>{city.province}, Spain</span>
+          <span>{city.province || 'España'}, España</span>
         </div>
         
         {/* City stats */}
-        <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center justify-between text-sm mb-4">
           <div className="flex items-center text-gray-600">
             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m4 0v-5a1 1 0 011-1h4a1 1 0 011 1v5m-4-8h.01M12 8h.01" />
             </svg>
-            <span>{city.clubCount || 0} clubs</span>
+            <span>{city.clubCount || 0} clubes</span>
           </div>
           
-          {city.coordinates?.lat && city.coordinates?.lng && (
+          {((city.coordinates?.lat && city.coordinates?.lng) || city.hasCoordinates) && (
             <div className="flex items-center text-green-600">
               <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
@@ -111,9 +136,15 @@ export default function CityCard({ city, leagueCount = 0, className = '' }) {
         
         {/* Action button */}
         <div className="mt-4">
-          <button className="w-full bg-parque-purple text-white py-2 px-4 rounded-lg hover:bg-parque-purple/90 transition-colors font-medium">
-            View Tennis Leagues
-          </button>
+          {displayLeagueCount > 0 ? (
+            <button className="w-full bg-parque-purple text-white py-2 px-4 rounded-lg hover:bg-parque-purple/90 transition-colors font-medium">
+              Ver Ligas de Tenis
+            </button>
+          ) : (
+            <button className="w-full bg-gray-100 text-gray-600 py-2 px-4 rounded-lg cursor-default font-medium">
+              Próximamente
+            </button>
+          )}
         </div>
       </div>
     </div>
