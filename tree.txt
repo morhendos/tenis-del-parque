@@ -16,6 +16,8 @@ root/
 │   │   │   └── page.js
 │   │   ├── elo
 │   │   │   └── page.js
+│   │   ├── forgot-password
+│   │   │   └── page.js
 │   │   ├── layout.js
 │   │   ├── leagues
 │   │   │   └── page.js
@@ -46,6 +48,8 @@ root/
 │   │   ├── reglas
 │   │   │   ├── RulesPageContent.js
 │   │   │   └── page.js
+│   │   ├── reset-password
+│   │   │   └── page.js
 │   │   ├── rules
 │   │   │   └── page.js
 │   │   ├── signup
@@ -55,6 +59,8 @@ root/
 │   │       └── page.js
 │   ├── admin
 │   │   ├── README.md
+│   │   ├── cities
+│   │   │   └── page.js
 │   │   ├── clubs
 │   │   │   └── page.js
 │   │   ├── dashboard
@@ -87,6 +93,12 @@ root/
 │   │   └── page.js
 │   ├── api
 │   │   ├── admin
+│   │   │   ├── cities
+│   │   │   │   ├── enhance-google
+│   │   │   │   │   └── route.js
+│   │   │   │   ├── route.js
+│   │   │   │   └── search-google
+│   │   │   │       └── route.js
 │   │   │   ├── clubs
 │   │   │   │   ├── [id]
 │   │   │   │   │   └── route.js
@@ -143,8 +155,14 @@ root/
 │   │   ├── auth
 │   │   │   ├── [...nextauth]
 │   │   │   │   └── route.js
-│   │   │   └── activate
+│   │   │   ├── activate
+│   │   │   │   └── route.js
+│   │   │   ├── forgot-password
+│   │   │   │   └── route.js
+│   │   │   └── reset-password
 │   │   │       └── route.js
+│   │   ├── cities
+│   │   │   └── route.js
 │   │   ├── clubs
 │   │   │   ├── [city]
 │   │   │   │   └── [slug]
@@ -189,8 +207,12 @@ root/
 │           └── page.js
 ├── components
 │   ├── admin
+│   │   ├── cities
+│   │   │   ├── CityFormModal.js
+│   │   │   └── CityGoogleEnhancer.js
 │   │   ├── clubs
 │   │   │   ├── ClubFormModal.js
+│   │   │   ├── ClubImageManager.js
 │   │   │   └── GoogleMapsImporter.js
 │   │   ├── leagues
 │   │   │   ├── ImportCSVModal.js
@@ -272,8 +294,14 @@ root/
 │       └── WelcomeModal.js
 ├── docs
 │   ├── ADMIN_DOCS_VIEWER.md
+│   ├── CITIES_MANAGEMENT_COMPLETE.md
+│   ├── CITIES_MANAGEMENT_SUMMARY.md
+│   ├── CITY_AUTOCOMPLETE_TESTING.md
 │   ├── CURRENT_STATUS.md
+│   ├── DYNAMIC_CITY_TESTING_GUIDE.md
+│   ├── ENHANCED_CITY_AUTOCOMPLETE.md
 │   ├── FEE_SYSTEM.md
+│   ├── GOOGLE_MAPS_CITY_CREATION.md
 │   ├── GOOGLE_MAPS_IMPORT_FEATURE.md
 │   ├── GOOGLE_MAPS_IMPORT_SPEC.md
 │   ├── GOOGLE_MAPS_SETUP.md
@@ -284,7 +312,9 @@ root/
 │   ├── PRODUCT_LED_GROWTH.md
 │   ├── PR_MULTILINGUAL_IMPLEMENTATION.md
 │   ├── README.md
+│   ├── RESEND_EMAIL_SETUP.md
 │   ├── SCORING_SYSTEM_INTEGRATION.md
+│   ├── SEASON_SYSTEM_REFACTOR.md
 │   ├── SEO Strategy
 │   ├── SEO_CHECKLIST.md
 │   ├── SEO_CLUBS_DIRECTORY_TODO.md
@@ -308,6 +338,7 @@ root/
 │   │   ├── homeContent.js
 │   │   ├── loginContent.js
 │   │   ├── multiLeagueHomeContent.js
+│   │   ├── passwordResetContent.js
 │   │   ├── rulesContent.js
 │   │   ├── swissContent.js
 │   │   └── welcomeContent.js
@@ -316,6 +347,8 @@ root/
 │   ├── db
 │   │   ├── mongodb.js
 │   │   └── mongoose.js
+│   ├── email
+│   │   └── resend.js
 │   ├── hooks
 │   │   ├── useActiveSection.js
 │   │   ├── useAuth.js
@@ -330,16 +363,20 @@ root/
 │   ├── i18n
 │   │   └── config.js
 │   ├── models
+│   │   ├── City.js
 │   │   ├── Club.js
 │   │   ├── League.js
 │   │   ├── Match.js
 │   │   ├── Player.js
+│   │   ├── Season.js
 │   │   └── User.js
 │   └── utils
 │       ├── apiHelpers.js
 │       ├── matchResultUtils.js
 │       ├── phoneUtils.js
 │       ├── rulesIcons.js
+│       ├── seasonUtils.js
+│       ├── spanishTextUtils.js
 │       └── swissPairing.js
 ├── middleware.js
 ├── next.config.js
@@ -375,6 +412,7 @@ root/
 ├── scripts
 │   ├── checkAuth.mjs
 │   ├── createAdminUser.js
+│   ├── createSeasons.js
 │   ├── createTestData.js
 │   ├── diagnoseLinkIssues.js
 │   ├── directFix.js
@@ -382,7 +420,10 @@ root/
 │   ├── generateSitemap.js
 │   ├── linkPlayersToUsers.js
 │   ├── migrateActivationTokens.js
+│   ├── seedCities.js
+│   ├── seedCitiesEnhanced.js
 │   ├── seedLeagues.js
+│   ├── seedSeasons.mjs
 │   ├── tree.js
 │   └── unlockAccounts.js
 ├── styles
