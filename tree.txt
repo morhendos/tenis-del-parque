@@ -166,6 +166,8 @@ root/
 │   │   │   └── reset-password
 │   │   │       └── route.js
 │   │   ├── cities
+│   │   │   ├── photo
+│   │   │   │   └── route.js
 │   │   │   └── route.js
 │   │   ├── clubs
 │   │   │   ├── [city]
@@ -451,3 +453,4 @@ root/
 │   └── dashboard.js
 ├── tailwind.config.js
 └── tree.txt
+
