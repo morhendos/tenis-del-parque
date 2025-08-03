@@ -9,6 +9,7 @@ import ScoringSystem from '@/components/league/ScoringSystem'
 import StandingsTable from '@/components/player/StandingsTable'
 import ResultsTab from '@/components/player/ResultsTab'
 import ScheduleTab from '@/components/player/ScheduleTab'
+import { findSeasonBySlug, getSeasonDisplayName } from '@/lib/utils/seasonUtils'
 
 export default function LeagueSeasonPage() {
   const params = useParams()
@@ -16,6 +17,7 @@ export default function LeagueSeasonPage() {
   const language = locale || 'es'
   
   const [league, setLeague] = useState(null)
+  const [currentSeason, setCurrentSeason] = useState(null)
   const [standings, setStandings] = useState(null)
   const [matches, setMatches] = useState([])
   const [schedule, setSchedule] = useState([])
@@ -34,10 +36,10 @@ export default function LeagueSeasonPage() {
 
   // If register tab is active but registration is closed, switch to standings
   useEffect(() => {
-    if (activeTab === 'register' && league && league.currentSeason && league.currentSeason.status !== 'registration_open') {
+    if (activeTab === 'register' && currentSeason && currentSeason.status !== 'registration_open') {
       setActiveTab('standings')
     }
-  }, [activeTab, league])
+  }, [activeTab, currentSeason])
 
   // Handle scroll effect for sticky tabs
   useEffect(() => {
@@ -55,54 +57,43 @@ export default function LeagueSeasonPage() {
     try {
       setLoading(true)
       
+      // Fetch league data
       const leagueRes = await fetch(`/api/leagues/${location}`)
       if (!leagueRes.ok) throw new Error('League not found')
       const leagueData = await leagueRes.json()
       
-      const seasonMap = {
-        'verano2025': 'Summer 2025',
-        'summer2025': 'Summer 2025',
-        'invierno2025': 'Winter 2025',
-        'winter2025': 'Winter 2025',
-        'primavera2025': 'Spring 2025',
-        'spring2025': 'Spring 2025',
-        'otono2025': 'Autumn 2025',
-        'autumn2025': 'Autumn 2025',
-        'fall2025': 'Autumn 2025'
-      }
-      
-      const targetSeasonName = seasonMap[season]
-      let targetSeason = leagueData.league.seasons?.find(s => s.name === targetSeasonName)
-      
-      if (!targetSeason) {
-        targetSeason = leagueData.league.seasons?.find(s => s.name === season)
-      }
-      
-      if (!targetSeason) {
+      // Find the season using the new system
+      const seasonObj = await findSeasonBySlug(season, language)
+      if (!seasonObj) {
         throw new Error(`Season ${season} not found`)
       }
       
-      setLeague({ ...leagueData.league, currentSeason: targetSeason })
+      setLeague(leagueData.league)
+      setCurrentSeason(seasonObj)
       
       if (leagueData.league.config?.roundsPerSeason) {
         setTotalRounds(leagueData.league.config.roundsPerSeason)
       }
       
-      const dbSeason = targetSeasonName === 'Summer 2025' ? 'summer-2025' : targetSeasonName
+      // Use the season's database key for API calls
+      const dbSeasonKey = seasonObj.dbKey // e.g., "summer-2025"
       
-      const standingsRes = await fetch(`/api/leagues/${location}/standings?season=${dbSeason}`)
+      // Fetch standings
+      const standingsRes = await fetch(`/api/leagues/${location}/standings?season=${dbSeasonKey}`)
       if (standingsRes.ok) {
         const standingsData = await standingsRes.json()
         setStandings(standingsData)
       }
       
-      const matchesRes = await fetch(`/api/leagues/${location}/matches?season=${dbSeason}&status=completed&limit=200`)
+      // Fetch completed matches
+      const matchesRes = await fetch(`/api/leagues/${location}/matches?season=${dbSeasonKey}&status=completed&limit=200`)
       if (matchesRes.ok) {
         const matchesData = await matchesRes.json()
         setMatches(matchesData.matches || [])
       }
       
-      const scheduleRes = await fetch(`/api/leagues/${location}/matches?season=${dbSeason}&status=scheduled&limit=200`)
+      // Fetch scheduled matches
+      const scheduleRes = await fetch(`/api/leagues/${location}/matches?season=${dbSeasonKey}&status=scheduled&limit=200`)
       if (scheduleRes.ok) {
         const scheduleData = await scheduleRes.json()
         console.log(`LeagueSeasonPage: Received ${scheduleData.matches?.length || 0} scheduled matches from API`)
@@ -121,23 +112,7 @@ export default function LeagueSeasonPage() {
     }
   }
 
-  const getSeasonDisplayName = (seasonKey) => {
-    const seasonNames = {
-      es: {
-        'verano2025': 'Verano 2025',
-        'invierno2025': 'Invierno 2025', 
-        'primavera2025': 'Primavera 2025',
-        'otono2025': 'Otoño 2025'
-      },
-      en: {
-        'verano2025': 'Summer 2025',
-        'invierno2025': 'Winter 2025',
-        'primavera2025': 'Spring 2025', 
-        'otono2025': 'Autumn 2025'
-      }
-    }
-    return seasonNames[language][seasonKey] || seasonKey
-  }
+
 
   if (loading) {
     return (
@@ -207,8 +182,6 @@ export default function LeagueSeasonPage() {
     )
   }
 
-  const currentSeason = league.currentSeason
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-parque-bg via-white to-white">
       {/* Navigation - Only show when toggled */}
@@ -257,7 +230,7 @@ export default function LeagueSeasonPage() {
                 { id: 'standings', label: language === 'es' ? 'Clasificación' : 'Standings' },
                 { id: 'schedule', label: language === 'es' ? 'Calendario' : 'Schedule' },
                 { id: 'matches', label: language === 'es' ? 'Resultados' : 'Results' },
-                ...(currentSeason.status === 'registration_open' ? [{ id: 'register', label: language === 'es' ? 'Inscribirse' : 'Register' }] : [])
+                ...(currentSeason && currentSeason.status === 'registration_open' ? [{ id: 'register', label: language === 'es' ? 'Inscribirse' : 'Register' }] : [])
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -300,28 +273,30 @@ export default function LeagueSeasonPage() {
                 </h2>
                 <div className="flex items-center gap-3">
                   <span className="text-sm md:text-base text-gray-600 font-medium">
-                    {getSeasonDisplayName(season)}
+                    {currentSeason ? currentSeason.getName(language) : getSeasonDisplayName(season, language)}
                   </span>
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                    currentSeason.status === 'registration_open' 
-                      ? 'bg-green-100 text-green-800' 
-                      : currentSeason.status === 'active'
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {currentSeason.status === 'registration_open' && 
-                      (language === 'es' ? 'Inscripciones Abiertas' : 'Registration Open')
-                    }
-                    {currentSeason.status === 'active' && 
-                      (language === 'es' ? 'Liga Activa' : 'League Active')
-                    }
-                    {currentSeason.status === 'completed' && 
-                      (language === 'es' ? 'Temporada Finalizada' : 'Season Completed')
-                    }
-                    {currentSeason.status === 'upcoming' && 
-                      (language === 'es' ? 'Próximamente' : 'Coming Soon')
-                    }
-                  </span>
+                  {currentSeason && (
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      currentSeason.status === 'registration_open' 
+                        ? 'bg-green-100 text-green-800' 
+                        : currentSeason.status === 'active'
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {currentSeason.status === 'registration_open' && 
+                        (language === 'es' ? 'Inscripciones Abiertas' : 'Registration Open')
+                      }
+                      {currentSeason.status === 'active' && 
+                        (language === 'es' ? 'Liga Activa' : 'League Active')
+                      }
+                      {currentSeason.status === 'completed' && 
+                        (language === 'es' ? 'Temporada Finalizada' : 'Season Completed')
+                      }
+                      {currentSeason.status === 'upcoming' && 
+                        (language === 'es' ? 'Próximamente' : 'Coming Soon')
+                      }
+                    </span>
+                  )}
                 </div>
               </div>
               
@@ -363,28 +338,30 @@ export default function LeagueSeasonPage() {
                 </h2>
                 <div className="flex items-center gap-3">
                   <span className="text-sm md:text-base text-gray-600 font-medium">
-                    {getSeasonDisplayName(season)}
+                    {currentSeason ? currentSeason.getName(language) : getSeasonDisplayName(season, language)}
                   </span>
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                    currentSeason.status === 'registration_open' 
-                      ? 'bg-green-100 text-green-800' 
-                      : currentSeason.status === 'active'
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {currentSeason.status === 'registration_open' && 
-                      (language === 'es' ? 'Inscripciones Abiertas' : 'Registration Open')
-                    }
-                    {currentSeason.status === 'active' && 
-                      (language === 'es' ? 'Liga Activa' : 'League Active')
-                    }
-                    {currentSeason.status === 'completed' && 
-                      (language === 'es' ? 'Temporada Finalizada' : 'Season Completed')
-                    }
-                    {currentSeason.status === 'upcoming' && 
-                      (language === 'es' ? 'Próximamente' : 'Coming Soon')
-                    }
-                  </span>
+                  {currentSeason && (
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      currentSeason.status === 'registration_open' 
+                        ? 'bg-green-100 text-green-800' 
+                        : currentSeason.status === 'active'
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {currentSeason.status === 'registration_open' && 
+                        (language === 'es' ? 'Inscripciones Abiertas' : 'Registration Open')
+                      }
+                      {currentSeason.status === 'active' && 
+                        (language === 'es' ? 'Liga Activa' : 'League Active')
+                      }
+                      {currentSeason.status === 'completed' && 
+                        (language === 'es' ? 'Temporada Finalizada' : 'Season Completed')
+                      }
+                      {currentSeason.status === 'upcoming' && 
+                        (language === 'es' ? 'Próximamente' : 'Coming Soon')
+                      }
+                    </span>
+                  )}
                 </div>
               </div>
               <ScheduleTab 
@@ -407,28 +384,30 @@ export default function LeagueSeasonPage() {
                 </h2>
                 <div className="flex items-center gap-3">
                   <span className="text-sm md:text-base text-gray-600 font-medium">
-                    {getSeasonDisplayName(season)}
+                    {currentSeason ? currentSeason.getName(language) : getSeasonDisplayName(season, language)}
                   </span>
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                    currentSeason.status === 'registration_open' 
-                      ? 'bg-green-100 text-green-800' 
-                      : currentSeason.status === 'active'
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {currentSeason.status === 'registration_open' && 
-                      (language === 'es' ? 'Inscripciones Abiertas' : 'Registration Open')
-                    }
-                    {currentSeason.status === 'active' && 
-                      (language === 'es' ? 'Liga Activa' : 'League Active')
-                    }
-                    {currentSeason.status === 'completed' && 
-                      (language === 'es' ? 'Temporada Finalizada' : 'Season Completed')
-                    }
-                    {currentSeason.status === 'upcoming' && 
-                      (language === 'es' ? 'Próximamente' : 'Coming Soon')
-                    }
-                  </span>
+                  {currentSeason && (
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      currentSeason.status === 'registration_open' 
+                        ? 'bg-green-100 text-green-800' 
+                        : currentSeason.status === 'active'
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {currentSeason.status === 'registration_open' && 
+                        (language === 'es' ? 'Inscripciones Abiertas' : 'Registration Open')
+                      }
+                      {currentSeason.status === 'active' && 
+                        (language === 'es' ? 'Liga Activa' : 'League Active')
+                      }
+                      {currentSeason.status === 'completed' && 
+                        (language === 'es' ? 'Temporada Finalizada' : 'Season Completed')
+                      }
+                      {currentSeason.status === 'upcoming' && 
+                        (language === 'es' ? 'Próximamente' : 'Coming Soon')
+                      }
+                    </span>
+                  )}
                 </div>
               </div>
               <ResultsTab matches={matches} language={language} />
@@ -445,32 +424,34 @@ export default function LeagueSeasonPage() {
                 </h2>
                 <div className="flex items-center gap-3">
                   <span className="text-sm md:text-base text-gray-600 font-medium">
-                    {getSeasonDisplayName(season)}
+                    {currentSeason ? currentSeason.getName(language) : getSeasonDisplayName(season, language)}
                   </span>
-                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                    currentSeason.status === 'registration_open' 
-                      ? 'bg-green-100 text-green-800' 
-                      : currentSeason.status === 'active'
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {currentSeason.status === 'registration_open' && 
-                      (language === 'es' ? 'Inscripciones Abiertas' : 'Registration Open')
-                    }
-                    {currentSeason.status === 'active' && 
-                      (language === 'es' ? 'Liga Activa' : 'League Active')
-                    }
-                    {currentSeason.status === 'completed' && 
-                      (language === 'es' ? 'Temporada Finalizada' : 'Season Completed')
-                    }
-                    {currentSeason.status === 'upcoming' && 
-                      (language === 'es' ? 'Próximamente' : 'Coming Soon')
-                    }
-                  </span>
+                  {currentSeason && (
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      currentSeason.status === 'registration_open' 
+                        ? 'bg-green-100 text-green-800' 
+                        : currentSeason.status === 'active'
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {currentSeason.status === 'registration_open' && 
+                        (language === 'es' ? 'Inscripciones Abiertas' : 'Registration Open')
+                      }
+                      {currentSeason.status === 'active' && 
+                        (language === 'es' ? 'Liga Activa' : 'League Active')
+                      }
+                      {currentSeason.status === 'completed' && 
+                        (language === 'es' ? 'Temporada Finalizada' : 'Season Completed')
+                      }
+                      {currentSeason.status === 'upcoming' && 
+                        (language === 'es' ? 'Próximamente' : 'Coming Soon')
+                      }
+                    </span>
+                  )}
                 </div>
               </div>
               
-              {currentSeason.status === 'registration_open' ? (
+              {currentSeason && currentSeason.status === 'registration_open' ? (
                 <div className="text-center">
                   <div className="text-3xl md:text-4xl mb-3 md:mb-4">✍️</div>
                   <p className="text-gray-700 mb-4 md:mb-6 text-sm md:text-base">
