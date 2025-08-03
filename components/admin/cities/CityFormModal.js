@@ -85,7 +85,7 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
   useEffect(() => {
     if (city) {
       setSearchMode(false) // Editing mode, skip search
-      setStep(1) // Start at form step
+      setStep(1) // Start at form step for editing
       setFormData({
         slug: city.slug || '',
         name: {
@@ -107,6 +107,10 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
           googlePhotoReference: null
         }
       })
+      // For editing, also set any existing Google Photos data
+      if (city.googleData?.photos) {
+        setCityPhotos(city.googleData.photos)
+      }
     } else {
       // Reset to initial state for new city
       setSearchMode(true)
@@ -132,6 +136,7 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
           googlePhotoReference: null
         }
       })
+      setCityPhotos([])
     }
     setError(null)
     setSearchQuery('')
@@ -140,7 +145,6 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
     setAutocompleteResults([])
     setShowAutocomplete(false)
     setSelectedAutocompleteIndex(-1)
-    setCityPhotos([])
   }, [city, isOpen])
 
   // Debounced autocomplete search
@@ -527,12 +531,15 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
           photos: cityPhotos // Include fetched photos
         }
         dataToSend.enhancedAt = new Date().toISOString()
+      } else if (city && city.googleData) {
+        // Preserve existing Google data for edited cities
+        dataToSend.googleData = {
+          ...city.googleData,
+          photos: cityPhotos.length > 0 ? cityPhotos : city.googleData?.photos
+        }
       }
 
-      const url = city 
-        ? '/api/admin/cities'
-        : '/api/admin/cities'
-      
+      const url = '/api/admin/cities'
       const method = city ? 'PUT' : 'POST'
       
       if (city) {
@@ -583,6 +590,13 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
     }
   }
 
+  // Helper to go directly to image management for editing cities
+  const handleGoToImages = () => {
+    if (city && validateForm()) {
+      setStep(2)
+    }
+  }
+
   // Common Spanish provinces
   const provinces = [
     'Málaga', 'Cádiz', 'Sevilla', 'Córdoba', 'Huelva', 'Jaén', 'Almería', 'Granada',
@@ -604,7 +618,12 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
               </h3>
               {!city && step === 1 && searchMode && (
                 <p className="text-sm text-gray-600 mt-1">
-                  Smart search with accent-insensitive matching - type "Malag" to find "Málaga"
+                  Smart search with accent-insensitive matching and automatic photo import
+                </p>
+              )}
+              {step === 1 && (!searchMode || city) && (
+                <p className="text-sm text-gray-600 mt-1">
+                  {city ? 'Edit city details and manage images' : 'Configure city details'}
                 </p>
               )}
               {step === 2 && (
@@ -614,8 +633,8 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
               )}
             </div>
             <div className="flex items-center space-x-4">
-              {/* Step indicator */}
-              {!city && !searchMode && (
+              {/* Step indicator - show for new cities or when editing and in step 2 */}
+              {(!city || step === 2) && (
                 <div className="flex items-center space-x-2">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step === 1 ? 'bg-parque-purple text-white' : step > 1 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-400'}`}>
                     1
@@ -840,6 +859,37 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
                 </div>
               )}
 
+              {/* Current City Info for editing */}
+              {city && (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium text-gray-900">Editing: {city.name.es}</h4>
+                      <p className="text-sm text-gray-600">
+                        {city.clubCount || 0} clubs • Created {new Date(city.createdAt).toLocaleDateString()}
+                        {city.googlePlaceId && ' • Google Enhanced'}
+                      </p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {city.images?.main && (
+                        <span className="text-xs text-green-600 flex items-center">
+                          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                          </svg>
+                          Has Images
+                        </span>
+                      )}
+                      <button
+                        onClick={handleGoToImages}
+                        className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                      >
+                        Manage Images
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Basic Information */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -996,49 +1046,36 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
               </div>
               
               {/* Photos preview if available */}
-              {cityPhotos.length > 0 && (
+              {(cityPhotos.length > 0 || (city && city.googleData?.photos)) && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <h4 className="font-medium text-green-900 mb-2">
-                    📸 Auto-imported Photos ({cityPhotos.length} found)
+                    📸 Available Photos ({cityPhotos.length || city?.googleData?.photos?.length || 0} found)
                   </h4>
                   <div className="grid grid-cols-6 gap-2">
-                    {cityPhotos.slice(0, 6).map((photo, index) => (
-                      <div key={index} className="relative">
-                        <img
-                          src={photo.url}
-                          alt={`${formData.name.es} photo ${index + 1}`}
-                          className="w-full h-16 object-cover rounded border"
-                        />
-                        {index === 0 && (
-                          <div className="absolute top-0 right-0 bg-green-500 text-white text-xs px-1 rounded-bl">
-                            Main
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                    {(cityPhotos.length > 0 ? cityPhotos : city?.googleData?.photos || []).slice(0, 6).map((photo, index) => {
+                      const photoUrl = photo.url || `/api/admin/cities/google-photo?photo_reference=${photo.photo_reference}&maxwidth=400`
+                      return (
+                        <div key={index} className="relative">
+                          <img
+                            src={photoUrl}
+                            alt={`${formData.name.es} photo ${index + 1}`}
+                            className="w-full h-16 object-cover rounded border"
+                            onError={(e) => {
+                              e.target.src = `https://images.unsplash.com/400x300/?city,${formData.name.es || 'spain'},landscape`
+                            }}
+                          />
+                          {index === 0 && (
+                            <div className="absolute top-0 right-0 bg-green-500 text-white text-xs px-1 rounded-bl">
+                              Main
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
                   </div>
                   <p className="text-sm text-green-800 mt-2">
-                    Main image automatically set from first photo. You can manage all images in step 2.
+                    {formData.images.main ? 'Main image set.' : 'Main image will be set from first photo.'} You can manage all images in step 2.
                   </p>
-                </div>
-              )}
-              
-              {/* City Information */}
-              {city && (
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">City Statistics</h4>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-600">Clubs:</span>
-                      <span className="ml-2 font-medium">{city.clubCount || 0}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Created:</span>
-                      <span className="ml-2 font-medium">
-                        {new Date(city.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
                 </div>
               )}
             </div>
@@ -1066,7 +1103,8 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
                 city={{
                   ...formData,
                   googleData: {
-                    photos: cityPhotos
+                    ...(formData.googleData || {}),
+                    photos: cityPhotos.length > 0 ? cityPhotos : (city?.googleData?.photos || [])
                   }
                 }}
                 onImagesUpdate={handleImagesUpdate}
@@ -1110,13 +1148,22 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
                 )}
                 
                 {city && (
-                  <button
-                    onClick={handleSubmit}
-                    disabled={loading}
-                    className="px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-parque-purple/90 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {loading ? 'Saving...' : 'Update City'}
-                  </button>
+                  <>
+                    <button
+                      onClick={handleGoToImages}
+                      disabled={!validateForm()}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Manage Images
+                    </button>
+                    <button
+                      onClick={handleSubmit}
+                      disabled={loading}
+                      className="px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-parque-purple/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? 'Saving...' : 'Update City'}
+                    </button>
+                  </>
                 )}
               </>
             )}
@@ -1127,7 +1174,7 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
                 disabled={loading}
                 className="px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-parque-purple/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Creating...' : 'Create City'}
+                {loading ? (city ? 'Updating...' : 'Creating...') : (city ? 'Update City' : 'Create City')}
               </button>
             )}
           </div>
