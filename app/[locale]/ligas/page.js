@@ -212,7 +212,7 @@ export default function LeaguesPage() {
           <p className="text-lg mb-8 max-w-2xl mx-auto">
             {locale === 'es'
               ? 'Únete a nuestra lista de espera y te avisaremos cuando lancemos una liga en tu ciudad. ¡Cuantos más seamos, antes llegamos!'
-              : 'Join our waiting list and we\\'ll notify you when we launch a league in your city. The more we are, the sooner we arrive!'}
+              : "Join our waiting list and we'll notify you when we launch a league in your city. The more we are, the sooner we arrive!"}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
