@@ -9,7 +9,7 @@ import ScoringSystem from '@/components/league/ScoringSystem'
 import StandingsTable from '@/components/player/StandingsTable'
 import ResultsTab from '@/components/player/ResultsTab'
 import ScheduleTab from '@/components/player/ScheduleTab'
-import { findSeasonBySlug, getSeasonDisplayName } from '@/lib/utils/seasonUtils'
+import { getSeasonDisplayName } from '@/lib/utils/seasonUtils.client'
 
 export default function LeagueSeasonPage() {
   const params = useParams()
@@ -62,11 +62,12 @@ export default function LeagueSeasonPage() {
       if (!leagueRes.ok) throw new Error('League not found')
       const leagueData = await leagueRes.json()
       
-      // Find the season using the new system
-      const seasonObj = await findSeasonBySlug(season, language)
-      if (!seasonObj) {
+      // Find the season using the API
+      const seasonRes = await fetch(`/api/seasons/${season}?language=${language}`)
+      if (!seasonRes.ok) {
         throw new Error(`Season ${season} not found`)
       }
+      const seasonObj = await seasonRes.json()
       
       setLeague(leagueData.league)
       setCurrentSeason(seasonObj)
@@ -273,7 +274,7 @@ export default function LeagueSeasonPage() {
                 </h2>
                 <div className="flex items-center gap-3">
                   <span className="text-sm md:text-base text-gray-600 font-medium">
-                    {currentSeason ? currentSeason.getName(language) : getSeasonDisplayName(season, language)}
+                    {currentSeason ? currentSeason.name : getSeasonDisplayName(season, language)}
                   </span>
                   {currentSeason && (
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
@@ -338,7 +339,7 @@ export default function LeagueSeasonPage() {
                 </h2>
                 <div className="flex items-center gap-3">
                   <span className="text-sm md:text-base text-gray-600 font-medium">
-                    {currentSeason ? currentSeason.getName(language) : getSeasonDisplayName(season, language)}
+                    {currentSeason ? currentSeason.name : getSeasonDisplayName(season, language)}
                   </span>
                   {currentSeason && (
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
@@ -384,7 +385,7 @@ export default function LeagueSeasonPage() {
                 </h2>
                 <div className="flex items-center gap-3">
                   <span className="text-sm md:text-base text-gray-600 font-medium">
-                    {currentSeason ? currentSeason.getName(language) : getSeasonDisplayName(season, language)}
+                    {currentSeason ? currentSeason.name : getSeasonDisplayName(season, language)}
                   </span>
                   {currentSeason && (
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
@@ -424,7 +425,7 @@ export default function LeagueSeasonPage() {
                 </h2>
                 <div className="flex items-center gap-3">
                   <span className="text-sm md:text-base text-gray-600 font-medium">
-                    {currentSeason ? currentSeason.getName(language) : getSeasonDisplayName(season, language)}
+                    {currentSeason ? currentSeason.name : getSeasonDisplayName(season, language)}
                   </span>
                   {currentSeason && (
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
