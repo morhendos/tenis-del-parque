@@ -1,14 +1,25 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { useState } from 'react';
+
+// Helper function to generate deterministic fallback images
+const getFallbackImageUrl = (cityName, width = 800, height = 600) => {
+  // Create a seed from city name for consistent images
+  const seed = cityName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 10)
+  return `https://picsum.photos/${width}/${height}?seed=${seed}`
+}
 
 export default function LeagueCard({ league, content, locale }) {
+  const [imageError, setImageError] = useState(false)
+  const [imageLoading, setImageLoading] = useState(true)
+
   const isActive = league.status === 'active';
   const isComingSoon = league.status === 'coming_soon';
   const citySlug = league.slug;
   const cityContent = content?.cities?.cityDescriptions?.[citySlug];
   
-  // Extract location string from location object
-  const locationString = league.location?.city || league.location?.region || league.name;
+  // Extract location string from location object or cityData
+  const locationString = league.cityData?.name || league.location?.city || league.location?.region || league.name;
   const regionString = league.location?.region || 'España';
   
   // Check if registration is open for active leagues
@@ -28,8 +39,41 @@ export default function LeagueCard({ league, content, locale }) {
     year: 'numeric' 
   }) : null;
   
-  // Check if league has a custom image
-  const hasCustomImage = ['liga-de-sotogrande', 'liga-de-malaga', 'liga-de-estepona', 'liga-de-marbella'].includes(citySlug);
+  // Get city image with priority to Google Maps photos
+  const getCityImage = () => {
+    // Priority 1: City photos from Google Maps (via cityData)
+    if (league.cityData?.images?.main && !imageError) {
+      // If it's a Google photo reference, use the public proxy
+      if (league.cityData.images.googlePhotoReference) {
+        return `/api/cities/photo?photo_reference=${league.cityData.images.googlePhotoReference}&maxwidth=800`
+      }
+      // Otherwise use the direct image URL
+      return league.cityData.images.main
+    }
+    
+    // Priority 2: Legacy static images (for backward compatibility)
+    const hasCustomImage = ['liga-de-sotogrande', 'liga-de-malaga', 'liga-de-estepona', 'liga-de-marbella'].includes(citySlug);
+    if (hasCustomImage && !imageError) {
+      return `/${citySlug === 'liga-de-sotogrande' ? 'sotogrande-01.jpg' : 
+        citySlug === 'liga-de-estepona' ? 'estepona-01.webp' :
+        citySlug === 'liga-de-malaga' ? 'malaga-01.avif' : 
+        citySlug === 'liga-de-marbella' ? 'marbella-02.webp' : 
+             `${citySlug}-01.jpg`}`
+    }
+    
+    // Priority 3: Fallback to deterministic placeholder based on city name
+    return getFallbackImageUrl(locationString, 800, 600)
+  }
+
+  const handleImageError = () => {
+    console.log('Image failed to load for league:', league.name)
+    setImageError(true)
+    setImageLoading(false)
+  }
+
+  const handleImageLoad = () => {
+    setImageLoading(false)
+  }
   
   // Get the appropriate button text and link
   const getButtonConfig = () => {
@@ -85,30 +129,42 @@ export default function LeagueCard({ league, content, locale }) {
           }
         </span>
       </div>
+
+      {/* Google Photo Attribution (if from Google) */}
+      {league.cityData?.images?.googlePhotoReference && !imageError && (
+        <div className="absolute top-4 left-4 z-10">
+          <div className="bg-white/90 rounded px-2 py-1 text-xs text-gray-600 flex items-center space-x-1">
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+            </svg>
+            <span>Google</span>
+          </div>
+        </div>
+      )}
       
       {/* City Image */}
       <div className="relative h-48 overflow-hidden">
-        {hasCustomImage ? (
-          <>
-            <Image
-              src={`/${citySlug === 'liga-de-sotogrande' ? 'sotogrande-01.jpg' : 
-                citySlug === 'liga-de-estepona' ? 'estepona-01.webp' :
-                citySlug === 'liga-de-malaga' ? 'malaga-01.avif' : 
-                citySlug === 'liga-de-marbella' ? 'marbella-02.webp' : 
-                     `${citySlug}-01.jpg`}`}
-              alt={league.name}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            />
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-parque-purple/80 via-parque-purple/40 to-transparent"></div>
-          </>
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-parque-purple to-parque-green"></div>
+        {imageLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-parque-purple"></div>
+          </div>
         )}
+
+        <Image
+          src={getCityImage()}
+          alt={`${league.name} - ${locationString}`}
+          fill
+          className={`object-cover transition-opacity duration-300 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
+          onError={handleImageError}
+          onLoad={handleImageLoad}
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        />
+
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-parque-purple/80 via-parque-purple/40 to-transparent"></div>
+        
         <div className="absolute inset-0 flex items-center justify-center">
-          <h3 className="text-3xl font-bold text-white drop-shadow-lg">{league.name}</h3>
+          <h3 className="text-3xl font-bold text-white drop-shadow-lg text-center px-4">{league.name}</h3>
         </div>
       </div>
       
