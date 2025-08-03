@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import CityFormModal from '@/components/admin/cities/CityFormModal'
+import CityGoogleEnhancer from '@/components/admin/cities/CityGoogleEnhancer'
 
 export default function AdminCitiesPage() {
   const [cities, setCities] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [showFormModal, setShowFormModal] = useState(false)
+  const [showEnhancerModal, setShowEnhancerModal] = useState(false)
   const [editingCity, setEditingCity] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -63,6 +65,11 @@ export default function AdminCitiesPage() {
     fetchCities()
     setShowFormModal(false)
     setEditingCity(null)
+  }
+
+  const handleEnhancerSuccess = () => {
+    fetchCities()
+    setShowEnhancerModal(false)
   }
 
   const handleUpdateClubCounts = async () => {
@@ -154,7 +161,9 @@ export default function AdminCitiesPage() {
     active: cities.filter(c => c.status === 'active').length,
     withClubs: cities.filter(c => c.clubCount > 0).length,
     totalClubs: cities.reduce((sum, c) => sum + c.clubCount, 0),
-    provinces: [...new Set(cities.map(c => c.province))].length
+    provinces: [...new Set(cities.map(c => c.province))].length,
+    withCoordinates: cities.filter(c => c.coordinates?.lat && c.coordinates?.lng).length,
+    googleEnhanced: cities.filter(c => c.importSource === 'google').length
   }
 
   if (loading && cities.length === 0) {
@@ -174,6 +183,15 @@ export default function AdminCitiesPage() {
           <p className="text-gray-600 mt-1">Manage cities for tennis club directory</p>
         </div>
         <div className="flex space-x-3">
+          <button
+            onClick={() => setShowEnhancerModal(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+            </svg>
+            <span>Enhance with Google</span>
+          </button>
           <button
             onClick={handleUpdateClubCounts}
             disabled={loading}
@@ -196,8 +214,8 @@ export default function AdminCitiesPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      {/* Enhanced Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
         <div className="bg-white rounded-lg shadow p-6">
           <div className="text-3xl font-bold text-parque-purple">{stats.total}</div>
           <div className="text-sm text-gray-600">Total Cities</div>
@@ -218,7 +236,34 @@ export default function AdminCitiesPage() {
           <div className="text-3xl font-bold text-orange-600">{stats.provinces}</div>
           <div className="text-sm text-gray-600">Provinces</div>
         </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="text-3xl font-bold text-cyan-600">{stats.withCoordinates}</div>
+          <div className="text-sm text-gray-600">With GPS</div>
+        </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="text-3xl font-bold text-blue-700">{stats.googleEnhanced}</div>
+          <div className="text-sm text-gray-600">Google Enhanced</div>
+        </div>
       </div>
+
+      {/* Google Enhancement Info */}
+      {stats.total > 0 && stats.withCoordinates < stats.total && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-start space-x-3">
+            <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            <div className="flex-1">
+              <h4 className="font-medium text-blue-900">
+                {stats.total - stats.withCoordinates} cities need GPS enhancement
+              </h4>
+              <p className="text-sm text-blue-800 mt-1">
+                Click "Enhance with Google" to automatically fetch GPS coordinates, formatted addresses, and place IDs for all cities using Google Maps API.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="bg-white rounded-lg shadow p-4">
@@ -319,10 +364,17 @@ export default function AdminCitiesPage() {
               <tr key={city._id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div>
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium text-gray-900 flex items-center">
                       {city.name.es}
                       {city.name.es !== city.name.en && (
                         <span className="text-gray-500 ml-2">/ {city.name.en}</span>
+                      )}
+                      {city.coordinates?.lat && city.coordinates?.lng && (
+                        <span className="ml-2 text-green-500" title="Has GPS coordinates">
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                          </svg>
+                        </span>
                       )}
                     </div>
                     <div className="text-sm text-gray-500">{city.slug}</div>
@@ -402,6 +454,13 @@ export default function AdminCitiesPage() {
         }}
         city={editingCity}
         onSuccess={handleFormSuccess}
+      />
+
+      {/* City Google Enhancer Modal */}
+      <CityGoogleEnhancer
+        isOpen={showEnhancerModal}
+        onClose={() => setShowEnhancerModal(false)}
+        onSuccess={handleEnhancerSuccess}
       />
     </div>
   )
