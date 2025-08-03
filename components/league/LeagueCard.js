@@ -2,11 +2,22 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
 
-// Helper function to generate deterministic fallback images
-const getFallbackImageUrl = (cityName, width = 800, height = 600) => {
-  // Create a seed from city name for consistent images
-  const seed = cityName.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 10)
-  return `https://picsum.photos/${width}/${height}?seed=${seed}`
+// Helper function to generate consistent fallback images for leagues
+const getGenericLeagueFallback = (cityName) => {
+  // Use a consistent gradient background for all leagues without images
+  return 'data:image/svg+xml;base64,' + btoa(`
+    <svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="leagueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#10B981;stop-opacity:1" />
+        </linearGradient>
+      </defs>
+      <rect width="800" height="600" fill="url(#leagueGrad)"/>
+      <text x="400" y="280" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="white" opacity="0.9">🏆</text>
+      <text x="400" y="340" font-family="Arial, sans-serif" font-size="20" text-anchor="middle" fill="white" opacity="0.8">${cityName}</text>
+    </svg>
+  `)
 }
 
 export default function LeagueCard({ league, content, locale }) {
@@ -61,8 +72,8 @@ export default function LeagueCard({ league, content, locale }) {
              `${citySlug}-01.jpg`}`
     }
     
-    // Priority 3: Fallback to deterministic placeholder based on city name
-    return getFallbackImageUrl(locationString, 800, 600)
+    // Priority 3: Fallback to consistent gradient with league trophy
+    return getGenericLeagueFallback(locationString)
   }
 
   const handleImageError = () => {
@@ -129,18 +140,6 @@ export default function LeagueCard({ league, content, locale }) {
           }
         </span>
       </div>
-
-      {/* Google Photo Attribution (if from Google) */}
-      {league.cityData?.images?.googlePhotoReference && !imageError && (
-        <div className="absolute top-4 left-4 z-10">
-          <div className="bg-white/90 rounded px-2 py-1 text-xs text-gray-600 flex items-center space-x-1">
-            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-            </svg>
-            <span>Google</span>
-          </div>
-        </div>
-      )}
       
       {/* City Image */}
       <div className="relative h-48 overflow-hidden">
