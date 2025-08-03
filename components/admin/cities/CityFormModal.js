@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import CityImageManager from '@/components/admin/cities/CityImageManager'
 
 export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
   const [loading, setLoading] = useState(false)
@@ -10,6 +11,9 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
   const [searchLoading, setSearchLoading] = useState(false)
   const [searchResults, setSearchResults] = useState([])
   const [selectedResult, setSelectedResult] = useState(null)
+  const [step, setStep] = useState(1) // Add step management: 1=search/form, 2=images
+  const [cityPhotos, setCityPhotos] = useState([])
+  const [photosLoading, setPhotosLoading] = useState(false)
   
   // Autocomplete states
   const [autocompleteResults, setAutocompleteResults] = useState([])
@@ -35,7 +39,12 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
     },
     status: 'active',
     displayOrder: 0,
-    importSource: 'manual'
+    importSource: 'manual',
+    images: {
+      main: '',
+      gallery: [],
+      googlePhotoReference: null
+    }
   })
 
   // Helper function to normalize text for accent-insensitive comparison
@@ -76,6 +85,7 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
   useEffect(() => {
     if (city) {
       setSearchMode(false) // Editing mode, skip search
+      setStep(1) // Start at form step
       setFormData({
         slug: city.slug || '',
         name: {
@@ -90,11 +100,17 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
         },
         status: city.status || 'active',
         displayOrder: city.displayOrder || 0,
-        importSource: city.importSource || 'manual'
+        importSource: city.importSource || 'manual',
+        images: city.images || {
+          main: '',
+          gallery: [],
+          googlePhotoReference: null
+        }
       })
     } else {
       // Reset to initial state for new city
       setSearchMode(true)
+      setStep(1)
       setFormData({
         slug: '',
         name: {
@@ -109,7 +125,12 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
         },
         status: 'active',
         displayOrder: 0,
-        importSource: 'manual'
+        importSource: 'manual',
+        images: {
+          main: '',
+          gallery: [],
+          googlePhotoReference: null
+        }
       })
     }
     setError(null)
@@ -119,6 +140,7 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
     setAutocompleteResults([])
     setShowAutocomplete(false)
     setSelectedAutocompleteIndex(-1)
+    setCityPhotos([])
   }, [city, isOpen])
 
   // Debounced autocomplete search
@@ -138,7 +160,7 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          query: query, // Don't add ", Spain" here - the API will handle it
+          query: query,
           types: ['locality', 'administrative_area_level_2']
         })
       })
@@ -253,8 +275,9 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          query: searchQuery, // API will handle adding ", Spain"
-          types: ['locality', 'administrative_area_level_2']
+          query: searchQuery,
+          types: ['locality', 'administrative_area_level_2'],
+          includePhotos: true // Request photos during search
         })
       })
 
@@ -278,8 +301,52 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
     }
   }
 
+  // Fetch photos for a selected city
+  const fetchCityPhotos = async (placeId, cityName) => {
+    if (!placeId && !cityName) return
+
+    setPhotosLoading(true)
+    try {
+      const response = await fetch('/api/admin/cities/fetch-photos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          placeId: placeId,
+          cityName: cityName
+        })
+      })
+
+      const data = await response.json()
+      if (response.ok && data.photos) {
+        setCityPhotos(data.photos)
+        
+        // Auto-set main image from first photo if no main image exists
+        if (data.photos.length > 0 && !formData.images.main) {
+          setFormData(prev => ({
+            ...prev,
+            images: {
+              ...prev.images,
+              main: data.photos[0].url,
+              googlePhotoReference: data.photos[0].photo_reference
+            },
+            googleData: {
+              ...(prev.googleData || {}),
+              photos: data.photos
+            }
+          }))
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching photos:', err)
+    } finally {
+      setPhotosLoading(false)
+    }
+  }
+
   // Select a city from search results
-  const handleSelectCity = (result) => {
+  const handleSelectCity = async (result) => {
     setSelectedResult(result)
     
     // Extract city and province from Google result
@@ -299,7 +366,7 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
     const slug = generateSlug(cityName)
 
     // Pre-fill form with Google data
-    setFormData({
+    const newFormData = {
       slug: slug,
       name: {
         es: cityName,
@@ -313,8 +380,35 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
       },
       status: 'active',
       displayOrder: 0,
-      importSource: 'google'
-    })
+      importSource: 'google',
+      images: {
+        main: '',
+        gallery: [],
+        googlePhotoReference: null
+      }
+    }
+
+    setFormData(newFormData)
+
+    // Fetch photos for the selected city if they weren't included in search
+    if (!result.photos && result.place_id) {
+      await fetchCityPhotos(result.place_id, result.name)
+    } else if (result.photos && result.photos.length > 0) {
+      setCityPhotos(result.photos)
+      // Auto-set main image from first photo
+      setFormData(prev => ({
+        ...prev,
+        images: {
+          ...prev.images,
+          main: result.photos[0].url,
+          googlePhotoReference: result.photos[0].photo_reference
+        },
+        googleData: {
+          ...(prev.googleData || {}),
+          photos: result.photos
+        }
+      }))
+    }
   }
 
   // Switch to manual mode
@@ -363,6 +457,14 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
       
       return newData
     })
+  }
+
+  // Handle images update from CityImageManager
+  const handleImagesUpdate = (updatedImages) => {
+    setFormData(prev => ({
+      ...prev,
+      images: updatedImages
+    }))
   }
 
   const validateForm = () => {
@@ -421,7 +523,8 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
         dataToSend.googleData = {
           types: selectedResult.types,
           addressComponents: selectedResult.address_components,
-          viewport: selectedResult.geometry?.viewport
+          viewport: selectedResult.geometry?.viewport,
+          photos: cityPhotos // Include fetched photos
         }
         dataToSend.enhancedAt = new Date().toISOString()
       }
@@ -466,6 +569,20 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
     }
   }
 
+  // Helper to go to next step
+  const handleNextStep = () => {
+    if (step === 1 && validateForm()) {
+      setStep(2)
+    }
+  }
+
+  // Helper to go to previous step
+  const handlePrevStep = () => {
+    if (step > 1) {
+      setStep(step - 1)
+    }
+  }
+
   // Common Spanish provinces
   const provinces = [
     'Málaga', 'Cádiz', 'Sevilla', 'Córdoba', 'Huelva', 'Jaén', 'Almería', 'Granada',
@@ -477,7 +594,7 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
@@ -485,20 +602,39 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
               <h3 className="text-xl font-semibold text-gray-900">
                 {city ? 'Edit City' : 'Add New City'}
               </h3>
-              {!city && searchMode && (
+              {!city && step === 1 && searchMode && (
                 <p className="text-sm text-gray-600 mt-1">
                   Smart search with accent-insensitive matching - type "Malag" to find "Málaga"
                 </p>
               )}
+              {step === 2 && (
+                <p className="text-sm text-gray-600 mt-1">
+                  Manage city images for frontend display
+                </p>
+              )}
             </div>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            <div className="flex items-center space-x-4">
+              {/* Step indicator */}
+              {!city && !searchMode && (
+                <div className="flex items-center space-x-2">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step === 1 ? 'bg-parque-purple text-white' : step > 1 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-400'}`}>
+                    1
+                  </div>
+                  <div className={`w-16 h-0.5 ${step > 1 ? 'bg-green-300' : 'bg-gray-200'}`}></div>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${step === 2 ? 'bg-parque-purple text-white' : step > 2 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-400'}`}>
+                    2
+                  </div>
+                </div>
+              )}
+              <button
+                onClick={onClose}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
         
@@ -510,8 +646,8 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
             </div>
           )}
           
-          {/* Google Search Mode (for new cities) */}
-          {!city && searchMode && (
+          {/* Step 1: Google Search Mode or Form (for new cities) */}
+          {step === 1 && !city && searchMode && (
             <div className="space-y-4">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex items-start space-x-3">
@@ -519,13 +655,13 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
                     <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                   </svg>
                   <div className="flex-1">
-                    <h4 className="font-medium text-blue-900">🚀 Enhanced Smart City Search</h4>
+                    <h4 className="font-medium text-blue-900">🚀 Enhanced Smart City Search with Auto Photo Import</h4>
                     <p className="text-sm text-blue-800 mt-1">
-                      Now supports accent-insensitive search! Type "Malag" to find "Málaga", "Cordoba" to find "Córdoba", etc.
+                      Now automatically fetches city photos from Google Maps! Search supports accent-insensitive matching.
                     </p>
                     <ul className="text-xs text-blue-700 mt-2 space-y-1">
                       <li>• Works without accents: Malaga, Cordoba, Cadiz</li>
-                      <li>• Fuzzy matching for typos</li>
+                      <li>• Automatically imports city photos for frontend display</li>
                       <li>• Use arrow keys ↑↓ to navigate, Enter to select</li>
                     </ul>
                   </div>
@@ -610,6 +746,7 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
                 <div className="text-xs text-gray-500 mt-1 space-y-1">
                   <p>💡 Use ↑↓ arrows to navigate suggestions, Enter to select, Esc to close</p>
                   <p>🎯 Accent-insensitive: "Malag" finds "Málaga", "Cordoba" finds "Córdoba"</p>
+                  <p>📸 Automatically imports city photos for frontend display</p>
                 </div>
               </div>
 
@@ -630,12 +767,21 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
                             : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'
                         }`}
                       >
-                        <div className="font-medium text-gray-900">
-                          {highlightMatch(result.name, searchQuery)}
-                        </div>
-                        <div className="text-sm text-gray-600">{result.formatted_address}</div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          📍 {result.geometry?.location?.lat?.toFixed(4)}, {result.geometry?.location?.lng?.toFixed(4)}
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-900">
+                              {highlightMatch(result.name, searchQuery)}
+                            </div>
+                            <div className="text-sm text-gray-600">{result.formatted_address}</div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              📍 {result.geometry?.location?.lat?.toFixed(4)}, {result.geometry?.location?.lng?.toFixed(4)}
+                            </div>
+                          </div>
+                          {result.photos && result.photos.length > 0 && (
+                            <div className="ml-3 text-xs text-green-600">
+                              📸 {result.photos.length} photos
+                            </div>
+                          )}
                         </div>
                       </button>
                     ))}
@@ -664,8 +810,8 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
             </div>
           )}
 
-          {/* Manual Form Mode */}
-          {(!searchMode || city) && (
+          {/* Step 1: Manual Form Mode */}
+          {step === 1 && (!searchMode || city) && (
             <div className="space-y-4">
               {/* Google Data Preview */}
               {selectedResult && (
@@ -677,7 +823,8 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
                     <div className="flex-1">
                       <h4 className="font-medium text-green-900">Google Maps Data Selected</h4>
                       <p className="text-sm text-green-800 mt-1">
-                        <strong>{selectedResult.name}</strong> - GPS coordinates and province auto-detected. You can edit the fields below if needed.
+                        <strong>{selectedResult.name}</strong> - GPS coordinates, province, and photos auto-detected. 
+                        You can edit the fields below if needed.
                       </p>
                       <button
                         onClick={() => {
@@ -848,6 +995,34 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
                 </div>
               </div>
               
+              {/* Photos preview if available */}
+              {cityPhotos.length > 0 && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <h4 className="font-medium text-green-900 mb-2">
+                    📸 Auto-imported Photos ({cityPhotos.length} found)
+                  </h4>
+                  <div className="grid grid-cols-6 gap-2">
+                    {cityPhotos.slice(0, 6).map((photo, index) => (
+                      <div key={index} className="relative">
+                        <img
+                          src={photo.url}
+                          alt={`${formData.name.es} photo ${index + 1}`}
+                          className="w-full h-16 object-cover rounded border"
+                        />
+                        {index === 0 && (
+                          <div className="absolute top-0 right-0 bg-green-500 text-white text-xs px-1 rounded-bl">
+                            Main
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-sm text-green-800 mt-2">
+                    Main image automatically set from first photo. You can manage all images in step 2.
+                  </p>
+                </div>
+              )}
+              
               {/* City Information */}
               {city && (
                 <div className="bg-gray-50 rounded-lg p-4">
@@ -868,26 +1043,94 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
               )}
             </div>
           )}
+
+          {/* Step 2: Images Management */}
+          {step === 2 && (
+            <div className="space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start space-x-3">
+                  <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                  </svg>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-blue-900">City Image Management</h4>
+                    <p className="text-sm text-blue-800 mt-1">
+                      Manage city images that will be displayed on the frontend leagues page. 
+                      You can use Google Photos or upload custom images.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <CityImageManager
+                city={{
+                  ...formData,
+                  googleData: {
+                    photos: cityPhotos
+                  }
+                }}
+                onImagesUpdate={handleImagesUpdate}
+                readOnly={false}
+              />
+            </div>
+          )}
         </div>
         
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
-          >
-            Cancel
-          </button>
-          
-          {(!searchMode || city) && (
+        <div className="px-6 py-4 border-t border-gray-200 flex justify-between">
+          <div className="flex space-x-3">
             <button
-              onClick={handleSubmit}
-              disabled={loading}
-              className="px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-parque-purple/90 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
             >
-              {loading ? 'Saving...' : (city ? 'Update City' : 'Create City')}
+              Cancel
             </button>
-          )}
+            
+            {step > 1 && (
+              <button
+                onClick={handlePrevStep}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+              >
+                ← Previous
+              </button>
+            )}
+          </div>
+          
+          <div className="flex space-x-3">
+            {step === 1 && (!searchMode || city) && (
+              <>
+                {!city && (
+                  <button
+                    onClick={handleNextStep}
+                    disabled={!validateForm()}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next: Images →
+                  </button>
+                )}
+                
+                {city && (
+                  <button
+                    onClick={handleSubmit}
+                    disabled={loading}
+                    className="px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-parque-purple/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? 'Saving...' : 'Update City'}
+                  </button>
+                )}
+              </>
+            )}
+            
+            {step === 2 && (
+              <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className="px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-parque-purple/90 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Creating...' : 'Create City'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
