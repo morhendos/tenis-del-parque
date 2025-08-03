@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server'
 
 // Generate consistent fallback image for all cities
-const getConsistentFallback = (photoReference) => {
-  // Create a generic city fallback using SVG
-  const svgFallback = `
+const getConsistentFallbackSVG = () => {
+  return `
     <svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="cityGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -15,10 +14,7 @@ const getConsistentFallback = (photoReference) => {
       <text x="400" y="280" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="white" opacity="0.9">🏙️</text>
       <text x="400" y="340" font-family="Arial, sans-serif" font-size="24" text-anchor="middle" fill="white" opacity="0.8">Ciudad</text>
     </svg>
-  `
-  
-  const base64Svg = Buffer.from(svgFallback).toString('base64')
-  return `data:image/svg+xml;base64,${base64Svg}`
+  `.trim()
 }
 
 export async function GET(request) {
@@ -33,8 +29,14 @@ export async function GET(request) {
 
     // Check if Google Maps API is available
     if (!process.env.GOOGLE_MAPS_API_KEY) {
-      // Return consistent fallback image
-      return NextResponse.redirect(getConsistentFallback(photoReference))
+      // Return consistent fallback SVG
+      return new NextResponse(getConsistentFallbackSVG(), {
+        headers: {
+          'Content-Type': 'image/svg+xml',
+          'Cache-Control': 'public, max-age=86400',
+          'X-Image-Source': 'fallback-svg'
+        }
+      })
     }
 
     // Construct Google Photos URL
@@ -56,21 +58,33 @@ export async function GET(request) {
         headers: {
           'Content-Type': contentType,
           'Cache-Control': 'public, max-age=86400', // Cache for 24 hours
-          'X-Image-Source': 'google-photos-public'
+          'X-Image-Source': 'google-photos'
         }
       })
 
     } catch (apiError) {
       console.error('Google Photos API error:', apiError.message)
       
-      // Return consistent fallback on error
-      return NextResponse.redirect(getConsistentFallback(photoReference))
+      // Return consistent fallback SVG on error
+      return new NextResponse(getConsistentFallbackSVG(), {
+        headers: {
+          'Content-Type': 'image/svg+xml',
+          'Cache-Control': 'public, max-age=3600', // Cache fallback for 1 hour
+          'X-Image-Source': 'fallback-svg'
+        }
+      })
     }
 
   } catch (error) {
     console.error('Error serving Google Photo:', error)
     
-    // Return consistent fallback on any error
-    return NextResponse.redirect(getConsistentFallback('default'))
+    // Return consistent fallback SVG on any error
+    return new NextResponse(getConsistentFallbackSVG(), {
+      headers: {
+        'Content-Type': 'image/svg+xml',
+        'Cache-Control': 'public, max-age=3600',
+        'X-Image-Source': 'fallback-svg'
+      }
+    })
   }
 }
