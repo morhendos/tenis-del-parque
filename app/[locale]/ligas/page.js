@@ -6,12 +6,12 @@ import { homeContent } from '@/lib/content/homeContent'
 import { multiLeagueHomeContent } from '@/lib/content/multiLeagueHomeContent'
 import Navigation from '@/components/common/Navigation'
 import Footer from '@/components/common/Footer'
-import LeagueCard from '@/components/league/LeagueCard'
+import CityCard from '@/components/cities/CityCard'
 
 export default function LeaguesPage() {
   const params = useParams()
   const locale = params.locale || 'es'
-  const [leagues, setLeagues] = useState([])
+  const [cities, setCities] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -19,57 +19,56 @@ export default function LeaguesPage() {
   const content = multiLeagueHomeContent[locale] || multiLeagueHomeContent['es']
 
   useEffect(() => {
-    fetchLeagues()
+    fetchCities()
   }, [])
 
-  const fetchLeagues = async () => {
+  const fetchCities = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/leagues')
+      const response = await fetch('/api/cities')
       if (response.ok) {
         const data = await response.json()
-        setLeagues(data.leagues || [])
+        setCities(data.cities || [])
       } else {
-        // If API fails, show demo leagues
-        setLeagues([
+        // If API fails, show demo cities
+        setCities([
           {
             _id: 'demo-sotogrande',
-            name: 'Liga de Sotogrande',
             slug: 'sotogrande',
-            location: {
-              city: 'Sotogrande',
-              region: 'Andalucía',
-              country: 'España'
-            },
-            description: {
-              es: 'La primera liga amateur de tenis en Sotogrande. Sistema suizo, rankings ELO y ambiente competitivo pero relajado.',
-              en: 'The first amateur tennis league in Sotogrande. Swiss system, ELO rankings and competitive but relaxed atmosphere.'
-            },
-            seasons: [
-              {
-                name: 'Verano 2025',
-                status: 'active',
-                startDate: '2025-07-07',
-                price: { isFree: true }
-              }
-            ],
-            playerCount: 20,
-            status: 'active'
+            name: { es: 'Sotogrande', en: 'Sotogrande' },
+            province: 'Cádiz',
+            clubCount: 5,
+            leagueCount: 1,
+            coordinates: { lat: 36.2847, lng: -5.2558 },
+            images: { main: '', googlePhotoReference: null },
+            hasCoordinates: true,
+            hasImages: false
+          },
+          {
+            _id: 'demo-marbella',
+            slug: 'marbella',
+            name: { es: 'Marbella', en: 'Marbella' },
+            province: 'Málaga',
+            clubCount: 12,
+            leagueCount: 0,
+            coordinates: { lat: 36.5101, lng: -4.8824 },
+            images: { main: '', googlePhotoReference: null },
+            hasCoordinates: true,
+            hasImages: false
           }
         ])
       }
     } catch (err) {
-      console.error('Error fetching leagues:', err)
+      console.error('Error fetching cities:', err)
       setError(err.message)
     } finally {
       setLoading(false)
     }
   }
 
-  // Organize leagues by status
-  const activeLeagues = leagues.filter(league => league.status === 'active')
-  const comingSoonLeagues = leagues.filter(league => league.status === 'coming_soon')
-  const inactiveLeagues = leagues.filter(league => league.status === 'inactive')
+  // Organize cities by league availability
+  const citiesWithLeagues = cities.filter(city => city.leagueCount > 0)
+  const citiesComingSoon = cities.filter(city => city.leagueCount === 0)
 
   if (loading) {
     return (
@@ -78,7 +77,7 @@ export default function LeaguesPage() {
         <div className="container mx-auto px-4 py-32 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
           <p className="mt-4 text-gray-600">
-            {locale === 'es' ? 'Cargando ligas...' : 'Loading leagues...'}
+            {locale === 'es' ? 'Cargando ciudades...' : 'Loading cities...'}
           </p>
         </div>
       </div>
@@ -93,74 +92,88 @@ export default function LeaguesPage() {
       <section className="relative pt-32 pb-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <div className="text-6xl mb-6">🏆</div>
+            <div className="text-6xl mb-6">🏙️</div>
             <h1 className="text-5xl font-light text-parque-purple mb-4">
-              {locale === 'es' ? 'Ligas de Tenis' : 'Tennis Leagues'}
+              {locale === 'es' ? 'Ciudades con Tenis' : 'Tennis Cities'}
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               {locale === 'es' 
-                ? 'Encuentra tu liga perfecta y compite con jugadores de tu nivel en un ambiente divertido y competitivo.'
-                : 'Find your perfect league and compete with players at your level in a fun and competitive environment.'}
+                ? 'Descubre las mejores ciudades para jugar al tenis. Ligas amateur, clubes increíbles y una comunidad apasionada te esperan.'
+                : 'Discover the best cities to play tennis. Amateur leagues, incredible clubs and a passionate community await you.'}
             </p>
           </div>
+
+          {/* Stats Section */}
+          {cities.length > 0 && (
+            <div className="flex flex-wrap justify-center gap-8 mb-8">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-parque-purple">{cities.length}</div>
+                <div className="text-gray-600">
+                  {locale === 'es' ? 'Ciudades' : 'Cities'}
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-parque-green">
+                  {cities.reduce((sum, city) => sum + (city.clubCount || 0), 0)}
+                </div>
+                <div className="text-gray-600">
+                  {locale === 'es' ? 'Clubes' : 'Clubs'}
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-amber-500">
+                  {cities.reduce((sum, city) => sum + (city.leagueCount || 0), 0)}
+                </div>
+                <div className="text-gray-600">
+                  {locale === 'es' ? 'Ligas Activas' : 'Active Leagues'}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
-      {/* Leagues Grid */}
+      {/* Cities Grid */}
       <section className="container mx-auto px-4 pb-16">
-        {leagues.length > 0 ? (
-          <div className="space-y-12">
-            {/* Active Leagues */}
-            {activeLeagues.length > 0 && (
+        {cities.length > 0 ? (
+          <div className="space-y-16">
+            {/* Cities with Active Leagues */}
+            {citiesWithLeagues.length > 0 && (
               <div>
                 <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
-                  {locale === 'es' ? 'Ligas Activas' : 'Active Leagues'}
+                  {locale === 'es' ? '🏆 Ligas Activas' : '🏆 Active Leagues'}
                 </h2>
-                <div className="flex flex-wrap justify-center gap-8">
-                  {activeLeagues.map((league) => (
-                    <LeagueCard
-                      key={league._id}
-                      league={league}
-                      content={content}
-                      locale={locale}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                  {citiesWithLeagues.map((city) => (
+                    <CityCard
+                      key={city._id}
+                      city={city}
+                      leagueCount={city.leagueCount}
+                      className="w-full"
                     />
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Coming Soon Leagues */}
-            {comingSoonLeagues.length > 0 && (
+            {/* Cities Coming Soon */}
+            {citiesComingSoon.length > 0 && (
               <div>
                 <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
-                  {locale === 'es' ? 'Próximamente' : 'Coming Soon'}
+                  {locale === 'es' ? '🚀 Próximamente' : '🚀 Coming Soon'}
                 </h2>
-                <div className="flex flex-wrap justify-center gap-8">
-                  {comingSoonLeagues.map((league) => (
-                    <LeagueCard
-                      key={league._id}
-                      league={league}
-                      content={content}
-                      locale={locale}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Inactive Leagues */}
-            {inactiveLeagues.length > 0 && (
-              <div className="opacity-60">
-                <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
-                  {locale === 'es' ? 'Ligas Anteriores' : 'Past Leagues'}
-                </h2>
-                <div className="flex flex-wrap justify-center gap-8">
-                  {inactiveLeagues.map((league) => (
-                    <LeagueCard
-                      key={league._id}
-                      league={league}
-                      content={content}
-                      locale={locale}
+                <p className="text-center text-gray-600 mb-8">
+                  {locale === 'es' 
+                    ? 'Estas ciudades tendrán ligas de tenis muy pronto. ¡Mantente atento!'
+                    : 'These cities will have tennis leagues very soon. Stay tuned!'}
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                  {citiesComingSoon.map((city) => (
+                    <CityCard
+                      key={city._id}
+                      city={city}
+                      leagueCount={city.leagueCount}
+                      className="w-full"
                     />
                   ))}
                 </div>
@@ -171,12 +184,12 @@ export default function LeaguesPage() {
           <div className="text-center py-16 max-w-2xl mx-auto">
             <div className="text-6xl mb-6">🎾</div>
             <h2 className="text-3xl font-light text-gray-900 mb-4">
-              {locale === 'es' ? 'Próximamente más ligas' : 'More leagues coming soon'}
+              {locale === 'es' ? 'Expandiendo por España' : 'Expanding across Spain'}
             </h2>
             <p className="text-gray-600 mb-8">
               {locale === 'es' 
-                ? 'Estamos trabajando para traerte más ligas en diferentes ubicaciones. ¡Mantente atento!'
-                : 'We are working to bring you more leagues in different locations. Stay tuned!'}
+                ? 'Estamos trabajando para traerte tenis amateur a más ciudades españolas. ¡La revolución del tenis está en camino!'
+                : 'We are working to bring you amateur tennis to more Spanish cities. The tennis revolution is on its way!'}
             </p>
             <a 
               href={`/${locale}/sotogrande`}
@@ -193,20 +206,28 @@ export default function LeaguesPage() {
         <div className="container mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             {locale === 'es' 
-              ? '¿No encuentras una liga en tu ciudad?'
-              : "Can't find a league in your city?"}
+              ? '¿Tu ciudad no está en la lista?'
+              : "Your city isn't on the list?"}
           </h2>
           <p className="text-lg mb-8 max-w-2xl mx-auto">
             {locale === 'es'
-              ? 'Únete a nuestra lista de espera y te avisaremos cuando lancemos una liga cerca de ti.'
-              : 'Join our waiting list and we\'ll notify you when we launch a league near you.'}
+              ? 'Únete a nuestra lista de espera y te avisaremos cuando lancemos una liga en tu ciudad. ¡Cuantos más seamos, antes llegamos!'
+              : 'Join our waiting list and we\\'ll notify you when we launch a league in your city. The more we are, the sooner we arrive!'}
           </p>
-          <a
-            href={`/${locale}`}
-            className="inline-block px-8 py-3 bg-white text-parque-purple rounded-lg font-medium hover:bg-gray-100 transition-colors"
-          >
-            {locale === 'es' ? 'Ver Ciudades Disponibles' : 'View Available Cities'}
-          </a>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+              href={`/${locale}`}
+              className="inline-block px-8 py-3 bg-white text-parque-purple rounded-lg font-medium hover:bg-gray-100 transition-colors"
+            >
+              {locale === 'es' ? 'Unirse a Lista de Espera' : 'Join Waiting List'}
+            </a>
+            <a
+              href={`/${locale}/clubs`}
+              className="inline-block px-8 py-3 border-2 border-white text-white rounded-lg font-medium hover:bg-white hover:text-parque-purple transition-colors"
+            >
+              {locale === 'es' ? 'Explorar Clubes' : 'Explore Clubs'}
+            </a>
+          </div>
         </div>
       </section>
 
