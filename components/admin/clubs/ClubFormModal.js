@@ -178,6 +178,10 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
   // Check if this is a Google import
   const isGoogleImport = club?.importSource === 'google' || club?.googlePlaceId
 
+  // Check if selected city exists in the cities list
+  const isCityInList = cities.some(c => c.slug === formData.location.city)
+  const willCreateNewCity = formData.location.city && !isCityInList && formData.location.city !== 'malaga'
+
   // Fetch cities when component mounts
   useEffect(() => {
     fetchCities()
@@ -870,27 +874,36 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
             Loading cities...
           </div>
         ) : (
-          <select
-            value={formData.location.city}
-            onChange={(e) => handleChange('location.city', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple"
-            required
-          >
-            {cities.map(city => (
-              <option key={city.slug} value={city.slug}>
-                {city.name.es || city.name.en}
+          <>
+            <select
+              value={formData.location.city}
+              onChange={(e) => handleChange('location.city', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple"
+              required
+            >
+              {cities.map(city => (
+                <option key={city.slug} value={city.slug}>
+                  {city.name.es || city.name.en}
+                </option>
+              ))}
+              {/* Add option to create new city if not in list */}
+              <option value="_new" disabled>
+                ── Other cities will be auto-created ──
               </option>
-            ))}
-            {/* Add option to create new city if not in list */}
-            <option value="_new" disabled>
-              ── Other cities will be auto-created ──
-            </option>
-          </select>
-        )}
-        {formData.location.city && !cities.find(c => c.slug === formData.location.city) && (
-          <p className="text-xs text-yellow-600 mt-1">
-            This city will be created automatically when you save the club.
-          </p>
+            </select>
+            
+            {willCreateNewCity && (
+              <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
+                <p className="text-blue-800">
+                  <span className="font-medium">✨ New city will be created:</span> 
+                  <span className="ml-1 capitalize">{formData.location.city}</span>
+                </p>
+                <p className="text-blue-600 text-xs mt-1">
+                  This city will be automatically added to the system when you save the club.
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
       
