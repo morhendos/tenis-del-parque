@@ -17,13 +17,17 @@ export default function CityImageManager({ city, onImagesUpdate, readOnly = fals
     return `/api/admin/cities/google-photo?photo_reference=${photoReference}&maxwidth=${maxWidth}`
   }
 
+  // Helper function to get proper fallback image
+  const getFallbackImageUrl = (width = 800, height = 600, seed = 1) => {
+    return `https://picsum.photos/${width}/${height}?random=${seed}`
+  }
+
   // Helper function to handle image load errors
-  const handleImageError = (imageId, fallbackUrl = null) => {
+  const handleImageError = (imageId, width = 800, height = 600) => {
     setImageErrors(prev => new Set(prev).add(imageId))
-    if (fallbackUrl) {
-      return fallbackUrl
-    }
-    return `https://images.unsplash.com/800x600/?city,spain,landscape`
+    // Use a deterministic seed based on city name for consistent fallbacks
+    const seed = city?.name?.es ? city.name.es.length + city.slug?.length || 0 : Math.floor(Math.random() * 1000)
+    return getFallbackImageUrl(width, height, seed)
   }
 
   // Get all available images with better error handling
@@ -213,8 +217,9 @@ export default function CityImageManager({ city, onImagesUpdate, readOnly = fals
     const handleError = () => {
       setHasError(true)
       setIsLoading(false)
-      // Use a city-themed fallback image
-      const fallbackUrl = `https://images.unsplash.com/800x600/?city,${city?.name?.es || 'spain'},landscape`
+      // Use a proper fallback image with deterministic seed
+      const seed = city?.name?.es ? city.name.es.charCodeAt(0) + (image.id ? image.id.length : 0) : Math.floor(Math.random() * 1000)
+      const fallbackUrl = getFallbackImageUrl(400, 300, seed)
       setImgSrc(fallbackUrl)
     }
 
@@ -490,7 +495,8 @@ export default function CityImageManager({ city, onImagesUpdate, readOnly = fals
               alt={selectedImage.title}
               className="max-w-full max-h-full object-contain"
               onError={(e) => {
-                e.target.src = `https://images.unsplash.com/800x600/?city,${city?.name?.es || 'spain'},landscape`
+                const seed = city?.name?.es ? city.name.es.charCodeAt(0) + selectedImage.id.length : Math.floor(Math.random() * 1000)
+                e.target.src = getFallbackImageUrl(800, 600, seed)
               }}
             />
             <button
@@ -523,7 +529,7 @@ export default function CityImageManager({ city, onImagesUpdate, readOnly = fals
           <li>• <strong>Gallery:</strong> Additional photos for the city page</li>
           <li>• Click any image to view full size or set as main</li>
           <li>• Supported formats: JPEG, PNG, WebP (max 5MB each)</li>
-          <li>• Images may use fallbacks if Google Photos fail to load</li>
+          <li>• Images use quality fallbacks if originals fail to load</li>
         </ul>
       </div>
     </div>
