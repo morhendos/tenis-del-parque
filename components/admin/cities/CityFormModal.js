@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 
 export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
   const [loading, setLoading] = useState(false)
@@ -10,6 +10,16 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
   const [searchLoading, setSearchLoading] = useState(false)
   const [searchResults, setSearchResults] = useState([])
   const [selectedResult, setSelectedResult] = useState(null)
+  
+  // Autocomplete states
+  const [autocompleteResults, setAutocompleteResults] = useState([])
+  const [showAutocomplete, setShowAutocomplete] = useState(false)
+  const [selectedAutocompleteIndex, setSelectedAutocompleteIndex] = useState(-1)
+  const [autocompleteLoading, setAutocompleteLoading] = useState(false)
+  
+  const searchInputRef = useRef(null)
+  const autocompleteRef = useRef(null)
+  const debounceRef = useRef(null)
   
   const [formData, setFormData] = useState({
     slug: '',
@@ -72,7 +82,123 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
     setSearchQuery('')
     setSearchResults([])
     setSelectedResult(null)
+    setAutocompleteResults([])
+    setShowAutocomplete(false)
+    setSelectedAutocompleteIndex(-1)
   }, [city, isOpen])
+
+  // Debounced autocomplete search
+  const performAutocompleteSearch = useCallback(async (query) => {
+    if (!query.trim() || query.length < 2) {
+      setAutocompleteResults([])
+      setShowAutocomplete(false)
+      return
+    }
+
+    setAutocompleteLoading(true)
+
+    try {
+      const response = await fetch('/api/admin/cities/search-google', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          query: query + ', Spain',
+          types: ['locality', 'administrative_area_level_2']
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.results) {
+        setAutocompleteResults(data.results.slice(0, 5)) // Limit to 5 for autocomplete
+        setShowAutocomplete(true)
+        setSelectedAutocompleteIndex(-1)
+      }
+    } catch (err) {
+      console.error('Autocomplete search error:', err)
+    } finally {
+      setAutocompleteLoading(false)
+    }
+  }, [])
+
+  // Handle input change with debounced autocomplete
+  const handleSearchQueryChange = (value) => {
+    setSearchQuery(value)
+    
+    // Clear previous debounce
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current)
+    }
+    
+    // Set new debounce
+    debounceRef.current = setTimeout(() => {
+      performAutocompleteSearch(value)
+    }, 300) // 300ms delay
+  }
+
+  // Handle keyboard navigation in autocomplete
+  const handleKeyDown = (e) => {
+    if (!showAutocomplete || autocompleteResults.length === 0) {
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        handleCitySearch()
+      }
+      return
+    }
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault()
+        setSelectedAutocompleteIndex(prev => 
+          prev < autocompleteResults.length - 1 ? prev + 1 : prev
+        )
+        break
+      
+      case 'ArrowUp':
+        e.preventDefault()
+        setSelectedAutocompleteIndex(prev => prev > 0 ? prev - 1 : -1)
+        break
+      
+      case 'Enter':
+        e.preventDefault()
+        if (selectedAutocompleteIndex >= 0) {
+          handleSelectAutocomplete(autocompleteResults[selectedAutocompleteIndex])
+        } else {
+          handleCitySearch()
+        }
+        break
+      
+      case 'Escape':
+        setShowAutocomplete(false)
+        setSelectedAutocompleteIndex(-1)
+        break
+    }
+  }
+
+  // Select from autocomplete
+  const handleSelectAutocomplete = (result) => {
+    setSearchQuery(result.name)
+    setShowAutocomplete(false)
+    setSelectedAutocompleteIndex(-1)
+    handleSelectCity(result)
+  }
+
+  // Hide autocomplete when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (autocompleteRef.current && !autocompleteRef.current.contains(event.target)) {
+        setShowAutocomplete(false)
+        setSelectedAutocompleteIndex(-1)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   // Search for cities using Google Maps
   const handleCitySearch = async () => {
@@ -84,6 +210,7 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
     setSearchLoading(true)
     setError(null)
     setSearchResults([])
+    setShowAutocomplete(false)
 
     try {
       const response = await fetch('/api/admin/cities/search-google', {
@@ -92,8 +219,8 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          query: searchQuery + ', Spain', // Add Spain to get Spanish cities
-          types: ['locality', 'administrative_area_level_2'] // City types
+          query: searchQuery + ', Spain',
+          types: ['locality', 'administrative_area_level_2']
         })
       })
 
@@ -160,6 +287,7 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
   const handleManualMode = () => {
     setSearchMode(false)
     setSelectedResult(null)
+    setShowAutocomplete(false)
     // Keep any pre-filled data from search
   }
 
@@ -325,7 +453,7 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
               </h3>
               {!city && searchMode && (
                 <p className="text-sm text-gray-600 mt-1">
-                  Search Google Maps to find and add cities quickly
+                  Type to get instant city suggestions from Google Maps
                 </p>
               )}
             </div>
@@ -357,27 +485,71 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
                     <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                   </svg>
                   <div className="flex-1">
-                    <h4 className="font-medium text-blue-900">Quick City Search</h4>
+                    <h4 className="font-medium text-blue-900">Smart City Search with Autocomplete</h4>
                     <p className="text-sm text-blue-800 mt-1">
-                      Search for a Spanish city to automatically populate name, coordinates, and province data.
+                      Start typing a Spanish city name to see instant suggestions. Use arrow keys to navigate and Enter to select.
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div>
+              <div className="relative" ref={autocompleteRef}>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Search for Spanish City
                 </label>
                 <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleCitySearch()}
-                    placeholder="e.g., Marbella, Estepona, Benalmádena..."
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  <div className="flex-1 relative">
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => handleSearchQueryChange(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      onFocus={() => searchQuery.length >= 2 && setShowAutocomplete(true)}
+                      placeholder="Type city name... (e.g., Marbella)"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-8"
+                    />
+                    
+                    {/* Loading indicator */}
+                    {autocompleteLoading && (
+                      <div className="absolute right-2 top-2">
+                        <svg className="w-5 h-5 animate-spin text-gray-400" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      </div>
+                    )}
+
+                    {/* Autocomplete Dropdown */}
+                    {showAutocomplete && autocompleteResults.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        {autocompleteResults.map((result, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handleSelectAutocomplete(result)}
+                            className={`w-full text-left px-3 py-2 hover:bg-gray-50 transition-colors ${
+                              index === selectedAutocompleteIndex 
+                                ? 'bg-blue-50 border-l-4 border-blue-500' 
+                                : 'border-l-4 border-transparent'
+                            } ${index !== autocompleteResults.length - 1 ? 'border-b border-gray-100' : ''}`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="font-medium text-gray-900">{result.name}</div>
+                                <div className="text-sm text-gray-600">
+                                  {result.address_components?.find(c => c.types.includes('administrative_area_level_2'))?.long_name || 'Spain'}
+                                </div>
+                              </div>
+                              <div className="text-xs text-gray-400">
+                                📍 {result.geometry?.location?.lat?.toFixed(2)}, {result.geometry?.location?.lng?.toFixed(2)}
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
                   <button
                     onClick={handleCitySearch}
                     disabled={searchLoading || !searchQuery.trim()}
@@ -392,6 +564,11 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
                     <span>Search</span>
                   </button>
                 </div>
+                
+                {/* Keyboard shortcuts hint */}
+                <p className="text-xs text-gray-500 mt-1">
+                  💡 Use ↑↓ arrows to navigate suggestions, Enter to select, Esc to close
+                </p>
               </div>
 
               {/* Search Results */}
