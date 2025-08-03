@@ -1,31 +1,44 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 
 export default function ClubImageManager({ club, onImagesUpdate, readOnly = false }) {
   const [selectedImage, setSelectedImage] = useState(null)
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [uploading, setUploading] = useState(false)
   const [showGallery, setShowGallery] = useState(false)
   const fileInputRef = useRef(null)
 
-  // Helper function to get Google Photo URL
+  // Helper function to get Google Photo URL without exposing API key
   const getGooglePhotoUrl = (photoReference, maxWidth = 800) => {
     if (!photoReference) return null
-    return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${maxWidth}&photo_reference=${photoReference}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
+    // Use our backend API endpoint to get Google Photos
+    return `/api/admin/clubs/google-photo?photo_reference=${photoReference}&maxwidth=${maxWidth}`
   }
 
   // Get all available images
   const getAllImages = () => {
     const images = []
     
-    // Main image
+    // Main image - handle both uploaded images and Google photos
     if (club?.images?.main) {
       images.push({
         id: 'main',
         url: club.images.main,
         type: 'main',
         source: club.images.googlePhotoReference ? 'google' : 'upload',
-        title: 'Main Image'
+        title: 'Main Image',
+        reference: club.images.googlePhotoReference
+      })
+    } else if (club?.images?.googlePhotoReference) {
+      // If no main image URL but there is a Google photo reference, use it as main
+      images.push({
+        id: 'main',
+        url: getGooglePhotoUrl(club.images.googlePhotoReference),
+        type: 'main',
+        source: 'google',
+        title: 'Main Image',
+        reference: club.images.googlePhotoReference
       })
     }
     
@@ -46,7 +59,8 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
     if (club?.googleData?.photos && club.googleData.photos.length > 0) {
       club.googleData.photos.forEach((photo, index) => {
         const photoUrl = getGooglePhotoUrl(photo.photo_reference)
-        if (photoUrl && photoUrl !== club?.images?.main) {
+        // Skip if this photo is already used as main image (compare by reference)
+        if (photoUrl && photo.photo_reference !== club?.images?.googlePhotoReference) {
           images.push({
             id: `google_${index}`,
             url: photoUrl,
@@ -65,6 +79,51 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
   }
 
   const allImages = getAllImages()
+
+  // Navigation functions for image modal
+  const navigateToImage = useCallback((index) => {
+    if (allImages.length === 0) return
+    const validIndex = ((index % allImages.length) + allImages.length) % allImages.length
+    setSelectedImageIndex(validIndex)
+    setSelectedImage(allImages[validIndex])
+  }, [allImages])
+
+  const navigatePrevious = useCallback(() => {
+    navigateToImage(selectedImageIndex - 1)
+  }, [navigateToImage, selectedImageIndex])
+
+  const navigateNext = useCallback(() => {
+    navigateToImage(selectedImageIndex + 1)
+  }, [navigateToImage, selectedImageIndex])
+
+  const openImageModal = (image) => {
+    const imageIndex = allImages.findIndex(img => img.id === image.id)
+    setSelectedImageIndex(imageIndex >= 0 ? imageIndex : 0)
+    setSelectedImage(image)
+  }
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (!selectedImage) return
+      
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        navigatePrevious()
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        navigateNext()
+      } else if (e.key === 'Escape') {
+        e.preventDefault()
+        setSelectedImage(null)
+      }
+    }
+
+    if (selectedImage) {
+      document.addEventListener('keydown', handleKeyPress)
+      return () => document.removeEventListener('keydown', handleKeyPress)
+    }
+  }, [selectedImage, selectedImageIndex, navigatePrevious, navigateNext])
 
   // Handle file upload
   const handleFileUpload = async (files) => {
@@ -209,7 +268,7 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center">
           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex space-x-1">
             <button
-              onClick={() => setSelectedImage(image)}
+              onClick={() => openImageModal(image)}
               className="p-1 bg-white rounded-full text-gray-700 hover:bg-gray-100"
               title="View Full Size"
             >
@@ -404,23 +463,61 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
               alt={selectedImage.title}
               className="max-w-full max-h-full object-contain"
             />
+            
+            {/* Close button */}
             <button
               onClick={() => setSelectedImage(null)}
-              className="absolute top-4 right-4 p-2 bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-75"
+              className="absolute top-4 right-4 p-2 bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-75 transition-all"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            
-            {/* Image info */}
+
+            {/* Left arrow button */}
+            {allImages.length > 1 && (
+              <button
+                onClick={navigatePrevious}
+                className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-75 transition-all"
+                title="Previous image (←)"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            )}
+
+            {/* Right arrow button */}
+            {allImages.length > 1 && (
+              <button
+                onClick={navigateNext}
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-75 transition-all"
+                title="Next image (→)"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            )}
+
+            {/* Image counter and info */}
             <div className="absolute bottom-4 left-4 bg-black bg-opacity-50 text-white p-3 rounded">
               <p className="font-medium">{selectedImage.title}</p>
               <p className="text-sm opacity-75">Source: {selectedImage.source === 'google' ? 'Google Maps' : 'Uploaded'}</p>
+              {allImages.length > 1 && (
+                <p className="text-sm opacity-75">{selectedImageIndex + 1} of {allImages.length}</p>
+              )}
               {selectedImage.width && selectedImage.height && (
                 <p className="text-xs opacity-75">{selectedImage.width} × {selectedImage.height}px</p>
               )}
             </div>
+
+            {/* Navigation hint */}
+            {allImages.length > 1 && (
+              <div className="absolute top-4 left-4 bg-black bg-opacity-50 text-white p-2 rounded text-sm">
+                Use ← → keys or click arrows to navigate
+              </div>
+            )}
           </div>
         </div>
       )}

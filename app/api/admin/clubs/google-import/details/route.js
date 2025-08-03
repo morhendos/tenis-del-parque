@@ -119,11 +119,8 @@ async function extractAndCreateCity(formattedAddress, vicinity) {
   }
 }
 
-// Helper function to get photo URL from Google Places photo reference
-function getGooglePhotoUrl(photoReference, apiKey, maxWidth = 800) {
-  if (!photoReference || !apiKey) return null
-  return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${maxWidth}&photo_reference=${photoReference}&key=${apiKey}`
-}
+// Note: We no longer generate full Google Photos URLs during import
+// Photo references are stored and URLs are generated via API endpoint when needed
 
 // Helper function to map Google place to club format - ONLY REAL DATA
 async function mapGooglePlaceToClub(place, apiKey) {
@@ -179,10 +176,10 @@ async function mapGooglePlaceToClub(place, apiKey) {
     })
   }
   
-  // Get first photo if available
-  let mainPhotoUrl = ''
+  // Get first photo reference if available (don't store full URL with API key)
+  let mainPhotoReference = null
   if (place.photos && place.photos.length > 0 && place.photos[0].photo_reference) {
-    mainPhotoUrl = getGooglePhotoUrl(place.photos[0].photo_reference, apiKey)
+    mainPhotoReference = place.photos[0].photo_reference
   }
   
   return {
@@ -285,11 +282,11 @@ async function mapGooglePlaceToClub(place, apiKey) {
     // Tags - EMPTY UNTIL MANUALLY ADDED
     tags: [],
     
-    // Images - Add Google photo if available
+    // Images - Store Google photo reference, not full URL with API key
     images: {
-      main: mainPhotoUrl,
+      main: '', // Leave empty for Google photos, will be generated via API endpoint
       gallery: [],
-      googlePhotoReference: place.photos && place.photos.length > 0 ? place.photos[0].photo_reference : null
+      googlePhotoReference: mainPhotoReference
     },
     
     // SEO - LEAVE EMPTY FOR MANUAL ENTRY
