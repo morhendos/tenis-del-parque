@@ -4,6 +4,13 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import ClubFormModal from '@/components/admin/clubs/ClubFormModal'
 import GoogleMapsImporter from '@/components/admin/clubs/GoogleMapsImporter'
+import { 
+  CITY_AREAS_MAPPING, 
+  AREA_DISPLAY_NAMES, 
+  CITY_DISPLAY_NAMES,
+  generateDisplayName,
+  getAreasForCity
+} from '@/lib/utils/areaMapping'
 
 // Google Import Legend Component
 const GoogleImportLegend = () => {
@@ -116,6 +123,28 @@ const getDataQualityScore = (club) => {
   }
 }
 
+// Helper function to get display name for club location
+const getClubDisplayName = (club) => {
+  // Use existing displayName if available
+  if (club.location?.displayName) {
+    return club.location.displayName
+  }
+  
+  // Generate display name from area and city
+  if (club.location?.area && club.location?.city) {
+    return generateDisplayName(club.location.area, club.location.city)
+  }
+  
+  // Fallback to city name
+  if (club.location?.city) {
+    const cityDisplay = CITY_DISPLAY_NAMES[club.location.city] || 
+                       club.location.city.charAt(0).toUpperCase() + club.location.city.slice(1)
+    return cityDisplay
+  }
+  
+  return 'Unknown Location'
+}
+
 export default function AdminClubsPage() {
   const router = useRouter()
   const [clubs, setClubs] = useState([])
@@ -124,7 +153,11 @@ export default function AdminClubsPage() {
   const [showFormModal, setShowFormModal] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
   const [editingClub, setEditingClub] = useState(null)
+  
+  // Enhanced filtering state
   const [selectedCity, setSelectedCity] = useState('all')
+  const [selectedArea, setSelectedArea] = useState('all')
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     fetchClubs()
@@ -218,15 +251,59 @@ export default function AdminClubsPage() {
     }
   }
 
-  const filteredClubs = selectedCity === 'all' 
-    ? clubs 
-    : clubs.filter(club => club.location.city === selectedCity)
+  // Enhanced filtering logic
+  const filteredClubs = clubs.filter(club => {
+    // Search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      const clubName = club.name?.toLowerCase() || ''
+      const displayName = getClubDisplayName(club).toLowerCase()
+      const address = club.location?.address?.toLowerCase() || ''
+      const area = club.location?.area?.toLowerCase() || ''
+      const city = club.location?.city?.toLowerCase() || ''
+      
+      const searchMatch = clubName.includes(query) ||
+                         displayName.includes(query) ||
+                         address.includes(query) ||
+                         area.includes(query) ||
+                         city.includes(query)
+      
+      if (!searchMatch) return false
+    }
+    
+    // City filter
+    if (selectedCity !== 'all') {
+      // Include all areas that belong to the selected main city
+      const mainCity = club.location?.city
+      if (mainCity !== selectedCity) {
+        return false
+      }
+    }
+    
+    // Area filter
+    if (selectedArea !== 'all') {
+      const clubArea = club.location?.area
+      if (clubArea !== selectedArea) {
+        return false
+      }
+    }
+    
+    return true
+  })
 
+  // Calculate statistics for main cities (including areas)
   const clubsByCity = clubs.reduce((acc, club) => {
-    const city = club.location.city
-    acc[city] = (acc[city] || 0) + 1
+    const city = club.location?.city
+    if (city) {
+      acc[city] = (acc[city] || 0) + 1
+    }
     return acc
   }, {})
+
+  // Get areas for currently selected city
+  const availableAreas = selectedCity !== 'all' 
+    ? getAreasForCity(selectedCity)
+    : []
 
   if (loading) {
     return (
@@ -242,7 +319,7 @@ export default function AdminClubsPage() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Tennis Clubs Directory</h2>
-          <p className="text-gray-600 mt-1">Manage tennis clubs for SEO directory</p>
+          <p className="text-gray-600 mt-1">Manage tennis clubs with area-based organization</p>
         </div>
         <div className="flex space-x-3">
           <button
@@ -278,63 +355,125 @@ export default function AdminClubsPage() {
       {/* Google Import Legend - Show if any clubs are from Google */}
       {clubs.some(c => c.importSource === 'google') && <GoogleImportLegend />}
 
-      {/* City Filter */}
-      <div className="bg-white rounded-lg shadow p-4">
+      {/* Enhanced Filters */}
+      <div className="bg-white rounded-lg shadow p-4 space-y-4">
+        {/* Search Bar */}
+        <div className="flex items-center space-x-4">
+          <div className="flex-1">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                placeholder="Search clubs by name, area, city, or address..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-parque-purple focus:border-parque-purple"
+              />
+            </div>
+          </div>
+          {(searchQuery || selectedCity !== 'all' || selectedArea !== 'all') && (
+            <button
+              onClick={() => {
+                setSearchQuery('')
+                setSelectedCity('all')
+                setSelectedArea('all')
+              }}
+              className="px-3 py-2 text-sm bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200"
+            >
+              Clear All
+            </button>
+          )}
+        </div>
+
+        {/* City Filter */}
         <div className="flex items-center space-x-4">
           <span className="text-sm font-medium text-gray-700">Filter by city:</span>
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap gap-2">
             <button
-              onClick={() => setSelectedCity('all')}
+              onClick={() => {
+                setSelectedCity('all')
+                setSelectedArea('all')
+              }}
               className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                 selectedCity === 'all'
                   ? 'bg-parque-purple text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              All ({clubs.length})
+              All Cities ({clubs.length})
             </button>
-            <button
-              onClick={() => setSelectedCity('malaga')}
-              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                selectedCity === 'malaga'
-                  ? 'bg-parque-purple text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Málaga ({clubsByCity.malaga || 0})
-            </button>
-            <button
-              onClick={() => setSelectedCity('marbella')}
-              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                selectedCity === 'marbella'
-                  ? 'bg-parque-purple text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Marbella ({clubsByCity.marbella || 0})
-            </button>
-            <button
-              onClick={() => setSelectedCity('estepona')}
-              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                selectedCity === 'estepona'
-                  ? 'bg-parque-purple text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Estepona ({clubsByCity.estepona || 0})
-            </button>
-            <button
-              onClick={() => setSelectedCity('sotogrande')}
-              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                selectedCity === 'sotogrande'
-                  ? 'bg-parque-purple text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Sotogrande ({clubsByCity.sotogrande || 0})
-            </button>
+            {Object.entries(clubsByCity).map(([city, count]) => (
+              <button
+                key={city}
+                onClick={() => {
+                  setSelectedCity(city)
+                  setSelectedArea('all')
+                }}
+                className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                  selectedCity === city
+                    ? 'bg-parque-purple text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {CITY_DISPLAY_NAMES[city] || city.charAt(0).toUpperCase() + city.slice(1)} ({count})
+              </button>
+            ))}
           </div>
         </div>
+
+        {/* Area Filter - Only show when a city is selected */}
+        {selectedCity !== 'all' && availableAreas.length > 0 && (
+          <div className="flex items-center space-x-4">
+            <span className="text-sm font-medium text-gray-700">Filter by area:</span>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedArea('all')}
+                className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                  selectedArea === 'all'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                }`}
+              >
+                All Areas in {CITY_DISPLAY_NAMES[selectedCity]}
+              </button>
+              {availableAreas.map(area => {
+                const areaClubCount = clubs.filter(club => 
+                  club.location?.city === selectedCity && club.location?.area === area
+                ).length
+                
+                if (areaClubCount === 0) return null
+                
+                return (
+                  <button
+                    key={area}
+                    onClick={() => setSelectedArea(area)}
+                    className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                      selectedArea === area
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                    }`}
+                  >
+                    {AREA_DISPLAY_NAMES[area] || area} ({areaClubCount})
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Filter Results Summary */}
+        {(searchQuery || selectedCity !== 'all' || selectedArea !== 'all') && (
+          <div className="text-sm text-gray-600 border-t pt-3">
+            Showing {filteredClubs.length} of {clubs.length} clubs
+            {searchQuery && ` matching "${searchQuery}"`}
+            {selectedArea !== 'all' && ` in ${AREA_DISPLAY_NAMES[selectedArea] || selectedArea}`}
+            {selectedCity !== 'all' && selectedArea === 'all' && ` in ${CITY_DISPLAY_NAMES[selectedCity] || selectedCity}`}
+          </div>
+        )}
       </div>
 
       {error && (
@@ -343,7 +482,7 @@ export default function AdminClubsPage() {
         </div>
       )}
 
-      {/* Clubs Table */}
+      {/* Enhanced Clubs Table */}
       <div className="bg-white shadow rounded-lg overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -352,7 +491,7 @@ export default function AdminClubsPage() {
                 Club Name
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                City
+                Location & Area
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Courts
@@ -374,6 +513,7 @@ export default function AdminClubsPage() {
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredClubs.map((club) => {
               const quality = getDataQualityScore(club)
+              const displayName = getClubDisplayName(club)
               
               return (
                 <tr key={club._id} className="hover:bg-gray-50">
@@ -414,19 +554,30 @@ export default function AdminClubsPage() {
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900 capitalize">{club.location.city}</div>
-                    <div className="text-sm text-gray-500">{club.location.address}</div>
+                  <td className="px-6 py-4">
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {displayName}
+                      </div>
+                      {club.location?.area && club.location?.area !== club.location?.city && (
+                        <div className="text-xs text-blue-600 mt-1">
+                          Area: {AREA_DISPLAY_NAMES[club.location.area] || club.location.area}
+                        </div>
+                      )}
+                      <div className="text-sm text-gray-500 mt-1">
+                        {club.location?.address}
+                      </div>
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      {club.courts.total} courts
-                      {club.courts.total === 6 && club.importSource === 'google' && (
+                      {club.courts?.total} courts
+                      {club.courts?.total === 6 && club.importSource === 'google' && (
                         <span className="ml-1 text-yellow-600" title="Default value - needs verification">≈</span>
                       )}
                     </div>
                     <div className="text-sm text-gray-500">
-                      {club.courts.surfaces.map(s => `${s.count} ${s.type}`).join(', ')}
+                      {club.courts?.surfaces?.map(s => `${s.count} ${s.type}`).join(', ')}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -464,18 +615,22 @@ export default function AdminClubsPage() {
 
         {filteredClubs.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-500">
-              {selectedCity === 'all' 
-                ? 'No clubs found. Add your first club to get started.'
-                : `No clubs found in ${selectedCity.charAt(0).toUpperCase() + selectedCity.slice(1)}.`
-              }
-            </p>
+            <div className="text-gray-500">
+              {searchQuery || selectedCity !== 'all' || selectedArea !== 'all' ? (
+                <div>
+                  <p className="text-lg mb-2">No clubs found matching your filters</p>
+                  <p className="text-sm">Try adjusting your search or filter criteria</p>
+                </div>
+              ) : (
+                <p>No clubs found. Add your first club to get started.</p>
+              )}
+            </div>
           </div>
         )}
       </div>
 
-      {/* Stats Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      {/* Enhanced Stats Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
         <div className="bg-white rounded-lg shadow p-6">
           <div className="text-3xl font-bold text-parque-purple">{clubs.length}</div>
           <div className="text-sm text-gray-600">Total Clubs</div>
@@ -500,9 +655,15 @@ export default function AdminClubsPage() {
         </div>
         <div className="bg-white rounded-lg shadow p-6">
           <div className="text-3xl font-bold text-indigo-600">
-            {clubs.reduce((sum, club) => sum + club.courts.total, 0)}
+            {clubs.reduce((sum, club) => sum + (club.courts?.total || 0), 0)}
           </div>
           <div className="text-sm text-gray-600">Total Courts</div>
+        </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="text-3xl font-bold text-purple-600">
+            {Object.keys(clubsByCity).length}
+          </div>
+          <div className="text-sm text-gray-600">Cities</div>
         </div>
       </div>
 
