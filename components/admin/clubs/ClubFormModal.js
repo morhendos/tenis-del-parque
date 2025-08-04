@@ -2,6 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import ClubImageManager from './ClubImageManager'
+import { 
+  getCityOptions, 
+  generateDisplayName, 
+  getAreasForCity 
+} from '@/lib/utils/areaMapping'
 
 // Data source indicator component
 const DataSourceIndicator = ({ source }) => {
@@ -54,10 +59,13 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
     featured: false,
     displayOrder: 0,
     
-    // Location
+    // Enhanced Location with Area Support
     location: {
       address: '',
-      city: 'malaga',
+      area: '',
+      city: 'marbella',
+      administrativeCity: '',
+      displayName: '',
       postalCode: '',
       coordinates: {
         lat: null,
@@ -177,6 +185,10 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
   // Surface type being added
   const [newSurface, setNewSurface] = useState({ type: 'clay', count: 1 })
 
+  // City options from our area mapping system
+  const [cityOptions, setCityOptions] = useState([])
+  const [availableAreas, setAvailableAreas] = useState([])
+
   // Check if this is a Google import
   const isGoogleImport = club?.importSource === 'google' || club?.googlePlaceId
 
@@ -186,6 +198,38 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
 
   // Total number of steps
   const totalSteps = 6
+
+  // Load city options from area mapping system
+  useEffect(() => {
+    const options = getCityOptions()
+    setCityOptions(options)
+  }, [])
+
+  // Update available areas when city changes
+  useEffect(() => {
+    if (formData.location.city) {
+      const areas = getAreasForCity(formData.location.city)
+      setAvailableAreas(areas.map(area => ({
+        value: area,
+        label: area.split('-').map(word => 
+          word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ')
+      })))
+      
+      // Reset area if current area is not available for selected city
+      if (formData.location.area && !areas.includes(formData.location.area)) {
+        handleChange('location.area', '')
+      }
+    }
+  }, [formData.location.city])
+
+  // Auto-generate display name when area or city changes
+  useEffect(() => {
+    if (formData.location.city) {
+      const displayName = generateDisplayName(formData.location.area, formData.location.city)
+      handleChange('location.displayName', displayName)
+    }
+  }, [formData.location.area, formData.location.city])
 
   // Fetch cities when component mounts
   useEffect(() => {
@@ -223,6 +267,9 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
     const googleVerifiedFields = ['name', 'location.address', 'location.coordinates', 'contact.phone', 'contact.website']
     if (googleVerifiedFields.includes(fieldName)) return 'google_verified'
     
+    // Area and display fields from area mapping
+    if (['location.area', 'location.displayName'].includes(fieldName)) return 'google_verified'
+    
     // Fields that are estimated
     const estimatedFields = ['courts', 'amenities', 'services', 'pricing']
     if (estimatedFields.some(field => fieldName.startsWith(field))) return 'google_estimated'
@@ -251,7 +298,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
     }))
   }
 
-  // Random data generator (previous implementation...)
+  // Random data generator with area support
   const generateRandomData = () => {
     // Random club names
     const prefixes = ['Club de Tenis', 'Tennis Club', 'Real Club', 'Centro Deportivo', 'Complejo Tenis']
@@ -261,10 +308,15 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
     const randomName = names[Math.floor(Math.random() * names.length)]
     const clubName = `${randomPrefix} ${randomName}`
     
-    // Select random city from available cities
-    const selectedCity = cities.length > 0 
-      ? cities[Math.floor(Math.random() * cities.length)]
-      : { slug: 'marbella', name: { es: 'Marbella', en: 'Marbella' } }
+    // Select random city from our city options
+    const selectedCityOption = cityOptions.length > 0 
+      ? cityOptions[Math.floor(Math.random() * cityOptions.length)]
+      : { value: 'marbella', label: 'Marbella', areas: [] }
+    
+    // Select random area from selected city
+    const selectedArea = selectedCityOption.areas.length > 0
+      ? selectedCityOption.areas[Math.floor(Math.random() * selectedCityOption.areas.length)]
+      : { value: selectedCityOption.value, label: selectedCityOption.label }
     
     // Random address components
     const streets = ['Calle ', 'Avenida ', 'Paseo ', 'Camino ', 'Urbanización ']
@@ -292,11 +344,10 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       sotogrande: { lat: 36.2874 + (Math.random() - 0.5) * 0.05, lng: -5.2687 + (Math.random() - 0.5) * 0.05 }
     }
     
-    // Random courts
-    const totalOutdoor = Math.floor(Math.random() * 12) + 2 // 2-13 outdoor courts
-    const totalIndoor = Math.random() > 0.7 ? Math.floor(Math.random() * 4) + 1 : 0 // 30% chance of indoor courts
+    // Random courts and other data (same as before...)
+    const totalOutdoor = Math.floor(Math.random() * 12) + 2
+    const totalIndoor = Math.random() > 0.7 ? Math.floor(Math.random() * 4) + 1 : 0
     
-    // Random surfaces
     const surfaceTypes = ['clay', 'hard', 'synthetic', 'padel']
     const surfaces = []
     let remainingCourts = totalOutdoor + totalIndoor
@@ -308,7 +359,6 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       remainingCourts -= count
     }
     
-    // Random amenities (more likely for premium clubs)
     const isPremium = Math.random() > 0.5
     const randomAmenities = {
       parking: Math.random() > 0.2,
@@ -325,7 +375,6 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       physio: isPremium && Math.random() > 0.8
     }
     
-    // Random services
     const randomServices = {
       lessons: Math.random() > 0.2,
       coaching: Math.random() > 0.3,
@@ -334,22 +383,18 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       summerCamps: Math.random() > 0.6
     }
     
-    // Random tags
     const allTags = ['family-friendly', 'professional', 'beginner-friendly', 'tournaments', 
                      'social-club', 'hotel-club', 'municipal', 'private', 'academy']
     const randomTags = allTags.filter(() => Math.random() > 0.7)
     
-    // Random pricing
     const basePrice = isPremium ? 25 : 15
     const minPrice = basePrice + Math.floor(Math.random() * 10)
     const maxPrice = minPrice + Math.floor(Math.random() * 15) + 5
     
-    // Generate phone number
     const phonePrefix = Math.random() > 0.5 ? '+34 952' : '+34 951'
     const phoneNumber = `${phonePrefix} ${Math.floor(Math.random() * 900) + 100} ${Math.floor(Math.random() * 900) + 100}`
     
-    const cityName = selectedCity.name.es || selectedCity.name.en || selectedCity.slug
-    const cityDisplayName = cityName.charAt(0).toUpperCase() + cityName.slice(1)
+    const displayName = generateDisplayName(selectedArea.value, selectedCityOption.value)
     
     const generatedData = {
       name: clubName,
@@ -357,17 +402,24 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       status: 'active',
       featured: Math.random() > 0.8,
       displayOrder: Math.floor(Math.random() * 10),
+      
+      // Enhanced location with area support
       location: {
         address: `${streetType}${streetName}, ${streetNumber}`,
-        city: selectedCity.slug,
-        postalCode: postalCodes[selectedCity.slug]?.[Math.floor(Math.random() * (postalCodes[selectedCity.slug]?.length || 1))] || '29600',
-        coordinates: cityCoordinates[selectedCity.slug] || { lat: 36.5099, lng: -4.8863 },
-        googleMapsUrl: `https://maps.google.com/?q=${clubName.replace(/\s+/g, '+')}+${cityDisplayName}`
+        area: selectedArea.value,
+        city: selectedCityOption.value,
+        administrativeCity: selectedArea.value !== selectedCityOption.value ? selectedArea.value : '',
+        displayName: displayName,
+        postalCode: postalCodes[selectedCityOption.value]?.[Math.floor(Math.random() * (postalCodes[selectedCityOption.value]?.length || 1))] || '29600',
+        coordinates: cityCoordinates[selectedCityOption.value] || { lat: 36.5099, lng: -4.8863 },
+        googleMapsUrl: `https://maps.google.com/?q=${clubName.replace(/\s+/g, '+')}+${selectedArea.label}`
       },
+      
       description: {
-        es: `${clubName} es un ${isPremium ? 'prestigioso' : 'acogedor'} club de tenis ubicado en ${cityDisplayName}. Contamos con ${totalOutdoor + totalIndoor} pistas ${totalIndoor > 0 ? '(incluyendo ' + totalIndoor + ' cubiertas)' : ''} y ofrecemos una experiencia de tenis ${isPremium ? 'premium' : 'excepcional'} para jugadores de todos los niveles. Nuestras instalaciones ${isPremium ? 'de primera clase' : 'modernas'} y nuestro equipo profesional garantizan una experiencia deportiva inolvidable.`,
-        en: `${clubName} is a ${isPremium ? 'prestigious' : 'welcoming'} tennis club located in ${cityDisplayName}. We feature ${totalOutdoor + totalIndoor} courts ${totalIndoor > 0 ? '(including ' + totalIndoor + ' indoor)' : ''} and offer ${isPremium ? 'a premium' : 'an exceptional'} tennis experience for players of all levels. Our ${isPremium ? 'world-class' : 'modern'} facilities and professional staff ensure an unforgettable sporting experience.`
+        es: `${clubName} es un ${isPremium ? 'prestigioso' : 'acogedor'} club de tenis ubicado en ${displayName}. Contamos con ${totalOutdoor + totalIndoor} pistas ${totalIndoor > 0 ? '(incluyendo ' + totalIndoor + ' cubiertas)' : ''} y ofrecemos una experiencia de tenis ${isPremium ? 'premium' : 'excepcional'} para jugadores de todos los niveles.`,
+        en: `${clubName} is a ${isPremium ? 'prestigious' : 'welcoming'} tennis club located in ${displayName}. We feature ${totalOutdoor + totalIndoor} courts ${totalIndoor > 0 ? '(including ' + totalIndoor + ' indoor)' : ''} and offer ${isPremium ? 'a premium' : 'an exceptional'} tennis experience for players of all levels.`
       },
+      
       courts: {
         total: totalOutdoor + totalIndoor,
         surfaces: surfaces,
@@ -416,16 +468,16 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       },
       seo: {
         metaTitle: {
-          es: `${clubName} - Club de Tenis en ${cityDisplayName}`,
-          en: `${clubName} - Tennis Club in ${cityDisplayName}`
+          es: `${clubName} - Club de Tenis en ${displayName}`,
+          en: `${clubName} - Tennis Club in ${displayName}`
         },
         metaDescription: {
-          es: `Descubre ${clubName}, ${isPremium ? 'el mejor club de tenis' : 'tu club de tenis'} en ${cityDisplayName}. ${totalOutdoor + totalIndoor} pistas, ${Object.values(randomServices).filter(Boolean).length} servicios disponibles. ¡Reserva ahora!`,
-          en: `Discover ${clubName}, ${isPremium ? 'the premier tennis club' : 'your tennis club'} in ${cityDisplayName}. ${totalOutdoor + totalIndoor} courts, ${Object.values(randomServices).filter(Boolean).length} services available. Book now!`
+          es: `Descubre ${clubName}, ${isPremium ? 'el mejor club de tenis' : 'tu club de tenis'} en ${displayName}. ${totalOutdoor + totalIndoor} pistas disponibles.`,
+          en: `Discover ${clubName}, ${isPremium ? 'the premier tennis club' : 'your tennis club'} in ${displayName}. ${totalOutdoor + totalIndoor} courts available.`
         },
         keywords: {
-          es: [`tenis ${selectedCity.slug}`, `club tenis ${selectedCity.slug}`, 'pistas tenis', 'clases tenis', selectedCity.slug],
-          en: [`tennis ${selectedCity.slug}`, `tennis club ${selectedCity.slug}`, 'tennis courts', 'tennis lessons', selectedCity.slug]
+          es: [`tenis ${selectedCityOption.value}`, `club tenis ${selectedArea.value}`, 'pistas tenis', selectedCityOption.value],
+          en: [`tennis ${selectedCityOption.value}`, `tennis club ${selectedArea.value}`, 'tennis courts', selectedCityOption.value]
         }
       },
       amenitiesVerified: true,
@@ -446,6 +498,17 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
         courts: {
           ...club.courts,
           surfaces: club.courts?.surfaces || []
+        },
+        // Enhanced location with area support
+        location: {
+          address: club.location?.address || '',
+          area: club.location?.area || '',
+          city: club.location?.city || 'marbella',
+          administrativeCity: club.location?.administrativeCity || '',
+          displayName: club.location?.displayName || '',
+          postalCode: club.location?.postalCode || '',
+          coordinates: club.location?.coordinates || { lat: null, lng: null },
+          googleMapsUrl: club.location?.googleMapsUrl || ''
         },
         images: {
           main: club.images?.main || '',
@@ -470,7 +533,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
         servicesVerified: club.servicesVerified || false
       })
     } else {
-      // Reset to initial state for new club
+      // Reset to initial state for new club with area support
       setFormData({
         name: '',
         slug: '',
@@ -479,7 +542,10 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
         displayOrder: 0,
         location: {
           address: '',
-          city: cities.length > 0 ? cities[0].slug : 'malaga',
+          area: '',
+          city: 'marbella',
+          administrativeCity: '',
+          displayName: '',
           postalCode: '',
           coordinates: {
             lat: null,
@@ -689,6 +755,17 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
           indoor: formData.courts.indoor || 0,
           outdoor: formData.courts.outdoor || 0
         },
+        // Enhanced location data
+        location: {
+          address: formData.location.address,
+          area: formData.location.area || null,
+          city: formData.location.city,
+          administrativeCity: formData.location.administrativeCity || null,
+          displayName: formData.location.displayName || null,
+          postalCode: formData.location.postalCode || '',
+          coordinates: formData.location.coordinates,
+          googleMapsUrl: formData.location.googleMapsUrl || ''
+        },
         images: {
           main: formData.images.main || '',
           gallery: formData.images.gallery || [],
@@ -710,7 +787,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
         }
       }
 
-      console.log('Sending club data:', dataToSend)
+      console.log('Sending club data with areas:', dataToSend)
 
       const url = club 
         ? `/api/admin/clubs/${club._id}` 
@@ -740,7 +817,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
         throw new Error(data.error || `Failed to ${club ? 'update' : 'create'} club`)
       }
 
-      console.log('Club saved successfully:', data.club)
+      console.log('Club saved successfully with areas:', data.club)
       onSuccess(data.club)
       onClose()
     } catch (err) {
@@ -795,15 +872,12 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
     </div>
   )
 
-  // ... All other render methods remain the same (renderBasicInfo, renderLocationInfo, etc.)
-  // [Previous render methods would be here - I'll include them in the full file]
-
   const renderBasicInfo = () => (
     <div className="space-y-4">
       {isGoogleImport && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
-          <p className="font-medium text-blue-900 mb-1">Google Maps Import</p>
-          <p className="text-blue-700">Fields marked with ✓ are verified from Google. Fields with ≈ are estimated and should be verified.</p>
+          <p className="font-medium text-blue-900 mb-1">🗺️ Google Maps Import</p>
+          <p className="text-blue-700">Fields marked with ✓ are verified from Google. Area information has been automatically detected and mapped.</p>
         </div>
       )}
       
@@ -911,9 +985,24 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
 
   const renderLocationInfo = () => (
     <div className="space-y-4">
+      {/* Geographic Areas Guide */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h4 className="text-sm font-medium text-blue-900 mb-2">
+          📍 Geographic Areas Guide
+        </h4>
+        <p className="text-sm text-blue-700 mb-2">
+          Select the main city for league organization, then choose the specific area where the club is located.
+        </p>
+        <div className="text-xs text-blue-600">
+          <p><strong>Example:</strong> Club in "El Paraíso" → City: "Marbella", Area: "El Paraíso"</p>
+          <p><strong>Result:</strong> Displays as "El Paraíso (Marbella)" and belongs to Marbella League</p>
+        </div>
+      </div>
+
+      {/* Main City Selection */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          City *
+          Main City (for League Organization) *
           <DataSourceIndicator source={getFieldSource('location.city')} />
         </label>
         {citiesLoading ? (
@@ -928,15 +1017,11 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple"
               required
             >
-              {cities.map(city => (
-                <option key={city.slug} value={city.slug}>
-                  {city.name.es || city.name.en}
+              {cityOptions.map(city => (
+                <option key={city.value} value={city.value}>
+                  {city.label} - {city.description}
                 </option>
               ))}
-              {/* Add option to create new city if not in list */}
-              <option value="_new" disabled>
-                ── Other cities will be auto-created ──
-              </option>
             </select>
             
             {willCreateNewCity && (
@@ -953,6 +1038,61 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
           </>
         )}
       </div>
+
+      {/* Specific Area Selection */}
+      {availableAreas.length > 0 && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Specific Area/Neighborhood
+            <DataSourceIndicator source={getFieldSource('location.area')} />
+          </label>
+          <select
+            value={formData.location.area}
+            onChange={(e) => handleChange('location.area', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple"
+          >
+            <option value="">Select area (optional)...</option>
+            {availableAreas.map(area => (
+              <option key={area.value} value={area.value}>
+                {area.label}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-gray-500">
+            Choose the specific neighborhood or area where the club is located
+          </p>
+        </div>
+      )}
+
+      {/* Display Name Preview */}
+      {formData.location.displayName && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <h4 className="text-sm font-medium text-green-900 mb-1">
+            📍 Display Name Preview
+          </h4>
+          <p className="text-lg font-semibold text-green-800">
+            {formData.location.displayName}
+          </p>
+          <p className="text-sm text-green-700 mt-1">
+            This is how the location will appear to users in listings and club pages
+          </p>
+        </div>
+      )}
+
+      {/* League Organization Info */}
+      {formData.location.city && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <h4 className="text-sm font-medium text-yellow-900 mb-1">
+            🏆 League Organization
+          </h4>
+          <p className="text-sm text-yellow-700">
+            This club will be part of the <strong>{cityOptions.find(c => c.value === formData.location.city)?.label}</strong> league.
+            {formData.location.area && formData.location.area !== formData.location.city && (
+              <span> Players can easily find it by searching for both "{formData.location.area.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}" and "{cityOptions.find(c => c.value === formData.location.city)?.label}".</span>
+            )}
+          </p>
+        </div>
+      )}
       
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1026,9 +1166,31 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
           placeholder="https://maps.google.com/..."
         />
       </div>
+
+      {/* Examples Section */}
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+        <h4 className="text-sm font-medium text-gray-900 mb-2">
+          💡 Examples
+        </h4>
+        <div className="space-y-2 text-sm text-gray-700">
+          <div>
+            <strong>El Paraíso club:</strong> City = "Marbella", Area = "El Paraíso" 
+            → Displays as "El Paraíso (Marbella)"
+          </div>
+          <div>
+            <strong>Central Marbella club:</strong> City = "Marbella", Area = "Marbella" 
+            → Displays as "Marbella"
+          </div>
+          <div>
+            <strong>San Pedro club:</strong> City = "Marbella", Area = "San Pedro de Alcántara" 
+            → Displays as "San Pedro de Alcántara (Marbella)"
+          </div>
+        </div>
+      </div>
     </div>
   )
 
+  // Continue with other render methods (renderCourtsInfo, etc. - same as before)
   const renderCourtsInfo = () => (
     <div className="space-y-4">
       {isGoogleImport && (
@@ -1360,7 +1522,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
                 <button
                   onClick={generateRandomData}
                   className="px-3 py-1 text-sm bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors flex items-center space-x-1"
-                  title="Fill with random test data"
+                  title="Fill with random test data including areas"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
@@ -1400,7 +1562,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
             <p className="text-sm text-gray-600">
               Step {currentStep} of {totalSteps}: {[
                 'Basic Information',
-                'Location',
+                'Location & Areas',
                 'Courts',
                 'Amenities & Services',
                 'Contact & Pricing',
