@@ -301,7 +301,7 @@ export default function ClubsPage() {
                         {area.cityDisplayName.charAt(0).toUpperCase() + area.cityDisplayName.slice(1)}, España
                       </p>
                       <a
-                        href={`/${locale}/clubs/${area.city}/${area.area}`}
+                        href={`/${locale}/clubs/${area.city}/area/${area.area}`}
                         className="text-parque-purple hover:underline text-sm font-medium"
                       >
                         {locale === 'es' ? 'Ver clubs en la zona →' : 'View clubs in area →'}

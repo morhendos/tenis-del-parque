@@ -4,7 +4,7 @@
 
 ### 1. **Google Photos API Key Exposure Issue** ❌ → ✅
 
-**Problem**: The `CityImageManager` was trying to access `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` directly in the frontend, which exposes the API key and can cause security issues.
+**Problem**: The `CityImageManager` was trying to access `GOOGLE_MAPS_API_KEY` directly in the frontend, which exposes the API key and can cause security issues.
 
 **Solution**: Created a secure proxy API endpoint:
 - **New endpoint**: `/api/admin/cities/google-photo/route.js`

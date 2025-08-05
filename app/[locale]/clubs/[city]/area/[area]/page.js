@@ -259,7 +259,7 @@ export default function AreaClubsPage() {
                 {otherAreas.slice(0, 4).map(otherArea => (
                   <Link
                     key={otherArea}
-                    href={`/${locale}/clubs/${city}/${otherArea}`}
+                    href={`/${locale}/clubs/${city}/area/${otherArea}`}
                     className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
                   >
                     {AREA_DISPLAY_NAMES[otherArea] || otherArea}

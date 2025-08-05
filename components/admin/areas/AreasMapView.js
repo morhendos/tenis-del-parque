@@ -71,16 +71,36 @@ export default function AreasMapView() {
   }, [])
 
   const loadGoogleMaps = () => {
-    if (window.google) {
+    // Check if Google Maps is already loaded
+    if (window.google && window.google.maps) {
       initializeMap()
       return
     }
 
+    // Check if script is already being loaded
+    const existingScript = document.querySelector('script[src*="maps.googleapis.com"]')
+    if (existingScript) {
+      existingScript.addEventListener('load', initializeMap)
+      return
+    }
+
+    // Check if API key is available
+    const apiKey = process.env.GOOGLE_MAPS_API_KEY
+    if (!apiKey) {
+      console.error('Google Maps API key is not set. Please add GOOGLE_MAPS_API_KEY to your environment variables.')
+      setLoading(false)
+      return
+    }
+
     const script = document.createElement('script')
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`
     script.async = true
     script.defer = true
     script.onload = initializeMap
+    script.onerror = () => {
+      console.error('Failed to load Google Maps API')
+      setLoading(false)
+    }
     document.head.appendChild(script)
   }
 
@@ -233,6 +253,36 @@ export default function AreasMapView() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading Areas Map...</p>
+          {!process.env.GOOGLE_MAPS_API_KEY && (
+            <p className="mt-2 text-sm text-red-600">
+              Google Maps API key not configured
+            </p>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state if Google Maps failed to load
+  if (!loading && !map && !process.env.GOOGLE_MAPS_API_KEY) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+        <div className="flex items-center">
+          <div className="flex-shrink-0">
+            <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div className="ml-3">
+            <h3 className="text-sm font-medium text-red-800">Google Maps Configuration Required</h3>
+            <div className="mt-2 text-sm text-red-700">
+              <p>To use the Areas Map, you need to:</p>
+              <ol className="mt-2 list-decimal list-inside space-y-1">
+                <li>Add <code className="bg-red-100 px-1 rounded">GOOGLE_MAPS_API_KEY</code> to your environment variables</li>
+                <li>Restart the development server</li>
+              </ol>
+            </div>
+          </div>
         </div>
       </div>
     )
