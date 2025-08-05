@@ -121,11 +121,6 @@ export default function LeagueSeasonPage() {
       const scheduleRes = await fetch(`/api/leagues/${location}/matches?season=${dbSeasonKey}&status=scheduled&limit=200`)
       if (scheduleRes.ok) {
         const scheduleData = await scheduleRes.json()
-        console.log(`LeagueSeasonPage: Received ${scheduleData.matches?.length || 0} scheduled matches from API`)
-        console.log(`LeagueSeasonPage: Matches by round:`, (scheduleData.matches || []).reduce((acc, match) => {
-          acc[match.round] = (acc[match.round] || 0) + 1
-          return acc
-        }, {}))
         setSchedule(scheduleData.matches || [])
       }
       
@@ -330,6 +325,65 @@ export default function LeagueSeasonPage() {
               
               {standings && standings.unifiedStandings ? (
                 <div>
+                  {/* League Progress Summary */}
+                  {(matches.length > 0 || schedule.length > 0) && (
+                    <div className="mb-6 bg-gray-50 rounded-lg p-4">
+                      <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-3">
+                        {language === 'es' ? 'Progreso de la Liga' : 'League Progress'}
+                      </h3>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="text-center">
+                          <div className="text-xl md:text-2xl font-bold text-gray-900">
+                            {matches.length + schedule.length}
+                          </div>
+                          <div className="text-xs md:text-sm text-gray-600">
+                            {language === 'es' ? 'Total Partidos' : 'Total Matches'}
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xl md:text-2xl font-bold text-green-600">
+                            {matches.length}
+                          </div>
+                          <div className="text-xs md:text-sm text-gray-600">
+                            {language === 'es' ? 'Completados' : 'Completed'}
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xl md:text-2xl font-bold text-blue-600">
+                            {schedule.length}
+                          </div>
+                          <div className="text-xs md:text-sm text-gray-600">
+                            {language === 'es' ? 'Programados' : 'Scheduled'}
+                          </div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xl md:text-2xl font-bold text-parque-purple">
+                            {standings.currentRound || 1}
+                          </div>
+                          <div className="text-xs md:text-sm text-gray-600">
+                            {language === 'es' ? 'Ronda Actual' : 'Current Round'}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-3 bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                          style={{ 
+                            width: `${(matches.length + schedule.length) > 0 ? (matches.length / (matches.length + schedule.length)) * 100 : 0}%` 
+                          }}
+                        ></div>
+                      </div>
+                      <div className="mt-2 text-center text-xs md:text-sm text-gray-600">
+                        {(matches.length + schedule.length) > 0 && (
+                          <>
+                            {matches.length} {language === 'es' ? 'completados de' : 'completed out of'} {matches.length + schedule.length} {language === 'es' ? 'partidos' : 'matches'} 
+                            ({Math.round((matches.length / (matches.length + schedule.length)) * 100)}% {language === 'es' ? 'completo' : 'complete'})
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
                   <StandingsTable 
                     players={standings.unifiedStandings} 
                     language={language}

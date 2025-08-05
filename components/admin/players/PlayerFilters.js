@@ -3,7 +3,7 @@ import React from 'react'
 export default function PlayerFilters({ filters, onFilterChange, leagues, leagueParam }) {
   return (
     <div className="bg-white p-6 rounded-lg shadow">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Search
@@ -65,6 +65,30 @@ export default function PlayerFilters({ filters, onFilterChange, leagues, league
                 {league.name}
               </option>
             ))}
+          </select>
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Sort By
+          </label>
+          <select
+            value={filters.sortBy || 'name-asc'}
+            onChange={(e) => onFilterChange({ ...filters, sortBy: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-transparent"
+          >
+            <option value="name-asc">Name (A-Z)</option>
+            <option value="name-desc">Name (Z-A)</option>
+            <option value="email-asc">Email (A-Z)</option>
+            <option value="email-desc">Email (Z-A)</option>
+            <option value="level-asc">Level (Beginner → Advanced)</option>
+            <option value="level-desc">Level (Advanced → Beginner)</option>
+            <option value="status-asc">Status (A-Z)</option>
+            <option value="status-desc">Status (Z-A)</option>
+            <option value="elo-asc">ELO (Low to High)</option>
+            <option value="elo-desc">ELO (High to Low)</option>
+            <option value="created-asc">Date Added (Oldest First)</option>
+            <option value="created-desc">Date Added (Newest First)</option>
           </select>
         </div>
       </div>
