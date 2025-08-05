@@ -85,9 +85,9 @@ export default function AreasMapView() {
     }
 
     // Check if API key is available
-    const apiKey = process.env.GOOGLE_MAPS_API_KEY
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
     if (!apiKey) {
-      console.error('Google Maps API key is not set. Please add GOOGLE_MAPS_API_KEY to your environment variables.')
+      console.error('Google Maps API key is not set. Please add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to your environment variables.')
       setLoading(false)
       return
     }
@@ -253,7 +253,7 @@ export default function AreasMapView() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading Areas Map...</p>
-          {!process.env.GOOGLE_MAPS_API_KEY && (
+          {!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY && (
             <p className="mt-2 text-sm text-red-600">
               Google Maps API key not configured
             </p>
@@ -264,7 +264,7 @@ export default function AreasMapView() {
   }
 
   // Show error state if Google Maps failed to load
-  if (!loading && !map && !process.env.GOOGLE_MAPS_API_KEY) {
+  if (!loading && !map && !process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-6">
         <div className="flex items-center">
@@ -278,7 +278,7 @@ export default function AreasMapView() {
             <div className="mt-2 text-sm text-red-700">
               <p>To use the Areas Map, you need to:</p>
               <ol className="mt-2 list-decimal list-inside space-y-1">
-                <li>Add <code className="bg-red-100 px-1 rounded">GOOGLE_MAPS_API_KEY</code> to your environment variables</li>
+                <li>Add <code className="bg-red-100 px-1 rounded">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> to your environment variables</li>
                 <li>Restart the development server</li>
               </ol>
             </div>
