@@ -12,6 +12,7 @@ export default function AreasMapView() {
   const mapInstanceRef = useRef(null)
   const markersRef = useRef([])
   const [loading, setLoading] = useState(true)
+  const [googleMapsLoaded, setGoogleMapsLoaded] = useState(false)
   const [selectedLeague, setSelectedLeague] = useState('all')
   const [clubs, setClubs] = useState([])
   const [debugInfo, setDebugInfo] = useState('')
@@ -167,11 +168,15 @@ export default function AreasMapView() {
 
   // Initialize the map when Google Maps is ready
   useEffect(() => {
-    if (!window.google || !window.google.maps || !mapRef.current || mapInstanceRef.current) {
+    // Check all conditions
+    if (!googleMapsLoaded || !mapRef.current || mapInstanceRef.current) {
       return
     }
 
     console.log('🎯 All conditions met, creating map NOW!')
+    console.log('   Google Maps loaded:', googleMapsLoaded)
+    console.log('   Map container:', !!mapRef.current)
+    console.log('   Map already created:', !!mapInstanceRef.current)
     
     try {
       const mapInstance = new window.google.maps.Map(mapRef.current, {
@@ -200,7 +205,7 @@ export default function AreasMapView() {
       setError(err.message)
       setLoading(false)
     }
-  }, [clubs]) // Re-run when clubs load
+  }, [googleMapsLoaded, clubs]) // Re-run when Google Maps loads or clubs change
 
   // Load Google Maps script on mount
   useEffect(() => {
@@ -222,10 +227,11 @@ export default function AreasMapView() {
     // Start fetching clubs
     fetchClubs()
 
-    // Load Google Maps if not already loaded
+    // Check if Google Maps is already loaded
     if (window.google && window.google.maps) {
       console.log('✅ Google Maps already available')
       setDebugInfo(prev => prev + ' | Google Maps: Already loaded')
+      setGoogleMapsLoaded(true)
       return
     }
 
@@ -234,7 +240,18 @@ export default function AreasMapView() {
     if (existingScript) {
       console.log('⏳ Script exists, waiting for load...')
       setDebugInfo(prev => prev + ' | Google Maps: Script loading')
-      return
+      
+      // Wait for it to load
+      const checkInterval = setInterval(() => {
+        if (window.google && window.google.maps) {
+          console.log('✅ Google Maps is now available!')
+          setGoogleMapsLoaded(true)
+          setDebugInfo(prev => prev + ' | Google Maps: Loaded')
+          clearInterval(checkInterval)
+        }
+      }, 100)
+      
+      return () => clearInterval(checkInterval)
     }
 
     // Create new script
@@ -244,8 +261,8 @@ export default function AreasMapView() {
     // Create callback
     window.initMap = () => {
       console.log('✅ Google Maps callback fired!')
+      setGoogleMapsLoaded(true)
       setDebugInfo(prev => prev + ' | Google Maps: Loaded')
-      // The useEffect above will handle map creation
     }
     
     const script = document.createElement('script')
