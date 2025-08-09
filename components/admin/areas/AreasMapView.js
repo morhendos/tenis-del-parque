@@ -11,7 +11,6 @@ export default function AreasMapView() {
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
   const markersRef = useRef([])
-  const googleMapsLoadedRef = useRef(false)
   const [loading, setLoading] = useState(true)
   const [selectedLeague, setSelectedLeague] = useState('all')
   const [clubs, setClubs] = useState([])
@@ -141,66 +140,6 @@ export default function AreasMapView() {
     setDebugInfo(prev => prev + ` | Markers: ${newMarkers.length}`)
   }
 
-  // Initialize map function
-  const initializeMap = () => {
-    console.log('🗺️ InitializeMap called')
-    console.log('   Container:', mapRef.current ? 'YES' : 'NO')
-    console.log('   Google Maps:', window.google?.maps ? 'YES' : 'NO')
-    console.log('   Already initialized:', mapInstanceRef.current ? 'YES' : 'NO')
-    
-    // Check if already initialized
-    if (mapInstanceRef.current) {
-      console.log('⚠️ Map already initialized')
-      return
-    }
-
-    // Check requirements
-    if (!mapRef.current) {
-      console.log('❌ Map container not ready')
-      // Try again in a moment
-      setTimeout(initializeMap, 100)
-      return
-    }
-
-    if (!window.google || !window.google.maps) {
-      console.log('❌ Google Maps not available')
-      // Try again in a moment
-      setTimeout(initializeMap, 100)
-      return
-    }
-
-    try {
-      console.log('🎯 Creating map instance NOW...')
-      const mapInstance = new window.google.maps.Map(mapRef.current, {
-        center: { lat: 36.5, lng: -4.8 },
-        zoom: 10,
-        styles: [
-          {
-            featureType: 'poi',
-            elementType: 'labels',
-            stylers: [{ visibility: 'off' }]
-          }
-        ]
-      })
-
-      console.log('✅ Map instance created!')
-      mapInstanceRef.current = mapInstance
-      setDebugInfo(prev => prev + ' | Map: Created')
-      
-      // Create markers if clubs are loaded
-      if (clubs.length > 0) {
-        createAreaMarkers(mapInstance, clubs)
-      }
-      
-      setLoading(false)
-    } catch (error) {
-      console.error('❌ Error creating map:', error)
-      setError(error.message)
-      setDebugInfo(prev => prev + ' | ERROR: ' + error.message)
-      setLoading(false)
-    }
-  }
-
   // Fetch clubs
   const fetchClubs = async () => {
     console.log('📊 Fetching clubs...')
@@ -226,7 +165,44 @@ export default function AreasMapView() {
     }
   }
 
-  // Main initialization effect
+  // Initialize the map when Google Maps is ready
+  useEffect(() => {
+    if (!window.google || !window.google.maps || !mapRef.current || mapInstanceRef.current) {
+      return
+    }
+
+    console.log('🎯 All conditions met, creating map NOW!')
+    
+    try {
+      const mapInstance = new window.google.maps.Map(mapRef.current, {
+        center: { lat: 36.5, lng: -4.8 },
+        zoom: 10,
+        styles: [
+          {
+            featureType: 'poi',
+            elementType: 'labels',
+            stylers: [{ visibility: 'off' }]
+          }
+        ]
+      })
+
+      console.log('✅ Map created successfully!')
+      mapInstanceRef.current = mapInstance
+      setDebugInfo(prev => prev + ' | Map: Created')
+      setLoading(false)
+      
+      // Create markers if clubs are loaded
+      if (clubs.length > 0) {
+        createAreaMarkers(mapInstance, clubs)
+      }
+    } catch (err) {
+      console.error('❌ Error creating map:', err)
+      setError(err.message)
+      setLoading(false)
+    }
+  }, [clubs]) // Re-run when clubs load
+
+  // Load Google Maps script on mount
   useEffect(() => {
     console.log('🗺️ AreasMapView mounting...')
     
@@ -240,72 +216,51 @@ export default function AreasMapView() {
       return
     }
 
-    console.log('🔑 API Key check: Found')
+    console.log('🔑 API Key: Found')
     setDebugInfo(`API Key: Found`)
 
     // Start fetching clubs
     fetchClubs()
 
-    // Load Google Maps
-    console.log('🚀 Starting Google Maps load...')
-    
-    // Check if already loaded
-    if (window.google && window.google.maps && !googleMapsLoadedRef.current) {
+    // Load Google Maps if not already loaded
+    if (window.google && window.google.maps) {
       console.log('✅ Google Maps already available')
-      googleMapsLoadedRef.current = true
       setDebugInfo(prev => prev + ' | Google Maps: Already loaded')
-      // Initialize map after a brief delay
-      setTimeout(initializeMap, 100)
       return
     }
 
     // Check for existing script
     const existingScript = document.querySelector('script[src*="maps.googleapis.com"]')
-    if (existingScript && !googleMapsLoadedRef.current) {
-      console.log('⏳ Script exists, adding listener...')
-      setDebugInfo(prev => prev + ' | Google Maps: Script exists, waiting')
-      
-      const checkGoogleMaps = () => {
-        if (window.google && window.google.maps && !googleMapsLoadedRef.current) {
-          console.log('✅ Google Maps now available!')
-          googleMapsLoadedRef.current = true
-          setDebugInfo(prev => prev + ' | Google Maps: Now loaded')
-          initializeMap()
-        } else {
-          setTimeout(checkGoogleMaps, 100)
-        }
-      }
-      
-      checkGoogleMaps()
+    if (existingScript) {
+      console.log('⏳ Script exists, waiting for load...')
+      setDebugInfo(prev => prev + ' | Google Maps: Script loading')
       return
     }
 
-    // Load new script
-    console.log('📥 Creating new Google Maps script...')
-    setDebugInfo(prev => prev + ' | Google Maps: Loading script')
+    // Create new script
+    console.log('📥 Loading Google Maps script...')
+    setDebugInfo(prev => prev + ' | Google Maps: Loading')
+    
+    // Create callback
+    window.initMap = () => {
+      console.log('✅ Google Maps callback fired!')
+      setDebugInfo(prev => prev + ' | Google Maps: Loaded')
+      // The useEffect above will handle map creation
+    }
     
     const script = document.createElement('script')
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initMap`
     script.async = true
     script.defer = true
     
-    script.onload = () => {
-      console.log('✅ Google Maps script loaded!')
-      googleMapsLoadedRef.current = true
-      setDebugInfo(prev => prev + ' | Google Maps: Script loaded')
-      // Initialize map after a brief delay
-      setTimeout(initializeMap, 100)
-    }
-    
-    script.onerror = (error) => {
-      console.error('❌ Failed to load Google Maps', error)
-      setError('Failed to load Google Maps script')
-      setDebugInfo(prev => prev + ' | ERROR: Script load failed')
+    script.onerror = () => {
+      console.error('❌ Failed to load Google Maps')
+      setError('Failed to load Google Maps')
       setLoading(false)
     }
     
     document.head.appendChild(script)
-  }, []) // Empty dependency - run once on mount
+  }, [])
 
   // Update markers when clubs change
   useEffect(() => {
@@ -364,25 +319,6 @@ export default function AreasMapView() {
 
   const stats = getAreaStats()
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96 bg-white rounded-lg shadow">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading Areas Map...</p>
-          <div className="mt-4 p-3 bg-gray-100 rounded text-xs text-left max-w-md">
-            <strong>Debug Info:</strong><br />
-            {debugInfo || 'Initializing...'}
-          </div>
-          <div className="mt-2 text-xs text-gray-500">
-            Check browser console for detailed logs
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   // Error state
   if (error) {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
@@ -412,8 +348,7 @@ export default function AreasMapView() {
                 <ol className="mt-2 list-decimal list-inside space-y-1">
                   <li>Ensure <code className="bg-red-100 px-1 rounded">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> is in .env.local</li>
                   <li>Enable Maps JavaScript API in Google Cloud Console</li>
-                  <li>Remove any referrer restrictions for localhost</li>
-                  <li>Check browser console for detailed errors</li>
+                  <li>Check browser console for errors</li>
                   <li>Restart your development server</li>
                 </ol>
               </div>
@@ -424,7 +359,7 @@ export default function AreasMapView() {
     )
   }
 
-  // Main render
+  // Main render - ALWAYS render the map container
   return (
     <div className="space-y-6">
       {/* Header with Stats */}
@@ -496,13 +431,27 @@ export default function AreasMapView() {
         </div>
       </div>
 
-      {/* Map Container */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      {/* Map Container - ALWAYS RENDERED with loading overlay */}
+      <div className="bg-white rounded-lg shadow overflow-hidden relative">
+        {/* Map div - always present */}
         <div 
           ref={mapRef}
           className="w-full"
           style={{ height: '600px' }}
         />
+        
+        {/* Loading overlay - shown only when loading */}
+        {loading && (
+          <div className="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center z-10">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
+              <p className="mt-4 text-gray-600">Loading map...</p>
+              <div className="mt-4 p-3 bg-gray-100 rounded text-xs max-w-md">
+                <strong>Debug:</strong> {debugInfo || 'Initializing...'}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Legend */}
