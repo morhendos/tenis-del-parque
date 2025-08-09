@@ -16,7 +16,6 @@ export default function AreasMapView() {
   const [clubs, setClubs] = useState([])
   const [markers, setMarkers] = useState([])
   const [debugInfo, setDebugInfo] = useState('')
-  const [googleMapsReady, setGoogleMapsReady] = useState(false)
 
   // Area coordinates (approximate)
   const areaCoordinates = {
@@ -68,9 +67,12 @@ export default function AreasMapView() {
     'sotogrande': '#EF4444'
   }
 
-  // Initialize map (memoized to prevent re-creation)
+  // Initialize map
   const initializeMap = useCallback(() => {
     console.log('🗺️ Initializing map...')
+    console.log('   Map container available:', !!mapRef.current)
+    console.log('   Google Maps available:', !!(window.google && window.google.maps))
+    console.log('   Map already created:', !!mapInstanceRef.current)
     
     // Check if already initialized
     if (mapInstanceRef.current) {
@@ -80,15 +82,15 @@ export default function AreasMapView() {
     
     // Check if map container is available
     if (!mapRef.current) {
-      console.log('⏳ Map container not ready yet, will retry...')
-      setDebugInfo(prev => prev + ' | Waiting for map container')
+      console.log('❌ Map container not ready yet')
+      setDebugInfo(prev => prev + ' | ERROR: No map container')
       return
     }
 
     // Check if Google Maps is available
     if (!window.google || !window.google.maps) {
-      console.log('⏳ Google Maps not ready yet')
-      setDebugInfo(prev => prev + ' | Waiting for Google Maps')
+      console.log('❌ Google Maps not available yet')
+      setDebugInfo(prev => prev + ' | ERROR: Google Maps not loaded')
       return
     }
 
@@ -122,89 +124,6 @@ export default function AreasMapView() {
       setLoading(false)
     }
   }, [clubs])
-
-  // Load Google Maps script
-  const loadGoogleMaps = useCallback(() => {
-    console.log('🚀 Starting loadGoogleMaps...')
-    
-    // Check if Google Maps is already loaded
-    if (window.google && window.google.maps) {
-      console.log('✅ Google Maps already loaded')
-      setDebugInfo(prev => prev + ' | Google Maps: Already loaded')
-      setGoogleMapsReady(true)
-      return
-    }
-
-    // Check if script is already being loaded
-    const existingScript = document.querySelector('script[src*="maps.googleapis.com"]')
-    if (existingScript) {
-      console.log('⏳ Google Maps script already exists, waiting...')
-      setDebugInfo(prev => prev + ' | Google Maps: Script exists, waiting')
-      
-      // Add load listener if not already loaded
-      const checkLoaded = () => {
-        if (window.google && window.google.maps) {
-          console.log('✅ Google Maps now available')
-          setGoogleMapsReady(true)
-        }
-      }
-      
-      existingScript.addEventListener('load', checkLoaded)
-      // Also check immediately in case it's already loaded
-      checkLoaded()
-      return
-    }
-
-    // Check if API key is available
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-    if (!apiKey) {
-      console.error('❌ Google Maps API key is not set. Please add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to your environment variables.')
-      setDebugInfo(prev => prev + ' | ERROR: No API key')
-      setLoading(false)
-      return
-    }
-
-    console.log('📥 Loading Google Maps script...')
-    setDebugInfo(prev => prev + ' | Google Maps: Loading script')
-    
-    // Create callback function
-    window.initGoogleMaps = () => {
-      console.log('✅ Google Maps script loaded successfully')
-      setDebugInfo(prev => prev + ' | Google Maps: Script loaded')
-      setGoogleMapsReady(true)
-    }
-    
-    const script = document.createElement('script')
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initGoogleMaps`
-    script.async = true
-    script.defer = true
-    script.onerror = (error) => {
-      console.error('❌ Failed to load Google Maps API', error)
-      setDebugInfo(prev => prev + ' | ERROR: Script failed to load')
-      setLoading(false)
-    }
-    document.head.appendChild(script)
-  }, [])
-
-  // Fetch clubs data
-  const fetchClubs = useCallback(async () => {
-    console.log('📊 Fetching clubs...')
-    try {
-      const response = await fetch('/api/clubs?limit=1000')
-      if (response.ok) {
-        const data = await response.json()
-        console.log('✅ Clubs fetched:', data.clubs?.length || 0)
-        setClubs(data.clubs || [])
-        setDebugInfo(prev => prev + ` | Clubs: ${data.clubs?.length || 0}`)
-      } else {
-        console.error('❌ Failed to fetch clubs:', response.status)
-        setDebugInfo(prev => prev + ' | ERROR: Failed to fetch clubs')
-      }
-    } catch (error) {
-      console.error('❌ Error fetching clubs:', error)
-      setDebugInfo(prev => prev + ' | ERROR: Clubs fetch failed')
-    }
-  }, [])
 
   // Create area markers
   const createAreaMarkers = useCallback((mapInstance, clubsData) => {
@@ -279,7 +198,7 @@ export default function AreasMapView() {
     setDebugInfo(prev => prev + ` | Markers: ${newMarkers.length}`)
   }, [markers, leagueColors])
 
-  // Initial setup
+  // Load Google Maps script and fetch clubs on mount
   useEffect(() => {
     console.log('🗺️ AreasMapView mounting...')
     
@@ -288,19 +207,93 @@ export default function AreasMapView() {
     console.log('🔑 API Key check:', apiKey ? `Found (${apiKey.substring(0, 10)}...)` : 'NOT FOUND')
     setDebugInfo(`API Key: ${apiKey ? 'Found' : 'NOT FOUND'}`)
     
-    loadGoogleMaps()
-    fetchClubs()
-  }, [loadGoogleMaps, fetchClubs])
-
-  // Initialize map when Google Maps is ready and component is mounted
-  useEffect(() => {
-    if (googleMapsReady && mapRef.current && !mapInstanceRef.current) {
-      console.log('🚀 Google Maps ready and container available, initializing map...')
-      initializeMap()
+    // Fetch clubs
+    const fetchClubs = async () => {
+      console.log('📊 Fetching clubs...')
+      try {
+        const response = await fetch('/api/clubs?limit=1000')
+        if (response.ok) {
+          const data = await response.json()
+          console.log('✅ Clubs fetched:', data.clubs?.length || 0)
+          setClubs(data.clubs || [])
+          setDebugInfo(prev => prev + ` | Clubs: ${data.clubs?.length || 0}`)
+        } else {
+          console.error('❌ Failed to fetch clubs:', response.status)
+          setDebugInfo(prev => prev + ' | ERROR: Failed to fetch clubs')
+        }
+      } catch (error) {
+        console.error('❌ Error fetching clubs:', error)
+        setDebugInfo(prev => prev + ' | ERROR: Clubs fetch failed')
+      }
     }
-  }, [googleMapsReady, initializeMap])
 
-  // Update markers when clubs data changes
+    // Load Google Maps
+    const loadGoogleMaps = () => {
+      console.log('🚀 Starting loadGoogleMaps...')
+      
+      // Check if Google Maps is already loaded
+      if (window.google && window.google.maps) {
+        console.log('✅ Google Maps already loaded')
+        setDebugInfo(prev => prev + ' | Google Maps: Already loaded')
+        // Initialize map immediately
+        setTimeout(() => initializeMap(), 100)
+        return
+      }
+
+      // Check if script is already being loaded
+      const existingScript = document.querySelector('script[src*="maps.googleapis.com"]')
+      if (existingScript) {
+        console.log('⏳ Google Maps script already exists, waiting...')
+        setDebugInfo(prev => prev + ' | Google Maps: Script exists, waiting')
+        
+        existingScript.addEventListener('load', () => {
+          console.log('✅ Google Maps script loaded (via existing script)')
+          setDebugInfo(prev => prev + ' | Google Maps: Script loaded')
+          setTimeout(() => initializeMap(), 100)
+        })
+        
+        // Check if already loaded
+        if (window.google && window.google.maps) {
+          console.log('✅ Google Maps already available')
+          setTimeout(() => initializeMap(), 100)
+        }
+        return
+      }
+
+      // Check if API key is available
+      if (!apiKey) {
+        console.error('❌ Google Maps API key is not set.')
+        setDebugInfo(prev => prev + ' | ERROR: No API key')
+        setLoading(false)
+        return
+      }
+
+      console.log('📥 Loading Google Maps script...')
+      setDebugInfo(prev => prev + ' | Google Maps: Loading script')
+      
+      const script = document.createElement('script')
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`
+      script.async = true
+      script.defer = true
+      script.onload = () => {
+        console.log('✅ Google Maps script loaded successfully')
+        setDebugInfo(prev => prev + ' | Google Maps: Script loaded')
+        // Small delay to ensure everything is ready
+        setTimeout(() => initializeMap(), 100)
+      }
+      script.onerror = (error) => {
+        console.error('❌ Failed to load Google Maps API', error)
+        setDebugInfo(prev => prev + ' | ERROR: Script failed to load')
+        setLoading(false)
+      }
+      document.head.appendChild(script)
+    }
+
+    fetchClubs()
+    loadGoogleMaps()
+  }, []) // Empty dependency array for mount only
+
+  // Reinitialize map when clubs data changes
   useEffect(() => {
     if (map && clubs.length > 0) {
       createAreaMarkers(map, clubs)
@@ -373,7 +366,7 @@ export default function AreasMapView() {
   }
 
   // Show error state if Google Maps failed to load
-  if (!loading && !map && !googleMapsReady) {
+  if (!loading && !map) {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
     
     return (
