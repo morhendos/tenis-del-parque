@@ -3,7 +3,8 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import City from '@/lib/models/City'
 import dbConnect from '@/lib/db/mongoose'
-import { determineLeagueByLocation } from '@/components/admin/areas/AreasMapView'
+// FIX: Import from shared utility instead of client component
+import { determineLeagueByLocation, LEAGUE_NAMES } from '@/lib/utils/geographicBoundaries'
 
 // Dynamically import to handle if package is not installed
 let Client
@@ -27,14 +28,6 @@ function generateSlug(name) {
     .replace(/\s+/g, '-') // Replace spaces with hyphens
     .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
     .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
-}
-
-// League display names
-const LEAGUE_NAMES = {
-  'marbella': 'Marbella',
-  'malaga': 'Málaga',
-  'estepona': 'Estepona',
-  'sotogrande': 'Sotogrande'
 }
 
 // Process location data using geographic boundaries
