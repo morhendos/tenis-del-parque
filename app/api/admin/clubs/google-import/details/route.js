@@ -3,11 +3,7 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import City from '@/lib/models/City'
 import dbConnect from '@/lib/db/mongoose'
-import { 
-  extractAreaFromGoogle, 
-  determineMainCity, 
-  generateDisplayName 
-} from '@/lib/utils/areaMapping'
+import { determineLeagueByLocation } from '@/components/admin/areas/AreasMapView'
 
 // Dynamically import to handle if package is not installed
 let Client
@@ -20,9 +16,9 @@ try {
 
 const googleMapsClient = Client ? new Client({}) : null
 
-// Helper function to generate slug from name and area
-function generateSlug(name, area = null) {
-  const baseName = name
+// Helper function to generate slug from name
+function generateSlug(name) {
+  return name
     .toLowerCase()
     .normalize('NFD') // Normalize to decomposed form
     .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
@@ -31,87 +27,97 @@ function generateSlug(name, area = null) {
     .replace(/\s+/g, '-') // Replace spaces with hyphens
     .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
     .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
-
-  // Include area in slug for better uniqueness
-  if (area && area !== 'unknown') {
-    return `${baseName}-${area}`
-  }
-  
-  return baseName
 }
 
-// Enhanced function to extract and process location data using our area mapping
+// League display names
+const LEAGUE_NAMES = {
+  'marbella': 'Marbella',
+  'malaga': 'Málaga',
+  'estepona': 'Estepona',
+  'sotogrande': 'Sotogrande'
+}
+
+// Process location data using geographic boundaries
 async function processLocationFromGoogle(place) {
   await dbConnect()
   
   console.log('Processing place:', place.name)
-  console.log('Formatted address:', place.formatted_address)
-  console.log('Address components:', place.address_components)
+  console.log('Coordinates:', place.geometry?.location)
   
-  // Extract area information using our new system
-  const areaInfo = extractAreaFromGoogle(place.address_components)
-  console.log('Extracted area info:', areaInfo)
+  // Determine league based on coordinates
+  let league = null
+  let leagueName = null
   
-  // Determine main city for league organization
-  const mainCity = determineMainCity(areaInfo.area, areaInfo.city)
-  console.log('Determined main city:', mainCity)
-  
-  // Generate display name
-  const displayName = generateDisplayName(areaInfo.area, mainCity)
-  console.log('Generated display name:', displayName)
+  if (place.geometry?.location?.lat && place.geometry?.location?.lng) {
+    league = determineLeagueByLocation(
+      place.geometry.location.lat,
+      place.geometry.location.lng
+    )
+    leagueName = league ? LEAGUE_NAMES[league] : null
+    console.log('Auto-assigned to league:', league || 'UNASSIGNED')
+  }
   
   // Extract postal code from address
-  const postalCodeMatch = place.formatted_address.match(/\b\d{5}\b/)
+  const postalCodeMatch = place.formatted_address?.match(/\b\d{5}\b/)
   const postalCode = postalCodeMatch ? postalCodeMatch[0] : ''
   
-  // Create or ensure main city exists
-  try {
-    const city = await City.findOrCreate({
-      slug: mainCity,
-      name: mainCity.charAt(0).toUpperCase() + mainCity.slice(1),
-      nameEs: mainCity.charAt(0).toUpperCase() + mainCity.slice(1),
-      nameEn: mainCity.charAt(0).toUpperCase() + mainCity.slice(1),
-      importSource: 'google'
-    })
-    
-    console.log(`City "${mainCity}" ensured in database`)
-  } catch (error) {
-    console.error('Error creating city:', error)
+  // Extract locality from address components
+  let locality = null
+  if (place.address_components) {
+    const localityComponent = place.address_components.find(comp => 
+      comp.types.includes('locality')
+    )
+    locality = localityComponent?.long_name
+  }
+  
+  // Create or ensure league city exists if assigned
+  if (league) {
+    try {
+      const city = await City.findOrCreate({
+        slug: league,
+        name: LEAGUE_NAMES[league],
+        nameEs: LEAGUE_NAMES[league],
+        nameEn: LEAGUE_NAMES[league],
+        importSource: 'google'
+      })
+      console.log(`League city "${league}" ensured in database`)
+    } catch (error) {
+      console.error('Error creating city:', error)
+    }
   }
   
   return {
-    area: areaInfo.area,
-    city: mainCity,
-    administrativeCity: areaInfo.city,
-    displayName: displayName,
-    address: place.vicinity || place.formatted_address.split(',')[0],
+    address: place.vicinity || place.formatted_address?.split(',')[0] || '',
+    city: league || locality?.toLowerCase() || 'unassigned',
+    leagueName: leagueName,
+    locality: locality,
     postalCode: postalCode,
     coordinates: {
       lat: place.geometry?.location?.lat || null,
       lng: place.geometry?.location?.lng || null
     },
     googleMapsUrl: place.url || `https://maps.google.com/?q=place_id:${place.place_id}`,
+    autoAssigned: !!league,
     // Keep original data for debugging
     originalData: {
       formattedAddress: place.formatted_address,
       vicinity: place.vicinity,
-      extractedArea: areaInfo.originalArea,
-      extractedCity: areaInfo.originalCity
+      locality: locality
     }
   }
 }
 
-// Enhanced function to map Google place to club format with area support
+// Map Google place to club format
 async function mapGooglePlaceToClub(place, apiKey) {
-  // Process location with our enhanced area mapping
+  // Process location with automatic league assignment
   const locationData = await processLocationFromGoogle(place)
   
-  // Generate slug with area for better uniqueness
-  const slug = generateSlug(place.name, locationData.area)
+  // Generate slug
+  const slug = generateSlug(place.name)
   
-  console.log(`Generated slug for "${place.name}": "${slug}"`)
-  console.log(`Location mapping: ${locationData.area} → ${locationData.city}`)
-  console.log(`Display name: ${locationData.displayName}`)
+  console.log(`📍 "${place.name}" → League: ${locationData.leagueName || 'Unassigned'}`)
+  console.log(`   Coordinates: ${locationData.coordinates.lat}, ${locationData.coordinates.lng}`)
+  console.log(`   Auto-assigned: ${locationData.autoAssigned ? 'YES' : 'NO'}`)
   
   // Parse operating hours if available
   const operatingHours = {}
@@ -136,7 +142,6 @@ async function mapGooglePlaceToClub(place, apiKey) {
     }
     
     place.opening_hours.weekday_text.forEach(dayText => {
-      // Parse format like "Monday: 8:00 AM – 10:00 PM" or "Lunes: 8:00–22:00"
       const match = dayText.match(/^(\w+):\s*(.+)/)
       if (match) {
         const dayName = match[1]
@@ -147,10 +152,9 @@ async function mapGooglePlaceToClub(place, apiKey) {
           if (hours.toLowerCase().includes('closed') || hours.toLowerCase().includes('cerrado')) {
             operatingHours[dayKey] = { open: null, close: null, closed: true }
           } else {
-            // Try to parse hours - just store the string for now
             operatingHours[dayKey] = { 
-              open: '08:00', // Default fallback
-              close: '22:00', // Default fallback
+              open: '08:00',
+              close: '22:00',
               originalText: hours 
             }
           }
@@ -159,31 +163,31 @@ async function mapGooglePlaceToClub(place, apiKey) {
     })
   }
   
-  // Get first photo reference if available (don't store full URL with API key)
+  // Get first photo reference if available
   let mainPhotoReference = null
   if (place.photos && place.photos.length > 0 && place.photos[0].photo_reference) {
     mainPhotoReference = place.photos[0].photo_reference
   }
   
   return {
-    // Basic Information - ONLY FROM GOOGLE
+    // Basic Information
     name: place.name,
     slug: slug,
     status: 'active',
     featured: false,
     displayOrder: 0,
     
-    // Enhanced Location with Area Support
+    // Location with automatic league assignment
     location: {
       address: locationData.address,
-      area: locationData.area,
-      city: locationData.city,
-      administrativeCity: locationData.administrativeCity,
-      displayName: locationData.displayName,
+      city: locationData.city, // This is now the league (marbella, malaga, etc.)
       postalCode: locationData.postalCode,
       coordinates: locationData.coordinates,
       googleMapsUrl: locationData.googleMapsUrl,
-      // Store original data for debugging/reference
+      // Additional metadata
+      autoAssigned: locationData.autoAssigned,
+      leagueName: locationData.leagueName,
+      locality: locationData.locality,
       _debug: locationData.originalData
     },
     
@@ -193,10 +197,10 @@ async function mapGooglePlaceToClub(place, apiKey) {
       en: ''
     },
     
-    // Courts - Use default values to pass validation
+    // Courts - Default values
     courts: {
-      total: 6, // Default estimate
-      surfaces: [{ type: 'clay', count: 6 }], // Default to clay courts
+      total: 6,
+      surfaces: [{ type: 'clay', count: 6 }],
       indoor: 0,
       outdoor: 6
     },
@@ -235,7 +239,7 @@ async function mapGooglePlaceToClub(place, apiKey) {
       instagram: ''
     },
     
-    // Operating Hours - ONLY IF AVAILABLE FROM GOOGLE
+    // Operating Hours
     operatingHours: Object.keys(operatingHours).length > 0 ? operatingHours : {
       monday: { open: '', close: '' },
       tuesday: { open: '', close: '' },
@@ -246,7 +250,7 @@ async function mapGooglePlaceToClub(place, apiKey) {
       sunday: { open: '', close: '' }
     },
     
-    // Pricing - LEAVE EMPTY FOR MANUAL ENTRY
+    // Pricing - LEAVE EMPTY
     pricing: {
       courtRental: {
         hourly: {
@@ -264,17 +268,17 @@ async function mapGooglePlaceToClub(place, apiKey) {
       membershipRequired: null
     },
     
-    // Tags - EMPTY UNTIL MANUALLY ADDED
+    // Tags - EMPTY
     tags: [],
     
-    // Images - Store Google photo reference, not full URL with API key
+    // Images
     images: {
-      main: '', // Leave empty for Google photos, will be generated via API endpoint
+      main: '',
       gallery: [],
       googlePhotoReference: mainPhotoReference
     },
     
-    // SEO - LEAVE EMPTY FOR MANUAL ENTRY
+    // SEO - EMPTY
     seo: {
       metaTitle: {
         es: '',
@@ -290,7 +294,7 @@ async function mapGooglePlaceToClub(place, apiKey) {
       }
     },
     
-    // Google data - STORE ACTUAL GOOGLE DATA
+    // Google data
     googlePlaceId: place.place_id,
     googleData: {
       rating: place.rating || null,
@@ -387,9 +391,9 @@ export async function POST(request) {
           const clubData = await mapGooglePlaceToClub(response.data.result, apiKey)
           clubs.push(clubData)
           console.log(`✅ Processed: ${response.data.result.name}`)
-          console.log(`   → Area: ${clubData.location.area}`)
+          console.log(`   → League: ${clubData.location.leagueName || 'Unassigned'}`)
           console.log(`   → City: ${clubData.location.city}`)
-          console.log(`   → Display: ${clubData.location.displayName}`)
+          console.log(`   → Auto-assigned: ${clubData.location.autoAssigned ? 'YES' : 'NO'}`)
           console.log(`   → Slug: ${clubData.slug}`)
         }
       } catch (error) {
@@ -401,20 +405,32 @@ export async function POST(request) {
       }
     }
 
-    console.log(`🎉 Successfully processed ${clubs.length} clubs with area mapping!`)
+    console.log(`🎉 Successfully processed ${clubs.length} clubs with automatic league assignment!`)
+
+    // Summary of league assignments
+    const leagueAssignments = {}
+    clubs.forEach(club => {
+      const league = club.location.city
+      if (!leagueAssignments[league]) {
+        leagueAssignments[league] = []
+      }
+      leagueAssignments[league].push(club.name)
+    })
+
+    console.log('\n📊 League Assignment Summary:')
+    Object.entries(leagueAssignments).forEach(([league, clubNames]) => {
+      console.log(`   ${LEAGUE_NAMES[league] || league}: ${clubNames.length} clubs`)
+    })
 
     return NextResponse.json({
       clubs,
       requested: placeIds.length,
       found: clubs.length,
       errors: errors.length > 0 ? errors : undefined,
-      mappingInfo: {
-        areasProcessed: clubs.map(club => ({
-          name: club.name,
-          area: club.location.area,
-          city: club.location.city,
-          displayName: club.location.displayName
-        }))
+      assignmentInfo: {
+        summary: leagueAssignments,
+        autoAssigned: clubs.filter(c => c.location.autoAssigned).length,
+        unassigned: clubs.filter(c => c.location.city === 'unassigned').length
       }
     })
 
