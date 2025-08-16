@@ -331,55 +331,99 @@ export default function AreasMapEditor() {
     return inside
   }
 
+  // Check if Google Maps Drawing library is available
+  const isDrawingLibraryLoaded = () => {
+    return window.google && 
+           window.google.maps && 
+           window.google.maps.drawing && 
+           window.google.maps.drawing.DrawingManager
+  }
+
+  // Initialize drawing manager with retry logic
+  const initializeDrawingManager = (mapInstance, retryCount = 0) => {
+    const maxRetries = 10
+    
+    if (!isDrawingLibraryLoaded()) {
+      if (retryCount < maxRetries) {
+        console.log(`Drawing library not ready, retrying... (${retryCount + 1}/${maxRetries})`)
+        setTimeout(() => {
+          initializeDrawingManager(mapInstance, retryCount + 1)
+        }, 500)
+        return
+      } else {
+        setError('Google Maps Drawing library failed to load. Please refresh the page.')
+        setLoading(false)
+        return
+      }
+    }
+
+    try {
+      // Initialize drawing manager
+      const drawingManager = new window.google.maps.drawing.DrawingManager({
+        drawingMode: null,
+        drawingControl: false,
+        polygonOptions: {
+          fillColor: '#8B5CF6',
+          fillOpacity: 0.15,
+          strokeColor: '#8B5CF6',
+          strokeOpacity: 0.8,
+          strokeWeight: 2,
+          editable: true,
+          draggable: true
+        }
+      })
+
+      drawingManager.setMap(mapInstance)
+      drawingManagerRef.current = drawingManager
+
+      // Listen for polygon completion
+      window.google.maps.event.addListener(drawingManager, 'polygoncomplete', (polygon) => {
+        const newArea = createArea(polygon)
+        selectArea(newArea.id)
+        setDrawingMode(false)
+        drawingManager.setDrawingMode(null)
+      })
+
+      console.log('Drawing manager initialized successfully')
+      setLoading(false)
+    } catch (error) {
+      console.error('Error initializing drawing manager:', error)
+      setError('Failed to initialize drawing manager. Please refresh the page.')
+      setLoading(false)
+    }
+  }
+
   // Initialize map
   useEffect(() => {
     if (!googleMapsLoaded || !mapRef.current || mapInstanceRef.current) return
 
-    const mapInstance = new window.google.maps.Map(mapRef.current, {
-      center: { lat: 36.5, lng: -4.9 },
-      zoom: 9,
-      mapTypeControl: true,
-      streetViewControl: false
-    })
+    try {
+      const mapInstance = new window.google.maps.Map(mapRef.current, {
+        center: { lat: 36.5, lng: -4.9 },
+        zoom: 9,
+        mapTypeControl: true,
+        streetViewControl: false
+      })
 
-    mapInstanceRef.current = mapInstance
+      mapInstanceRef.current = mapInstance
 
-    // Initialize drawing manager
-    const drawingManager = new window.google.maps.drawing.DrawingManager({
-      drawingMode: null,
-      drawingControl: false,
-      polygonOptions: {
-        fillColor: '#8B5CF6',
-        fillOpacity: 0.15,
-        strokeColor: '#8B5CF6',
-        strokeOpacity: 0.8,
-        strokeWeight: 2,
-        editable: true,
-        draggable: true
-      }
-    })
+      // Initialize drawing manager with retry logic
+      initializeDrawingManager(mapInstance)
 
-    drawingManager.setMap(mapInstance)
-    drawingManagerRef.current = drawingManager
+      // Load initial data
+      loadAreas()
+      
+      // Fetch clubs
+      fetch('/api/clubs?limit=1000')
+        .then(res => res.json())
+        .then(data => setClubs(data.clubs || []))
+        .catch(console.error)
 
-    // Listen for polygon completion
-    window.google.maps.event.addListener(drawingManager, 'polygoncomplete', (polygon) => {
-      const newArea = createArea(polygon)
-      selectArea(newArea.id)
-      setDrawingMode(false)
-      drawingManager.setDrawingMode(null)
-    })
-
-    // Load initial data
-    loadAreas()
-    
-    // Fetch clubs
-    fetch('/api/clubs?limit=1000')
-      .then(res => res.json())
-      .then(data => setClubs(data.clubs || []))
-      .catch(console.error)
-
-    setLoading(false)
+    } catch (error) {
+      console.error('Error initializing map:', error)
+      setError('Failed to initialize map. Please refresh the page.')
+      setLoading(false)
+    }
   }, [googleMapsLoaded])
 
   // Update map when areas or clubs change
@@ -390,7 +434,7 @@ export default function AreasMapEditor() {
     }
   }, [areas, clubs, showClubs])
 
-  // Load Google Maps
+  // Load Google Maps with proper library loading
   useEffect(() => {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
     if (!apiKey) {
@@ -399,20 +443,49 @@ export default function AreasMapEditor() {
       return
     }
 
+    // Check if already loaded
     if (window.google && window.google.maps) {
       setGoogleMapsLoaded(true)
       return
     }
 
+    // Prevent multiple script loading
+    if (document.querySelector('script[src*="maps.googleapis.com"]')) {
+      // Script already exists, wait for it to load
+      const checkLoaded = () => {
+        if (window.google && window.google.maps) {
+          setGoogleMapsLoaded(true)
+        } else {
+          setTimeout(checkLoaded, 100)
+        }
+      }
+      checkLoaded()
+      return
+    }
+
+    // Create global callback
     window.initMapEditor = () => {
+      console.log('Google Maps loaded successfully')
       setGoogleMapsLoaded(true)
     }
 
+    // Load Google Maps script with drawing library
     const script = document.createElement('script')
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=drawing,places&callback=initMapEditor`
     script.async = true
     script.defer = true
+    script.onerror = () => {
+      setError('Failed to load Google Maps. Please check your internet connection and try again.')
+      setLoading(false)
+    }
     document.head.appendChild(script)
+
+    return () => {
+      // Cleanup
+      if (window.initMapEditor) {
+        delete window.initMapEditor
+      }
+    }
   }, [])
 
   const selectedAreaData = areas.find(a => a.id === selectedArea)
@@ -420,7 +493,19 @@ export default function AreasMapEditor() {
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+        <div className="flex items-center mb-2">
+          <svg className="w-5 h-5 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <h3 className="text-red-800 font-medium">Error Loading Map</h3>
+        </div>
         <p className="text-red-600">{error}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+        >
+          Refresh Page
+        </button>
       </div>
     )
   }
@@ -471,17 +556,18 @@ export default function AreasMapEditor() {
             </button>
             <button
               onClick={toggleDrawingMode}
+              disabled={loading}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 drawingMode 
                   ? 'bg-purple-600 text-white' 
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               {drawingMode ? '✏️ Drawing...' : '✏️ Draw Area'}
             </button>
             <button
               onClick={toggleEditMode}
-              disabled={!selectedArea}
+              disabled={!selectedArea || loading}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 editMode 
                   ? 'bg-green-600 text-white' 
@@ -492,14 +578,14 @@ export default function AreasMapEditor() {
             </button>
             <button
               onClick={deleteSelectedArea}
-              disabled={!selectedArea}
+              disabled={!selectedArea || loading}
               className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               🗑️ Delete
             </button>
             <button
               onClick={saveAreas}
-              disabled={saving}
+              disabled={saving || loading}
               className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50"
             >
               {saving ? 'Saving...' : '💾 Save All'}
@@ -531,7 +617,10 @@ export default function AreasMapEditor() {
             />
             {loading && (
               <div className="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+                  <p className="mt-3 text-gray-600">Loading Google Maps...</p>
+                </div>
               </div>
             )}
           </div>
@@ -597,7 +686,7 @@ export default function AreasMapEditor() {
                     Statistics
                   </label>
                   <div className="bg-gray-50 rounded-lg p-3 space-y-2 text-sm">
-                    <div>Clubs in area: <strong>{areaStats[selectedArea.id] || 0}</strong></div>
+                    <div>Clubs in area: <strong>{areaStats[selectedArea] || 0}</strong></div>
                     <div>Vertices: <strong>{selectedAreaData.bounds.length}</strong></div>
                     <div>Center: <strong>{selectedAreaData.center.lat.toFixed(4)}, {selectedAreaData.center.lng.toFixed(4)}</strong></div>
                   </div>
