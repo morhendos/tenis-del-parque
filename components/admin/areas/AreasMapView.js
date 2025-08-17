@@ -13,53 +13,17 @@ import {
   DRAWING_OPTIONS, 
   POLYGON_STYLES, 
   MARKER_CONFIG,
-  NOTIFICATION_DURATION,
   API_ENDPOINTS,
   ERROR_MESSAGES,
   SUCCESS_MESSAGES 
 } from './constants/mapConfig'
 
-// Simple inline notification component
-function Notification({ message, type, onClose }) {
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onClose()
-    }, NOTIFICATION_DURATION)
-    
-    return () => clearTimeout(timer)
-  }, [onClose])
-  
-  const styles = {
-    success: 'bg-green-50 border-green-500 text-green-900',
-    error: 'bg-red-50 border-red-500 text-red-900',
-    warning: 'bg-amber-50 border-amber-500 text-amber-900',
-    info: 'bg-blue-50 border-blue-500 text-blue-900'
-  }
-  
-  const icons = {
-    success: '✅',
-    error: '❌',
-    warning: '⚠️',
-    info: 'ℹ️'
-  }
-  
-  return (
-    <div className={`fixed top-4 right-4 z-50 max-w-md p-4 border-l-4 rounded-lg shadow-lg ${styles[type]} animate-slide-in`}>
-      <div className="flex items-start">
-        <span className="text-xl mr-3">{icons[type]}</span>
-        <div className="flex-1">
-          <p className="text-sm font-medium">{message}</p>
-        </div>
-        <button
-          onClick={onClose}
-          className="ml-4 text-gray-500 hover:text-gray-700"
-        >
-          ×
-        </button>
-      </div>
-    </div>
-  )
-}
+// Import UI components
+import AreaNotification from './components/AreaNotification'
+import AreaStats from './components/AreaStats'
+import LeagueFilterButtons from './components/LeagueFilterButtons'
+import AreaEditControls from './components/AreaEditControls'
+import AreaLegend from './components/AreaLegend'
 
 export default function AreasMapView() {
   const mapRef = useRef(null)
@@ -711,9 +675,9 @@ export default function AreasMapView() {
 
   return (
     <div className="space-y-6">
-      {/* Inline notification */}
+      {/* Notification */}
       {notification && (
-        <Notification
+        <AreaNotification
           message={notification.message}
           type={notification.type}
           onClose={() => setNotification(null)}
@@ -759,132 +723,32 @@ export default function AreasMapView() {
         </div>
 
         {/* Edit Mode Controls */}
-        {editMode && (
-          <div className="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <h3 className="font-medium text-purple-900">✏️ Edit Mode Active</h3>
-                <p className="text-sm text-purple-700">
-                  Click areas to select • Drag points to edit boundaries • Draw new custom areas
-                </p>
-              </div>
-              <div className="flex gap-2">
-                {drawingManagerRef.current && (
-                  <button
-                    onClick={toggleDrawingMode}
-                    disabled={loading}
-                    className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                      drawingMode 
-                        ? 'bg-purple-600 text-white' 
-                        : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-                    } disabled:opacity-50`}
-                  >
-                    {drawingMode ? '✏️ Drawing...' : '➕ Draw New Area'}
-                  </button>
-                )}
-                {selectedArea?.startsWith('custom_') && (
-                  <button
-                    onClick={deleteCustomArea}
-                    className="px-3 py-1 bg-red-100 text-red-700 rounded text-sm font-medium hover:bg-red-200"
-                  >
-                    🗑️ Delete Area
-                  </button>
-                )}
-                {Object.keys(modifiedLeagues).length > 0 && (
-                  <button
-                    onClick={resetLeagueModifications}
-                    className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded text-sm font-medium hover:bg-yellow-200"
-                  >
-                    🔄 Reset Modifications
-                  </button>
-                )}
-              </div>
-            </div>
-            
-            {/* Save Controls */}
-            <div className="flex items-center justify-between pt-3 border-t border-purple-200">
-              <div className="flex items-center space-x-4">
-                {hasUnsavedChanges && (
-                  <span className="text-sm text-amber-600 font-medium">
-                    ⚠️ You have unsaved changes
-                  </span>
-                )}
-                <span className="text-sm text-purple-600">
-                  Modified leagues: {Object.keys(modifiedLeagues).length} • 
-                  Custom areas: {customAreas.length}
-                </span>
-              </div>
-              <button
-                onClick={saveAllChanges}
-                disabled={saving || (!hasUnsavedChanges && customAreas.length === 0 && Object.keys(modifiedLeagues).length === 0)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  hasUnsavedChanges || customAreas.length > 0 || Object.keys(modifiedLeagues).length > 0
-                    ? 'bg-green-600 text-white hover:bg-green-700'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                } disabled:opacity-50`}
-              >
-                {saving ? '💾 Saving...' : '💾 Save All Changes'}
-              </button>
-            </div>
-          </div>
-        )}
+        <AreaEditControls
+          editMode={editMode}
+          drawingMode={drawingMode}
+          hasDrawingManager={!!drawingManagerRef.current}
+          loading={loading}
+          selectedArea={selectedArea}
+          modifiedLeagues={modifiedLeagues}
+          customAreas={customAreas}
+          hasUnsavedChanges={hasUnsavedChanges}
+          saving={saving}
+          onToggleDrawing={toggleDrawingMode}
+          onDeleteArea={deleteCustomArea}
+          onResetModifications={resetLeagueModifications}
+          onSaveChanges={saveAllChanges}
+        />
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-          <div className="bg-gray-50 rounded-lg p-4 text-center">
-            <div className="text-3xl font-bold text-gray-600">{stats.totalClubs}</div>
-            <div className="text-sm text-gray-600">Total Clubs</div>
-          </div>
-          {Object.entries(LEAGUE_POLYGONS).map(([league, data]) => (
-            <div key={league} className="bg-gray-50 rounded-lg p-4 text-center relative">
-              <div className="text-3xl font-bold" style={{ color: data.color }}>
-                {stats.byLeague[league]}
-              </div>
-              <div className="text-sm text-gray-600">
-                {data.name}
-                {modifiedLeagues[league] && (
-                  <span className="block text-xs text-amber-600 font-medium mt-1">Modified</span>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+        {/* Area Statistics */}
+        <AreaStats stats={stats} modifiedLeagues={modifiedLeagues} />
 
         {/* League Filter Buttons */}
-        <div className="flex flex-wrap gap-3">
-          <button
-            onClick={() => filterByLeague('all')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              selectedLeague === 'all'
-                ? 'bg-gray-800 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            All Leagues ({stats.totalClubs} clubs)
-          </button>
-          
-          {Object.entries(LEAGUE_POLYGONS).map(([league, data]) => (
-            <button
-              key={league}
-              onClick={() => filterByLeague(league)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                selectedLeague === league
-                  ? 'text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-              style={{
-                backgroundColor: selectedLeague === league ? data.color : undefined
-              }}
-            >
-              <span style={{ color: selectedLeague !== league ? data.color : undefined }}>
-                ●
-              </span>
-              {' '}
-              {data.name} ({stats.byLeague[league]} clubs)
-              {modifiedLeagues[league] && ' ⚠️'}
-            </button>
-          ))}
-        </div>
+        <LeagueFilterButtons
+          selectedLeague={selectedLeague}
+          onFilterChange={filterByLeague}
+          stats={stats}
+          modifiedLeagues={modifiedLeagues}
+        />
       </div>
 
       {/* Map Container */}
@@ -906,78 +770,11 @@ export default function AreasMapView() {
       </div>
 
       {/* Legend */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          How League Assignment Works
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <h4 className="font-medium text-gray-900 mb-2">📍 Automatic Assignment</h4>
-            <p className="text-sm text-gray-600 mb-3">
-              Clubs are automatically assigned to leagues based on their GPS coordinates. 
-              When a club falls within a league's boundary, it belongs to that league.
-            </p>
-            <div className="space-y-2">
-              {Object.entries(LEAGUE_POLYGONS).map(([league, data]) => (
-                <div key={league} className="flex items-center">
-                  <div 
-                    className="w-4 h-4 rounded mr-2"
-                    style={{ backgroundColor: data.color, opacity: 0.3 }}
-                  />
-                  <span className="text-sm">
-                    <strong>{data.name}:</strong> {stats.byLeague[league]} clubs
-                    {modifiedLeagues[league] && <span className="text-amber-600 ml-1">(Modified)</span>}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          <div>
-            <h4 className="font-medium text-gray-900 mb-2">
-              {editMode ? '✏️ Editing Areas' : '🗺️ Geographic Boundaries'}
-            </h4>
-            <p className="text-sm text-gray-600 mb-3">
-              {editMode 
-                ? 'Click and drag points to modify area boundaries. Draw new custom areas as needed. All changes are tracked and can be saved.'
-                : 'The colored areas on the map show the geographic boundaries for each league. These boundaries automatically determine league membership.'
-              }
-            </p>
-            <div className={`border rounded p-3 text-sm ${
-              editMode ? 'bg-purple-50 border-purple-200' : 'bg-blue-50 border-blue-200'
-            }`}>
-              <strong className={editMode ? 'text-purple-900' : 'text-blue-900'}>
-                {editMode ? 'Edit Mode Tips:' : 'Import Tip:'}
-              </strong>
-              <p className={`mt-1 ${editMode ? 'text-purple-700' : 'text-blue-700'}`}>
-                {editMode 
-                  ? '• Click areas to select them • Drag corner points to reshape boundaries • Use "Draw New Area" to create custom regions'
-                  : 'When importing clubs from Google Maps, they\'ll be automatically assigned to the correct league based on their location!'
-                }
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Add CSS for slide-in animation if not already present */}
-      <style jsx>{`
-        @keyframes slide-in {
-          from {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-        
-        .animate-slide-in {
-          animation: slide-in 0.3s ease-out;
-        }
-      `}</style>
+      <AreaLegend 
+        editMode={editMode} 
+        stats={stats} 
+        modifiedLeagues={modifiedLeagues} 
+      />
     </div>
   )
 }
