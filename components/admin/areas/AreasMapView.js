@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import React from 'react'
 
 // Import custom hooks
@@ -54,17 +54,20 @@ export default function AreasMapView() {
     resetLeagueModifications
   } = useAreaPersistence()
   
-  // Club markers management - pass the actual map instance
+  // Get the actual map instance (might be null initially)
+  const mapInstance = mapInstanceRef?.current || null
+  
+  // Club markers management - will handle null map instance
   const {
     clubs,
-    loading: clubsLoading,
+    loading: clubsLoading = false,
     fetchClubs,
     createMarkers,
     filterByLeague,
     updateMarkerStyles
-  } = useClubMarkers(mapInstanceRef.current)
+  } = useClubMarkers(mapInstance)
   
-  // Polygon drawing management - pass the actual map instance
+  // Polygon drawing management - will handle null map instance
   const {
     drawingManager,
     initializeDrawing,
@@ -72,7 +75,7 @@ export default function AreasMapView() {
     drawBoundaries,
     clearPolygons,
     setPolygonEditability
-  } = usePolygonDrawing(mapInstanceRef.current)
+  } = usePolygonDrawing(mapInstance)
   
   // Area management orchestration
   const {
@@ -83,25 +86,32 @@ export default function AreasMapView() {
   } = useAreaManagement()
 
   // Initialize map when component mounts and Google Maps is loaded
-  React.useEffect(() => {
+  useEffect(() => {
     if (googleMapsLoaded && mapRef.current && !mapInstanceRef.current) {
-      initializeMap(mapRef.current)
+      const instance = initializeMap(mapRef.current)
+      if (instance) {
+        console.log('Map instance created successfully')
+      }
     }
-  }, [googleMapsLoaded, initializeMap])
+  }, [googleMapsLoaded, initializeMap, mapRef, mapInstanceRef])
 
   // Initialize everything when map instance is ready
-  React.useEffect(() => {
-    if (!mapInstanceRef.current) return
+  useEffect(() => {
+    if (!mapInstance) return
     
     const initialize = async () => {
+      console.log('Initializing map components...')
+      
       // Load saved areas
       await loadCustomAreas()
       
       // Fetch clubs
-      await fetchClubs()
+      if (fetchClubs) {
+        await fetchClubs()
+      }
       
       // Initialize drawing manager
-      if (window.google?.maps?.drawing) {
+      if (window.google?.maps?.drawing && initializeDrawing) {
         initializeDrawing({
           onPolygonComplete: (polygon) => {
             const newArea = handlePolygonComplete(
@@ -117,21 +127,23 @@ export default function AreasMapView() {
       }
       
       // Draw initial boundaries
-      drawBoundaries({
-        customAreas,
-        modifiedLeagues,
-        boundaryType,
-        editMode,
-        onAreaClick: (areaId) => setSelectedArea(areaId)
-      })
+      if (drawBoundaries) {
+        drawBoundaries({
+          customAreas,
+          modifiedLeagues,
+          boundaryType,
+          editMode,
+          onAreaClick: (areaId) => setSelectedArea(areaId)
+        })
+      }
     }
     
     initialize()
-  }, [mapInstanceRef.current])
+  }, [mapInstance]) // Only depend on mapInstance changing
   
   // Update map when state changes
-  React.useEffect(() => {
-    if (!mapInstanceRef.current) return
+  useEffect(() => {
+    if (!mapInstance || !drawBoundaries) return
     
     // Redraw boundaries
     drawBoundaries({
@@ -143,8 +155,10 @@ export default function AreasMapView() {
     })
     
     // Update markers
-    updateMarkerStyles(editMode)
-  }, [customAreas, modifiedLeagues, boundaryType, editMode])
+    if (updateMarkerStyles) {
+      updateMarkerStyles(editMode)
+    }
+  }, [customAreas, modifiedLeagues, boundaryType, editMode, mapInstance])
   
   // Memoized toggle edit mode
   const toggleEditMode = useCallback(() => {
@@ -152,15 +166,21 @@ export default function AreasMapView() {
     setEditMode(newEditMode)
     
     // Update polygon editability
-    setPolygonEditability(newEditMode)
+    if (setPolygonEditability) {
+      setPolygonEditability(newEditMode)
+    }
     
     // Update marker styles
-    updateMarkerStyles(newEditMode)
+    if (updateMarkerStyles) {
+      updateMarkerStyles(newEditMode)
+    }
     
     if (!newEditMode) {
       setSelectedArea(null)
       setDrawingMode(false)
-      toggleDrawing(false)
+      if (toggleDrawing) {
+        toggleDrawing(false)
+      }
     }
     
     showNotification(
@@ -177,9 +197,13 @@ export default function AreasMapView() {
   
   // Memoized toggle drawing mode
   const handleToggleDrawing = useCallback(() => {
+    if (!toggleDrawing) {
+      showNotification('Drawing manager not initialized', 'warning')
+      return
+    }
     setDrawingMode(!drawingMode)
     toggleDrawing(!drawingMode)
-  }, [drawingMode, toggleDrawing])
+  }, [drawingMode, toggleDrawing, showNotification])
   
   // Memoized toggle boundary type
   const toggleBoundaryType = useCallback(() => {
@@ -192,7 +216,9 @@ export default function AreasMapView() {
     
     if (selectedArea.startsWith('custom_')) {
       deleteArea(selectedArea)
-      clearPolygons([selectedArea])
+      if (clearPolygons) {
+        clearPolygons([selectedArea])
+      }
     }
     
     setSelectedArea(null)
@@ -210,7 +236,7 @@ export default function AreasMapView() {
   // Memoized handle reset modifications
   const handleResetModifications = useCallback(() => {
     resetLeagueModifications()
-    if (mapInstanceRef.current) {
+    if (mapInstance && drawBoundaries) {
       drawBoundaries({
         customAreas,
         modifiedLeagues: {},
@@ -226,7 +252,8 @@ export default function AreasMapView() {
     customAreas,
     boundaryType,
     editMode,
-    showNotification
+    showNotification,
+    mapInstance
   ])
   
   // Memoized close notification
@@ -236,7 +263,7 @@ export default function AreasMapView() {
   
   // Memoized statistics calculation
   const stats = useMemo(() => 
-    calculateAreaStats(clubs, modifiedLeagues),
+    calculateAreaStats(clubs || [], modifiedLeagues || {}),
     [clubs, modifiedLeagues]
   )
   
@@ -320,10 +347,10 @@ export default function AreasMapView() {
           hasDrawingManager={!!drawingManager}
           loading={loading}
           selectedArea={selectedArea}
-          modifiedLeagues={modifiedLeagues}
-          customAreas={customAreas}
-          hasUnsavedChanges={hasUnsavedChanges}
-          saving={saving}
+          modifiedLeagues={modifiedLeagues || {}}
+          customAreas={customAreas || []}
+          hasUnsavedChanges={hasUnsavedChanges || false}
+          saving={saving || false}
           onToggleDrawing={handleToggleDrawing}
           onDeleteArea={handleDeleteArea}
           onResetModifications={handleResetModifications}
@@ -331,14 +358,14 @@ export default function AreasMapView() {
         />
 
         {/* Area Statistics */}
-        <AreaStats stats={stats} modifiedLeagues={modifiedLeagues} />
+        <AreaStats stats={stats} modifiedLeagues={modifiedLeagues || {}} />
 
         {/* League Filter Buttons */}
         <LeagueFilterButtons
           selectedLeague={selectedLeague}
-          onFilterChange={filterByLeague}
+          onFilterChange={filterByLeague || (() => {})}
           stats={stats}
-          modifiedLeagues={modifiedLeagues}
+          modifiedLeagues={modifiedLeagues || {}}
         />
       </div>
 
@@ -353,7 +380,7 @@ export default function AreasMapView() {
       <AreaLegend 
         editMode={editMode} 
         stats={stats} 
-        modifiedLeagues={modifiedLeagues} 
+        modifiedLeagues={modifiedLeagues || {}} 
       />
     </div>
   )
