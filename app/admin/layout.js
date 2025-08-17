@@ -72,17 +72,8 @@ export default function AdminLayout({ children }) {
       )
     },
     { 
-      name: 'Areas Map', 
+      name: 'Areas Management', 
       href: '/admin/areas/map', 
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-        </svg>
-      )
-    },
-    { 
-      name: 'Areas Editor', 
-      href: '/admin/areas/editor', 
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -147,14 +138,9 @@ export default function AdminLayout({ children }) {
   }
 
   const getBreadcrumbs = () => {
-    // Handle areas editor page
-    if (pathname === '/admin/areas/editor') {
-      return [{ name: 'Areas Editor', href: null }]
-    }
-    
-    // Handle areas map page
-    if (pathname === '/admin/areas/map') {
-      return [{ name: 'Areas Map', href: null }]
+    // Handle areas pages (both map and editor paths lead to same component now)
+    if (pathname === '/admin/areas/map' || pathname === '/admin/areas/editor') {
+      return [{ name: 'Areas Management', href: null }]
     }
     
     // Handle docs pages
@@ -218,8 +204,7 @@ export default function AdminLayout({ children }) {
   }
 
   const getPageTitle = () => {
-    if (pathname.includes('/admin/areas/editor')) return 'Areas Editor'
-    if (pathname.includes('/admin/areas/map')) return 'Areas Map'
+    if (pathname.includes('/admin/areas/')) return 'Areas Management'
     if (pathname.includes('/admin/users')) return 'User Management'
     if (pathname.includes('/admin/docs')) return 'Documentation'
     if (pathname.includes('/admin/clubs')) return 'Club Management'
