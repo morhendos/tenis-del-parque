@@ -1,99 +1,88 @@
 'use client'
 
 import React from 'react'
+import PropTypes from 'prop-types'
 import { LEAGUE_POLYGONS } from '@/lib/utils/geographicBoundaries'
 
 /**
  * League filter buttons component
  * @param {Object} props - Component props
- * @param {string} props.selectedLeague - Currently selected league ('all' or league key)
+ * @param {string} props.selectedLeague - Currently selected league filter
  * @param {Function} props.onFilterChange - Callback when filter changes
- * @param {Object} props.stats - Statistics object with totalClubs and byLeague
- * @param {Object} props.modifiedLeagues - Object tracking which leagues have been modified
+ * @param {Object} props.stats - Statistics object with league counts
+ * @param {Object} props.modifiedLeagues - Object tracking modified leagues
  */
-export default function LeagueFilterButtons({ 
+const LeagueFilterButtons = ({ 
   selectedLeague = 'all', 
   onFilterChange, 
   stats, 
   modifiedLeagues = {} 
-}) {
+}) => {
   return (
-    <div className="flex flex-wrap gap-3">
-      {/* All leagues button */}
+    <div className="flex flex-wrap gap-2">
       <button
         onClick={() => onFilterChange('all')}
         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all transform hover:scale-105 ${
           selectedLeague === 'all'
-            ? 'bg-gray-800 text-white shadow-lg'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            ? 'bg-gray-800 text-white'
+            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
         }`}
         aria-pressed={selectedLeague === 'all'}
+        title="Show all clubs"
       >
-        All Leagues ({stats.totalClubs} clubs)
+        All ({stats.totalClubs})
       </button>
       
-      {/* Individual league buttons */}
-      {Object.entries(LEAGUE_POLYGONS).map(([league, data]) => {
-        const isSelected = selectedLeague === league
-        const isModified = !!modifiedLeagues[league]
-        const clubCount = stats.byLeague[league] || 0
-        
-        return (
-          <button
-            key={league}
-            onClick={() => onFilterChange(league)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all transform hover:scale-105 ${
-              isSelected
-                ? 'text-white shadow-lg'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-            style={{
-              backgroundColor: isSelected ? data.color : undefined,
-              borderColor: isSelected ? data.color : undefined
-            }}
-            aria-pressed={isSelected}
-            title={`Filter by ${data.name} league${isModified ? ' (Modified)' : ''}`}
-          >
-            <span 
-              className="inline-block mr-2"
-              style={{ color: !isSelected ? data.color : undefined }}
-            >
-              ●
-            </span>
-            {data.name} ({clubCount} clubs)
-            {isModified && (
-              <span className="ml-1" title="This league area has been modified">
-                ⚠️
-              </span>
-            )}
-          </button>
-        )
-      })}
+      {Object.entries(LEAGUE_POLYGONS).map(([league, data]) => (
+        <button
+          key={league}
+          onClick={() => onFilterChange(league)}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all transform hover:scale-105 ${
+            selectedLeague === league
+              ? 'text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+          style={{
+            backgroundColor: selectedLeague === league ? data.color : undefined
+          }}
+          aria-pressed={selectedLeague === league}
+          title={`Show ${data.name} clubs`}
+        >
+          {data.name} ({stats.byLeague[league] || 0})
+          {modifiedLeagues[league] && (
+            <span className="ml-1" title="Modified area">📝</span>
+          )}
+        </button>
+      ))}
       
-      {/* Unassigned button (if any unassigned clubs) */}
       {stats.unassigned > 0 && (
         <button
           onClick={() => onFilterChange('unassigned')}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-all transform hover:scale-105 ${
             selectedLeague === 'unassigned'
-              ? 'bg-gray-600 text-white shadow-lg'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              ? 'bg-gray-600 text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
           }`}
           aria-pressed={selectedLeague === 'unassigned'}
+          title="Show unassigned clubs"
         >
-          <span className="inline-block mr-2 text-gray-400">●</span>
-          Unassigned ({stats.unassigned} clubs)
+          Unassigned ({stats.unassigned})
         </button>
       )}
     </div>
   )
 }
 
-// Add React.memo for performance optimization
-export const MemoizedLeagueFilterButtons = React.memo(LeagueFilterButtons, (prevProps, nextProps) => {
-  return (
-    prevProps.selectedLeague === nextProps.selectedLeague &&
-    JSON.stringify(prevProps.stats) === JSON.stringify(nextProps.stats) &&
-    JSON.stringify(prevProps.modifiedLeagues) === JSON.stringify(nextProps.modifiedLeagues)
-  )
-})
+LeagueFilterButtons.propTypes = {
+  selectedLeague: PropTypes.string,
+  onFilterChange: PropTypes.func.isRequired,
+  stats: PropTypes.shape({
+    totalClubs: PropTypes.number,
+    byLeague: PropTypes.object,
+    unassigned: PropTypes.number
+  }).isRequired,
+  modifiedLeagues: PropTypes.object
+}
+
+// Export memoized version for performance
+export default React.memo(LeagueFilterButtons)

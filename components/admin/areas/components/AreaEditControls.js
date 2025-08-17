@@ -1,154 +1,138 @@
 'use client'
 
 import React from 'react'
+import PropTypes from 'prop-types'
 
 /**
  * Edit mode controls component
  * @param {Object} props - Component props
- * @param {boolean} props.editMode - Whether edit mode is active
- * @param {boolean} props.drawingMode - Whether drawing mode is active
- * @param {boolean} props.hasDrawingManager - Whether drawing manager is available
- * @param {boolean} props.loading - Loading state
- * @param {string} props.selectedArea - Currently selected area ID
- * @param {Object} props.modifiedLeagues - Object tracking modified leagues
- * @param {Array} props.customAreas - Array of custom areas
- * @param {boolean} props.hasUnsavedChanges - Whether there are unsaved changes
- * @param {boolean} props.saving - Whether currently saving
- * @param {Function} props.onToggleDrawing - Callback for toggling drawing mode
- * @param {Function} props.onDeleteArea - Callback for deleting selected area
- * @param {Function} props.onResetModifications - Callback for resetting modifications
- * @param {Function} props.onSaveChanges - Callback for saving all changes
  */
-export default function AreaEditControls({
+const AreaEditControls = ({
   editMode,
   drawingMode,
   hasDrawingManager,
   loading,
   selectedArea,
-  modifiedLeagues = {},
-  customAreas = [],
+  modifiedLeagues,
+  customAreas,
   hasUnsavedChanges,
   saving,
   onToggleDrawing,
   onDeleteArea,
   onResetModifications,
   onSaveChanges
-}) {
+}) => {
   if (!editMode) return null
 
-  const canSave = hasUnsavedChanges || customAreas.length > 0 || Object.keys(modifiedLeagues).length > 0
-  const modifiedCount = Object.keys(modifiedLeagues).length
-  const customCount = customAreas.length
+  const hasModifications = Object.keys(modifiedLeagues).length > 0
+  const hasCustomAreas = customAreas.length > 0
 
   return (
-    <div className="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
-      {/* Header and controls */}
-      <div className="flex items-center justify-between mb-3">
-        <div>
-          <h3 className="font-medium text-purple-900 flex items-center gap-2">
-            ✏️ Edit Mode Active
-            {hasUnsavedChanges && (
-              <span className="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded-full">
-                Unsaved
-              </span>
-            )}
-          </h3>
-          <p className="text-sm text-purple-700 mt-1">
-            Click areas to select • Drag points to edit boundaries • Draw new custom areas
-          </p>
-        </div>
-        
-        {/* Action buttons */}
-        <div className="flex gap-2">
-          {hasDrawingManager && (
-            <button
-              onClick={onToggleDrawing}
-              disabled={loading}
-              className={`px-3 py-1 rounded text-sm font-medium transition-all transform hover:scale-105 ${
-                drawingMode 
-                  ? 'bg-purple-600 text-white shadow-md' 
-                  : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-              } disabled:opacity-50 disabled:transform-none`}
-              title={drawingMode ? 'Stop drawing' : 'Start drawing new area'}
-            >
-              {drawingMode ? '✏️ Drawing...' : '➕ Draw New Area'}
-            </button>
-          )}
-          
-          {selectedArea?.startsWith('custom_') && (
+    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center gap-3">
+          {/* Draw Area Button */}
+          <button
+            onClick={onToggleDrawing}
+            disabled={!hasDrawingManager || loading}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              drawingMode
+                ? 'bg-purple-600 text-white'
+                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+            } ${(!hasDrawingManager || loading) ? 'opacity-50 cursor-not-allowed' : ''}`}
+            title={drawingMode ? 'Stop drawing' : 'Start drawing new area'}
+          >
+            {drawingMode ? '⏹️ Stop Drawing' : '✏️ Draw Area'}
+          </button>
+
+          {/* Delete Area Button */}
+          {selectedArea && selectedArea.startsWith('custom_') && (
             <button
               onClick={onDeleteArea}
-              className="px-3 py-1 bg-red-100 text-red-700 rounded text-sm font-medium hover:bg-red-200 transition-all transform hover:scale-105"
+              className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
               title="Delete selected custom area"
             >
               🗑️ Delete Area
             </button>
           )}
-          
-          {modifiedCount > 0 && (
+
+          {/* Reset Modifications Button */}
+          {hasModifications && (
             <button
               onClick={onResetModifications}
-              className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded text-sm font-medium hover:bg-yellow-200 transition-all transform hover:scale-105"
-              title="Reset all league modifications to original boundaries"
+              className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700 transition-colors"
+              title="Reset all league boundary modifications"
             >
-              🔄 Reset Modifications
+              ↩️ Reset Modifications
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-3">
+          {/* Status Indicators */}
+          {(hasModifications || hasCustomAreas) && (
+            <div className="flex items-center gap-2 text-sm">
+              {hasModifications && (
+                <span className="bg-amber-200 text-amber-800 px-2 py-1 rounded-full font-medium">
+                  {Object.keys(modifiedLeagues).length} Modified
+                </span>
+              )}
+              {hasCustomAreas && (
+                <span className="bg-purple-200 text-purple-800 px-2 py-1 rounded-full font-medium">
+                  {customAreas.length} Custom
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Save Button */}
+          {hasUnsavedChanges && (
+            <button
+              onClick={onSaveChanges}
+              disabled={saving}
+              className={`px-6 py-2 bg-green-600 text-white rounded-lg text-sm font-medium transition-all ${
+                saving 
+                  ? 'opacity-50 cursor-not-allowed' 
+                  : 'hover:bg-green-700 animate-pulse'
+              }`}
+              title="Save all changes to database"
+            >
+              {saving ? '💾 Saving...' : '💾 Save All Changes'}
             </button>
           )}
         </div>
       </div>
-      
-      {/* Save controls section */}
-      <div className="flex items-center justify-between pt-3 border-t border-purple-200">
-        <div className="flex items-center space-x-4">
-          {/* Status indicators */}
-          <div className="flex gap-3 text-sm">
-            {modifiedCount > 0 && (
-              <span className="text-purple-600">
-                <span className="font-medium">{modifiedCount}</span> modified league{modifiedCount !== 1 ? 's' : ''}
-              </span>
-            )}
-            {customCount > 0 && (
-              <span className="text-purple-600">
-                <span className="font-medium">{customCount}</span> custom area{customCount !== 1 ? 's' : ''}
-              </span>
-            )}
-            {!modifiedCount && !customCount && (
-              <span className="text-gray-500">No changes to save</span>
-            )}
-          </div>
-        </div>
-        
-        {/* Save button */}
-        <button
-          onClick={onSaveChanges}
-          disabled={saving || !canSave}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all transform ${
-            canSave
-              ? 'bg-green-600 text-white hover:bg-green-700 hover:scale-105 shadow-md'
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-          } disabled:opacity-50 disabled:transform-none`}
-          title={canSave ? 'Save all changes to database' : 'No changes to save'}
-        >
-          {saving ? (
-            <>
-              <span className="inline-block animate-spin mr-2">⏳</span>
-              Saving...
-            </>
-          ) : (
-            <>💾 Save All Changes</>
-          )}
-        </button>
-      </div>
-      
-      {/* Tips section */}
+
+      {/* Drawing Mode Tips */}
       {drawingMode && (
-        <div className="mt-3 p-2 bg-purple-100 rounded text-xs text-purple-700">
-          💡 <strong>Tip:</strong> Click on the map to add points. Double-click to complete the polygon.
+        <div className="mt-3 p-3 bg-purple-100 rounded-lg text-sm text-purple-800">
+          <p className="font-medium mb-1">🎨 Drawing Mode Active</p>
+          <ul className="space-y-1 text-xs">
+            <li>• Click on the map to add points</li>
+            <li>• Click the first point to close the polygon</li>
+            <li>• Press ESC to cancel drawing</li>
+          </ul>
         </div>
       )}
     </div>
   )
 }
 
-// Add React.memo for performance optimization
-export const MemoizedAreaEditControls = React.memo(AreaEditControls)
+AreaEditControls.propTypes = {
+  editMode: PropTypes.bool.isRequired,
+  drawingMode: PropTypes.bool.isRequired,
+  hasDrawingManager: PropTypes.bool.isRequired,
+  loading: PropTypes.bool.isRequired,
+  selectedArea: PropTypes.string,
+  modifiedLeagues: PropTypes.object.isRequired,
+  customAreas: PropTypes.array.isRequired,
+  hasUnsavedChanges: PropTypes.bool.isRequired,
+  saving: PropTypes.bool.isRequired,
+  onToggleDrawing: PropTypes.func.isRequired,
+  onDeleteArea: PropTypes.func.isRequired,
+  onResetModifications: PropTypes.func.isRequired,
+  onSaveChanges: PropTypes.func.isRequired
+}
+
+// Export memoized version for performance
+export default React.memo(AreaEditControls)
