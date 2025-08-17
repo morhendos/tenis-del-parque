@@ -8,18 +8,141 @@ import {
   determineLeagueByLocation 
 } from '@/lib/utils/geographicBoundaries'
 
+// Default colors for new areas (if needed for custom areas)
+const AREA_COLORS = [
+  '#8B5CF6', '#10B981', '#F59E0B', '#EF4444', 
+  '#3B82F6', '#EC4899', '#14B8A6', '#F97316'
+]
+
 export default function AreasMapView() {
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
   const markersRef = useRef([])
   const polygonsRef = useRef([])
+  const drawingManagerRef = useRef(null)
+  
   const [loading, setLoading] = useState(true)
   const [googleMapsLoaded, setGoogleMapsLoaded] = useState(false)
   const [selectedLeague, setSelectedLeague] = useState('all')
   const [clubs, setClubs] = useState([])
   const [debugInfo, setDebugInfo] = useState('')
   const [error, setError] = useState(null)
-  const [boundaryType, setBoundaryType] = useState('polygons') // 'polygons' or 'none'
+  const [boundaryType, setBoundaryType] = useState('polygons')
+  
+  // Edit mode states
+  const [editMode, setEditMode] = useState(false)
+  const [drawingMode, setDrawingMode] = useState(false)
+  const [selectedArea, setSelectedArea] = useState(null)
+  const [customAreas, setCustomAreas] = useState([])
+  const [saving, setSaving] = useState(false)
+
+  // Load custom areas from database
+  const loadCustomAreas = async () => {
+    try {
+      const response = await fetch('/api/admin/areas')
+      if (response.ok) {
+        const data = await response.json()
+        setCustomAreas(data.areas || [])
+      }
+    } catch (error) {
+      console.error('Error loading custom areas:', error)
+    }
+  }
+
+  // Save custom areas to database
+  const saveCustomAreas = async () => {
+    setSaving(true)
+    try {
+      const response = await fetch('/api/admin/areas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ areas: customAreas })
+      })
+      
+      if (response.ok) {
+        alert('Custom areas saved successfully!')
+      } else {
+        throw new Error('Failed to save areas')
+      }
+    } catch (error) {
+      console.error('Error saving areas:', error)
+      alert('Failed to save areas. Please try again.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // Initialize drawing manager (only in edit mode)
+  const initializeDrawingManager = (mapInstance) => {
+    if (!window.google?.maps?.drawing?.DrawingManager) {
+      console.warn('Drawing library not available')
+      return
+    }
+
+    const drawingManager = new window.google.maps.drawing.DrawingManager({
+      drawingMode: null,
+      drawingControl: false,
+      polygonOptions: {
+        fillColor: '#8B5CF6',
+        fillOpacity: 0.15,
+        strokeColor: '#8B5CF6',
+        strokeOpacity: 0.8,
+        strokeWeight: 2,
+        editable: true,
+        draggable: true
+      }
+    })
+
+    drawingManager.setMap(mapInstance)
+    drawingManagerRef.current = drawingManager
+
+    // Listen for polygon completion
+    window.google.maps.event.addListener(drawingManager, 'polygoncomplete', (polygon) => {
+      createCustomArea(polygon)
+      setDrawingMode(false)
+      drawingManager.setDrawingMode(null)
+    })
+  }
+
+  // Create custom area from polygon
+  const createCustomArea = (polygon) => {
+    const path = polygon.getPath()
+    const bounds = []
+    
+    for (let i = 0; i < path.getLength(); i++) {
+      const point = path.getAt(i)
+      bounds.push({ lat: point.lat(), lng: point.lng() })
+    }
+
+    const newArea = {
+      id: `custom_${Date.now()}`,
+      name: `Custom Area ${customAreas.length + 1}`,
+      bounds: bounds,
+      color: AREA_COLORS[customAreas.length % AREA_COLORS.length],
+      isCustom: true
+    }
+
+    setCustomAreas([...customAreas, newArea])
+    
+    // Style the polygon
+    polygon.setOptions({
+      fillColor: newArea.color,
+      strokeColor: newArea.color,
+      fillOpacity: 0.15,
+      strokeOpacity: 0.8,
+      strokeWeight: 2
+    })
+  }
+
+  // Toggle drawing mode
+  const toggleDrawingMode = () => {
+    if (!drawingManagerRef.current) return
+    
+    setDrawingMode(!drawingMode)
+    drawingManagerRef.current.setDrawingMode(
+      !drawingMode ? window.google.maps.drawing.OverlayType.POLYGON : null
+    )
+  }
 
   // Create club markers
   const createClubMarkers = (mapInstance, clubsData) => {
@@ -111,6 +234,7 @@ export default function AreasMapView() {
 
     if (boundaryType === 'none') return
 
+    // Draw existing league polygons
     Object.entries(LEAGUE_POLYGONS).forEach(([league, data]) => {
       const polygon = new window.google.maps.Polygon({
         paths: data.bounds,
@@ -119,25 +243,64 @@ export default function AreasMapView() {
         strokeWeight: 2,
         fillColor: data.color,
         fillOpacity: 0.15,
-        map: mapInstance
+        map: mapInstance,
+        editable: editMode && selectedArea === league,
+        draggable: editMode && selectedArea === league
       })
 
       // Add click listener
       const infoWindow = new window.google.maps.InfoWindow()
       polygon.addListener('click', (event) => {
-        const clubsInArea = markersRef.current.filter(m => m.league === league).length
-        infoWindow.setContent(`
-          <div style="padding: 10px;">
-            <h3 style="margin: 0; color: ${data.color};">
-              🏆 ${data.name} League Area
-            </h3>
-            <p style="margin: 5px 0;">
-              ${clubsInArea} clubs in this area
-            </p>
-          </div>
-        `)
-        infoWindow.setPosition(event.latLng)
-        infoWindow.open(mapInstance)
+        if (editMode) {
+          setSelectedArea(league)
+          // Update all polygons' editability
+          polygonsRef.current.forEach((p, index) => {
+            const leagues = Object.keys(LEAGUE_POLYGONS)
+            const isSelected = leagues[index] === league
+            p.setOptions({ 
+              editable: isSelected,
+              draggable: isSelected,
+              strokeWeight: isSelected ? 4 : 2
+            })
+          })
+        } else {
+          const clubsInArea = markersRef.current.filter(m => m.league === league).length
+          infoWindow.setContent(`
+            <div style="padding: 10px;">
+              <h3 style="margin: 0; color: ${data.color};">
+                🏆 ${data.name} League Area
+              </h3>
+              <p style="margin: 5px 0;">
+                ${clubsInArea} clubs in this area
+              </p>
+            </div>
+          `)
+          infoWindow.setPosition(event.latLng)
+          infoWindow.open(mapInstance)
+        }
+      })
+
+      polygonsRef.current.push(polygon)
+    })
+
+    // Draw custom areas
+    customAreas.forEach(area => {
+      const polygon = new window.google.maps.Polygon({
+        paths: area.bounds,
+        strokeColor: area.color,
+        strokeOpacity: 0.8,
+        strokeWeight: 2,
+        fillColor: area.color,
+        fillOpacity: 0.15,
+        map: mapInstance,
+        editable: editMode && selectedArea === area.id,
+        draggable: editMode && selectedArea === area.id
+      })
+
+      polygon.addListener('click', () => {
+        if (editMode) {
+          setSelectedArea(area.id)
+        }
       })
 
       polygonsRef.current.push(polygon)
@@ -194,6 +357,11 @@ export default function AreasMapView() {
       mapInstanceRef.current = mapInstance
       setDebugInfo(prev => prev + ' | Map: Created')
       
+      // Initialize drawing manager if drawing library is available
+      if (window.google?.maps?.drawing) {
+        initializeDrawingManager(mapInstance)
+      }
+      
       // Draw league boundaries
       drawLeagueBoundaries(mapInstance)
       
@@ -202,15 +370,18 @@ export default function AreasMapView() {
         createClubMarkers(mapInstance, clubs)
       }
       
+      // Load custom areas
+      loadCustomAreas()
+      
       setLoading(false)
     } catch (err) {
       console.error('❌ Error creating map:', err)
       setError(err.message)
       setLoading(false)
     }
-  }, [googleMapsLoaded, clubs, boundaryType])
+  }, [googleMapsLoaded, clubs, boundaryType, editMode, customAreas])
 
-  // Load Google Maps script on mount
+  // Load Google Maps script on mount with BOTH libraries
   useEffect(() => {
     console.log('🗺️ AreasMapView mounting...')
     
@@ -257,9 +428,9 @@ export default function AreasMapView() {
       return () => clearInterval(checkInterval)
     }
 
-    // Create new script
-    console.log('📥 Loading Google Maps script...')
-    setDebugInfo(prev => prev + ' | Google Maps: Loading')
+    // Create new script with BOTH places AND drawing libraries
+    console.log('📥 Loading Google Maps script with drawing library...')
+    setDebugInfo(prev => prev + ' | Google Maps: Loading with drawing')
     
     // Create callback
     window.initMap = () => {
@@ -269,7 +440,8 @@ export default function AreasMapView() {
     }
     
     const script = document.createElement('script')
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initMap`
+    // FIXED: Include BOTH places AND drawing libraries
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,drawing&callback=initMap`
     script.async = true
     script.defer = true
     
@@ -290,7 +462,7 @@ export default function AreasMapView() {
       }
       drawLeagueBoundaries(mapInstanceRef.current)
     }
-  }, [clubs, boundaryType])
+  }, [clubs, boundaryType, editMode, selectedArea, customAreas])
 
   // Filter by league
   const filterByLeague = (league) => {
@@ -306,7 +478,9 @@ export default function AreasMapView() {
     polygonsRef.current.forEach((polygon, index) => {
       const leagues = Object.keys(LEAGUE_POLYGONS)
       const polygonLeague = leagues[index]
-      polygon.setVisible(league === 'all' || polygonLeague === league)
+      if (polygonLeague) {
+        polygon.setVisible(league === 'all' || polygonLeague === league)
+      }
     })
     
     setSelectedLeague(league)
@@ -368,18 +542,31 @@ export default function AreasMapView() {
 
   return (
     <div className="space-y-6">
-      {/* Header with Stats */}
+      {/* Header with Mode Toggle */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex justify-between items-start mb-6">
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              🗺️ League Areas Map
+              🗺️ League Areas {editMode ? 'Editor' : 'Map'}
             </h2>
             <p className="text-gray-600">
-              Geographic boundaries and automatic league assignment
+              {editMode 
+                ? 'Edit geographic boundaries and create custom areas'
+                : 'Geographic boundaries and automatic league assignment'
+              }
             </p>
           </div>
           <div className="flex gap-2">
+            <button
+              onClick={() => setEditMode(!editMode)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                editMode
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {editMode ? '🔒 View Mode' : '✏️ Edit Mode'}
+            </button>
             <button
               onClick={() => setBoundaryType(boundaryType === 'polygons' ? 'none' : 'polygons')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -392,6 +579,40 @@ export default function AreasMapView() {
             </button>
           </div>
         </div>
+
+        {/* Edit Mode Controls */}
+        {editMode && (
+          <div className="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-medium text-purple-900">Edit Mode Active</h3>
+              <div className="flex gap-2">
+                {drawingManagerRef.current && (
+                  <button
+                    onClick={toggleDrawingMode}
+                    disabled={loading}
+                    className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                      drawingMode 
+                        ? 'bg-purple-600 text-white' 
+                        : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                    } disabled:opacity-50`}
+                  >
+                    {drawingMode ? '✏️ Drawing...' : '✏️ Draw Custom Area'}
+                  </button>
+                )}
+                <button
+                  onClick={saveCustomAreas}
+                  disabled={saving || loading}
+                  className="px-3 py-1 bg-green-600 text-white rounded text-sm font-medium hover:bg-green-700 disabled:opacity-50"
+                >
+                  {saving ? 'Saving...' : '💾 Save Changes'}
+                </button>
+              </div>
+            </div>
+            <p className="text-sm text-purple-700">
+              • Click areas to select and edit • Draw new custom areas • Existing league boundaries are read-only
+            </p>
+          </div>
+        )}
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
@@ -498,10 +719,14 @@ export default function AreasMapView() {
               These boundaries automatically determine league membership.
             </p>
             <div className="bg-blue-50 border border-blue-200 rounded p-3 text-sm">
-              <strong className="text-blue-900">Import Tip:</strong>
+              <strong className="text-blue-900">
+                {editMode ? 'Edit Mode:' : 'Import Tip:'}
+              </strong>
               <p className="text-blue-700 mt-1">
-                When importing clubs from Google Maps, they'll be automatically assigned 
-                to the correct league based on their location!
+                {editMode 
+                  ? 'Click areas to select and edit them. Draw new custom areas as needed.'
+                  : 'When importing clubs from Google Maps, they\'ll be automatically assigned to the correct league based on their location!'
+                }
               </p>
             </div>
           </div>
