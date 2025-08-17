@@ -15,6 +15,7 @@ import AreaStats from './components/AreaStats'
 import LeagueFilterButtons from './components/LeagueFilterButtons'
 import AreaEditControls from './components/AreaEditControls'
 import AreaLegend from './components/AreaLegend'
+import AreaMapCanvas from './components/AreaMapCanvas'
 
 // Import utilities
 import { calculateAreaStats } from './utils/areaCalculations'
@@ -311,23 +312,12 @@ export default function AreasMapView() {
         />
       </div>
 
-      {/* Map Container */}
-      <div className="bg-white rounded-lg shadow overflow-hidden relative">
-        <div 
-          ref={mapRef}
-          className="w-full"
-          style={{ height: MAP_CONFIG.containerHeight }}
-        />
-        
-        {loading && (
-          <div className="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center z-10">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
-              <p className="mt-4 text-gray-600">Loading map...</p>
-            </div>
-          </div>
-        )}
-      </div>
+      {/* Map Container - Now using the extracted component */}
+      <AreaMapCanvas 
+        ref={mapRef}
+        loading={loading}
+        loadingText={editMode ? "Loading editor..." : "Loading map..."}
+      />
 
       {/* Legend */}
       <AreaLegend 
