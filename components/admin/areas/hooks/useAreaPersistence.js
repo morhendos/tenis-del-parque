@@ -3,10 +3,10 @@
  * Handles database operations for custom areas and modified leagues
  */
 import { useState, useCallback } from 'react'
-import { API_ENDPOINTS, ERROR_MESSAGES, SUCCESS_MESSAGES } from '../constants/mapConfig'
+import { API_ENDPOINTS, ERROR_MESSAGES, SUCCESS_MESSAGES, AREA_COLORS } from '../constants/mapConfig'
 import { LEAGUE_POLYGONS } from '@/lib/utils/geographicBoundaries'
-import { generateSlug, calculatePolygonCenter } from '../utils/areaCalculations'
-import { AREA_COLORS } from '../constants/mapConfig'
+import { generateSlug } from '../utils/areaCalculations'
+import { calculatePolygonCenter } from '../utils/polygonHelpers'
 
 export default function useAreaPersistence() {
   const [customAreas, setCustomAreas] = useState([])
