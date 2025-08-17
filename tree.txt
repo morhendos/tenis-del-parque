@@ -63,6 +63,8 @@ root/
 │   ├── admin
 │   │   ├── README.md
 │   │   ├── areas
+│   │   │   ├── editor
+│   │   │   │   └── page.js
 │   │   │   └── map
 │   │   │       └── page.js
 │   │   ├── cities
@@ -101,6 +103,8 @@ root/
 │   │   └── page.js
 │   ├── api
 │   │   ├── admin
+│   │   │   ├── areas
+│   │   │   │   └── route.js
 │   │   │   ├── auth
 │   │   │   │   └── check
 │   │   │   ├── cities
@@ -235,6 +239,7 @@ root/
 ├── components
 │   ├── admin
 │   │   ├── areas
+│   │   │   ├── AreasMapEditor.js
 │   │   │   └── AreasMapView.js
 │   │   ├── cities
 │   │   │   ├── CityFormModal.js
@@ -406,6 +411,7 @@ root/
 │   ├── i18n
 │   │   └── config.js
 │   ├── models
+│   │   ├── Area.js
 │   │   ├── City.js
 │   │   ├── Club.js
 │   │   ├── League.js
@@ -416,6 +422,7 @@ root/
 │   └── utils
 │       ├── apiHelpers.js
 │       ├── areaMapping.js
+│       ├── geographicBoundaries.js
 │       ├── matchResultUtils.js
 │       ├── phoneUtils.js
 │       ├── rulesIcons.js
