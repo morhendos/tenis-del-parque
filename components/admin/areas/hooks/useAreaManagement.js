@@ -3,8 +3,7 @@
  * Combines functionality from other hooks and manages overall state
  */
 import { useState, useCallback } from 'react'
-import { calculatePolygonCenter } from '../utils/areaCalculations'
-import { pathToBounds } from '../utils/polygonHelpers'
+import { pathToBounds, calculatePolygonCenter } from '../utils/polygonHelpers'
 import { generateSlug } from '../utils/areaCalculations'
 import { AREA_COLORS, SUCCESS_MESSAGES } from '../constants/mapConfig'
 
