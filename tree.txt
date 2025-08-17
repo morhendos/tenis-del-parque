@@ -244,11 +244,18 @@ root/
 │   │   │   ├── components
 │   │   │   │   ├── AreaEditControls.js
 │   │   │   │   ├── AreaLegend.js
+│   │   │   │   ├── AreaMapCanvas.js
 │   │   │   │   ├── AreaNotification.js
 │   │   │   │   ├── AreaStats.js
 │   │   │   │   └── LeagueFilterButtons.js
 │   │   │   ├── constants
 │   │   │   │   └── mapConfig.js
+│   │   │   ├── hooks
+│   │   │   │   ├── useAreaManagement.js
+│   │   │   │   ├── useAreaPersistence.js
+│   │   │   │   ├── useClubMarkers.js
+│   │   │   │   ├── useMapInitialization.js
+│   │   │   │   └── usePolygonDrawing.js
 │   │   │   └── utils
 │   │   │       ├── areaCalculations.js
 │   │   │       └── polygonHelpers.js
