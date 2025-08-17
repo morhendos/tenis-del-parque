@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { CITY_DISPLAY_NAMES } from '@/lib/utils/areaMapping'
+import Toast from '@/components/ui/Toast'
 // Import from shared utility
 import { 
   LEAGUE_POLYGONS,
@@ -13,6 +14,34 @@ const AREA_COLORS = [
   '#8B5CF6', '#10B981', '#F59E0B', '#EF4444', 
   '#3B82F6', '#EC4899', '#14B8A6', '#F97316'
 ]
+
+// Helper function to calculate polygon center
+const calculatePolygonCenter = (bounds) => {
+  if (!bounds || bounds.length === 0) {
+    return { lat: 0, lng: 0 }
+  }
+  
+  let latSum = 0
+  let lngSum = 0
+  
+  bounds.forEach(point => {
+    latSum += point.lat
+    lngSum += point.lng
+  })
+  
+  return {
+    lat: latSum / bounds.length,
+    lng: lngSum / bounds.length
+  }
+}
+
+// Helper function to generate slug from name
+const generateSlug = (name) => {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
 
 export default function AreasMapView() {
   const mapRef = useRef(null)
@@ -36,8 +65,15 @@ export default function AreasMapView() {
   const [customAreas, setCustomAreas] = useState([])
   const [modifiedLeagues, setModifiedLeagues] = useState({}) // Track modifications to existing leagues
   const [saving, setSaving] = useState(false)
-  const [saveSuccess, setSaveSuccess] = useState(false)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  
+  // Toast notifications
+  const [toast, setToast] = useState(null)
+  
+  // Show toast helper
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type })
+  }
 
   // Load custom areas from database
   const loadCustomAreas = async () => {
@@ -61,20 +97,35 @@ export default function AreasMapView() {
       }
     } catch (error) {
       console.error('Error loading custom areas:', error)
+      showToast('Failed to load saved areas', 'error')
     }
   }
 
   // Save all changes to database
   const saveAllChanges = async () => {
     setSaving(true)
-    setSaveSuccess(false)
     
     try {
-      // Collect all areas to save (custom + modified leagues)
+      // Prepare areas with all required fields
+      const preparedCustomAreas = customAreas.map(area => ({
+        ...area,
+        slug: area.slug || generateSlug(area.name),
+        center: area.center || calculatePolygonCenter(area.bounds)
+      }))
+      
+      const preparedModifiedLeagues = Object.values(modifiedLeagues).map(area => ({
+        ...area,
+        slug: area.slug || generateSlug(area.name),
+        center: area.center || calculatePolygonCenter(area.bounds)
+      }))
+      
+      // Collect all areas to save
       const allAreas = [
-        ...customAreas,
-        ...Object.values(modifiedLeagues)
+        ...preparedCustomAreas,
+        ...preparedModifiedLeagues
       ]
+      
+      console.log('Saving areas with required fields:', allAreas)
       
       const response = await fetch('/api/admin/areas', {
         method: 'POST',
@@ -82,23 +133,28 @@ export default function AreasMapView() {
         body: JSON.stringify({ areas: allAreas })
       })
       
+      const result = await response.json()
+      
       if (response.ok) {
-        setSaveSuccess(true)
         setHasUnsavedChanges(false)
-        
-        // Show success message
-        setTimeout(() => setSaveSuccess(false), 3000)
+        showToast(
+          `✅ Successfully saved ${preparedCustomAreas.length} custom areas and ${preparedModifiedLeagues.length} league modifications`,
+          'success'
+        )
         
         console.log('✅ Saved areas:', {
-          customAreas: customAreas.length,
+          customAreas: preparedCustomAreas.length,
           modifiedLeagues: Object.keys(modifiedLeagues).length
         })
       } else {
-        throw new Error('Failed to save areas')
+        throw new Error(result.error || 'Failed to save areas')
       }
     } catch (error) {
       console.error('Error saving areas:', error)
-      alert('Failed to save areas. Please try again.')
+      showToast(
+        `❌ Failed to save areas: ${error.message}`,
+        'error'
+      )
     } finally {
       setSaving(false)
     }
@@ -111,6 +167,8 @@ export default function AreasMapView() {
       leagueId,
       name: `Modified ${LEAGUE_POLYGONS[leagueId]?.name || leagueId}`,
       bounds: newBounds,
+      center: calculatePolygonCenter(newBounds),
+      slug: `modified-${leagueId}`,
       color: LEAGUE_POLYGONS[leagueId]?.color || '#8B5CF6',
       isCustom: false,
       isModified: true
@@ -165,16 +223,20 @@ export default function AreasMapView() {
       bounds.push({ lat: point.lat(), lng: point.lng() })
     }
 
+    const name = `Custom Area ${customAreas.length + 1}`
     const newArea = {
       id: `custom_${Date.now()}`,
-      name: `Custom Area ${customAreas.length + 1}`,
+      name,
+      slug: generateSlug(name),
       bounds: bounds,
+      center: calculatePolygonCenter(bounds),
       color: AREA_COLORS[customAreas.length % AREA_COLORS.length],
       isCustom: true
     }
 
     setCustomAreas(prev => [...prev, newArea])
     setHasUnsavedChanges(true)
+    showToast(`Created new area: ${name}`, 'success')
     
     // Style the polygon
     polygon.setOptions({
@@ -204,9 +266,11 @@ export default function AreasMapView() {
       }
 
       if (isCustom) {
-        // Update custom area
+        // Update custom area with new center
         setCustomAreas(prev => prev.map(area => 
-          area.id === areaId ? { ...area, bounds } : area
+          area.id === areaId 
+            ? { ...area, bounds, center: calculatePolygonCenter(bounds) } 
+            : area
         ))
       } else {
         // Track league modification
@@ -246,6 +310,7 @@ export default function AreasMapView() {
           strokeWeight: 3
         })
       })
+      showToast('Edit mode enabled - Click and drag polygon points to modify boundaries', 'info')
     } else {
       // Exiting edit mode - make polygons read-only
       polygonsRef.current.forEach((polygon, id) => {
@@ -267,6 +332,7 @@ export default function AreasMapView() {
   const deleteCustomArea = () => {
     if (!selectedArea || !selectedArea.startsWith('custom_')) return
     
+    const areaToDelete = customAreas.find(a => a.id === selectedArea)
     const polygon = polygonsRef.current.get(selectedArea)
     if (polygon) {
       polygon.setMap(null)
@@ -276,6 +342,7 @@ export default function AreasMapView() {
     setCustomAreas(prev => prev.filter(area => area.id !== selectedArea))
     setSelectedArea(null)
     setHasUnsavedChanges(true)
+    showToast(`Deleted area: ${areaToDelete?.name || 'Custom Area'}`, 'success')
   }
 
   // Reset league modifications
@@ -286,6 +353,7 @@ export default function AreasMapView() {
     if (mapInstanceRef.current) {
       drawLeagueBoundaries(mapInstanceRef.current)
     }
+    showToast('All league modifications have been reset', 'info')
   }
 
   // Create club markers
@@ -645,6 +713,15 @@ export default function AreasMapView() {
 
   return (
     <div className="space-y-6">
+      {/* Toast notifications */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
       {/* Header with Mode Toggle */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex justify-between items-start mb-6">
@@ -732,11 +809,6 @@ export default function AreasMapView() {
                 {hasUnsavedChanges && (
                   <span className="text-sm text-amber-600 font-medium">
                     ⚠️ You have unsaved changes
-                  </span>
-                )}
-                {saveSuccess && (
-                  <span className="text-sm text-green-600 font-medium">
-                    ✅ Changes saved successfully!
                   </span>
                 )}
                 <span className="text-sm text-purple-600">
