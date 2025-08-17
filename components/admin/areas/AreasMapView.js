@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { CITY_DISPLAY_NAMES } from '@/lib/utils/areaMapping'
-import Toast from '@/components/ui/Toast'
 // Import from shared utility
 import { 
   LEAGUE_POLYGONS,
@@ -43,6 +42,48 @@ const generateSlug = (name) => {
     .replace(/^-+|-+$/g, '')
 }
 
+// Simple inline notification component
+function Notification({ message, type, onClose }) {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose()
+    }, 5000)
+    
+    return () => clearTimeout(timer)
+  }, [onClose])
+  
+  const styles = {
+    success: 'bg-green-50 border-green-500 text-green-900',
+    error: 'bg-red-50 border-red-500 text-red-900',
+    warning: 'bg-amber-50 border-amber-500 text-amber-900',
+    info: 'bg-blue-50 border-blue-500 text-blue-900'
+  }
+  
+  const icons = {
+    success: '✅',
+    error: '❌',
+    warning: '⚠️',
+    info: 'ℹ️'
+  }
+  
+  return (
+    <div className={`fixed top-4 right-4 z-50 max-w-md p-4 border-l-4 rounded-lg shadow-lg ${styles[type]} animate-slide-in`}>
+      <div className="flex items-start">
+        <span className="text-xl mr-3">{icons[type]}</span>
+        <div className="flex-1">
+          <p className="text-sm font-medium">{message}</p>
+        </div>
+        <button
+          onClick={onClose}
+          className="ml-4 text-gray-500 hover:text-gray-700"
+        >
+          ×
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function AreasMapView() {
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
@@ -67,12 +108,12 @@ export default function AreasMapView() {
   const [saving, setSaving] = useState(false)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   
-  // Toast notifications
-  const [toast, setToast] = useState(null)
+  // Notification state
+  const [notification, setNotification] = useState(null)
   
-  // Show toast helper
-  const showToast = (message, type = 'info') => {
-    setToast({ message, type })
+  // Show notification helper
+  const showNotification = (message, type = 'info') => {
+    setNotification({ message, type })
   }
 
   // Load custom areas from database
@@ -97,7 +138,7 @@ export default function AreasMapView() {
       }
     } catch (error) {
       console.error('Error loading custom areas:', error)
-      showToast('Failed to load saved areas', 'error')
+      showNotification('Failed to load saved areas', 'error')
     }
   }
 
@@ -137,8 +178,8 @@ export default function AreasMapView() {
       
       if (response.ok) {
         setHasUnsavedChanges(false)
-        showToast(
-          `✅ Successfully saved ${preparedCustomAreas.length} custom areas and ${preparedModifiedLeagues.length} league modifications`,
+        showNotification(
+          `Successfully saved ${preparedCustomAreas.length} custom areas and ${preparedModifiedLeagues.length} league modifications`,
           'success'
         )
         
@@ -151,8 +192,8 @@ export default function AreasMapView() {
       }
     } catch (error) {
       console.error('Error saving areas:', error)
-      showToast(
-        `❌ Failed to save areas: ${error.message}`,
+      showNotification(
+        `Failed to save areas: ${error.message}`,
         'error'
       )
     } finally {
@@ -236,7 +277,7 @@ export default function AreasMapView() {
 
     setCustomAreas(prev => [...prev, newArea])
     setHasUnsavedChanges(true)
-    showToast(`Created new area: ${name}`, 'success')
+    showNotification(`Created new area: ${name}`, 'success')
     
     // Style the polygon
     polygon.setOptions({
@@ -310,7 +351,7 @@ export default function AreasMapView() {
           strokeWeight: 3
         })
       })
-      showToast('Edit mode enabled - Click and drag polygon points to modify boundaries', 'info')
+      showNotification('Edit mode enabled - Click and drag polygon points to modify boundaries', 'info')
     } else {
       // Exiting edit mode - make polygons read-only
       polygonsRef.current.forEach((polygon, id) => {
@@ -342,7 +383,7 @@ export default function AreasMapView() {
     setCustomAreas(prev => prev.filter(area => area.id !== selectedArea))
     setSelectedArea(null)
     setHasUnsavedChanges(true)
-    showToast(`Deleted area: ${areaToDelete?.name || 'Custom Area'}`, 'success')
+    showNotification(`Deleted area: ${areaToDelete?.name || 'Custom Area'}`, 'success')
   }
 
   // Reset league modifications
@@ -353,7 +394,7 @@ export default function AreasMapView() {
     if (mapInstanceRef.current) {
       drawLeagueBoundaries(mapInstanceRef.current)
     }
-    showToast('All league modifications have been reset', 'info')
+    showNotification('All league modifications have been reset', 'info')
   }
 
   // Create club markers
@@ -713,12 +754,12 @@ export default function AreasMapView() {
 
   return (
     <div className="space-y-6">
-      {/* Toast notifications */}
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
+      {/* Inline notification */}
+      {notification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
         />
       )}
 
@@ -962,6 +1003,24 @@ export default function AreasMapView() {
           </div>
         </div>
       </div>
+
+      {/* Add CSS for slide-in animation if not already present */}
+      <style jsx>{`
+        @keyframes slide-in {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        
+        .animate-slide-in {
+          animation: slide-in 0.3s ease-out;
+        }
+      `}</style>
     </div>
   )
 }
