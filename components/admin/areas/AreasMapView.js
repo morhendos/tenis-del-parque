@@ -2,52 +2,29 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { CITY_DISPLAY_NAMES } from '@/lib/utils/areaMapping'
-// Import from shared utility
+import { LEAGUE_POLYGONS, determineLeagueByLocation } from '@/lib/utils/geographicBoundaries'
+
+// Import utilities
+import { calculatePolygonCenter, pathToBounds } from './utils/polygonHelpers'
+import { generateSlug, calculateAreaStats } from './utils/areaCalculations'
 import { 
-  LEAGUE_POLYGONS,
-  determineLeagueByLocation 
-} from '@/lib/utils/geographicBoundaries'
-
-// Default colors for new areas (if needed for custom areas)
-const AREA_COLORS = [
-  '#8B5CF6', '#10B981', '#F59E0B', '#EF4444', 
-  '#3B82F6', '#EC4899', '#14B8A6', '#F97316'
-]
-
-// Helper function to calculate polygon center
-const calculatePolygonCenter = (bounds) => {
-  if (!bounds || bounds.length === 0) {
-    return { lat: 0, lng: 0 }
-  }
-  
-  let latSum = 0
-  let lngSum = 0
-  
-  bounds.forEach(point => {
-    latSum += point.lat
-    lngSum += point.lng
-  })
-  
-  return {
-    lat: latSum / bounds.length,
-    lng: lngSum / bounds.length
-  }
-}
-
-// Helper function to generate slug from name
-const generateSlug = (name) => {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-}
+  MAP_CONFIG, 
+  AREA_COLORS, 
+  DRAWING_OPTIONS, 
+  POLYGON_STYLES, 
+  MARKER_CONFIG,
+  NOTIFICATION_DURATION,
+  API_ENDPOINTS,
+  ERROR_MESSAGES,
+  SUCCESS_MESSAGES 
+} from './constants/mapConfig'
 
 // Simple inline notification component
 function Notification({ message, type, onClose }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       onClose()
-    }, 5000)
+    }, NOTIFICATION_DURATION)
     
     return () => clearTimeout(timer)
   }, [onClose])
@@ -119,7 +96,7 @@ export default function AreasMapView() {
   // Load custom areas from database
   const loadCustomAreas = async () => {
     try {
-      const response = await fetch('/api/admin/areas')
+      const response = await fetch(API_ENDPOINTS.areas)
       if (response.ok) {
         const data = await response.json()
         const areas = data.areas || []
@@ -157,7 +134,7 @@ export default function AreasMapView() {
       }
     } catch (error) {
       console.error('Error loading custom areas:', error)
-      showNotification('Failed to load saved areas', 'error')
+      showNotification(ERROR_MESSAGES.loadFailed, 'error')
     }
   }
 
@@ -195,7 +172,7 @@ export default function AreasMapView() {
       
       console.log('Saving areas with tracking:', allAreas)
       
-      const response = await fetch('/api/admin/areas', {
+      const response = await fetch(API_ENDPOINTS.areas, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ areas: allAreas })
@@ -215,12 +192,12 @@ export default function AreasMapView() {
           modifiedLeagues: preparedModifiedLeagues.length
         })
       } else {
-        throw new Error(result.error || 'Failed to save areas')
+        throw new Error(result.error || ERROR_MESSAGES.saveFailed)
       }
     } catch (error) {
       console.error('Error saving areas:', error)
       showNotification(
-        `Failed to save areas: ${error.message}`,
+        `${ERROR_MESSAGES.saveFailed}: ${error.message}`,
         'error'
       )
     } finally {
@@ -252,7 +229,7 @@ export default function AreasMapView() {
   // Initialize drawing manager (only in edit mode)
   const initializeDrawingManager = (mapInstance) => {
     if (!window.google?.maps?.drawing?.DrawingManager) {
-      console.warn('Drawing library not available')
+      console.warn(ERROR_MESSAGES.drawingLibraryUnavailable)
       return
     }
 
@@ -260,13 +237,13 @@ export default function AreasMapView() {
       drawingMode: null,
       drawingControl: false,
       polygonOptions: {
-        fillColor: '#8B5CF6',
-        fillOpacity: 0.15,
+        fillColor: DRAWING_OPTIONS.fillOpacity,
+        fillOpacity: DRAWING_OPTIONS.fillOpacity,
         strokeColor: '#8B5CF6',
-        strokeOpacity: 0.8,
-        strokeWeight: 2,
-        editable: true,
-        draggable: true
+        strokeOpacity: DRAWING_OPTIONS.strokeOpacity,
+        strokeWeight: DRAWING_OPTIONS.strokeWeight,
+        editable: DRAWING_OPTIONS.editable,
+        draggable: DRAWING_OPTIONS.draggable
       }
     })
 
@@ -283,15 +260,9 @@ export default function AreasMapView() {
 
   // Create custom area from polygon
   const createCustomArea = (polygon) => {
-    const path = polygon.getPath()
-    const bounds = []
-    
-    for (let i = 0; i < path.getLength(); i++) {
-      const point = path.getAt(i)
-      bounds.push({ lat: point.lat(), lng: point.lng() })
-    }
-
+    const bounds = pathToBounds(polygon.getPath())
     const name = `Custom Area ${customAreas.length + 1}`
+    
     const newArea = {
       id: `custom_${Date.now()}`,
       name,
@@ -304,15 +275,15 @@ export default function AreasMapView() {
 
     setCustomAreas(prev => [...prev, newArea])
     setHasUnsavedChanges(true)
-    showNotification(`Created new area: ${name}`, 'success')
+    showNotification(`${SUCCESS_MESSAGES.areaCreated}: ${name}`, 'success')
     
     // Style the polygon
     polygon.setOptions({
       fillColor: newArea.color,
       strokeColor: newArea.color,
-      fillOpacity: 0.15,
-      strokeOpacity: 0.8,
-      strokeWeight: 2
+      fillOpacity: POLYGON_STYLES.default.fillOpacity,
+      strokeOpacity: POLYGON_STYLES.default.strokeOpacity,
+      strokeWeight: POLYGON_STYLES.default.strokeWeight
     })
 
     // Store polygon reference
@@ -325,13 +296,7 @@ export default function AreasMapView() {
   // Setup polygon edit listeners
   const setupPolygonEditListeners = (polygon, areaId, isCustom) => {
     const updateBounds = () => {
-      const path = polygon.getPath()
-      const bounds = []
-      
-      for (let i = 0; i < path.getLength(); i++) {
-        const point = path.getAt(i)
-        bounds.push({ lat: point.lat(), lng: point.lng() })
-      }
+      const bounds = pathToBounds(polygon.getPath())
 
       if (isCustom) {
         // Update custom area with new center
@@ -372,21 +337,13 @@ export default function AreasMapView() {
     if (newEditMode) {
       // Entering edit mode - make polygons editable
       polygonsRef.current.forEach((polygon, id) => {
-        polygon.setOptions({ 
-          editable: true,
-          draggable: true,
-          strokeWeight: 3
-        })
+        polygon.setOptions(POLYGON_STYLES.editMode)
       })
-      showNotification('Edit mode enabled - Click and drag polygon points to modify boundaries', 'info')
+      showNotification(SUCCESS_MESSAGES.editModeEnabled, 'info')
     } else {
       // Exiting edit mode - make polygons read-only
       polygonsRef.current.forEach((polygon, id) => {
-        polygon.setOptions({ 
-          editable: false,
-          draggable: false,
-          strokeWeight: 2
-        })
+        polygon.setOptions(POLYGON_STYLES.default)
       })
       setSelectedArea(null)
       setDrawingMode(false)
@@ -410,7 +367,7 @@ export default function AreasMapView() {
     setCustomAreas(prev => prev.filter(area => area.id !== selectedArea))
     setSelectedArea(null)
     setHasUnsavedChanges(true)
-    showNotification(`Deleted area: ${areaToDelete?.name || 'Custom Area'}`, 'success')
+    showNotification(`${SUCCESS_MESSAGES.areaDeleted}: ${areaToDelete?.name || 'Custom Area'}`, 'success')
   }
 
   // Reset league modifications
@@ -421,7 +378,7 @@ export default function AreasMapView() {
     if (mapInstanceRef.current) {
       drawLeagueBoundaries(mapInstanceRef.current)
     }
-    showNotification('All league modifications have been reset', 'info')
+    showNotification(SUCCESS_MESSAGES.modificationsReset, 'info')
   }
 
   // Create club markers
@@ -460,11 +417,11 @@ export default function AreasMapView() {
         title: club.name,
         icon: {
           path: window.google.maps.SymbolPath.CIRCLE,
-          scale: editMode ? 6 : 8,
+          scale: editMode ? MARKER_CONFIG.editMode.scale : MARKER_CONFIG.default.scale,
           fillColor: leagueColor,
-          fillOpacity: editMode ? 0.6 : 0.9,
-          strokeColor: '#ffffff',
-          strokeWeight: 2
+          fillOpacity: editMode ? MARKER_CONFIG.editMode.fillOpacity : MARKER_CONFIG.default.fillOpacity,
+          strokeColor: MARKER_CONFIG.default.strokeColor,
+          strokeWeight: MARKER_CONFIG.default.strokeWeight
         }
       })
 
@@ -525,17 +482,18 @@ export default function AreasMapView() {
     Object.entries(LEAGUE_POLYGONS).forEach(([league, data]) => {
       const bounds = getLeagueBounds(league)
       const isModified = !!modifiedLeagues[league]
+      const styles = editMode ? POLYGON_STYLES.editMode : POLYGON_STYLES.default
       
       const polygon = new window.google.maps.Polygon({
         paths: bounds,
         strokeColor: data.color,
-        strokeOpacity: 0.8,
-        strokeWeight: editMode ? 3 : 2,
+        strokeOpacity: styles.strokeOpacity,
+        strokeWeight: styles.strokeWeight,
         fillColor: data.color,
-        fillOpacity: editMode ? 0.1 : 0.15,
+        fillOpacity: styles.fillOpacity,
         map: mapInstance,
-        editable: editMode,
-        draggable: editMode
+        editable: styles.editable,
+        draggable: styles.draggable
       })
 
       // Add click listener
@@ -571,16 +529,18 @@ export default function AreasMapView() {
 
     // Draw custom areas
     customAreas.forEach(area => {
+      const styles = editMode ? POLYGON_STYLES.editMode : POLYGON_STYLES.default
+      
       const polygon = new window.google.maps.Polygon({
         paths: area.bounds,
         strokeColor: area.color,
-        strokeOpacity: 0.8,
-        strokeWeight: editMode ? 3 : 2,
+        strokeOpacity: styles.strokeOpacity,
+        strokeWeight: styles.strokeWeight,
         fillColor: area.color,
-        fillOpacity: editMode ? 0.1 : 0.15,
+        fillOpacity: styles.fillOpacity,
         map: mapInstance,
-        editable: editMode,
-        draggable: editMode
+        editable: styles.editable,
+        draggable: styles.draggable
       })
 
       polygon.addListener('click', () => {
@@ -600,7 +560,7 @@ export default function AreasMapView() {
   // Fetch clubs
   const fetchClubs = async () => {
     try {
-      const response = await fetch('/api/clubs?limit=1000')
+      const response = await fetch(`${API_ENDPOINTS.clubs}?limit=1000`)
       if (response.ok) {
         const data = await response.json()
         setClubs(data.clubs || [])
@@ -623,15 +583,9 @@ export default function AreasMapView() {
     const initMap = async () => {
       try {
         const mapInstance = new window.google.maps.Map(mapRef.current, {
-          center: { lat: 36.5, lng: -4.9 },
-          zoom: 9,
-          styles: [
-            {
-              featureType: 'poi',
-              elementType: 'labels',
-              stylers: [{ visibility: 'off' }]
-            }
-          ]
+          center: MAP_CONFIG.defaultCenter,
+          zoom: MAP_CONFIG.defaultZoom,
+          styles: MAP_CONFIG.styles
         })
 
         mapInstanceRef.current = mapInstance
@@ -667,7 +621,7 @@ export default function AreasMapView() {
   useEffect(() => {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
     if (!apiKey) {
-      setError('Google Maps API key not configured')
+      setError(ERROR_MESSAGES.noApiKey)
       setLoading(false)
       return
     }
@@ -696,12 +650,12 @@ export default function AreasMapView() {
     }
     
     const script = document.createElement('script')
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,drawing&callback=initMap`
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=${MAP_CONFIG.libraries.join(',')}&callback=initMap`
     script.async = true
     script.defer = true
     
     script.onerror = () => {
-      setError('Failed to load Google Maps')
+      setError(ERROR_MESSAGES.mapLoadFailed)
       setLoading(false)
     }
     
@@ -731,36 +685,8 @@ export default function AreasMapView() {
     setSelectedLeague(league)
   }
 
-  // Get area statistics
-  const getAreaStats = () => {
-    const stats = {
-      totalClubs: clubs.length,
-      byLeague: {}
-    }
-
-    Object.keys(LEAGUE_POLYGONS).forEach(league => {
-      stats.byLeague[league] = 0
-    })
-    stats.byLeague.unassigned = 0
-
-    clubs.forEach(club => {
-      if (club.location?.coordinates?.lat && club.location?.coordinates?.lng) {
-        const league = determineLeagueByLocation(
-          club.location.coordinates.lat,
-          club.location.coordinates.lng
-        )
-        if (league) {
-          stats.byLeague[league]++
-        } else {
-          stats.byLeague.unassigned++
-        }
-      }
-    })
-
-    return stats
-  }
-
-  const stats = getAreaStats()
+  // Get area statistics using the utility function
+  const stats = calculateAreaStats(clubs, modifiedLeagues)
 
   // Error state
   if (error) {
@@ -966,7 +892,7 @@ export default function AreasMapView() {
         <div 
           ref={mapRef}
           className="w-full"
-          style={{ height: '700px' }}
+          style={{ height: MAP_CONFIG.containerHeight }}
         />
         
         {loading && (
