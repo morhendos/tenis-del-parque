@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback, useMemo } from 'react'
+import React from 'react'
 
 // Import custom hooks
 import useMapInitialization from './hooks/useMapInitialization'
@@ -94,42 +95,24 @@ export default function AreasMapView() {
     setDrawingMode
   })
 
-  // Initialize everything when map is ready
-  React.useEffect(() => {
+  // Memoized initialization function
+  const initialize = useCallback(async () => {
     if (!mapInstance) return
     
-    const initialize = async () => {
-      // Load saved areas
-      await loadAreas()
-      
-      // Fetch clubs
-      await fetchClubs()
-      
-      // Initialize drawing manager
-      if (window.google?.maps?.drawing) {
-        initializeDrawing({
-          onPolygonComplete: handlePolygonComplete
-        })
-      }
-      
-      // Draw initial boundaries
-      drawBoundaries({
-        customAreas,
-        modifiedLeagues,
-        boundaryType,
-        editMode,
-        onAreaClick: handleAreaSelection
+    // Load saved areas
+    await loadAreas()
+    
+    // Fetch clubs
+    await fetchClubs()
+    
+    // Initialize drawing manager
+    if (window.google?.maps?.drawing) {
+      initializeDrawing({
+        onPolygonComplete: handlePolygonComplete
       })
     }
     
-    initialize()
-  }, [mapInstance])
-  
-  // Update map when state changes
-  React.useEffect(() => {
-    if (!mapInstance) return
-    
-    // Redraw boundaries
+    // Draw initial boundaries
     drawBoundaries({
       customAreas,
       modifiedLeagues,
@@ -137,13 +120,59 @@ export default function AreasMapView() {
       editMode,
       onAreaClick: handleAreaSelection
     })
+  }, [
+    mapInstance,
+    loadAreas,
+    fetchClubs,
+    initializeDrawing,
+    handlePolygonComplete,
+    drawBoundaries,
+    customAreas,
+    modifiedLeagues,
+    boundaryType,
+    editMode,
+    handleAreaSelection
+  ])
+
+  // Initialize everything when map is ready
+  React.useEffect(() => {
+    initialize()
+  }, [initialize])
+  
+  // Memoized boundary drawing function
+  const updateBoundaries = useCallback(() => {
+    if (!mapInstance) return
+    
+    drawBoundaries({
+      customAreas,
+      modifiedLeagues,
+      boundaryType,
+      editMode,
+      onAreaClick: handleAreaSelection
+    })
+  }, [
+    mapInstance,
+    drawBoundaries,
+    customAreas,
+    modifiedLeagues,
+    boundaryType,
+    editMode,
+    handleAreaSelection
+  ])
+  
+  // Update map when state changes
+  React.useEffect(() => {
+    if (!mapInstance) return
+    
+    // Redraw boundaries
+    updateBoundaries()
     
     // Update markers
     updateMarkerStyles(editMode)
-  }, [customAreas, modifiedLeagues, boundaryType, editMode, mapInstance])
+  }, [updateBoundaries, updateMarkerStyles, editMode, mapInstance])
   
-  // Toggle edit mode
-  const toggleEditMode = () => {
+  // Memoized toggle edit mode
+  const toggleEditMode = useCallback(() => {
     const newEditMode = !editMode
     setEditMode(newEditMode)
     
@@ -163,16 +192,27 @@ export default function AreasMapView() {
       newEditMode ? 'Edit mode enabled' : 'Edit mode disabled',
       'info'
     )
-  }
+  }, [
+    editMode,
+    setPolygonEditability,
+    updateMarkerStyles,
+    toggleDrawing,
+    showNotification
+  ])
   
-  // Toggle drawing mode
-  const handleToggleDrawing = () => {
+  // Memoized toggle drawing mode
+  const handleToggleDrawing = useCallback(() => {
     setDrawingMode(!drawingMode)
     toggleDrawing(!drawingMode)
-  }
+  }, [drawingMode, toggleDrawing])
   
-  // Handle area deletion
-  const handleDeleteArea = () => {
+  // Memoized toggle boundary type
+  const toggleBoundaryType = useCallback(() => {
+    setBoundaryType(prev => prev === 'polygons' ? 'none' : 'polygons')
+  }, [])
+  
+  // Memoized handle area deletion
+  const handleDeleteArea = useCallback(() => {
     if (!selectedArea) return
     
     if (selectedArea.startsWith('custom_')) {
@@ -182,20 +222,20 @@ export default function AreasMapView() {
     
     setSelectedArea(null)
     showNotification('Area deleted successfully', 'success')
-  }
+  }, [selectedArea, deleteArea, clearPolygons, showNotification])
   
-  // Handle save
-  const handleSaveChanges = async () => {
+  // Memoized handle save
+  const handleSaveChanges = useCallback(async () => {
     const result = await saveAllChanges()
     if (result.success) {
       showNotification(result.message, 'success')
     } else {
       showNotification(result.message, 'error')
     }
-  }
+  }, [saveAllChanges, showNotification])
   
-  // Handle reset modifications
-  const handleResetModifications = () => {
+  // Memoized handle reset modifications
+  const handleResetModifications = useCallback(() => {
     resetLeagueModifications()
     drawBoundaries({
       customAreas,
@@ -205,10 +245,26 @@ export default function AreasMapView() {
       onAreaClick: handleAreaSelection
     })
     showNotification('League modifications reset', 'info')
-  }
+  }, [
+    resetLeagueModifications,
+    drawBoundaries,
+    customAreas,
+    boundaryType,
+    editMode,
+    handleAreaSelection,
+    showNotification
+  ])
   
-  // Calculate statistics
-  const stats = calculateAreaStats(clubs, modifiedLeagues)
+  // Memoized close notification
+  const handleCloseNotification = useCallback(() => {
+    showNotification(null)
+  }, [showNotification])
+  
+  // Memoized statistics calculation
+  const stats = useMemo(() => 
+    calculateAreaStats(clubs, modifiedLeagues),
+    [clubs, modifiedLeagues]
+  )
   
   // Combined loading state
   const loading = mapLoading || clubsLoading
@@ -241,7 +297,7 @@ export default function AreasMapView() {
         <AreaNotification
           message={notification.message}
           type={notification.type}
-          onClose={() => showNotification(null)}
+          onClose={handleCloseNotification}
         />
       )}
 
@@ -271,7 +327,7 @@ export default function AreasMapView() {
               {editMode ? '👁️ View Mode' : '✏️ Edit Mode'}
             </button>
             <button
-              onClick={() => setBoundaryType(boundaryType === 'polygons' ? 'none' : 'polygons')}
+              onClick={toggleBoundaryType}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 boundaryType === 'polygons'
                   ? 'bg-blue-600 text-white'
