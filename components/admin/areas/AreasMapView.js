@@ -124,14 +124,33 @@ export default function AreasMapView() {
         const data = await response.json()
         const areas = data.areas || []
         
+        console.log('Loaded areas from database:', areas)
+        
         // Separate custom areas from modified leagues
-        const custom = areas.filter(area => area.isCustom)
+        const custom = []
         const modified = {}
+        
         areas.forEach(area => {
-          if (!area.isCustom && area.leagueId) {
-            modified[area.leagueId] = area
+          // Check if it's a modified league (has originalLeagueId or matches a league pattern)
+          if (area.originalLeagueId) {
+            // This is a modified league, restore it
+            modified[area.originalLeagueId] = {
+              ...area,
+              leagueId: area.originalLeagueId,
+              bounds: area.bounds,
+              center: area.center,
+              color: LEAGUE_POLYGONS[area.originalLeagueId]?.color || area.color,
+              name: LEAGUE_POLYGONS[area.originalLeagueId]?.name || area.name,
+              isModified: true
+            }
+          } else if (area.isCustom) {
+            // This is a custom area
+            custom.push(area)
           }
         })
+        
+        console.log('Restored modified leagues:', modified)
+        console.log('Restored custom areas:', custom)
         
         setCustomAreas(custom)
         setModifiedLeagues(modified)
@@ -147,17 +166,25 @@ export default function AreasMapView() {
     setSaving(true)
     
     try {
-      // Prepare areas with all required fields
+      // Prepare custom areas with all required fields
       const preparedCustomAreas = customAreas.map(area => ({
         ...area,
         slug: area.slug || generateSlug(area.name),
-        center: area.center || calculatePolygonCenter(area.bounds)
+        center: area.center || calculatePolygonCenter(area.bounds),
+        isCustom: true
       }))
       
-      const preparedModifiedLeagues = Object.values(modifiedLeagues).map(area => ({
-        ...area,
-        slug: area.slug || generateSlug(area.name),
-        center: area.center || calculatePolygonCenter(area.bounds)
+      // Prepare modified leagues with proper tracking
+      const preparedModifiedLeagues = Object.entries(modifiedLeagues).map(([leagueId, area]) => ({
+        id: `league_${leagueId}_modified`,
+        name: `${LEAGUE_POLYGONS[leagueId]?.name || leagueId} (Modified)`,
+        slug: `league-${leagueId}-modified`,
+        bounds: area.bounds,
+        center: area.center || calculatePolygonCenter(area.bounds),
+        color: area.color || LEAGUE_POLYGONS[leagueId]?.color || '#8B5CF6',
+        originalLeagueId: leagueId, // IMPORTANT: Track which league this modifies
+        isCustom: false,
+        isModified: true
       }))
       
       // Collect all areas to save
@@ -166,7 +193,7 @@ export default function AreasMapView() {
         ...preparedModifiedLeagues
       ]
       
-      console.log('Saving areas with required fields:', allAreas)
+      console.log('Saving areas with tracking:', allAreas)
       
       const response = await fetch('/api/admin/areas', {
         method: 'POST',
@@ -185,7 +212,7 @@ export default function AreasMapView() {
         
         console.log('✅ Saved areas:', {
           customAreas: preparedCustomAreas.length,
-          modifiedLeagues: Object.keys(modifiedLeagues).length
+          modifiedLeagues: preparedModifiedLeagues.length
         })
       } else {
         throw new Error(result.error || 'Failed to save areas')
@@ -206,10 +233,10 @@ export default function AreasMapView() {
     const modifiedArea = {
       id: `league_${leagueId}`,
       leagueId,
-      name: `Modified ${LEAGUE_POLYGONS[leagueId]?.name || leagueId}`,
+      originalLeagueId: leagueId, // Keep track of original league
+      name: LEAGUE_POLYGONS[leagueId]?.name || leagueId,
       bounds: newBounds,
       center: calculatePolygonCenter(newBounds),
-      slug: `modified-${leagueId}`,
       color: LEAGUE_POLYGONS[leagueId]?.color || '#8B5CF6',
       isCustom: false,
       isModified: true
@@ -484,7 +511,7 @@ export default function AreasMapView() {
 
   // Draw league boundaries as polygons
   const drawLeagueBoundaries = (mapInstance) => {
-    console.log('🗺️ Drawing league boundaries')
+    console.log('🗺️ Drawing league boundaries with modifications:', modifiedLeagues)
     
     // Clear existing polygons
     polygonsRef.current.forEach(polygon => {
@@ -593,43 +620,47 @@ export default function AreasMapView() {
       return
     }
 
-    try {
-      const mapInstance = new window.google.maps.Map(mapRef.current, {
-        center: { lat: 36.5, lng: -4.9 },
-        zoom: 9,
-        styles: [
-          {
-            featureType: 'poi',
-            elementType: 'labels',
-            stylers: [{ visibility: 'off' }]
-          }
-        ]
-      })
+    const initMap = async () => {
+      try {
+        const mapInstance = new window.google.maps.Map(mapRef.current, {
+          center: { lat: 36.5, lng: -4.9 },
+          zoom: 9,
+          styles: [
+            {
+              featureType: 'poi',
+              elementType: 'labels',
+              stylers: [{ visibility: 'off' }]
+            }
+          ]
+        })
 
-      mapInstanceRef.current = mapInstance
-      
-      // Initialize drawing manager if drawing library is available
-      if (window.google?.maps?.drawing) {
-        initializeDrawingManager(mapInstance)
+        mapInstanceRef.current = mapInstance
+        
+        // Initialize drawing manager if drawing library is available
+        if (window.google?.maps?.drawing) {
+          initializeDrawingManager(mapInstance)
+        }
+        
+        // Load custom areas FIRST
+        await loadCustomAreas()
+        
+        // Then draw league boundaries
+        drawLeagueBoundaries(mapInstance)
+        
+        // Create markers if clubs are loaded
+        if (clubs.length > 0) {
+          createClubMarkers(mapInstance, clubs)
+        }
+        
+        setLoading(false)
+      } catch (err) {
+        console.error('❌ Error creating map:', err)
+        setError(err.message)
+        setLoading(false)
       }
-      
-      // Draw league boundaries
-      drawLeagueBoundaries(mapInstance)
-      
-      // Create markers if clubs are loaded
-      if (clubs.length > 0) {
-        createClubMarkers(mapInstance, clubs)
-      }
-      
-      // Load custom areas
-      loadCustomAreas()
-      
-      setLoading(false)
-    } catch (err) {
-      console.error('❌ Error creating map:', err)
-      setError(err.message)
-      setLoading(false)
     }
+    
+    initMap()
   }, [googleMapsLoaded])
 
   // Load Google Maps script on mount with BOTH libraries
