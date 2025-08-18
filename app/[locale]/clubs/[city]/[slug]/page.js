@@ -69,7 +69,25 @@ export default function ClubDetailPage() {
           lng: club.location.coordinates.lng 
         },
         zoom: 17, // Close zoom to see the club clearly
-        mapTypeId: 'terrain', // Terrain mode as requested
+        mapTypeId: 'terrain', // Terrain mode for better visualization
+        zoomControl: true, // Enable zoom controls
+        zoomControlOptions: {
+          position: window.google.maps.ControlPosition.RIGHT_CENTER // Position zoom controls on the right
+        },
+        mapTypeControl: true, // Allow switching between map types
+        mapTypeControlOptions: {
+          style: window.google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+          position: window.google.maps.ControlPosition.TOP_RIGHT,
+          mapTypeIds: ['terrain', 'satellite', 'roadmap', 'hybrid']
+        },
+        streetViewControl: true, // Enable street view
+        streetViewControlOptions: {
+          position: window.google.maps.ControlPosition.RIGHT_TOP
+        },
+        fullscreenControl: true, // Enable fullscreen button
+        fullscreenControlOptions: {
+          position: window.google.maps.ControlPosition.RIGHT_TOP
+        },
         styles: [
           {
             featureType: 'poi',
@@ -79,29 +97,45 @@ export default function ClubDetailPage() {
         ]
       })
 
-      // Add marker for the club
-      new window.google.maps.Marker({
+      // Add marker for the club with a nice bounce animation
+      const marker = new window.google.maps.Marker({
         position: { 
           lat: club.location.coordinates.lat, 
           lng: club.location.coordinates.lng 
         },
         map: map,
         title: club.name,
+        animation: window.google.maps.Animation.DROP, // Drop animation when marker appears
         icon: {
           path: window.google.maps.SymbolPath.CIRCLE,
-          scale: 10,
+          scale: 12,
           fillColor: '#7C3AED',
           fillOpacity: 1,
           strokeColor: '#ffffff',
-          strokeWeight: 2
+          strokeWeight: 3
         }
+      })
+
+      // Add info window that opens when clicking the marker
+      const infoWindow = new window.google.maps.InfoWindow({
+        content: `
+          <div style="padding: 8px;">
+            <h3 style="margin: 0 0 4px 0; color: #7C3AED; font-weight: bold;">${club.name}</h3>
+            <p style="margin: 0; color: #666; font-size: 14px;">${club.location.address}</p>
+            ${club.courts?.total ? `<p style="margin: 4px 0 0 0; color: #666; font-size: 13px;">🎾 ${club.courts.total} ${locale === 'es' ? 'pistas' : 'courts'}</p>` : ''}
+          </div>
+        `
+      })
+
+      marker.addListener('click', () => {
+        infoWindow.open(map, marker)
       })
 
       setMapLoaded(true)
     }
 
     loadGoogleMaps()
-  }, [club, mapLoaded])
+  }, [club, mapLoaded, locale])
 
   // Collect all images
   const allImages = useMemo(() => {
@@ -446,6 +480,9 @@ export default function ClubDetailPage() {
                 <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
                   <div className="p-6 border-b">
                     <h2 className="text-xl font-semibold">{locale === 'es' ? 'Ubicación' : 'Location'}</h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {locale === 'es' ? 'Mapa en modo terreno con controles de zoom' : 'Terrain map with zoom controls'}
+                    </p>
                   </div>
                   <div id="club-map" className="h-96"></div>
                   <div className="p-4 bg-gray-50">
