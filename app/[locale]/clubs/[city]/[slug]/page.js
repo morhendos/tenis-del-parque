@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Navigation from '@/components/common/Navigation'
@@ -41,6 +41,60 @@ export default function ClubDetailPage() {
     }
   }
 
+  // Helper to check if any amenity exists
+  const hasAmenities = useMemo(() => 
+    Object.values(club?.amenities || {}).some(v => v === true), 
+    [club?.amenities]
+  )
+  
+  // Helper to check if any service exists
+  const hasServices = useMemo(() => 
+    Object.values(club?.services || {}).some(v => v === true), 
+    [club?.services]
+  )
+  
+  // Helper to check if courts data exists
+  const hasCourtsData = useMemo(() => 
+    club?.courts?.total > 0, 
+    [club?.courts]
+  )
+  
+  // Helper to check if pricing exists
+  const hasPricing = useMemo(() => 
+    (club?.pricing?.courtRental?.hourly?.min !== null && club?.pricing?.courtRental?.hourly?.max !== null) ||
+    (club?.pricing?.courtRental?.membership?.monthly !== null || club?.pricing?.courtRental?.membership?.annual !== null),
+    [club?.pricing]
+  )
+  
+  // Helper to check if schedule exists
+  const hasSchedule = useMemo(() => 
+    club?.operatingHours && Object.values(club.operatingHours).some(hours => hours?.open || hours?.close),
+    [club?.operatingHours]
+  )
+  
+  // Filter tabs based on available data - memoized to prevent recreating on every render
+  const availableTabs = useMemo(() => {
+    return [
+      { id: 'info', label: { es: 'Información', en: 'Information' }, show: true },
+      { id: 'courts', label: { es: 'Pistas', en: 'Courts' }, show: hasCourtsData },
+      { id: 'pricing', label: { es: 'Precios', en: 'Pricing' }, show: hasPricing },
+      { id: 'schedule', label: { es: 'Horarios', en: 'Schedule' }, show: hasSchedule },
+      { id: 'contact', label: { es: 'Contacto', en: 'Contact' }, show: true }
+    ].filter(tab => tab.show)
+  }, [hasCourtsData, hasPricing, hasSchedule])
+
+  // Set initial tab to first available - fixed dependencies
+  useEffect(() => {
+    if (availableTabs.length > 0 && !availableTabs.find(tab => tab.id === activeTab)) {
+      setActiveTab(availableTabs[0].id)
+    }
+  }, [availableTabs, activeTab])
+
+  const formatSchedule = (hours) => {
+    if (!hours || !hours.open || !hours.close) return locale === 'es' ? 'Cerrado' : 'Closed'
+    return `${hours.open} - ${hours.close}`
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -70,43 +124,6 @@ export default function ClubDetailPage() {
       </div>
     )
   }
-
-  const formatSchedule = (hours) => {
-    if (!hours || !hours.open || !hours.close) return locale === 'es' ? 'Cerrado' : 'Closed'
-    return `${hours.open} - ${hours.close}`
-  }
-
-  // Helper to check if any amenity exists
-  const hasAmenities = Object.values(club.amenities || {}).some(v => v === true)
-  
-  // Helper to check if any service exists
-  const hasServices = Object.values(club.services || {}).some(v => v === true)
-  
-  // Helper to check if courts data exists
-  const hasCourtsData = club.courts?.total > 0
-  
-  // Helper to check if pricing exists
-  const hasPricing = (club.pricing?.courtRental?.hourly?.min !== null && club.pricing?.courtRental?.hourly?.max !== null) ||
-                     (club.pricing?.courtRental?.membership?.monthly !== null || club.pricing?.courtRental?.membership?.annual !== null)
-  
-  // Helper to check if schedule exists
-  const hasSchedule = club.operatingHours && Object.values(club.operatingHours).some(hours => hours?.open || hours?.close)
-  
-  // Filter tabs based on available data
-  const availableTabs = [
-    { id: 'info', label: { es: 'Información', en: 'Information' }, show: true },
-    { id: 'courts', label: { es: 'Pistas', en: 'Courts' }, show: hasCourtsData },
-    { id: 'pricing', label: { es: 'Precios', en: 'Pricing' }, show: hasPricing },
-    { id: 'schedule', label: { es: 'Horarios', en: 'Schedule' }, show: hasSchedule },
-    { id: 'contact', label: { es: 'Contacto', en: 'Contact' }, show: true }
-  ].filter(tab => tab.show)
-
-  // Set initial tab to first available
-  useEffect(() => {
-    if (availableTabs.length > 0 && !availableTabs.find(tab => tab.id === activeTab)) {
-      setActiveTab(availableTabs[0].id)
-    }
-  }, [availableTabs])
 
   return (
     <div className="min-h-screen bg-gray-50">
