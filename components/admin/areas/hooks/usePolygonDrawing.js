@@ -2,7 +2,7 @@
  * Custom hook for managing polygon drawing and editing
  * Handles drawing manager, polygon creation, and edit listeners
  */
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { 
   DRAWING_OPTIONS, 
   POLYGON_STYLES,
@@ -12,25 +12,31 @@ import {
 import { pathToBounds } from '../utils/polygonHelpers'
 import { LEAGUE_POLYGONS } from '@/lib/utils/geographicBoundaries'
 
-export default function usePolygonDrawing() {
-  const [editMode, setEditMode] = useState(false)
-  const [drawingMode, setDrawingMode] = useState(false)
-  const [selectedArea, setSelectedArea] = useState(null)
-  const [boundaryType, setBoundaryType] = useState('polygons')
-  
-  const drawingManagerRef = useRef(null)
+export default function usePolygonDrawing(mapInstance) {
+  const [drawingManager, setDrawingManager] = useState(null)
   const polygonsRef = useRef(new Map())
+  const drawingModeRef = useRef(false)
 
   /**
    * Initialize the drawing manager for creating new polygons
    */
-  const initializeDrawingManager = useCallback((mapInstance, onPolygonComplete) => {
+  const initializeDrawing = useCallback((options = {}) => {
+    if (!mapInstance) {
+      console.warn('Map instance not available for drawing manager')
+      return null
+    }
+
     if (!window.google?.maps?.drawing?.DrawingManager) {
       console.warn(ERROR_MESSAGES.drawingLibraryUnavailable)
       return null
     }
 
-    const drawingManager = new window.google.maps.drawing.DrawingManager({
+    // Clear existing drawing manager if any
+    if (drawingManager) {
+      drawingManager.setMap(null)
+    }
+
+    const newDrawingManager = new window.google.maps.drawing.DrawingManager({
       drawingMode: null,
       drawingControl: false,
       polygonOptions: {
@@ -44,21 +50,37 @@ export default function usePolygonDrawing() {
       }
     })
 
-    drawingManager.setMap(mapInstance)
-    drawingManagerRef.current = drawingManager
+    newDrawingManager.setMap(mapInstance)
+    setDrawingManager(newDrawingManager)
 
     // Listen for polygon completion
-    window.google.maps.event.addListener(drawingManager, 'polygoncomplete', (polygon) => {
-      const bounds = pathToBounds(polygon.getPath())
-      if (onPolygonComplete) {
-        onPolygonComplete(polygon, bounds)
-      }
-      setDrawingMode(false)
-      drawingManager.setDrawingMode(null)
-    })
+    if (options.onPolygonComplete) {
+      window.google.maps.event.addListener(newDrawingManager, 'polygoncomplete', (polygon) => {
+        options.onPolygonComplete(polygon)
+        drawingModeRef.current = false
+        newDrawingManager.setDrawingMode(null)
+      })
+    }
 
-    return drawingManager
-  }, [])
+    return newDrawingManager
+  }, [mapInstance, drawingManager])
+
+  /**
+   * Toggle drawing mode
+   */
+  const toggleDrawing = useCallback((enabled) => {
+    if (!drawingManager) {
+      console.warn('Drawing manager not initialized')
+      return false
+    }
+    
+    drawingModeRef.current = enabled
+    drawingManager.setDrawingMode(
+      enabled ? window.google.maps.drawing.OverlayType.POLYGON : null
+    )
+    
+    return enabled
+  }, [drawingManager])
 
   /**
    * Setup edit listeners for a polygon
@@ -100,16 +122,29 @@ export default function usePolygonDrawing() {
   }, [])
 
   /**
-   * Draw league boundaries as polygons on the map
+   * Draw boundaries on the map
    */
-  const drawLeagueBoundaries = useCallback((
-    mapInstance, 
-    customAreas = [], 
-    modifiedLeagues = {},
-    onPolygonClick,
-    onBoundsUpdate
-  ) => {
-    console.log('🗺️ Drawing league boundaries with modifications:', modifiedLeagues)
+  const drawBoundaries = useCallback((options = {}) => {
+    if (!mapInstance) {
+      console.warn('Map instance not available for drawing boundaries')
+      return
+    }
+
+    const {
+      customAreas = [],
+      modifiedLeagues = {},
+      boundaryType = 'polygons',
+      editMode = false,
+      onAreaClick,
+      onBoundsUpdate
+    } = options
+
+    console.log('🗺️ Drawing boundaries:', {
+      customAreasCount: customAreas.length,
+      modifiedLeaguesCount: Object.keys(modifiedLeagues).length,
+      boundaryType,
+      editMode
+    })
     
     // Clear existing polygons
     polygonsRef.current.forEach(polygon => {
@@ -140,12 +175,9 @@ export default function usePolygonDrawing() {
 
       // Add click listener
       polygon.addListener('click', (event) => {
-        if (editMode) {
-          setSelectedArea(league)
-          if (onPolygonClick) {
-            onPolygonClick(league, false)
-          }
-        } else {
+        if (editMode && onAreaClick) {
+          onAreaClick(league)
+        } else if (!editMode) {
           // Show info window in view mode
           const infoWindow = new window.google.maps.InfoWindow()
           infoWindow.setContent(`
@@ -188,11 +220,8 @@ export default function usePolygonDrawing() {
       })
 
       polygon.addListener('click', () => {
-        if (editMode) {
-          setSelectedArea(area.id)
-          if (onPolygonClick) {
-            onPolygonClick(area.id, true)
-          }
+        if (editMode && onAreaClick) {
+          onAreaClick(area.id)
         }
       })
 
@@ -204,79 +233,37 @@ export default function usePolygonDrawing() {
         })
       }
     })
-  }, [editMode, boundaryType, setupPolygonEditListeners, removePolygonEditListeners])
+
+    console.log(`✅ Drew ${polygonsRef.current.size} polygons on map`)
+  }, [mapInstance, setupPolygonEditListeners, removePolygonEditListeners])
 
   /**
-   * Style a polygon with specific options
+   * Clear specific polygons or all if no IDs provided
    */
-  const stylePolygon = useCallback((polygon, options) => {
-    if (polygon && polygon.setOptions) {
-      polygon.setOptions(options)
-    }
-  }, [])
-
-  /**
-   * Delete a polygon from the map
-   */
-  const deletePolygon = useCallback((areaId) => {
-    const polygon = polygonsRef.current.get(areaId)
-    if (polygon) {
-      removePolygonEditListeners(polygon)
-      polygon.setMap(null)
-      polygonsRef.current.delete(areaId)
+  const clearPolygons = useCallback((polygonIds = null) => {
+    if (polygonIds) {
+      polygonIds.forEach(id => {
+        const polygon = polygonsRef.current.get(id)
+        if (polygon) {
+          removePolygonEditListeners(polygon)
+          polygon.setMap(null)
+          polygonsRef.current.delete(id)
+        }
+      })
+    } else {
+      polygonsRef.current.forEach(polygon => {
+        removePolygonEditListeners(polygon)
+        polygon.setMap(null)
+      })
+      polygonsRef.current.clear()
     }
   }, [removePolygonEditListeners])
 
   /**
-   * Toggle drawing mode
+   * Set editability for all polygons
    */
-  const toggleDrawingMode = useCallback(() => {
-    if (!drawingManagerRef.current) return false
-    
-    const newDrawingMode = !drawingMode
-    setDrawingMode(newDrawingMode)
-    drawingManagerRef.current.setDrawingMode(
-      newDrawingMode ? window.google.maps.drawing.OverlayType.POLYGON : null
-    )
-    
-    return newDrawingMode
-  }, [drawingMode])
-
-  /**
-   * Toggle edit mode for all polygons
-   */
-  const toggleEditMode = useCallback((showNotification) => {
-    const newEditMode = !editMode
-    setEditMode(newEditMode)
-    
-    if (newEditMode) {
-      // Entering edit mode - make polygons editable
-      polygonsRef.current.forEach((polygon) => {
-        polygon.setOptions(POLYGON_STYLES.editMode)
-      })
-      if (showNotification) {
-        showNotification(SUCCESS_MESSAGES.editModeEnabled, 'info')
-      }
-    } else {
-      // Exiting edit mode - make polygons read-only
-      polygonsRef.current.forEach((polygon) => {
-        polygon.setOptions(POLYGON_STYLES.default)
-      })
-      setSelectedArea(null)
-      setDrawingMode(false)
-      if (drawingManagerRef.current) {
-        drawingManagerRef.current.setDrawingMode(null)
-      }
-    }
-    
-    return newEditMode
-  }, [editMode])
-
-  /**
-   * Update polygon styles based on edit mode
-   */
-  const updatePolygonStyles = useCallback(() => {
-    const styles = editMode ? POLYGON_STYLES.editMode : POLYGON_STYLES.default
+  const setPolygonEditability = useCallback((editable) => {
+    const styles = editable ? POLYGON_STYLES.editMode : POLYGON_STYLES.default
     polygonsRef.current.forEach(polygon => {
       polygon.setOptions({
         editable: styles.editable,
@@ -285,54 +272,24 @@ export default function usePolygonDrawing() {
         fillOpacity: styles.fillOpacity
       })
     })
-  }, [editMode])
-
-  /**
-   * Get a polygon by area ID
-   */
-  const getPolygon = useCallback((areaId) => {
-    return polygonsRef.current.get(areaId)
   }, [])
 
-  /**
-   * Clear all polygons from the map
-   */
-  const clearPolygons = useCallback(() => {
-    polygonsRef.current.forEach(polygon => {
-      removePolygonEditListeners(polygon)
-      polygon.setMap(null)
-    })
-    polygonsRef.current.clear()
-  }, [removePolygonEditListeners])
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (drawingManager) {
+        drawingManager.setMap(null)
+      }
+      clearPolygons()
+    }
+  }, [drawingManager, clearPolygons])
 
   return {
-    // State
-    editMode,
-    drawingMode,
-    selectedArea,
-    boundaryType,
-    
-    // Refs
-    drawingManagerRef,
-    polygonsRef,
-    
-    // Actions
-    initializeDrawingManager,
-    setupPolygonEditListeners,
-    removePolygonEditListeners,
-    drawLeagueBoundaries,
-    stylePolygon,
-    deletePolygon,
-    toggleDrawingMode,
-    toggleEditMode,
-    updatePolygonStyles,
-    getPolygon,
+    drawingManager,
+    initializeDrawing,
+    toggleDrawing,
+    drawBoundaries,
     clearPolygons,
-    
-    // Setters
-    setEditMode,
-    setDrawingMode,
-    setSelectedArea,
-    setBoundaryType
+    setPolygonEditability
   }
 }
