@@ -3,16 +3,9 @@
 import React, { useState, useEffect } from 'react'
 import CityFormModal from '@/components/admin/cities/CityFormModal'
 import CityGoogleEnhancer from '@/components/admin/cities/CityGoogleEnhancer'
-import { 
-  CITY_AREAS_MAPPING, 
-  AREA_DISPLAY_NAMES, 
-  CITY_DISPLAY_NAMES,
-  getAreasForCity
-} from '@/lib/utils/areaMapping'
 
 export default function AdminCitiesPage() {
   const [cities, setCities] = useState([])
-  const [clubs, setClubs] = useState([]) // Added to get area-aware club data
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [showFormModal, setShowFormModal] = useState(false)
@@ -21,11 +14,9 @@ export default function AdminCitiesPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [sortBy, setSortBy] = useState('displayOrder')
-  const [showAreaDetails, setShowAreaDetails] = useState({}) // Track which cities show area details
 
   useEffect(() => {
     fetchCities()
-    fetchClubs()
   }, [])
 
   const fetchCities = async () => {
@@ -43,18 +34,6 @@ export default function AdminCitiesPage() {
     }
   }
 
-  const fetchClubs = async () => {
-    try {
-      const response = await fetch('/api/admin/clubs')
-      if (!response.ok) throw new Error('Failed to fetch clubs')
-      
-      const data = await response.json()
-      setClubs(data.clubs || [])
-    } catch (err) {
-      console.error('Error fetching clubs:', err.message)
-    }
-  }
-
   const handleDelete = async (cityId, cityName) => {
     if (!confirm(`Are you sure you want to delete "${cityName}"? This will only work if no clubs are associated with this city.`)) return
 
@@ -67,7 +46,6 @@ export default function AdminCitiesPage() {
       if (!response.ok) throw new Error(data.error)
       
       await fetchCities()
-      await fetchClubs()
     } catch (err) {
       alert('Error deleting city: ' + err.message)
     }
@@ -85,14 +63,12 @@ export default function AdminCitiesPage() {
 
   const handleFormSuccess = () => {
     fetchCities()
-    fetchClubs()
     setShowFormModal(false)
     setEditingCity(null)
   }
 
   const handleEnhancerSuccess = () => {
     fetchCities()
-    fetchClubs()
     setShowEnhancerModal(false)
   }
 
@@ -111,71 +87,9 @@ export default function AdminCitiesPage() {
         })
       }
       await fetchCities()
-      await fetchClubs()
     } catch (err) {
       alert('Error updating club counts: ' + err.message)
     }
-  }
-
-  // Enhanced function to get area-aware club counts
-  const getAreaAwareClubCounts = (citySlug) => {
-    const cityClubs = clubs.filter(club => club.location?.city === citySlug)
-    const areas = getAreasForCity(citySlug)
-    
-    const areaBreakdown = {}
-    let totalClubs = 0
-    
-    areas.forEach(area => {
-      const areaClubs = cityClubs.filter(club => club.location?.area === area)
-      if (areaClubs.length > 0) {
-        areaBreakdown[area] = areaClubs.length
-        totalClubs += areaClubs.length
-      }
-    })
-    
-    return {
-      total: totalClubs,
-      byArea: areaBreakdown,
-      hasAreas: Object.keys(areaBreakdown).length > 0
-    }
-  }
-
-  // Enhanced function to get all area statistics
-  const getAreaStatistics = () => {
-    const stats = {
-      totalAreas: 0,
-      areasWithClubs: 0,
-      clubsByMainCity: {},
-      areaBreakdown: {}
-    }
-    
-    // Calculate area statistics
-    Object.entries(CITY_AREAS_MAPPING).forEach(([mainCity, areas]) => {
-      stats.totalAreas += areas.length
-      stats.clubsByMainCity[mainCity] = 0
-      stats.areaBreakdown[mainCity] = {}
-      
-      areas.forEach(area => {
-        const areaClubs = clubs.filter(club => 
-          club.location?.city === mainCity && club.location?.area === area
-        )
-        
-        if (areaClubs.length > 0) {
-          stats.areasWithClubs++
-          stats.clubsByMainCity[mainCity] += areaClubs.length
-          stats.areaBreakdown[mainCity][area] = areaClubs.length
-        }
-      })
-    })
-    
-    return stats
-  }
-
-  const toggleAreaDetails = (cityId) => {
-    setShowAreaDetails(prev => ({
-      ...prev,
-      [cityId]: !prev[cityId]
-    }))
   }
 
   const getStatusBadgeColor = (status) => {
@@ -262,8 +176,7 @@ export default function AdminCitiesPage() {
       }
     })
 
-  // Enhanced statistics with area awareness
-  const areaStats = getAreaStatistics()
+  // Basic statistics
   const stats = {
     total: cities.length,
     active: cities.filter(c => c.status === 'active').length,
@@ -272,10 +185,7 @@ export default function AdminCitiesPage() {
     provinces: [...new Set(cities.map(c => c.province))].length,
     withCoordinates: cities.filter(c => c.coordinates?.lat && c.coordinates?.lng).length,
     googleEnhanced: cities.filter(c => c.importSource === 'google').length,
-    withImages: cities.filter(c => hasImages(c)).length,
-    // New area-aware statistics
-    totalAreas: areaStats.totalAreas,
-    areasWithClubs: areaStats.areasWithClubs
+    withImages: cities.filter(c => hasImages(c)).length
   }
 
   if (loading && cities.length === 0) {
@@ -292,7 +202,7 @@ export default function AdminCitiesPage() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Cities Management</h2>
-          <p className="text-gray-600 mt-1">Manage cities with area-based organization for tennis clubs</p>
+          <p className="text-gray-600 mt-1">Manage cities where tennis clubs are located</p>
         </div>
         <div className="flex space-x-3">
           <button
@@ -326,19 +236,19 @@ export default function AdminCitiesPage() {
         </div>
       </div>
 
-      {/* Enhanced Stats Cards with Area Information */}
-      <div className="grid grid-cols-1 md:grid-cols-10 gap-4">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
         <div className="bg-white rounded-lg shadow p-6">
           <div className="text-3xl font-bold text-parque-purple">{stats.total}</div>
           <div className="text-sm text-gray-600">Total Cities</div>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
           <div className="text-3xl font-bold text-green-600">{stats.active}</div>
-          <div className="text-sm text-gray-600">Active Cities</div>
+          <div className="text-sm text-gray-600">Active</div>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
           <div className="text-3xl font-bold text-blue-600">{stats.withClubs}</div>
-          <div className="text-sm text-gray-600">Cities with Clubs</div>
+          <div className="text-sm text-gray-600">With Clubs</div>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
           <div className="text-3xl font-bold text-indigo-600">{stats.totalClubs}</div>
@@ -354,51 +264,32 @@ export default function AdminCitiesPage() {
         </div>
         <div className="bg-white rounded-lg shadow p-6">
           <div className="text-3xl font-bold text-blue-700">{stats.googleEnhanced}</div>
-          <div className="text-sm text-gray-600">Google Enhanced</div>
+          <div className="text-sm text-gray-600">Enhanced</div>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
           <div className="text-3xl font-bold text-purple-600">{stats.withImages}</div>
           <div className="text-sm text-gray-600">With Images</div>
         </div>
-        {/* New Area Statistics */}
-        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-yellow-400">
-          <div className="text-3xl font-bold text-yellow-600">{stats.totalAreas}</div>
-          <div className="text-sm text-gray-600">Total Areas</div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-6 border-l-4 border-yellow-400">
-          <div className="text-3xl font-bold text-yellow-600">{stats.areasWithClubs}</div>
-          <div className="text-sm text-gray-600">Areas with Clubs</div>
-        </div>
       </div>
 
-      {/* Area System Information Panel */}
-      {stats.totalAreas > 0 && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <div className="flex items-start space-x-3">
-            <svg className="w-5 h-5 text-yellow-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-            </svg>
-            <div className="flex-1">
-              <h4 className="font-medium text-yellow-900">
-                Area-Based Organization Active
-              </h4>
-              <p className="text-sm text-yellow-800 mt-1">
-                {stats.areasWithClubs} of {stats.totalAreas} configured areas have clubs. 
-                Cities like "Marbella" include area clubs (El Paraíso, Nueva Andalucía, etc.) for league organization.
-              </p>
-              <div className="mt-3 grid grid-cols-1 md:grid-cols-4 gap-3 text-sm">
-                {Object.entries(areaStats.clubsByMainCity).map(([city, count]) => (
-                  count > 0 && (
-                    <div key={city} className="bg-yellow-100 rounded px-2 py-1">
-                      <span className="font-medium">{CITY_DISPLAY_NAMES[city] || city}</span>: {count} clubs
-                    </div>
-                  )
-                ))}
-              </div>
-            </div>
+      {/* Info Panel about GPS Areas */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-start space-x-3">
+          <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+          </svg>
+          <div className="flex-1">
+            <h4 className="font-medium text-blue-900">
+              GPS-Based League Areas Active
+            </h4>
+            <p className="text-sm text-blue-800 mt-1">
+              League assignment is now handled automatically through GPS-based polygon areas. 
+              Cities are just reference points for club locations. View and edit league boundaries 
+              in the <a href="/admin/areas/map" className="underline font-medium">Areas Map Editor</a>.
+            </p>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Image Management Info */}
       {stats.total > 0 && stats.withImages < stats.total && (
@@ -413,25 +304,6 @@ export default function AdminCitiesPage() {
               </h4>
               <p className="text-sm text-purple-800 mt-1">
                 Cities with images provide better user experience on the frontend. Edit each city to manage images or use "Enhance with Google" to automatically fetch photos.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Google Enhancement Info */}
-      {stats.total > 0 && stats.withCoordinates < stats.total && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-start space-x-3">
-            <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-            </svg>
-            <div className="flex-1">
-              <h4 className="font-medium text-blue-900">
-                {stats.total - stats.withCoordinates} cities need GPS enhancement
-              </h4>
-              <p className="text-sm text-blue-800 mt-1">
-                Click "Enhance with Google" to automatically fetch GPS coordinates, formatted addresses, and place IDs for all cities using Google Maps API.
               </p>
             </div>
           </div>
@@ -504,19 +376,19 @@ export default function AdminCitiesPage() {
         </div>
       )}
 
-      {/* Enhanced Cities Table with Area Information */}
+      {/* Cities Table */}
       <div className="bg-white shadow rounded-lg overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                City Name & Areas
+                City Name
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Province
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Clubs & Areas
+                Clubs
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Images
@@ -536,190 +408,110 @@ export default function AdminCitiesPage() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredCities.map((city) => {
-              const areaInfo = getAreaAwareClubCounts(city.slug)
-              const configuredAreas = getAreasForCity(city.slug)
-              const isAreaDetailsOpen = showAreaDetails[city._id]
-              
-              return (
-                <React.Fragment key={city._id}>
-                  <tr className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900 flex items-center">
-                          {city.name.es}
-                          {city.name.es !== city.name.en && (
-                            <span className="text-gray-500 ml-2">/ {city.name.en}</span>
-                          )}
-                          {city.coordinates?.lat && city.coordinates?.lng && (
-                            <span className="ml-2 text-green-500" title="Has GPS coordinates">
-                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                              </svg>
-                            </span>
-                          )}
-                          {configuredAreas.length > 0 && (
-                            <button
-                              onClick={() => toggleAreaDetails(city._id)}
-                              className="ml-2 text-yellow-600 hover:text-yellow-800"
-                              title={`${configuredAreas.length} areas configured`}
-                            >
-                              <svg className={`w-4 h-4 transition-transform ${isAreaDetailsOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                              </svg>
-                            </button>
-                          )}
-                        </div>
-                        <div className="text-sm text-gray-500">{city.slug}</div>
-                        {city.coordinates?.lat && (
-                          <div className="text-xs text-gray-400">
-                            📍 {city.coordinates.lat.toFixed(4)}, {city.coordinates.lng.toFixed(4)}
-                          </div>
-                        )}
-                        {configuredAreas.length > 0 && (
-                          <div className="text-xs text-yellow-600 mt-1">
-                            {configuredAreas.length} areas configured
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {city.province}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div>
-                        <div className="text-sm text-gray-900 font-medium">
-                          {areaInfo.total} clubs total
-                          {areaInfo.hasAreas && (
-                            <span className="text-xs text-yellow-600 ml-1">
-                              (from {Object.keys(areaInfo.byArea).length} areas)
-                            </span>
-                          )}
-                        </div>
-                        {city.clubCount > 0 && (
-                          <button
-                            onClick={() => window.open(`/admin/clubs?city=${city.slug}`, '_blank')}
-                            className="text-xs text-parque-purple hover:text-parque-purple/80"
-                          >
-                            View clubs →
-                          </button>
-                        )}
-                        {areaInfo.hasAreas && Object.keys(areaInfo.byArea).length <= 3 && (
-                          <div className="mt-1 flex flex-wrap gap-1">
-                            {Object.entries(areaInfo.byArea).map(([area, count]) => (
-                              <span key={area} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                                {AREA_DISPLAY_NAMES[area] || area}: {count}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {hasImages(city) ? (
-                        <div className="flex items-center space-x-2">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                            <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-                            </svg>
-                            {getImageCount(city)}
-                          </span>
-                          {city.images?.main && (
-                            <img
-                              src={city.images.main.includes('google-photo') 
-                                ? city.images.main 
-                                : city.images.main
-                              }
-                              alt={city.name.es}
-                              className="w-8 h-8 rounded object-cover"
-                              onError={(e) => {
-                                e.target.src = getFallbackImageUrl(city, 100, 100)
-                              }}
-                            />
-                          )}
-                        </div>
-                      ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
-                          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            {filteredCities.map((city) => (
+              <tr key={city._id} className="hover:bg-gray-50">
+                <td className="px-6 py-4">
+                  <div>
+                    <div className="text-sm font-medium text-gray-900 flex items-center">
+                      {city.name.es}
+                      {city.name.es !== city.name.en && (
+                        <span className="text-gray-500 ml-2">/ {city.name.en}</span>
+                      )}
+                      {city.coordinates?.lat && city.coordinates?.lng && (
+                        <span className="ml-2 text-green-500" title="Has GPS coordinates">
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                           </svg>
-                          No Images
                         </span>
                       )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(city.status)}`}>
-                        {city.status}
+                    </div>
+                    <div className="text-sm text-gray-500">{city.slug}</div>
+                    {city.coordinates?.lat && (
+                      <div className="text-xs text-gray-400">
+                        📍 {city.coordinates.lat.toFixed(4)}, {city.coordinates.lng.toFixed(4)}
+                      </div>
+                    )}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {city.province}
+                </td>
+                <td className="px-6 py-4">
+                  <div>
+                    <div className="text-sm text-gray-900 font-medium">
+                      {city.clubCount} clubs
+                    </div>
+                    {city.clubCount > 0 && (
+                      <button
+                        onClick={() => window.open(`/admin/clubs?city=${city.slug}`, '_blank')}
+                        className="text-xs text-parque-purple hover:text-parque-purple/80"
+                      >
+                        View clubs →
+                      </button>
+                    )}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {hasImages(city) ? (
+                    <div className="flex items-center space-x-2">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                        <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                        </svg>
+                        {getImageCount(city)}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getImportSourceBadge(city.importSource)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {city.displayOrder}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleEdit(city)}
-                        className="text-indigo-600 hover:text-indigo-900 mr-4"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(city._id, city.name.es)}
-                        className="text-red-600 hover:text-red-900"
-                        disabled={city.clubCount > 0}
-                        title={city.clubCount > 0 ? 'Cannot delete city with clubs' : 'Delete city'}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                  
-                  {/* Area Details Expansion Row */}
-                  {isAreaDetailsOpen && configuredAreas.length > 0 && (
-                    <tr>
-                      <td colSpan="8" className="px-6 py-4 bg-yellow-50">
-                        <div className="space-y-3">
-                          <h4 className="text-sm font-medium text-gray-900">
-                            Areas in {city.name.es} ({configuredAreas.length} total)
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            {configuredAreas.map(area => {
-                              const areaClubCount = areaInfo.byArea[area] || 0
-                              return (
-                                <div key={area} className="bg-white rounded-lg border p-3">
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-sm font-medium text-gray-900">
-                                      {AREA_DISPLAY_NAMES[area] || area}
-                                    </span>
-                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                                      areaClubCount > 0 
-                                        ? 'bg-green-100 text-green-800' 
-                                        : 'bg-gray-100 text-gray-600'
-                                    }`}>
-                                      {areaClubCount} clubs
-                                    </span>
-                                  </div>
-                                  {areaClubCount > 0 && (
-                                    <button
-                                      onClick={() => window.open(`/admin/clubs?city=${city.slug}&area=${area}`, '_blank')}
-                                      className="text-xs text-parque-purple hover:text-parque-purple/80 mt-1"
-                                    >
-                                      View area clubs →
-                                    </button>
-                                  )}
-                                </div>
-                              )
-                            })}
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
+                      {city.images?.main && (
+                        <img
+                          src={city.images.main.includes('google-photo') 
+                            ? city.images.main 
+                            : city.images.main
+                          }
+                          alt={city.name.es}
+                          className="w-8 h-8 rounded object-cover"
+                          onError={(e) => {
+                            e.target.src = getFallbackImageUrl(city, 100, 100)
+                          }}
+                        />
+                      )}
+                    </div>
+                  ) : (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      No Images
+                    </span>
                   )}
-                </React.Fragment>
-              )
-            })}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(city.status)}`}>
+                    {city.status}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {getImportSourceBadge(city.importSource)}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {city.displayOrder}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <button
+                    onClick={() => handleEdit(city)}
+                    className="text-indigo-600 hover:text-indigo-900 mr-4"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(city._id, city.name.es)}
+                    className="text-red-600 hover:text-red-900"
+                    disabled={city.clubCount > 0}
+                    title={city.clubCount > 0 ? 'Cannot delete city with clubs' : 'Delete city'}
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
 
