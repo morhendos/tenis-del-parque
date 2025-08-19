@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import ClubImageManager from './ClubImageManager'
+import CourtsManager from './CourtsManager'
 import { 
   getCityOptions, 
   generateDisplayName, 
@@ -45,6 +46,65 @@ const DataSourceIndicator = ({ source }) => {
   )
 }
 
+// Helper function to convert legacy courts to new structure
+const convertLegacyCourts = (courts) => {
+  if (!courts) {
+    return {
+      tennis: { total: 0, indoor: 0, outdoor: 0, surfaces: [] },
+      padel: { total: 0, indoor: 0, outdoor: 0, surfaces: [] },
+      pickleball: { total: 0, indoor: 0, outdoor: 0, surfaces: [] }
+    }
+  }
+
+  // If it's already in the new format
+  if (courts.tennis || courts.padel || courts.pickleball) {
+    return {
+      tennis: courts.tennis || { total: 0, indoor: 0, outdoor: 0, surfaces: [] },
+      padel: courts.padel || { total: 0, indoor: 0, outdoor: 0, surfaces: [] },
+      pickleball: courts.pickleball || { total: 0, indoor: 0, outdoor: 0, surfaces: [] }
+    }
+  }
+
+  // Convert from legacy format
+  const tennisSurfaces = []
+  const padelSurfaces = []
+  
+  if (courts.surfaces && Array.isArray(courts.surfaces)) {
+    courts.surfaces.forEach(surface => {
+      if (surface.type === 'padel') {
+        padelSurfaces.push({ type: 'synthetic', count: surface.count })
+      } else {
+        tennisSurfaces.push(surface)
+      }
+    })
+  }
+
+  // Calculate padel courts from surfaces
+  const padelCount = padelSurfaces.reduce((sum, s) => sum + s.count, 0)
+  const tennisCount = Math.max(0, (courts.total || 0) - padelCount)
+
+  return {
+    tennis: {
+      total: tennisCount,
+      indoor: padelCount > 0 ? Math.max(0, (courts.indoor || 0) - Math.floor(padelCount / 2)) : (courts.indoor || 0),
+      outdoor: padelCount > 0 ? Math.max(0, (courts.outdoor || 0) - Math.ceil(padelCount / 2)) : (courts.outdoor || 0),
+      surfaces: tennisSurfaces
+    },
+    padel: {
+      total: padelCount,
+      indoor: Math.floor(padelCount / 2),
+      outdoor: Math.ceil(padelCount / 2),
+      surfaces: padelSurfaces
+    },
+    pickleball: {
+      total: 0,
+      indoor: 0,
+      outdoor: 0,
+      surfaces: []
+    }
+  }
+}
+
 export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -80,12 +140,11 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       en: ''
     },
     
-    // Courts
+    // Courts - NEW STRUCTURE
     courts: {
-      total: 0,
-      surfaces: [],
-      indoor: 0,
-      outdoor: 0
+      tennis: { total: 0, indoor: 0, outdoor: 0, surfaces: [] },
+      padel: { total: 0, indoor: 0, outdoor: 0, surfaces: [] },
+      pickleball: { total: 0, indoor: 0, outdoor: 0, surfaces: [] }
     },
     
     // Amenities
@@ -181,9 +240,6 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
     amenitiesVerified: false,
     servicesVerified: false
   })
-
-  // Surface type being added
-  const [newSurface, setNewSurface] = useState({ type: 'clay', count: 1 })
 
   // City options from our area mapping system
   const [cityOptions, setCityOptions] = useState([])
@@ -298,7 +354,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
     }))
   }
 
-  // Random data generator with area support
+  // Random data generator with area support and multi-sport courts
   const generateRandomData = () => {
     // Random club names
     const prefixes = ['Club de Tenis', 'Tennis Club', 'Real Club', 'Centro Deportivo', 'Complejo Tenis']
@@ -344,20 +400,34 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       sotogrande: { lat: 36.2874 + (Math.random() - 0.5) * 0.05, lng: -5.2687 + (Math.random() - 0.5) * 0.05 }
     }
     
-    // Random courts and other data (same as before...)
-    const totalOutdoor = Math.floor(Math.random() * 12) + 2
-    const totalIndoor = Math.random() > 0.7 ? Math.floor(Math.random() * 4) + 1 : 0
+    // Random multi-sport courts
+    const hasTennis = Math.random() > 0.1 // 90% chance
+    const hasPadel = Math.random() > 0.4 // 60% chance
+    const hasPickleball = Math.random() > 0.8 // 20% chance
     
-    const surfaceTypes = ['clay', 'hard', 'synthetic', 'padel']
-    const surfaces = []
-    let remainingCourts = totalOutdoor + totalIndoor
+    const tennisOutdoor = hasTennis ? Math.floor(Math.random() * 8) + 2 : 0
+    const tennisIndoor = hasTennis && Math.random() > 0.7 ? Math.floor(Math.random() * 3) + 1 : 0
     
-    while (remainingCourts > 0) {
-      const surfaceType = surfaceTypes[Math.floor(Math.random() * surfaceTypes.length)]
-      const count = Math.min(remainingCourts, Math.floor(Math.random() * 4) + 1)
-      surfaces.push({ type: surfaceType, count })
-      remainingCourts -= count
+    const padelOutdoor = hasPadel ? Math.floor(Math.random() * 6) + 1 : 0
+    const padelIndoor = hasPadel && Math.random() > 0.8 ? Math.floor(Math.random() * 2) + 1 : 0
+    
+    const pickleballOutdoor = hasPickleball ? Math.floor(Math.random() * 4) + 1 : 0
+    const pickleballIndoor = 0 // Rarely indoor
+    
+    // Generate surfaces for each sport
+    const tennisSurfaces = []
+    if (hasTennis) {
+      const surfaceTypes = ['clay', 'hard', 'synthetic']
+      const mainSurface = surfaceTypes[Math.floor(Math.random() * surfaceTypes.length)]
+      tennisSurfaces.push({ type: mainSurface, count: Math.max(tennisOutdoor + tennisIndoor - 2, 1) })
+      if (tennisOutdoor + tennisIndoor > 4) {
+        const secondSurface = surfaceTypes.filter(s => s !== mainSurface)[Math.floor(Math.random() * 2)]
+        tennisSurfaces.push({ type: secondSurface, count: 2 })
+      }
     }
+    
+    const padelSurfaces = hasPadel ? [{ type: 'synthetic', count: padelOutdoor + padelIndoor }] : []
+    const pickleballSurfaces = hasPickleball ? [{ type: 'hard', count: pickleballOutdoor + pickleballIndoor }] : []
     
     const isPremium = Math.random() > 0.5
     const randomAmenities = {
@@ -416,16 +486,32 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       },
       
       description: {
-        es: `${clubName} es un ${isPremium ? 'prestigioso' : 'acogedor'} club de tenis ubicado en ${displayName}. Contamos con ${totalOutdoor + totalIndoor} pistas ${totalIndoor > 0 ? '(incluyendo ' + totalIndoor + ' cubiertas)' : ''} y ofrecemos una experiencia de tenis ${isPremium ? 'premium' : 'excepcional'} para jugadores de todos los niveles.`,
-        en: `${clubName} is a ${isPremium ? 'prestigious' : 'welcoming'} tennis club located in ${displayName}. We feature ${totalOutdoor + totalIndoor} courts ${totalIndoor > 0 ? '(including ' + totalIndoor + ' indoor)' : ''} and offer ${isPremium ? 'a premium' : 'an exceptional'} tennis experience for players of all levels.`
+        es: `${clubName} es un ${isPremium ? 'prestigioso' : 'acogedor'} complejo deportivo ubicado en ${displayName}. ${hasTennis ? `Contamos con ${tennisOutdoor + tennisIndoor} pistas de tenis. ` : ''}${hasPadel ? `Disponemos de ${padelOutdoor + padelIndoor} pistas de pádel. ` : ''}${hasPickleball ? `Ofrecemos ${pickleballOutdoor + pickleballIndoor} pistas de pickleball. ` : ''}Una experiencia deportiva ${isPremium ? 'premium' : 'excepcional'} para jugadores de todos los niveles.`,
+        en: `${clubName} is a ${isPremium ? 'prestigious' : 'welcoming'} sports complex located in ${displayName}. ${hasTennis ? `We feature ${tennisOutdoor + tennisIndoor} tennis courts. ` : ''}${hasPadel ? `We have ${padelOutdoor + padelIndoor} padel courts. ` : ''}${hasPickleball ? `We offer ${pickleballOutdoor + pickleballIndoor} pickleball courts. ` : ''}${isPremium ? 'A premium' : 'An exceptional'} sports experience for players of all levels.`
       },
       
+      // Multi-sport courts
       courts: {
-        total: totalOutdoor + totalIndoor,
-        surfaces: surfaces,
-        indoor: totalIndoor,
-        outdoor: totalOutdoor
+        tennis: {
+          total: tennisOutdoor + tennisIndoor,
+          indoor: tennisIndoor,
+          outdoor: tennisOutdoor,
+          surfaces: tennisSurfaces
+        },
+        padel: {
+          total: padelOutdoor + padelIndoor,
+          indoor: padelIndoor,
+          outdoor: padelOutdoor,
+          surfaces: padelSurfaces
+        },
+        pickleball: {
+          total: pickleballOutdoor + pickleballIndoor,
+          indoor: pickleballIndoor,
+          outdoor: pickleballOutdoor,
+          surfaces: pickleballSurfaces
+        }
       },
+      
       amenities: randomAmenities,
       services: randomServices,
       contact: {
@@ -472,8 +558,8 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
           en: `${clubName} - Tennis Club in ${displayName}`
         },
         metaDescription: {
-          es: `Descubre ${clubName}, ${isPremium ? 'el mejor club de tenis' : 'tu club de tenis'} en ${displayName}. ${totalOutdoor + totalIndoor} pistas disponibles.`,
-          en: `Discover ${clubName}, ${isPremium ? 'the premier tennis club' : 'your tennis club'} in ${displayName}. ${totalOutdoor + totalIndoor} courts available.`
+          es: `Descubre ${clubName}, ${isPremium ? 'el mejor club de tenis' : 'tu club de tenis'} en ${displayName}. ${hasTennis ? 'Tenis, ' : ''}${hasPadel ? 'Pádel, ' : ''}${hasPickleball ? 'Pickleball' : ''} disponibles.`,
+          en: `Discover ${clubName}, ${isPremium ? 'the premier tennis club' : 'your tennis club'} in ${displayName}. ${hasTennis ? 'Tennis, ' : ''}${hasPadel ? 'Padel, ' : ''}${hasPickleball ? 'Pickleball' : ''} available.`
         },
         keywords: {
           es: [`tenis ${selectedCityOption.value}`, `club tenis ${selectedArea.value}`, 'pistas tenis', selectedCityOption.value],
@@ -491,14 +577,14 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
   // Initialize form data when editing
   useEffect(() => {
     if (club) {
+      // Convert legacy courts structure if needed
+      const courtsData = convertLegacyCourts(club.courts)
+      
       setFormData({
         ...club,
         // Ensure arrays are arrays
         tags: club.tags || [],
-        courts: {
-          ...club.courts,
-          surfaces: club.courts?.surfaces || []
-        },
+        courts: courtsData,
         // Enhanced location with area support
         location: {
           address: club.location?.address || '',
@@ -533,112 +619,15 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
         servicesVerified: club.servicesVerified || false
       })
     } else {
-      // Reset to initial state for new club with area support
-      setFormData({
-        name: '',
-        slug: '',
-        status: 'active',
-        featured: false,
-        displayOrder: 0,
-        location: {
-          address: '',
-          area: '',
-          city: 'marbella',
-          administrativeCity: '',
-          displayName: '',
-          postalCode: '',
-          coordinates: {
-            lat: null,
-            lng: null
-          },
-          googleMapsUrl: ''
-        },
-        description: {
-          es: '',
-          en: ''
-        },
+      // Reset to initial state for new club with multi-sport support
+      setFormData(prev => ({
+        ...prev,
         courts: {
-          total: 0,
-          surfaces: [],
-          indoor: 0,
-          outdoor: 0
-        },
-        amenities: {
-          parking: false,
-          lighting: false,
-          proShop: false,
-          restaurant: false,
-          changingRooms: false,
-          showers: false,
-          lockers: false,
-          wheelchair: false,
-          swimming: false,
-          gym: false,
-          sauna: false,
-          physio: false
-        },
-        services: {
-          lessons: false,
-          coaching: false,
-          stringing: false,
-          tournaments: false,
-          summerCamps: false
-        },
-        contact: {
-          phone: '',
-          email: '',
-          website: '',
-          facebook: '',
-          instagram: ''
-        },
-        operatingHours: {
-          monday: { open: '08:00', close: '22:00' },
-          tuesday: { open: '08:00', close: '22:00' },
-          wednesday: { open: '08:00', close: '22:00' },
-          thursday: { open: '08:00', close: '22:00' },
-          friday: { open: '08:00', close: '22:00' },
-          saturday: { open: '08:00', close: '22:00' },
-          sunday: { open: '08:00', close: '22:00' }
-        },
-        pricing: {
-          courtRental: {
-            hourly: {
-              min: null,
-              max: null,
-              currency: 'EUR'
-            },
-            membership: {
-              monthly: null,
-              annual: null,
-              currency: 'EUR'
-            }
-          },
-          publicAccess: true,
-          membershipRequired: false
-        },
-        tags: [],
-        images: {
-          main: '',
-          gallery: [],
-          googlePhotoReference: null
-        },
-        seo: {
-          metaTitle: {
-            es: '',
-            en: ''
-          },
-          metaDescription: {
-            es: '',
-            en: ''
-          },
-          keywords: {
-            es: [],
-            en: []
-          }
-        },
-        amenitiesVerified: false,
-        servicesVerified: false
-      })
+          tennis: { total: 0, indoor: 0, outdoor: 0, surfaces: [] },
+          padel: { total: 0, indoor: 0, outdoor: 0, surfaces: [] },
+          pickleball: { total: 0, indoor: 0, outdoor: 0, surfaces: [] }
+        }
+      }))
     }
     setCurrentStep(1)
     setError(null)
@@ -662,41 +651,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
         newData.slug = generateSlug(value)
       }
       
-      // Auto-calculate total courts when indoor or outdoor changes
-      if (field === 'courts.indoor' || field === 'courts.outdoor') {
-        const indoor = field === 'courts.indoor' ? value : newData.courts.indoor
-        const outdoor = field === 'courts.outdoor' ? value : newData.courts.outdoor
-        newData.courts.total = (indoor || 0) + (outdoor || 0)
-      }
-      
       return newData
-    })
-  }
-
-  const addSurface = () => {
-    if (newSurface.type && newSurface.count > 0) {
-      setFormData(prev => ({
-        ...prev,
-        courts: {
-          ...prev.courts,
-          surfaces: [...prev.courts.surfaces, newSurface]
-        }
-      }))
-      setNewSurface({ type: 'clay', count: 1 })
-    }
-  }
-
-  const removeSurface = (index) => {
-    setFormData(prev => {
-      const surfaces = [...prev.courts.surfaces]
-      surfaces.splice(index, 1)
-      return {
-        ...prev,
-        courts: {
-          ...prev.courts,
-          surfaces
-        }
-      }
     })
   }
 
@@ -721,9 +676,13 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
       return false
     }
     
-    // Check if at least one court is added
-    if (formData.courts.total === 0) {
-      setError('At least one court (indoor or outdoor) is required')
+    // Check if at least one court is added across all sports
+    const totalCourts = (formData.courts.tennis?.total || 0) + 
+                       (formData.courts.padel?.total || 0) + 
+                       (formData.courts.pickleball?.total || 0)
+    
+    if (totalCourts === 0) {
+      setError('At least one court (of any type) is required')
       setCurrentStep(3)
       return false
     }
@@ -740,20 +699,16 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
     setError(null)
 
     try {
-      // Calculate total courts from indoor + outdoor
-      const totalCourts = (formData.courts.indoor || 0) + (formData.courts.outdoor || 0)
-      
       // Clean up the data before sending
       const dataToSend = {
         ...formData,
         // Ensure arrays are arrays
         tags: formData.tags || [],
+        // Ensure courts structure is complete
         courts: {
-          ...formData.courts,
-          surfaces: formData.courts.surfaces || [],
-          total: totalCourts, // Use calculated total
-          indoor: formData.courts.indoor || 0,
-          outdoor: formData.courts.outdoor || 0
+          tennis: formData.courts.tennis || { total: 0, indoor: 0, outdoor: 0, surfaces: [] },
+          padel: formData.courts.padel || { total: 0, indoor: 0, outdoor: 0, surfaces: [] },
+          pickleball: formData.courts.pickleball || { total: 0, indoor: 0, outdoor: 0, surfaces: [] }
         },
         // Enhanced location data
         location: {
@@ -787,7 +742,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
         }
       }
 
-      console.log('Sending club data with areas:', dataToSend)
+      console.log('Sending club data with multi-sport courts:', dataToSend)
 
       const url = club 
         ? `/api/admin/clubs/${club._id}` 
@@ -817,7 +772,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
         throw new Error(data.error || `Failed to ${club ? 'update' : 'create'} club`)
       }
 
-      console.log('Club saved successfully with areas:', data.club)
+      console.log('Club saved successfully with multi-sport courts:', data.club)
       onSuccess(data.club)
       onClose()
     } catch (err) {
@@ -1190,108 +1145,17 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
     </div>
   )
 
-  // Continue with other render methods (renderCourtsInfo, etc. - same as before)
+  // Use CourtsManager for courts info
   const renderCourtsInfo = () => (
     <div className="space-y-4">
       {isGoogleImport && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm">
           <p className="font-medium text-yellow-900 mb-1">⚠️ Default Data</p>
-          <p className="text-yellow-700">Court information is set to default values (6 clay courts). Please update with actual court details.</p>
+          <p className="text-yellow-700">Court information is set to default values. Please update with actual court details for tennis, padel, and pickleball.</p>
         </div>
       )}
       
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Indoor Courts *
-            <DataSourceIndicator source={getFieldSource('courts')} />
-          </label>
-          <input
-            type="number"
-            min="0"
-            value={formData.courts.indoor}
-            onChange={(e) => handleChange('courts.indoor', parseInt(e.target.value) || 0)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple"
-          />
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Outdoor Courts *
-            <DataSourceIndicator source={getFieldSource('courts')} />
-          </label>
-          <input
-            type="number"
-            min="0"
-            value={formData.courts.outdoor}
-            onChange={(e) => handleChange('courts.outdoor', parseInt(e.target.value) || 0)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple"
-          />
-        </div>
-      </div>
-      
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-        <p className="text-sm text-yellow-800">
-          <strong>Total Courts: {formData.courts.total}</strong> 
-          <span className="text-xs ml-2">(Automatically calculated from indoor + outdoor)</span>
-        </p>
-      </div>
-      
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Court Surfaces (Optional)
-        </label>
-        
-        {formData.courts.surfaces.map((surface, index) => (
-          <div key={index} className="flex items-center space-x-2 mb-2">
-            <span className="flex-1 text-sm">
-              {surface.count} {surface.type} court{surface.count !== 1 ? 's' : ''}
-            </span>
-            <button
-              type="button"
-              onClick={() => removeSurface(index)}
-              className="text-red-600 hover:text-red-800"
-            >
-              Remove
-            </button>
-          </div>
-        ))}
-        
-        <div className="flex items-center space-x-2 mt-2">
-          <select
-            value={newSurface.type}
-            onChange={(e) => setNewSurface(prev => ({ ...prev, type: e.target.value }))}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple"
-          >
-            <option value="clay">Clay</option>
-            <option value="hard">Hard</option>
-            <option value="grass">Grass</option>
-            <option value="synthetic">Synthetic</option>
-            <option value="carpet">Carpet</option>
-            <option value="padel">Padel</option>
-          </select>
-          
-          <input
-            type="number"
-            min="1"
-            value={newSurface.count}
-            onChange={(e) => setNewSurface(prev => ({ ...prev, count: parseInt(e.target.value) || 1 }))}
-            className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple"
-          />
-          
-          <button
-            type="button"
-            onClick={addSurface}
-            className="px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-parque-purple/90"
-          >
-            Add
-          </button>
-        </div>
-        
-        <p className="text-xs text-gray-500 mt-2">
-          Note: Court surfaces provide additional detail but don't affect the total court count.
-        </p>
-      </div>
+      <CourtsManager formData={formData} handleChange={handleChange} />
     </div>
   )
 
@@ -1522,7 +1386,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
                 <button
                   onClick={generateRandomData}
                   className="px-3 py-1 text-sm bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors flex items-center space-x-1"
-                  title="Fill with random test data including areas"
+                  title="Fill with random test data including multi-sport courts"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
@@ -1563,7 +1427,7 @@ export default function ClubFormModal({ isOpen, onClose, club, onSuccess }) {
               Step {currentStep} of {totalSteps}: {[
                 'Basic Information',
                 'Location & Areas',
-                'Courts',
+                'Courts & Sports',
                 'Amenities & Services',
                 'Contact & Pricing',
                 'Images'
