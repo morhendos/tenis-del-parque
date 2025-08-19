@@ -69,7 +69,7 @@ export default function ClubDetailPage() {
           lng: club.location.coordinates.lng 
         },
         zoom: 17, // Close zoom to see the club clearly
-        mapTypeId: 'terrain', // Terrain mode for better visualization
+        mapTypeId: 'satellite', // Satellite view by default for better visualization
         zoomControl: true, // Enable zoom controls
         zoomControlOptions: {
           position: window.google.maps.ControlPosition.RIGHT_CENTER // Position zoom controls on the right
@@ -78,7 +78,7 @@ export default function ClubDetailPage() {
         mapTypeControlOptions: {
           style: window.google.maps.MapTypeControlStyle.DROPDOWN_MENU,
           position: window.google.maps.ControlPosition.TOP_RIGHT,
-          mapTypeIds: ['terrain', 'satellite', 'roadmap', 'hybrid']
+          mapTypeIds: ['satellite', 'hybrid', 'terrain', 'roadmap']
         },
         streetViewControl: true, // Enable street view
         streetViewControlOptions: {
@@ -481,7 +481,7 @@ export default function ClubDetailPage() {
                   <div className="p-6 border-b">
                     <h2 className="text-xl font-semibold">{locale === 'es' ? 'Ubicación' : 'Location'}</h2>
                     <p className="text-sm text-gray-600 mt-1">
-                      {locale === 'es' ? 'Mapa en modo terreno con controles de zoom' : 'Terrain map with zoom controls'}
+                      {locale === 'es' ? 'Vista satélite con controles de zoom' : 'Satellite view with zoom controls'}
                     </p>
                   </div>
                   <div id="club-map" className="h-96"></div>
