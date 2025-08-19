@@ -103,24 +103,98 @@ export async function POST(request) {
       // Continue with club creation even if city creation fails
     }
 
-    // Ensure courts structure is valid and calculate total
-    const indoor = parseInt(data.courts?.indoor) || 0
-    const outdoor = parseInt(data.courts?.outdoor) || 0
-    const total = indoor + outdoor
-    
-    if (total < 1) {
-      return NextResponse.json(
-        { error: 'At least one court (indoor or outdoor) is required' },
-        { status: 400 }
-      )
-    }
-    
-    data.courts = {
-      ...data.courts,
-      total,
-      indoor,
-      outdoor,
-      surfaces: data.courts?.surfaces || []
+    // Handle new court structure
+    if (data.courts) {
+      // Calculate totals for each court type
+      if (data.courts.tennis) {
+        const tennisIndoor = parseInt(data.courts.tennis.indoor) || 0
+        const tennisOutdoor = parseInt(data.courts.tennis.outdoor) || 0
+        data.courts.tennis.total = tennisIndoor + tennisOutdoor
+        data.courts.tennis.indoor = tennisIndoor
+        data.courts.tennis.outdoor = tennisOutdoor
+        data.courts.tennis.surfaces = data.courts.tennis.surfaces || []
+      } else {
+        data.courts.tennis = {
+          total: 0,
+          indoor: 0,
+          outdoor: 0,
+          surfaces: []
+        }
+      }
+      
+      if (data.courts.padel) {
+        const padelIndoor = parseInt(data.courts.padel.indoor) || 0
+        const padelOutdoor = parseInt(data.courts.padel.outdoor) || 0
+        data.courts.padel.total = padelIndoor + padelOutdoor
+        data.courts.padel.indoor = padelIndoor
+        data.courts.padel.outdoor = padelOutdoor
+        data.courts.padel.surfaces = data.courts.padel.surfaces || []
+      } else {
+        data.courts.padel = {
+          total: 0,
+          indoor: 0,
+          outdoor: 0,
+          surfaces: []
+        }
+      }
+      
+      if (data.courts.pickleball) {
+        const pickleballIndoor = parseInt(data.courts.pickleball.indoor) || 0
+        const pickleballOutdoor = parseInt(data.courts.pickleball.outdoor) || 0
+        data.courts.pickleball.total = pickleballIndoor + pickleballOutdoor
+        data.courts.pickleball.indoor = pickleballIndoor
+        data.courts.pickleball.outdoor = pickleballOutdoor
+        data.courts.pickleball.surfaces = data.courts.pickleball.surfaces || []
+      } else {
+        data.courts.pickleball = {
+          total: 0,
+          indoor: 0,
+          outdoor: 0,
+          surfaces: []
+        }
+      }
+      
+      // Handle legacy structure for backward compatibility
+      if (data.courts.total !== undefined && !data.courts.tennis.total && !data.courts.padel.total && !data.courts.pickleball.total) {
+        const indoor = parseInt(data.courts.indoor) || 0
+        const outdoor = parseInt(data.courts.outdoor) || 0
+        const total = indoor + outdoor
+        
+        // Convert legacy to tennis courts by default
+        data.courts.tennis = {
+          total,
+          indoor,
+          outdoor,
+          surfaces: data.courts.surfaces || []
+        }
+      }
+      
+      // Clear legacy fields
+      data.courts.total = 0
+      data.courts.indoor = 0
+      data.courts.outdoor = 0
+      data.courts.surfaces = []
+      
+      // Validate that at least one court exists
+      const totalAllCourts = data.courts.tennis.total + data.courts.padel.total + data.courts.pickleball.total
+      
+      if (totalAllCourts < 1) {
+        return NextResponse.json(
+          { error: 'At least one court (tennis, padel, or pickleball) is required' },
+          { status: 400 }
+        )
+      }
+    } else {
+      // Initialize empty court structure
+      data.courts = {
+        tennis: { total: 0, indoor: 0, outdoor: 0, surfaces: [] },
+        padel: { total: 0, indoor: 0, outdoor: 0, surfaces: [] },
+        pickleball: { total: 0, indoor: 0, outdoor: 0, surfaces: [] },
+        total: 0,
+        indoor: 0,
+        outdoor: 0,
+        surfaces: []
+      }
     }
 
     // Ensure arrays are arrays
