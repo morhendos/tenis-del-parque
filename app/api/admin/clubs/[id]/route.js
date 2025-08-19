@@ -64,24 +64,88 @@ export async function PUT(request, { params }) {
       )
     }
 
-    // Ensure courts structure is valid and calculate total
-    const indoor = parseInt(data.courts?.indoor) || 0
-    const outdoor = parseInt(data.courts?.outdoor) || 0
-    const total = indoor + outdoor
-    
-    if (total < 1) {
-      return NextResponse.json(
-        { error: 'At least one court (indoor or outdoor) is required' },
-        { status: 400 }
-      )
-    }
-    
-    data.courts = {
-      ...data.courts,
-      total,
-      indoor,
-      outdoor,
-      surfaces: data.courts?.surfaces || []
+    // Handle new court structure
+    if (data.courts) {
+      // Calculate totals for each court type
+      if (data.courts.tennis) {
+        const tennisIndoor = parseInt(data.courts.tennis.indoor) || 0
+        const tennisOutdoor = parseInt(data.courts.tennis.outdoor) || 0
+        data.courts.tennis.total = tennisIndoor + tennisOutdoor
+        data.courts.tennis.indoor = tennisIndoor
+        data.courts.tennis.outdoor = tennisOutdoor
+        data.courts.tennis.surfaces = data.courts.tennis.surfaces || []
+      }
+      
+      if (data.courts.padel) {
+        const padelIndoor = parseInt(data.courts.padel.indoor) || 0
+        const padelOutdoor = parseInt(data.courts.padel.outdoor) || 0
+        data.courts.padel.total = padelIndoor + padelOutdoor
+        data.courts.padel.indoor = padelIndoor
+        data.courts.padel.outdoor = padelOutdoor
+        data.courts.padel.surfaces = data.courts.padel.surfaces || []
+      }
+      
+      if (data.courts.pickleball) {
+        const pickleballIndoor = parseInt(data.courts.pickleball.indoor) || 0
+        const pickleballOutdoor = parseInt(data.courts.pickleball.outdoor) || 0
+        data.courts.pickleball.total = pickleballIndoor + pickleballOutdoor
+        data.courts.pickleball.indoor = pickleballIndoor
+        data.courts.pickleball.outdoor = pickleballOutdoor
+        data.courts.pickleball.surfaces = data.courts.pickleball.surfaces || []
+      }
+      
+      // Handle legacy structure for backward compatibility
+      if (data.courts.total !== undefined && !data.courts.tennis && !data.courts.padel && !data.courts.pickleball) {
+        const indoor = parseInt(data.courts.indoor) || 0
+        const outdoor = parseInt(data.courts.outdoor) || 0
+        const total = indoor + outdoor
+        
+        if (total < 1) {
+          return NextResponse.json(
+            { error: 'At least one court is required' },
+            { status: 400 }
+          )
+        }
+        
+        // Convert legacy to tennis courts by default
+        data.courts = {
+          tennis: {
+            total,
+            indoor,
+            outdoor,
+            surfaces: data.courts.surfaces || []
+          },
+          padel: {
+            total: 0,
+            indoor: 0,
+            outdoor: 0,
+            surfaces: []
+          },
+          pickleball: {
+            total: 0,
+            indoor: 0,
+            outdoor: 0,
+            surfaces: []
+          },
+          // Keep legacy fields for backward compatibility
+          total: 0,
+          indoor: 0,
+          outdoor: 0,
+          surfaces: []
+        }
+      }
+      
+      // Validate that at least one court exists
+      const totalAllCourts = (data.courts.tennis?.total || 0) + 
+                           (data.courts.padel?.total || 0) + 
+                           (data.courts.pickleball?.total || 0)
+      
+      if (totalAllCourts < 1) {
+        return NextResponse.json(
+          { error: 'At least one court (tennis, padel, or pickleball) is required' },
+          { status: 400 }
+        )
+      }
     }
 
     const club = await Club.findByIdAndUpdate(
