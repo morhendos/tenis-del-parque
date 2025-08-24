@@ -4,6 +4,9 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import fs from 'fs/promises'
 import path from 'path'
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
+
 export async function GET(request) {
   try {
     // Check authentication

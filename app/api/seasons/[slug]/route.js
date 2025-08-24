@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { findSeasonBySlug } from '@/lib/utils/seasonUtils'
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
+
 export async function GET(request, { params }) {
   try {
     const { slug } = params

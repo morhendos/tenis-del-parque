@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
+
 // Generate consistent fallback image for all cities
 const getConsistentFallbackSVG = () => {
   return `
