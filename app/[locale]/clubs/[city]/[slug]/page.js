@@ -41,6 +41,45 @@ export default function ClubDetailPage() {
     }
   }
 
+  // Helper function to get court info from both old and new structures
+  const getCourtInfo = (courts) => {
+    if (!courts) {
+      return { total: 0, indoor: 0, outdoor: 0, surfaces: [], sports: {} }
+    }
+
+    // New structure (from refactored editor)
+    if (courts.tennis || courts.padel || courts.pickleball) {
+      const tennisTotal = courts.tennis?.total || 0
+      const padelTotal = courts.padel?.total || 0
+      const pickleballTotal = courts.pickleball?.total || 0
+      
+      const tennisIndoor = courts.tennis?.indoor || 0
+      const padelIndoor = courts.padel?.indoor || 0
+      const pickleballIndoor = courts.pickleball?.indoor || 0
+      
+      return {
+        total: tennisTotal + padelTotal + pickleballTotal,
+        indoor: tennisIndoor + padelIndoor + pickleballIndoor,
+        outdoor: (tennisTotal - tennisIndoor) + (padelTotal - padelIndoor) + (pickleballTotal - pickleballIndoor),
+        surfaces: [], // New structure doesn't have surfaces
+        sports: {
+          tennis: tennisTotal,
+          padel: padelTotal,
+          pickleball: pickleballTotal
+        }
+      }
+    }
+    
+    // Old structure (legacy)
+    return {
+      total: courts.total || 0,
+      indoor: courts.indoor || 0,
+      outdoor: courts.outdoor || 0,
+      surfaces: courts.surfaces || [],
+      sports: {}
+    }
+  }
+
   // Initialize Google Map
   useEffect(() => {
     if (!club?.location?.coordinates || mapLoaded) return
@@ -63,28 +102,30 @@ export default function ClubDetailPage() {
       const mapElement = document.getElementById('club-map')
       if (!mapElement) return
 
+      const courtInfo = getCourtInfo(club.courts)
+
       const map = new window.google.maps.Map(mapElement, {
         center: { 
           lat: club.location.coordinates.lat, 
           lng: club.location.coordinates.lng 
         },
-        zoom: 17, // Close zoom to see the club clearly
-        mapTypeId: 'satellite', // Satellite view by default for better visualization
-        zoomControl: true, // Enable zoom controls
+        zoom: 17,
+        mapTypeId: 'satellite',
+        zoomControl: true,
         zoomControlOptions: {
-          position: window.google.maps.ControlPosition.RIGHT_CENTER // Position zoom controls on the right
+          position: window.google.maps.ControlPosition.RIGHT_CENTER
         },
-        mapTypeControl: true, // Allow switching between map types
+        mapTypeControl: true,
         mapTypeControlOptions: {
           style: window.google.maps.MapTypeControlStyle.DROPDOWN_MENU,
           position: window.google.maps.ControlPosition.TOP_RIGHT,
           mapTypeIds: ['satellite', 'hybrid', 'terrain', 'roadmap']
         },
-        streetViewControl: true, // Enable street view
+        streetViewControl: true,
         streetViewControlOptions: {
           position: window.google.maps.ControlPosition.RIGHT_TOP
         },
-        fullscreenControl: true, // Enable fullscreen button
+        fullscreenControl: true,
         fullscreenControlOptions: {
           position: window.google.maps.ControlPosition.RIGHT_TOP
         },
@@ -97,7 +138,6 @@ export default function ClubDetailPage() {
         ]
       })
 
-      // Add marker for the club with a nice bounce animation
       const marker = new window.google.maps.Marker({
         position: { 
           lat: club.location.coordinates.lat, 
@@ -105,7 +145,7 @@ export default function ClubDetailPage() {
         },
         map: map,
         title: club.name,
-        animation: window.google.maps.Animation.DROP, // Drop animation when marker appears
+        animation: window.google.maps.Animation.DROP,
         icon: {
           path: window.google.maps.SymbolPath.CIRCLE,
           scale: 12,
@@ -116,13 +156,12 @@ export default function ClubDetailPage() {
         }
       })
 
-      // Add info window that opens when clicking the marker
       const infoWindow = new window.google.maps.InfoWindow({
         content: `
           <div style="padding: 8px;">
             <h3 style="margin: 0 0 4px 0; color: #7C3AED; font-weight: bold;">${club.name}</h3>
             <p style="margin: 0; color: #666; font-size: 14px;">${club.location.address}</p>
-            ${club.courts?.total ? `<p style="margin: 4px 0 0 0; color: #666; font-size: 13px;">🎾 ${club.courts.total} ${locale === 'es' ? 'pistas' : 'courts'}</p>` : ''}
+            ${courtInfo.total > 0 ? `<p style="margin: 4px 0 0 0; color: #666; font-size: 13px;">🎾 ${courtInfo.total} ${locale === 'es' ? 'pistas' : 'courts'}</p>` : ''}
           </div>
         `
       })
@@ -199,6 +238,8 @@ export default function ClubDetailPage() {
       </div>
     )
   }
+
+  const courtInfo = getCourtInfo(club.courts)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -323,37 +364,40 @@ export default function ClubDetailPage() {
                   </div>
                 </div>
 
-                {/* Quick Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 bg-gray-50">
-                  {club.courts?.total > 0 && (
+                {/* Quick Stats - Updated to handle both structures */}
+                {courtInfo.total > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 bg-gray-50">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-parque-purple">{club.courts.total}</div>
+                      <div className="text-2xl font-bold text-parque-purple">{courtInfo.total}</div>
                       <div className="text-sm text-gray-600">{locale === 'es' ? 'Pistas totales' : 'Total courts'}</div>
                     </div>
-                  )}
-                  {club.courts?.indoor > 0 && (
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-600">{club.courts.indoor}</div>
-                      <div className="text-sm text-gray-600">{locale === 'es' ? 'Cubiertas' : 'Indoor'}</div>
-                    </div>
-                  )}
-                  {club.courts?.surfaces?.length > 0 && (
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-green-600">{club.courts.surfaces.length}</div>
-                      <div className="text-sm text-gray-600">{locale === 'es' ? 'Superficies' : 'Surfaces'}</div>
-                    </div>
-                  )}
-                  {club.pricing?.publicAccess !== null && (
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-orange-600">
-                        {club.pricing.publicAccess ? '✓' : '✗'}
+                    
+                    {courtInfo.indoor > 0 && (
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-600">{courtInfo.indoor}</div>
+                        <div className="text-sm text-gray-600">{locale === 'es' ? 'Cubiertas' : 'Indoor'}</div>
                       </div>
-                      <div className="text-sm text-gray-600">
-                        {club.pricing.publicAccess ? (locale === 'es' ? 'Público' : 'Public') : (locale === 'es' ? 'Privado' : 'Private')}
+                    )}
+                    
+                    {courtInfo.surfaces.length > 0 && (
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-600">{courtInfo.surfaces.length}</div>
+                        <div className="text-sm text-gray-600">{locale === 'es' ? 'Superficies' : 'Surfaces'}</div>
                       </div>
-                    </div>
-                  )}
-                </div>
+                    )}
+                    
+                    {club.pricing?.publicAccess !== null && (
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-orange-600">
+                          {club.pricing.publicAccess ? '✓' : '✗'}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {club.pricing.publicAccess ? (locale === 'es' ? 'Público' : 'Public') : (locale === 'es' ? 'Privado' : 'Private')}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Description */}
                 {(club.description?.[locale] || club.description?.es) && (
@@ -365,29 +409,78 @@ export default function ClubDetailPage() {
                   </div>
                 )}
 
-                {/* Courts Information */}
-                {club.courts?.surfaces?.length > 0 && (
+                {/* Courts Information - Updated to handle both structures */}
+                {courtInfo.total > 0 && (
                   <div className="p-6 border-t">
                     <h2 className="text-xl font-semibold mb-4">{locale === 'es' ? 'Pistas y Superficies' : 'Courts & Surfaces'}</h2>
-                    <div className="grid md:grid-cols-2 gap-3">
-                      {club.courts.surfaces.map((surface, idx) => (
-                        <div key={idx} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-parque-purple/10 flex items-center justify-center">
-                              <span className="text-parque-purple font-bold">{surface.count}</span>
+                    
+                    {/* Display sports for new structure */}
+                    {(courtInfo.sports.tennis > 0 || courtInfo.sports.padel > 0 || courtInfo.sports.pickleball > 0) && (
+                      <div className="grid md:grid-cols-3 gap-3 mb-4">
+                        {courtInfo.sports.tennis > 0 && (
+                          <div className="flex items-center justify-between bg-green-50 p-3 rounded-lg border border-green-200">
+                            <div className="flex items-center gap-3">
+                              <span className="text-2xl">🎾</span>
+                              <div>
+                                <div className="font-medium">{locale === 'es' ? 'Tenis' : 'Tennis'}</div>
+                                <div className="text-sm text-gray-600">
+                                  {courtInfo.sports.tennis} {locale === 'es' ? 'pistas' : 'courts'}
+                                </div>
+                              </div>
                             </div>
-                            <span className="font-medium">
-                              {surface.type === 'clay' ? (locale === 'es' ? 'Tierra batida' : 'Clay') :
-                               surface.type === 'hard' ? (locale === 'es' ? 'Pista dura' : 'Hard court') :
-                               surface.type === 'grass' ? (locale === 'es' ? 'Césped' : 'Grass') :
-                               surface.type === 'synthetic' ? (locale === 'es' ? 'Sintética' : 'Synthetic') :
-                               surface.type === 'padel' ? 'Pádel' :
-                               surface.type}
-                            </span>
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                        )}
+                        {courtInfo.sports.padel > 0 && (
+                          <div className="flex items-center justify-between bg-blue-50 p-3 rounded-lg border border-blue-200">
+                            <div className="flex items-center gap-3">
+                              <span className="text-2xl">🏸</span>
+                              <div>
+                                <div className="font-medium">{locale === 'es' ? 'Pádel' : 'Padel'}</div>
+                                <div className="text-sm text-gray-600">
+                                  {courtInfo.sports.padel} {locale === 'es' ? 'pistas' : 'courts'}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        {courtInfo.sports.pickleball > 0 && (
+                          <div className="flex items-center justify-between bg-orange-50 p-3 rounded-lg border border-orange-200">
+                            <div className="flex items-center gap-3">
+                              <span className="text-2xl">🏓</span>
+                              <div>
+                                <div className="font-medium">Pickleball</div>
+                                <div className="text-sm text-gray-600">
+                                  {courtInfo.sports.pickleball} {locale === 'es' ? 'pistas' : 'courts'}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Display surfaces for old structure */}
+                    {courtInfo.surfaces.length > 0 && (
+                      <div className="grid md:grid-cols-2 gap-3">
+                        {courtInfo.surfaces.map((surface, idx) => (
+                          <div key={idx} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-parque-purple/10 flex items-center justify-center">
+                                <span className="text-parque-purple font-bold">{surface.count}</span>
+                              </div>
+                              <span className="font-medium">
+                                {surface.type === 'clay' ? (locale === 'es' ? 'Tierra batida' : 'Clay') :
+                                 surface.type === 'hard' ? (locale === 'es' ? 'Pista dura' : 'Hard court') :
+                                 surface.type === 'grass' ? (locale === 'es' ? 'Césped' : 'Grass') :
+                                 surface.type === 'synthetic' ? (locale === 'es' ? 'Sintética' : 'Synthetic') :
+                                 surface.type === 'padel' ? 'Pádel' :
+                                 surface.type}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -509,7 +602,7 @@ export default function ClubDetailPage() {
                 <h3 className="text-lg font-semibold mb-4">{locale === 'es' ? 'Contacto' : 'Contact'}</h3>
                 
                 <div className="space-y-4">
-                  {club.contact.phone && (
+                  {club.contact?.phone && (
                     <a 
                       href={`tel:${club.contact.phone}`}
                       className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
@@ -526,7 +619,7 @@ export default function ClubDetailPage() {
                     </a>
                   )}
 
-                  {club.contact.email && (
+                  {club.contact?.email && (
                     <a 
                       href={`mailto:${club.contact.email}`}
                       className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
@@ -543,7 +636,7 @@ export default function ClubDetailPage() {
                     </a>
                   )}
 
-                  {club.contact.website && (
+                  {club.contact?.website && (
                     <a 
                       href={club.contact.website}
                       target="_blank"
@@ -564,7 +657,7 @@ export default function ClubDetailPage() {
                     </a>
                   )}
 
-                  {(club.contact.facebook || club.contact.instagram) && (
+                  {(club.contact?.facebook || club.contact?.instagram) && (
                     <div className="pt-2 border-t">
                       <div className="text-sm text-gray-600 mb-2">{locale === 'es' ? 'Redes sociales' : 'Social media'}</div>
                       <div className="flex gap-2">
@@ -601,7 +694,7 @@ export default function ClubDetailPage() {
                   <div className="space-y-2 text-sm">
                     {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => {
                       const hours = club.operatingHours?.[day]
-                      if (!hours || !hours.open) return null
+                      if (!hours || !hours.open || hours.open === 'closed') return null
                       
                       return (
                         <div key={day} className="flex justify-between py-1">
@@ -649,24 +742,27 @@ export default function ClubDetailPage() {
                     {locale === 'es' ? 'Clubs Cercanos' : 'Nearby Clubs'}
                   </h3>
                   <div className="space-y-3">
-                    {nearbyClubs.slice(0, 3).map(nearbyClub => (
-                      <Link
-                        key={nearbyClub._id}
-                        href={`/${locale}/clubs/${city}/${nearbyClub.slug}`}
-                        className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
-                      >
-                        <h4 className="font-semibold text-gray-900">{nearbyClub.name}</h4>
-                        <p className="text-sm text-gray-600 mt-1">{nearbyClub.location.address}</p>
-                        {nearbyClub.courts?.total > 0 && (
-                          <div className="flex items-center justify-between mt-2">
-                            <span className="text-xs text-gray-500">
-                              {nearbyClub.courts.total} {locale === 'es' ? 'pistas' : 'courts'}
-                            </span>
-                            <span className="text-parque-purple">→</span>
-                          </div>
-                        )}
-                      </Link>
-                    ))}
+                    {nearbyClubs.slice(0, 3).map(nearbyClub => {
+                      const nearbyCourtInfo = getCourtInfo(nearbyClub.courts)
+                      return (
+                        <Link
+                          key={nearbyClub._id}
+                          href={`/${locale}/clubs/${city}/${nearbyClub.slug}`}
+                          className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                          <h4 className="font-semibold text-gray-900">{nearbyClub.name}</h4>
+                          <p className="text-sm text-gray-600 mt-1">{nearbyClub.location?.address}</p>
+                          {nearbyCourtInfo.total > 0 && (
+                            <div className="flex items-center justify-between mt-2">
+                              <span className="text-xs text-gray-500">
+                                {nearbyCourtInfo.total} {locale === 'es' ? 'pistas' : 'courts'}
+                              </span>
+                              <span className="text-parque-purple">→</span>
+                            </div>
+                          )}
+                        </Link>
+                      )
+                    })}
                   </div>
                 </div>
               )}
