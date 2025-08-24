@@ -199,14 +199,27 @@ export default function ClubsPage() {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <Navigation locale={locale} />
       
-      {/* Simplified Hero Section */}
-      <section className="relative bg-gradient-to-br from-parque-purple to-parque-green text-white py-20">
-        <div className="container mx-auto px-4">
+      {/* Simplified Hero Section - More subtle background */}
+      <section className="relative bg-gray-100 py-20 overflow-hidden">
+        {/* Subtle pattern overlay */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          }}></div>
+        </div>
+        
+        <div className="container mx-auto px-4 relative">
           <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+            <div className="inline-block mb-6 px-4 py-2 bg-parque-purple/10 rounded-full">
+              <span className="text-parque-purple font-medium">
+                🎾 {locale === 'es' ? 'Directorio de Clubes' : 'Club Directory'}
+              </span>
+            </div>
+            
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
               {locale === 'es' ? 'Encuentra tu Club de Tenis' : 'Find Your Tennis Club'}
             </h1>
-            <p className="text-lg text-white/90 mb-8">
+            <p className="text-lg text-gray-600 mb-8">
               {locale === 'es' 
                 ? 'Descubre los mejores clubes de tenis en España. Encuentra instalaciones increíbles y únete a nuestra comunidad.'
                 : 'Discover the best tennis clubs in Spain. Find incredible facilities and join our community.'}
@@ -220,15 +233,15 @@ export default function ClubsPage() {
                   placeholder={locale === 'es' ? 'Buscar ciudades o áreas...' : 'Search cities or areas...'}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-white/10 backdrop-blur-sm border border-white/30 rounded-full text-white placeholder-white/70 focus:outline-none focus:bg-white/20 focus:border-white/50 transition-all text-lg"
+                  className="w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-full text-gray-900 placeholder-gray-400 focus:outline-none focus:border-parque-purple focus:ring-2 focus:ring-parque-purple/20 transition-all text-lg shadow-sm"
                 />
-                <svg className="absolute left-4 top-3.5 h-6 w-6 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="absolute left-4 top-3.5 h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 {searchTerm && (
                   <button
                     onClick={() => setSearchTerm('')}
-                    className="absolute right-4 top-3.5 text-white/70 hover:text-white"
+                    className="absolute right-4 top-3.5 text-gray-400 hover:text-gray-600"
                   >
                     <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -243,7 +256,7 @@ export default function ClubsPage() {
 
       {/* Popular Areas Section - Only show if there are areas with clubs */}
       {areaStats.topAreas.length > 0 && !searchTerm && (
-        <section className="py-12 bg-white">
+        <section className="py-12 bg-white border-b">
           <div className="container mx-auto px-4">
             <div className="text-center mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-2">
