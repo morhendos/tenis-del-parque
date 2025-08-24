@@ -259,7 +259,7 @@ export default function GoogleSearchSection({ onSelect, onSkip }) {
           <div className="flex-1">
             <h4 className="font-medium text-blue-900">🚀 Smart Search Features</h4>
             <ul className="text-sm text-blue-800 mt-2 space-y-1">
-              <li>✓ Accent-insensitive: "Malaga" finds "Málaga"</li>
+              <li>✓ Accent-insensitive: &quot;Malaga&quot; finds &quot;Málaga&quot;</li>
               <li>✓ Auto-imports GPS coordinates</li>
               <li>✓ Fetches city photos from Google</li>
               <li>✓ Detects province automatically</li>

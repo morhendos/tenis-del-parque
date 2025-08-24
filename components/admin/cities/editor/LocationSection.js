@@ -51,7 +51,7 @@ export default function LocationSection({ formData, onChange, selectedGoogleResu
               placeholder="Spain"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Usually "Spain" for Spanish cities
+              Usually &quot;Spain&quot; for Spanish cities
             </p>
           </div>
         </div>

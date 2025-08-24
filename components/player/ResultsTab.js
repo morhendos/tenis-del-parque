@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react'
 import MatchResultCard from './MatchResultCard'
+import { formatPlayerNameForPublic } from '@/lib/utils/playerNameUtils'
 
 export default function ResultsTab({ matches, language, player = null }) {
   const [filters, setFilters] = useState({
@@ -158,7 +159,7 @@ export default function ResultsTab({ matches, language, player = null }) {
                           : 'bg-gray-50'
                       }`}>
                         <div className="font-medium text-gray-900">
-                          {match.players.player1.name}
+                          {formatPlayerNameForPublic(match.players.player1.name)}
                           {isPlayer1Winner && 
                             <span className="ml-2">🏆</span>}
                         </div>
@@ -196,7 +197,7 @@ export default function ResultsTab({ matches, language, player = null }) {
                           : 'bg-gray-50'
                       }`}>
                         <div className="font-medium text-gray-900">
-                          {match.players.player2.name}
+                          {formatPlayerNameForPublic(match.players.player2.name)}
                           {isPlayer2Winner && 
                             <span className="ml-2">🏆</span>}
                         </div>

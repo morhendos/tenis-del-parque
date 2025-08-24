@@ -296,7 +296,7 @@ export default function AdminCitiesPage() {
                 {stats.total - stats.withImages} cities need images
               </h4>
               <p className="text-sm text-purple-800 mt-1">
-                Cities with images provide better user experience on the frontend. Edit each city to manage images or use "Enhance with Google" to automatically fetch photos.
+                Cities with images provide better user experience on the frontend. Edit each city to manage images or use &quot;Enhance with Google&quot; to automatically fetch photos.
               </p>
             </div>
           </div>

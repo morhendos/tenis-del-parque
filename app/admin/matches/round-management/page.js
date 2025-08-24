@@ -246,7 +246,7 @@ function RoundManagementContent() {
       <div className="bg-green-50 border border-green-200 rounded-lg p-4">
         <h3 className="font-semibold text-green-900 mb-2">✏️ How to Edit Matches</h3>
         <div className="text-sm text-green-800 space-y-2">
-          <p><strong>1. Click "Edit Match"</strong> on any match below to change players, schedule, or enter results</p>
+          <p><strong>1. Click &quot;Edit Match&quot;</strong> on any match below to change players, schedule, or enter results</p>
           <p><strong>2. Delete entire rounds</strong> if you want to start over</p>
           <p><strong>3. Go back to Matches</strong> to create new matches or use Swiss Pairing for new rounds</p>
         </div>

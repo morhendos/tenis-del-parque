@@ -1,4 +1,5 @@
 import React from 'react'
+import { formatPlayerNameForStandings } from '@/lib/utils/playerNameUtils'
 
 export default function StandingsTable({ players, language, unified = false }) {
   const getPositionStyle = (position) => {
@@ -121,7 +122,7 @@ export default function StandingsTable({ players, language, unified = false }) {
               {/* Player name on separate row */}
               <div className="mb-3 text-center">
                 <div className="text-lg font-bold text-gray-900 mb-1 flex items-center justify-center">
-                  {standing.player.name}
+                  {formatPlayerNameForStandings(standing.player.name, language)}
                   {getPlayerStatusIndicator(standing.player)}
                 </div>
                 <div className="text-sm text-gray-500">
@@ -253,7 +254,7 @@ export default function StandingsTable({ players, language, unified = false }) {
                         </div>
                         <div>
                           <div className="text-sm font-bold text-gray-900 flex items-center">
-                            {standing.player.name}
+                            {formatPlayerNameForStandings(standing.player.name, language)}
                             {getPlayerStatusIndicator(standing.player)}
                           </div>
                           {winPercentage > 0 && (

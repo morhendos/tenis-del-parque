@@ -411,7 +411,7 @@ export default function CityClubsPage() {
               
               {searchTerm && (
                 <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                  🔍 "{searchTerm}"
+                  🔍 &quot;{searchTerm}&quot;
                 </span>
               )}
               

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { formatPlayerNameForPublic, formatOpponentName } from '@/lib/utils/playerNameUtils'
 
 export default function MatchCard({ 
   match, 
@@ -106,25 +107,25 @@ export default function MatchCard({
               </h3>
               <div className="text-sm text-gray-700 font-medium mt-1">
                 {isPublic || !player ? (
-                  // Public view: show both players equally
+                  // Public view: show both players equally with formatted names
                   <>
                     <span className="text-gray-900">
-                      {match.players?.player1?.name || 'TBD'}
+                      {match.players?.player1?.name ? formatPlayerNameForPublic(match.players.player1.name) : 'TBD'}
                     </span>
                     <span className="mx-2 text-gray-500">vs</span>
                     <span className="text-gray-900">
-                      {match.players?.player2?.name || 'TBD'}
+                      {match.players?.player2?.name ? formatPlayerNameForPublic(match.players.player2.name) : 'TBD'}
                     </span>
                   </>
                 ) : (
-                  // Player view: highlight player vs opponent
+                  // Player view: highlight player vs opponent (keep player's own name full, format opponent)
                   <>
                     <span className={isUpcoming ? 'text-parque-purple' : isWinner ? 'text-green-600' : 'text-red-600'}>
                       {player?.name || 'You'}
                     </span>
                     <span className="mx-2 text-gray-500">vs</span>
                     <span className={!isUpcoming && !isWinner ? 'text-green-600' : 'text-gray-900'}>
-                      {opponent?.name || 'TBD'}
+                      {opponent?.name ? formatOpponentName(opponent.name, language) : 'TBD'}
                     </span>
                   </>
                 )}
@@ -349,9 +350,10 @@ export default function MatchCard({
                   if (opponent?.whatsapp) {
                     onWhatsApp && onWhatsApp(match, opponent)
                   } else {
+                    const opponentDisplayName = opponent?.name ? formatOpponentName(opponent.name, language) : (language === 'es' ? 'este jugador' : 'this player')
                     alert(language === 'es' 
-                      ? `No hay número de WhatsApp disponible para ${opponent?.name || 'este jugador'}` 
-                      : `No WhatsApp number available for ${opponent?.name || 'this player'}`)
+                      ? `No hay número de WhatsApp disponible para ${opponentDisplayName}` 
+                      : `No WhatsApp number available for ${opponentDisplayName}`)
                   }
                 }}
                 className={`${

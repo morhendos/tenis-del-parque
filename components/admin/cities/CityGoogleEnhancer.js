@@ -136,7 +136,7 @@ export default function CityGoogleEnhancer({ isOpen, onClose, onSuccess }) {
                     />
                     <div>
                       <div className="font-medium">Cities missing GPS coordinates</div>
-                      <div className="text-sm text-gray-500">Only enhance cities that don't have coordinates yet</div>
+                      <div className="text-sm text-gray-500">Only enhance cities that don&apos;t have coordinates yet</div>
                     </div>
                   </label>
                   
@@ -169,7 +169,7 @@ export default function CityGoogleEnhancer({ isOpen, onClose, onSuccess }) {
                     <div className="font-medium text-gray-900">📸 Include Photo Enhancement</div>
                     <div className="text-sm text-gray-500 mt-1">
                       Automatically fetch and set city photos from Google Maps for frontend display. 
-                      This will only add photos to cities that don't have a main image yet.
+                      This will only add photos to cities that don&apos;t have a main image yet.
                     </div>
                     <div className="text-xs text-blue-600 mt-1">
                       ⚡ Recommended: Photos enhance the visual appeal of the frontend leagues page
