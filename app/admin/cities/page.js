@@ -1,16 +1,15 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import CityFormModal from '@/components/admin/cities/CityFormModal'
+import { useRouter } from 'next/navigation'
 import CityGoogleEnhancer from '@/components/admin/cities/CityGoogleEnhancer'
 
 export default function AdminCitiesPage() {
+  const router = useRouter()
   const [cities, setCities] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [showFormModal, setShowFormModal] = useState(false)
   const [showEnhancerModal, setShowEnhancerModal] = useState(false)
-  const [editingCity, setEditingCity] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [sortBy, setSortBy] = useState('displayOrder')
@@ -52,19 +51,13 @@ export default function AdminCitiesPage() {
   }
 
   const handleEdit = (city) => {
-    setEditingCity(city)
-    setShowFormModal(true)
+    // Navigate to the edit page instead of opening modal
+    router.push(`/admin/cities/${city._id}/edit`)
   }
 
   const handleCreate = () => {
-    setEditingCity(null)
-    setShowFormModal(true)
-  }
-
-  const handleFormSuccess = () => {
-    fetchCities()
-    setShowFormModal(false)
-    setEditingCity(null)
+    // Navigate to the new city page instead of opening modal
+    router.push('/admin/cities/new')
   }
 
   const handleEnhancerSuccess = () => {
@@ -226,7 +219,7 @@ export default function AdminCitiesPage() {
           </button>
           <button
             onClick={handleCreate}
-            className="px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-parque-purple/90 flex items-center space-x-2"
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center space-x-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -239,7 +232,7 @@ export default function AdminCitiesPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
         <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-3xl font-bold text-parque-purple">{stats.total}</div>
+          <div className="text-3xl font-bold text-purple-600">{stats.total}</div>
           <div className="text-sm text-gray-600">Total Cities</div>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
@@ -324,7 +317,7 @@ export default function AdminCitiesPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search cities..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
           
@@ -333,7 +326,7 @@ export default function AdminCitiesPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -346,7 +339,7 @@ export default function AdminCitiesPage() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
               <option value="displayOrder">Display Order</option>
               <option value="name">Name (A-Z)</option>
@@ -409,7 +402,11 @@ export default function AdminCitiesPage() {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredCities.map((city) => (
-              <tr key={city._id} className="hover:bg-gray-50">
+              <tr 
+                key={city._id} 
+                className="hover:bg-gray-50 cursor-pointer transition-colors"
+                onClick={() => handleEdit(city)}
+              >
                 <td className="px-6 py-4">
                   <div>
                     <div className="text-sm font-medium text-gray-900 flex items-center">
@@ -443,8 +440,11 @@ export default function AdminCitiesPage() {
                     </div>
                     {city.clubCount > 0 && (
                       <button
-                        onClick={() => window.open(`/admin/clubs?city=${city.slug}`, '_blank')}
-                        className="text-xs text-parque-purple hover:text-parque-purple/80"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          window.open(`/admin/clubs?city=${city.slug}`, '_blank')
+                        }}
+                        className="text-xs text-purple-600 hover:text-purple-800"
                       >
                         View clubs →
                       </button>
@@ -496,18 +496,28 @@ export default function AdminCitiesPage() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button
-                    onClick={() => handleEdit(city)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleEdit(city)
+                    }}
                     className="text-indigo-600 hover:text-indigo-900 mr-4"
                   >
-                    Edit
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
                   </button>
                   <button
-                    onClick={() => handleDelete(city._id, city.name.es)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDelete(city._id, city.name.es)
+                    }}
                     className="text-red-600 hover:text-red-900"
                     disabled={city.clubCount > 0}
                     title={city.clubCount > 0 ? 'Cannot delete city with clubs' : 'Delete city'}
                   >
-                    Delete
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
                   </button>
                 </td>
               </tr>
@@ -527,18 +537,12 @@ export default function AdminCitiesPage() {
         )}
       </div>
 
-      {/* City Form Modal */}
-      <CityFormModal
-        isOpen={showFormModal}
-        onClose={() => {
-          setShowFormModal(false)
-          setEditingCity(null)
-        }}
-        city={editingCity}
-        onSuccess={handleFormSuccess}
-      />
+      {/* Tip about clickable rows */}
+      <div className="text-center text-sm text-gray-500">
+        💡 Tip: Click on any city row to edit it
+      </div>
 
-      {/* City Google Enhancer Modal */}
+      {/* City Google Enhancer Modal - Keep this as modal */}
       <CityGoogleEnhancer
         isOpen={showEnhancerModal}
         onClose={() => setShowEnhancerModal(false)}
