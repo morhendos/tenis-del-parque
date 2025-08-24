@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useLocale } from '@/lib/hooks/useLocale'
@@ -33,19 +33,47 @@ export default function CityCard({ city, leagueCount = 0, className = '' }) {
   const [imageLoading, setImageLoading] = useState(true)
   const { locale } = useLocale()
 
+  // Debug logging
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('CityCard Debug:', {
+        cityName: city.name?.es,
+        hasImages: !!city.images,
+        mainImage: city.images?.main,
+        googlePhotoRef: city.images?.googlePhotoReference,
+        googlePhotos: city.googleData?.photos?.length || 0
+      })
+    }
+  }, [city])
+
   // Get the main city image with proper fallback handling
   const getCityImage = () => {
-    if (city.images?.main && !imageError) {
+    // If there's an error, always return fallback
+    if (imageError) {
+      return getGenericCityFallback()
+    }
+
+    // Check for main image - handle both Google photos and Vercel Blob URLs
+    if (city.images?.main) {
       // If it's a Google photo reference, use the public proxy
       if (city.images?.googlePhotoReference) {
         return `/api/cities/photo?photo_reference=${city.images.googlePhotoReference}&maxwidth=800`
       }
-      // Otherwise use the direct image URL
+      // Check if it's a Vercel Blob URL
+      if (city.images.main.includes('blob.vercel-storage.com')) {
+        // Vercel Blob URLs can be used directly
+        return city.images.main
+      }
+      // Check if it's a relative URL (from old local uploads)
+      if (city.images.main.startsWith('/')) {
+        return city.images.main
+      }
+      // Otherwise use the URL as-is (could be any external URL)
       return city.images.main
     }
     
     // Check if there are Google photos available even without a direct main image
-    if (city.googleData?.photos && city.googleData.photos.length > 0 && !imageError) {
+    if (city.googleData?.photos && city.googleData.photos.length > 0) {
       const firstPhoto = city.googleData.photos[0]
       if (firstPhoto.photo_reference) {
         return `/api/cities/photo?photo_reference=${firstPhoto.photo_reference}&maxwidth=800`
@@ -56,8 +84,8 @@ export default function CityCard({ city, leagueCount = 0, className = '' }) {
     return getGenericCityFallback()
   }
 
-  const handleImageError = () => {
-    console.log('Image failed to load for city:', city.name?.es || city.displayName)
+  const handleImageError = (e) => {
+    console.error('Image failed to load for city:', city.name?.es || city.displayName, 'URL:', e.target?.src)
     setImageError(true)
     setImageLoading(false)
   }
@@ -69,24 +97,29 @@ export default function CityCard({ city, leagueCount = 0, className = '' }) {
   // Handle missing league count
   const displayLeagueCount = leagueCount || city.leagueCount || 0
 
+  // Get the image URL
+  const imageUrl = getCityImage()
+  const isDataUrl = imageUrl.startsWith('data:')
+
   return (
     <div className={`bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 ${className}`}>
       {/* City Image */}
       <div className="relative h-48 bg-gray-200">
-        {imageLoading && (
+        {imageLoading && !isDataUrl && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-parque-purple"></div>
           </div>
         )}
         
         <Image
-          src={getCityImage()}
+          src={imageUrl}
           alt={`${city.name?.es || city.displayName} - Tennis city`}
           fill
-          className={`object-cover transition-opacity duration-300 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
+          className={`object-cover transition-opacity duration-300 ${imageLoading && !isDataUrl ? 'opacity-0' : 'opacity-100'}`}
           onError={handleImageError}
           onLoad={handleImageLoad}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          unoptimized={isDataUrl} // Don't optimize data URLs
         />
         
         {/* Overlay gradient */}
