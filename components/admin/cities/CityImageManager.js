@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useMemo } from 'react'
 
 export default function CityImageManager({ city, onImagesUpdate, readOnly = false }) {
   const [selectedImage, setSelectedImage] = useState(null)
@@ -30,8 +30,8 @@ export default function CityImageManager({ city, onImagesUpdate, readOnly = fals
     return getFallbackImageUrl(width, height, seed)
   }
 
-  // Get all available images with better error handling
-  const getAllImages = () => {
+  // Get all available images with better error handling - MEMOIZED to prevent infinite loops
+  const allImages = useMemo(() => {
     const images = []
     
     // Main image
@@ -79,9 +79,7 @@ export default function CityImageManager({ city, onImagesUpdate, readOnly = fals
     }
     
     return images
-  }
-
-  const allImages = getAllImages()
+  }, [city?.images, city?.googleData?.photos]) // Only recalculate when city images change
 
   // Handle file upload with progress
   const handleFileUpload = async (files) => {
