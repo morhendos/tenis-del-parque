@@ -1,4 +1,5 @@
 root/
+├── PR_README.md
 ├── README.md
 ├── app
 │   ├── [locale]
@@ -271,7 +272,6 @@ root/
 │   │   │       └── polygonHelpers.js
 │   │   ├── cities
 │   │   │   ├── CityEditor.js
-│   │   │   ├── CityFormModal.js
 │   │   │   ├── CityGoogleEnhancer.js
 │   │   │   ├── CityImageManager.js
 │   │   │   └── editor
@@ -383,6 +383,7 @@ root/
 │   ├── CITY_IMAGE_MANAGEMENT_FIXES.md
 │   ├── CITY_IMAGE_SYSTEM_COMPLETE.md
 │   ├── CITY_IMAGE_TESTING_CHECKLIST.md
+│   ├── CITY_PHOTO_REFRESH_FEATURE.md
 │   ├── CLUB_EDITOR_REFACTOR.md
 │   ├── CLUB_IMAGE_MANAGEMENT.md
 │   ├── COMPLETE_ARCHITECTURE_FIX_SUMMARY.md
@@ -414,6 +415,7 @@ root/
 │   ├── SEO_LAUNCH_CHECKLIST.md
 │   ├── STRATEGY_TO_GET_75_FIRST_USERS.md
 │   ├── UX_IMPROVEMENTS_SUMMARY.md
+│   ├── VERCEL_BLOB_STORAGE_SETUP.md
 │   └── as
 ├── jsconfig.json
 ├── lib
@@ -470,6 +472,7 @@ root/
 │       ├── geographicBoundaries.js
 │       ├── matchResultUtils.js
 │       ├── phoneUtils.js
+│       ├── playerNameUtils.js
 │       ├── rulesIcons.js
 │       ├── seasonUtils.client.js
 │       ├── seasonUtils.js
@@ -507,6 +510,7 @@ root/
 │   ├── uploads
 │   │   ├── README.md
 │   │   ├── cities
+│   │   │   └── city_image_1756046420215_eq2d7g.jpg
 │   │   └── clubs
 │   ├── web-app-manifest-192x192.png
 │   └── web-app-manifest-512x512.png
@@ -526,8 +530,10 @@ root/
 │   ├── migrateCourtsData.mjs
 │   ├── seedCities.js
 │   ├── seedCitiesEnhanced.js
+│   ├── seedCitiesProduction.js
 │   ├── seedLeagues.js
 │   ├── seedSeasons.mjs
+│   ├── test-city-photo-refresh.sh
 │   ├── tree.js
 │   └── unlockAccounts.js
 ├── styles

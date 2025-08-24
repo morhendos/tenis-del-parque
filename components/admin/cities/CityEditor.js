@@ -12,6 +12,7 @@ export default function CityEditor({ cityId = null }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [refreshingPhotos, setRefreshingPhotos] = useState(false)
   const [error, setError] = useState(null)
   const [successMessage, setSuccessMessage] = useState(null)
   const [currentSection, setCurrentSection] = useState('search')
@@ -39,7 +40,10 @@ export default function CityEditor({ cityId = null }) {
       main: '',
       gallery: [],
       googlePhotoReference: null
-    }
+    },
+    googlePlaceId: '',
+    formattedAddress: '',
+    googleData: {}
   })
 
   // Load city data if editing
@@ -77,7 +81,10 @@ export default function CityEditor({ cityId = null }) {
           main: '',
           gallery: [],
           googlePhotoReference: null
-        }
+        },
+        googlePlaceId: city.googlePlaceId || '',
+        formattedAddress: city.formattedAddress || '',
+        googleData: city.googleData || {}
       })
       
       if (city.googleData?.photos) {
@@ -89,6 +96,103 @@ export default function CityEditor({ cityId = null }) {
       setError(err.message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Refresh Google Photos for existing city
+  const refreshGooglePhotos = async () => {
+    if (!formData.googlePlaceId && !formData.name.es) {
+      setError('City needs a Google Place ID or name to fetch photos')
+      return
+    }
+
+    setRefreshingPhotos(true)
+    setError(null)
+    setSuccessMessage(null)
+
+    try {
+      // First, search for the city if we don't have a place ID
+      let placeId = formData.googlePlaceId
+      let cityData = null
+      
+      if (!placeId && formData.name.es) {
+        const searchResponse = await fetch('/api/admin/cities/search-google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: formData.name.es,
+            types: ['locality', 'administrative_area_level_2']
+          })
+        })
+
+        const searchData = await searchResponse.json()
+        if (searchData.results?.[0]) {
+          cityData = searchData.results[0]
+          placeId = cityData.place_id
+          
+          // Update city with Google data
+          setFormData(prev => ({
+            ...prev,
+            googlePlaceId: placeId,
+            formattedAddress: cityData.formatted_address || prev.formattedAddress,
+            coordinates: {
+              lat: cityData.geometry?.location?.lat || prev.coordinates.lat,
+              lng: cityData.geometry?.location?.lng || prev.coordinates.lng
+            },
+            googleData: {
+              ...prev.googleData,
+              types: cityData.types,
+              addressComponents: cityData.address_components,
+              viewport: cityData.geometry?.viewport
+            }
+          }))
+          setHasUnsavedChanges(true)
+        }
+      }
+
+      if (!placeId) {
+        throw new Error('Could not find city on Google Maps')
+      }
+
+      // Fetch photos
+      const photosResponse = await fetch('/api/admin/cities/fetch-photos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          placeId: placeId,
+          cityName: formData.name.es
+        })
+      })
+
+      const photosData = await photosResponse.json()
+      
+      if (photosData.photos && photosData.photos.length > 0) {
+        setCityPhotos(photosData.photos)
+        
+        // Update form data with new photos
+        setFormData(prev => ({
+          ...prev,
+          images: {
+            ...prev.images,
+            main: `/api/admin/cities/google-photo?photo_reference=${photosData.photos[0].photo_reference}&maxwidth=800`,
+            googlePhotoReference: photosData.photos[0].photo_reference
+          },
+          googleData: {
+            ...prev.googleData,
+            photos: photosData.photos
+          }
+        }))
+        
+        setHasUnsavedChanges(true)
+        setSuccessMessage(`Successfully fetched ${photosData.photos.length} photos from Google Maps! Click "Update City" to save.`)
+      } else {
+        setError('No photos found for this city on Google Maps')
+      }
+    } catch (err) {
+      console.error('Error refreshing photos:', err)
+      setError(err.message || 'Failed to fetch Google photos')
+    } finally {
+      setRefreshingPhotos(false)
     }
   }
 
@@ -127,9 +231,17 @@ export default function CityEditor({ cityId = null }) {
       displayOrder: 0,
       importSource: 'google',
       images: {
-        main: photos.length > 0 ? photos[0].url : '',
+        main: photos.length > 0 ? `/api/admin/cities/google-photo?photo_reference=${photos[0].photo_reference}&maxwidth=800` : '',
         gallery: [],
         googlePhotoReference: photos.length > 0 ? photos[0].photo_reference : null
+      },
+      googlePlaceId: result.place_id || '',
+      formattedAddress: result.formatted_address || '',
+      googleData: {
+        types: result.types,
+        addressComponents: result.address_components,
+        viewport: result.geometry?.viewport,
+        photos: photos
       }
     })
     
@@ -217,14 +329,12 @@ export default function CityEditor({ cityId = null }) {
         delete dataToSend.coordinates
       }
       
-      // Add Google data if selected from search
-      if (selectedGoogleResult) {
-        dataToSend.googlePlaceId = selectedGoogleResult.place_id
-        dataToSend.formattedAddress = selectedGoogleResult.formatted_address
+      // Add Google data if selected from search or refreshed
+      if (selectedGoogleResult || formData.googlePlaceId) {
+        dataToSend.googlePlaceId = formData.googlePlaceId || selectedGoogleResult?.place_id
+        dataToSend.formattedAddress = formData.formattedAddress || selectedGoogleResult?.formatted_address
         dataToSend.googleData = {
-          types: selectedGoogleResult.types,
-          addressComponents: selectedGoogleResult.address_components,
-          viewport: selectedGoogleResult.geometry?.viewport,
+          ...formData.googleData,
           photos: cityPhotos
         }
       }
@@ -444,6 +554,47 @@ export default function CityEditor({ cityId = null }) {
         {error && (
           <div className="mx-6 mt-4 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg">
             {error}
+          </div>
+        )}
+        
+        {/* Google Photo Refresh Button (for existing cities in images section) */}
+        {cityId && currentSection === 'images' && (
+          <div className="mx-6 mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-medium text-blue-900">Refresh Google Photos</h3>
+                <p className="text-sm text-blue-700 mt-1">
+                  Fetch the latest photos from Google Maps for this city
+                </p>
+              </div>
+              <button
+                onClick={refreshGooglePhotos}
+                disabled={refreshingPhotos}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center space-x-2"
+              >
+                {refreshingPhotos ? (
+                  <>
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                    </svg>
+                    <span>Fetching...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span>Refresh Photos from Google</span>
+                  </>
+                )}
+              </button>
+            </div>
+            {formData.googlePlaceId && (
+              <p className="text-xs text-blue-600 mt-2">
+                Place ID: {formData.googlePlaceId}
+              </p>
+            )}
           </div>
         )}
         
