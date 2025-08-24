@@ -6,7 +6,7 @@ import CityImageManager from '@/components/admin/cities/CityImageManager'
 export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [searchMode, setSearchMode] = useState(!city) // Start in search mode for new cities
+  const [searchMode, setSearchMode] = useState(false) // Initialize as false
   const [searchQuery, setSearchQuery] = useState('')
   const [searchLoading, setSearchLoading] = useState(false)
   const [searchResults, setSearchResults] = useState([])
@@ -81,8 +81,11 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
     )
   }
 
-  // Initialize form data when editing
+  // Initialize form data when editing - fixed to prevent re-render loops
   useEffect(() => {
+    // Only run when modal opens (isOpen changes from false to true)
+    if (!isOpen) return
+    
     if (city) {
       setSearchMode(false) // Editing mode, skip search
       setStep(1) // Start at form step for editing
@@ -138,6 +141,8 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
       })
       setCityPhotos([])
     }
+    
+    // Reset other states
     setError(null)
     setSearchQuery('')
     setSearchResults([])
@@ -145,7 +150,7 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
     setAutocompleteResults([])
     setShowAutocomplete(false)
     setSelectedAutocompleteIndex(-1)
-  }, [city, isOpen])
+  }, [isOpen]) // Only depend on isOpen, not city (city is stable)
 
   // Debounced autocomplete search
   const performAutocompleteSearch = useCallback(async (query) => {
@@ -463,13 +468,13 @@ export default function CityFormModal({ isOpen, onClose, city, onSuccess }) {
     })
   }
 
-  // Handle images update from CityImageManager
-  const handleImagesUpdate = (updatedImages) => {
+  // Handle images update from CityImageManager - wrapped in useCallback
+  const handleImagesUpdate = useCallback((updatedImages) => {
     setFormData(prev => ({
       ...prev,
       images: updatedImages
     }))
-  }
+  }, [])
 
   const validateForm = () => {
     if (!formData.slug) {
