@@ -28,41 +28,42 @@ export default function CityClubsPage() {
     amenities: [],
     priceRange: 'all',
     publicAccess: 'all',
-    area: searchParams.get('area') || 'all' // Support area filtering from URL
+    area: searchParams.get('area') || 'all'
   })
-  const [viewMode, setViewMode] = useState('grid') // grid or list
+  const [viewMode, setViewMode] = useState('grid')
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '')
+  const [showFilters, setShowFilters] = useState(false)
   
   const t = homeContent[locale] || homeContent['es']
 
-  // Enhanced city information with area context
+  // City information with area context
   const cityInfo = {
     malaga: {
       name: 'Málaga',
       description: {
-        es: 'Málaga, capital de la Costa del Sol, ofrece una vibrante escena tenística con más de 30 clubs distribuidos por diferentes zonas de la ciudad y alrededores. El clima mediterráneo permite jugar al tenis durante todo el año.',
-        en: 'Málaga, capital of the Costa del Sol, offers a vibrant tennis scene with over 30 clubs distributed across different areas of the city and surroundings. The Mediterranean climate allows year-round tennis playing.'
+        es: 'Málaga, capital de la Costa del Sol, ofrece una vibrante escena tenística con más de 30 clubs distribuidos por diferentes zonas de la ciudad y alrededores.',
+        en: 'Málaga, capital of the Costa del Sol, offers a vibrant tennis scene with over 30 clubs distributed across different areas of the city and surroundings.'
       }
     },
     marbella: {
       name: 'Marbella',
       description: {
-        es: 'Marbella y su área metropolitana, incluyendo zonas como El Paraíso, Nueva Andalucía y San Pedro de Alcántara, ofrecen la mayor concentración de clubs de tenis de lujo en la Costa del Sol. Un destino perfecto para combinar vacaciones y tenis.',
-        en: 'Marbella and its metropolitan area, including zones like El Paraíso, Nueva Andalucía and San Pedro de Alcántara, offer the highest concentration of luxury tennis clubs on the Costa del Sol. A perfect destination to combine vacation and tennis.'
+        es: 'Marbella y su área metropolitana ofrecen la mayor concentración de clubs de tenis de lujo en la Costa del Sol.',
+        en: 'Marbella and its metropolitan area offer the highest concentration of luxury tennis clubs on the Costa del Sol.'
       }
     },
     estepona: {
       name: 'Estepona',
       description: {
-        es: 'Conocida como el "Jardín de la Costa del Sol", Estepona y sus alrededores ofrecen una experiencia de tenis más tranquila y familiar. Sus clubs combinan excelentes instalaciones con un ambiente acogedor.',
-        en: 'Known as the "Garden of the Costa del Sol", Estepona and its surroundings offer a quieter, more family-friendly tennis experience. Its clubs combine excellent facilities with a welcoming atmosphere.'
+        es: 'Conocida como el "Jardín de la Costa del Sol", Estepona ofrece una experiencia de tenis más tranquila y familiar.',
+        en: 'Known as the "Garden of the Costa del Sol", Estepona offers a quieter, more family-friendly tennis experience.'
       }
     },
     sotogrande: {
       name: 'Sotogrande',
       description: {
-        es: 'Sotogrande y su zona, incluyendo La Línea y alrededores, es conocida por sus exclusivos clubs de tenis y su ambiente internacional. Un enclave de lujo con instalaciones de primer nivel.',
-        en: 'Sotogrande and its area, including La Línea and surroundings, is known for its exclusive tennis clubs and international atmosphere. A luxury enclave with top-level facilities.'
+        es: 'Sotogrande es conocida por sus exclusivos clubs de tenis y su ambiente internacional.',
+        en: 'Sotogrande is known for its exclusive tennis clubs and international atmosphere.'
       }
     }
   }
@@ -81,7 +82,6 @@ export default function CityClubsPage() {
   const fetchClubs = async () => {
     try {
       setLoading(true)
-      // Enhanced API call to support area filtering
       const params = new URLSearchParams({ city })
       const response = await fetch(`/api/clubs?${params}`)
       if (response.ok) {
@@ -111,7 +111,7 @@ export default function CityClubsPage() {
       )
     }
 
-    // Area filter - NEW!
+    // Area filter
     if (filters.area !== 'all') {
       filtered = filtered.filter(club => club.location?.area === filters.area)
     }
@@ -119,14 +119,14 @@ export default function CityClubsPage() {
     // Surface filter
     if (filters.surface !== 'all') {
       filtered = filtered.filter(club => 
-        club.courts.surfaces.some(s => s.type === filters.surface)
+        club.courts?.surfaces?.some(s => s.type === filters.surface)
       )
     }
 
     // Amenities filter
     if (filters.amenities.length > 0) {
       filtered = filtered.filter(club => 
-        filters.amenities.every(amenity => club.amenities[amenity])
+        filters.amenities.every(amenity => club.amenities?.[amenity])
       )
     }
 
@@ -195,7 +195,7 @@ export default function CityClubsPage() {
     <div className="min-h-screen bg-gray-50">
       <Navigation locale={locale} />
       
-      {/* Enhanced Hero Section with Area Context */}
+      {/* Hero Section - Simplified */}
       <section className="relative pt-32 pb-12 px-4 bg-gradient-to-br from-parque-purple to-parque-green text-white">
         <div className="container mx-auto">
           <div className="max-w-4xl">
@@ -211,7 +211,7 @@ export default function CityClubsPage() {
               <span className="text-white">{currentCity.name}</span>
             </nav>
             
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
               {locale === 'es' 
                 ? `Clubs de Tenis en ${currentCity.name}`
                 : `Tennis Clubs in ${currentCity.name}`}
@@ -220,56 +220,52 @@ export default function CityClubsPage() {
               {currentCity.description[locale]}
             </p>
 
-            {/* Area Overview for cities with multiple areas */}
+            {/* Area Pills for cities with multiple areas */}
             {availableAreas.length > 0 && (
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 mt-6">
-                <h3 className="text-lg font-semibold mb-3">
-                  {locale === 'es' ? 'Explora por zona:' : 'Explore by area:'}
-                </h3>
-                <div className="flex flex-wrap gap-3">
-                  {availableAreas.map(area => (
+              <div className="flex flex-wrap gap-2 mt-6">
+                <button
+                  onClick={() => setFilters(prev => ({ ...prev, area: 'all' }))}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    filters.area === 'all'
+                      ? 'bg-white text-parque-purple'
+                      : 'bg-white/20 text-white hover:bg-white/30'
+                  }`}
+                >
+                  {locale === 'es' ? 'Todas las áreas' : 'All areas'}
+                  <span className="ml-2 opacity-75">({clubs.length})</span>
+                </button>
+                {availableAreas.map(area => (
+                  areaStats[area] > 0 && (
                     <button
                       key={area}
                       onClick={() => setFilters(prev => ({ ...prev, area }))}
-                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                         filters.area === area
                           ? 'bg-white text-parque-purple'
                           : 'bg-white/20 text-white hover:bg-white/30'
                       }`}
                     >
                       {AREA_DISPLAY_NAMES[area] || area}
-                      {areaStats[area] > 0 && (
-                        <span className="ml-2 text-xs opacity-75">
-                          ({areaStats[area]})
-                        </span>
-                      )}
+                      <span className="ml-2 opacity-75">({areaStats[area]})</span>
                     </button>
-                  ))}
-                  {filters.area !== 'all' && (
-                    <button
-                      onClick={() => setFilters(prev => ({ ...prev, area: 'all' }))}
-                      className="px-3 py-2 rounded-lg text-sm font-medium bg-white/20 text-white hover:bg-white/30"
-                    >
-                      {locale === 'es' ? 'Ver todas' : 'View all'}
-                    </button>
-                  )}
-                </div>
+                  )
+                ))}
               </div>
             )}
           </div>
         </div>
       </section>
 
-      {/* Enhanced Filters Section */}
-      <section className="sticky top-0 z-40 bg-white shadow-md py-4">
+      {/* Simplified Search & Filter Bar */}
+      <section className="sticky top-0 z-40 bg-white shadow-sm py-4">
         <div className="container mx-auto px-4">
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-            {/* Enhanced Search Bar */}
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Search Bar */}
             <div className="flex-1 max-w-md">
               <div className="relative">
                 <input
                   type="text"
-                  placeholder={locale === 'es' ? 'Buscar clubs o áreas...' : 'Search clubs or areas...'}
+                  placeholder={locale === 'es' ? 'Buscar clubs...' : 'Search clubs...'}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-parque-purple"
@@ -280,162 +276,140 @@ export default function CityClubsPage() {
               </div>
             </div>
 
-            {/* Filter Pills */}
-            <div className="flex flex-wrap gap-2">
-              {/* Area Filter - NEW! */}
-              {availableAreas.length > 0 && (
-                <select
-                  value={filters.area}
-                  onChange={(e) => setFilters(prev => ({ ...prev, area: e.target.value }))}
-                  className="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:border-parque-purple"
-                >
-                  <option value="all">
-                    {locale === 'es' ? 'Todas las áreas' : 'All areas'}
-                  </option>
-                  {availableAreas.map(area => (
-                    <option key={area} value={area}>
-                      {AREA_DISPLAY_NAMES[area] || area} ({areaStats[area] || 0})
-                    </option>
-                  ))}
-                </select>
-              )}
+            {/* Filter Toggle */}
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`px-4 py-2 rounded-lg border transition-colors flex items-center gap-2 ${
+                showFilters ? 'bg-parque-purple text-white border-parque-purple' : 'border-gray-300 hover:border-parque-purple'
+              }`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+              </svg>
+              {locale === 'es' ? 'Filtros' : 'Filters'}
+            </button>
 
-              {/* Surface Filter */}
-              <select
-                value={filters.surface}
-                onChange={(e) => setFilters(prev => ({ ...prev, surface: e.target.value }))}
-                className="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:border-parque-purple"
-              >
-                <option value="all">{locale === 'es' ? 'Todas las superficies' : 'All surfaces'}</option>
-                <option value="clay">{locale === 'es' ? 'Tierra batida' : 'Clay'}</option>
-                <option value="hard">{locale === 'es' ? 'Pista dura' : 'Hard court'}</option>
-                <option value="grass">{locale === 'es' ? 'Césped' : 'Grass'}</option>
-                <option value="synthetic">{locale === 'es' ? 'Sintética' : 'Synthetic'}</option>
-              </select>
-
-              {/* Price Range Filter */}
-              <select
-                value={filters.priceRange}
-                onChange={(e) => setFilters(prev => ({ ...prev, priceRange: e.target.value }))}
-                className="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:border-parque-purple"
-              >
-                <option value="all">{locale === 'es' ? 'Todos los precios' : 'All prices'}</option>
-                <option value="budget">{locale === 'es' ? '≤ 15€/hora' : '≤ €15/hour'}</option>
-                <option value="medium">{locale === 'es' ? '15-25€/hora' : '€15-25/hour'}</option>
-                <option value="premium">{locale === 'es' ? '> 25€/hora' : '> €25/hour'}</option>
-              </select>
-
-              {/* Access Type Filter */}
-              <select
-                value={filters.publicAccess}
-                onChange={(e) => setFilters(prev => ({ ...prev, publicAccess: e.target.value }))}
-                className="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:border-parque-purple"
-              >
-                <option value="all">{locale === 'es' ? 'Todo acceso' : 'All access'}</option>
-                <option value="public">{locale === 'es' ? 'Acceso público' : 'Public access'}</option>
-                <option value="members">{locale === 'es' ? 'Solo socios' : 'Members only'}</option>
-              </select>
-            </div>
-
-            {/* View Mode & Results Count */}
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">
-                {filteredClubs.length} {locale === 'es' ? 'clubs encontrados' : 'clubs found'}
-                {filters.area !== 'all' && (
-                  <span className="ml-1 text-parque-purple font-medium">
-                    {locale === 'es' ? 'en' : 'in'} {AREA_DISPLAY_NAMES[filters.area] || filters.area}
-                  </span>
-                )}
-              </span>
-              <div className="flex gap-1">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded ${viewMode === 'grid' ? 'bg-parque-purple text-white' : 'bg-gray-200'}`}
-                >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 rounded ${viewMode === 'list' ? 'bg-parque-purple text-white' : 'bg-gray-200'}`}
-                >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Amenities Filter */}
-          <div className="flex flex-wrap gap-2">
-            <span className="text-sm text-gray-600 mr-2">
-              {locale === 'es' ? 'Servicios:' : 'Amenities:'}
-            </span>
-            {[
-              { key: 'parking', label: { es: 'Parking', en: 'Parking' }, icon: '🚗' },
-              { key: 'lighting', label: { es: 'Iluminación', en: 'Lighting' }, icon: '💡' },
-              { key: 'restaurant', label: { es: 'Restaurante', en: 'Restaurant' }, icon: '🍽️' },
-              { key: 'proShop', label: { es: 'Tienda', en: 'Pro Shop' }, icon: '🎾' },
-              { key: 'showers', label: { es: 'Duchas', en: 'Showers' }, icon: '🚿' },
-              { key: 'gym', label: { es: 'Gimnasio', en: 'Gym' }, icon: '🏋️' }
-            ].map(amenity => (
-              <button
-                key={amenity.key}
-                onClick={() => toggleAmenity(amenity.key)}
-                className={`px-3 py-1 rounded-full text-sm flex items-center gap-1 transition-colors ${
-                  filters.amenities.includes(amenity.key)
-                    ? 'bg-parque-purple text-white'
-                    : 'bg-gray-100 hover:bg-gray-200'
-                }`}
-              >
-                <span>{amenity.icon}</span>
-                <span>{amenity.label[locale]}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* Active Filters Display */}
-          {(filters.area !== 'all' || searchTerm || filters.surface !== 'all' || filters.priceRange !== 'all' || filters.publicAccess !== 'all' || filters.amenities.length > 0) && (
-            <div className="mt-4 flex flex-wrap gap-2 items-center">
-              <span className="text-sm text-gray-600">
-                {locale === 'es' ? 'Filtros activos:' : 'Active filters:'}
-              </span>
-              
+            {/* Results Count */}
+            <div className="text-sm text-gray-600">
+              <span className="font-semibold">{filteredClubs.length}</span> {locale === 'es' ? 'clubs encontrados' : 'clubs found'}
               {filters.area !== 'all' && (
-                <span className="bg-parque-purple/10 text-parque-purple px-3 py-1 rounded-full text-sm">
-                  📍 {AREA_DISPLAY_NAMES[filters.area] || filters.area}
+                <span className="ml-1">
+                  {locale === 'es' ? 'en' : 'in'} <span className="font-medium text-parque-purple">{AREA_DISPLAY_NAMES[filters.area] || filters.area}</span>
                 </span>
               )}
-              
-              {searchTerm && (
-                <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                  🔍 &quot;{searchTerm}&quot;
-                </span>
-              )}
-              
+            </div>
+
+            {/* View Mode */}
+            <div className="flex gap-1 ml-auto">
               <button
-                onClick={() => {
-                  setFilters({
-                    surface: 'all',
-                    amenities: [],
-                    priceRange: 'all',
-                    publicAccess: 'all',
-                    area: 'all'
-                  })
-                  setSearchTerm('')
-                }}
-                className="text-sm text-gray-500 hover:text-gray-700 underline"
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded ${viewMode === 'grid' ? 'bg-parque-purple text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
+                aria-label="Grid view"
               >
-                {locale === 'es' ? 'Limpiar todos' : 'Clear all'}
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
               </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded ${viewMode === 'list' ? 'bg-parque-purple text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
+                aria-label="List view"
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Expandable Filters */}
+          {showFilters && (
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <div className="flex flex-wrap gap-4">
+                {/* Surface Filter */}
+                <select
+                  value={filters.surface}
+                  onChange={(e) => setFilters(prev => ({ ...prev, surface: e.target.value }))}
+                  className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 focus:outline-none focus:border-parque-purple"
+                >
+                  <option value="all">{locale === 'es' ? 'Todas las superficies' : 'All surfaces'}</option>
+                  <option value="clay">{locale === 'es' ? 'Tierra batida' : 'Clay'}</option>
+                  <option value="hard">{locale === 'es' ? 'Pista dura' : 'Hard court'}</option>
+                  <option value="grass">{locale === 'es' ? 'Césped' : 'Grass'}</option>
+                  <option value="synthetic">{locale === 'es' ? 'Sintética' : 'Synthetic'}</option>
+                </select>
+
+                {/* Price Range Filter */}
+                <select
+                  value={filters.priceRange}
+                  onChange={(e) => setFilters(prev => ({ ...prev, priceRange: e.target.value }))}
+                  className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 focus:outline-none focus:border-parque-purple"
+                >
+                  <option value="all">{locale === 'es' ? 'Todos los precios' : 'All prices'}</option>
+                  <option value="budget">{locale === 'es' ? '≤ 15€/hora' : '≤ €15/hour'}</option>
+                  <option value="medium">{locale === 'es' ? '15-25€/hora' : '€15-25/hour'}</option>
+                  <option value="premium">{locale === 'es' ? '> 25€/hora' : '> €25/hour'}</option>
+                </select>
+
+                {/* Access Type Filter */}
+                <select
+                  value={filters.publicAccess}
+                  onChange={(e) => setFilters(prev => ({ ...prev, publicAccess: e.target.value }))}
+                  className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 focus:outline-none focus:border-parque-purple"
+                >
+                  <option value="all">{locale === 'es' ? 'Todo acceso' : 'All access'}</option>
+                  <option value="public">{locale === 'es' ? 'Acceso público' : 'Public access'}</option>
+                  <option value="members">{locale === 'es' ? 'Solo socios' : 'Members only'}</option>
+                </select>
+
+                {/* Clear Filters */}
+                {(filters.surface !== 'all' || filters.priceRange !== 'all' || filters.publicAccess !== 'all' || searchTerm) && (
+                  <button
+                    onClick={() => {
+                      setFilters({
+                        surface: 'all',
+                        amenities: [],
+                        priceRange: 'all',
+                        publicAccess: 'all',
+                        area: filters.area
+                      })
+                      setSearchTerm('')
+                    }}
+                    className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 underline"
+                  >
+                    {locale === 'es' ? 'Limpiar filtros' : 'Clear filters'}
+                  </button>
+                )}
+              </div>
+
+              {/* Amenities Filter - Simplified */}
+              <div className="flex flex-wrap gap-2 mt-3">
+                {[
+                  { key: 'parking', label: { es: 'Parking', en: 'Parking' }, icon: '🚗' },
+                  { key: 'lighting', label: { es: 'Iluminación', en: 'Lighting' }, icon: '💡' },
+                  { key: 'restaurant', label: { es: 'Restaurante', en: 'Restaurant' }, icon: '🍽️' },
+                  { key: 'proShop', label: { es: 'Tienda', en: 'Pro Shop' }, icon: '🎾' }
+                ].map(amenity => (
+                  <button
+                    key={amenity.key}
+                    onClick={() => toggleAmenity(amenity.key)}
+                    className={`px-3 py-1.5 rounded-full text-sm flex items-center gap-1 transition-colors ${
+                      filters.amenities.includes(amenity.key)
+                        ? 'bg-parque-purple text-white'
+                        : 'bg-gray-100 hover:bg-gray-200'
+                    }`}
+                  >
+                    <span>{amenity.icon}</span>
+                    <span>{amenity.label[locale]}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>
       </section>
 
-      {/* Enhanced Clubs Grid */}
+      {/* Clubs Grid */}
       <section className="py-8 px-4">
         <div className="container mx-auto">
           {filteredClubs.length > 0 ? (
@@ -455,13 +429,6 @@ export default function CityClubsPage() {
                   ? 'No se encontraron clubs con los filtros seleccionados.'
                   : 'No clubs found with the selected filters.'}
               </p>
-              {filters.area !== 'all' && (
-                <p className="text-gray-500 mb-4">
-                  {locale === 'es' 
-                    ? `Buscando en: ${AREA_DISPLAY_NAMES[filters.area] || filters.area}`
-                    : `Searching in: ${AREA_DISPLAY_NAMES[filters.area] || filters.area}`}
-                </p>
-              )}
               <button
                 onClick={() => {
                   setFilters({
@@ -482,7 +449,7 @@ export default function CityClubsPage() {
         </div>
       </section>
 
-      {/* Enhanced CTA Section */}
+      {/* CTA Section */}
       <section className="py-16 px-4 bg-gradient-to-br from-parque-purple to-parque-green text-white">
         <div className="container mx-auto text-center max-w-3xl">
           <h2 className="text-3xl font-bold mb-4">
@@ -492,8 +459,8 @@ export default function CityClubsPage() {
           </h2>
           <p className="text-xl mb-8">
             {locale === 'es'
-              ? 'Únete a nuestra liga amateur y encuentra jugadores de tu nivel en toda la zona'
-              : 'Join our amateur league and find players at your level across the area'}
+              ? 'Únete a nuestra liga amateur y encuentra jugadores de tu nivel'
+              : 'Join our amateur league and find players at your level'}
           </p>
           <Link
             href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${city}`}
