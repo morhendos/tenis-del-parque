@@ -178,13 +178,12 @@ export default function ClubsPage() {
     return cityMatches || areaMatches
   })
 
-  // Organize cities by club availability
+  // Only show cities with clubs
   const citiesWithClubs = filteredCities.filter(city => city.clubCount > 0)
-  const citiesComingSoon = filteredCities.filter(city => city.clubCount === 0)
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-parque-bg via-white to-white">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
         <Navigation locale={locale} />
         <div className="container mx-auto px-4 py-32 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
@@ -197,138 +196,102 @@ export default function ClubsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-parque-bg via-white to-white">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <Navigation locale={locale} />
       
-      {/* Enhanced Hero Section */}
-      <section className="relative pt-32 pb-16">
+      {/* Simplified Hero Section */}
+      <section className="relative bg-gradient-to-br from-parque-purple to-parque-green text-white py-20">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <div className="text-6xl mb-6">🎾</div>
-            <h1 className="text-5xl font-light text-parque-purple mb-4">
-              {locale === 'es' ? 'Clubes de Tenis' : 'Tennis Clubs'}
+          <div className="text-center max-w-3xl mx-auto">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              {locale === 'es' ? 'Encuentra tu Club de Tenis' : 'Find Your Tennis Club'}
             </h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-6">
+            <p className="text-lg text-white/90 mb-8">
               {locale === 'es' 
-                ? 'Descubre los mejores clubes de tenis en España organizados por ciudades y áreas. Encuentra instalaciones increíbles y únete a una comunidad apasionada.'
-                : 'Discover the best tennis clubs in Spain organized by cities and areas. Find incredible facilities and join a passionate community.'}
+                ? 'Descubre los mejores clubes de tenis en España. Encuentra instalaciones increíbles y únete a nuestra comunidad.'
+                : 'Discover the best tennis clubs in Spain. Find incredible facilities and join our community.'}
             </p>
 
-            {/* Enhanced Search with Area Context */}
-            <div className="max-w-md mx-auto mb-8">
+            {/* Search Bar */}
+            <div className="max-w-md mx-auto">
               <div className="relative">
                 <input
                   type="text"
                   placeholder={locale === 'es' ? 'Buscar ciudades o áreas...' : 'Search cities or areas...'}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-parque-purple focus:border-transparent text-lg"
+                  className="w-full pl-12 pr-4 py-3 bg-white/10 backdrop-blur-sm border border-white/30 rounded-full text-white placeholder-white/70 focus:outline-none focus:bg-white/20 focus:border-white/50 transition-all text-lg"
                 />
-                <svg className="absolute left-4 top-3.5 h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="absolute left-4 top-3.5 h-6 w-6 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-4 top-3.5 text-white/70 hover:text-white"
+                  >
+                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
               </div>
             </div>
           </div>
-
-          {/* Area Highlights Section */}
-          {areaStats.topAreas.length > 0 && (
-            <div className="max-w-4xl mx-auto">
-              <button
-                onClick={() => setShowAreaDetails(!showAreaDetails)}
-                className="mb-6 flex items-center justify-center gap-2 mx-auto px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors"
-              >
-                <span>
-                  {locale === 'es' ? 'Áreas Destacadas' : 'Featured Areas'}
-                </span>
-                <svg className={`w-4 h-4 transition-transform ${showAreaDetails ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {showAreaDetails && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                  {areaStats.topAreas.slice(0, 6).map((area, index) => (
-                    <div key={`${area.city}-${area.area}`} className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-semibold text-gray-900">{area.displayName}</h4>
-                        <span className="bg-parque-purple text-white px-2 py-1 rounded-full text-sm">
-                          {area.count} {locale === 'es' ? 'clubs' : 'clubs'}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-3">
-                        {area.cityDisplayName.charAt(0).toUpperCase() + area.cityDisplayName.slice(1)}, España
-                      </p>
-                      <a
-                        href={`/${locale}/clubs/${area.city}/area/${area.area}`}
-                        className="text-parque-purple hover:underline text-sm font-medium"
-                      >
-                        {locale === 'es' ? 'Ver clubs en la zona →' : 'View clubs in area →'}
-                      </a>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </section>
 
-      {/* Cities Grid */}
-      <section className="container mx-auto px-4 pb-16">
-        {filteredCities.length > 0 ? (
-          <div className="space-y-16">
-            {/* Cities Grid - No header needed */}
-            {citiesWithClubs.length > 0 && (
-              <div>
-                {searchTerm && (
-                  <p className="text-center text-gray-600 mb-6">
-                    {locale === 'es' 
-                      ? `Mostrando ${citiesWithClubs.length} ciudades que coinciden con "${searchTerm}"`
-                      : `Showing ${citiesWithClubs.length} cities matching "${searchTerm}"`}
-                  </p>
-                )}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                  {citiesWithClubs.map((city) => (
-                    <CityCard
-                      key={city._id}
-                      city={city}
-                      leagueCount={city.leagueCount}
-                      className="w-full"
-                      showAreaInfo={true}
-                      areaCount={getAreasForCity(city.slug).length}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Cities Coming Soon */}
-            {citiesComingSoon.length > 0 && (
-              <div>
-                <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
-                  {locale === 'es' ? '🚀 Próximamente' : '🚀 Coming Soon'}
-                </h2>
-                <p className="text-center text-gray-600 mb-8">
-                  {locale === 'es' 
-                    ? 'Estas ciudades tendrán clubes de tenis registrados muy pronto. ¡Mantente atento!'
-                    : 'These cities will have tennis clubs registered very soon. Stay tuned!'}
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                  {citiesComingSoon.map((city) => (
-                    <CityCard
-                      key={city._id}
-                      city={city}
-                      leagueCount={city.leagueCount}
-                      className="w-full opacity-75"
-                      showAreaInfo={true}
-                      areaCount={getAreasForCity(city.slug).length}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
+      {/* Popular Areas Section - Only show if there are areas with clubs */}
+      {areaStats.topAreas.length > 0 && !searchTerm && (
+        <section className="py-12 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+                {locale === 'es' ? 'Áreas Populares' : 'Popular Areas'}
+              </h2>
+              <p className="text-gray-600">
+                {locale === 'es' ? 'Explora clubes por zonas específicas' : 'Explore clubs by specific areas'}
+              </p>
+            </div>
+            
+            <div className="flex flex-wrap justify-center gap-3">
+              {areaStats.topAreas.slice(0, 8).map((area) => (
+                <a
+                  key={`${area.city}-${area.area}`}
+                  href={`/${locale}/clubs/${area.city}/area/${area.area}`}
+                  className="group inline-flex items-center gap-2 bg-gray-50 hover:bg-parque-purple hover:text-white px-4 py-2 rounded-full transition-all border border-gray-200 hover:border-parque-purple"
+                >
+                  <span className="font-medium">{area.displayName}</span>
+                  <span className="text-sm opacity-75">({area.count})</span>
+                </a>
+              ))}
+            </div>
           </div>
+        </section>
+      )}
+
+      {/* Cities Grid */}
+      <section className="container mx-auto px-4 py-16">
+        {citiesWithClubs.length > 0 ? (
+          <>
+            {searchTerm && (
+              <p className="text-center text-gray-600 mb-8">
+                {locale === 'es' 
+                  ? `${citiesWithClubs.length} ciudades encontradas para "${searchTerm}"`
+                  : `${citiesWithClubs.length} cities found for "${searchTerm}"`}
+              </p>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {citiesWithClubs.map((city) => (
+                <CityCard
+                  key={city._id}
+                  city={city}
+                  leagueCount={city.leagueCount}
+                  className="w-full"
+                />
+              ))}
+            </div>
+          </>
         ) : (
           <div className="text-center py-16 max-w-2xl mx-auto">
             {searchTerm ? (
@@ -339,12 +302,12 @@ export default function ClubsPage() {
                 </h2>
                 <p className="text-gray-600 mb-8">
                   {locale === 'es' 
-                    ? `No encontramos ciudades o áreas que coincidan con "${searchTerm}". Intenta con otros términos.`
-                    : `We couldn't find cities or areas matching "${searchTerm}". Try different terms.`}
+                    ? `No encontramos ciudades o áreas que coincidan con "${searchTerm}".`
+                    : `We couldn't find cities or areas matching "${searchTerm}".`}
                 </p>
                 <button
                   onClick={() => setSearchTerm('')}
-                  className="inline-block bg-parque-purple text-white px-8 py-3 rounded-full hover:bg-parque-purple/90 transition-colors font-medium"
+                  className="inline-block bg-parque-purple text-white px-6 py-3 rounded-full hover:bg-parque-purple/90 transition-colors font-medium"
                 >
                   {locale === 'es' ? 'Ver Todas las Ciudades' : 'View All Cities'}
                 </button>
@@ -357,12 +320,12 @@ export default function ClubsPage() {
                 </h2>
                 <p className="text-gray-600 mb-8">
                   {locale === 'es' 
-                    ? 'Estamos creando el directorio más completo de clubes de tenis en España por ciudades y áreas. ¡Pronto tendrás acceso a cientos de clubes!'
-                    : 'We are creating the most complete tennis club directory in Spain by cities and areas. Soon you will have access to hundreds of clubs!'}
+                    ? 'Estamos creando el directorio más completo de clubes de tenis en España.'
+                    : 'We are creating the most complete tennis club directory in Spain.'}
                 </p>
                 <a 
                   href={`/${locale}/ligas`}
-                  className="inline-block bg-parque-purple text-white px-8 py-3 rounded-full hover:bg-parque-purple/90 transition-colors font-medium"
+                  className="inline-block bg-parque-purple text-white px-6 py-3 rounded-full hover:bg-parque-purple/90 transition-colors font-medium"
                 >
                   {locale === 'es' ? 'Ver Ligas Disponibles' : 'View Available Leagues'}
                 </a>
@@ -372,29 +335,29 @@ export default function ClubsPage() {
         )}
       </section>
 
-      {/* CTA Section */}
+      {/* CTA Section - Simplified */}
       <section className="py-16 px-4 bg-gradient-to-br from-parque-purple to-parque-green text-white">
-        <div className="container mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+        <div className="container mx-auto text-center max-w-2xl">
+          <h2 className="text-3xl font-bold mb-4">
             {locale === 'es' 
               ? '¿Listo para Jugar?'
               : 'Ready to Play?'}
           </h2>
-          <p className="text-lg mb-8 max-w-2xl mx-auto">
+          <p className="text-lg mb-8 text-white/90">
             {locale === 'es'
-              ? 'Encuentra tu club ideal por área y únete a nuestras ligas de tenis amateur organizadas geográficamente en toda España.'
-              : 'Find your ideal club by area and join our geographically organized amateur tennis leagues across Spain.'}
+              ? 'Únete a nuestras ligas de tenis amateur en toda España.'
+              : 'Join our amateur tennis leagues across Spain.'}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
               href={`/${locale}/ligas`}
-              className="inline-block px-8 py-3 bg-white text-parque-purple rounded-lg font-medium hover:bg-gray-100 transition-colors"
+              className="inline-block px-6 py-3 bg-white text-parque-purple rounded-full font-medium hover:bg-gray-100 transition-colors"
             >
               {locale === 'es' ? 'Ver Ligas' : 'View Leagues'}
             </a>
             <a
               href={`/${locale}`}
-              className="inline-block px-8 py-3 border-2 border-white text-white rounded-lg font-medium hover:bg-white hover:text-parque-purple transition-colors"
+              className="inline-block px-6 py-3 border-2 border-white text-white rounded-full font-medium hover:bg-white hover:text-parque-purple transition-colors"
             >
               {locale === 'es' ? 'Unirse a Lista de Espera' : 'Join Waiting List'}
             </a>
