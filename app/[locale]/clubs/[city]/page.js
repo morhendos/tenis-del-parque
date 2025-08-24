@@ -195,28 +195,28 @@ export default function CityClubsPage() {
     <div className="min-h-screen bg-gray-50">
       <Navigation locale={locale} />
       
-      {/* Hero Section - Simplified */}
-      <section className="relative pt-32 pb-12 px-4 bg-gradient-to-br from-parque-purple to-parque-green text-white">
+      {/* Hero Section - More subtle design */}
+      <section className="relative pt-32 pb-12 px-4 bg-white border-b">
         <div className="container mx-auto">
           <div className="max-w-4xl">
-            <nav className="flex items-center space-x-2 text-sm mb-4 text-white/80">
-              <Link href={`/${locale}`} className="hover:text-white">
+            <nav className="flex items-center space-x-2 text-sm mb-4 text-gray-500">
+              <Link href={`/${locale}`} className="hover:text-gray-700">
                 {locale === 'es' ? 'Inicio' : 'Home'}
               </Link>
               <span>/</span>
-              <Link href={`/${locale}/clubs`} className="hover:text-white">
+              <Link href={`/${locale}/clubs`} className="hover:text-gray-700">
                 {locale === 'es' ? 'Clubs' : 'Clubs'}
               </Link>
               <span>/</span>
-              <span className="text-white">{currentCity.name}</span>
+              <span className="text-gray-900 font-medium">{currentCity.name}</span>
             </nav>
             
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
               {locale === 'es' 
                 ? `Clubs de Tenis en ${currentCity.name}`
                 : `Tennis Clubs in ${currentCity.name}`}
             </h1>
-            <p className="text-xl text-white/90 mb-6">
+            <p className="text-xl text-gray-600 mb-6">
               {currentCity.description[locale]}
             </p>
 
@@ -227,8 +227,8 @@ export default function CityClubsPage() {
                   onClick={() => setFilters(prev => ({ ...prev, area: 'all' }))}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                     filters.area === 'all'
-                      ? 'bg-white text-parque-purple'
-                      : 'bg-white/20 text-white hover:bg-white/30'
+                      ? 'bg-parque-purple text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
                   {locale === 'es' ? 'Todas las áreas' : 'All areas'}
@@ -241,8 +241,8 @@ export default function CityClubsPage() {
                       onClick={() => setFilters(prev => ({ ...prev, area }))}
                       className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                         filters.area === area
-                          ? 'bg-white text-parque-purple'
-                          : 'bg-white/20 text-white hover:bg-white/30'
+                          ? 'bg-parque-purple text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
                       {AREA_DISPLAY_NAMES[area] || area}
@@ -268,7 +268,7 @@ export default function CityClubsPage() {
                   placeholder={locale === 'es' ? 'Buscar clubs...' : 'Search clubs...'}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-parque-purple"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-parque-purple focus:ring-2 focus:ring-parque-purple/20"
                 />
                 <svg className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
