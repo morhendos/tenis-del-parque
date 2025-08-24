@@ -2,17 +2,53 @@ import Link from 'next/link'
 import { AREA_DISPLAY_NAMES, CITY_DISPLAY_NAMES } from '@/lib/utils/areaMapping'
 
 export default function ClubCard({ club, locale }) {
-  const courtTypes = club.courts.surfaces.map(s => s.type)
-  const hasMultipleSurfaces = courtTypes.length > 1
+  // Handle both old and new court structures
+  const getCourtInfo = () => {
+    if (!club.courts) {
+      return { total: 0, indoor: 0, outdoor: 0, surfaces: [] }
+    }
+
+    // New structure (from refactored editor)
+    if (club.courts.tennis || club.courts.padel || club.courts.pickleball) {
+      const tennisTotal = club.courts.tennis?.total || 0
+      const padelTotal = club.courts.padel?.total || 0
+      const pickleballTotal = club.courts.pickleball?.total || 0
+      
+      const tennisIndoor = club.courts.tennis?.indoor || 0
+      const padelIndoor = club.courts.padel?.indoor || 0
+      const pickleballIndoor = club.courts.pickleball?.indoor || 0
+      
+      return {
+        total: tennisTotal + padelTotal + pickleballTotal,
+        indoor: tennisIndoor + padelIndoor + pickleballIndoor,
+        outdoor: (tennisTotal - tennisIndoor) + (padelTotal - padelIndoor) + (pickleballTotal - pickleballIndoor),
+        surfaces: [],
+        tennis: tennisTotal,
+        padel: padelTotal,
+        pickleball: pickleballTotal
+      }
+    }
+    
+    // Old structure (legacy)
+    return {
+      total: club.courts.total || 0,
+      indoor: club.courts.indoor || 0,
+      outdoor: club.courts.outdoor || 0,
+      surfaces: club.courts.surfaces || []
+    }
+  }
+
+  const courtInfo = getCourtInfo()
+  const hasMultipleSurfaces = courtInfo.surfaces.length > 1
   
   // Get main amenities to display
   const mainAmenities = []
-  if (club.amenities.parking) mainAmenities.push({ icon: '🚗', label: locale === 'es' ? 'Parking' : 'Parking' })
-  if (club.amenities.lighting) mainAmenities.push({ icon: '💡', label: locale === 'es' ? 'Iluminación' : 'Lighting' })
-  if (club.amenities.restaurant) mainAmenities.push({ icon: '🍽️', label: locale === 'es' ? 'Restaurante' : 'Restaurant' })
-  if (club.amenities.proShop) mainAmenities.push({ icon: '🎾', label: locale === 'es' ? 'Tienda' : 'Pro Shop' })
+  if (club.amenities?.parking) mainAmenities.push({ icon: '🚗', label: locale === 'es' ? 'Parking' : 'Parking' })
+  if (club.amenities?.lighting) mainAmenities.push({ icon: '💡', label: locale === 'es' ? 'Iluminación' : 'Lighting' })
+  if (club.amenities?.restaurant) mainAmenities.push({ icon: '🍽️', label: locale === 'es' ? 'Restaurante' : 'Restaurant' })
+  if (club.amenities?.proShop) mainAmenities.push({ icon: '🎾', label: locale === 'es' ? 'Tienda' : 'Pro Shop' })
   
-  const description = club.description[locale] || club.description.es
+  const description = club.description?.[locale] || club.description?.es || ''
   const truncatedDescription = description.length > 150 
     ? description.substring(0, 150) + '...' 
     : description
@@ -55,7 +91,7 @@ export default function ClubCard({ club, locale }) {
 
   return (
     <Link
-      href={`/${locale}/clubs/${club.location.city}/${club.slug}`}
+      href={`/${locale}/clubs/${club.location?.city || 'marbella'}/${club.slug}`}
       className="group bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full"
     >
       {/* Enhanced Header with Area Information */}
@@ -100,31 +136,56 @@ export default function ClubCard({ club, locale }) {
         <div className="mb-4 pb-4 border-b border-gray-200">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-semibold text-gray-700">
-              {club.courts.total} {locale === 'es' ? 'pistas' : 'courts'}
+              {courtInfo.total} {locale === 'es' ? 'pistas' : 'courts'}
             </span>
-            {club.courts.indoor > 0 && (
+            {courtInfo.indoor > 0 && (
               <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                {club.courts.indoor} {locale === 'es' ? 'cubiertas' : 'indoor'}
+                {courtInfo.indoor} {locale === 'es' ? 'cubiertas' : 'indoor'}
               </span>
             )}
           </div>
-          <div className="flex flex-wrap gap-2">
-            {club.courts.surfaces.map((surface, idx) => (
-              <span 
-                key={idx}
-                className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full"
-              >
-                {surface.count} {
-                  surface.type === 'clay' ? (locale === 'es' ? 'tierra batida' : 'clay') :
-                  surface.type === 'hard' ? (locale === 'es' ? 'dura' : 'hard') :
-                  surface.type === 'grass' ? (locale === 'es' ? 'césped' : 'grass') :
-                  surface.type === 'synthetic' ? (locale === 'es' ? 'sintética' : 'synthetic') :
-                  surface.type === 'padel' ? 'padel' :
-                  surface.type
-                }
-              </span>
-            ))}
-          </div>
+          
+          {/* Display court types for new structure */}
+          {(courtInfo.tennis > 0 || courtInfo.padel > 0 || courtInfo.pickleball > 0) && (
+            <div className="flex flex-wrap gap-2">
+              {courtInfo.tennis > 0 && (
+                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                  🎾 {courtInfo.tennis} {locale === 'es' ? 'tenis' : 'tennis'}
+                </span>
+              )}
+              {courtInfo.padel > 0 && (
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                  🏸 {courtInfo.padel} {locale === 'es' ? 'pádel' : 'padel'}
+                </span>
+              )}
+              {courtInfo.pickleball > 0 && (
+                <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">
+                  🏓 {courtInfo.pickleball} pickleball
+                </span>
+              )}
+            </div>
+          )}
+          
+          {/* Display surfaces for old structure */}
+          {courtInfo.surfaces.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {courtInfo.surfaces.map((surface, idx) => (
+                <span 
+                  key={idx}
+                  className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full"
+                >
+                  {surface.count} {
+                    surface.type === 'clay' ? (locale === 'es' ? 'tierra batida' : 'clay') :
+                    surface.type === 'hard' ? (locale === 'es' ? 'dura' : 'hard') :
+                    surface.type === 'grass' ? (locale === 'es' ? 'césped' : 'grass') :
+                    surface.type === 'synthetic' ? (locale === 'es' ? 'sintética' : 'synthetic') :
+                    surface.type === 'padel' ? 'padel' :
+                    surface.type
+                  }
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Amenities */}
