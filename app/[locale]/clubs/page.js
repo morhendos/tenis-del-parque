@@ -17,7 +17,7 @@ export default function ClubsPage() {
   const params = useParams()
   const locale = params.locale || 'es'
   const [cities, setCities] = useState([])
-  const [clubs, setClubs] = useState([]) // NEW: Get clubs for area stats
+  const [clubs, setClubs] = useState([]) // For area stats
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -27,7 +27,7 @@ export default function ClubsPage() {
 
   useEffect(() => {
     fetchCities()
-    fetchClubs() // NEW: Fetch clubs for area statistics
+    fetchClubs() // Fetch clubs for area statistics
   }, [])
 
   const fetchCities = async () => {
@@ -106,7 +106,7 @@ export default function ClubsPage() {
     }
   }
 
-  // NEW: Fetch clubs for area statistics
+  // Fetch clubs for area statistics
   const fetchClubs = async () => {
     try {
       const response = await fetch('/api/clubs?limit=1000') // Get all clubs for stats
@@ -119,7 +119,7 @@ export default function ClubsPage() {
     }
   }
 
-  // NEW: Calculate area statistics
+  // Calculate area statistics
   const getAreaStatistics = () => {
     const stats = {
       totalAreas: 0,
@@ -169,7 +169,7 @@ export default function ClubsPage() {
       city.slug.toLowerCase().includes(search) ||
       city.province.toLowerCase().includes(search)
     
-    // NEW: Also check if any areas in this city match the search
+    // Also check if any areas in this city match the search
     const cityAreas = getAreasForCity(city.slug)
     const areaMatches = cityAreas.some(area => 
       (AREA_DISPLAY_NAMES[area] || area).toLowerCase().includes(search)
@@ -214,7 +214,7 @@ export default function ClubsPage() {
                 : 'Discover the best tennis clubs in Spain organized by cities and areas. Find incredible facilities and join a passionate community.'}
             </p>
 
-            {/* NEW: Enhanced Search with Area Context */}
+            {/* Enhanced Search with Area Context */}
             <div className="max-w-md mx-auto mb-8">
               <div className="relative">
                 <input
@@ -231,48 +231,7 @@ export default function ClubsPage() {
             </div>
           </div>
 
-          {/* Enhanced Stats Section with Area Information */}
-          {cities.length > 0 && (
-            <div className="flex flex-wrap justify-center gap-8 mb-8">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-parque-purple">{cities.length}</div>
-                <div className="text-gray-600">
-                  {locale === 'es' ? 'Ciudades' : 'Cities'}
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-parque-green">
-                  {cities.reduce((sum, city) => sum + (city.clubCount || 0), 0)}
-                </div>
-                <div className="text-gray-600">
-                  {locale === 'es' ? 'Clubes' : 'Clubs'}
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-amber-500">
-                  {cities.reduce((sum, city) => sum + (city.leagueCount || 0), 0)}
-                </div>
-                <div className="text-gray-600">
-                  {locale === 'es' ? 'Ligas Activas' : 'Active Leagues'}
-                </div>
-              </div>
-              {/* NEW: Area Statistics */}
-              <div className="text-center">
-                <div className="text-3xl font-bold text-purple-600">{areaStats.totalAreas}</div>
-                <div className="text-gray-600">
-                  {locale === 'es' ? 'Áreas' : 'Areas'}
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-cyan-600">{areaStats.areasWithClubs}</div>
-                <div className="text-gray-600">
-                  {locale === 'es' ? 'Áreas con Clubes' : 'Areas with Clubs'}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* NEW: Area Highlights Section */}
+          {/* Area Highlights Section */}
           {areaStats.topAreas.length > 0 && (
             <div className="max-w-4xl mx-auto">
               <button
@@ -315,16 +274,13 @@ export default function ClubsPage() {
         </div>
       </section>
 
-      {/* Enhanced Cities Grid */}
+      {/* Cities Grid */}
       <section className="container mx-auto px-4 pb-16">
         {filteredCities.length > 0 ? (
           <div className="space-y-16">
-            {/* Cities with Clubs */}
+            {/* Cities Grid - No header needed */}
             {citiesWithClubs.length > 0 && (
               <div>
-                <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
-                  {locale === 'es' ? '🏟️ Ciudades con Clubes' : '🏟️ Cities with Clubs'}
-                </h2>
                 {searchTerm && (
                   <p className="text-center text-gray-600 mb-6">
                     {locale === 'es' 
@@ -339,7 +295,7 @@ export default function ClubsPage() {
                       city={city}
                       leagueCount={city.leagueCount}
                       className="w-full"
-                      showAreaInfo={true} // NEW: Show area information
+                      showAreaInfo={true}
                       areaCount={getAreasForCity(city.slug).length}
                     />
                   ))}
@@ -416,70 +372,7 @@ export default function ClubsPage() {
         )}
       </section>
 
-      {/* Enhanced Features Section */}
-      <section className="py-16 px-4 bg-gray-50">
-        <div className="container mx-auto max-w-4xl">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              {locale === 'es'
-                ? '¿Por Qué Usar Nuestro Directorio?'
-                : 'Why Use Our Directory?'}
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-white p-6 rounded-xl shadow-md">
-              <div className="text-3xl mb-4">🎯</div>
-              <h3 className="text-xl font-semibold mb-2">
-                {locale === 'es' ? 'Organización por Áreas' : 'Organization by Areas'}
-              </h3>
-              <p className="text-gray-600">
-                {locale === 'es'
-                  ? 'Encuentra clubs organizados por áreas específicas como El Paraíso, Nueva Andalucía, y más.'
-                  : 'Find clubs organized by specific areas like El Paraíso, Nueva Andalucía, and more.'}
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-md">
-              <div className="text-3xl mb-4">🏆</div>
-              <h3 className="text-xl font-semibold mb-2">
-                {locale === 'es' ? 'Ligas por Región' : 'Regional Leagues'}
-              </h3>
-              <p className="text-gray-600">
-                {locale === 'es'
-                  ? 'Únete a ligas organizadas geográficamente para competir con jugadores de tu zona.'
-                  : 'Join geographically organized leagues to compete with players from your area.'}
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-md">
-              <div className="text-3xl mb-4">📍</div>
-              <h3 className="text-xl font-semibold mb-2">
-                {locale === 'es' ? 'Búsqueda Inteligente' : 'Smart Search'}
-              </h3>
-              <p className="text-gray-600">
-                {locale === 'es'
-                  ? 'Busca por ciudad, área específica, o nombre de club para encontrar exactamente lo que necesitas.'
-                  : 'Search by city, specific area, or club name to find exactly what you need.'}
-              </p>
-            </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-md">
-              <div className="text-3xl mb-4">💬</div>
-              <h3 className="text-xl font-semibold mb-2">
-                {locale === 'es' ? 'Contexto Local' : 'Local Context'}
-              </h3>
-              <p className="text-gray-600">
-                {locale === 'es'
-                  ? 'Información detallada sobre cada área con características únicas y ambiente local.'
-                  : 'Detailed information about each area with unique characteristics and local atmosphere.'}
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Enhanced CTA Section */}
+      {/* CTA Section */}
       <section className="py-16 px-4 bg-gradient-to-br from-parque-purple to-parque-green text-white">
         <div className="container mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
