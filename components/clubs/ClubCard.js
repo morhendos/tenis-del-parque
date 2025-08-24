@@ -39,7 +39,6 @@ export default function ClubCard({ club, locale }) {
   }
 
   const courtInfo = getCourtInfo()
-  const hasMultipleSurfaces = courtInfo.surfaces.length > 1
   
   // Get main amenities to display
   const mainAmenities = []
@@ -92,7 +91,7 @@ export default function ClubCard({ club, locale }) {
   return (
     <Link
       href={`/${locale}/clubs/${club.location?.city || 'marbella'}/${club.slug}`}
-      className="group bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col h-full"
+      className="group block bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden h-full transform hover:-translate-y-1 cursor-pointer"
     >
       {/* Enhanced Header with Area Information */}
       <div className="relative bg-gradient-to-br from-parque-purple to-parque-green p-6 text-white">
@@ -129,7 +128,7 @@ export default function ClubCard({ club, locale }) {
       </div>
 
       {/* Content */}
-      <div className="p-6 flex-1 flex flex-col">
+      <div className="p-6 flex flex-col h-full">
         <p className="text-gray-600 mb-4 flex-1">{truncatedDescription}</p>
 
         {/* Courts Info */}
@@ -189,16 +188,18 @@ export default function ClubCard({ club, locale }) {
         </div>
 
         {/* Amenities */}
-        <div className="mb-4">
-          <div className="flex flex-wrap gap-3">
-            {mainAmenities.slice(0, 4).map((amenity, idx) => (
-              <div key={idx} className="flex items-center gap-1 text-sm text-gray-600">
-                <span>{amenity.icon}</span>
-                <span>{amenity.label}</span>
-              </div>
-            ))}
+        {mainAmenities.length > 0 && (
+          <div className="mb-4">
+            <div className="flex flex-wrap gap-3">
+              {mainAmenities.slice(0, 4).map((amenity, idx) => (
+                <div key={idx} className="flex items-center gap-1 text-sm text-gray-600">
+                  <span>{amenity.icon}</span>
+                  <span>{amenity.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Price Range */}
         {club.pricing?.courtRental?.hourly && (
@@ -239,24 +240,15 @@ export default function ClubCard({ club, locale }) {
           </div>
         )}
 
-        {/* Enhanced CTA with Area Context */}
-        <div className="mt-auto">
-          <div className="flex items-center justify-between">
-            <span className="text-parque-purple font-medium group-hover:translate-x-1 transition-transform">
-              {locale === 'es' ? 'Ver detalles' : 'View details'} →
+        {/* Hover Indicator - Subtle arrow at bottom right */}
+        <div className="mt-auto flex items-center justify-end">
+          <div className="flex items-center gap-2 text-parque-purple opacity-0 group-hover:opacity-100 transition-opacity">
+            <span className="text-sm font-medium">
+              {locale === 'es' ? 'Ver detalles' : 'View details'}
             </span>
-            <div className="flex items-center gap-2">
-              {club.pricing?.membershipRequired && (
-                <span className="text-xs text-gray-500">
-                  {locale === 'es' ? 'Socios' : 'Members only'}
-                </span>
-              )}
-              {club.location?.area && (
-                <span className="text-xs bg-yellow-50 text-yellow-700 px-2 py-1 rounded-full">
-                  {AREA_DISPLAY_NAMES[club.location.area] || club.location.area}
-                </span>
-              )}
-            </div>
+            <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
           </div>
         </div>
       </div>
