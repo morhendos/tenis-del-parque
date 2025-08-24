@@ -70,6 +70,11 @@ root/
 │   │   ├── cities
 │   │   │   └── page.js
 │   │   ├── clubs
+│   │   │   ├── [id]
+│   │   │   │   └── edit
+│   │   │   │       └── page.js
+│   │   │   ├── new
+│   │   │   │   └── page.js
 │   │   │   └── page.js
 │   │   ├── dashboard
 │   │   │   └── page.js
@@ -264,9 +269,16 @@ root/
 │   │   │   ├── CityGoogleEnhancer.js
 │   │   │   └── CityImageManager.js
 │   │   ├── clubs
-│   │   │   ├── ClubFormModal.js
+│   │   │   ├── ClubEditor.js
 │   │   │   ├── ClubImageManager.js
-│   │   │   └── GoogleMapsImporter.js
+│   │   │   ├── GoogleMapsImporter.js
+│   │   │   └── editor
+│   │   │       ├── AmenitiesSection.js
+│   │   │       ├── BasicInfoSection.js
+│   │   │       ├── ContactSection.js
+│   │   │       ├── CourtsSection.js
+│   │   │       ├── ImagesSection.js
+│   │   │       └── LocationSection.js
 │   │   ├── leagues
 │   │   │   ├── ImportCSVModal.js
 │   │   │   └── LeagueFormModal.js
@@ -359,6 +371,7 @@ root/
 │   ├── CITY_IMAGE_MANAGEMENT_FIXES.md
 │   ├── CITY_IMAGE_SYSTEM_COMPLETE.md
 │   ├── CITY_IMAGE_TESTING_CHECKLIST.md
+│   ├── CLUB_EDITOR_REFACTOR.md
 │   ├── CLUB_IMAGE_MANAGEMENT.md
 │   ├── COMPLETE_ARCHITECTURE_FIX_SUMMARY.md
 │   ├── CURRENT_STATUS.md
@@ -372,6 +385,7 @@ root/
 │   ├── GOOGLE_MAPS_IMPORT_SPEC.md
 │   ├── GOOGLE_MAPS_SETUP.md
 │   ├── HOMEPAGE_LEAGUE_IMPLEMENTATION_PLAN.md
+│   ├── MULTI_SPORT_COURTS.md
 │   ├── NUMBER_OF_PLAYERS_IN_COSTA_DEL_SOL.md
 │   ├── PHASE_1_2_SUMMARY.md
 │   ├── PLAYER_MESSAGES_SYSTEM.md
@@ -489,12 +503,14 @@ root/
 │   ├── createAdminUser.js
 │   ├── createSeasons.js
 │   ├── createTestData.js
+│   ├── debugClubCourts.js
 │   ├── diagnoseLinkIssues.js
 │   ├── directFix.js
 │   ├── fixMismatchedLinks.js
 │   ├── generateSitemap.js
 │   ├── linkPlayersToUsers.js
 │   ├── migrateActivationTokens.js
+│   ├── migrateCourtsData.mjs
 │   ├── seedCities.js
 │   ├── seedCitiesEnhanced.js
 │   ├── seedLeagues.js
