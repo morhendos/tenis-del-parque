@@ -68,6 +68,11 @@ root/
 │   │   │   └── map
 │   │   │       └── page.js
 │   │   ├── cities
+│   │   │   ├── [id]
+│   │   │   │   └── edit
+│   │   │   │       └── page.js
+│   │   │   ├── new
+│   │   │   │   └── page.js
 │   │   │   └── page.js
 │   │   ├── clubs
 │   │   │   ├── [id]
@@ -265,9 +270,16 @@ root/
 │   │   │       ├── areaCalculations.js
 │   │   │       └── polygonHelpers.js
 │   │   ├── cities
+│   │   │   ├── CityEditor.js
 │   │   │   ├── CityFormModal.js
 │   │   │   ├── CityGoogleEnhancer.js
-│   │   │   └── CityImageManager.js
+│   │   │   ├── CityImageManager.js
+│   │   │   └── editor
+│   │   │       ├── BasicInfoSection.js
+│   │   │       ├── GoogleSearchSection.js
+│   │   │       ├── ImagesSection.js
+│   │   │       ├── LocationSection.js
+│   │   │       └── SettingsSection.js
 │   │   ├── clubs
 │   │   │   ├── ClubEditor.js
 │   │   │   ├── ClubImageManager.js
@@ -500,6 +512,7 @@ root/
 │   └── web-app-manifest-512x512.png
 ├── scripts
 │   ├── checkAuth.mjs
+│   ├── cleanup-old-editors.sh
 │   ├── createAdminUser.js
 │   ├── createSeasons.js
 │   ├── createTestData.js
