@@ -1,9 +1,6 @@
-'use client'
-
-import { use } from 'react'
 import CityEditor from '@/components/admin/cities/CityEditor'
 
-export default function EditCityPage({ params }) {
-  const { id } = use(params)
+export default async function EditCityPage({ params }) {
+  const { id } = await params
   return <CityEditor cityId={id} />
 }

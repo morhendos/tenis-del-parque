@@ -37,11 +37,19 @@ export default function CityCard({ city, leagueCount = 0, className = '' }) {
   const getCityImage = () => {
     if (city.images?.main && !imageError) {
       // If it's a Google photo reference, use the public proxy
-      if (city.images.googlePhotoReference) {
+      if (city.images?.googlePhotoReference) {
         return `/api/cities/photo?photo_reference=${city.images.googlePhotoReference}&maxwidth=800`
       }
       // Otherwise use the direct image URL
       return city.images.main
+    }
+    
+    // Check if there are Google photos available even without a direct main image
+    if (city.googleData?.photos && city.googleData.photos.length > 0 && !imageError) {
+      const firstPhoto = city.googleData.photos[0]
+      if (firstPhoto.photo_reference) {
+        return `/api/cities/photo?photo_reference=${firstPhoto.photo_reference}&maxwidth=800`
+      }
     }
     
     // Generic, consistent fallback for all cities

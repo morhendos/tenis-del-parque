@@ -15,9 +15,25 @@ export async function GET(request) {
     await dbConnect()
 
     const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
     const status = searchParams.get('status')
     const withCounts = searchParams.get('withCounts') === 'true'
 
+    // If ID is provided, fetch single city
+    if (id) {
+      const city = await City.findById(id).lean()
+      
+      if (!city) {
+        return NextResponse.json(
+          { error: 'City not found' },
+          { status: 404 }
+        )
+      }
+
+      return NextResponse.json({ city })
+    }
+
+    // Otherwise, fetch all cities with optional filtering
     let query = {}
     if (status) {
       query.status = status
