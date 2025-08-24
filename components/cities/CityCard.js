@@ -90,11 +90,19 @@ export default function CityCard({ city, leagueCount = 0, className = '' }) {
   // Get the image URL
   const imageUrl = getCityImage()
   const isDataUrl = imageUrl.startsWith('data:')
+  
+  // Determine the link URL based on whether the city has leagues
+  const linkUrl = displayLeagueCount > 0 
+    ? `/${locale}/${locale === 'es' ? 'ligas' : 'leagues'}`
+    : `/${locale}/clubs/${city.slug || city.name?.es?.toLowerCase() || 'ciudad'}`
 
   return (
-    <div className={`group bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 ${className}`}>
+    <Link 
+      href={linkUrl}
+      className={`group block bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer ${className}`}
+    >
       {/* City Image */}
-      <div className="relative h-48 bg-gradient-to-br from-purple-100 to-green-100">
+      <div className="relative h-56 bg-gradient-to-br from-purple-100 to-green-100">
         {imageLoading && !isDataUrl && (
           <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm z-10">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-parque-purple"></div>
@@ -105,7 +113,7 @@ export default function CityCard({ city, leagueCount = 0, className = '' }) {
           src={imageUrl}
           alt={`${city.name?.es || city.displayName} - Tennis city`}
           fill
-          className={`object-cover transition-all duration-500 group-hover:scale-105 ${imageLoading && !isDataUrl ? 'opacity-0' : 'opacity-100'}`}
+          className={`object-cover transition-all duration-700 group-hover:scale-110 ${imageLoading && !isDataUrl ? 'opacity-0' : 'opacity-100'}`}
           onError={handleImageError}
           onLoad={handleImageLoad}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -113,12 +121,12 @@ export default function CityCard({ city, leagueCount = 0, className = '' }) {
         />
         
         {/* Elegant gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-300"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
         
-        {/* League count badge - minimalist design */}
+        {/* League badge - top right */}
         {displayLeagueCount > 0 && (
-          <div className="absolute top-3 right-3">
-            <div className="bg-green-500 text-white rounded-full px-3 py-1 text-xs font-semibold shadow-lg flex items-center gap-1">
+          <div className="absolute top-4 right-4">
+            <div className="bg-green-500 text-white rounded-full px-3 py-1 text-xs font-bold shadow-lg flex items-center gap-1">
               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
               </svg>
@@ -127,50 +135,33 @@ export default function CityCard({ city, leagueCount = 0, className = '' }) {
           </div>
         )}
         
-        {/* Club count - bottom left */}
-        <div className="absolute bottom-3 left-3">
-          <div className="bg-white/90 backdrop-blur-sm text-gray-800 rounded-lg px-3 py-1.5 text-sm font-medium shadow-md">
-            <span className="font-bold">{city.clubCount || 0}</span> {locale === 'es' ? 'clubes' : 'clubs'}
+        {/* City Info Overlay - Bottom */}
+        <div className="absolute bottom-0 left-0 right-0 p-6">
+          <h3 className="text-2xl font-bold text-white mb-2 group-hover:translate-x-1 transition-transform">
+            {city.name?.es || city.displayName}
+          </h3>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center text-white/90 text-sm">
+              <svg className="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+              </svg>
+              <span>{city.province || 'España'}</span>
+            </div>
+            <div className="bg-white/90 backdrop-blur-sm text-gray-800 rounded-lg px-3 py-1.5 text-sm font-semibold">
+              <span className="text-lg font-bold">{city.clubCount || 0}</span> {locale === 'es' ? 'clubes' : 'clubs'}
+            </div>
+          </div>
+        </div>
+        
+        {/* Hover Indicator - Arrow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+          <div className="bg-white/95 backdrop-blur-sm rounded-full p-4 shadow-xl">
+            <svg className="w-8 h-8 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
           </div>
         </div>
       </div>
-      
-      {/* City Information - Cleaner design */}
-      <div className="p-5">
-        <div className="mb-3">
-          <h3 className="text-xl font-semibold text-gray-900 group-hover:text-parque-purple transition-colors">
-            {city.name?.es || city.displayName}
-          </h3>
-          {city.name?.es !== city.name?.en && city.name?.en && (
-            <p className="text-sm text-gray-500 mt-0.5">{city.name.en}</p>
-          )}
-        </div>
-        
-        <div className="flex items-center text-sm text-gray-600 mb-4">
-          <svg className="w-4 h-4 mr-1.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-          </svg>
-          <span>{city.province || 'España'}</span>
-        </div>
-        
-        {/* Action button - Cleaner style */}
-        <Link 
-          href={displayLeagueCount > 0 
-            ? `/${locale}/${locale === 'es' ? 'ligas' : 'leagues'}`
-            : `/${locale}/clubs/${city.slug || city.name?.es?.toLowerCase() || 'ciudad'}`
-          }
-          className={`block w-full text-center py-2.5 px-4 rounded-lg font-medium transition-all duration-200 ${
-            displayLeagueCount > 0 
-              ? 'bg-parque-purple text-white hover:bg-parque-purple/90 hover:shadow-md' 
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          {displayLeagueCount > 0 
-            ? (locale === 'es' ? 'Ver Ligas' : 'View Leagues')
-            : (locale === 'es' ? 'Explorar Clubes' : 'Explore Clubs')
-          }
-        </Link>
-      </div>
-    </div>
+    </Link>
   )
 }
