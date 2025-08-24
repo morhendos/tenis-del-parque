@@ -112,6 +112,7 @@ export default function LeagueSeasonPage() {
       
       // Fetch completed matches
       const matchesRes = await fetch(`/api/leagues/${location}/matches?season=${dbSeasonKey}&status=completed&limit=200`)
+
       if (matchesRes.ok) {
         const matchesData = await matchesRes.json()
         setMatches(matchesData.matches || [])
@@ -119,8 +120,14 @@ export default function LeagueSeasonPage() {
       
       // Fetch scheduled matches
       const scheduleRes = await fetch(`/api/leagues/${location}/matches?season=${dbSeasonKey}&status=scheduled&limit=200`)
+
       if (scheduleRes.ok) {
         const scheduleData = await scheduleRes.json()
+        console.log(`LeagueSeasonPage: Received ${scheduleData.matches?.length || 0} scheduled matches from API`)
+        console.log(`LeagueSeasonPage: Matches by round:`, (scheduleData.matches || []).reduce((acc, match) => {
+          acc[match.round] = (acc[match.round] || 0) + 1
+          return acc
+        }, {}))
         setSchedule(scheduleData.matches || [])
       }
       
