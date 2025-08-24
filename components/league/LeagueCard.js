@@ -1,14 +1,36 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { useState } from 'react';
+
+// Helper function to generate consistent fallback images for leagues
+const getGenericLeagueFallback = (cityName) => {
+  // Use a consistent gradient background for all leagues without images
+  return 'data:image/svg+xml;base64,' + btoa(`
+    <svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="leagueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#10B981;stop-opacity:1" />
+        </linearGradient>
+      </defs>
+      <rect width="800" height="600" fill="url(#leagueGrad)"/>
+      <text x="400" y="280" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="white" opacity="0.9">🏆</text>
+      <text x="400" y="340" font-family="Arial, sans-serif" font-size="20" text-anchor="middle" fill="white" opacity="0.8">${cityName}</text>
+    </svg>
+  `)
+}
 
 export default function LeagueCard({ league, content, locale }) {
+  const [imageError, setImageError] = useState(false)
+  const [imageLoading, setImageLoading] = useState(true)
+
   const isActive = league.status === 'active';
   const isComingSoon = league.status === 'coming_soon';
   const citySlug = league.slug;
   const cityContent = content?.cities?.cityDescriptions?.[citySlug];
   
-  // Extract location string from location object
-  const locationString = league.location?.city || league.location?.region || league.name;
+  // Extract location string from location object or cityData
+  const locationString = league.cityData?.name || league.location?.city || league.location?.region || league.name;
   const regionString = league.location?.region || 'España';
   
   // Check if registration is open for active leagues
@@ -28,8 +50,41 @@ export default function LeagueCard({ league, content, locale }) {
     year: 'numeric' 
   }) : null;
   
-  // Check if league has a custom image
-  const hasCustomImage = ['liga-de-sotogrande', 'liga-de-malaga', 'liga-de-estepona', 'liga-de-marbella'].includes(citySlug);
+  // Get city image with priority to Google Maps photos
+  const getCityImage = () => {
+    // Priority 1: City photos from Google Maps (via cityData)
+    if (league.cityData?.images?.main && !imageError) {
+      // If it's a Google photo reference, use the public proxy
+      if (league.cityData.images.googlePhotoReference) {
+        return `/api/cities/photo?photo_reference=${league.cityData.images.googlePhotoReference}&maxwidth=800`
+      }
+      // Otherwise use the direct image URL
+      return league.cityData.images.main
+    }
+    
+    // Priority 2: Legacy static images (for backward compatibility)
+    const hasCustomImage = ['liga-de-sotogrande', 'liga-de-malaga', 'liga-de-estepona', 'liga-de-marbella'].includes(citySlug);
+    if (hasCustomImage && !imageError) {
+      return `/${citySlug === 'liga-de-sotogrande' ? 'sotogrande-01.jpg' : 
+        citySlug === 'liga-de-estepona' ? 'estepona-01.webp' :
+        citySlug === 'liga-de-malaga' ? 'malaga-01.avif' : 
+        citySlug === 'liga-de-marbella' ? 'marbella-02.webp' : 
+             `${citySlug}-01.jpg`}`
+    }
+    
+    // Priority 3: Fallback to consistent gradient with league trophy
+    return getGenericLeagueFallback(locationString)
+  }
+
+  const handleImageError = () => {
+    console.log('Image failed to load for league:', league.name)
+    setImageError(true)
+    setImageLoading(false)
+  }
+
+  const handleImageLoad = () => {
+    setImageLoading(false)
+  }
   
   // Get the appropriate button text and link
   const getButtonConfig = () => {
@@ -88,27 +143,27 @@ export default function LeagueCard({ league, content, locale }) {
       
       {/* City Image */}
       <div className="relative h-48 overflow-hidden">
-        {hasCustomImage ? (
-          <>
-            <Image
-              src={`/${citySlug === 'liga-de-sotogrande' ? 'sotogrande-01.jpg' : 
-                citySlug === 'liga-de-estepona' ? 'estepona-01.webp' :
-                citySlug === 'liga-de-malaga' ? 'malaga-01.avif' : 
-                citySlug === 'liga-de-marbella' ? 'marbella-02.webp' : 
-                     `${citySlug}-01.jpg`}`}
-              alt={league.name}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            />
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-parque-purple/80 via-parque-purple/40 to-transparent"></div>
-          </>
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-parque-purple to-parque-green"></div>
+        {imageLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-parque-purple"></div>
+          </div>
         )}
+
+        <Image
+          src={getCityImage()}
+          alt={`${league.name} - ${locationString}`}
+          fill
+          className={`object-cover transition-opacity duration-300 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
+          onError={handleImageError}
+          onLoad={handleImageLoad}
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        />
+
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-parque-purple/80 via-parque-purple/40 to-transparent"></div>
+        
         <div className="absolute inset-0 flex items-center justify-center">
-          <h3 className="text-3xl font-bold text-white drop-shadow-lg">{league.name}</h3>
+          <h3 className="text-3xl font-bold text-white drop-shadow-lg text-center px-4">{league.name}</h3>
         </div>
       </div>
       

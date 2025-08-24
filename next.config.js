@@ -2,7 +2,10 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: [],
+    domains: [
+      // Legacy domain for existing static images
+      'images.unsplash.com',
+    ],
   },
 }
 

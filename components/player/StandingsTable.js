@@ -1,4 +1,5 @@
 import React from 'react'
+import { formatPlayerNameForStandings } from '@/lib/utils/playerNameUtils'
 
 export default function StandingsTable({ players, language, unified = false }) {
   const getPositionStyle = (position) => {
@@ -85,7 +86,7 @@ export default function StandingsTable({ players, language, unified = false }) {
           return (
             <div 
               key={standing.player._id} 
-              className={`${getPositionStyle(standing.position)} ${getPlayerStatusStyle(standing.player)} rounded-xl p-3 shadow-lg border transition-all duration-300 hover:shadow-xl hover:scale-[1.02]`}
+              className={`${getPositionStyle(standing.position)} ${getPlayerStatusStyle(standing.player)} rounded-xl p-3 shadow-lg border transition-all duration-300 hover:shadow-xl hover:-translate-y-1`}
             >
               {/* Header with position and points */}
               <div className="flex items-center justify-between mb-3">
@@ -121,7 +122,7 @@ export default function StandingsTable({ players, language, unified = false }) {
               {/* Player name on separate row */}
               <div className="mb-3 text-center">
                 <div className="text-lg font-bold text-gray-900 mb-1 flex items-center justify-center">
-                  {standing.player.name}
+                  {formatPlayerNameForStandings(standing.player.name, language)}
                   {getPlayerStatusIndicator(standing.player)}
                 </div>
                 <div className="text-sm text-gray-500">
@@ -238,7 +239,7 @@ export default function StandingsTable({ players, language, unified = false }) {
                 const rowBg = getPositionStyle(standing.position)
                             
                 return (
-                  <tr key={standing.player._id} className={`${rowBg} ${getPlayerStatusStyle(standing.player)} hover:shadow-md hover:scale-[1.01] transition-all duration-200`}>
+                  <tr key={standing.player._id} className={`${rowBg} ${getPlayerStatusStyle(standing.player)} hover:shadow-md hover:bg-white/50 transition-all duration-200`}>
                     <td className="px-6 py-5 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm mr-3 ${getPositionBadgeStyle(standing.position)}`}>
@@ -253,7 +254,7 @@ export default function StandingsTable({ players, language, unified = false }) {
                         </div>
                         <div>
                           <div className="text-sm font-bold text-gray-900 flex items-center">
-                            {standing.player.name}
+                            {formatPlayerNameForStandings(standing.player.name, language)}
                             {getPlayerStatusIndicator(standing.player)}
                           </div>
                           {winPercentage > 0 && (

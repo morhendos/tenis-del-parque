@@ -62,6 +62,25 @@ export default function AdminLayout({ children }) {
       )
     },
     { 
+      name: 'Cities', 
+      href: '/admin/cities', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      )
+    },
+    { 
+      name: 'Areas Management', 
+      href: '/admin/areas/map', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+      )
+    },
+    { 
       name: 'Users', 
       href: '/admin/users', 
       icon: (
@@ -119,6 +138,11 @@ export default function AdminLayout({ children }) {
   }
 
   const getBreadcrumbs = () => {
+    // Handle areas pages (both map and editor paths lead to same component now)
+    if (pathname === '/admin/areas/map' || pathname === '/admin/areas/editor') {
+      return [{ name: 'Areas Management', href: null }]
+    }
+    
     // Handle docs pages
     if (pathname.match(/\/admin\/docs\/[^/]+$/)) {
       return [
@@ -134,6 +158,11 @@ export default function AdminLayout({ children }) {
     // Handle clubs pages
     if (pathname === '/admin/clubs') {
       return [{ name: 'Clubs', href: null }]
+    }
+    
+    // Handle cities pages
+    if (pathname === '/admin/cities') {
+      return [{ name: 'Cities', href: null }]
     }
     
     // Handle league management pages
@@ -175,9 +204,11 @@ export default function AdminLayout({ children }) {
   }
 
   const getPageTitle = () => {
+    if (pathname.includes('/admin/areas/')) return 'Areas Management'
     if (pathname.includes('/admin/users')) return 'User Management'
     if (pathname.includes('/admin/docs')) return 'Documentation'
     if (pathname.includes('/admin/clubs')) return 'Club Management'
+    if (pathname.includes('/admin/cities')) return 'Cities Management'
     if (pathname.includes('/admin/leagues') && !pathname.match(/\/admin\/leagues\/[^/]+$/)) return 'League Management'
     if (pathname.match(/\/admin\/leagues\/[^/]+$/)) return selectedLeague?.name || 'League Management'
     if (pathname.includes('/admin/players')) return `Player Management - ${selectedLeague?.name || ''}`

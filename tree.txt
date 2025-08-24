@@ -12,9 +12,14 @@ root/
 │   │   │   ├── [city]
 │   │   │   │   ├── [slug]
 │   │   │   │   │   └── page.js
+│   │   │   │   ├── area
+│   │   │   │   │   └── [area]
+│   │   │   │   │       └── page.js
 │   │   │   │   └── page.js
 │   │   │   └── page.js
 │   │   ├── elo
+│   │   │   └── page.js
+│   │   ├── forgot-password
 │   │   │   └── page.js
 │   │   ├── layout.js
 │   │   ├── leagues
@@ -46,6 +51,8 @@ root/
 │   │   ├── reglas
 │   │   │   ├── RulesPageContent.js
 │   │   │   └── page.js
+│   │   ├── reset-password
+│   │   │   └── page.js
 │   │   ├── rules
 │   │   │   └── page.js
 │   │   ├── signup
@@ -55,13 +62,32 @@ root/
 │   │       └── page.js
 │   ├── admin
 │   │   ├── README.md
+│   │   ├── areas
+│   │   │   ├── editor
+│   │   │   │   └── page.js
+│   │   │   └── map
+│   │   │       └── page.js
+│   │   ├── cities
+│   │   │   ├── [id]
+│   │   │   │   └── edit
+│   │   │   │       └── page.js
+│   │   │   ├── new
+│   │   │   │   └── page.js
+│   │   │   └── page.js
 │   │   ├── clubs
+│   │   │   ├── [id]
+│   │   │   │   └── edit
+│   │   │   │       └── page.js
+│   │   │   ├── new
+│   │   │   │   └── page.js
 │   │   │   └── page.js
 │   │   ├── dashboard
 │   │   │   └── page.js
 │   │   ├── docs
 │   │   │   ├── [slug]
 │   │   │   │   └── page.js
+│   │   │   └── page.js
+│   │   ├── documentation
 │   │   │   └── page.js
 │   │   ├── layout.js
 │   │   ├── leagues
@@ -75,7 +101,9 @@ root/
 │   │   │   │   └── page.js
 │   │   │   ├── generate-round
 │   │   │   │   └── page.js
-│   │   │   └── page.js
+│   │   │   ├── page.js
+│   │   │   └── round-management
+│   │   │       └── page.js
 │   │   ├── page.js
 │   │   ├── players
 │   │   │   └── page.js
@@ -85,8 +113,31 @@ root/
 │   │   └── page.js
 │   ├── api
 │   │   ├── admin
+│   │   │   ├── areas
+│   │   │   │   └── route.js
+│   │   │   ├── auth
+│   │   │   │   └── check
+│   │   │   ├── cities
+│   │   │   │   ├── enhance-google
+│   │   │   │   │   └── route.js
+│   │   │   │   ├── fetch-photos
+│   │   │   │   │   └── route.js
+│   │   │   │   ├── google-photo
+│   │   │   │   │   └── route.js
+│   │   │   │   ├── route.js
+│   │   │   │   └── search-google
+│   │   │   │       └── route.js
 │   │   │   ├── clubs
 │   │   │   │   ├── [id]
+│   │   │   │   │   └── route.js
+│   │   │   │   ├── google-import
+│   │   │   │   │   ├── create
+│   │   │   │   │   │   └── route.js
+│   │   │   │   │   ├── details
+│   │   │   │   │   │   └── route.js
+│   │   │   │   │   └── search
+│   │   │   │   │       └── route.js
+│   │   │   │   ├── google-photo
 │   │   │   │   │   └── route.js
 │   │   │   │   └── route.js
 │   │   │   ├── dashboard
@@ -104,11 +155,15 @@ root/
 │   │   │   ├── matches
 │   │   │   │   ├── [id]
 │   │   │   │   │   └── route.js
+│   │   │   │   ├── bulk-delete
+│   │   │   │   │   └── route.js
 │   │   │   │   ├── export
 │   │   │   │   │   └── route.js
 │   │   │   │   ├── generate-round
 │   │   │   │   │   └── route.js
 │   │   │   │   ├── import
+│   │   │   │   │   └── route.js
+│   │   │   │   ├── replace-player
 │   │   │   │   │   └── route.js
 │   │   │   │   └── route.js
 │   │   │   ├── players
@@ -134,8 +189,16 @@ root/
 │   │   ├── auth
 │   │   │   ├── [...nextauth]
 │   │   │   │   └── route.js
-│   │   │   └── activate
+│   │   │   ├── activate
+│   │   │   │   └── route.js
+│   │   │   ├── forgot-password
+│   │   │   │   └── route.js
+│   │   │   └── reset-password
 │   │   │       └── route.js
+│   │   ├── cities
+│   │   │   ├── photo
+│   │   │   │   └── route.js
+│   │   │   └── route.js
 │   │   ├── clubs
 │   │   │   ├── [city]
 │   │   │   │   └── [slug]
@@ -167,7 +230,12 @@ root/
 │   │   ├── players
 │   │   │   └── register
 │   │   │       └── route.js
-│   │   └── seed-leagues
+│   │   ├── seasons
+│   │   │   └── [slug]
+│   │   │       └── route.js
+│   │   ├── seed-leagues
+│   │   │   └── route.js
+│   │   └── upload
 │   │       └── route.js
 │   ├── apple-icon.png
 │   ├── globals.css
@@ -180,6 +248,49 @@ root/
 │           └── page.js
 ├── components
 │   ├── admin
+│   │   ├── areas
+│   │   │   ├── AreasMapEditor.js
+│   │   │   ├── AreasMapView.js
+│   │   │   ├── components
+│   │   │   │   ├── AreaEditControls.js
+│   │   │   │   ├── AreaLegend.js
+│   │   │   │   ├── AreaMapCanvas.js
+│   │   │   │   ├── AreaNotification.js
+│   │   │   │   ├── AreaStats.js
+│   │   │   │   └── LeagueFilterButtons.js
+│   │   │   ├── constants
+│   │   │   │   └── mapConfig.js
+│   │   │   ├── hooks
+│   │   │   │   ├── useAreaManagement.js
+│   │   │   │   ├── useAreaPersistence.js
+│   │   │   │   ├── useClubMarkers.js
+│   │   │   │   ├── useMapInitialization.js
+│   │   │   │   └── usePolygonDrawing.js
+│   │   │   └── utils
+│   │   │       ├── areaCalculations.js
+│   │   │       └── polygonHelpers.js
+│   │   ├── cities
+│   │   │   ├── CityEditor.js
+│   │   │   ├── CityFormModal.js
+│   │   │   ├── CityGoogleEnhancer.js
+│   │   │   ├── CityImageManager.js
+│   │   │   └── editor
+│   │   │       ├── BasicInfoSection.js
+│   │   │       ├── GoogleSearchSection.js
+│   │   │       ├── ImagesSection.js
+│   │   │       ├── LocationSection.js
+│   │   │       └── SettingsSection.js
+│   │   ├── clubs
+│   │   │   ├── ClubEditor.js
+│   │   │   ├── ClubImageManager.js
+│   │   │   ├── GoogleMapsImporter.js
+│   │   │   └── editor
+│   │   │       ├── AmenitiesSection.js
+│   │   │       ├── BasicInfoSection.js
+│   │   │       ├── ContactSection.js
+│   │   │       ├── CourtsSection.js
+│   │   │       ├── ImagesSection.js
+│   │   │       └── LocationSection.js
 │   │   ├── leagues
 │   │   │   ├── ImportCSVModal.js
 │   │   │   └── LeagueFormModal.js
@@ -206,6 +317,8 @@ root/
 │   ├── analytics
 │   │   ├── GoogleAnalytics.js
 │   │   └── MicrosoftClarity.js
+│   ├── cities
+│   │   └── CityCard.js
 │   ├── clubs
 │   │   └── ClubCard.js
 │   ├── common
@@ -260,21 +373,48 @@ root/
 │       └── WelcomeModal.js
 ├── docs
 │   ├── ADMIN_DOCS_VIEWER.md
+│   ├── AREAS_MAP_REFACTORING_PLAN.md
+│   ├── CITIES_MANAGEMENT_COMPLETE.md
+│   ├── CITIES_MANAGEMENT_SUMMARY.md
+│   ├── CITY_AUTOCOMPLETE_TESTING.md
+│   ├── CITY_DISPLAY_IMPLEMENTATION_SUMMARY.md
+│   ├── CITY_IMAGE_IMPLEMENTATION_SUMMARY.md
+│   ├── CITY_IMAGE_MANAGEMENT.md
+│   ├── CITY_IMAGE_MANAGEMENT_FIXES.md
+│   ├── CITY_IMAGE_SYSTEM_COMPLETE.md
+│   ├── CITY_IMAGE_TESTING_CHECKLIST.md
+│   ├── CLUB_EDITOR_REFACTOR.md
+│   ├── CLUB_IMAGE_MANAGEMENT.md
+│   ├── COMPLETE_ARCHITECTURE_FIX_SUMMARY.md
 │   ├── CURRENT_STATUS.md
+│   ├── DYNAMIC_CITY_TESTING_GUIDE.md
+│   ├── ENHANCED_CITY_AUTOCOMPLETE.md
 │   ├── FEE_SYSTEM.md
+│   ├── GEOGRAPHIC_AREAS_IMPLEMENTATION_COMPLETE.md
+│   ├── GEOGRAPHIC_AREAS_IMPLEMENTATION_PLAN.md
+│   ├── GOOGLE_MAPS_CITY_CREATION.md
+│   ├── GOOGLE_MAPS_IMPORT_FEATURE.md
+│   ├── GOOGLE_MAPS_IMPORT_SPEC.md
+│   ├── GOOGLE_MAPS_SETUP.md
 │   ├── HOMEPAGE_LEAGUE_IMPLEMENTATION_PLAN.md
+│   ├── MULTI_SPORT_COURTS.md
+│   ├── NUMBER_OF_PLAYERS_IN_COSTA_DEL_SOL.md
 │   ├── PHASE_1_2_SUMMARY.md
 │   ├── PLAYER_MESSAGES_SYSTEM.md
 │   ├── PRODUCT_LED_GROWTH.md
 │   ├── PR_MULTILINGUAL_IMPLEMENTATION.md
 │   ├── README.md
+│   ├── RESEND_EMAIL_SETUP.md
 │   ├── SCORING_SYSTEM_INTEGRATION.md
+│   ├── SEASON_SYSTEM_REFACTOR.md
 │   ├── SEO Strategy
 │   ├── SEO_CHECKLIST.md
 │   ├── SEO_CLUBS_DIRECTORY_TODO.md
 │   ├── SEO_IMPLEMENTATION_PLAN.md
 │   ├── SEO_LAUNCH_CHECKLIST.md
-│   └── STRATEGY_TO_GET_75_FIRST_USERS.md
+│   ├── STRATEGY_TO_GET_75_FIRST_USERS.md
+│   ├── UX_IMPROVEMENTS_SUMMARY.md
+│   └── as
 ├── jsconfig.json
 ├── lib
 │   ├── analytics
@@ -291,6 +431,7 @@ root/
 │   │   ├── homeContent.js
 │   │   ├── loginContent.js
 │   │   ├── multiLeagueHomeContent.js
+│   │   ├── passwordResetContent.js
 │   │   ├── rulesContent.js
 │   │   ├── swissContent.js
 │   │   └── welcomeContent.js
@@ -299,6 +440,8 @@ root/
 │   ├── db
 │   │   ├── mongodb.js
 │   │   └── mongoose.js
+│   ├── email
+│   │   └── resend.js
 │   ├── hooks
 │   │   ├── useActiveSection.js
 │   │   ├── useAuth.js
@@ -313,16 +456,24 @@ root/
 │   ├── i18n
 │   │   └── config.js
 │   ├── models
+│   │   ├── Area.js
+│   │   ├── City.js
 │   │   ├── Club.js
 │   │   ├── League.js
 │   │   ├── Match.js
 │   │   ├── Player.js
+│   │   ├── Season.js
 │   │   └── User.js
 │   └── utils
 │       ├── apiHelpers.js
+│       ├── areaMapping.js
+│       ├── geographicBoundaries.js
 │       ├── matchResultUtils.js
 │       ├── phoneUtils.js
 │       ├── rulesIcons.js
+│       ├── seasonUtils.client.js
+│       ├── seasonUtils.js
+│       ├── spanishTextUtils.js
 │       └── swissPairing.js
 ├── middleware.js
 ├── next.config.js
@@ -353,19 +504,30 @@ root/
 │   ├── sitemap.xml
 │   ├── sotogrande-01.jpg
 │   ├── twitter-image.png
+│   ├── uploads
+│   │   ├── README.md
+│   │   ├── cities
+│   │   └── clubs
 │   ├── web-app-manifest-192x192.png
 │   └── web-app-manifest-512x512.png
 ├── scripts
 │   ├── checkAuth.mjs
+│   ├── cleanup-old-editors.sh
 │   ├── createAdminUser.js
+│   ├── createSeasons.js
 │   ├── createTestData.js
+│   ├── debugClubCourts.js
 │   ├── diagnoseLinkIssues.js
 │   ├── directFix.js
 │   ├── fixMismatchedLinks.js
 │   ├── generateSitemap.js
 │   ├── linkPlayersToUsers.js
 │   ├── migrateActivationTokens.js
+│   ├── migrateCourtsData.mjs
+│   ├── seedCities.js
+│   ├── seedCitiesEnhanced.js
 │   ├── seedLeagues.js
+│   ├── seedSeasons.mjs
 │   ├── tree.js
 │   └── unlockAccounts.js
 ├── styles

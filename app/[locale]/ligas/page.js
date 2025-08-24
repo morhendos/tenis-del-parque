@@ -54,7 +54,11 @@ export default function LeaguesPage() {
               }
             ],
             playerCount: 20,
-            status: 'active'
+            status: 'active',
+            cityData: {
+              name: { es: 'Sotogrande', en: 'Sotogrande' },
+              images: { main: '', googlePhotoReference: null }
+            }
           }
         ])
       }
@@ -103,6 +107,34 @@ export default function LeaguesPage() {
                 : 'Find your perfect league and compete with players at your level in a fun and competitive environment.'}
             </p>
           </div>
+
+          {/* Stats Section */}
+          {leagues.length > 0 && (
+            <div className="flex flex-wrap justify-center gap-8 mb-8">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-parque-purple">{leagues.length}</div>
+                <div className="text-gray-600">
+                  {locale === 'es' ? 'Ligas' : 'Leagues'}
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-parque-green">
+                  {leagues.reduce((sum, league) => sum + (league.playerCount || 0), 0)}
+                </div>
+                <div className="text-gray-600">
+                  {locale === 'es' ? 'Jugadores' : 'Players'}
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-amber-500">
+                  {activeLeagues.length}
+                </div>
+                <div className="text-gray-600">
+                  {locale === 'es' ? 'Ligas Activas' : 'Active Leagues'}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -199,14 +231,22 @@ export default function LeaguesPage() {
           <p className="text-lg mb-8 max-w-2xl mx-auto">
             {locale === 'es'
               ? 'Únete a nuestra lista de espera y te avisaremos cuando lancemos una liga cerca de ti.'
-              : 'Join our waiting list and we\'ll notify you when we launch a league near you.'}
+              : "Join our waiting list and we'll notify you when we launch a league near you."}
           </p>
-          <a
-            href={`/${locale}`}
-            className="inline-block px-8 py-3 bg-white text-parque-purple rounded-lg font-medium hover:bg-gray-100 transition-colors"
-          >
-            {locale === 'es' ? 'Ver Ciudades Disponibles' : 'View Available Cities'}
-          </a>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+              href={`/${locale}`}
+              className="inline-block px-8 py-3 bg-white text-parque-purple rounded-lg font-medium hover:bg-gray-100 transition-colors"
+            >
+              {locale === 'es' ? 'Unirse a Lista de Espera' : 'Join Waiting List'}
+            </a>
+            <a
+              href={`/${locale}/clubs`}
+              className="inline-block px-8 py-3 border-2 border-white text-white rounded-lg font-medium hover:bg-white hover:text-parque-purple transition-colors"
+            >
+              {locale === 'es' ? 'Explorar Clubes' : 'Explore Clubs'}
+            </a>
+          </div>
         </div>
       </section>
 

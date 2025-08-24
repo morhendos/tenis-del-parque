@@ -224,7 +224,7 @@ export default function CitySignupPage() {
     ...t.signup,
     title: isComingSoon 
       ? `${locale === 'es' ? 'Pre-regístrate para' : 'Pre-register for'} ${league.name}`
-      : `${locale === 'es' ? 'Únete a la Liga de' : 'Join the'} ${league.name} ${locale === 'es' ? '' : 'League'}`,
+      : `${locale === 'es' ? 'Únete a' : 'Join the'} ${league.name} ${locale === 'es' ? '' : 'League'}`,
     subtitle: isComingSoon
       ? `${locale === 'es' ? 'Sé de los primeros en jugar cuando lancemos en' : 'Be among the first to play when we launch in'} ${league.name}`
       : `${locale === 'es' ? 'Juega al tenis en' : 'Play tennis in'} ${league.name} ${locale === 'es' ? 'con jugadores de tu nivel' : 'with players at your level'}`
@@ -235,7 +235,7 @@ export default function CitySignupPage() {
     signupContent.success = {
       title: locale === 'es' ? '¡Estás en la lista!' : 'You\'re on the list!',
       message: locale === 'es' 
-        ? `Te contactaremos cuando la liga de ${league.name} esté lista para lanzar. ¡Prepárate para jugar!`
+        ? `Te contactaremos cuando ${league.name} esté lista para lanzar. ¡Prepárate para jugar!`
         : `We'll contact you when the ${league.name} league is ready to launch. Get ready to play!`
     }
   }

@@ -211,12 +211,28 @@ export async function POST(request, { params }) {
       const resetToken = user.generatePasswordResetToken()
       await user.save()
 
-      // TODO: Send email with reset link
-      // For now, just log the token
-      console.log(`Password reset token for ${user.email}: ${resetToken}`)
+      // Send password reset email
+      const { sendPasswordResetEmail } = await import('../../../../../lib/email/resend')
       
-      // In production, you would send an email here
-      // await sendPasswordResetEmail(user.email, resetToken)
+      // Determine the best language for the user
+      // Priority: 1. User's saved preference, 2. Default to English for admin-initiated resets
+      const userLanguage = user.preferences?.language || 'en'
+      
+      console.log(`Admin sending password reset email to ${user.email} in language: ${userLanguage}`)
+      
+      const emailResult = await sendPasswordResetEmail(
+        user.email, 
+        resetToken, 
+        userLanguage
+      )
+      
+      if (!emailResult.success) {
+        console.error('Failed to send password reset email:', emailResult.error)
+        return NextResponse.json(
+          { error: 'Failed to send reset email' },
+          { status: 500 }
+        )
+      }
 
       return NextResponse.json({
         success: true,
