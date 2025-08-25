@@ -26,39 +26,54 @@ export default function ClubCard({ club, locale }) {
     return null
   }
 
-  // Handle both old and new court structures
+  // Get court breakdown
   const getCourtInfo = () => {
     if (!club.courts) {
-      return { total: 0, indoor: 0, outdoor: 0, surfaces: [] }
+      return { tennis: 0, padel: 0, pickleball: 0, total: 0 }
     }
 
     // New structure (from refactored editor)
     if (club.courts.tennis || club.courts.padel || club.courts.pickleball) {
-      const tennisTotal = club.courts.tennis?.total || 0
-      const padelTotal = club.courts.padel?.total || 0
-      const pickleballTotal = club.courts.pickleball?.total || 0
-      
-      const tennisIndoor = club.courts.tennis?.indoor || 0
-      const padelIndoor = club.courts.padel?.indoor || 0
-      const pickleballIndoor = club.courts.pickleball?.indoor || 0
+      const tennis = club.courts.tennis?.total || 0
+      const padel = club.courts.padel?.total || 0
+      const pickleball = club.courts.pickleball?.total || 0
       
       return {
-        total: tennisTotal + padelTotal + pickleballTotal,
-        indoor: tennisIndoor + padelIndoor + pickleballIndoor,
-        outdoor: (tennisTotal - tennisIndoor) + (padelTotal - padelIndoor) + (pickleballTotal - pickleballIndoor),
-        surfaces: [],
-        tennis: tennisTotal,
-        padel: padelTotal,
-        pickleball: pickleballTotal
+        tennis,
+        padel,
+        pickleball,
+        total: tennis + padel + pickleball,
+        tennisIndoor: club.courts.tennis?.indoor || 0,
+        padelIndoor: club.courts.padel?.indoor || 0,
+        pickleballIndoor: club.courts.pickleball?.indoor || 0
       }
     }
     
-    // Old structure (legacy)
-    return {
-      total: club.courts.total || 0,
-      indoor: club.courts.indoor || 0,
-      outdoor: club.courts.outdoor || 0,
-      surfaces: club.courts.surfaces || []
+    // Old structure (legacy) - try to determine court type from surfaces
+    const surfaces = club.courts.surfaces || []
+    const hasPadel = surfaces.some(s => s.type === 'padel')
+    
+    if (hasPadel) {
+      return {
+        tennis: 0,
+        padel: club.courts.total || 0,
+        pickleball: 0,
+        total: club.courts.total || 0,
+        tennisIndoor: 0,
+        padelIndoor: club.courts.indoor || 0,
+        pickleballIndoor: 0
+      }
+    } else {
+      // Default to tennis for legacy data
+      return {
+        tennis: club.courts.total || 0,
+        padel: 0,
+        pickleball: 0,
+        total: club.courts.total || 0,
+        tennisIndoor: club.courts.indoor || 0,
+        padelIndoor: 0,
+        pickleballIndoor: 0
+      }
     }
   }
 
@@ -177,71 +192,114 @@ export default function ClubCard({ club, locale }) {
           </p>
         )}
 
-        {/* Quick Info Grid */}
-        <div className="grid grid-cols-2 gap-3">
-          {/* Courts */}
-          <div className="bg-gray-50 rounded-lg p-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-500">{locale === 'es' ? 'Pistas' : 'Courts'}</span>
-              <span className="text-sm font-semibold text-gray-700">{courtInfo.total}</span>
-            </div>
-            {courtInfo.indoor > 0 && (
-              <span className="text-xs text-blue-600 font-medium">
-                {courtInfo.indoor} {locale === 'es' ? 'cubiertas' : 'indoor'}
-              </span>
+        {/* Court Types Display - Clear breakdown */}
+        <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+          <div className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+            {locale === 'es' ? 'Pistas' : 'Courts'}
+          </div>
+          
+          <div className="space-y-1.5">
+            {courtInfo.tennis > 0 && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🎾</span>
+                  <span className="text-sm font-medium text-gray-700">
+                    {locale === 'es' ? 'Tenis' : 'Tennis'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-gray-900">{courtInfo.tennis}</span>
+                  {courtInfo.tennisIndoor > 0 && (
+                    <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
+                      {courtInfo.tennisIndoor} {locale === 'es' ? 'cub.' : 'ind.'}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {courtInfo.padel > 0 && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🏸</span>
+                  <span className="text-sm font-medium text-gray-700">
+                    {locale === 'es' ? 'Pádel' : 'Padel'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-gray-900">{courtInfo.padel}</span>
+                  {courtInfo.padelIndoor > 0 && (
+                    <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
+                      {courtInfo.padelIndoor} {locale === 'es' ? 'cub.' : 'ind.'}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {courtInfo.pickleball > 0 && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🏓</span>
+                  <span className="text-sm font-medium text-gray-700">Pickleball</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-gray-900">{courtInfo.pickleball}</span>
+                  {courtInfo.pickleballIndoor > 0 && (
+                    <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
+                      {courtInfo.pickleballIndoor} {locale === 'es' ? 'cub.' : 'ind.'}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {courtInfo.total === 0 && (
+              <div className="text-sm text-gray-500 italic">
+                {locale === 'es' ? 'Información no disponible' : 'Information not available'}
+              </div>
             )}
           </div>
           
+          {/* Total summary if multiple types */}
+          {(courtInfo.tennis > 0 && courtInfo.padel > 0) || 
+           (courtInfo.tennis > 0 && courtInfo.pickleball > 0) || 
+           (courtInfo.padel > 0 && courtInfo.pickleball > 0) ? (
+            <div className="pt-2 border-t border-gray-200">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-500 uppercase">Total</span>
+                <span className="text-sm font-bold text-gray-900">{courtInfo.total}</span>
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        {/* Price and Amenities Row */}
+        <div className="flex items-center justify-between">
           {/* Price */}
           {club.pricing?.courtRental?.hourly && (
-            <div className="bg-gray-50 rounded-lg p-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-500">{locale === 'es' ? 'Desde' : 'From'}</span>
-                <span className="text-sm font-semibold text-gray-700">
-                  {club.pricing.courtRental.hourly.min}€/h
+            <div className="text-sm">
+              <span className="text-gray-500">{locale === 'es' ? 'Desde' : 'From'} </span>
+              <span className="font-bold text-gray-900">
+                {club.pricing.courtRental.hourly.min}€/h
+              </span>
+            </div>
+          )}
+          
+          {/* Amenities - Inline icons */}
+          {mainAmenities.length > 0 && (
+            <div className="flex items-center gap-2">
+              {mainAmenities.slice(0, 3).map((amenity, idx) => (
+                <span key={idx} className="text-lg" title={amenity.label}>
+                  {amenity.icon}
                 </span>
-              </div>
+              ))}
             </div>
           )}
         </div>
 
-        {/* Court Types - Compact display */}
-        {(courtInfo.tennis > 0 || courtInfo.padel > 0 || courtInfo.pickleball > 0) && (
-          <div className="flex flex-wrap gap-1.5">
-            {courtInfo.tennis > 0 && (
-              <span className="inline-flex items-center gap-1 text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
-                <span className="text-xs">🎾</span>
-                <span>{courtInfo.tennis}</span>
-              </span>
-            )}
-            {courtInfo.padel > 0 && (
-              <span className="inline-flex items-center gap-1 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                <span className="text-xs">🏸</span>
-                <span>{courtInfo.padel}</span>
-              </span>
-            )}
-            {courtInfo.pickleball > 0 && (
-              <span className="inline-flex items-center gap-1 text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">
-                <span className="text-xs">🏓</span>
-                <span>{courtInfo.pickleball}</span>
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* Amenities - Inline icons */}
-        {mainAmenities.length > 0 && (
-          <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
-            {mainAmenities.slice(0, 4).map((amenity, idx) => (
-              <div key={idx} className="flex items-center gap-1" title={amenity.label}>
-                <span className="text-lg">{amenity.icon}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
         {/* Call to action */}
-        <div className="flex items-center justify-between pt-2">
+        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
           <span className="text-sm text-parque-purple font-medium group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
             {locale === 'es' ? 'Ver detalles' : 'View details'}
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
