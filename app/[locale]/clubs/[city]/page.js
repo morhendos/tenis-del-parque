@@ -143,7 +143,9 @@ export default function CityClubsPage() {
 
     // Amenities filter
     if (filters.amenities.length > 0) {
-      filtered = filters.amenities.every(amenity => club.amenities?.[amenity])
+      filtered = filtered.filter(club =>
+        filters.amenities.every(amenity => club.amenities?.[amenity])
+      )
     }
 
     // Price range filter
@@ -309,7 +311,7 @@ export default function CityClubsPage() {
                   areaStats[area] > 0 && (
                     <button
                       key={area}
-                      onClick={() => setFilters(prev => ({ ...prev, area })))}
+                      onClick={() => setFilters(prev => ({ ...prev, area }))}
                       className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                         filters.area === area
                           ? 'bg-white text-parque-purple scale-105'
