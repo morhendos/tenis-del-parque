@@ -634,7 +634,9 @@ export default function CityClubsPage() {
             </div>
           ) : (
             <div className="text-center py-16 max-w-md mx-auto">
-              <div className="text-6xl mb-4">🔍</div>
+              <svg className="w-24 h-24 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 {locale === 'es' 
                   ? 'No encontramos clubs'
