@@ -25,6 +25,7 @@ export default function CityClubsPage() {
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState({
     surface: 'all',
+    courtType: 'all', // New filter for court type
     amenities: [],
     priceRange: 'all',
     publicAccess: 'all',
@@ -33,7 +34,7 @@ export default function CityClubsPage() {
   const [viewMode, setViewMode] = useState('grid')
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '')
   const [showFilters, setShowFilters] = useState(false)
-  const [sortBy, setSortBy] = useState('featured') // New sorting option
+  const [sortBy, setSortBy] = useState('featured')
   
   const t = homeContent[locale] || homeContent['es']
 
@@ -115,6 +116,24 @@ export default function CityClubsPage() {
     // Area filter
     if (filters.area !== 'all') {
       filtered = filtered.filter(club => club.location?.area === filters.area)
+    }
+
+    // Court type filter
+    if (filters.courtType !== 'all') {
+      filtered = filtered.filter(club => {
+        if (filters.courtType === 'tennis') {
+          return (club.courts?.tennis?.total > 0) || 
+                 (club.courts?.total > 0 && !club.courts?.surfaces?.some(s => s.type === 'padel'))
+        }
+        if (filters.courtType === 'padel') {
+          return (club.courts?.padel?.total > 0) || 
+                 (club.courts?.surfaces?.some(s => s.type === 'padel'))
+        }
+        if (filters.courtType === 'pickleball') {
+          return club.courts?.pickleball?.total > 0
+        }
+        return true
+      })
     }
 
     // Surface filter
@@ -200,20 +219,56 @@ export default function CityClubsPage() {
 
   const areaStats = getAreaStats()
 
-  // Get quick stats
+  // Get court breakdown stats
   const stats = useMemo(() => {
-    const totalCourts = clubs.reduce((sum, club) => {
-      const courts = (club.courts?.tennis?.total || 0) + 
-                    (club.courts?.padel?.total || 0) + 
-                    (club.courts?.pickleball?.total || 0) +
-                    (club.courts?.total || 0)
-      return sum + courts
-    }, 0)
+    let tennisCourts = 0
+    let padelCourts = 0
+    let pickleballCourts = 0
+    let clubsWithTennis = 0
+    let clubsWithPadel = 0
+    let clubsWithPickleball = 0
+    
+    clubs.forEach(club => {
+      // New structure
+      if (club.courts?.tennis?.total > 0) {
+        tennisCourts += club.courts.tennis.total
+        clubsWithTennis++
+      }
+      if (club.courts?.padel?.total > 0) {
+        padelCourts += club.courts.padel.total
+        clubsWithPadel++
+      }
+      if (club.courts?.pickleball?.total > 0) {
+        pickleballCourts += club.courts.pickleball.total
+        clubsWithPickleball++
+      }
+      
+      // Legacy structure
+      if (!club.courts?.tennis && !club.courts?.padel && !club.courts?.pickleball && club.courts?.total > 0) {
+        const hasPadel = club.courts?.surfaces?.some(s => s.type === 'padel')
+        if (hasPadel) {
+          padelCourts += club.courts.total
+          clubsWithPadel++
+        } else {
+          tennisCourts += club.courts.total
+          clubsWithTennis++
+        }
+      }
+    })
     
     const publicClubs = clubs.filter(club => club.pricing?.publicAccess === true).length
-    const withAmenities = clubs.filter(club => club.amenities?.restaurant || club.amenities?.proShop).length
-
-    return { totalCourts, publicClubs, withAmenities }
+    const totalCourts = tennisCourts + padelCourts + pickleballCourts
+    
+    return { 
+      tennisCourts, 
+      padelCourts, 
+      pickleballCourts, 
+      totalCourts,
+      clubsWithTennis,
+      clubsWithPadel,
+      clubsWithPickleball,
+      publicClubs 
+    }
   }, [clubs])
 
   if (loading) {
@@ -260,23 +315,54 @@ export default function CityClubsPage() {
               {currentCity.description[locale]}
             </p>
 
-            {/* Quick Stats */}
+            {/* Court Type Stats - Separated */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <div className="text-3xl font-bold">{clubs.length}</div>
-                <div className="text-sm text-white/80">{locale === 'es' ? 'Clubs' : 'Clubs'}</div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-2xl">🎾</span>
+                  <div>
+                    <div className="text-2xl font-bold">{stats.tennisCourts}</div>
+                    <div className="text-xs text-white/80">
+                      {locale === 'es' ? 'Pistas de tenis' : 'Tennis courts'}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-xs text-white/60 mt-1">
+                  {stats.clubsWithTennis} {locale === 'es' ? 'clubs' : 'clubs'}
+                </div>
               </div>
+              
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <div className="text-3xl font-bold">{stats.totalCourts}</div>
-                <div className="text-sm text-white/80">{locale === 'es' ? 'Pistas' : 'Courts'}</div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-2xl">🏸</span>
+                  <div>
+                    <div className="text-2xl font-bold">{stats.padelCourts}</div>
+                    <div className="text-xs text-white/80">
+                      {locale === 'es' ? 'Pistas de pádel' : 'Padel courts'}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-xs text-white/60 mt-1">
+                  {stats.clubsWithPadel} {locale === 'es' ? 'clubs' : 'clubs'}
+                </div>
               </div>
+              
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-2xl">🏓</span>
+                  <div>
+                    <div className="text-2xl font-bold">{stats.pickleballCourts}</div>
+                    <div className="text-xs text-white/80">Pickleball</div>
+                  </div>
+                </div>
+                <div className="text-xs text-white/60 mt-1">
+                  {stats.clubsWithPickleball} {locale === 'es' ? 'clubs' : 'clubs'}
+                </div>
+              </div>
+              
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
                 <div className="text-3xl font-bold">{stats.publicClubs}</div>
                 <div className="text-sm text-white/80">{locale === 'es' ? 'Acceso público' : 'Public access'}</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <div className="text-3xl font-bold">{availableAreas.length}</div>
-                <div className="text-sm text-white/80">{locale === 'es' ? 'Áreas' : 'Areas'}</div>
               </div>
             </div>
 
@@ -370,9 +456,9 @@ export default function CityClubsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
               </svg>
               {locale === 'es' ? 'Filtros' : 'Filters'}
-              {(filters.surface !== 'all' || filters.priceRange !== 'all' || filters.publicAccess !== 'all' || filters.amenities.length > 0) && (
+              {(filters.courtType !== 'all' || filters.surface !== 'all' || filters.priceRange !== 'all' || filters.publicAccess !== 'all' || filters.amenities.length > 0) && (
                 <span className="bg-white text-parque-purple px-2 py-0.5 rounded-full text-xs font-bold">
-                  {[filters.surface !== 'all', filters.priceRange !== 'all', filters.publicAccess !== 'all', filters.amenities.length > 0].filter(Boolean).length}
+                  {[filters.courtType !== 'all', filters.surface !== 'all', filters.priceRange !== 'all', filters.publicAccess !== 'all', filters.amenities.length > 0].filter(Boolean).length}
                 </span>
               )}
             </button>
@@ -412,10 +498,11 @@ export default function CityClubsPage() {
             </div>
             
             {/* Clear All Filters */}
-            {(filters.surface !== 'all' || filters.priceRange !== 'all' || filters.publicAccess !== 'all' || filters.amenities.length > 0 || searchTerm) && (
+            {(filters.courtType !== 'all' || filters.surface !== 'all' || filters.priceRange !== 'all' || filters.publicAccess !== 'all' || filters.amenities.length > 0 || searchTerm) && (
               <button
                 onClick={() => {
                   setFilters({
+                    courtType: 'all',
                     surface: 'all',
                     amenities: [],
                     priceRange: 'all',
@@ -435,6 +522,23 @@ export default function CityClubsPage() {
           {showFilters && (
             <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {/* Court Type Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {locale === 'es' ? 'Tipo de pista' : 'Court type'}
+                  </label>
+                  <select
+                    value={filters.courtType}
+                    onChange={(e) => setFilters(prev => ({ ...prev, courtType: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 focus:outline-none focus:border-parque-purple"
+                  >
+                    <option value="all">{locale === 'es' ? 'Todos' : 'All'}</option>
+                    <option value="tennis">🎾 {locale === 'es' ? 'Tenis' : 'Tennis'}</option>
+                    <option value="padel">🏸 {locale === 'es' ? 'Pádel' : 'Padel'}</option>
+                    <option value="pickleball">🏓 Pickleball</option>
+                  </select>
+                </div>
+
                 {/* Surface Filter */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -550,6 +654,7 @@ export default function CityClubsPage() {
               <button
                 onClick={() => {
                   setFilters({
+                    courtType: 'all',
                     surface: 'all',
                     amenities: [],
                     priceRange: 'all',
