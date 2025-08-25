@@ -81,10 +81,10 @@ export default function ClubCard({ club, locale }) {
   
   // Get main amenities to display
   const mainAmenities = []
-  if (club.amenities?.parking) mainAmenities.push({ icon: '🚗', label: locale === 'es' ? 'Parking' : 'Parking' })
-  if (club.amenities?.lighting) mainAmenities.push({ icon: '💡', label: locale === 'es' ? 'Iluminación' : 'Lighting' })
-  if (club.amenities?.restaurant) mainAmenities.push({ icon: '🍽️', label: locale === 'es' ? 'Restaurante' : 'Restaurant' })
-  if (club.amenities?.proShop) mainAmenities.push({ icon: '🎾', label: locale === 'es' ? 'Tienda' : 'Pro Shop' })
+  if (club.amenities?.parking) mainAmenities.push({ key: 'parking', label: locale === 'es' ? 'Parking' : 'Parking' })
+  if (club.amenities?.lighting) mainAmenities.push({ key: 'lighting', label: locale === 'es' ? 'Iluminación' : 'Lighting' })
+  if (club.amenities?.restaurant) mainAmenities.push({ key: 'restaurant', label: locale === 'es' ? 'Restaurante' : 'Restaurant' })
+  if (club.amenities?.proShop) mainAmenities.push({ key: 'proShop', label: locale === 'es' ? 'Tienda' : 'Pro Shop' })
   
   const description = club.description?.[locale] || club.description?.es || ''
   const truncatedDescription = description.length > 100 
@@ -110,8 +110,8 @@ export default function ClubCard({ club, locale }) {
   // Fallback image component
   const FallbackImage = () => (
     <div className="absolute inset-0 bg-gradient-to-br from-parque-purple via-parque-purple/80 to-parque-green flex items-center justify-center">
-      <div className="text-center">
-        <span className="text-6xl mb-2 block">🎾</span>
+      <div className="text-center text-white">
+        <div className="text-4xl font-bold mb-2">TC</div>
         <span className="text-white/80 text-sm font-medium">Tennis Club</span>
       </div>
     </div>
@@ -160,14 +160,14 @@ export default function ClubCard({ club, locale }) {
           {/* Area badge */}
           {club.location?.area && (
             <span className="bg-white/90 backdrop-blur-sm text-gray-700 px-2 py-1 rounded-full text-xs font-medium">
-              📍 {AREA_DISPLAY_NAMES[club.location.area] || club.location.area}
+              {AREA_DISPLAY_NAMES[club.location.area] || club.location.area}
             </span>
           )}
           
           {/* Featured badge */}
           {club.featured && (
             <span className="bg-yellow-400 text-gray-900 px-3 py-1 rounded-full text-xs font-semibold ml-auto">
-              ⭐ {locale === 'es' ? 'Destacado' : 'Featured'}
+              {locale === 'es' ? 'Destacado' : 'Featured'}
             </span>
           )}
         </div>
@@ -201,12 +201,9 @@ export default function ClubCard({ club, locale }) {
           <div className="space-y-1.5">
             {courtInfo.tennis > 0 && (
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-base">🎾</span>
-                  <span className="text-sm font-medium text-gray-700">
-                    {locale === 'es' ? 'Tenis' : 'Tennis'}
-                  </span>
-                </div>
+                <span className="text-sm font-medium text-gray-700">
+                  {locale === 'es' ? 'Tenis' : 'Tennis'}
+                </span>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-bold text-gray-900">{courtInfo.tennis}</span>
                   {courtInfo.tennisIndoor > 0 && (
@@ -220,12 +217,9 @@ export default function ClubCard({ club, locale }) {
             
             {courtInfo.padel > 0 && (
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-base">🏸</span>
-                  <span className="text-sm font-medium text-gray-700">
-                    {locale === 'es' ? 'Pádel' : 'Padel'}
-                  </span>
-                </div>
+                <span className="text-sm font-medium text-gray-700">
+                  {locale === 'es' ? 'Pádel' : 'Padel'}
+                </span>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-bold text-gray-900">{courtInfo.padel}</span>
                   {courtInfo.padelIndoor > 0 && (
@@ -239,10 +233,7 @@ export default function ClubCard({ club, locale }) {
             
             {courtInfo.pickleball > 0 && (
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-base">🏓</span>
-                  <span className="text-sm font-medium text-gray-700">Pickleball</span>
-                </div>
+                <span className="text-sm font-medium text-gray-700">Pickleball</span>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-bold text-gray-900">{courtInfo.pickleball}</span>
                   {courtInfo.pickleballIndoor > 0 && (
@@ -286,14 +277,18 @@ export default function ClubCard({ club, locale }) {
             </div>
           )}
           
-          {/* Amenities - Inline icons */}
+          {/* Amenities - Text only */}
           {mainAmenities.length > 0 && (
-            <div className="flex items-center gap-2">
-              {mainAmenities.slice(0, 3).map((amenity, idx) => (
-                <span key={idx} className="text-lg" title={amenity.label}>
-                  {amenity.icon}
+            <div className="flex items-center gap-1">
+              {mainAmenities.slice(0, 2).map((amenity, idx) => (
+                <span key={idx} className="text-xs text-gray-600">
+                  {amenity.label}
+                  {idx < Math.min(1, mainAmenities.length - 1) && ','}
                 </span>
               ))}
+              {mainAmenities.length > 2 && (
+                <span className="text-xs text-gray-500">+{mainAmenities.length - 2}</span>
+              )}
             </div>
           )}
         </div>
@@ -307,10 +302,14 @@ export default function ClubCard({ club, locale }) {
             </svg>
           </span>
           
-          {/* Public/Private indicator */}
-          {club.pricing?.membershipRequired && (
+          {/* Access type indicator */}
+          {club.pricing?.membershipRequired ? (
             <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
               {locale === 'es' ? 'Solo socios' : 'Members only'}
+            </span>
+          ) : (
+            <span className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded">
+              {locale === 'es' ? 'Acceso público' : 'Public access'}
             </span>
           )}
         </div>
