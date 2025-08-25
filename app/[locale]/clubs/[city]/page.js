@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Navigation from '@/components/common/Navigation'
@@ -25,6 +25,7 @@ export default function CityClubsPage() {
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState({
     surface: 'all',
+    courtType: 'all', // New filter for court type
     amenities: [],
     priceRange: 'all',
     publicAccess: 'all',
@@ -33,6 +34,7 @@ export default function CityClubsPage() {
   const [viewMode, setViewMode] = useState('grid')
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '')
   const [showFilters, setShowFilters] = useState(false)
+  const [sortBy, setSortBy] = useState('featured')
   
   const t = homeContent[locale] || homeContent['es']
 
@@ -77,7 +79,7 @@ export default function CityClubsPage() {
 
   useEffect(() => {
     applyFilters()
-  }, [clubs, filters, searchTerm])
+  }, [clubs, filters, searchTerm, sortBy])
 
   const fetchClubs = async () => {
     try {
@@ -116,16 +118,35 @@ export default function CityClubsPage() {
       filtered = filtered.filter(club => club.location?.area === filters.area)
     }
 
+    // Court type filter
+    if (filters.courtType !== 'all') {
+      filtered = filtered.filter(club => {
+        if (filters.courtType === 'tennis') {
+          return (club.courts?.tennis?.total > 0) || 
+                 (club.courts?.total > 0 && !club.courts?.surfaces?.some(s => s.type === 'padel'))
+        }
+        if (filters.courtType === 'padel') {
+          return (club.courts?.padel?.total > 0) || 
+                 (club.courts?.surfaces?.some(s => s.type === 'padel'))
+        }
+        if (filters.courtType === 'pickleball') {
+          return club.courts?.pickleball?.total > 0
+        }
+        return true
+      })
+    }
+
     // Surface filter
     if (filters.surface !== 'all') {
       filtered = filtered.filter(club => 
-        club.courts?.surfaces?.some(s => s.type === filters.surface)
+        club.courts?.surfaces?.some(s => s.type === filters.surface) ||
+        club.courts?.tennis?.surfaces?.some(s => s.type === filters.surface)
       )
     }
 
     // Amenities filter
     if (filters.amenities.length > 0) {
-      filtered = filtered.filter(club => 
+      filtered = filtered.filter(club =>
         filters.amenities.every(amenity => club.amenities?.[amenity])
       )
     }
@@ -149,10 +170,31 @@ export default function CityClubsPage() {
     if (filters.publicAccess !== 'all') {
       filtered = filtered.filter(club => 
         filters.publicAccess === 'public' 
-          ? club.pricing?.publicAccess === true
+          ? !club.pricing?.membershipRequired // Most clubs are public unless explicitly members-only
           : club.pricing?.membershipRequired === true
       )
     }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.name.localeCompare(b.name)
+        case 'price-low':
+          return (a.pricing?.courtRental?.hourly?.min || 999) - (b.pricing?.courtRental?.hourly?.min || 999)
+        case 'price-high':
+          return (b.pricing?.courtRental?.hourly?.min || 0) - (a.pricing?.courtRental?.hourly?.min || 0)
+        case 'courts':
+          const aTotal = (a.courts?.tennis?.total || 0) + (a.courts?.padel?.total || 0) + (a.courts?.pickleball?.total || 0) + (a.courts?.total || 0)
+          const bTotal = (b.courts?.tennis?.total || 0) + (b.courts?.padel?.total || 0) + (b.courts?.pickleball?.total || 0) + (b.courts?.total || 0)
+          return bTotal - aTotal
+        case 'featured':
+        default:
+          if (a.featured && !b.featured) return -1
+          if (!a.featured && b.featured) return 1
+          return (a.displayOrder || 0) - (b.displayOrder || 0)
+      }
+    })
 
     setFilteredClubs(filtered)
   }
@@ -177,6 +219,61 @@ export default function CityClubsPage() {
 
   const areaStats = getAreaStats()
 
+  // Get court breakdown stats
+  const stats = useMemo(() => {
+    let tennisCourts = 0
+    let padelCourts = 0
+    let pickleballCourts = 0
+    let clubsWithTennis = 0
+    let clubsWithPadel = 0
+    let clubsWithPickleball = 0
+    
+    clubs.forEach(club => {
+      // New structure
+      if (club.courts?.tennis?.total > 0) {
+        tennisCourts += club.courts.tennis.total
+        clubsWithTennis++
+      }
+      if (club.courts?.padel?.total > 0) {
+        padelCourts += club.courts.padel.total
+        clubsWithPadel++
+      }
+      if (club.courts?.pickleball?.total > 0) {
+        pickleballCourts += club.courts.pickleball.total
+        clubsWithPickleball++
+      }
+      
+      // Legacy structure
+      if (!club.courts?.tennis && !club.courts?.padel && !club.courts?.pickleball && club.courts?.total > 0) {
+        const hasPadel = club.courts?.surfaces?.some(s => s.type === 'padel')
+        if (hasPadel) {
+          padelCourts += club.courts.total
+          clubsWithPadel++
+        } else {
+          tennisCourts += club.courts.total
+          clubsWithTennis++
+        }
+      }
+    })
+    
+    // Count public clubs (clubs are public by default unless explicitly members-only)
+    const publicClubs = clubs.filter(club => !club.pricing?.membershipRequired).length
+    const membersOnlyClubs = clubs.filter(club => club.pricing?.membershipRequired === true).length
+    const totalCourts = tennisCourts + padelCourts + pickleballCourts
+    
+    return { 
+      tennisCourts, 
+      padelCourts, 
+      pickleballCourts, 
+      totalCourts,
+      clubsWithTennis,
+      clubsWithPadel,
+      clubsWithPickleball,
+      publicClubs,
+      membersOnlyClubs
+    }
+  }, [clubs])
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -195,40 +292,84 @@ export default function CityClubsPage() {
     <div className="min-h-screen bg-gray-50">
       <Navigation locale={locale} />
       
-      {/* Hero Section - More subtle design */}
-      <section className="relative pt-32 pb-12 px-4 bg-white border-b">
+      {/* Enhanced Hero Section - with original copy */}
+      <section className="relative pt-32 pb-16 px-4 bg-gradient-to-br from-parque-purple via-parque-purple/90 to-parque-green text-white">
         <div className="container mx-auto">
           <div className="max-w-4xl">
-            <nav className="flex items-center space-x-2 text-sm mb-4 text-gray-500">
-              <Link href={`/${locale}`} className="hover:text-gray-700">
+            <nav className="flex items-center space-x-2 text-sm mb-4 text-white/80">
+              <Link href={`/${locale}`} className="hover:text-white">
                 {locale === 'es' ? 'Inicio' : 'Home'}
               </Link>
               <span>/</span>
-              <Link href={`/${locale}/clubs`} className="hover:text-gray-700">
+              <Link href={`/${locale}/clubs`} className="hover:text-white">
                 {locale === 'es' ? 'Clubs' : 'Clubs'}
               </Link>
               <span>/</span>
-              <span className="text-gray-900 font-medium">{currentCity.name}</span>
+              <span className="text-white font-medium">{currentCity.name}</span>
             </nav>
             
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
+            {/* Original copy for header */}
+            <h1 className="text-4xl md:text-6xl font-bold mb-4">
               {locale === 'es' 
                 ? `Clubs de Tenis en ${currentCity.name}`
                 : `Tennis Clubs in ${currentCity.name}`}
             </h1>
-            <p className="text-xl text-gray-600 mb-6">
+            <p className="text-xl text-white/90 mb-8">
               {currentCity.description[locale]}
             </p>
 
+            {/* Court Type Stats - Separated, without emojis */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                <div className="text-3xl font-bold">{stats.tennisCourts}</div>
+                <div className="text-xs text-white/80 font-medium uppercase tracking-wide">
+                  {locale === 'es' ? 'Pistas de tenis' : 'Tennis courts'}
+                </div>
+                <div className="text-xs text-white/60 mt-1">
+                  {stats.clubsWithTennis} {locale === 'es' ? 'clubs' : 'clubs'}
+                </div>
+              </div>
+              
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                <div className="text-3xl font-bold">{stats.padelCourts}</div>
+                <div className="text-xs text-white/80 font-medium uppercase tracking-wide">
+                  {locale === 'es' ? 'Pistas de pádel' : 'Padel courts'}
+                </div>
+                <div className="text-xs text-white/60 mt-1">
+                  {stats.clubsWithPadel} {locale === 'es' ? 'clubs' : 'clubs'}
+                </div>
+              </div>
+              
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                <div className="text-3xl font-bold">{stats.pickleballCourts}</div>
+                <div className="text-xs text-white/80 font-medium uppercase tracking-wide">
+                  Pickleball
+                </div>
+                <div className="text-xs text-white/60 mt-1">
+                  {stats.clubsWithPickleball} {locale === 'es' ? 'clubs' : 'clubs'}
+                </div>
+              </div>
+              
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                <div className="text-3xl font-bold">{stats.publicClubs}</div>
+                <div className="text-xs text-white/80 font-medium uppercase tracking-wide">
+                  {locale === 'es' ? 'Acceso público' : 'Public access'}
+                </div>
+                <div className="text-xs text-white/60 mt-1">
+                  {stats.membersOnlyClubs} {locale === 'es' ? 'solo socios' : 'members only'}
+                </div>
+              </div>
+            </div>
+
             {/* Area Pills for cities with multiple areas */}
             {availableAreas.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-6">
+              <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setFilters(prev => ({ ...prev, area: 'all' }))}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                     filters.area === 'all'
-                      ? 'bg-parque-purple text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-white text-parque-purple scale-105'
+                      : 'bg-white/20 text-white hover:bg-white/30'
                   }`}
                 >
                   {locale === 'es' ? 'Todas las áreas' : 'All areas'}
@@ -239,10 +380,10 @@ export default function CityClubsPage() {
                     <button
                       key={area}
                       onClick={() => setFilters(prev => ({ ...prev, area }))}
-                      className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                         filters.area === area
-                          ? 'bg-parque-purple text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          ? 'bg-white text-parque-purple scale-105'
+                          : 'bg-white/20 text-white hover:bg-white/30'
                       }`}
                     >
                       {AREA_DISPLAY_NAMES[area] || area}
@@ -256,8 +397,8 @@ export default function CityClubsPage() {
         </div>
       </section>
 
-      {/* Simplified Search & Filter Bar */}
-      <section className="sticky top-0 z-40 bg-white shadow-sm py-4">
+      {/* Enhanced Search & Filter Bar */}
+      <section className="sticky top-0 z-40 bg-white shadow-lg py-4">
         <div className="container mx-auto px-4">
           <div className="flex flex-wrap items-center gap-4">
             {/* Search Bar */}
@@ -265,144 +406,214 @@ export default function CityClubsPage() {
               <div className="relative">
                 <input
                   type="text"
-                  placeholder={locale === 'es' ? 'Buscar clubs...' : 'Search clubs...'}
+                  placeholder={locale === 'es' ? 'Buscar clubs, áreas, servicios...' : 'Search clubs, areas, services...'}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-parque-purple focus:ring-2 focus:ring-parque-purple/20"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-parque-purple focus:ring-2 focus:ring-parque-purple/20 text-gray-700"
                 />
-                <svg className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
               </div>
             </div>
+
+            {/* Sort Dropdown */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:border-parque-purple text-gray-700"
+            >
+              <option value="featured">{locale === 'es' ? 'Destacados' : 'Featured'}</option>
+              <option value="name">{locale === 'es' ? 'Nombre A-Z' : 'Name A-Z'}</option>
+              <option value="price-low">{locale === 'es' ? 'Precio: Menor' : 'Price: Low to High'}</option>
+              <option value="price-high">{locale === 'es' ? 'Precio: Mayor' : 'Price: High to Low'}</option>
+              <option value="courts">{locale === 'es' ? 'Más pistas' : 'Most courts'}</option>
+            </select>
 
             {/* Filter Toggle */}
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`px-4 py-2 rounded-lg border transition-colors flex items-center gap-2 ${
-                showFilters ? 'bg-parque-purple text-white border-parque-purple' : 'border-gray-300 hover:border-parque-purple'
+              className={`px-4 py-3 rounded-lg border transition-colors flex items-center gap-2 ${
+                showFilters ? 'bg-parque-purple text-white border-parque-purple' : 'border-gray-300 hover:border-parque-purple text-gray-700'
               }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
               </svg>
               {locale === 'es' ? 'Filtros' : 'Filters'}
-            </button>
-
-            {/* Results Count */}
-            <div className="text-sm text-gray-600">
-              <span className="font-semibold">{filteredClubs.length}</span> {locale === 'es' ? 'clubs encontrados' : 'clubs found'}
-              {filters.area !== 'all' && (
-                <span className="ml-1">
-                  {locale === 'es' ? 'en' : 'in'} <span className="font-medium text-parque-purple">{AREA_DISPLAY_NAMES[filters.area] || filters.area}</span>
+              {(filters.courtType !== 'all' || filters.surface !== 'all' || filters.priceRange !== 'all' || filters.publicAccess !== 'all' || filters.amenities.length > 0) && (
+                <span className="bg-white text-parque-purple px-2 py-0.5 rounded-full text-xs font-bold">
+                  {[filters.courtType !== 'all', filters.surface !== 'all', filters.priceRange !== 'all', filters.publicAccess !== 'all', filters.amenities.length > 0].filter(Boolean).length}
                 </span>
               )}
-            </div>
+            </button>
 
             {/* View Mode */}
-            <div className="flex gap-1 ml-auto">
+            <div className="flex gap-1">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-2 rounded ${viewMode === 'grid' ? 'bg-parque-purple text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
+                className={`p-3 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-parque-purple text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
                 aria-label="Grid view"
               >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                 </svg>
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-2 rounded ${viewMode === 'list' ? 'bg-parque-purple text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
+                className={`p-3 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-parque-purple text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
                 aria-label="List view"
               >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
                 </svg>
               </button>
             </div>
           </div>
 
+          {/* Results Count */}
+          <div className="mt-4 flex items-center justify-between">
+            <div className="text-sm text-gray-600">
+              <span className="font-semibold text-lg text-gray-900">{filteredClubs.length}</span> {locale === 'es' ? 'clubs encontrados' : 'clubs found'}
+              {filters.area !== 'all' && (
+                <span className="ml-1">
+                  {locale === 'es' ? 'en' : 'in'} <span className="font-medium text-parque-purple">{AREA_DISPLAY_NAMES[filters.area] || filters.area}</span>
+                </span>
+              )}
+            </div>
+            
+            {/* Clear All Filters */}
+            {(filters.courtType !== 'all' || filters.surface !== 'all' || filters.priceRange !== 'all' || filters.publicAccess !== 'all' || filters.amenities.length > 0 || searchTerm) && (
+              <button
+                onClick={() => {
+                  setFilters({
+                    courtType: 'all',
+                    surface: 'all',
+                    amenities: [],
+                    priceRange: 'all',
+                    publicAccess: 'all',
+                    area: filters.area
+                  })
+                  setSearchTerm('')
+                }}
+                className="text-sm text-parque-purple hover:text-parque-purple/80 underline"
+              >
+                {locale === 'es' ? 'Limpiar filtros' : 'Clear all filters'}
+              </button>
+            )}
+          </div>
+
           {/* Expandable Filters */}
           {showFilters && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <div className="flex flex-wrap gap-4">
+            <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {/* Court Type Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {locale === 'es' ? 'Tipo de pista' : 'Court type'}
+                  </label>
+                  <select
+                    value={filters.courtType}
+                    onChange={(e) => setFilters(prev => ({ ...prev, courtType: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 focus:outline-none focus:border-parque-purple"
+                  >
+                    <option value="all">{locale === 'es' ? 'Todos' : 'All'}</option>
+                    <option value="tennis">{locale === 'es' ? 'Tenis' : 'Tennis'}</option>
+                    <option value="padel">{locale === 'es' ? 'Pádel' : 'Padel'}</option>
+                    <option value="pickleball">Pickleball</option>
+                  </select>
+                </div>
+
                 {/* Surface Filter */}
-                <select
-                  value={filters.surface}
-                  onChange={(e) => setFilters(prev => ({ ...prev, surface: e.target.value }))}
-                  className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 focus:outline-none focus:border-parque-purple"
-                >
-                  <option value="all">{locale === 'es' ? 'Todas las superficies' : 'All surfaces'}</option>
-                  <option value="clay">{locale === 'es' ? 'Tierra batida' : 'Clay'}</option>
-                  <option value="hard">{locale === 'es' ? 'Pista dura' : 'Hard court'}</option>
-                  <option value="grass">{locale === 'es' ? 'Césped' : 'Grass'}</option>
-                  <option value="synthetic">{locale === 'es' ? 'Sintética' : 'Synthetic'}</option>
-                </select>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {locale === 'es' ? 'Superficie' : 'Surface'}
+                  </label>
+                  <select
+                    value={filters.surface}
+                    onChange={(e) => setFilters(prev => ({ ...prev, surface: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 focus:outline-none focus:border-parque-purple"
+                  >
+                    <option value="all">{locale === 'es' ? 'Todas' : 'All'}</option>
+                    <option value="clay">{locale === 'es' ? 'Tierra batida' : 'Clay'}</option>
+                    <option value="hard">{locale === 'es' ? 'Pista dura' : 'Hard court'}</option>
+                    <option value="grass">{locale === 'es' ? 'Césped' : 'Grass'}</option>
+                    <option value="synthetic">{locale === 'es' ? 'Sintética' : 'Synthetic'}</option>
+                  </select>
+                </div>
 
                 {/* Price Range Filter */}
-                <select
-                  value={filters.priceRange}
-                  onChange={(e) => setFilters(prev => ({ ...prev, priceRange: e.target.value }))}
-                  className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 focus:outline-none focus:border-parque-purple"
-                >
-                  <option value="all">{locale === 'es' ? 'Todos los precios' : 'All prices'}</option>
-                  <option value="budget">{locale === 'es' ? '≤ 15€/hora' : '≤ €15/hour'}</option>
-                  <option value="medium">{locale === 'es' ? '15-25€/hora' : '€15-25/hour'}</option>
-                  <option value="premium">{locale === 'es' ? '> 25€/hora' : '> €25/hour'}</option>
-                </select>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {locale === 'es' ? 'Precio' : 'Price'}
+                  </label>
+                  <select
+                    value={filters.priceRange}
+                    onChange={(e) => setFilters(prev => ({ ...prev, priceRange: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 focus:outline-none focus:border-parque-purple"
+                  >
+                    <option value="all">{locale === 'es' ? 'Todos' : 'All'}</option>
+                    <option value="budget">{locale === 'es' ? '≤ 15€/hora' : '≤ €15/hour'}</option>
+                    <option value="medium">{locale === 'es' ? '15-25€/hora' : '€15-25/hour'}</option>
+                    <option value="premium">{locale === 'es' ? '> 25€/hora' : '> €25/hour'}</option>
+                  </select>
+                </div>
 
                 {/* Access Type Filter */}
-                <select
-                  value={filters.publicAccess}
-                  onChange={(e) => setFilters(prev => ({ ...prev, publicAccess: e.target.value }))}
-                  className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 focus:outline-none focus:border-parque-purple"
-                >
-                  <option value="all">{locale === 'es' ? 'Todo acceso' : 'All access'}</option>
-                  <option value="public">{locale === 'es' ? 'Acceso público' : 'Public access'}</option>
-                  <option value="members">{locale === 'es' ? 'Solo socios' : 'Members only'}</option>
-                </select>
-
-                {/* Clear Filters */}
-                {(filters.surface !== 'all' || filters.priceRange !== 'all' || filters.publicAccess !== 'all' || searchTerm) && (
-                  <button
-                    onClick={() => {
-                      setFilters({
-                        surface: 'all',
-                        amenities: [],
-                        priceRange: 'all',
-                        publicAccess: 'all',
-                        area: filters.area
-                      })
-                      setSearchTerm('')
-                    }}
-                    className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 underline"
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {locale === 'es' ? 'Acceso' : 'Access'}
+                  </label>
+                  <select
+                    value={filters.publicAccess}
+                    onChange={(e) => setFilters(prev => ({ ...prev, publicAccess: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 focus:outline-none focus:border-parque-purple"
                   >
-                    {locale === 'es' ? 'Limpiar filtros' : 'Clear filters'}
-                  </button>
-                )}
+                    <option value="all">{locale === 'es' ? 'Todos' : 'All'}</option>
+                    <option value="public">{locale === 'es' ? 'Público' : 'Public'}</option>
+                    <option value="members">{locale === 'es' ? 'Solo socios' : 'Members only'}</option>
+                  </select>
+                </div>
               </div>
 
-              {/* Amenities Filter - Simplified */}
-              <div className="flex flex-wrap gap-2 mt-3">
-                {[
-                  { key: 'parking', label: { es: 'Parking', en: 'Parking' }, icon: '🚗' },
-                  { key: 'lighting', label: { es: 'Iluminación', en: 'Lighting' }, icon: '💡' },
-                  { key: 'restaurant', label: { es: 'Restaurante', en: 'Restaurant' }, icon: '🍽️' },
-                  { key: 'proShop', label: { es: 'Tienda', en: 'Pro Shop' }, icon: '🎾' }
-                ].map(amenity => (
-                  <button
-                    key={amenity.key}
-                    onClick={() => toggleAmenity(amenity.key)}
-                    className={`px-3 py-1.5 rounded-full text-sm flex items-center gap-1 transition-colors ${
-                      filters.amenities.includes(amenity.key)
-                        ? 'bg-parque-purple text-white'
-                        : 'bg-gray-100 hover:bg-gray-200'
-                    }`}
-                  >
-                    <span>{amenity.icon}</span>
-                    <span>{amenity.label[locale]}</span>
-                  </button>
-                ))}
+              {/* Amenities Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {locale === 'es' ? 'Servicios' : 'Amenities'}
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { key: 'parking', label: { es: 'Parking', en: 'Parking' } },
+                    { key: 'lighting', label: { es: 'Iluminación', en: 'Lighting' } },
+                    { key: 'restaurant', label: { es: 'Restaurante', en: 'Restaurant' } },
+                    { key: 'proShop', label: { es: 'Tienda', en: 'Pro Shop' } },
+                    { key: 'changingRooms', label: { es: 'Vestuarios', en: 'Changing Rooms' } },
+                    { key: 'gym', label: { es: 'Gimnasio', en: 'Gym' } },
+                    { key: 'swimming', label: { es: 'Piscina', en: 'Pool' } }
+                  ].map(amenity => (
+                    <button
+                      key={amenity.key}
+                      onClick={() => toggleAmenity(amenity.key)}
+                      className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+                        filters.amenities.includes(amenity.key)
+                          ? 'bg-parque-purple text-white scale-105'
+                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                      }`}
+                    >
+                      {amenity.label[locale]}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -414,24 +625,32 @@ export default function CityClubsPage() {
         <div className="container mx-auto">
           {filteredClubs.length > 0 ? (
             <div className={viewMode === 'grid' 
-              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' 
-              : 'space-y-4'
+              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6' 
+              : 'space-y-4 max-w-4xl mx-auto'
             }>
               {filteredClubs.map((club) => (
                 <ClubCard key={club._id} club={club} locale={locale} />
               ))}
             </div>
           ) : (
-            <div className="text-center py-16">
-              <div className="text-6xl mb-4">🔍</div>
-              <p className="text-gray-600 text-lg mb-4">
+            <div className="text-center py-16 max-w-md mx-auto">
+              <svg className="w-24 h-24 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 {locale === 'es' 
-                  ? 'No se encontraron clubs con los filtros seleccionados.'
-                  : 'No clubs found with the selected filters.'}
+                  ? 'No encontramos clubs'
+                  : 'No clubs found'}
+              </h3>
+              <p className="text-gray-600 mb-6">
+                {locale === 'es' 
+                  ? 'Prueba ajustando los filtros o busca en otra área'
+                  : 'Try adjusting the filters or search in another area'}
               </p>
               <button
                 onClick={() => {
                   setFilters({
+                    courtType: 'all',
                     surface: 'all',
                     amenities: [],
                     priceRange: 'all',
@@ -440,9 +659,9 @@ export default function CityClubsPage() {
                   })
                   setSearchTerm('')
                 }}
-                className="text-parque-purple hover:underline"
+                className="px-6 py-3 bg-parque-purple text-white rounded-lg hover:bg-parque-purple/90 transition-colors"
               >
-                {locale === 'es' ? 'Limpiar filtros' : 'Clear filters'}
+                {locale === 'es' ? 'Limpiar todos los filtros' : 'Clear all filters'}
               </button>
             </div>
           )}
@@ -462,12 +681,20 @@ export default function CityClubsPage() {
               ? 'Únete a nuestra liga amateur y encuentra jugadores de tu nivel'
               : 'Join our amateur league and find players at your level'}
           </p>
-          <Link
-            href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${city}`}
-            className="inline-block px-8 py-4 bg-white text-parque-purple rounded-lg font-medium text-lg hover:bg-gray-100 transition-colors"
-          >
-            {locale === 'es' ? 'Únete a la Liga' : 'Join the League'}
-          </Link>
+          <div className="flex gap-4 justify-center">
+            <Link
+              href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${city}`}
+              className="inline-block px-8 py-4 bg-white text-parque-purple rounded-lg font-medium text-lg hover:bg-gray-100 transition-colors"
+            >
+              {locale === 'es' ? 'Únete a la Liga' : 'Join the League'}
+            </Link>
+            <Link
+              href={`/${locale}/ligas`}
+              className="inline-block px-8 py-4 bg-white/20 backdrop-blur-sm text-white rounded-lg font-medium text-lg hover:bg-white/30 transition-colors"
+            >
+              {locale === 'es' ? 'Ver Ligas' : 'View Leagues'}
+            </Link>
+          </div>
         </div>
       </section>
 
