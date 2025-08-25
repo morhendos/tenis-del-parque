@@ -170,7 +170,7 @@ export default function CityClubsPage() {
     if (filters.publicAccess !== 'all') {
       filtered = filtered.filter(club => 
         filters.publicAccess === 'public' 
-          ? club.pricing?.publicAccess === true
+          ? !club.pricing?.membershipRequired // Most clubs are public unless explicitly members-only
           : club.pricing?.membershipRequired === true
       )
     }
@@ -256,7 +256,9 @@ export default function CityClubsPage() {
       }
     })
     
-    const publicClubs = clubs.filter(club => club.pricing?.publicAccess === true).length
+    // Count public clubs (clubs are public by default unless explicitly members-only)
+    const publicClubs = clubs.filter(club => !club.pricing?.membershipRequired).length
+    const membersOnlyClubs = clubs.filter(club => club.pricing?.membershipRequired === true).length
     const totalCourts = tennisCourts + padelCourts + pickleballCourts
     
     return { 
@@ -267,7 +269,8 @@ export default function CityClubsPage() {
       clubsWithTennis,
       clubsWithPadel,
       clubsWithPickleball,
-      publicClubs 
+      publicClubs,
+      membersOnlyClubs
     }
   }, [clubs])
 
@@ -315,17 +318,12 @@ export default function CityClubsPage() {
               {currentCity.description[locale]}
             </p>
 
-            {/* Court Type Stats - Separated */}
+            {/* Court Type Stats - Separated, without emojis */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-2xl">🎾</span>
-                  <div>
-                    <div className="text-2xl font-bold">{stats.tennisCourts}</div>
-                    <div className="text-xs text-white/80">
-                      {locale === 'es' ? 'Pistas de tenis' : 'Tennis courts'}
-                    </div>
-                  </div>
+                <div className="text-3xl font-bold">{stats.tennisCourts}</div>
+                <div className="text-xs text-white/80 font-medium uppercase tracking-wide">
+                  {locale === 'es' ? 'Pistas de tenis' : 'Tennis courts'}
                 </div>
                 <div className="text-xs text-white/60 mt-1">
                   {stats.clubsWithTennis} {locale === 'es' ? 'clubs' : 'clubs'}
@@ -333,14 +331,9 @@ export default function CityClubsPage() {
               </div>
               
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-2xl">🏸</span>
-                  <div>
-                    <div className="text-2xl font-bold">{stats.padelCourts}</div>
-                    <div className="text-xs text-white/80">
-                      {locale === 'es' ? 'Pistas de pádel' : 'Padel courts'}
-                    </div>
-                  </div>
+                <div className="text-3xl font-bold">{stats.padelCourts}</div>
+                <div className="text-xs text-white/80 font-medium uppercase tracking-wide">
+                  {locale === 'es' ? 'Pistas de pádel' : 'Padel courts'}
                 </div>
                 <div className="text-xs text-white/60 mt-1">
                   {stats.clubsWithPadel} {locale === 'es' ? 'clubs' : 'clubs'}
@@ -348,12 +341,9 @@ export default function CityClubsPage() {
               </div>
               
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-2xl">🏓</span>
-                  <div>
-                    <div className="text-2xl font-bold">{stats.pickleballCourts}</div>
-                    <div className="text-xs text-white/80">Pickleball</div>
-                  </div>
+                <div className="text-3xl font-bold">{stats.pickleballCourts}</div>
+                <div className="text-xs text-white/80 font-medium uppercase tracking-wide">
+                  Pickleball
                 </div>
                 <div className="text-xs text-white/60 mt-1">
                   {stats.clubsWithPickleball} {locale === 'es' ? 'clubs' : 'clubs'}
@@ -362,7 +352,12 @@ export default function CityClubsPage() {
               
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
                 <div className="text-3xl font-bold">{stats.publicClubs}</div>
-                <div className="text-sm text-white/80">{locale === 'es' ? 'Acceso público' : 'Public access'}</div>
+                <div className="text-xs text-white/80 font-medium uppercase tracking-wide">
+                  {locale === 'es' ? 'Acceso público' : 'Public access'}
+                </div>
+                <div className="text-xs text-white/60 mt-1">
+                  {stats.membersOnlyClubs} {locale === 'es' ? 'solo socios' : 'members only'}
+                </div>
               </div>
             </div>
 
@@ -533,9 +528,9 @@ export default function CityClubsPage() {
                     className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 focus:outline-none focus:border-parque-purple"
                   >
                     <option value="all">{locale === 'es' ? 'Todos' : 'All'}</option>
-                    <option value="tennis">🎾 {locale === 'es' ? 'Tenis' : 'Tennis'}</option>
-                    <option value="padel">🏸 {locale === 'es' ? 'Pádel' : 'Padel'}</option>
-                    <option value="pickleball">🏓 Pickleball</option>
+                    <option value="tennis">{locale === 'es' ? 'Tenis' : 'Tennis'}</option>
+                    <option value="padel">{locale === 'es' ? 'Pádel' : 'Padel'}</option>
+                    <option value="pickleball">Pickleball</option>
                   </select>
                 </div>
 
@@ -598,25 +593,24 @@ export default function CityClubsPage() {
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {[
-                    { key: 'parking', label: { es: 'Parking', en: 'Parking' }, icon: '🚗' },
-                    { key: 'lighting', label: { es: 'Iluminación', en: 'Lighting' }, icon: '💡' },
-                    { key: 'restaurant', label: { es: 'Restaurante', en: 'Restaurant' }, icon: '🍽️' },
-                    { key: 'proShop', label: { es: 'Tienda', en: 'Pro Shop' }, icon: '🎾' },
-                    { key: 'changingRooms', label: { es: 'Vestuarios', en: 'Changing Rooms' }, icon: '🚿' },
-                    { key: 'gym', label: { es: 'Gimnasio', en: 'Gym' }, icon: '💪' },
-                    { key: 'swimming', label: { es: 'Piscina', en: 'Pool' }, icon: '🏊' }
+                    { key: 'parking', label: { es: 'Parking', en: 'Parking' } },
+                    { key: 'lighting', label: { es: 'Iluminación', en: 'Lighting' } },
+                    { key: 'restaurant', label: { es: 'Restaurante', en: 'Restaurant' } },
+                    { key: 'proShop', label: { es: 'Tienda', en: 'Pro Shop' } },
+                    { key: 'changingRooms', label: { es: 'Vestuarios', en: 'Changing Rooms' } },
+                    { key: 'gym', label: { es: 'Gimnasio', en: 'Gym' } },
+                    { key: 'swimming', label: { es: 'Piscina', en: 'Pool' } }
                   ].map(amenity => (
                     <button
                       key={amenity.key}
                       onClick={() => toggleAmenity(amenity.key)}
-                      className={`px-3 py-1.5 rounded-full text-sm flex items-center gap-1 transition-all ${
+                      className={`px-3 py-1.5 rounded-full text-sm transition-all ${
                         filters.amenities.includes(amenity.key)
                           ? 'bg-parque-purple text-white scale-105'
                           : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                       }`}
                     >
-                      <span>{amenity.icon}</span>
-                      <span>{amenity.label[locale]}</span>
+                      {amenity.label[locale]}
                     </button>
                   ))}
                 </div>
