@@ -255,14 +255,7 @@ export default function ClubCard({ club, locale }) {
           {/* Total summary if multiple types */}
           {(courtInfo.tennis > 0 && courtInfo.padel > 0) || 
            (courtInfo.tennis > 0 && courtInfo.pickleball > 0) || 
-           (courtInfo.padel > 0 && courtInfo.pickleball > 0) ? (
-            <div className="pt-2 border-t border-gray-200">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-500 uppercase">Total</span>
-                <span className="text-sm font-bold text-gray-900">{courtInfo.total}</span>
-              </div>
-            </div>
-          ) : null}
+           (courtInfo.padel > 0 && courtInfo.pickleball > 0) }
         </div>
 
         {/* Price and Amenities Row */}

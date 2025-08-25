@@ -1,6 +1,7 @@
 root/
 ├── PR_README.md
 ├── README.md
+├── SOLUTION_SUMMARY.md
 ├── app
 │   ├── [locale]
 │   │   ├── [location]
@@ -204,7 +205,12 @@ root/
 │   │   │   ├── [city]
 │   │   │   │   └── [slug]
 │   │   │   │       └── route.js
+│   │   │   ├── photo
+│   │   │   │   └── route.js
 │   │   │   └── route.js
+│   │   ├── debug
+│   │   │   └── city-images
+│   │   │       └── route.js
 │   │   ├── leagues
 │   │   │   ├── [league]
 │   │   │   │   ├── matches
