@@ -44,10 +44,6 @@ export default function CityClubsPage() {
       description: {
         es: 'Málaga, capital de la Costa del Sol, ofrece una vibrante escena tenística con más de 30 clubs distribuidos por diferentes zonas de la ciudad y alrededores.',
         en: 'Málaga, capital of the Costa del Sol, offers a vibrant tennis scene with over 30 clubs distributed across different areas of the city and surroundings.'
-      },
-      hero: {
-        title: { es: 'Descubre los mejores clubs de tenis', en: 'Discover the best tennis clubs' },
-        subtitle: { es: 'Encuentra tu lugar perfecto para jugar', en: 'Find your perfect place to play' }
       }
     },
     marbella: {
@@ -55,10 +51,6 @@ export default function CityClubsPage() {
       description: {
         es: 'Marbella y su área metropolitana ofrecen la mayor concentración de clubs de tenis de lujo en la Costa del Sol.',
         en: 'Marbella and its metropolitan area offer the highest concentration of luxury tennis clubs on the Costa del Sol.'
-      },
-      hero: {
-        title: { es: 'Clubs de tenis de clase mundial', en: 'World-class tennis clubs' },
-        subtitle: { es: 'Desde Nueva Andalucía hasta El Paraíso', en: 'From Nueva Andalucía to El Paraíso' }
       }
     },
     estepona: {
@@ -66,10 +58,6 @@ export default function CityClubsPage() {
       description: {
         es: 'Conocida como el "Jardín de la Costa del Sol", Estepona ofrece una experiencia de tenis más tranquila y familiar.',
         en: 'Known as the "Garden of the Costa del Sol", Estepona offers a quieter, more family-friendly tennis experience.'
-      },
-      hero: {
-        title: { es: 'Tenis en el Jardín de la Costa del Sol', en: 'Tennis in the Garden of Costa del Sol' },
-        subtitle: { es: 'Clubs acogedores y ambiente familiar', en: 'Welcoming clubs and family atmosphere' }
       }
     },
     sotogrande: {
@@ -77,10 +65,6 @@ export default function CityClubsPage() {
       description: {
         es: 'Sotogrande es conocida por sus exclusivos clubs de tenis y su ambiente internacional.',
         en: 'Sotogrande is known for its exclusive tennis clubs and international atmosphere.'
-      },
-      hero: {
-        title: { es: 'Tenis exclusivo en Sotogrande', en: 'Exclusive tennis in Sotogrande' },
-        subtitle: { es: 'Donde el lujo se encuentra con el deporte', en: 'Where luxury meets sport' }
       }
     }
   }
@@ -250,7 +234,7 @@ export default function CityClubsPage() {
     <div className="min-h-screen bg-gray-50">
       <Navigation locale={locale} />
       
-      {/* Enhanced Hero Section */}
+      {/* Enhanced Hero Section - with original copy */}
       <section className="relative pt-32 pb-16 px-4 bg-gradient-to-br from-parque-purple via-parque-purple/90 to-parque-green text-white">
         <div className="container mx-auto">
           <div className="max-w-4xl">
@@ -266,11 +250,14 @@ export default function CityClubsPage() {
               <span className="text-white font-medium">{currentCity.name}</span>
             </nav>
             
+            {/* Original copy for header */}
             <h1 className="text-4xl md:text-6xl font-bold mb-4">
-              {currentCity.hero?.title?.[locale] || `Clubs de Tenis en ${currentCity.name}`}
+              {locale === 'es' 
+                ? `Clubs de Tenis en ${currentCity.name}`
+                : `Tennis Clubs in ${currentCity.name}`}
             </h1>
             <p className="text-xl text-white/90 mb-8">
-              {currentCity.hero?.subtitle?.[locale] || currentCity.description[locale]}
+              {currentCity.description[locale]}
             </p>
 
             {/* Quick Stats */}
