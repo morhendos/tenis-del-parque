@@ -250,21 +250,21 @@ export default function ClubDetailPage() {
       {/* Mobile-Optimized Hero Section with Image Gallery */}
       <section className="relative pt-16 lg:pt-20">
         <div className="lg:container lg:mx-auto lg:px-4">
-          {/* Mobile Breadcrumb - Simplified for small screens */}
-          <nav className="flex items-center space-x-1 text-xs lg:text-sm py-2 lg:py-4 text-gray-600 px-4 lg:px-0 overflow-x-auto">
-            <Link href={`/${locale}`} className="hover:text-gray-900 whitespace-nowrap">
+          {/* Mobile Breadcrumb - Fixed truncation issue */}
+          <nav className="flex items-center space-x-1 text-xs lg:text-sm py-2 lg:py-4 text-gray-600 px-4 lg:px-0">
+            <Link href={`/${locale}`} className="hover:text-gray-900 whitespace-nowrap flex-shrink-0">
               {locale === 'es' ? 'Inicio' : 'Home'}
             </Link>
-            <span>/</span>
-            <Link href={`/${locale}/clubs`} className="hover:text-gray-900 whitespace-nowrap">
+            <span className="flex-shrink-0">/</span>
+            <Link href={`/${locale}/clubs`} className="hover:text-gray-900 whitespace-nowrap flex-shrink-0">
               {locale === 'es' ? 'Clubs' : 'Clubs'}
             </Link>
-            <span className="hidden sm:inline">/</span>
-            <Link href={`/${locale}/clubs/${city}`} className="hidden sm:inline hover:text-gray-900 capitalize whitespace-nowrap">
+            <span className="hidden sm:inline flex-shrink-0">/</span>
+            <Link href={`/${locale}/clubs/${city}`} className="hidden sm:inline hover:text-gray-900 capitalize whitespace-nowrap flex-shrink-0">
               {city.replace(/-/g, ' ')}
             </Link>
-            <span>/</span>
-            <span className="text-gray-900 font-medium truncate">{club.name}</span>
+            <span className="flex-shrink-0">/</span>
+            <span className="text-gray-900 font-medium min-w-0 break-words">{club.name}</span>
           </nav>
 
           {/* Main Content Grid - Mobile First */}
@@ -368,36 +368,39 @@ export default function ClubDetailPage() {
                   </div>
                 </div>
 
-                {/* Mobile Tab Navigation - FIXED ALIGNMENT */}
+                {/* Mobile Tab Navigation - FIXED ALIGNMENT with override for global margin */}
                 <div className="lg:hidden border-b sticky top-16 bg-white z-10">
                   <div className="flex">
                     <button
                       onClick={() => setActiveTab('info')}
-                      className={`flex-1 px-4 py-3 font-medium text-sm border-b-2 transition-colors ${
+                      className={`flex-1 px-4 py-3 font-medium text-sm border-b-2 transition-colors !mb-0 ${
                         activeTab === 'info' 
                           ? 'border-parque-purple text-parque-purple' 
                           : 'border-transparent text-gray-600'
                       }`}
+                      style={{ marginBottom: '0' }}
                     >
                       {locale === 'es' ? 'Información' : 'Information'}
                     </button>
                     <button
                       onClick={() => setActiveTab('courts')}
-                      className={`flex-1 px-4 py-3 font-medium text-sm border-b-2 transition-colors ${
+                      className={`flex-1 px-4 py-3 font-medium text-sm border-b-2 transition-colors !mb-0 ${
                         activeTab === 'courts' 
                           ? 'border-parque-purple text-parque-purple' 
                           : 'border-transparent text-gray-600'
                       }`}
+                      style={{ marginBottom: '0' }}
                     >
                       {locale === 'es' ? 'Pistas' : 'Courts'}
                     </button>
                     <button
                       onClick={() => setActiveTab('amenities')}
-                      className={`flex-1 px-4 py-3 font-medium text-sm border-b-2 transition-colors ${
+                      className={`flex-1 px-4 py-3 font-medium text-sm border-b-2 transition-colors !mb-0 ${
                         activeTab === 'amenities' 
                           ? 'border-parque-purple text-parque-purple' 
                           : 'border-transparent text-gray-600'
                       }`}
+                      style={{ marginBottom: '0' }}
                     >
                       {locale === 'es' ? 'Servicios' : 'Services'}
                     </button>
