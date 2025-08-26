@@ -1,9 +1,73 @@
 import mongoose from 'mongoose'
 import dotenv from 'dotenv'
-import Club from '../lib/models/Club.js'
 import fs from 'fs/promises'
 import path from 'path'
 import { fileURLToPath } from 'url'
+
+// Define Club schema inline to avoid ES module import issues
+const ClubSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, 'Club name is required'],
+    trim: true
+  },
+  slug: {
+    type: String,
+    required: [true, 'Club slug is required'],
+    unique: true,
+    lowercase: true,
+    trim: true
+  },
+  location: {
+    address: {
+      type: String,
+      required: true
+    },
+    area: {
+      type: String,
+      trim: true,
+      lowercase: true
+    },
+    city: {
+      type: String,
+      required: true,
+      lowercase: true,
+      trim: true
+    },
+    administrativeCity: {
+      type: String,
+      trim: true,
+      lowercase: true
+    },
+    displayName: {
+      type: String,
+      trim: true
+    },
+    postalCode: String,
+    coordinates: {
+      lat: {
+        type: Number,
+        min: -90,
+        max: 90
+      },
+      lng: {
+        type: Number,
+        min: -180,
+        max: 180
+      }
+    },
+    googleMapsUrl: String
+  },
+  status: {
+    type: String,
+    enum: ['active', 'inactive', 'pending'],
+    default: 'active'
+  }
+}, {
+  timestamps: true
+})
+
+const Club = mongoose.models.Club || mongoose.model('Club', ClubSchema)
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
