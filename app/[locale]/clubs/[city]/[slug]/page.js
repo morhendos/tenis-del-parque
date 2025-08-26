@@ -307,31 +307,18 @@ export default function ClubDetailPage() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                           </svg>
                         </button>
-                        {/* More subtle image indicators for mobile */}
-                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 lg:hidden">
-                          {allImages.map((_, idx) => (
-                            <button
-                              key={idx}
-                              onClick={() => setSelectedImage(idx)}
-                              className={`w-1.5 h-1.5 rounded-full transition-all ${
-                                selectedImage === idx ? 'bg-white w-4' : 'bg-white/40'
-                              }`}
-                              aria-label={`Go to image ${idx + 1}`}
-                            />
-                          ))}
-                        </div>
                       </>
                     )}
                   </div>
-                  {/* Thumbnail strip - Hidden on mobile, visible on larger screens */}
+                  {/* Thumbnail strip - Now visible on ALL screen sizes */}
                   {allImages.length > 1 && (
-                    <div className="hidden lg:flex p-4 gap-2 overflow-x-auto">
+                    <div className="flex p-3 lg:p-4 gap-2 overflow-x-auto bg-gray-50">
                       {allImages.map((img, idx) => (
                         <button
                           key={idx}
                           onClick={() => setSelectedImage(idx)}
-                          className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
-                            selectedImage === idx ? 'border-parque-purple' : 'border-transparent'
+                          className={`flex-shrink-0 w-16 h-16 lg:w-20 lg:h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                            selectedImage === idx ? 'border-parque-purple ring-2 ring-parque-purple/20' : 'border-transparent hover:border-gray-300'
                           }`}
                         >
                           <img 
@@ -381,12 +368,12 @@ export default function ClubDetailPage() {
                   </div>
                 </div>
 
-                {/* Mobile Tab Navigation - WITHOUT MAP TAB */}
+                {/* Mobile Tab Navigation - FIXED ALIGNMENT */}
                 <div className="lg:hidden border-b sticky top-16 bg-white z-10">
-                  <div className="flex overflow-x-auto scrollbar-hide">
+                  <div className="flex">
                     <button
                       onClick={() => setActiveTab('info')}
-                      className={`px-4 py-3 font-medium text-sm whitespace-nowrap border-b-2 transition-colors ${
+                      className={`flex-1 px-4 py-3 font-medium text-sm border-b-2 transition-colors ${
                         activeTab === 'info' 
                           ? 'border-parque-purple text-parque-purple' 
                           : 'border-transparent text-gray-600'
@@ -396,7 +383,7 @@ export default function ClubDetailPage() {
                     </button>
                     <button
                       onClick={() => setActiveTab('courts')}
-                      className={`px-4 py-3 font-medium text-sm whitespace-nowrap border-b-2 transition-colors ${
+                      className={`flex-1 px-4 py-3 font-medium text-sm border-b-2 transition-colors ${
                         activeTab === 'courts' 
                           ? 'border-parque-purple text-parque-purple' 
                           : 'border-transparent text-gray-600'
@@ -406,7 +393,7 @@ export default function ClubDetailPage() {
                     </button>
                     <button
                       onClick={() => setActiveTab('amenities')}
-                      className={`px-4 py-3 font-medium text-sm whitespace-nowrap border-b-2 transition-colors ${
+                      className={`flex-1 px-4 py-3 font-medium text-sm border-b-2 transition-colors ${
                         activeTab === 'amenities' 
                           ? 'border-parque-purple text-parque-purple' 
                           : 'border-transparent text-gray-600'
