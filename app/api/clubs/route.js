@@ -2,45 +2,70 @@ import { NextResponse } from 'next/server'
 import Club from '@/lib/models/Club'
 import dbConnect from '@/lib/db/mongoose'
 import { 
-  CITY_AREAS_MAPPING, 
-  AREA_DISPLAY_NAMES, 
-  CITY_DISPLAY_NAMES,
-  getAreasForCity
-} from '@/lib/utils/areaMapping'
+  determineLeagueByLocationWithFallback, 
+  LEAGUE_POLYGONS, 
+  LEAGUE_NAMES 
+} from '@/lib/utils/geographicBoundaries'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
+
+/**
+ * Helper function to determine club's league based on GPS coordinates
+ */
+function assignClubToLeague(club) {
+  if (!club.location?.coordinates?.lat || !club.location?.coordinates?.lng) {
+    console.warn(`Club ${club.name} missing GPS coordinates for league assignment`)
+    return null
+  }
+  
+  const league = determineLeagueByLocationWithFallback(
+    club.location.coordinates.lat, 
+    club.location.coordinates.lng
+  )
+  
+  return league
+}
+
+/**
+ * Enhanced club data with GPS-based league assignment
+ */
+function enhanceClubWithLeague(club) {
+  const league = assignClubToLeague(club)
+  
+  // Convert to plain object if it's a MongoDB document
+  const enhancedClub = club.toObject ? club.toObject() : { ...club }
+  
+  // Add league information based on GPS coordinates
+  enhancedClub.league = league
+  enhancedClub.leagueInfo = league ? {
+    id: league,
+    name: LEAGUE_NAMES[league],
+    color: LEAGUE_POLYGONS[league]?.color
+  } : null
+  
+  return enhancedClub
+}
 
 export async function GET(request) {
   try {
     await dbConnect()
 
     const { searchParams } = new URL(request.url)
-    const city = searchParams.get('city')
-    const area = searchParams.get('area') // NEW: Area filtering support
+    const league = searchParams.get('league') // GPS-based league filtering
     const featured = searchParams.get('featured')
-    const search = searchParams.get('search') // NEW: Search support
+    const search = searchParams.get('search')
     const limit = parseInt(searchParams.get('limit') || '100')
     const offset = parseInt(searchParams.get('offset') || '0')
 
     let query = { status: 'active' }
-
-    // City filtering
-    if (city && city !== 'all') {
-      query['location.city'] = city.toLowerCase()
-    }
-
-    // NEW: Area filtering
-    if (area && area !== 'all') {
-      query['location.area'] = area.toLowerCase()
-    }
 
     // Featured filtering
     if (featured === 'true') {
       query.featured = true
     }
 
-    // NEW: Search functionality
+    // Search functionality
     if (search && search.trim()) {
       const searchRegex = new RegExp(search.trim(), 'i')
       query.$or = [
@@ -52,15 +77,14 @@ export async function GET(request) {
       ]
     }
 
-    const clubs = await Club.find(query)
+    // Get all active clubs first
+    const clubsRaw = await Club.find(query)
       .sort({ featured: -1, displayOrder: 1, name: 1 })
-      .limit(limit)
-      .skip(offset)
       .select({
         name: 1,
         slug: 1,
         description: 1,
-        location: 1, // Enhanced to include area information
+        location: 1,
         courts: 1,
         amenities: 1,
         services: 1,
@@ -72,81 +96,77 @@ export async function GET(request) {
       })
       .lean()
 
-    // Get total count for pagination
-    const total = await Club.countDocuments(query)
+    // Enhance clubs with GPS-based league assignments
+    const clubsWithLeagues = clubsRaw.map(club => enhanceClubWithLeague(club))
 
-    // Enhanced: Get counts by city AND area for filters
-    const cityCounts = await Club.aggregate([
-      { $match: { status: 'active' } },
-      { $group: { _id: '$location.city', count: { $sum: 1 } } }
-    ])
+    // Filter by league if specified (after GPS assignment)
+    let filteredClubs = clubsWithLeagues
+    if (league && league !== 'all') {
+      filteredClubs = clubsWithLeagues.filter(club => club.league === league)
+    }
 
-    const cityStats = cityCounts.reduce((acc, { _id, count }) => {
-      acc[_id] = count
-      return acc
-    }, {})
+    // Apply pagination to filtered results
+    const clubs = filteredClubs.slice(offset, offset + limit)
+    const total = filteredClubs.length
 
-    // NEW: Get area statistics
-    const areaCounts = await Club.aggregate([
-      { $match: { status: 'active', 'location.area': { $exists: true, $ne: null } } },
-      { 
-        $group: { 
-          _id: { 
-            city: '$location.city', 
-            area: '$location.area' 
-          }, 
-          count: { $sum: 1 } 
-        } 
+    // Calculate league statistics based on GPS assignments
+    const leagueStats = {}
+    let assignedCount = 0
+    let unassignedCount = 0
+
+    clubsWithLeagues.forEach(club => {
+      if (club.league) {
+        leagueStats[club.league] = (leagueStats[club.league] || 0) + 1
+        assignedCount++
+      } else {
+        unassignedCount++
       }
-    ])
-
-    const areaStats = {}
-    areaCounts.forEach(({ _id, count }) => {
-      if (!areaStats[_id.city]) {
-        areaStats[_id.city] = {}
-      }
-      areaStats[_id.city][_id.area] = count
     })
 
-    // NEW: Enhanced response with area support
+    // Create league info for response
+    const leagueInfo = {}
+    Object.keys(LEAGUE_POLYGONS).forEach(leagueKey => {
+      leagueInfo[leagueKey] = {
+        id: leagueKey,
+        name: LEAGUE_NAMES[leagueKey] || LEAGUE_POLYGONS[leagueKey].name,
+        color: LEAGUE_POLYGONS[leagueKey].color,
+        count: leagueStats[leagueKey] || 0
+      }
+    })
+
+    console.log(`📊 GPS-based club assignment stats:`, {
+      total: clubsWithLeagues.length,
+      assigned: assignedCount,
+      unassigned: unassignedCount,
+      byLeague: leagueStats
+    })
+
     const response = {
       clubs,
       total,
-      cityStats,
-      areaStats, // NEW: Area-based statistics
+      leagueStats, // GPS-based league statistics
+      leagueInfo,   // League information with names and colors
+      assignmentInfo: {
+        method: 'gps-based',
+        assigned: assignedCount,
+        unassigned: unassignedCount,
+        assignmentRate: Math.round((assignedCount / clubsWithLeagues.length) * 100)
+      },
       pagination: {
         limit,
         offset,
         hasMore: offset + clubs.length < total
       },
-      filters: { // NEW: Applied filters info
-        city: city || 'all',
-        area: area || 'all',
+      filters: {
+        league: league || 'all',
         featured: featured === 'true',
         search: search || ''
       }
     }
 
-    // NEW: Add area context for specific city queries
-    if (city && city !== 'all') {
-      const availableAreas = getAreasForCity(city)
-      const cityAreaStats = areaStats[city] || {}
-      
-      response.areaContext = {
-        city: city,
-        cityDisplayName: CITY_DISPLAY_NAMES[city] || city,
-        availableAreas: availableAreas.map(areaKey => ({
-          key: areaKey,
-          name: AREA_DISPLAY_NAMES[areaKey] || areaKey,
-          count: cityAreaStats[areaKey] || 0
-        })),
-        totalAreasWithClubs: Object.keys(cityAreaStats).length
-      }
-    }
-
     return NextResponse.json(response)
   } catch (error) {
-    console.error('Error fetching clubs:', error)
+    console.error('Error fetching clubs with GPS assignment:', error)
     return NextResponse.json(
       { error: 'Failed to fetch clubs', details: error.message },
       { status: 500 }
@@ -154,7 +174,9 @@ export async function GET(request) {
   }
 }
 
-// NEW: Enhanced POST method with area support for future club creation
+/**
+ * Create new club with GPS-based league assignment
+ */
 export async function POST(request) {
   try {
     await dbConnect()
@@ -169,24 +191,35 @@ export async function POST(request) {
       )
     }
 
-    // Enhanced: Generate display name if area is provided
-    if (clubData.location.area && clubData.location.city) {
-      const areaName = AREA_DISPLAY_NAMES[clubData.location.area] || clubData.location.area
-      const cityName = CITY_DISPLAY_NAMES[clubData.location.city] || clubData.location.city
-      clubData.location.displayName = `${areaName} (${cityName.charAt(0).toUpperCase() + cityName.slice(1)})`
+    // GPS coordinates are required for league assignment
+    if (!clubData.location.coordinates?.lat || !clubData.location.coordinates?.lng) {
+      return NextResponse.json(
+        { error: 'GPS coordinates (lat, lng) are required for automatic league assignment' },
+        { status: 400 }
+      )
     }
 
     const club = new Club(clubData)
+    
+    // Assign league based on GPS coordinates before saving
+    const assignedLeague = assignClubToLeague(clubData)
+    
+    console.log(`🎯 New club "${clubData.name}" assigned to league: ${assignedLeague || 'unassigned'}`)
+
     await club.save()
+
+    // Enhance response with league info
+    const enhancedClub = enhanceClubWithLeague(club)
 
     return NextResponse.json({ 
       success: true, 
-      club,
-      message: 'Club created successfully with area context'
+      club: enhancedClub,
+      assignedLeague,
+      message: `Club created successfully and assigned to ${assignedLeague ? `${LEAGUE_NAMES[assignedLeague]} league` : 'no league (outside defined areas)'} based on GPS coordinates`
     }, { status: 201 })
     
   } catch (error) {
-    console.error('Error creating club:', error)
+    console.error('Error creating club with GPS assignment:', error)
     return NextResponse.json(
       { error: 'Failed to create club', details: error.message },
       { status: 500 }
