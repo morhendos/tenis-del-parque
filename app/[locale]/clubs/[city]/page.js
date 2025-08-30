@@ -7,12 +7,7 @@ import Navigation from '@/components/common/Navigation'
 import Footer from '@/components/common/Footer'
 import ClubCard from '@/components/clubs/ClubCard'
 import { homeContent } from '@/lib/content/homeContent'
-import { 
-  CITY_AREAS_MAPPING, 
-  AREA_DISPLAY_NAMES, 
-  CITY_DISPLAY_NAMES,
-  getAreasForCity
-} from '@/lib/utils/areaMapping'
+import { LEAGUE_NAMES } from '@/lib/utils/geographicBoundaries'
 
 export default function CityClubsPage() {
   const params = useParams()
@@ -23,6 +18,7 @@ export default function CityClubsPage() {
   const [clubs, setClubs] = useState([])
   const [filteredClubs, setFilteredClubs] = useState([])
   const [loading, setLoading] = useState(true)
+  const [cityInfo, setCityInfo] = useState(null)
   const [filters, setFilters] = useState({
     surface: 'all',
     courtType: 'all', // New filter for court type
@@ -38,40 +34,53 @@ export default function CityClubsPage() {
   
   const t = homeContent[locale] || homeContent['es']
 
-  // City information with area context
-  const cityInfo = {
-    malaga: {
-      name: 'Málaga',
-      description: {
-        es: 'Málaga, capital de la Costa del Sol, ofrece una vibrante escena tenística con más de 30 clubs distribuidos por diferentes zonas de la ciudad y alrededores.',
-        en: 'Málaga, capital of the Costa del Sol, offers a vibrant tennis scene with over 30 clubs distributed across different areas of the city and surroundings.'
-      }
-    },
-    marbella: {
-      name: 'Marbella',
-      description: {
-        es: 'Marbella y su área metropolitana ofrecen la mayor concentración de clubs de tenis de lujo en la Costa del Sol.',
-        en: 'Marbella and its metropolitan area offer the highest concentration of luxury tennis clubs on the Costa del Sol.'
-      }
-    },
-    estepona: {
-      name: 'Estepona',
-      description: {
-        es: 'Conocida como el "Jardín de la Costa del Sol", Estepona ofrece una experiencia de tenis más tranquila y familiar.',
-        en: 'Known as the "Garden of the Costa del Sol", Estepona offers a quieter, more family-friendly tennis experience.'
-      }
-    },
-    sotogrande: {
-      name: 'Sotogrande',
-      description: {
-        es: 'Sotogrande es conocida por sus exclusivos clubs de tenis y su ambiente internacional.',
-        en: 'Sotogrande is known for its exclusive tennis clubs and international atmosphere.'
+  // City information - now sourced from API response and geographic boundaries
+  const getCityDisplayInfo = (citySlug, apiCityInfo) => {
+    const baseInfo = {
+      malaga: {
+        name: 'Málaga',
+        description: {
+          es: 'Málaga, capital de la Costa del Sol, ofrece una vibrante escena tenística con clubs distribuidos por diferentes zonas de la ciudad y alrededores.',
+          en: 'Málaga, capital of the Costa del Sol, offers a vibrant tennis scene with clubs distributed across different areas of the city and surroundings.'
+        }
+      },
+      marbella: {
+        name: 'Marbella',
+        description: {
+          es: 'Marbella y su área metropolitana ofrecen la mayor concentración de clubs de tenis de lujo en la Costa del Sol.',
+          en: 'Marbella and its metropolitan area offer the highest concentration of luxury tennis clubs on the Costa del Sol.'
+        }
+      },
+      estepona: {
+        name: 'Estepona',
+        description: {
+          es: 'Conocida como el "Jardín de la Costa del Sol", Estepona ofrece una experiencia de tenis más tranquila y familiar.',
+          en: 'Known as the "Garden of the Costa del Sol", Estepona offers a quieter, more family-friendly tennis experience.'
+        }
+      },
+      sotogrande: {
+        name: 'Sotogrande',
+        description: {
+          es: 'Sotogrande es conocida por sus exclusivos clubs de tenis y su ambiente internacional.',
+          en: 'Sotogrande is known for its exclusive tennis clubs and international atmosphere.'
+        }
       }
     }
-  }
 
-  const currentCity = cityInfo[city] || cityInfo.malaga
-  const availableAreas = getAreasForCity(city)
+    const info = baseInfo[citySlug] || baseInfo.malaga
+    
+    // Merge with API response data if available
+    if (apiCityInfo) {
+      return {
+        ...info,
+        name: apiCityInfo.name || info.name,
+        league: apiCityInfo.league,
+        color: apiCityInfo.color
+      }
+    }
+    
+    return info
+  }
 
   useEffect(() => {
     fetchClubs()
@@ -84,23 +93,63 @@ export default function CityClubsPage() {
   const fetchClubs = async () => {
     try {
       setLoading(true)
-      const params = new URLSearchParams({ city })
+      // Use the new city-specific API endpoint
+      const response = await fetch(`/api/clubs/city/${city}`)
+      if (response.ok) {
+        const data = await response.json()
+        setClubs(data.clubs || [])
+        setCityInfo(data.city || null)
+        console.log(`🏙️ Loaded ${data.clubs?.length || 0} clubs for ${city}`, data.assignmentInfo)
+      } else {
+        const errorData = await response.json()
+        console.error(`Error fetching clubs for ${city}:`, errorData.error)
+        // Fallback: try the general clubs API with league parameter if city API fails
+        if (response.status === 404) {
+          console.warn(`City ${city} not found, falling back to league-based filtering`)
+          await fetchClubsByLeague()
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching clubs:', error)
+      await fetchClubsByLeague() // Fallback
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Fallback method using league parameter
+  const fetchClubsByLeague = async () => {
+    try {
+      // Map city to league for fallback
+      const cityToLeagueMap = {
+        'marbella': 'marbella',
+        'malaga': 'malaga', 
+        'estepona': 'estepona',
+        'sotogrande': 'sotogrande'
+      }
+      
+      const league = cityToLeagueMap[city?.toLowerCase()]
+      if (!league) {
+        console.error(`Unknown city: ${city}`)
+        return
+      }
+
+      const params = new URLSearchParams({ league })
       const response = await fetch(`/api/clubs?${params}`)
       if (response.ok) {
         const data = await response.json()
         setClubs(data.clubs || [])
+        console.log(`🔄 Fallback: Loaded ${data.clubs?.length || 0} clubs for league ${league}`)
       }
     } catch (error) {
-      console.error('Error fetching clubs:', error)
-    } finally {
-      setLoading(false)
+      console.error('Error in fallback club fetching:', error)
     }
   }
 
   const applyFilters = () => {
     let filtered = [...clubs]
 
-    // Search filter - enhanced to include area names
+    // Search filter - enhanced to include area names and basic location info
     if (searchTerm.trim()) {
       const search = searchTerm.toLowerCase()
       filtered = filtered.filter(club => 
@@ -109,13 +158,15 @@ export default function CityClubsPage() {
         club.description?.en?.toLowerCase().includes(search) ||
         club.location?.address?.toLowerCase().includes(search) ||
         club.location?.displayName?.toLowerCase().includes(search) ||
-        (club.location?.area && (AREA_DISPLAY_NAMES[club.location.area] || club.location.area).toLowerCase().includes(search))
+        club.location?.area?.toLowerCase().includes(search)
       )
     }
 
-    // Area filter
+    // Area filter (simplified since we're already filtering by city/league)
     if (filters.area !== 'all') {
-      filtered = filtered.filter(club => club.location?.area === filters.area)
+      filtered = filtered.filter(club => 
+        club.location?.area?.toLowerCase() === filters.area.toLowerCase()
+      )
     }
 
     // Court type filter
@@ -208,7 +259,15 @@ export default function CityClubsPage() {
     }))
   }
 
-  // Helper to get area statistics for the current city
+  // Get unique areas from clubs for area filter
+  const availableAreas = useMemo(() => {
+    const areas = [...new Set(clubs
+      .map(club => club.location?.area)
+      .filter(Boolean))]
+    return areas
+  }, [clubs])
+
+  // Helper to get area statistics
   const getAreaStats = () => {
     const areaStats = {}
     availableAreas.forEach(area => {
@@ -218,6 +277,9 @@ export default function CityClubsPage() {
   }
 
   const areaStats = getAreaStats()
+
+  // Get current city display info
+  const currentCity = getCityDisplayInfo(city, cityInfo)
 
   // Get court breakdown stats
   const stats = useMemo(() => {
@@ -292,7 +354,7 @@ export default function CityClubsPage() {
     <div className="min-h-screen bg-gray-50">
       <Navigation locale={locale} />
       
-      {/* Enhanced Hero Section - with original copy */}
+      {/* Enhanced Hero Section */}
       <section className="relative pt-32 pb-16 px-4 bg-gradient-to-br from-parque-purple via-parque-purple/90 to-parque-green text-white">
         <div className="container mx-auto">
           <div className="max-w-4xl">
@@ -308,7 +370,6 @@ export default function CityClubsPage() {
               <span className="text-white font-medium">{currentCity.name}</span>
             </nav>
             
-            {/* Original copy for header */}
             <h1 className="text-4xl md:text-6xl font-bold mb-4">
               {locale === 'es' 
                 ? `Clubs de Tenis en ${currentCity.name}`
@@ -318,7 +379,7 @@ export default function CityClubsPage() {
               {currentCity.description[locale]}
             </p>
 
-            {/* Court Type Stats - Separated, without emojis */}
+            {/* Court Type Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
                 <div className="text-3xl font-bold">{stats.tennisCourts}</div>
@@ -362,7 +423,7 @@ export default function CityClubsPage() {
             </div>
 
             {/* Area Pills for cities with multiple areas */}
-            {availableAreas.length > 0 && (
+            {availableAreas.length > 1 && (
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setFilters(prev => ({ ...prev, area: 'all' }))}
@@ -386,7 +447,7 @@ export default function CityClubsPage() {
                           : 'bg-white/20 text-white hover:bg-white/30'
                       }`}
                     >
-                      {AREA_DISPLAY_NAMES[area] || area}
+                      {area}
                       <span className="ml-2 opacity-75">({areaStats[area]})</span>
                     </button>
                   )
@@ -487,7 +548,7 @@ export default function CityClubsPage() {
               <span className="font-semibold text-lg text-gray-900">{filteredClubs.length}</span> {locale === 'es' ? 'clubs encontrados' : 'clubs found'}
               {filters.area !== 'all' && (
                 <span className="ml-1">
-                  {locale === 'es' ? 'en' : 'in'} <span className="font-medium text-parque-purple">{AREA_DISPLAY_NAMES[filters.area] || filters.area}</span>
+                  {locale === 'es' ? 'en' : 'in'} <span className="font-medium text-parque-purple">{filters.area}</span>
                 </span>
               )}
             </div>
