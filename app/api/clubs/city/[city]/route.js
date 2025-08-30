@@ -11,17 +11,6 @@ import {
 export const dynamic = 'force-dynamic'
 
 /**
- * Mapping from city slugs to league IDs
- * This maintains backward compatibility with existing URLs
- */
-const CITY_TO_LEAGUE_MAPPING = {
-  'marbella': 'marbella',
-  'malaga': 'malaga',
-  'estepona': 'estepona',
-  'sotogrande': 'sotogrande'
-}
-
-/**
  * Helper function to determine club's league based on GPS coordinates
  */
 function assignClubToLeague(club) {
@@ -64,22 +53,14 @@ export async function GET(request, { params }) {
 
     const { city } = params
     const { searchParams } = new URL(request.url)
+    const includeInactive = searchParams.get('includeInactive') === 'true'
     const featured = searchParams.get('featured')
     const search = searchParams.get('search')
     const limit = parseInt(searchParams.get('limit') || '100')
     const offset = parseInt(searchParams.get('offset') || '0')
 
-    // Map city slug to league ID
-    const targetLeague = CITY_TO_LEAGUE_MAPPING[city?.toLowerCase()]
-    
-    if (!targetLeague) {
-      return NextResponse.json(
-        { error: `City "${city}" not found. Available cities: ${Object.keys(CITY_TO_LEAGUE_MAPPING).join(', ')}` },
-        { status: 404 }
-      )
-    }
-
-    let query = { status: 'active' }
+    // Build query - include inactive clubs if requested (for debugging)
+    let query = includeInactive ? {} : { status: 'active' }
 
     // Featured filtering
     if (featured === 'true') {
@@ -98,7 +79,7 @@ export async function GET(request, { params }) {
       ]
     }
 
-    // Get all active clubs first
+    // Get all clubs that match the base query
     const clubsRaw = await Club.find(query)
       .sort({ featured: -1, displayOrder: 1, name: 1 })
       .select({
@@ -113,25 +94,62 @@ export async function GET(request, { params }) {
         pricing: 1,
         tags: 1,
         featured: 1,
-        images: 1
+        images: 1,
+        status: 1  // Include status for debugging
       })
       .lean()
 
     // Enhance clubs with GPS-based league assignments
     const clubsWithLeagues = clubsRaw.map(club => enhanceClubWithLeague(club))
 
-    // Filter by target league (based on GPS assignment)
-    const cityClubs = clubsWithLeagues.filter(club => club.league === targetLeague)
+    // Filter by target city/league using GPS assignments
+    const cityClubs = clubsWithLeagues.filter(club => {
+      if (!club.league) {
+        console.warn(`⚠️  Club "${club.name}" has no GPS-based league assignment`)
+        return false
+      }
+      
+      // Use GPS-based league to determine if club belongs to this city
+      return club.league.toLowerCase() === city.toLowerCase()
+    })
+
+    // Separate active and inactive for debugging
+    const activeClubs = cityClubs.filter(club => club.status === 'active')
+    const inactiveClubs = cityClubs.filter(club => club.status !== 'active')
+
+    // Use appropriate clubs based on includeInactive flag
+    const finalClubs = includeInactive ? cityClubs : activeClubs
 
     // Apply pagination to filtered results
-    const clubs = cityClubs.slice(offset, offset + limit)
-    const total = cityClubs.length
+    const clubs = finalClubs.slice(offset, offset + limit)
+    const total = finalClubs.length
 
-    console.log(`📍 City clubs API for "${city}" (${targetLeague} league):`, {
+    // Enhanced debugging info
+    console.log(`🗺️  GPS-based city clubs for "${city}":`, {
       totalClubsInDB: clubsRaw.length,
-      clubsInTargetLeague: cityClubs.length,
-      returnedAfterPagination: clubs.length
+      totalWithGPSAssignments: clubsWithLeagues.filter(c => c.league).length,
+      clubsAssignedToThisCity: cityClubs.length,
+      activeInThisCity: activeClubs.length,
+      inactiveInThisCity: inactiveClubs.length,
+      returnedAfterFiltering: clubs.length,
+      includeInactive: includeInactive
     })
+
+    // Log specific club assignments for debugging
+    cityClubs.forEach(club => {
+      console.log(`  📍 ${club.name} (${club.status}): ${club.location?.coordinates?.lat}, ${club.location?.coordinates?.lng} → ${club.league}`)
+    })
+
+    // Determine city info from the actual league assignments
+    const targetLeague = city.toLowerCase()
+    const leagueInfo = LEAGUE_POLYGONS[targetLeague]
+    
+    if (!leagueInfo && cityClubs.length === 0) {
+      return NextResponse.json(
+        { error: `No clubs found for city "${city}". Available leagues: ${Object.keys(LEAGUE_POLYGONS).join(', ')}` },
+        { status: 404 }
+      )
+    }
 
     const response = {
       clubs,
@@ -139,13 +157,26 @@ export async function GET(request, { params }) {
       city: {
         slug: city,
         league: targetLeague,
-        name: LEAGUE_NAMES[targetLeague],
-        color: LEAGUE_POLYGONS[targetLeague]?.color
+        name: LEAGUE_NAMES[targetLeague] || city,
+        color: leagueInfo?.color
+      },
+      debug: {
+        totalClubsQueried: clubsRaw.length,
+        clubsWithGPSAssignments: clubsWithLeagues.filter(c => c.league).length,
+        clubsInThisCity: cityClubs.length,
+        activeClubsInThisCity: activeClubs.length,
+        inactiveClubsInThisCity: inactiveClubs.length,
+        clubAssignments: cityClubs.map(c => ({
+          name: c.name,
+          status: c.status,
+          coordinates: c.location?.coordinates,
+          assignedLeague: c.league
+        }))
       },
       assignmentInfo: {
-        method: 'gps-based-city-filter',
+        method: 'pure-gps-based',
         targetLeague,
-        totalInLeague: cityClubs.length
+        includeInactive: includeInactive
       },
       pagination: {
         limit,
@@ -156,7 +187,8 @@ export async function GET(request, { params }) {
         city: city,
         league: targetLeague,
         featured: featured === 'true',
-        search: search || ''
+        search: search || '',
+        includeInactive: includeInactive
       }
     }
 
