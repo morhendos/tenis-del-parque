@@ -85,11 +85,28 @@ export default function usePolygonDrawing(mapInstance) {
   /**
    * Setup edit listeners for a polygon
    */
-  const setupPolygonEditListeners = useCallback((polygon, areaId, onBoundsUpdate) => {
+  const setupPolygonEditListeners = useCallback((polygon, areaId, onBoundsUpdate, isCustom = false) => {
+    if (!polygon || !polygon.getPath) {
+      console.error('Invalid polygon for edit listeners setup')
+      return []
+    }
+
     const updateBounds = () => {
-      const bounds = pathToBounds(polygon.getPath())
-      if (onBoundsUpdate) {
-        onBoundsUpdate(areaId, bounds)
+      try {
+        const path = polygon.getPath()
+        if (!path || typeof path.getLength !== 'function') {
+          console.error('Invalid polygon path')
+          return
+        }
+
+        const bounds = pathToBounds(path)
+        console.log(`🔄 Bounds updated for ${areaId}:`, bounds.length, 'points')
+        
+        if (onBoundsUpdate && bounds.length >= 3) {
+          onBoundsUpdate(areaId, bounds, isCustom)
+        }
+      } catch (error) {
+        console.error('Error updating bounds:', error)
       }
     }
 
@@ -97,16 +114,22 @@ export default function usePolygonDrawing(mapInstance) {
     const path = polygon.getPath()
     const listeners = []
     
-    listeners.push(
-      window.google.maps.event.addListener(path, 'set_at', updateBounds),
-      window.google.maps.event.addListener(path, 'insert_at', updateBounds),
-      window.google.maps.event.addListener(path, 'remove_at', updateBounds)
-    )
-    
-    // Store listeners for cleanup
-    polygon._editListeners = listeners
-    
-    return listeners
+    try {
+      listeners.push(
+        window.google.maps.event.addListener(path, 'set_at', updateBounds),
+        window.google.maps.event.addListener(path, 'insert_at', updateBounds),
+        window.google.maps.event.addListener(path, 'remove_at', updateBounds)
+      )
+      
+      // Store listeners for cleanup
+      polygon._editListeners = listeners
+      
+      console.log(`✅ Set up edit listeners for area: ${areaId}`)
+      return listeners
+    } catch (error) {
+      console.error('Error setting up polygon edit listeners:', error)
+      return []
+    }
   }, [])
 
   /**
@@ -115,7 +138,11 @@ export default function usePolygonDrawing(mapInstance) {
   const removePolygonEditListeners = useCallback((polygon) => {
     if (polygon._editListeners) {
       polygon._editListeners.forEach(listener => {
-        window.google.maps.event.removeListener(listener)
+        try {
+          window.google.maps.event.removeListener(listener)
+        } catch (error) {
+          console.error('Error removing listener:', error)
+        }
       })
       polygon._editListeners = null
     }
@@ -125,8 +152,8 @@ export default function usePolygonDrawing(mapInstance) {
    * Draw boundaries on the map
    */
   const drawBoundaries = useCallback((options = {}) => {
-    if (!mapInstance) {
-      console.warn('Map instance not available for drawing boundaries')
+    if (!mapInstance || !window.google?.maps?.Polygon) {
+      console.warn('Map instance or Google Maps Polygon not available for drawing boundaries')
       return
     }
 
@@ -146,95 +173,139 @@ export default function usePolygonDrawing(mapInstance) {
       editMode
     })
     
-    // Clear existing polygons
-    polygonsRef.current.forEach(polygon => {
-      removePolygonEditListeners(polygon)
-      polygon.setMap(null)
+    // Clear existing polygons first
+    polygonsRef.current.forEach((polygon, key) => {
+      try {
+        removePolygonEditListeners(polygon)
+        if (polygon.setMap) {
+          polygon.setMap(null)
+        }
+      } catch (error) {
+        console.error(`Error clearing polygon ${key}:`, error)
+      }
     })
     polygonsRef.current.clear()
 
-    if (boundaryType === 'none') return
+    // Don't draw anything if boundaries are disabled
+    if (boundaryType === 'none') {
+      console.log('🚫 Boundary type is none, skipping drawing')
+      return
+    }
 
-    // Draw existing league polygons (with modifications if any)
-    Object.entries(LEAGUE_POLYGONS).forEach(([league, data]) => {
-      const bounds = modifiedLeagues[league]?.bounds || data.bounds
-      const isModified = !!modifiedLeagues[league]
-      const styles = editMode ? POLYGON_STYLES.editMode : POLYGON_STYLES.default
-      
-      const polygon = new window.google.maps.Polygon({
-        paths: bounds,
-        strokeColor: data.color,
-        strokeOpacity: styles.strokeOpacity,
-        strokeWeight: styles.strokeWeight,
-        fillColor: data.color,
-        fillOpacity: styles.fillOpacity,
-        map: mapInstance,
-        editable: styles.editable,
-        draggable: styles.draggable
-      })
+    try {
+      // Draw existing league polygons (with modifications if any)
+      console.log('🎨 Drawing static league boundaries...')
+      Object.entries(LEAGUE_POLYGONS).forEach(([league, data]) => {
+        const bounds = modifiedLeagues[league]?.bounds || data.bounds
+        const isModified = !!modifiedLeagues[league]
+        
+        // Use appropriate styles based on edit mode
+        const styles = editMode ? POLYGON_STYLES.editMode : POLYGON_STYLES.default
+        
+        // Ensure visibility by setting minimum opacity values
+        const fillOpacity = Math.max(styles.fillOpacity || 0.1, 0.1)
+        const strokeOpacity = Math.max(styles.strokeOpacity || 0.8, 0.8)
+        
+        console.log(`  - Creating ${league} polygon (modified: ${isModified})`)
+        
+        try {
+          const polygon = new window.google.maps.Polygon({
+            paths: bounds,
+            strokeColor: data.color,
+            strokeOpacity: strokeOpacity,
+            strokeWeight: styles.strokeWeight || 2,
+            fillColor: data.color,
+            fillOpacity: fillOpacity,
+            map: mapInstance,
+            editable: editMode && (styles.editable !== false),
+            draggable: editMode && (styles.draggable !== false),
+            clickable: true
+          })
 
-      // Add click listener
-      polygon.addListener('click', (event) => {
-        if (editMode && onAreaClick) {
-          onAreaClick(league)
-        } else if (!editMode) {
-          // Show info window in view mode
-          const infoWindow = new window.google.maps.InfoWindow()
-          infoWindow.setContent(`
-            <div style="padding: 10px;">
-              <h3 style="margin: 0; color: ${data.color};">
-                🏆 ${data.name} League Area ${isModified ? '(Modified)' : ''}
-              </h3>
-              ${isModified ? '<small style="color: #F59E0B;">⚠️ This area has been modified</small>' : ''}
-            </div>
-          `)
-          infoWindow.setPosition(event.latLng)
-          infoWindow.open(mapInstance)
+          // Add click listener
+          if (polygon.addListener) {
+            polygon.addListener('click', (event) => {
+              if (editMode && onAreaClick) {
+                onAreaClick(league)
+              } else if (!editMode) {
+                // Show info window in view mode
+                const infoWindow = new window.google.maps.InfoWindow()
+                infoWindow.setContent(`
+                  <div style="padding: 10px;">
+                    <h3 style="margin: 0; color: ${data.color};">
+                      🏆 ${data.name} League Area ${isModified ? '(Modified)' : ''}
+                    </h3>
+                    ${isModified ? '<small style="color: #F59E0B;">⚠️ This area has been modified</small>' : ''}
+                  </div>
+                `)
+                infoWindow.setPosition(event.latLng)
+                infoWindow.open(mapInstance)
+              }
+            })
+          }
+
+          polygonsRef.current.set(league, polygon)
+          
+          // Setup edit listeners if in edit mode
+          if (editMode && onBoundsUpdate) {
+            setupPolygonEditListeners(polygon, league, onBoundsUpdate, false)
+          }
+          
+          console.log(`    ✅ ${league} polygon created successfully`)
+        } catch (error) {
+          console.error(`    ❌ Error creating ${league} polygon:`, error)
         }
       })
 
-      polygonsRef.current.set(league, polygon)
-      
-      // Setup edit listeners if in edit mode
-      if (editMode && onBoundsUpdate) {
-        setupPolygonEditListeners(polygon, league, (id, bounds) => {
-          onBoundsUpdate(id, bounds, false) // false = not custom
+      // Draw custom areas
+      if (customAreas.length > 0) {
+        console.log('🎨 Drawing custom areas...')
+        customAreas.forEach((area, index) => {
+          const styles = editMode ? POLYGON_STYLES.editMode : POLYGON_STYLES.default
+          const fillOpacity = Math.max(styles.fillOpacity || 0.1, 0.1)
+          const strokeOpacity = Math.max(styles.strokeOpacity || 0.8, 0.8)
+          
+          console.log(`  - Creating custom area: ${area.name || area.id}`)
+          
+          try {
+            const polygon = new window.google.maps.Polygon({
+              paths: area.bounds,
+              strokeColor: area.color,
+              strokeOpacity: strokeOpacity,
+              strokeWeight: styles.strokeWeight || 2,
+              fillColor: area.color,
+              fillOpacity: fillOpacity,
+              map: mapInstance,
+              editable: editMode && (styles.editable !== false),
+              draggable: editMode && (styles.draggable !== false),
+              clickable: true
+            })
+
+            if (polygon.addListener) {
+              polygon.addListener('click', () => {
+                if (editMode && onAreaClick) {
+                  onAreaClick(area.id)
+                }
+              })
+            }
+
+            polygonsRef.current.set(area.id, polygon)
+            
+            if (editMode && onBoundsUpdate) {
+              setupPolygonEditListeners(polygon, area.id, onBoundsUpdate, true)
+            }
+            
+            console.log(`    ✅ Custom area ${area.name || area.id} created successfully`)
+          } catch (error) {
+            console.error(`    ❌ Error creating custom area ${area.name || area.id}:`, error)
+          }
         })
       }
-    })
 
-    // Draw custom areas
-    customAreas.forEach(area => {
-      const styles = editMode ? POLYGON_STYLES.editMode : POLYGON_STYLES.default
-      
-      const polygon = new window.google.maps.Polygon({
-        paths: area.bounds,
-        strokeColor: area.color,
-        strokeOpacity: styles.strokeOpacity,
-        strokeWeight: styles.strokeWeight,
-        fillColor: area.color,
-        fillOpacity: styles.fillOpacity,
-        map: mapInstance,
-        editable: styles.editable,
-        draggable: styles.draggable
-      })
-
-      polygon.addListener('click', () => {
-        if (editMode && onAreaClick) {
-          onAreaClick(area.id)
-        }
-      })
-
-      polygonsRef.current.set(area.id, polygon)
-      
-      if (editMode && onBoundsUpdate) {
-        setupPolygonEditListeners(polygon, area.id, (id, bounds) => {
-          onBoundsUpdate(id, bounds, true) // true = custom
-        })
-      }
-    })
-
-    console.log(`✅ Drew ${polygonsRef.current.size} polygons on map`)
+      console.log(`✅ Successfully drew ${polygonsRef.current.size} polygons on map`)
+    } catch (error) {
+      console.error('❌ Error in drawBoundaries:', error)
+    }
   }, [mapInstance, setupPolygonEditListeners, removePolygonEditListeners])
 
   /**
@@ -246,14 +317,18 @@ export default function usePolygonDrawing(mapInstance) {
         const polygon = polygonsRef.current.get(id)
         if (polygon) {
           removePolygonEditListeners(polygon)
-          polygon.setMap(null)
+          if (polygon.setMap) {
+            polygon.setMap(null)
+          }
           polygonsRef.current.delete(id)
         }
       })
     } else {
       polygonsRef.current.forEach(polygon => {
         removePolygonEditListeners(polygon)
-        polygon.setMap(null)
+        if (polygon.setMap) {
+          polygon.setMap(null)
+        }
       })
       polygonsRef.current.clear()
     }
@@ -264,21 +339,39 @@ export default function usePolygonDrawing(mapInstance) {
    */
   const setPolygonEditability = useCallback((editable) => {
     const styles = editable ? POLYGON_STYLES.editMode : POLYGON_STYLES.default
+    
+    // Ensure minimum visibility
+    const fillOpacity = Math.max(styles.fillOpacity || 0.1, 0.1)
+    const strokeOpacity = Math.max(styles.strokeOpacity || 0.8, 0.8)
+    
     polygonsRef.current.forEach(polygon => {
-      polygon.setOptions({
-        editable: styles.editable,
-        draggable: styles.draggable,
-        strokeOpacity: styles.strokeOpacity,
-        fillOpacity: styles.fillOpacity
-      })
+      if (polygon.setOptions) {
+        try {
+          polygon.setOptions({
+            editable: editable && (styles.editable !== false),
+            draggable: editable && (styles.draggable !== false),
+            strokeOpacity: strokeOpacity,
+            fillOpacity: fillOpacity,
+            strokeWeight: styles.strokeWeight || 2
+          })
+        } catch (error) {
+          console.error('Error updating polygon options:', error)
+        }
+      }
     })
+    
+    console.log(`🔧 Updated polygon editability: ${editable}`)
   }, [])
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (drawingManager) {
-        drawingManager.setMap(null)
+        try {
+          drawingManager.setMap(null)
+        } catch (error) {
+          console.error('Error cleaning up drawing manager:', error)
+        }
       }
       clearPolygons()
     }
