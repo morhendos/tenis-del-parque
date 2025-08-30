@@ -64,12 +64,12 @@ export default function AreasMapView() {
   // Club markers management - will handle null map instance
   const {
     clubs,
-    loading: clubsLoading = false,
+    loadingClubs = false,
     fetchClubs,
-    createMarkers,
+    createClubMarkers,
     filterByLeague,
-    updateMarkerStyles
-  } = useClubMarkers(mapInstance)
+    updateMarkerIcons
+  } = useClubMarkers()
   
   // Polygon drawing management - will handle null map instance
   const {
@@ -118,10 +118,16 @@ export default function AreasMapView() {
         }
       }
       
-      // Fetch clubs
+      // Fetch clubs and create markers
       if (fetchClubs) {
-        await fetchClubs()
-        console.log('✅ Fetched clubs')
+        const clubsData = await fetchClubs()
+        console.log('✅ Fetched clubs:', clubsData.length)
+        
+        // Create club markers on the map
+        if (clubsData.length > 0 && createClubMarkers) {
+          createClubMarkers(mapInstance, clubsData, editMode)
+          console.log('✅ Created club markers on map')
+        }
       }
       
       // Initialize drawing manager
@@ -147,7 +153,20 @@ export default function AreasMapView() {
     }
     
     initialize()
-  }, [mapInstance, isInitialized, loadCustomAreas, fetchClubs, initializeDrawing, handlePolygonComplete, addCustomArea])
+  }, [mapInstance, isInitialized, loadCustomAreas, fetchClubs, createClubMarkers, editMode, initializeDrawing, handlePolygonComplete, addCustomArea])
+  
+  // Create/update club markers when clubs data changes or edit mode changes
+  useEffect(() => {
+    if (!mapInstance || !clubs || clubs.length === 0 || !createClubMarkers) return
+    
+    console.log('🎯 Creating/updating club markers:', { 
+      clubsCount: clubs.length, 
+      editMode,
+      isInitialized 
+    })
+    
+    createClubMarkers(mapInstance, clubs, editMode)
+  }, [mapInstance, clubs, editMode, createClubMarkers, isInitialized])
   
   // Draw boundaries whenever relevant state changes
   useEffect(() => {
@@ -181,11 +200,6 @@ export default function AreasMapView() {
         }
       }
     })
-    
-    // Update markers
-    if (updateMarkerStyles) {
-      updateMarkerStyles(editMode)
-    }
   }, [
     mapInstance,
     customAreas,
@@ -194,7 +208,6 @@ export default function AreasMapView() {
     editMode,
     isInitialized,
     drawBoundaries,
-    updateMarkerStyles,
     trackLeagueModification,
     updateCustomArea
   ])
@@ -210,8 +223,8 @@ export default function AreasMapView() {
     }
     
     // Update marker styles
-    if (updateMarkerStyles) {
-      updateMarkerStyles(newEditMode)
+    if (updateMarkerIcons) {
+      updateMarkerIcons(newEditMode)
     }
     
     if (!newEditMode) {
@@ -229,7 +242,7 @@ export default function AreasMapView() {
   }, [
     editMode,
     setPolygonEditability,
-    updateMarkerStyles,
+    updateMarkerIcons,
     toggleDrawing,
     showNotification
   ])
@@ -283,6 +296,14 @@ export default function AreasMapView() {
     showNotification(null)
   }, [showNotification])
   
+  // Handle league filtering
+  const handleLeagueFilter = useCallback((league) => {
+    setSelectedLeague(league)
+    if (filterByLeague) {
+      filterByLeague(league)
+    }
+  }, [filterByLeague])
+  
   // Memoized statistics calculation
   const stats = useMemo(() => 
     calculateAreaStats(clubs || [], modifiedLeagues || {}),
@@ -290,7 +311,7 @@ export default function AreasMapView() {
   )
   
   // Combined loading state - ensure it's always boolean
-  const loading = Boolean(mapLoading || clubsLoading)
+  const loading = Boolean(mapLoading || loadingClubs)
   
   // Error state
   if (mapError) {
@@ -337,6 +358,11 @@ export default function AreasMapView() {
                 : 'Geographic boundaries and automatic league assignment'
               }
             </p>
+            {clubs && clubs.length > 0 && (
+              <p className="text-sm text-blue-600 mt-1">
+                📍 Showing {clubs.length} clubs on the map
+              </p>
+            )}
           </div>
           <div className="flex gap-2">
             <button
@@ -385,7 +411,7 @@ export default function AreasMapView() {
         {/* League Filter Buttons */}
         <LeagueFilterButtons
           selectedLeague={selectedLeague}
-          onFilterChange={filterByLeague || (() => {})}
+          onFilterChange={handleLeagueFilter}
           stats={stats}
           modifiedLeagues={modifiedLeagues || {}}
         />
