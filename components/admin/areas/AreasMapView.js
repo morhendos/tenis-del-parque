@@ -32,6 +32,7 @@ export default function AreasMapView() {
   
   // Track if areas have been loaded once the map is ready
   const areasLoadedRef = useRef(false)
+  const forceUpdateRef = useRef(0)
   
   // Initialize map - hook manages its own refs
   const {
@@ -69,7 +70,8 @@ export default function AreasMapView() {
     createClubMarkers,
     updateMarkerAssignments,
     filterByLeague,
-    updateMarkerIcons
+    updateMarkerIcons,
+    refreshAllAssignments
   } = useClubMarkers()
   
   // Polygon drawing management - will handle null map instance
@@ -89,6 +91,12 @@ export default function AreasMapView() {
     handlePolygonComplete,
     handleBoundsUpdate
   } = useAreaManagement()
+
+  // Force update function to trigger re-renders when needed
+  const forceUpdate = useCallback(() => {
+    forceUpdateRef.current += 1
+    console.log('🔄 Forcing component update:', forceUpdateRef.current)
+  }, [])
 
   // Initialize map when component mounts and Google Maps is loaded
   useEffect(() => {
@@ -144,6 +152,7 @@ export default function AreasMapView() {
             )
             setDrawingMode(false)
             console.log('✅ Created new area:', newArea)
+            forceUpdate()
           }
         })
         console.log('✅ Initialized drawing manager')
@@ -154,7 +163,7 @@ export default function AreasMapView() {
     }
     
     initialize()
-  }, [mapInstance, isInitialized, loadCustomAreas, fetchClubs, createClubMarkers, editMode, modifiedLeagues, initializeDrawing, handlePolygonComplete, addCustomArea])
+  }, [mapInstance, isInitialized, loadCustomAreas, fetchClubs, createClubMarkers, editMode, modifiedLeagues, initializeDrawing, handlePolygonComplete, addCustomArea, forceUpdate])
   
   // Create/update club markers when clubs data changes or edit mode changes
   useEffect(() => {
@@ -196,7 +205,7 @@ export default function AreasMapView() {
       editMode
     })
     
-    // Draw boundaries
+    // Always draw boundaries to fix the disappearing issue
     drawBoundaries({
       customAreas: customAreas || [],
       modifiedLeagues: modifiedLeagues || {},
@@ -207,13 +216,27 @@ export default function AreasMapView() {
         setSelectedArea(areaId)
       },
       onBoundsUpdate: (areaId, newBounds, isCustom) => {
-        console.log('Bounds updated:', areaId, isCustom)
+        console.log('Bounds updated:', areaId, isCustom, 'points:', newBounds?.length)
+        
         if (!isCustom) {
           // This is a league modification
           trackLeagueModification(areaId, newBounds)
+          console.log('✅ Tracked league modification for:', areaId)
+          
+          // Force refresh club assignments after boundary change
+          if (refreshAllAssignments) {
+            setTimeout(() => {
+              const updatedModifiedLeagues = { ...modifiedLeagues, [areaId]: { bounds: newBounds } }
+              const changedCount = refreshAllAssignments(updatedModifiedLeagues)
+              if (changedCount > 0) {
+                showNotification(`${changedCount} clubs reassigned due to boundary changes`, 'success')
+              }
+            }, 100) // Small delay to ensure state update
+          }
         } else {
           // This is a custom area update
           updateCustomArea(areaId, { bounds: newBounds })
+          console.log('✅ Updated custom area:', areaId)
         }
       }
     })
@@ -226,7 +249,10 @@ export default function AreasMapView() {
     isInitialized,
     drawBoundaries,
     trackLeagueModification,
-    updateCustomArea
+    updateCustomArea,
+    refreshAllAssignments,
+    showNotification,
+    forceUpdateRef.current // Include force update counter to trigger re-draws
   ])
   
   // Memoized toggle edit mode
@@ -256,12 +282,16 @@ export default function AreasMapView() {
       newEditMode ? 'Edit mode enabled - Drag area boundaries to reassign clubs' : 'Edit mode disabled',
       'info'
     )
+    
+    // Force update to ensure proper rendering
+    setTimeout(() => forceUpdate(), 100)
   }, [
     editMode,
     setPolygonEditability,
     updateMarkerIcons,
     toggleDrawing,
-    showNotification
+    showNotification,
+    forceUpdate
   ])
   
   // Memoized toggle drawing mode
@@ -276,8 +306,14 @@ export default function AreasMapView() {
   
   // Memoized toggle boundary type
   const toggleBoundaryType = useCallback(() => {
-    setBoundaryType(prev => prev === 'polygons' ? 'none' : 'polygons')
-  }, [])
+    const newBoundaryType = boundaryType === 'polygons' ? 'none' : 'polygons'
+    setBoundaryType(newBoundaryType)
+    
+    // Force a redraw when boundaries are toggled
+    setTimeout(() => forceUpdate(), 50)
+    
+    console.log('🔄 Toggled boundary type to:', newBoundaryType)
+  }, [boundaryType, forceUpdate])
   
   // Memoized handle area deletion
   const handleDeleteArea = useCallback(() => {
@@ -292,7 +328,8 @@ export default function AreasMapView() {
     
     setSelectedArea(null)
     showNotification('Area deleted successfully', 'success')
-  }, [selectedArea, deleteArea, clearPolygons, showNotification])
+    forceUpdate()
+  }, [selectedArea, deleteArea, clearPolygons, showNotification, forceUpdate])
   
   // Memoized handle save
   const handleSaveChanges = useCallback(async () => {
@@ -312,7 +349,10 @@ export default function AreasMapView() {
     }
     
     showNotification('League modifications reset - Club assignments restored', 'info')
-  }, [resetLeagueModifications, updateMarkerAssignments, clubs.length, showNotification])
+    
+    // Force redraw after reset
+    setTimeout(() => forceUpdate(), 100)
+  }, [resetLeagueModifications, updateMarkerAssignments, clubs.length, showNotification, forceUpdate])
   
   // Memoized close notification
   const handleCloseNotification = useCallback(() => {
