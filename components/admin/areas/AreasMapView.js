@@ -67,6 +67,7 @@ export default function AreasMapView() {
     loadingClubs = false,
     fetchClubs,
     createClubMarkers,
+    updateMarkerAssignments,
     filterByLeague,
     updateMarkerIcons
   } = useClubMarkers()
@@ -125,7 +126,7 @@ export default function AreasMapView() {
         
         // Create club markers on the map
         if (clubsData.length > 0 && createClubMarkers) {
-          createClubMarkers(mapInstance, clubsData, editMode)
+          createClubMarkers(mapInstance, clubsData, editMode, modifiedLeagues || {})
           console.log('✅ Created club markers on map')
         }
       }
@@ -153,7 +154,7 @@ export default function AreasMapView() {
     }
     
     initialize()
-  }, [mapInstance, isInitialized, loadCustomAreas, fetchClubs, createClubMarkers, editMode, initializeDrawing, handlePolygonComplete, addCustomArea])
+  }, [mapInstance, isInitialized, loadCustomAreas, fetchClubs, createClubMarkers, editMode, modifiedLeagues, initializeDrawing, handlePolygonComplete, addCustomArea])
   
   // Create/update club markers when clubs data changes or edit mode changes
   useEffect(() => {
@@ -162,11 +163,27 @@ export default function AreasMapView() {
     console.log('🎯 Creating/updating club markers:', { 
       clubsCount: clubs.length, 
       editMode,
+      modifiedLeagues: Object.keys(modifiedLeagues || {}).length,
       isInitialized 
     })
     
-    createClubMarkers(mapInstance, clubs, editMode)
-  }, [mapInstance, clubs, editMode, createClubMarkers, isInitialized])
+    createClubMarkers(mapInstance, clubs, editMode, modifiedLeagues || {})
+  }, [mapInstance, clubs, editMode, createClubMarkers, modifiedLeagues, isInitialized])
+  
+  // Update club assignments when modified leagues change
+  useEffect(() => {
+    if (!mapInstance || !clubs || clubs.length === 0 || !updateMarkerAssignments || !isInitialized) return
+    
+    console.log('🔄 Updating club assignments due to boundary changes:', {
+      modifiedLeagues: Object.keys(modifiedLeagues || {}).length
+    })
+    
+    const changedCount = updateMarkerAssignments(modifiedLeagues || {})
+    
+    if (changedCount > 0) {
+      showNotification(`Updated ${changedCount} club assignments based on modified boundaries`, 'success')
+    }
+  }, [modifiedLeagues, mapInstance, clubs, updateMarkerAssignments, isInitialized, showNotification])
   
   // Draw boundaries whenever relevant state changes
   useEffect(() => {
@@ -236,7 +253,7 @@ export default function AreasMapView() {
     }
     
     showNotification(
-      newEditMode ? 'Edit mode enabled' : 'Edit mode disabled',
+      newEditMode ? 'Edit mode enabled - Drag area boundaries to reassign clubs' : 'Edit mode disabled',
       'info'
     )
   }, [
@@ -288,8 +305,14 @@ export default function AreasMapView() {
   // Memoized handle reset modifications
   const handleResetModifications = useCallback(() => {
     resetLeagueModifications()
-    showNotification('League modifications reset', 'info')
-  }, [resetLeagueModifications, showNotification])
+    
+    // Reset club assignments to original boundaries
+    if (updateMarkerAssignments && clubs.length > 0) {
+      updateMarkerAssignments({}) // Pass empty object to use only static boundaries
+    }
+    
+    showNotification('League modifications reset - Club assignments restored', 'info')
+  }, [resetLeagueModifications, updateMarkerAssignments, clubs.length, showNotification])
   
   // Memoized close notification
   const handleCloseNotification = useCallback(() => {
@@ -354,13 +377,18 @@ export default function AreasMapView() {
             </h2>
             <p className="text-gray-600">
               {editMode 
-                ? 'Edit geographic boundaries and create custom areas'
+                ? 'Edit geographic boundaries and create custom areas - Club assignments update automatically'
                 : 'Geographic boundaries and automatic league assignment'
               }
             </p>
             {clubs && clubs.length > 0 && (
               <p className="text-sm text-blue-600 mt-1">
                 📍 Showing {clubs.length} clubs on the map
+                {Object.keys(modifiedLeagues || {}).length > 0 && (
+                  <span className="text-orange-600 ml-2">
+                    • {Object.keys(modifiedLeagues).length} modified area{Object.keys(modifiedLeagues).length !== 1 ? 's' : ''}
+                  </span>
+                )}
               </p>
             )}
           </div>
