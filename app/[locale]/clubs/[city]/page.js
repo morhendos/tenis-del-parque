@@ -19,9 +19,10 @@ export default function CityClubsPage() {
   const [filteredClubs, setFilteredClubs] = useState([])
   const [loading, setLoading] = useState(true)
   const [cityInfo, setCityInfo] = useState(null)
+  const [debugInfo, setDebugInfo] = useState(null)
   const [filters, setFilters] = useState({
     surface: 'all',
-    courtType: 'all', // New filter for court type
+    courtType: 'all',
     amenities: [],
     priceRange: 'all',
     publicAccess: 'all',
@@ -31,10 +32,11 @@ export default function CityClubsPage() {
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '')
   const [showFilters, setShowFilters] = useState(false)
   const [sortBy, setSortBy] = useState('featured')
+  const [showDebugInfo, setShowDebugInfo] = useState(false)
   
   const t = homeContent[locale] || homeContent['es']
 
-  // City information - now sourced from API response and geographic boundaries
+  // City information - now completely dynamic based on GPS assignments
   const getCityDisplayInfo = (citySlug, apiCityInfo) => {
     const baseInfo = {
       malaga: {
@@ -67,7 +69,13 @@ export default function CityClubsPage() {
       }
     }
 
-    const info = baseInfo[citySlug] || baseInfo.malaga
+    const info = baseInfo[citySlug] || { 
+      name: citySlug, 
+      description: { 
+        es: `Clubs de tenis en ${citySlug}`, 
+        en: `Tennis clubs in ${citySlug}` 
+      } 
+    }
     
     // Merge with API response data if available
     if (apiCityInfo) {
@@ -93,63 +101,49 @@ export default function CityClubsPage() {
   const fetchClubs = async () => {
     try {
       setLoading(true)
-      // Use the new city-specific API endpoint
+      
+      // First try with only active clubs
       const response = await fetch(`/api/clubs/city/${city}`)
       if (response.ok) {
         const data = await response.json()
         setClubs(data.clubs || [])
         setCityInfo(data.city || null)
-        console.log(`🏙️ Loaded ${data.clubs?.length || 0} clubs for ${city}`, data.assignmentInfo)
+        setDebugInfo(data.debug || null)
+        
+        console.log(`🏙️ GPS-based clubs for ${city}:`, {
+          activeClubs: data.clubs?.length || 0,
+          debugInfo: data.debug
+        })
+        
+        // If we get very few clubs, also fetch inactive ones for comparison
+        if ((data.clubs?.length || 0) < 3) {
+          console.log('🔍 Few active clubs found, checking inactive clubs for debugging...')
+          const debugResponse = await fetch(`/api/clubs/city/${city}?includeInactive=true`)
+          if (debugResponse.ok) {
+            const debugData = await debugResponse.json()
+            console.log(`🔬 Debug info for ${city}:`, {
+              totalClubs: debugData.clubs?.length || 0,
+              activeClubs: data.clubs?.length || 0,
+              debugBreakdown: debugData.debug
+            })
+          }
+        }
+        
       } else {
         const errorData = await response.json()
         console.error(`Error fetching clubs for ${city}:`, errorData.error)
-        // Fallback: try the general clubs API with league parameter if city API fails
-        if (response.status === 404) {
-          console.warn(`City ${city} not found, falling back to league-based filtering`)
-          await fetchClubsByLeague()
-        }
       }
     } catch (error) {
       console.error('Error fetching clubs:', error)
-      await fetchClubsByLeague() // Fallback
     } finally {
       setLoading(false)
-    }
-  }
-
-  // Fallback method using league parameter
-  const fetchClubsByLeague = async () => {
-    try {
-      // Map city to league for fallback
-      const cityToLeagueMap = {
-        'marbella': 'marbella',
-        'malaga': 'malaga', 
-        'estepona': 'estepona',
-        'sotogrande': 'sotogrande'
-      }
-      
-      const league = cityToLeagueMap[city?.toLowerCase()]
-      if (!league) {
-        console.error(`Unknown city: ${city}`)
-        return
-      }
-
-      const params = new URLSearchParams({ league })
-      const response = await fetch(`/api/clubs?${params}`)
-      if (response.ok) {
-        const data = await response.json()
-        setClubs(data.clubs || [])
-        console.log(`🔄 Fallback: Loaded ${data.clubs?.length || 0} clubs for league ${league}`)
-      }
-    } catch (error) {
-      console.error('Error in fallback club fetching:', error)
     }
   }
 
   const applyFilters = () => {
     let filtered = [...clubs]
 
-    // Search filter - enhanced to include area names and basic location info
+    // Search filter
     if (searchTerm.trim()) {
       const search = searchTerm.toLowerCase()
       filtered = filtered.filter(club => 
@@ -162,7 +156,7 @@ export default function CityClubsPage() {
       )
     }
 
-    // Area filter (simplified since we're already filtering by city/league)
+    // Area filter (now completely dynamic based on actual club data)
     if (filters.area !== 'all') {
       filtered = filtered.filter(club => 
         club.location?.area?.toLowerCase() === filters.area.toLowerCase()
@@ -221,7 +215,7 @@ export default function CityClubsPage() {
     if (filters.publicAccess !== 'all') {
       filtered = filtered.filter(club => 
         filters.publicAccess === 'public' 
-          ? !club.pricing?.membershipRequired // Most clubs are public unless explicitly members-only
+          ? !club.pricing?.membershipRequired
           : club.pricing?.membershipRequired === true
       )
     }
@@ -259,7 +253,7 @@ export default function CityClubsPage() {
     }))
   }
 
-  // Get unique areas from clubs for area filter
+  // Get unique areas from clubs for area filter (completely dynamic)
   const availableAreas = useMemo(() => {
     const areas = [...new Set(clubs
       .map(club => club.location?.area)
@@ -318,7 +312,7 @@ export default function CityClubsPage() {
       }
     })
     
-    // Count public clubs (clubs are public by default unless explicitly members-only)
+    // Count public clubs
     const publicClubs = clubs.filter(club => !club.pricing?.membershipRequired).length
     const membersOnlyClubs = clubs.filter(club => club.pricing?.membershipRequired === true).length
     const totalCourts = tennisCourts + padelCourts + pickleballCourts
@@ -422,7 +416,7 @@ export default function CityClubsPage() {
               </div>
             </div>
 
-            {/* Area Pills for cities with multiple areas */}
+            {/* Dynamic Area Pills */}
             {availableAreas.length > 1 && (
               <div className="flex flex-wrap gap-2">
                 <button
@@ -454,11 +448,43 @@ export default function CityClubsPage() {
                 ))}
               </div>
             )}
+
+            {/* Debug Info Toggle (for development) */}
+            {debugInfo && process.env.NODE_ENV === 'development' && (
+              <button
+                onClick={() => setShowDebugInfo(!showDebugInfo)}
+                className="mt-4 px-3 py-1 bg-white/20 text-white/80 rounded text-sm hover:bg-white/30"
+              >
+                🔍 Debug Info
+              </button>
+            )}
           </div>
         </div>
       </section>
 
-      {/* Enhanced Search & Filter Bar */}
+      {/* Debug Info Panel (development only) */}
+      {showDebugInfo && debugInfo && (
+        <section className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+          <div className="container mx-auto">
+            <h3 className="font-bold text-yellow-800 mb-2">🔬 GPS Assignment Debug Info</h3>
+            <div className="text-sm text-yellow-700 space-y-1">
+              <p><strong>Total clubs queried:</strong> {debugInfo.totalClubsQueried}</p>
+              <p><strong>Clubs with GPS assignments:</strong> {debugInfo.clubsWithGPSAssignments}</p>
+              <p><strong>Clubs in this city:</strong> {debugInfo.clubsInThisCity}</p>
+              <p><strong>Active clubs:</strong> {debugInfo.activeClubsInThisCity}</p>
+              <p><strong>Inactive clubs:</strong> {debugInfo.inactiveClubsInThisCity}</p>
+              <details className="mt-2">
+                <summary className="cursor-pointer font-medium">Club Assignments</summary>
+                <pre className="mt-2 text-xs bg-white p-2 rounded overflow-auto">
+                  {JSON.stringify(debugInfo.clubAssignments, null, 2)}
+                </pre>
+              </details>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Search & Filter Bar */}
       <section className="sticky top-0 z-40 bg-white shadow-lg py-4">
         <div className="container mx-auto px-4">
           <div className="flex flex-wrap items-center gap-4">
