@@ -4,7 +4,12 @@
  */
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { API_ENDPOINTS, MARKER_CONFIG } from '../constants/mapConfig'
-import { LEAGUE_POLYGONS, determineLeagueByLocation, isPointInPolygon } from '@/lib/utils/geographicBoundaries'
+import { 
+  LEAGUE_POLYGONS, 
+  determineLeagueByLocationWithFallback, 
+  isPointInPolygonEnhanced,
+  validatePolygonBoundaries 
+} from '@/lib/utils/geographicBoundaries'
 
 export default function useClubMarkers() {
   const [clubs, setClubs] = useState([])
@@ -13,21 +18,38 @@ export default function useClubMarkers() {
   const markersRef = useRef([])
 
   /**
-   * Determine league based on modified boundaries (if any) or static boundaries
+   * Determine league based on modified boundaries (if any) or static boundaries with fallback
    */
   const determineLeagueByModifiedLocation = useCallback((lat, lng, modifiedLeagues = {}) => {
+    if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+      console.warn('Invalid coordinates for club:', { lat, lng })
+      return null
+    }
+
     // First check modified league boundaries
     for (const [league, modifiedBounds] of Object.entries(modifiedLeagues)) {
       if (modifiedBounds && modifiedBounds.length >= 3) {
-        const polygon = modifiedBounds.map(point => ({ lat: point.lat(), lng: point.lng() }))
-        if (isPointInPolygon(lat, lng, polygon)) {
-          return league
+        try {
+          const isInside = isPointInPolygonEnhanced(lat, lng, modifiedBounds)
+          if (isInside) {
+            console.log(`📍 Club assigned to modified ${league} area`)
+            return league
+          }
+        } catch (error) {
+          console.error(`Error checking modified bounds for ${league}:`, error)
         }
       }
     }
     
-    // Fallback to static boundaries
-    return determineLeagueByLocation(lat, lng)
+    // Fallback to static boundaries with enhanced detection
+    const league = determineLeagueByLocationWithFallback(lat, lng)
+    if (league) {
+      console.log(`📍 Club assigned to static ${league} area`)
+    } else {
+      console.log(`❓ Club could not be assigned to any area: ${lat}, ${lng}`)
+    }
+    
+    return league
   }, [])
 
   /**
@@ -39,6 +61,12 @@ export default function useClubMarkers() {
       const response = await fetch(`${API_ENDPOINTS.clubs}?limit=1000`)
       if (response.ok) {
         const data = await response.json()
+        
+        // Validate polygon boundaries in development
+        if (process.env.NODE_ENV === 'development') {
+          validatePolygonBoundaries()
+        }
+        
         setClubs(data.clubs || [])
         return data.clubs || []
       }
@@ -66,9 +94,14 @@ export default function useClubMarkers() {
     markersRef.current = []
 
     const newMarkers = []
+    let assignedCount = 0
+    let unassignedCount = 0
 
     clubsData.forEach(club => {
-      if (!club.location?.coordinates?.lat || !club.location?.coordinates?.lng) return
+      if (!club.location?.coordinates?.lat || !club.location?.coordinates?.lng) {
+        console.warn(`Club ${club.name} missing coordinates`)
+        return
+      }
 
       // Determine which league this club belongs to based on coordinates (including modified boundaries)
       const league = determineLeagueByModifiedLocation(
@@ -76,6 +109,16 @@ export default function useClubMarkers() {
         club.location.coordinates.lng,
         modifiedLeagues
       )
+
+      if (league) {
+        assignedCount++
+      } else {
+        unassignedCount++
+        console.warn(`Club ${club.name} could not be assigned to any league:`, {
+          lat: club.location.coordinates.lat,
+          lng: club.location.coordinates.lng
+        })
+      }
 
       const leagueColor = league ? LEAGUE_POLYGONS[league].color : '#6B7280'
       const leagueName = league ? LEAGUE_POLYGONS[league].name : 'Unassigned'
@@ -108,6 +151,9 @@ export default function useClubMarkers() {
             <p style="margin: 0 0 5px 0; color: #6B7280; font-size: 14px;">
               📍 ${club.location.address || club.location.city}
             </p>
+            <p style="margin: 0 0 5px 0; color: #6B7280; font-size: 12px;">
+              📍 ${club.location.coordinates.lat.toFixed(4)}, ${club.location.coordinates.lng.toFixed(4)}
+            </p>
             <p style="margin: 0; color: ${leagueColor}; font-weight: bold; font-size: 14px;">
               🏆 ${leagueName} League
             </p>
@@ -115,6 +161,7 @@ export default function useClubMarkers() {
               <small style="color: #6B7280;">
                 ${editMode ? 'Edit mode: Areas can be modified' : 'Automatically assigned based on location'}
                 ${Object.keys(modifiedLeagues).length > 0 ? ' • Using modified boundaries' : ''}
+                ${!league ? ' • Outside defined areas' : ''}
               </small>
             </div>
           </div>
@@ -128,8 +175,17 @@ export default function useClubMarkers() {
       newMarkers.push({ marker, club, league, originalLeague: league })
     })
 
-    console.log('✅ Created', newMarkers.length, 'club markers')
+    console.log('✅ Created', newMarkers.length, 'club markers:', {
+      assigned: assignedCount,
+      unassigned: unassignedCount
+    })
+    
     markersRef.current = newMarkers
+    
+    // Warn about unassigned clubs
+    if (unassignedCount > 0) {
+      console.warn(`⚠️  ${unassignedCount} clubs could not be assigned to any league area`)
+    }
     
     return newMarkers
   }, [determineLeagueByModifiedLocation])
@@ -141,6 +197,8 @@ export default function useClubMarkers() {
     console.log('🔄 Updating marker assignments with modified leagues:', Object.keys(modifiedLeagues))
     
     let changedCount = 0
+    let nowAssignedCount = 0
+    let nowUnassignedCount = 0
     
     markersRef.current.forEach(({ marker, club }, index) => {
       if (!marker || !club.location?.coordinates?.lat || !club.location?.coordinates?.lng) return
@@ -158,6 +216,10 @@ export default function useClubMarkers() {
       if (newLeague !== oldLeague) {
         changedCount++
         console.log(`📍 Club "${club.name}" moved from ${oldLeague || 'unassigned'} to ${newLeague || 'unassigned'}`)
+        
+        // Track assignment changes
+        if (!oldLeague && newLeague) nowAssignedCount++
+        if (oldLeague && !newLeague) nowUnassignedCount++
         
         // Update marker reference
         markersRef.current[index].league = newLeague
@@ -188,12 +250,16 @@ export default function useClubMarkers() {
               <p style="margin: 0 0 5px 0; color: #6B7280; font-size: 14px;">
                 📍 ${club.location.address || club.location.city}
               </p>
+              <p style="margin: 0 0 5px 0; color: #6B7280; font-size: 12px;">
+                📍 ${club.location.coordinates.lat.toFixed(4)}, ${club.location.coordinates.lng.toFixed(4)}
+              </p>
               <p style="margin: 0; color: ${leagueColor}; font-weight: bold; font-size: 14px;">
                 🏆 ${leagueName} League
               </p>
               <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #E5E7EB;">
                 <small style="color: #6B7280;">
                   Updated assignment based on modified boundaries
+                  ${!newLeague ? ' • Outside defined areas' : ''}
                 </small>
               </div>
             </div>
@@ -207,7 +273,11 @@ export default function useClubMarkers() {
       }
     })
     
-    console.log(`✅ Updated ${changedCount} club assignments`)
+    console.log(`✅ Updated ${changedCount} club assignments:`, {
+      nowAssigned: nowAssignedCount,
+      nowUnassigned: nowUnassignedCount
+    })
+    
     return changedCount
   }, [determineLeagueByModifiedLocation])
 
@@ -235,12 +305,17 @@ export default function useClubMarkers() {
    * Filter markers by league
    */
   const filterByLeague = useCallback((league) => {
+    let visibleCount = 0
+    
     markersRef.current.forEach(({ marker, league: markerLeague }) => {
       if (marker && marker.setVisible) {
-        marker.setVisible(league === 'all' || markerLeague === league)
+        const shouldShow = league === 'all' || markerLeague === league
+        marker.setVisible(shouldShow)
+        if (shouldShow) visibleCount++
       }
     })
     
+    console.log(`🔍 Filtered to league: ${league}, showing ${visibleCount} clubs`)
     setSelectedLeague(league)
   }, [])
 
