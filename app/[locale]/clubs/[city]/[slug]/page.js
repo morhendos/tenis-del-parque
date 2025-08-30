@@ -201,23 +201,37 @@ export default function ClubDetailPage() {
     loadGoogleMaps()
   }, [club, mapLoaded, locale])
 
-  // Collect all images
+  // Collect all images with proper deduplication
   const allImages = useMemo(() => {
     if (!club) return []
+    const imageSet = new Set()
     const images = []
     
+    // Add main image first
     if (club.images?.main) {
+      imageSet.add(club.images.main)
       images.push(club.images.main)
     }
     
+    // Add gallery images (skip duplicates)
     if (club.images?.gallery && Array.isArray(club.images.gallery)) {
-      images.push(...club.images.gallery)
+      club.images.gallery.forEach(img => {
+        if (!imageSet.has(img)) {
+          imageSet.add(img)
+          images.push(img)
+        }
+      })
     }
     
+    // Add Google photos (skip duplicates)
     if (club.googleData?.photos && Array.isArray(club.googleData.photos)) {
-      images.push(...club.googleData.photos.map(photo => 
-        `/api/admin/clubs/google-photo?photo_reference=${photo.photo_reference}`
-      ))
+      club.googleData.photos.forEach(photo => {
+        const googlePhotoUrl = `/api/admin/clubs/google-photo?photo_reference=${photo.photo_reference}`
+        if (!imageSet.has(googlePhotoUrl)) {
+          imageSet.add(googlePhotoUrl)
+          images.push(googlePhotoUrl)
+        }
+      })
     }
     
     return images
