@@ -26,13 +26,15 @@ export default function useClubMarkers() {
       return null
     }
 
+    console.log(`🔍 Checking club location: ${lat}, ${lng}`)
+
     // First check modified league boundaries
-    for (const [league, modifiedBounds] of Object.entries(modifiedLeagues)) {
-      if (modifiedBounds && modifiedBounds.length >= 3) {
+    for (const [league, modifiedData] of Object.entries(modifiedLeagues)) {
+      if (modifiedData?.bounds && modifiedData.bounds.length >= 3) {
         try {
-          const isInside = isPointInPolygonEnhanced(lat, lng, modifiedBounds)
+          const isInside = isPointInPolygonEnhanced(lat, lng, modifiedData.bounds)
           if (isInside) {
-            console.log(`📍 Club assigned to modified ${league} area`)
+            console.log(`📍 Club assigned to MODIFIED ${league} area`)
             return league
           }
         } catch (error) {
@@ -44,7 +46,7 @@ export default function useClubMarkers() {
     // Fallback to static boundaries with enhanced detection
     const league = determineLeagueByLocationWithFallback(lat, lng)
     if (league) {
-      console.log(`📍 Club assigned to static ${league} area`)
+      console.log(`📍 Club assigned to STATIC ${league} area`)
     } else {
       console.log(`❓ Club could not be assigned to any area: ${lat}, ${lng}`)
     }
@@ -67,8 +69,11 @@ export default function useClubMarkers() {
           validatePolygonBoundaries()
         }
         
+        console.log('✅ Fetched clubs from API:', data.clubs?.length || 0)
         setClubs(data.clubs || [])
         return data.clubs || []
+      } else {
+        console.error('❌ Failed to fetch clubs, response not ok:', response.status)
       }
       return []
     } catch (error) {
@@ -83,12 +88,21 @@ export default function useClubMarkers() {
    * Create club markers on the map
    */
   const createClubMarkers = useCallback((mapInstance, clubsData, editMode = false, modifiedLeagues = {}) => {
+    if (!mapInstance || !clubsData || clubsData.length === 0) {
+      console.warn('Cannot create club markers: missing map instance or clubs data')
+      return []
+    }
+
     console.log('📍 Creating club markers with', clubsData.length, 'clubs, modified leagues:', Object.keys(modifiedLeagues).length)
     
     // Clear existing markers
     markersRef.current.forEach(({ marker }) => {
-      if (marker && marker.setMap) {
-        marker.setMap(null)
+      try {
+        if (marker && marker.setMap) {
+          marker.setMap(null)
+        }
+      } catch (error) {
+        console.error('Error clearing existing marker:', error)
       }
     })
     markersRef.current = []
@@ -96,6 +110,7 @@ export default function useClubMarkers() {
     const newMarkers = []
     let assignedCount = 0
     let unassignedCount = 0
+    const assignmentLog = {}
 
     clubsData.forEach(club => {
       if (!club.location?.coordinates?.lat || !club.location?.coordinates?.lng) {
@@ -110,11 +125,13 @@ export default function useClubMarkers() {
         modifiedLeagues
       )
 
+      // Track assignments for logging
       if (league) {
         assignedCount++
+        assignmentLog[league] = (assignmentLog[league] || 0) + 1
       } else {
         unassignedCount++
-        console.warn(`Club ${club.name} could not be assigned to any league:`, {
+        console.warn(`❓ Club "${club.name}" could not be assigned to any league:`, {
           lat: club.location.coordinates.lat,
           lng: club.location.coordinates.lng
         })
@@ -122,65 +139,80 @@ export default function useClubMarkers() {
 
       const leagueColor = league ? LEAGUE_POLYGONS[league].color : '#6B7280'
       const leagueName = league ? LEAGUE_POLYGONS[league].name : 'Unassigned'
+      const isModified = !!(league && modifiedLeagues[league])
 
-      // Create marker
-      const marker = new window.google.maps.Marker({
-        position: {
-          lat: club.location.coordinates.lat,
-          lng: club.location.coordinates.lng
-        },
-        map: mapInstance,
-        title: club.name,
-        icon: {
-          path: window.google.maps.SymbolPath.CIRCLE,
-          scale: editMode ? MARKER_CONFIG.editMode.scale : MARKER_CONFIG.default.scale,
-          fillColor: leagueColor,
-          fillOpacity: editMode ? MARKER_CONFIG.editMode.fillOpacity : MARKER_CONFIG.default.fillOpacity,
-          strokeColor: MARKER_CONFIG.default.strokeColor,
-          strokeWeight: MARKER_CONFIG.default.strokeWeight
-        }
-      })
+      try {
+        // Create marker
+        const marker = new window.google.maps.Marker({
+          position: {
+            lat: club.location.coordinates.lat,
+            lng: club.location.coordinates.lng
+          },
+          map: mapInstance,
+          title: club.name,
+          icon: {
+            path: window.google.maps.SymbolPath.CIRCLE,
+            scale: editMode ? MARKER_CONFIG.editMode.scale : MARKER_CONFIG.default.scale,
+            fillColor: leagueColor,
+            fillOpacity: editMode ? MARKER_CONFIG.editMode.fillOpacity : MARKER_CONFIG.default.fillOpacity,
+            strokeColor: MARKER_CONFIG.default.strokeColor,
+            strokeWeight: MARKER_CONFIG.default.strokeWeight
+          }
+        })
 
-      // Create info window
-      const infoWindow = new window.google.maps.InfoWindow({
-        content: `
-          <div style="padding: 10px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-            <h3 style="margin: 0 0 8px 0; color: #374151; font-size: 16px;">
-              ${club.name}
-            </h3>
-            <p style="margin: 0 0 5px 0; color: #6B7280; font-size: 14px;">
-              📍 ${club.location.address || club.location.city}
-            </p>
-            <p style="margin: 0 0 5px 0; color: #6B7280; font-size: 12px;">
-              📍 ${club.location.coordinates.lat.toFixed(4)}, ${club.location.coordinates.lng.toFixed(4)}
-            </p>
-            <p style="margin: 0; color: ${leagueColor}; font-weight: bold; font-size: 14px;">
-              🏆 ${leagueName} League
-            </p>
-            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #E5E7EB;">
-              <small style="color: #6B7280;">
-                ${editMode ? 'Edit mode: Areas can be modified' : 'Automatically assigned based on location'}
-                ${Object.keys(modifiedLeagues).length > 0 ? ' • Using modified boundaries' : ''}
-                ${!league ? ' • Outside defined areas' : ''}
-              </small>
+        // Create info window
+        const infoWindow = new window.google.maps.InfoWindow({
+          content: `
+            <div style="padding: 10px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+              <h3 style="margin: 0 0 8px 0; color: #374151; font-size: 16px;">
+                ${club.name}
+              </h3>
+              <p style="margin: 0 0 5px 0; color: #6B7280; font-size: 14px;">
+                📍 ${club.location.address || club.location.city || 'No address'}
+              </p>
+              <p style="margin: 0 0 5px 0; color: #6B7280; font-size: 12px;">
+                📍 ${club.location.coordinates.lat.toFixed(4)}, ${club.location.coordinates.lng.toFixed(4)}
+              </p>
+              <p style="margin: 0; color: ${leagueColor}; font-weight: bold; font-size: 14px;">
+                🏆 ${leagueName} League ${isModified ? '(Modified Boundaries)' : ''}
+              </p>
+              <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #E5E7EB;">
+                <small style="color: #6B7280;">
+                  ${editMode ? 'Edit mode: Areas can be modified' : 'Automatically assigned based on location'}
+                  ${Object.keys(modifiedLeagues).length > 0 ? ' • Using modified boundaries' : ''}
+                  ${!league ? ' • Outside defined areas' : ''}
+                </small>
+              </div>
             </div>
-          </div>
-        `
-      })
+          `
+        })
 
-      marker.addListener('click', () => {
-        infoWindow.open(mapInstance, marker)
-      })
+        if (marker.addListener) {
+          marker.addListener('click', () => {
+            infoWindow.open(mapInstance, marker)
+          })
+        }
 
-      newMarkers.push({ marker, club, league, originalLeague: league })
+        newMarkers.push({ 
+          marker, 
+          club, 
+          league, 
+          originalLeague: league,
+          isModified 
+        })
+      } catch (error) {
+        console.error(`Error creating marker for club ${club.name}:`, error)
+      }
     })
 
-    console.log('✅ Created', newMarkers.length, 'club markers:', {
-      assigned: assignedCount,
-      unassigned: unassignedCount
-    })
-    
     markersRef.current = newMarkers
+    
+    console.log('✅ Created', newMarkers.length, 'club markers:')
+    console.log('  📊 Assignment summary:', {
+      assigned: assignedCount,
+      unassigned: unassignedCount,
+      byLeague: assignmentLog
+    })
     
     // Warn about unassigned clubs
     if (unassignedCount > 0) {
@@ -194,16 +226,22 @@ export default function useClubMarkers() {
    * Update marker assignments and colors when boundaries change
    */
   const updateMarkerAssignments = useCallback((modifiedLeagues = {}) => {
+    if (!markersRef.current || markersRef.current.length === 0) {
+      console.warn('No markers to update')
+      return 0
+    }
+
     console.log('🔄 Updating marker assignments with modified leagues:', Object.keys(modifiedLeagues))
     
     let changedCount = 0
     let nowAssignedCount = 0
     let nowUnassignedCount = 0
+    const assignmentChanges = []
     
     markersRef.current.forEach(({ marker, club }, index) => {
       if (!marker || !club.location?.coordinates?.lat || !club.location?.coordinates?.lng) return
 
-      // Re-determine league assignment
+      // Re-determine league assignment with current modified boundaries
       const newLeague = determineLeagueByModifiedLocation(
         club.location.coordinates.lat,
         club.location.coordinates.lng,
@@ -215,7 +253,15 @@ export default function useClubMarkers() {
       // Update if league assignment changed
       if (newLeague !== oldLeague) {
         changedCount++
-        console.log(`📍 Club "${club.name}" moved from ${oldLeague || 'unassigned'} to ${newLeague || 'unassigned'}`)
+        const change = {
+          clubName: club.name,
+          from: oldLeague || 'unassigned',
+          to: newLeague || 'unassigned',
+          coords: [club.location.coordinates.lat, club.location.coordinates.lng]
+        }
+        assignmentChanges.push(change)
+        
+        console.log(`🎯 Club "${club.name}" moved from ${oldLeague || 'unassigned'} to ${newLeague || 'unassigned'}`)
         
         // Track assignment changes
         if (!oldLeague && newLeague) nowAssignedCount++
@@ -223,60 +269,78 @@ export default function useClubMarkers() {
         
         // Update marker reference
         markersRef.current[index].league = newLeague
+        markersRef.current[index].isModified = !!(newLeague && modifiedLeagues[newLeague])
         
-        // Update marker color
+        // Update marker color and icon
         const leagueColor = newLeague ? LEAGUE_POLYGONS[newLeague].color : '#6B7280'
         const leagueName = newLeague ? LEAGUE_POLYGONS[newLeague].name : 'Unassigned'
+        const isModified = !!(newLeague && modifiedLeagues[newLeague])
         
         if (marker.setIcon) {
-          const currentIcon = marker.getIcon()
-          marker.setIcon({
-            path: window.google.maps.SymbolPath.CIRCLE,
-            scale: currentIcon.scale || MARKER_CONFIG.default.scale,
-            fillColor: leagueColor,
-            fillOpacity: currentIcon.fillOpacity || MARKER_CONFIG.default.fillOpacity,
-            strokeColor: MARKER_CONFIG.default.strokeColor,
-            strokeWeight: MARKER_CONFIG.default.strokeWeight
-          })
+          try {
+            const currentIcon = marker.getIcon()
+            marker.setIcon({
+              path: window.google.maps.SymbolPath.CIRCLE,
+              scale: currentIcon.scale || MARKER_CONFIG.default.scale,
+              fillColor: leagueColor,
+              fillOpacity: currentIcon.fillOpacity || MARKER_CONFIG.default.fillOpacity,
+              strokeColor: MARKER_CONFIG.default.strokeColor,
+              strokeWeight: MARKER_CONFIG.default.strokeWeight
+            })
+          } catch (error) {
+            console.error('Error updating marker icon:', error)
+          }
         }
 
-        // Update info window content
-        const infoWindow = new window.google.maps.InfoWindow({
-          content: `
-            <div style="padding: 10px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-              <h3 style="margin: 0 0 8px 0; color: #374151; font-size: 16px;">
-                ${club.name}
-              </h3>
-              <p style="margin: 0 0 5px 0; color: #6B7280; font-size: 14px;">
-                📍 ${club.location.address || club.location.city}
-              </p>
-              <p style="margin: 0 0 5px 0; color: #6B7280; font-size: 12px;">
-                📍 ${club.location.coordinates.lat.toFixed(4)}, ${club.location.coordinates.lng.toFixed(4)}
-              </p>
-              <p style="margin: 0; color: ${leagueColor}; font-weight: bold; font-size: 14px;">
-                🏆 ${leagueName} League
-              </p>
-              <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #E5E7EB;">
-                <small style="color: #6B7280;">
-                  Updated assignment based on modified boundaries
-                  ${!newLeague ? ' • Outside defined areas' : ''}
-                </small>
+        // Update info window content with new assignment
+        try {
+          const newInfoWindow = new window.google.maps.InfoWindow({
+            content: `
+              <div style="padding: 10px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                <h3 style="margin: 0 0 8px 0; color: #374151; font-size: 16px;">
+                  ${club.name}
+                </h3>
+                <p style="margin: 0 0 5px 0; color: #6B7280; font-size: 14px;">
+                  📍 ${club.location.address || club.location.city || 'No address'}
+                </p>
+                <p style="margin: 0 0 5px 0; color: #6B7280; font-size: 12px;">
+                  📍 ${club.location.coordinates.lat.toFixed(4)}, ${club.location.coordinates.lng.toFixed(4)}
+                </p>
+                <p style="margin: 0; color: ${leagueColor}; font-weight: bold; font-size: 14px;">
+                  🏆 ${leagueName} League ${isModified ? '(Modified Boundaries)' : ''}
+                </p>
+                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #E5E7EB;">
+                  <small style="color: #10B981;">
+                    ✅ Updated assignment based on modified boundaries
+                  </small><br>
+                  <small style="color: #6B7280;">
+                    ${!newLeague ? 'Outside defined areas' : 'Automatically assigned based on location'}
+                  </small>
+                </div>
               </div>
-            </div>
-          `
-        })
+            `
+          })
 
-        // Remove old click listener and add new one
-        marker.addListener('click', () => {
-          infoWindow.open(marker.getMap(), marker)
-        })
+          // Clear existing listeners and add new one
+          window.google.maps.event.clearInstanceListeners(marker)
+          marker.addListener('click', () => {
+            newInfoWindow.open(marker.getMap(), marker)
+          })
+        } catch (error) {
+          console.error('Error updating info window:', error)
+        }
       }
     })
     
-    console.log(`✅ Updated ${changedCount} club assignments:`, {
-      nowAssigned: nowAssignedCount,
-      nowUnassigned: nowUnassignedCount
-    })
+    console.log(`✅ Updated ${changedCount} club assignments:`)
+    if (changedCount > 0) {
+      console.log('  📋 Assignment changes:', assignmentChanges)
+      console.log('  📊 Summary:', {
+        nowAssigned: nowAssignedCount,
+        nowUnassigned: nowUnassignedCount,
+        totalChanged: changedCount
+      })
+    }
     
     return changedCount
   }, [determineLeagueByModifiedLocation])
@@ -285,18 +349,24 @@ export default function useClubMarkers() {
    * Update marker icons (e.g., when edit mode changes)
    */
   const updateMarkerIcons = useCallback((editMode = false) => {
-    markersRef.current.forEach(({ marker, league }) => {
+    console.log(`🎨 Updating marker icons for edit mode: ${editMode}`)
+    
+    markersRef.current.forEach(({ marker, league }, index) => {
       if (marker && marker.setIcon) {
-        const leagueColor = league ? LEAGUE_POLYGONS[league].color : '#6B7280'
-        
-        marker.setIcon({
-          path: window.google.maps.SymbolPath.CIRCLE,
-          scale: editMode ? MARKER_CONFIG.editMode.scale : MARKER_CONFIG.default.scale,
-          fillColor: leagueColor,
-          fillOpacity: editMode ? MARKER_CONFIG.editMode.fillOpacity : MARKER_CONFIG.default.fillOpacity,
-          strokeColor: MARKER_CONFIG.default.strokeColor,
-          strokeWeight: MARKER_CONFIG.default.strokeWeight
-        })
+        try {
+          const leagueColor = league ? LEAGUE_POLYGONS[league].color : '#6B7280'
+          
+          marker.setIcon({
+            path: window.google.maps.SymbolPath.CIRCLE,
+            scale: editMode ? MARKER_CONFIG.editMode.scale : MARKER_CONFIG.default.scale,
+            fillColor: leagueColor,
+            fillOpacity: editMode ? MARKER_CONFIG.editMode.fillOpacity : MARKER_CONFIG.default.fillOpacity,
+            strokeColor: MARKER_CONFIG.default.strokeColor,
+            strokeWeight: MARKER_CONFIG.default.strokeWeight
+          })
+        } catch (error) {
+          console.error(`Error updating icon for marker ${index}:`, error)
+        }
       }
     })
   }, [])
@@ -310,22 +380,33 @@ export default function useClubMarkers() {
     markersRef.current.forEach(({ marker, league: markerLeague }) => {
       if (marker && marker.setVisible) {
         const shouldShow = league === 'all' || markerLeague === league
-        marker.setVisible(shouldShow)
-        if (shouldShow) visibleCount++
+        try {
+          marker.setVisible(shouldShow)
+          if (shouldShow) visibleCount++
+        } catch (error) {
+          console.error('Error filtering marker:', error)
+        }
       }
     })
     
     console.log(`🔍 Filtered to league: ${league}, showing ${visibleCount} clubs`)
     setSelectedLeague(league)
+    return visibleCount
   }, [])
 
   /**
    * Clear all markers from the map
    */
   const clearMarkers = useCallback(() => {
+    console.log('🧹 Clearing all club markers')
+    
     markersRef.current.forEach(({ marker }) => {
-      if (marker && marker.setMap) {
-        marker.setMap(null)
+      try {
+        if (marker && marker.setMap) {
+          marker.setMap(null)
+        }
+      } catch (error) {
+        console.error('Error clearing marker:', error)
       }
     })
     markersRef.current = []
@@ -343,8 +424,13 @@ export default function useClubMarkers() {
     return markersRef.current.filter(({ marker }) => {
       if (!marker || !marker.getPosition) return false
       
-      const position = marker.getPosition()
-      return window.google.maps.geometry.poly.containsLocation(position, polygonPath)
+      try {
+        const position = marker.getPosition()
+        return window.google.maps.geometry.poly.containsLocation(position, polygonPath)
+      } catch (error) {
+        console.error('Error checking marker in area:', error)
+        return false
+      }
     })
   }, [])
 
@@ -365,6 +451,14 @@ export default function useClubMarkers() {
     return counts
   }, [])
 
+  /**
+   * Force refresh of all club assignments
+   */
+  const refreshAllAssignments = useCallback((modifiedLeagues = {}) => {
+    console.log('🔄 Force refreshing all club assignments')
+    return updateMarkerAssignments(modifiedLeagues)
+  }, [updateMarkerAssignments])
+
   return {
     // State
     clubs,
@@ -383,6 +477,7 @@ export default function useClubMarkers() {
     clearMarkers,
     getMarkersInArea,
     getClubCountByLeague,
+    refreshAllAssignments,
     
     // Setters
     setClubs
