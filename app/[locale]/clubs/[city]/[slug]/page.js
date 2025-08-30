@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import Navigation from '@/components/common/Navigation'
 import Footer from '@/components/common/Footer'
 import { homeContent } from '@/lib/content/homeContent'
@@ -20,6 +21,8 @@ export default function ClubDetailPage() {
   const [selectedImage, setSelectedImage] = useState(0)
   const [showContactModal, setShowContactModal] = useState(false)
   const [activeTab, setActiveTab] = useState('info')
+  const [imageError, setImageError] = useState({})
+  const [imageLoading, setImageLoading] = useState({})
   
   const t = homeContent[locale] || homeContent['es']
 
@@ -231,6 +234,20 @@ export default function ClubDetailPage() {
     [club?.services]
   )
 
+  // Image error and loading handlers
+  const handleMainImageError = () => {
+    setImageError(prev => ({ ...prev, [selectedImage]: true }))
+    setImageLoading(prev => ({ ...prev, [selectedImage]: false }))
+  }
+
+  const handleMainImageLoad = () => {
+    setImageLoading(prev => ({ ...prev, [selectedImage]: false }))
+  }
+
+  const handleThumbnailError = (idx) => {
+    setImageError(prev => ({ ...prev, [`thumb_${idx}`]: true }))
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -295,13 +312,28 @@ export default function ClubDetailPage() {
               {allImages.length > 0 ? (
                 <div className="bg-white lg:rounded-2xl shadow-lg overflow-hidden">
                   <div className="relative aspect-[16/12] lg:aspect-[16/10]">
-                    <img 
+                    {imageLoading[selectedImage] && (
+                      <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center z-10">
+                        <div className="text-gray-400">
+                          <svg className="animate-spin h-8 w-8" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                        </div>
+                      </div>
+                    )}
+                    <Image 
                       src={allImages[selectedImage]} 
                       alt={club.name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.src = '/api/placeholder/800/500'
-                      }}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 67vw, 50vw"
+                      quality={85}
+                      className={`object-cover ${imageLoading[selectedImage] ? 'opacity-0' : 'opacity-100'}`}
+                      onError={handleMainImageError}
+                      onLoadingComplete={handleMainImageLoad}
+                      placeholder="blur"
+                      blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+                      priority={selectedImage === 0}
                     />
                     {club.featured && (
                       <div className="absolute top-2 left-2 lg:top-4 lg:left-4 bg-yellow-400 text-gray-900 px-2 py-1 lg:px-4 lg:py-2 rounded-full text-xs lg:text-base font-semibold shadow-lg">
@@ -337,17 +369,20 @@ export default function ClubDetailPage() {
                         <button
                           key={idx}
                           onClick={() => setSelectedImage(idx)}
-                          className={`flex-shrink-0 w-16 h-16 lg:w-20 lg:h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                          className={`flex-shrink-0 w-16 h-16 lg:w-20 lg:h-20 rounded-lg overflow-hidden border-2 transition-all relative ${
                             selectedImage === idx ? 'border-parque-purple ring-2 ring-parque-purple/20' : 'border-transparent hover:border-gray-300'
                           }`}
                         >
-                          <img 
+                          <Image 
                             src={img} 
                             alt={`${club.name} ${idx + 1}`}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.target.src = '/api/placeholder/80/80'
-                            }}
+                            fill
+                            sizes="80px"
+                            quality={60}
+                            className="object-cover"
+                            onError={() => handleThumbnailError(idx)}
+                            placeholder="blur"
+                            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                           />
                         </button>
                       ))}
@@ -904,7 +939,7 @@ export default function ClubDetailPage() {
                     >
                       <div className="w-10 h-10 bg-parque-purple/10 rounded-full flex items-center justify-center">
                         <svg className="w-5 h-5 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
                         </svg>
                       </div>
                       <div>
@@ -1095,7 +1130,7 @@ export default function ClubDetailPage() {
                       >
                         <div className="w-10 h-10 bg-parque-purple/10 rounded-full flex items-center justify-center">
                           <svg className="w-5 h-5 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
                           </svg>
                         </div>
                         <div>
