@@ -43,6 +43,26 @@ export default function ClubDetailPage() {
     }
   }
 
+  // Helper function to format price display
+  const formatPriceRange = (min, max, locale) => {
+    // Check if we have valid values
+    const hasMin = min !== null && min !== undefined && min !== ''
+    const hasMax = max !== null && max !== undefined && max !== ''
+    
+    if (hasMin && hasMax) {
+      // Both values exist - show range
+      return `${min}€ - ${max}€`
+    } else if (hasMin) {
+      // Only minimum value exists - show single price
+      return locale === 'es' ? `Desde ${min}€` : `From ${min}€`
+    } else if (hasMax) {
+      // Only maximum value exists (rare case)
+      return locale === 'es' ? `Hasta ${max}€` : `Up to ${max}€`
+    }
+    // No valid values
+    return null
+  }
+
   // Helper function to get court info from both old and new structures
   const getCourtInfo = (courts) => {
     if (!courts) {
@@ -438,20 +458,27 @@ export default function ClubDetailPage() {
                         </div>
                       )}
 
-                      {/* Pricing */}
+                      {/* Pricing - Using the new formatPriceRange function */}
                       {(club.pricing?.courtRental?.hourly?.min !== null || club.pricing?.courtRental?.membership?.monthly !== null) && (
                         <div>
                           <h3 className="text-lg font-semibold mb-3">{locale === 'es' ? 'Precios' : 'Pricing'}</h3>
                           <div className="space-y-2">
-                            {club.pricing?.courtRental?.hourly?.min !== null && (
-                              <div className="bg-gray-50 p-3 rounded-lg">
-                                <div className="text-xs text-gray-600 mb-1">{locale === 'es' ? 'Alquiler por hora' : 'Hourly rental'}</div>
-                                <div className="text-xl font-bold text-parque-purple">
-                                  {club.pricing.courtRental.hourly.min}€ - {club.pricing.courtRental.hourly.max}€
+                            {club.pricing?.courtRental?.hourly && (() => {
+                              const formattedPrice = formatPriceRange(
+                                club.pricing.courtRental.hourly.min,
+                                club.pricing.courtRental.hourly.max,
+                                locale
+                              )
+                              return formattedPrice ? (
+                                <div className="bg-gray-50 p-3 rounded-lg">
+                                  <div className="text-xs text-gray-600 mb-1">{locale === 'es' ? 'Alquiler por hora' : 'Hourly rental'}</div>
+                                  <div className="text-xl font-bold text-parque-purple">
+                                    {formattedPrice}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
-                            {club.pricing?.courtRental?.membership?.monthly !== null && (
+                              ) : null
+                            })()}
+                            {club.pricing?.courtRental?.membership?.monthly !== null && club.pricing?.courtRental?.membership?.monthly !== undefined && (
                               <div className="bg-gray-50 p-3 rounded-lg">
                                 <div className="text-xs text-gray-600 mb-1">{locale === 'es' ? 'Membresía mensual' : 'Monthly membership'}</div>
                                 <div className="text-xl font-bold text-parque-purple">
@@ -766,20 +793,27 @@ export default function ClubDetailPage() {
                     </div>
                   )}
 
-                  {/* Pricing - Desktop */}
+                  {/* Pricing - Desktop - Using the new formatPriceRange function */}
                   {(club.pricing?.courtRental?.hourly?.min !== null || club.pricing?.courtRental?.membership?.monthly !== null) && (
                     <div className="p-6 border-t bg-gray-50">
                       <h2 className="text-xl font-semibold mb-4">{locale === 'es' ? 'Precios' : 'Pricing'}</h2>
                       <div className="grid md:grid-cols-2 gap-4">
-                        {club.pricing?.courtRental?.hourly?.min !== null && (
-                          <div className="bg-white p-4 rounded-lg">
-                            <div className="text-sm text-gray-600 mb-1">{locale === 'es' ? 'Alquiler por hora' : 'Hourly rental'}</div>
-                            <div className="text-2xl font-bold text-parque-purple">
-                              {club.pricing.courtRental.hourly.min}€ - {club.pricing.courtRental.hourly.max}€
+                        {club.pricing?.courtRental?.hourly && (() => {
+                          const formattedPrice = formatPriceRange(
+                            club.pricing.courtRental.hourly.min,
+                            club.pricing.courtRental.hourly.max,
+                            locale
+                          )
+                          return formattedPrice ? (
+                            <div className="bg-white p-4 rounded-lg">
+                              <div className="text-sm text-gray-600 mb-1">{locale === 'es' ? 'Alquiler por hora' : 'Hourly rental'}</div>
+                              <div className="text-2xl font-bold text-parque-purple">
+                                {formattedPrice}
+                              </div>
                             </div>
-                          </div>
-                        )}
-                        {club.pricing?.courtRental?.membership?.monthly !== null && (
+                          ) : null
+                        })()}
+                        {club.pricing?.courtRental?.membership?.monthly !== null && club.pricing?.courtRental?.membership?.monthly !== undefined && (
                           <div className="bg-white p-4 rounded-lg">
                             <div className="text-sm text-gray-600 mb-1">{locale === 'es' ? 'Membresía mensual' : 'Monthly membership'}</div>
                             <div className="text-2xl font-bold text-parque-purple">
