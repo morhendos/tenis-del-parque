@@ -96,8 +96,12 @@ export async function GET(request) {
       })
       .lean()
 
-    // Enhance clubs with GPS-based league assignments
-    const clubsWithLeagues = clubsRaw.map(club => enhanceClubWithLeague(club))
+    // Enhance clubs with current area boundaries (including modified ones)
+    const clubsWithLeagues = []
+    for (const club of clubsRaw) {
+      const enhancedClub = await enhanceClubWithCurrentLeague(club)
+      clubsWithLeagues.push(enhancedClub)
+    }
 
     // Filter by league if specified (after GPS assignment)
     let filteredClubs = clubsWithLeagues
@@ -109,27 +113,20 @@ export async function GET(request) {
     const clubs = filteredClubs.slice(offset, offset + limit)
     const total = filteredClubs.length
 
-    // Calculate league statistics based on GPS assignments
-    const leagueStats = {}
-    let assignedCount = 0
-    let unassignedCount = 0
+    // Calculate area statistics using current boundaries
+    const areaStats = await calculateCurrentAreaStats(clubsWithLeagues)
+    const leagueStats = areaStats.byLeague
+    const assignedCount = areaStats.totalClubs - areaStats.unassigned
+    const unassignedCount = areaStats.unassigned
 
-    clubsWithLeagues.forEach(club => {
-      if (club.league) {
-        leagueStats[club.league] = (leagueStats[club.league] || 0) + 1
-        assignedCount++
-      } else {
-        unassignedCount++
-      }
-    })
-
-    // Create league info for response
+    // Create league info for response using current boundaries
+    const { boundaries } = await loadAreaBoundaries()
     const leagueInfo = {}
-    Object.keys(LEAGUE_POLYGONS).forEach(leagueKey => {
+    Object.keys(boundaries).forEach(leagueKey => {
       leagueInfo[leagueKey] = {
         id: leagueKey,
-        name: LEAGUE_NAMES[leagueKey] || LEAGUE_POLYGONS[leagueKey].name,
-        color: LEAGUE_POLYGONS[leagueKey].color,
+        name: LEAGUE_NAMES[leagueKey] || boundaries[leagueKey].name,
+        color: boundaries[leagueKey].color,
         count: leagueStats[leagueKey] || 0
       }
     })

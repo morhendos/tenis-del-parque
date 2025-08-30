@@ -6,6 +6,10 @@ import {
   LEAGUE_POLYGONS, 
   LEAGUE_NAMES 
 } from '@/lib/utils/geographicBoundaries'
+import { 
+  loadAreaBoundaries,
+  enhanceClubWithCurrentLeague 
+} from '@/lib/utils/areaLoader'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
@@ -99,8 +103,12 @@ export async function GET(request, { params }) {
       })
       .lean()
 
-    // Enhance clubs with GPS-based league assignments
-    const clubsWithLeagues = clubsRaw.map(club => enhanceClubWithLeague(club))
+    // Enhance clubs with current area boundaries (including modified ones)
+    const clubsWithLeagues = []
+    for (const club of clubsRaw) {
+      const enhancedClub = await enhanceClubWithCurrentLeague(club)
+      clubsWithLeagues.push(enhancedClub)
+    }
 
     // Filter by target city/league using GPS assignments
     const cityClubs = clubsWithLeagues.filter(club => {
