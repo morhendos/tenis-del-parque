@@ -7,11 +7,10 @@ import Footer from '@/components/common/Footer'
 import CityCard from '@/components/cities/CityCard'
 import { homeContent } from '@/lib/content/homeContent'
 import { 
-  CITY_AREAS_MAPPING, 
   AREA_DISPLAY_NAMES, 
   CITY_DISPLAY_NAMES,
-  getAreasForCity
-} from '@/lib/utils/areaMapping'
+  getAreasForCitySync
+} from '@/lib/utils/geographicBoundaries'
 
 export default function ClubsPage() {
   const params = useParams()
@@ -128,23 +127,24 @@ export default function ClubsPage() {
       topAreas: []
     }
 
-    Object.entries(CITY_AREAS_MAPPING).forEach(([city, areas]) => {
-      stats.totalAreas += areas.length
+    cities.forEach(city => {
+      const cityAreas = getAreasForCitySync(city.slug)
+      stats.totalAreas += cityAreas.length
       stats.citiesWithAreas++
       
-      areas.forEach(area => {
+      cityAreas.forEach(area => {
         const areaClubs = clubs.filter(club => 
-          club.location?.city === city && club.location?.area === area
+          club.location?.city === city.slug && club.location?.area === area
         )
         
         if (areaClubs.length > 0) {
           stats.areasWithClubs++
           stats.topAreas.push({
             area,
-            city,
+            city: city.slug,
             count: areaClubs.length,
             displayName: AREA_DISPLAY_NAMES[area] || area,
-            cityDisplayName: CITY_DISPLAY_NAMES[city] || city
+            cityDisplayName: CITY_DISPLAY_NAMES[city.slug] || city.name?.es || city.slug
           })
         }
       })
@@ -170,7 +170,7 @@ export default function ClubsPage() {
       city.province.toLowerCase().includes(search)
     
     // Also check if any areas in this city match the search
-    const cityAreas = getAreasForCity(city.slug)
+    const cityAreas = getAreasForCitySync(city.slug)
     const areaMatches = cityAreas.some(area => 
       (AREA_DISPLAY_NAMES[area] || area).toLowerCase().includes(search)
     )

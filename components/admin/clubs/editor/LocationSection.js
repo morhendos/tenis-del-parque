@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getCityOptions, getAreasForCity, generateDisplayName } from '@/lib/utils/areaMapping'
+import { getCityOptions, getAreasForCitySync, generateDisplayName } from '@/lib/utils/geographicBoundaries'
 
 export default function LocationSection({ formData, handleChange }) {
   const [cityOptions, setCityOptions] = useState([])
@@ -16,7 +16,7 @@ export default function LocationSection({ formData, handleChange }) {
   // Update available areas when city changes
   useEffect(() => {
     if (formData.location.city) {
-      const areas = getAreasForCity(formData.location.city)
+      const areas = getAreasForCitySync(formData.location.city)
       setAvailableAreas(areas.map(area => ({
         value: area,
         label: area.split('-').map(word => 

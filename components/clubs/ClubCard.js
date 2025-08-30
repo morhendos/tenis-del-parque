@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
-import { AREA_DISPLAY_NAMES, CITY_DISPLAY_NAMES } from '@/lib/utils/areaMapping'
+import { AREA_DISPLAY_NAMES, CITY_DISPLAY_NAMES } from '@/lib/utils/geographicBoundaries'
 
 export default function ClubCard({ club, locale }) {
   const [imageError, setImageError] = useState(false)

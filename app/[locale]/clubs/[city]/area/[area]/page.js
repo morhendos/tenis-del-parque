@@ -8,11 +8,10 @@ import Footer from '@/components/common/Footer'
 import ClubCard from '@/components/clubs/ClubCard'
 import { homeContent } from '@/lib/content/homeContent'
 import { 
-  CITY_AREAS_MAPPING, 
   AREA_DISPLAY_NAMES, 
   CITY_DISPLAY_NAMES,
-  getAreasForCity
-} from '@/lib/utils/areaMapping'
+  getAreasForCitySync
+} from '@/lib/utils/geographicBoundaries'
 
 export default function AreaClubsPage() {
   const params = useParams()
@@ -124,7 +123,7 @@ export default function AreaClubsPage() {
   })
 
   // Get other areas in the same city for navigation
-  const otherAreas = getAreasForCity(city).filter(a => a !== area)
+  const otherAreas = getAreasForCitySync(city).filter(a => a !== area)
 
   if (loading) {
     return (
