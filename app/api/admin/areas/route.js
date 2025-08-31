@@ -99,10 +99,25 @@ export async function POST(request) {
     // This ensures consistency between database and code
     await updateGeographicBoundariesFile(savedAreas)
 
+    // Trigger club assignment recalculation in the background
+    // Don't wait for it to complete to avoid blocking the response
+    import('@/lib/utils/clubAssignmentCache').then(({ recalculateAllClubAssignments }) => {
+      console.log('🔄 Triggering background club assignment recalculation...')
+      recalculateAllClubAssignments().then(result => {
+        if (result.success) {
+          console.log(`✅ Background recalculation complete: ${result.updated} clubs updated`)
+        } else {
+          console.error('❌ Background recalculation failed:', result.error)
+        }
+      })
+    }).catch(error => {
+      console.error('❌ Failed to trigger background recalculation:', error)
+    })
+
     return NextResponse.json({ 
       success: true, 
       areas: savedAreas,
-      message: `Successfully saved ${savedAreas.length} areas`
+      message: `Successfully saved ${savedAreas.length} areas. Club assignments are being recalculated in the background.`
     })
   } catch (error) {
     console.error('Error saving areas:', error)

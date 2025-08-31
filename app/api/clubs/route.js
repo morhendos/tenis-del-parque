@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import Club from '@/lib/models/Club'
 import dbConnect from '@/lib/db/mongoose'
 import { 
-  determineLeagueByLocationWithFallback, 
   LEAGUE_POLYGONS, 
   LEAGUE_NAMES 
 } from '@/lib/utils/geographicBoundaries'
@@ -92,16 +91,16 @@ export async function GET(request) {
         pricing: 1,
         tags: 1,
         featured: 1,
-        images: 1
+        images: 1,
+        assignedLeague: 1 // Include cached assignment
       })
       .lean()
 
-    // Enhance clubs with current area boundaries (including modified ones)
-    const clubsWithLeagues = []
-    for (const club of clubsRaw) {
-      const enhancedClub = await enhanceClubWithCurrentLeague(club)
-      clubsWithLeagues.push(enhancedClub)
-    }
+    // Use cached league assignments for fast performance
+    const clubsWithLeagues = clubsRaw.map(club => ({
+      ...club,
+      league: club.assignedLeague || club.location?.city // Fallback to old logic if not cached yet
+    }))
 
     // Filter by league if specified (after GPS assignment)
     let filteredClubs = clubsWithLeagues
@@ -113,20 +112,27 @@ export async function GET(request) {
     const clubs = filteredClubs.slice(offset, offset + limit)
     const total = filteredClubs.length
 
-    // Calculate area statistics using current boundaries
-    const areaStats = await calculateCurrentAreaStats(clubsWithLeagues)
-    const leagueStats = areaStats.byLeague
-    const assignedCount = areaStats.totalClubs - areaStats.unassigned
-    const unassignedCount = areaStats.unassigned
+    // Calculate league statistics from cached assignments (fast!)
+    const leagueStats = {}
+    let assignedCount = 0
+    let unassignedCount = 0
 
-    // Create league info for response using current boundaries
-    const { boundaries } = await loadAreaBoundaries()
+    clubsWithLeagues.forEach(club => {
+      if (club.league) {
+        leagueStats[club.league] = (leagueStats[club.league] || 0) + 1
+        assignedCount++
+      } else {
+        unassignedCount++
+      }
+    })
+
+    // Create league info for response using static boundaries (fast!)
     const leagueInfo = {}
-    Object.keys(boundaries).forEach(leagueKey => {
+    Object.keys(LEAGUE_POLYGONS).forEach(leagueKey => {
       leagueInfo[leagueKey] = {
         id: leagueKey,
-        name: LEAGUE_NAMES[leagueKey] || boundaries[leagueKey].name,
-        color: boundaries[leagueKey].color,
+        name: LEAGUE_NAMES[leagueKey] || LEAGUE_POLYGONS[leagueKey].name,
+        color: LEAGUE_POLYGONS[leagueKey].color,
         count: leagueStats[leagueKey] || 0
       }
     })

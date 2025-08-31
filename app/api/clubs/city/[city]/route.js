@@ -99,16 +99,16 @@ export async function GET(request, { params }) {
         tags: 1,
         featured: 1,
         images: 1,
-        status: 1  // Include status for debugging
+        status: 1,  // Include status for debugging
+        assignedLeague: 1 // Include cached assignment
       })
       .lean()
 
-    // Enhance clubs with current area boundaries (including modified ones)
-    const clubsWithLeagues = []
-    for (const club of clubsRaw) {
-      const enhancedClub = await enhanceClubWithCurrentLeague(club)
-      clubsWithLeagues.push(enhancedClub)
-    }
+    // Use cached league assignments for fast performance
+    const clubsWithLeagues = clubsRaw.map(club => ({
+      ...club,
+      league: club.assignedLeague || club.location?.city // Fallback to old logic if not cached yet
+    }))
 
     // Filter by target city/league using GPS assignments
     const cityClubs = clubsWithLeagues.filter(club => {

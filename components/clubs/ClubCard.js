@@ -91,18 +91,22 @@ export default function ClubCard({ club, locale }) {
     ? description.substring(0, 100) + '...' 
     : description
 
-  // Enhanced location display with area support
+  // Enhanced location display with GPS-based area support
   const getLocationDisplay = () => {
     const location = club.location
     
-    // If club has area information, show area hierarchy
-    if (location?.area && location?.displayName) {
-      return location.displayName // e.g., "El Paraíso (Marbella)"
+    // Use GPS-based league assignment for accurate city display
+    const assignedCity = club.league || location?.city
+    const cityDisplayName = CITY_DISPLAY_NAMES[assignedCity] || assignedCity || ''
+    
+    // If club has area information, show area hierarchy with GPS-assigned city
+    if (location?.area) {
+      const areaDisplayName = AREA_DISPLAY_NAMES[location.area] || location.area
+      return `${areaDisplayName} (${cityDisplayName.charAt(0).toUpperCase() + cityDisplayName.slice(1)})`
     }
     
-    // Fallback to city display
-    const cityName = CITY_DISPLAY_NAMES[location?.city] || location?.city || ''
-    return cityName.charAt(0).toUpperCase() + cityName.slice(1)
+    // Fallback to GPS-assigned city display
+    return cityDisplayName.charAt(0).toUpperCase() + cityDisplayName.slice(1)
   }
 
   const clubImage = getClubImage()

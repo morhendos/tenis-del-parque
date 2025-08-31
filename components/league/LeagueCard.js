@@ -5,7 +5,7 @@ import { useState } from 'react';
 // Helper function to generate consistent fallback images for leagues
 const getGenericLeagueFallback = (cityName) => {
   // Use a consistent gradient background for all leagues without images
-  return 'data:image/svg+xml;base64,' + btoa(`
+  const svgContent = `
     <svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="leagueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -17,7 +17,14 @@ const getGenericLeagueFallback = (cityName) => {
       <text x="400" y="280" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="white" opacity="0.9">🏆</text>
       <text x="400" y="340" font-family="Arial, sans-serif" font-size="20" text-anchor="middle" fill="white" opacity="0.8">${cityName}</text>
     </svg>
-  `)
+  `.trim()
+  
+  // Use Buffer for Node.js compatibility (works in both server and client)
+  const base64 = typeof window !== 'undefined' 
+    ? btoa(svgContent) // Client-side
+    : Buffer.from(svgContent).toString('base64') // Server-side
+    
+  return 'data:image/svg+xml;base64,' + base64
 }
 
 export default function LeagueCard({ league, content, locale }) {

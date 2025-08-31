@@ -118,7 +118,7 @@ export default function ClubsPage() {
     }
   }
 
-  // Calculate area statistics
+  // Calculate area statistics using GPS-based assignment
   const getAreaStatistics = () => {
     const stats = {
       totalAreas: 0,
@@ -133,8 +133,9 @@ export default function ClubsPage() {
       stats.citiesWithAreas++
       
       cityAreas.forEach(area => {
+        // Use GPS-based league assignment instead of database city field
         const areaClubs = clubs.filter(club => 
-          club.location?.city === city.slug && club.location?.area === area
+          club.league === city.slug && club.location?.area === area
         )
         
         if (areaClubs.length > 0) {
@@ -148,6 +149,10 @@ export default function ClubsPage() {
           })
         }
       })
+      
+      // Also calculate total club count per city using GPS assignment
+      const cityClubCount = clubs.filter(club => club.league === city.slug).length
+      city.clubCount = cityClubCount // Update the city object with correct count
     })
 
     // Sort top areas by club count
