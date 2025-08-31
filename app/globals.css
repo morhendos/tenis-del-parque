@@ -30,6 +30,10 @@ body {
   -moz-osx-font-smoothing: grayscale;
   /* Prevent horizontal scroll */
   overflow-x: hidden;
+  /* Improve font loading performance */
+  font-display: swap;
+  /* Ensure fonts are loaded before showing text */
+  font-optical-sizing: auto;
 }
 
 /* Mobile-specific improvements */

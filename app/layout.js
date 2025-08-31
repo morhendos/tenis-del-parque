@@ -2,18 +2,24 @@ import { Inter, Outfit, Raleway } from 'next/font/google'
 import './globals.css'
 import { Providers } from './providers'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ 
+  subsets: ['latin'],
+  display: 'swap', // Prevent flash of invisible text
+  preload: true
+})
 
 const outfit = Outfit({ 
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-outfit'
+  variable: '--font-outfit',
+  preload: true
 })
 
 const raleway = Raleway({ 
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-raleway'
+  variable: '--font-raleway',
+  preload: true
 })
 
 export const metadata = {
