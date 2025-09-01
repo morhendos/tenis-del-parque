@@ -501,7 +501,7 @@ export default function ClubDetailPage() {
                       {(club.description?.[locale] || club.description?.es) && (
                         <div>
                           <h3 className="text-lg font-semibold mb-2">{locale === 'es' ? 'Acerca del Club' : 'About the Club'}</h3>
-                          <p className="text-gray-600 text-sm leading-relaxed">
+                          <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">
                             {club.description[locale] || club.description.es}
                           </p>
                         </div>
@@ -707,7 +707,7 @@ export default function ClubDetailPage() {
                   {(club.description?.[locale] || club.description?.es) && (
                     <div className="p-6 border-t">
                       <h2 className="text-xl font-semibold mb-3">{locale === 'es' ? 'Acerca del Club' : 'About the Club'}</h2>
-                      <p className="text-gray-600 leading-relaxed">
+                      <p className="text-gray-600 leading-relaxed whitespace-pre-line">
                         {club.description[locale] || club.description.es}
                       </p>
                     </div>
