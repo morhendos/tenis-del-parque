@@ -77,7 +77,51 @@ export default function ClubCard({ club, locale }) {
     }
   }
 
+  // Check if there's meaningful pricing data to display
+  const hasPricingData = () => {
+    // Check various pricing structures that might exist
+    const hourlyMin = club.pricing?.courtRental?.hourly?.min
+    const hourlyMax = club.pricing?.courtRental?.hourly?.max
+    const dailyRate = club.pricing?.courtRental?.daily
+    const weeklyRate = club.pricing?.courtRental?.weekly
+    const monthlyRate = club.pricing?.courtRental?.monthly
+    
+    // Return true only if we have actual numeric pricing values
+    return (
+      (hourlyMin && hourlyMin > 0) ||
+      (hourlyMax && hourlyMax > 0) ||
+      (dailyRate && dailyRate > 0) ||
+      (weeklyRate && weeklyRate > 0) ||
+      (monthlyRate && monthlyRate > 0)
+    )
+  }
+
+  // Get the best price to display
+  const getPriceDisplay = () => {
+    if (!hasPricingData()) return null
+    
+    const hourlyMin = club.pricing?.courtRental?.hourly?.min
+    const hourlyMax = club.pricing?.courtRental?.hourly?.max
+    const dailyRate = club.pricing?.courtRental?.daily
+    
+    // Prefer hourly rates, then daily, then others
+    if (hourlyMin && hourlyMin > 0) {
+      return `${hourlyMin}€/h`
+    }
+    
+    if (hourlyMax && hourlyMax > 0) {
+      return `${hourlyMax}€/h`
+    }
+    
+    if (dailyRate && dailyRate > 0) {
+      return `${dailyRate}€/${locale === 'es' ? 'día' : 'day'}`
+    }
+    
+    return null
+  }
+
   const courtInfo = getCourtInfo()
+  const priceDisplay = getPriceDisplay()
   
   // Get main amenities to display
   const mainAmenities = []
@@ -265,33 +309,35 @@ export default function ClubCard({ club, locale }) {
            (courtInfo.padel > 0 && courtInfo.pickleball > 0) }
         </div>
 
-        {/* Price and Amenities Row */}
-        <div className="flex items-center justify-between">
-          {/* Price */}
-          {club.pricing?.courtRental?.hourly && (
-            <div className="text-sm">
-              <span className="text-gray-500">{locale === 'es' ? 'Desde' : 'From'} </span>
-              <span className="font-bold text-gray-900">
-                {club.pricing.courtRental.hourly.min}€/h
-              </span>
-            </div>
-          )}
-          
-          {/* Amenities - Text only */}
-          {mainAmenities.length > 0 && (
-            <div className="flex items-center gap-1">
-              {mainAmenities.slice(0, 2).map((amenity, idx) => (
-                <span key={idx} className="text-xs text-gray-600">
-                  {amenity.label}
-                  {idx < Math.min(1, mainAmenities.length - 1) && ','}
+        {/* Price and Amenities Row - Only show if price or amenities exist */}
+        {(priceDisplay || mainAmenities.length > 0) && (
+          <div className={`flex items-center ${priceDisplay && mainAmenities.length > 0 ? 'justify-between' : priceDisplay ? 'justify-start' : 'justify-end'}`}>
+            {/* Price - Only show if meaningful pricing data exists */}
+            {priceDisplay && (
+              <div className="text-sm">
+                <span className="text-gray-500">{locale === 'es' ? 'Desde' : 'From'} </span>
+                <span className="font-bold text-gray-900">
+                  {priceDisplay}
                 </span>
-              ))}
-              {mainAmenities.length > 2 && (
-                <span className="text-xs text-gray-500">+{mainAmenities.length - 2}</span>
-              )}
-            </div>
-          )}
-        </div>
+              </div>
+            )}
+            
+            {/* Amenities - Text only */}
+            {mainAmenities.length > 0 && (
+              <div className="flex items-center gap-1">
+                {mainAmenities.slice(0, 2).map((amenity, idx) => (
+                  <span key={idx} className="text-xs text-gray-600">
+                    {amenity.label}
+                    {idx < Math.min(1, mainAmenities.length - 1) && ','}
+                  </span>
+                ))}
+                {mainAmenities.length > 2 && (
+                  <span className="text-xs text-gray-500">+{mainAmenities.length - 2}</span>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Call to action */}
         <div className="flex items-center justify-between pt-2 border-t border-gray-100">
