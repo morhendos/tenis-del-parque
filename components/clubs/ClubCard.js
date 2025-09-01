@@ -143,10 +143,19 @@ export default function ClubCard({ club, locale }) {
     const assignedCity = club.league || location?.city
     const cityDisplayName = CITY_DISPLAY_NAMES[assignedCity] || assignedCity || ''
     
-    // If club has area information, show area hierarchy with GPS-assigned city
+    // If club has area information, show area with city when they differ
     if (location?.area) {
       const areaDisplayName = AREA_DISPLAY_NAMES[location.area] || location.area
-      return `${areaDisplayName} (${cityDisplayName.charAt(0).toUpperCase() + cityDisplayName.slice(1)})`
+      const formattedCityName = cityDisplayName.charAt(0).toUpperCase() + cityDisplayName.slice(1)
+      const formattedAreaName = areaDisplayName.charAt(0).toUpperCase() + areaDisplayName.slice(1)
+      
+      // Only show city if it's different from area and exists
+      if (formattedCityName && formattedCityName.toLowerCase() !== formattedAreaName.toLowerCase()) {
+        return `${formattedAreaName} - ${formattedCityName}`
+      }
+      
+      // Show just area when city is same as area or not available
+      return formattedAreaName
     }
     
     // Fallback to GPS-assigned city display
