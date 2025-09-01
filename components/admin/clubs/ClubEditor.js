@@ -118,6 +118,11 @@ export default function ClubEditor({ club, onSuccess, onCancel }) {
       main: '',
       gallery: [],
       googlePhotoReference: null
+    },
+
+    // Google Data (for Google Photos management)
+    googleData: {
+      photos: []
     }
   })
 
@@ -197,6 +202,9 @@ export default function ClubEditor({ club, onSuccess, onCancel }) {
           main: club.images?.main || '',
           gallery: club.images?.gallery || [],
           googlePhotoReference: club.images?.googlePhotoReference || null
+        },
+        googleData: {
+          photos: club.googleData?.photos || []
         }
       })
     }
