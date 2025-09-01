@@ -216,8 +216,13 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
     onImagesUpdate(updatedClub)
   }
 
-  // Remove image
+  // Remove image with confirmation
   const removeImage = (image) => {
+    const confirmMessage = `Are you sure you want to remove this ${image.type === 'main' ? 'main' : 'gallery'} image?`
+    if (!confirm(confirmMessage)) {
+      return
+    }
+
     if (image.type === 'main') {
       const updatedClub = {
         ...club,
@@ -239,6 +244,11 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
       }
       onImagesUpdate(updatedClub)
     }
+    
+    // Close modal if this image was being viewed
+    if (selectedImage?.id === image.id) {
+      setSelectedImage(null)
+    }
   }
 
   // Image preview component
@@ -250,10 +260,13 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
       xl: 'w-48 h-48'
     }
 
+    const canDelete = !readOnly && image.source !== 'google'
+    const canSetAsMain = !readOnly && image.type !== 'main'
+
     return (
       <div className={`relative ${sizeClasses[size]} rounded-lg overflow-hidden border-2 ${
         image.type === 'main' ? 'border-green-500' : 'border-gray-200'
-      } group`}>
+      } group cursor-pointer`}>
         <img
           src={image.url}
           alt={image.title}
@@ -269,7 +282,7 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex space-x-1">
             <button
               onClick={() => openImageModal(image)}
-              className="p-1 bg-white rounded-full text-gray-700 hover:bg-gray-100"
+              className="p-1.5 bg-white rounded-full text-gray-700 hover:bg-gray-100 shadow-lg"
               title="View Full Size"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -278,10 +291,10 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
               </svg>
             </button>
             
-            {!readOnly && image.type !== 'main' && (
+            {canSetAsMain && (
               <button
                 onClick={() => setAsMain(image)}
-                className="p-1 bg-green-500 rounded-full text-white hover:bg-green-600"
+                className="p-1.5 bg-green-500 rounded-full text-white hover:bg-green-600 shadow-lg"
                 title="Set as Main Image"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -290,14 +303,17 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
               </button>
             )}
             
-            {!readOnly && image.type !== 'google' && (
+            {canDelete && (
               <button
-                onClick={() => removeImage(image)}
-                className="p-1 bg-red-500 rounded-full text-white hover:bg-red-600"
-                title="Remove Image"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  removeImage(image)
+                }}
+                className="p-1.5 bg-red-500 rounded-full text-white hover:bg-red-600 shadow-lg"
+                title={`Remove ${image.type === 'main' ? 'Main' : 'Gallery'} Image`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
               </button>
             )}
@@ -307,12 +323,23 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
         {/* Image type badge */}
         <div className="absolute top-1 left-1">
           {image.type === 'main' && (
-            <span className="px-1 py-0.5 bg-green-500 text-white text-xs rounded">Main</span>
+            <span className="px-1.5 py-0.5 bg-green-500 text-white text-xs rounded font-medium">Main</span>
           )}
           {image.source === 'google' && (
-            <span className="px-1 py-0.5 bg-blue-500 text-white text-xs rounded">Google</span>
+            <span className="px-1.5 py-0.5 bg-blue-500 text-white text-xs rounded font-medium">Google</span>
           )}
         </div>
+
+        {/* Delete indicator for uploaded images */}
+        {canDelete && (
+          <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+          </div>
+        )}
       </div>
     )
   }
@@ -327,9 +354,24 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1"
             >
-              {uploading ? 'Uploading...' : 'Upload Images'}
+              {uploading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Upload Images
+                </>
+              )}
             </button>
             {allImages.length > 4 && (
               <button
@@ -374,8 +416,11 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
               {!readOnly && (
                 <button
                   onClick={() => removeImage(allImages.find(img => img.type === 'main'))}
-                  className="px-3 py-1 bg-red-100 text-red-700 text-sm rounded hover:bg-red-200"
+                  className="px-3 py-1 bg-red-100 text-red-700 text-sm rounded hover:bg-red-200 flex items-center gap-1"
                 >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
                   Remove Main Image
                 </button>
               )}
@@ -397,9 +442,16 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
       {/* Available images grid */}
       {allImages.length > 0 && (
         <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-2">
-            Available Images ({allImages.length})
-          </h4>
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-sm font-medium text-gray-700">
+              Available Images ({allImages.length})
+            </h4>
+            {!readOnly && (
+              <div className="text-xs text-gray-500">
+                Hover over images to see edit options
+              </div>
+            )}
+          </div>
           <div className="grid grid-cols-6 gap-2">
             {allImages.slice(0, showGallery ? allImages.length : 6).map((image) => (
               <ImagePreview key={image.id} image={image} size="md" />
@@ -430,6 +482,9 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
           </div>
           <p className="text-xs text-blue-700 mb-3">
             These photos were imported from Google Maps. Click any photo to set as main image or add to gallery.
+            <span className="block mt-1 text-blue-600 font-medium">
+              Note: Google Photos cannot be deleted, only uploaded photos can be removed.
+            </span>
           </p>
           
           <div className="grid grid-cols-6 gap-2">
@@ -474,6 +529,19 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
               </svg>
             </button>
 
+            {/* Delete button in modal for uploaded images */}
+            {!readOnly && selectedImage.source !== 'google' && (
+              <button
+                onClick={() => removeImage(selectedImage)}
+                className="absolute top-4 right-16 p-2 bg-red-500 bg-opacity-75 text-white rounded-full hover:bg-opacity-100 transition-all"
+                title="Delete Image"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            )}
+
             {/* Left arrow button */}
             {allImages.length > 1 && (
               <button
@@ -510,6 +578,9 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
               {selectedImage.width && selectedImage.height && (
                 <p className="text-xs opacity-75">{selectedImage.width} × {selectedImage.height}px</p>
               )}
+              {selectedImage.source !== 'google' && !readOnly && (
+                <p className="text-xs text-red-300 mt-1">💡 This image can be deleted</p>
+              )}
             </div>
 
             {/* Navigation hint */}
@@ -527,8 +598,9 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
         <p><strong>💡 Image Management Tips:</strong></p>
         <ul className="mt-1 space-y-1">
           <li>• <strong>Main Image:</strong> Used in club listings and headers</li>
-          <li>• <strong>Google Photos:</strong> Automatically imported from Google Maps</li>
+          <li>• <strong>Google Photos:</strong> Automatically imported from Google Maps (cannot be deleted)</li>
           <li>• <strong>Gallery:</strong> Additional photos for the club page</li>
+          <li>• <strong>Uploaded Images:</strong> Can be deleted using the trash icon on hover</li>
           <li>• Click any image to view full size or set as main</li>
           <li>• Supported formats: JPEG, PNG, WebP (max 5MB each)</li>
         </ul>
