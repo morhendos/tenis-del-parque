@@ -492,42 +492,76 @@ export default function ClubDetailPage() {
                   </div>
                 </div>
 
-                {/* UPDATED: Quick Stats - Now includes court info merged with top section */}
+                {/* FIXED: Courts & Quick Stats - Show sport breakdown WITHOUT emojis, moved to top */}
                 {courtInfo.total > 0 && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 lg:p-6 bg-gray-50">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-parque-purple">{courtInfo.total}</div>
-                      <div className="text-sm text-gray-600">{locale === 'es' ? 'Pistas totales' : 'Total courts'}</div>
-                    </div>
-                    {courtInfo.indoor > 0 && (
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-blue-600">{courtInfo.indoor}</div>
-                        <div className="text-sm text-gray-600">{locale === 'es' ? 'Cubiertas' : 'Indoor'}</div>
+                  <div className="p-4 lg:p-6 bg-gray-50">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3 lg:text-base">{locale === 'es' ? 'Pistas' : 'Courts'}</h3>
+                    
+                    {/* Display sports breakdown for new structure - NO EMOJIS */}
+                    {(courtInfo.sports.tennis > 0 || courtInfo.sports.padel > 0 || courtInfo.sports.pickleball > 0) ? (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-parque-purple">{courtInfo.total}</div>
+                          <div className="text-sm text-gray-600">{locale === 'es' ? 'Pistas totales' : 'Total courts'}</div>
+                        </div>
+                        {courtInfo.sports.tennis > 0 && (
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-green-600">{courtInfo.sports.tennis}</div>
+                            <div className="text-sm text-gray-600">{locale === 'es' ? 'Tenis' : 'Tennis'}</div>
+                          </div>
+                        )}
+                        {courtInfo.sports.padel > 0 && (
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-blue-600">{courtInfo.sports.padel}</div>
+                            <div className="text-sm text-gray-600">{locale === 'es' ? 'Pádel' : 'Padel'}</div>
+                          </div>
+                        )}
+                        {courtInfo.sports.pickleball > 0 && (
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-orange-600">{courtInfo.sports.pickleball}</div>
+                            <div className="text-sm text-gray-600">Pickleball</div>
+                          </div>
+                        )}
+                        {courtInfo.indoor > 0 && (
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-purple-600">{courtInfo.indoor}</div>
+                            <div className="text-sm text-gray-600">{locale === 'es' ? 'Cubiertas' : 'Indoor'}</div>
+                          </div>
+                        )}
+                        {club.pricing?.publicAccess !== null && (
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-gray-600">
+                              {club.pricing.publicAccess ? '✓' : '✗'}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              {club.pricing.publicAccess ? (locale === 'es' ? 'Público' : 'Public') : (locale === 'es' ? 'Privado' : 'Private')}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    )}
-                    {club.pricing?.publicAccess !== null && (
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-green-600">
-                          {club.pricing.publicAccess ? '✓' : '✗'}
+                    ) : (
+                      // Fallback for old structure - just show basic info
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-parque-purple">{courtInfo.total}</div>
+                          <div className="text-sm text-gray-600">{locale === 'es' ? 'Pistas totales' : 'Total courts'}</div>
                         </div>
-                        <div className="text-sm text-gray-600">
-                          {club.pricing.publicAccess ? (locale === 'es' ? 'Público' : 'Public') : (locale === 'es' ? 'Privado' : 'Private')}
-                        </div>
-                      </div>
-                    )}
-                    {(club.pricing?.courtRental?.hourly?.min !== null || club.pricing?.courtRental?.hourly?.max !== null) && (
-                      <div className="text-center">
-                        <div className="text-lg font-bold text-orange-600">
-                          {(() => {
-                            const formattedPrice = formatPriceRange(
-                              club.pricing.courtRental.hourly.min,
-                              club.pricing.courtRental.hourly.max,
-                              locale
-                            )
-                            return formattedPrice || '–'
-                          })()}
-                        </div>
-                        <div className="text-sm text-gray-600">{locale === 'es' ? 'Precio' : 'Price'}</div>
+                        {courtInfo.indoor > 0 && (
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-blue-600">{courtInfo.indoor}</div>
+                            <div className="text-sm text-gray-600">{locale === 'es' ? 'Cubiertas' : 'Indoor'}</div>
+                          </div>
+                        )}
+                        {club.pricing?.publicAccess !== null && (
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-green-600">
+                              {club.pricing.publicAccess ? '✓' : '✗'}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              {club.pricing.publicAccess ? (locale === 'es' ? 'Público' : 'Public') : (locale === 'es' ? 'Privado' : 'Private')}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
