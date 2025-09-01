@@ -6,6 +6,7 @@ import { AREA_DISPLAY_NAMES, CITY_DISPLAY_NAMES } from '@/lib/utils/geographicBo
 export default function ClubCard({ club, locale }) {
   const [imageError, setImageError] = useState(false)
   const [imageLoading, setImageLoading] = useState(true)
+  const [googlePhotoError, setGooglePhotoError] = useState(false)
   
   // Get the best available image
   const getClubImage = () => {
@@ -18,12 +19,35 @@ export default function ClubCard({ club, locale }) {
       return club.images.gallery[0]
     }
     
-    if (club.images?.googlePhotoReference && !imageError) {
-      return `/api/clubs/photo?photo_reference=${club.images.googlePhotoReference}`
+    if (club.images?.googlePhotoReference && !imageError && !googlePhotoError) {
+      const googlePhotoUrl = `/api/clubs/photo?photo_reference=${club.images.googlePhotoReference}`
+      // Add debug info in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[ClubCard] Using Google Photo for ${club.name}: ${club.images.googlePhotoReference.substring(0, 20)}...`)
+      }
+      return googlePhotoUrl
     }
     
     // Return null to trigger fallback
     return null
+  }
+
+  // Handle image errors with better logging
+  const handleImageError = (error) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(`[ClubCard] Image error for ${club.name}:`, error)
+    }
+    
+    // If it was a Google Photo that failed, mark it as failed
+    if (club.images?.googlePhotoReference && !club.images?.main && (!club.images?.gallery || club.images.gallery.length === 0)) {
+      setGooglePhotoError(true)
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(`[ClubCard] Google Photo failed for ${club.name}, photo_reference: ${club.images.googlePhotoReference}`)
+      }
+    }
+    
+    setImageError(true)
+    setImageLoading(false)
   }
 
   // Get court breakdown
@@ -177,8 +201,10 @@ export default function ClubCard({ club, locale }) {
   const FallbackImage = () => (
     <div className="absolute inset-0 bg-gradient-to-br from-parque-purple via-parque-purple/80 to-parque-green flex items-center justify-center">
       <div className="text-center text-white">
-        <div className="text-4xl font-bold mb-2">TC</div>
-        <span className="text-white/80 text-sm font-medium">Tennis Club</span>
+        <div className="text-4xl font-bold mb-2">🎾</div>
+        <span className="text-white/80 text-sm font-medium">
+          {googlePhotoError ? 'Photo Unavailable' : 'Tennis Club'}
+        </span>
       </div>
     </div>
   )
@@ -209,11 +235,13 @@ export default function ClubCard({ club, locale }) {
               sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
               quality={75}
               className={`object-cover group-hover:scale-110 transition-transform duration-500 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
-              onError={() => {
-                setImageError(true)
+              onError={handleImageError}
+              onLoadingComplete={() => {
                 setImageLoading(false)
+                if (process.env.NODE_ENV === 'development' && club.images?.googlePhotoReference && !club.images?.main) {
+                  console.log(`[ClubCard] Google Photo loaded successfully for ${club.name}`)
+                }
               }}
-              onLoadingComplete={() => setImageLoading(false)}
               placeholder="blur"
               blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
             />
