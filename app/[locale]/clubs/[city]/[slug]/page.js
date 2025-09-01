@@ -201,38 +201,93 @@ export default function ClubDetailPage() {
     loadGoogleMaps()
   }, [club, mapLoaded, locale])
 
-  // Collect all images with proper deduplication
+  // Helper function to normalize URLs for better duplicate detection
+  const normalizeImageUrl = (url) => {
+    if (!url) return null
+    
+    // Convert to string and trim
+    let normalized = String(url).trim()
+    
+    // Remove trailing slashes
+    normalized = normalized.replace(/\/+$/, '')
+    
+    // Normalize query parameters order for Google Photos
+    if (normalized.includes('photo_reference=')) {
+      try {
+        const urlObj = new URL(normalized, window.location.origin)
+        const photoRef = urlObj.searchParams.get('photo_reference')
+        if (photoRef) {
+          // Create a consistent format for Google Photo URLs
+          normalized = `/api/clubs/photo?photo_reference=${photoRef}`
+        }
+      } catch (e) {
+        // If URL parsing fails, use original
+      }
+    }
+    
+    return normalized.toLowerCase()
+  }
+
+  // Collect all images with enhanced deduplication
   const allImages = useMemo(() => {
     if (!club) return []
-    const imageSet = new Set()
+    
+    const imageMap = new Map() // Use Map to maintain insertion order and allow metadata
     const images = []
     
-    // Add main image first
+    // Helper to add image with deduplication
+    const addImage = (url, source = 'unknown') => {
+      if (!url) return
+      
+      const normalizedUrl = normalizeImageUrl(url)
+      if (!normalizedUrl) return
+      
+      // Check for duplicates using normalized URL
+      if (!imageMap.has(normalizedUrl)) {
+        imageMap.set(normalizedUrl, {
+          original: url,
+          source,
+          index: images.length
+        })
+        images.push(url)
+      } else {
+        // Log for debugging - this helps us understand what duplicates we're catching
+        console.log(`🔍 Duplicate image detected from ${source}:`, url, 'normalized to:', normalizedUrl)
+      }
+    }
+    
+    // Add main image first (highest priority)
     if (club.images?.main) {
-      imageSet.add(club.images.main)
-      images.push(club.images.main)
+      addImage(club.images.main, 'main')
     }
     
     // Add gallery images (skip duplicates)
     if (club.images?.gallery && Array.isArray(club.images.gallery)) {
-      club.images.gallery.forEach(img => {
-        if (!imageSet.has(img)) {
-          imageSet.add(img)
-          images.push(img)
-        }
+      club.images.gallery.forEach((img, idx) => {
+        addImage(img, `gallery[${idx}]`)
       })
     }
     
     // Add Google photos (skip duplicates)
     if (club.googleData?.photos && Array.isArray(club.googleData.photos)) {
-      club.googleData.photos.forEach(photo => {
-        const googlePhotoUrl = `/api/admin/clubs/google-photo?photo_reference=${photo.photo_reference}`
-        if (!imageSet.has(googlePhotoUrl)) {
-          imageSet.add(googlePhotoUrl)
-          images.push(googlePhotoUrl)
-        }
+      club.googleData.photos.forEach((photo, idx) => {
+        const googlePhotoUrl = `/api/clubs/photo?photo_reference=${photo.photo_reference}`
+        addImage(googlePhotoUrl, `google[${idx}]`)
       })
     }
+    
+    // Add legacy Google photo reference if it exists
+    if (club.images?.googlePhotoReference) {
+      const legacyGoogleUrl = `/api/clubs/photo?photo_reference=${club.images.googlePhotoReference}`
+      addImage(legacyGoogleUrl, 'legacy_google')
+    }
+    
+    // Log final results for debugging
+    console.log(`📸 Final image gallery for ${club.name}:`, images.length, 'unique images out of', 
+      (club.images?.gallery?.length || 0) + 
+      (club.googleData?.photos?.length || 0) + 
+      (club.images?.main ? 1 : 0) + 
+      (club.images?.googlePhotoReference ? 1 : 0), 'total potential images')
     
     return images
   }, [club])
