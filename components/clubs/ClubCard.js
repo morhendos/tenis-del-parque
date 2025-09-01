@@ -135,13 +135,21 @@ export default function ClubCard({ club, locale }) {
     ? description.substring(0, 100) + '...' 
     : description
 
+  // Get league assignment for URL generation
+  const getLeagueForUrl = () => {
+    // The league/zone assignment is stored in location.city
+    // This determines which league section the club belongs to
+    // and is used for URL organization: /clubs/[league]/[slug]
+    return club.location?.city || 'marbella'
+  }
+
   // Enhanced location display with GPS-based area support
   const getLocationDisplay = () => {
     const location = club.location
     
-    // Use GPS-based league assignment for accurate city display
-    const assignedCity = club.league || location?.city
-    const cityDisplayName = CITY_DISPLAY_NAMES[assignedCity] || assignedCity || ''
+    // Use the league assignment for display consistency
+    const leagueCity = getLeagueForUrl()
+    const cityDisplayName = CITY_DISPLAY_NAMES[leagueCity] || leagueCity || ''
     
     // If club has area information, show area with city when they differ
     if (location?.area) {
@@ -158,11 +166,12 @@ export default function ClubCard({ club, locale }) {
       return formattedAreaName
     }
     
-    // Fallback to GPS-assigned city display
+    // Fallback to league city display
     return cityDisplayName.charAt(0).toUpperCase() + cityDisplayName.slice(1)
   }
 
   const clubImage = getClubImage()
+  const leagueForUrl = getLeagueForUrl()
 
   // Fallback image component
   const FallbackImage = () => (
@@ -176,7 +185,7 @@ export default function ClubCard({ club, locale }) {
 
   return (
     <Link
-      href={`/${locale}/clubs/${club.location?.city || 'marbella'}/${club.slug}`}
+      href={`/${locale}/clubs/${leagueForUrl}/${club.slug}`}
       className="group block bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden h-full transform hover:-translate-y-1 cursor-pointer relative"
     >
       {/* Image Section - 40% of card height */}
