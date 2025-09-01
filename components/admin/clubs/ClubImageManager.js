@@ -233,9 +233,7 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
     } else if (image.type === 'gallery') {
       confirmMessage = 'Remove this image from the gallery?'
     } else if (image.source === 'google' && !image.isUsed) {
-      // This shouldn't happen with our new logic, but just in case
-      alert('Google Photos that are not being used cannot be removed. You can only remove photos that you\'ve set as main or added to your gallery.')
-      return
+      confirmMessage = 'Remove this Google Photo from your available photos? (This will permanently remove it from this club)'
     }
 
     if (!confirm(confirmMessage)) {
@@ -262,6 +260,19 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
         }
       }
       onImagesUpdate(updatedClub)
+    } else if (image.source === 'google' && !image.isUsed && image.reference) {
+      // Remove Google Photo from available pool
+      const updatedGooglePhotos = club.googleData.photos.filter(
+        photo => photo.photo_reference !== image.reference
+      )
+      const updatedClub = {
+        ...club,
+        googleData: {
+          ...club.googleData,
+          photos: updatedGooglePhotos
+        }
+      }
+      onImagesUpdate(updatedClub)
     }
     
     // Close modal if this image was being viewed
@@ -279,11 +290,8 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
       xl: 'w-48 h-48'
     }
 
-    // Can delete if:
-    // 1. Not in read-only mode
-    // 2. It's an uploaded image (source: 'upload') OR
-    // 3. It's a Google Photo that's being used (main image or in gallery) - these can be "removed from use"
-    const canDelete = !readOnly && (image.source === 'upload' || (image.source === 'google' && image.isUsed))
+    // Can delete all images in edit mode - different actions for different types
+    const canDelete = !readOnly
     const canSetAsMain = !readOnly && image.type !== 'main'
 
     return (
@@ -333,9 +341,13 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
                   removeImage(image)
                 }}
                 className="p-1.5 bg-red-500 rounded-full text-white hover:bg-red-600 shadow-lg"
-                title={image.source === 'google' && image.isUsed 
-                  ? `Remove Google Photo from ${image.type === 'main' ? 'main image' : 'gallery'}`
-                  : `Delete ${image.type === 'main' ? 'Main' : 'Gallery'} Image`}
+                title={
+                  image.source === 'google' && image.isUsed 
+                    ? `Remove Google Photo from ${image.type === 'main' ? 'main image' : 'gallery'}`
+                    : image.source === 'google' && !image.isUsed
+                    ? 'Remove Google Photo from available photos'
+                    : `Delete ${image.type === 'main' ? 'Main' : 'Gallery'} Image`
+                }
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -357,7 +369,7 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
           )}
         </div>
 
-        {/* Delete indicator for deletable images */}
+        {/* Delete indicator for all deletable images */}
         {canDelete && (
           <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
@@ -457,7 +469,7 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
       ) : (
         <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
           <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
           <p className="mt-2 text-sm text-gray-600">No main image set</p>
           {!readOnly && (
@@ -508,9 +520,9 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
             </h4>
           </div>
           <p className="text-xs text-blue-700 mb-3">
-            These photos were imported from Google Maps. Click any photo to set as main image.
+            These photos were imported from Google Maps. You can set any as main image or remove them from this list.
             <span className="block mt-1 text-blue-600 font-medium">
-              Once you use a Google Photo as your main image, you can remove it from that role (but the photo stays available here).
+              💡 You can now remove unwanted Google Photos by clicking the delete button on each photo.
             </span>
           </p>
           
@@ -557,13 +569,15 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
               </svg>
             </button>
 
-            {/* Delete button in modal for removable images */}
-            {!readOnly && (selectedImage.source === 'upload' || (selectedImage.source === 'google' && selectedImage.isUsed)) && (
+            {/* Delete button in modal for all images */}
+            {!readOnly && (
               <button
                 onClick={() => removeImage(selectedImage)}
                 className="absolute top-4 right-16 p-2 bg-red-500 bg-opacity-75 text-white rounded-full hover:bg-opacity-100 transition-all"
                 title={selectedImage.source === 'google' && selectedImage.isUsed 
                   ? 'Remove Google Photo from use' 
+                  : selectedImage.source === 'google' && !selectedImage.isUsed
+                  ? 'Remove Google Photo from available photos'
                   : 'Delete Image'}
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -608,10 +622,12 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
               {selectedImage.width && selectedImage.height && (
                 <p className="text-xs opacity-75">{selectedImage.width} × {selectedImage.height}px</p>
               )}
-              {(selectedImage.source === 'upload' || (selectedImage.source === 'google' && selectedImage.isUsed)) && !readOnly && (
+              {!readOnly && (
                 <p className="text-xs text-red-300 mt-1">
                   💡 {selectedImage.source === 'google' && selectedImage.isUsed 
                     ? 'Can remove from use' 
+                    : selectedImage.source === 'google' && !selectedImage.isUsed
+                    ? 'Can remove from available photos'
                     : 'Can delete this image'}
                 </p>
               )}
@@ -632,10 +648,10 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
         <p><strong>💡 Image Management Tips:</strong></p>
         <ul className="mt-1 space-y-1">
           <li>• <strong>Main Image:</strong> Used in club listings and headers</li>
-          <li>• <strong>Google Photos:</strong> Can be set as main image, then removed from that role</li>
+          <li>• <strong>Google Photos:</strong> Can be set as main image or removed from available pool</li>
           <li>• <strong>Gallery:</strong> Additional photos for the club page</li>
           <li>• <strong>Uploaded Images:</strong> Can be completely deleted</li>
-          <li>• <strong>Available Google Photos:</strong> Cannot be deleted, only used as main image</li>
+          <li>• <strong>Available Google Photos:</strong> Can be removed to clean up your photo list</li>
           <li>• Click any image to view full size or set as main</li>
           <li>• Supported formats: JPEG, PNG, WebP (max 5MB each)</li>
         </ul>
