@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import BasicInfoSection from './editor/BasicInfoSection'
 import LocationSection from './editor/LocationSection'
 import CourtsSection from './editor/CourtsSection'
@@ -210,7 +210,7 @@ export default function ClubEditor({ club, onSuccess, onCancel }) {
     }
   }, [club])
 
-  const handleChange = (field, value) => {
+  const handleChange = useCallback((field, value) => {
     setFormData(prev => {
       const keys = field.split('.')
       const newData = { ...prev }
@@ -225,7 +225,7 @@ export default function ClubEditor({ club, onSuccess, onCancel }) {
       return newData
     })
     setHasChanges(true)
-  }
+  }, [])
 
   const validateForm = () => {
     if (!formData.name || !formData.slug) {

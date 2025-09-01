@@ -29,7 +29,7 @@ export default function LocationSection({ formData, handleChange }) {
         handleChange('location.area', '')
       }
     }
-  }, [formData.location.city])
+  }, [formData.location.city, formData.location.area, handleChange])
 
   // Auto-generate display name
   useEffect(() => {
@@ -37,7 +37,7 @@ export default function LocationSection({ formData, handleChange }) {
       const displayName = generateDisplayName(formData.location.area, formData.location.city)
       handleChange('location.displayName', displayName)
     }
-  }, [formData.location.area, formData.location.city])
+  }, [formData.location.area, formData.location.city, handleChange])
 
   return (
     <div className="space-y-6">
@@ -222,7 +222,7 @@ export default function LocationSection({ formData, handleChange }) {
               placeholder="https://maps.google.com/..."
             />
             <p className="mt-1 text-sm text-gray-500">
-              Link to the club's location on Google Maps
+              Link to the club&apos;s location on Google Maps
             </p>
           </div>
         </div>
