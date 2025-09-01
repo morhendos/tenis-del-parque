@@ -4,7 +4,13 @@ import ClubImageManager from '../ClubImageManager'
 
 export default function ImagesSection({ formData, handleChange, club }) {
   const handleImagesUpdate = (updatedClub) => {
+    // Update both images and googleData when available
     handleChange('images', updatedClub.images)
+    
+    // Also update googleData if it exists (for Google Photos deletion)
+    if (updatedClub.googleData) {
+      handleChange('googleData', updatedClub.googleData)
+    }
   }
 
   return (
