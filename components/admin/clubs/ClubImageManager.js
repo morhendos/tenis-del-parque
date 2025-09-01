@@ -28,7 +28,8 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
         type: 'main',
         source: club.images.googlePhotoReference ? 'google' : 'upload',
         title: 'Main Image',
-        reference: club.images.googlePhotoReference
+        reference: club.images.googlePhotoReference,
+        isUsed: true // This photo is actively being used by the club
       })
     } else if (club?.images?.googlePhotoReference) {
       // If no main image URL but there is a Google photo reference, use it as main
@@ -38,7 +39,8 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
         type: 'main',
         source: 'google',
         title: 'Main Image',
-        reference: club.images.googlePhotoReference
+        reference: club.images.googlePhotoReference,
+        isUsed: true
       })
     }
     
@@ -50,12 +52,13 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
           url: url,
           type: 'gallery',
           source: 'upload',
-          title: `Gallery Image ${index + 1}`
+          title: `Gallery Image ${index + 1}`,
+          isUsed: true
         })
       })
     }
     
-    // Google Photos (not yet used as main/gallery)
+    // Google Photos (not yet used as main/gallery) - these are just available options
     if (club?.googleData?.photos && club.googleData.photos.length > 0) {
       club.googleData.photos.forEach((photo, index) => {
         const photoUrl = getGooglePhotoUrl(photo.photo_reference)
@@ -69,7 +72,8 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
             title: `Google Photo ${index + 1}`,
             reference: photo.photo_reference,
             width: photo.width,
-            height: photo.height
+            height: photo.height,
+            isUsed: false // This photo is just available, not actively used
           })
         }
       })
@@ -218,7 +222,22 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
 
   // Remove image with confirmation
   const removeImage = (image) => {
-    const confirmMessage = `Are you sure you want to remove this ${image.type === 'main' ? 'main' : 'gallery'} image?`
+    let confirmMessage = ''
+    
+    if (image.type === 'main') {
+      if (image.source === 'google') {
+        confirmMessage = 'Remove this Google Photo as the main image? (The photo will remain available in Google Photos below)'
+      } else {
+        confirmMessage = 'Remove this uploaded image as the main image?'
+      }
+    } else if (image.type === 'gallery') {
+      confirmMessage = 'Remove this image from the gallery?'
+    } else if (image.source === 'google' && !image.isUsed) {
+      // This shouldn't happen with our new logic, but just in case
+      alert('Google Photos that are not being used cannot be removed. You can only remove photos that you\'ve set as main or added to your gallery.')
+      return
+    }
+
     if (!confirm(confirmMessage)) {
       return
     }
@@ -260,7 +279,11 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
       xl: 'w-48 h-48'
     }
 
-    const canDelete = !readOnly && image.source !== 'google'
+    // Can delete if:
+    // 1. Not in read-only mode
+    // 2. It's an uploaded image (source: 'upload') OR
+    // 3. It's a Google Photo that's being used (main image or in gallery) - these can be "removed from use"
+    const canDelete = !readOnly && (image.source === 'upload' || (image.source === 'google' && image.isUsed))
     const canSetAsMain = !readOnly && image.type !== 'main'
 
     return (
@@ -310,7 +333,9 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
                   removeImage(image)
                 }}
                 className="p-1.5 bg-red-500 rounded-full text-white hover:bg-red-600 shadow-lg"
-                title={`Remove ${image.type === 'main' ? 'Main' : 'Gallery'} Image`}
+                title={image.source === 'google' && image.isUsed 
+                  ? `Remove Google Photo from ${image.type === 'main' ? 'main image' : 'gallery'}`
+                  : `Delete ${image.type === 'main' ? 'Main' : 'Gallery'} Image`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -326,11 +351,13 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
             <span className="px-1.5 py-0.5 bg-green-500 text-white text-xs rounded font-medium">Main</span>
           )}
           {image.source === 'google' && (
-            <span className="px-1.5 py-0.5 bg-blue-500 text-white text-xs rounded font-medium">Google</span>
+            <span className="px-1.5 py-0.5 bg-blue-500 text-white text-xs rounded font-medium">
+              {image.isUsed ? 'Google' : 'Available'}
+            </span>
           )}
         </div>
 
-        {/* Delete indicator for uploaded images */}
+        {/* Delete indicator for deletable images */}
         {canDelete && (
           <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
@@ -477,13 +504,13 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
               <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
             </svg>
             <h4 className="text-sm font-medium text-blue-900">
-              Google Maps Photos ({club.googleData.photos.length})
+              Available Google Maps Photos ({club.googleData.photos.length})
             </h4>
           </div>
           <p className="text-xs text-blue-700 mb-3">
-            These photos were imported from Google Maps. Click any photo to set as main image or add to gallery.
+            These photos were imported from Google Maps. Click any photo to set as main image.
             <span className="block mt-1 text-blue-600 font-medium">
-              Note: Google Photos cannot be deleted, only uploaded photos can be removed.
+              Once you use a Google Photo as your main image, you can remove it from that role (but the photo stays available here).
             </span>
           </p>
           
@@ -500,7 +527,8 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
                 title: `Google Photo ${index + 1}`,
                 reference: photo.photo_reference,
                 width: photo.width,
-                height: photo.height
+                height: photo.height,
+                isUsed: false
               }
               
               return <ImagePreview key={image.id} image={image} size="md" />
@@ -529,12 +557,14 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
               </svg>
             </button>
 
-            {/* Delete button in modal for uploaded images */}
-            {!readOnly && selectedImage.source !== 'google' && (
+            {/* Delete button in modal for removable images */}
+            {!readOnly && (selectedImage.source === 'upload' || (selectedImage.source === 'google' && selectedImage.isUsed)) && (
               <button
                 onClick={() => removeImage(selectedImage)}
                 className="absolute top-4 right-16 p-2 bg-red-500 bg-opacity-75 text-white rounded-full hover:bg-opacity-100 transition-all"
-                title="Delete Image"
+                title={selectedImage.source === 'google' && selectedImage.isUsed 
+                  ? 'Remove Google Photo from use' 
+                  : 'Delete Image'}
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -578,8 +608,12 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
               {selectedImage.width && selectedImage.height && (
                 <p className="text-xs opacity-75">{selectedImage.width} × {selectedImage.height}px</p>
               )}
-              {selectedImage.source !== 'google' && !readOnly && (
-                <p className="text-xs text-red-300 mt-1">💡 This image can be deleted</p>
+              {(selectedImage.source === 'upload' || (selectedImage.source === 'google' && selectedImage.isUsed)) && !readOnly && (
+                <p className="text-xs text-red-300 mt-1">
+                  💡 {selectedImage.source === 'google' && selectedImage.isUsed 
+                    ? 'Can remove from use' 
+                    : 'Can delete this image'}
+                </p>
               )}
             </div>
 
@@ -598,9 +632,10 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
         <p><strong>💡 Image Management Tips:</strong></p>
         <ul className="mt-1 space-y-1">
           <li>• <strong>Main Image:</strong> Used in club listings and headers</li>
-          <li>• <strong>Google Photos:</strong> Automatically imported from Google Maps (cannot be deleted)</li>
+          <li>• <strong>Google Photos:</strong> Can be set as main image, then removed from that role</li>
           <li>• <strong>Gallery:</strong> Additional photos for the club page</li>
-          <li>• <strong>Uploaded Images:</strong> Can be deleted using the trash icon on hover</li>
+          <li>• <strong>Uploaded Images:</strong> Can be completely deleted</li>
+          <li>• <strong>Available Google Photos:</strong> Cannot be deleted, only used as main image</li>
           <li>• Click any image to view full size or set as main</li>
           <li>• Supported formats: JPEG, PNG, WebP (max 5MB each)</li>
         </ul>
