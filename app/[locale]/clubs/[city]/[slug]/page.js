@@ -379,7 +379,7 @@ export default function ClubDetailPage() {
             <div className="lg:col-span-2 space-y-4 lg:space-y-6">
               {/* Enhanced Image Gallery */}
               {allImages.length > 0 ? (
-                <div className="bg-white lg:rounded-2xl shadow-xl overflow-hidden">
+                <div className="bg-white lg:rounded-2xl shadow-lg overflow-hidden">
                   <div className="relative aspect-[16/12] lg:aspect-[16/10]">
                     {imageLoading[selectedImage] && (
                       <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center z-10">
@@ -413,7 +413,7 @@ export default function ClubDetailPage() {
                       <>
                         <button
                           onClick={() => setSelectedImage((prev) => (prev - 1 + allImages.length) % allImages.length)}
-                          className="absolute left-2 lg:left-4 top-1/2 -translate-y-1/2 bg-white/95 hover:bg-white text-gray-800 p-2 lg:p-3 rounded-full shadow-xl transition-all duration-200 hover:scale-105 flex items-center justify-center backdrop-blur-sm"
+                          className="absolute left-2 lg:left-4 top-1/2 -translate-y-1/2 bg-white/95 hover:bg-white text-gray-800 p-2 lg:p-3 rounded-full shadow-lg transition-all duration-200 hover:scale-105 flex items-center justify-center backdrop-blur-sm"
                         >
                           <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
@@ -421,7 +421,7 @@ export default function ClubDetailPage() {
                         </button>
                         <button
                           onClick={() => setSelectedImage((prev) => (prev + 1) % allImages.length)}
-                          className="absolute right-2 lg:right-4 top-1/2 -translate-y-1/2 bg-white/95 hover:bg-white text-gray-800 p-2 lg:p-3 rounded-full shadow-xl transition-all duration-200 hover:scale-105 flex items-center justify-center backdrop-blur-sm"
+                          className="absolute right-2 lg:right-4 top-1/2 -translate-y-1/2 bg-white/95 hover:bg-white text-gray-800 p-2 lg:p-3 rounded-full shadow-lg transition-all duration-200 hover:scale-105 flex items-center justify-center backdrop-blur-sm"
                         >
                           <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
@@ -438,8 +438,8 @@ export default function ClubDetailPage() {
                           onClick={() => setSelectedImage(idx)}
                           className={`flex-shrink-0 w-16 h-16 lg:w-20 lg:h-20 rounded-xl overflow-hidden border-2 transition-all duration-300 relative ${
                             selectedImage === idx 
-                              ? 'border-parque-purple ring-3 ring-parque-purple/30 shadow-lg scale-105' 
-                              : 'border-gray-200 hover:border-gray-300 hover:shadow-md hover:scale-102'
+                              ? 'border-parque-purple ring-3 ring-parque-purple/30 shadow-md scale-105' 
+                              : 'border-gray-200 hover:border-gray-300 hover:shadow-sm hover:scale-102'
                           }`}
                         >
                           <Image 
@@ -459,7 +459,7 @@ export default function ClubDetailPage() {
                   )}
                 </div>
               ) : (
-                <div className="bg-gradient-to-br from-parque-purple to-parque-green lg:rounded-2xl shadow-xl h-64 lg:h-96 flex items-center justify-center">
+                <div className="bg-gradient-to-br from-parque-purple to-parque-green lg:rounded-2xl shadow-lg h-64 lg:h-96 flex items-center justify-center">
                   <div className="text-white text-center">
                     <svg className="w-16 h-16 lg:w-24 lg:h-24 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -470,18 +470,12 @@ export default function ClubDetailPage() {
               )}
 
               {/* Enhanced Club Information Card */}
-              <div className="bg-white lg:rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                {/* Club Header */}
+              <div className="bg-white lg:rounded-2xl shadow-lg overflow-hidden border border-gray-100">
+                {/* Club Header - Removed location icon */}
                 <div className="p-6 lg:p-8 border-b border-gray-100">
                   <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-3 leading-tight">{club.name}</h1>
                   <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-6 text-gray-600">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                      </div>
                       <span className="text-lg">{club.fullAddress}</span>
                     </div>
                     {club.googleData?.rating && (
@@ -862,7 +856,7 @@ export default function ClubDetailPage() {
 
               {/* Enhanced Map Section */}
               {club.location?.coordinates && (
-                <div className="bg-white lg:rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div className="bg-white lg:rounded-2xl shadow-lg overflow-hidden border border-gray-100">
                   <div className="p-6 lg:p-8 border-b border-gray-100">
                     <h2 className="text-xl lg:text-2xl font-bold text-gray-800 flex items-center gap-3">
                       <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -899,8 +893,8 @@ export default function ClubDetailPage() {
 
             {/* Right Column - Contact & Actions (Desktop) */}
             <div className="hidden lg:block space-y-6">
-              {/* Enhanced Contact Card */}
-              <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+              {/* More Subtle Contact Card */}
+              <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
                 <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
                   <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                     <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -914,16 +908,16 @@ export default function ClubDetailPage() {
                   {club.contact?.phone && (
                     <a 
                       href={`tel:${club.contact.phone}`}
-                      className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl hover:from-green-100 hover:to-emerald-100 transition-colors border border-green-100"
+                      className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors border border-gray-100"
                     >
-                      <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-12 h-12 bg-parque-purple/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <svg className="w-6 h-6 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                         </svg>
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-green-800">{locale === 'es' ? 'Teléfono' : 'Phone'}</div>
-                        <div className="font-bold text-green-900">{club.contact.phone}</div>
+                        <div className="text-sm font-medium text-gray-600">{locale === 'es' ? 'Teléfono' : 'Phone'}</div>
+                        <div className="font-bold text-gray-800">{club.contact.phone}</div>
                       </div>
                     </a>
                   )}
@@ -931,16 +925,16 @@ export default function ClubDetailPage() {
                   {club.contact?.email && (
                     <a 
                       href={`mailto:${club.contact.email}`}
-                      className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl hover:from-blue-100 hover:to-indigo-100 transition-colors border border-blue-100"
+                      className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors border border-gray-100"
                     >
-                      <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-12 h-12 bg-parque-purple/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <svg className="w-6 h-6 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-blue-800">Email</div>
-                        <div className="font-bold text-blue-900 text-sm break-all">{club.contact.email}</div>
+                        <div className="text-sm font-medium text-gray-600">Email</div>
+                        <div className="font-bold text-gray-800 text-sm break-all">{club.contact.email}</div>
                       </div>
                     </a>
                   )}
@@ -950,17 +944,40 @@ export default function ClubDetailPage() {
                       href={club.contact.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-4 p-4 bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl hover:from-purple-100 hover:to-violet-100 transition-colors border border-purple-100"
+                      className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors border border-gray-100"
                     >
-                      <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                      <div className="w-12 h-12 bg-parque-purple/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <svg className="w-6 h-6 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 919-9" />
                         </svg>
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-purple-800">{locale === 'es' ? 'Sitio web' : 'Website'}</div>
-                        <div className="font-bold text-purple-900 text-sm">
+                        <div className="text-sm font-medium text-gray-600">{locale === 'es' ? 'Sitio web' : 'Website'}</div>
+                        <div className="font-bold text-gray-800 text-sm">
                           {locale === 'es' ? 'Visitar sitio web' : 'Visit website'}
+                        </div>
+                      </div>
+                    </a>
+                  )}
+
+                  {/* Added Google Maps quick link in contact section */}
+                  {club.location?.coordinates && (
+                    <a 
+                      href={club.location.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${club.location.coordinates.lat},${club.location.coordinates.lng}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors border border-gray-100"
+                    >
+                      <div className="w-12 h-12 bg-parque-purple/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <svg className="w-6 h-6 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-600">{locale === 'es' ? 'Ver en Google Maps' : 'View on Google Maps'}</div>
+                        <div className="font-bold text-gray-800 text-sm">
+                          {locale === 'es' ? 'Abrir dirección' : 'Open directions'}
                         </div>
                       </div>
                     </a>
@@ -970,7 +987,7 @@ export default function ClubDetailPage() {
 
               {/* Operating Hours */}
               {club.operatingHours && Object.values(club.operatingHours).some(h => h?.open) && (
-                <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
                   <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
                     <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1004,7 +1021,7 @@ export default function ClubDetailPage() {
               )}
 
               {/* Enhanced CTA Card */}
-              <div className="bg-gradient-to-br from-parque-purple via-purple-600 to-parque-green text-white rounded-2xl shadow-xl p-8 relative overflow-hidden">
+              <div className="bg-gradient-to-br from-parque-purple via-purple-600 to-parque-green text-white rounded-2xl shadow-lg p-8 relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-black/20 to-transparent"></div>
                 <div className="relative">
                   <h3 className="text-2xl font-bold mb-4">
@@ -1028,7 +1045,7 @@ export default function ClubDetailPage() {
 
               {/* Nearby Clubs */}
               {nearbyClubs.length > 0 && (
-                <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
                   <h3 className="text-xl font-bold text-gray-800 mb-6">
                     {locale === 'es' ? 'Clubs Cercanos' : 'Nearby Clubs'}
                   </h3>
@@ -1063,7 +1080,7 @@ export default function ClubDetailPage() {
       </section>
 
       {/* Enhanced Mobile Sticky Bottom Bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-2xl z-50 pb-safe">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-lg z-50 pb-safe">
         <div className="grid grid-cols-2 gap-3 p-4">
           {club.contact?.phone && (
             <a 
@@ -1092,10 +1109,10 @@ export default function ClubDetailPage() {
         </div>
       </div>
 
-      {/* Mobile Contact Modal - Enhanced */}
+      {/* Mobile Contact Modal - More Subtle */}
       {showContactModal && (
         <div className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end">
-          <div className="bg-white w-full rounded-t-3xl max-h-[85vh] overflow-y-auto pb-safe shadow-2xl">
+          <div className="bg-white w-full rounded-t-3xl max-h-[85vh] overflow-y-auto pb-safe shadow-lg">
             <div className="sticky top-0 bg-white p-6 border-b flex justify-between items-center rounded-t-3xl">
               <h3 className="text-xl font-bold text-gray-800">{locale === 'es' ? 'Contacto e información' : 'Contact & Information'}</h3>
               <button
@@ -1117,32 +1134,32 @@ export default function ClubDetailPage() {
                     {club.contact?.phone && (
                       <a 
                         href={`tel:${club.contact.phone}`}
-                        className="flex items-center gap-4 p-4 bg-green-50 rounded-xl border border-green-100"
+                        className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100"
                       >
-                        <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                          <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="w-12 h-12 bg-parque-purple/10 rounded-xl flex items-center justify-center">
+                          <svg className="w-6 h-6 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                           </svg>
                         </div>
                         <div>
-                          <div className="text-sm font-medium text-green-800">{locale === 'es' ? 'Teléfono' : 'Phone'}</div>
-                          <div className="font-bold text-green-900">{club.contact.phone}</div>
+                          <div className="text-sm font-medium text-gray-600">{locale === 'es' ? 'Teléfono' : 'Phone'}</div>
+                          <div className="font-bold text-gray-800">{club.contact.phone}</div>
                         </div>
                       </a>
                     )}
                     {club.contact?.email && (
                       <a 
                         href={`mailto:${club.contact.email}`}
-                        className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl border border-blue-100"
+                        className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100"
                       >
-                        <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                          <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="w-12 h-12 bg-parque-purple/10 rounded-xl flex items-center justify-center">
+                          <svg className="w-6 h-6 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                           </svg>
                         </div>
                         <div>
-                          <div className="text-sm font-medium text-blue-800">Email</div>
-                          <div className="font-bold text-blue-900 text-sm break-all">{club.contact.email}</div>
+                          <div className="text-sm font-medium text-gray-600">Email</div>
+                          <div className="font-bold text-gray-800 text-sm break-all">{club.contact.email}</div>
                         </div>
                       </a>
                     )}
@@ -1151,17 +1168,38 @@ export default function ClubDetailPage() {
                         href={club.contact.website}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-4 p-4 bg-purple-50 rounded-xl border border-purple-100"
+                        className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100"
                       >
-                        <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                          <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="w-12 h-12 bg-parque-purple/10 rounded-xl flex items-center justify-center">
+                          <svg className="w-6 h-6 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 919-9" />
                           </svg>
                         </div>
                         <div>
-                          <div className="text-sm font-medium text-purple-800">{locale === 'es' ? 'Sitio web' : 'Website'}</div>
-                          <div className="font-bold text-purple-900 text-sm">
+                          <div className="text-sm font-medium text-gray-600">{locale === 'es' ? 'Sitio web' : 'Website'}</div>
+                          <div className="font-bold text-gray-800 text-sm">
                             {locale === 'es' ? 'Visitar sitio web' : 'Visit website'}
+                          </div>
+                        </div>
+                      </a>
+                    )}
+                    {club.location?.coordinates && (
+                      <a 
+                        href={club.location.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${club.location.coordinates.lat},${club.location.coordinates.lng}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100"
+                      >
+                        <div className="w-12 h-12 bg-parque-purple/10 rounded-xl flex items-center justify-center">
+                          <svg className="w-6 h-6 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-gray-600">{locale === 'es' ? 'Ver en Google Maps' : 'View on Google Maps'}</div>
+                          <div className="font-bold text-gray-800 text-sm">
+                            {locale === 'es' ? 'Abrir dirección' : 'Open directions'}
                           </div>
                         </div>
                       </a>
