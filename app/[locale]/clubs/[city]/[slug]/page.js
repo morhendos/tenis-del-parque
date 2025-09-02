@@ -356,7 +356,7 @@ export default function ClubDetailPage() {
       {/* Mobile-Optimized Hero Section with Image Gallery */}
       <section className="relative pt-16 lg:pt-20">
         <div className="lg:container lg:mx-auto lg:px-4">
-          {/* Mobile Breadcrumb - Fixed truncation issue */}
+          {/* Mobile Breadcrumb */}
           <nav className="flex items-center space-x-1 text-xs lg:text-sm py-2 lg:py-4 text-gray-600 px-4 lg:px-0">
             <Link href={`/${locale}`} className="hover:text-gray-900 whitespace-nowrap flex-shrink-0">
               {locale === 'es' ? 'Inicio' : 'Home'}
@@ -373,13 +373,13 @@ export default function ClubDetailPage() {
             <span className="text-gray-900 font-medium min-w-0 break-words">{club.name}</span>
           </nav>
 
-          {/* Main Content Grid - Mobile First */}
+          {/* Main Content Grid */}
           <div className="lg:grid lg:grid-cols-3 lg:gap-8 pb-12">
             {/* Left Column - Images & Info */}
             <div className="lg:col-span-2 space-y-4 lg:space-y-6">
-              {/* Mobile-First Image Gallery */}
+              {/* Enhanced Image Gallery */}
               {allImages.length > 0 ? (
-                <div className="bg-white lg:rounded-2xl shadow-lg overflow-hidden">
+                <div className="bg-white lg:rounded-2xl shadow-xl overflow-hidden">
                   <div className="relative aspect-[16/12] lg:aspect-[16/10]">
                     {imageLoading[selectedImage] && (
                       <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center z-10">
@@ -396,7 +396,7 @@ export default function ClubDetailPage() {
                       alt={club.name}
                       fill
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 67vw, 50vw"
-                      quality={85}
+                      quality={90}
                       className={`object-cover ${imageLoading[selectedImage] ? 'opacity-0' : 'opacity-100'}`}
                       onError={handleMainImageError}
                       onLoadingComplete={handleMainImageLoad}
@@ -405,41 +405,41 @@ export default function ClubDetailPage() {
                       priority={selectedImage === 0}
                     />
                     {club.featured && (
-                      <div className="absolute top-2 left-2 lg:top-4 lg:left-4 bg-yellow-400 text-gray-900 px-2 py-1 lg:px-4 lg:py-2 rounded-full text-xs lg:text-base font-semibold shadow-lg">
+                      <div className="absolute top-2 left-2 lg:top-4 lg:left-4 bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 px-3 py-1.5 lg:px-4 lg:py-2 rounded-full text-xs lg:text-sm font-semibold shadow-lg backdrop-blur-sm">
                         ⭐ {locale === 'es' ? 'Club Destacado' : 'Featured Club'}
                       </div>
                     )}
                     {allImages.length > 1 && (
                       <>
-                        {/* Mobile-optimized navigation buttons - FIXED CENTERING */}
                         <button
                           onClick={() => setSelectedImage((prev) => (prev - 1 + allImages.length) % allImages.length)}
-                          className="absolute left-2 lg:left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-1.5 lg:p-2 rounded-full shadow-lg transition-colors flex items-center justify-center"
+                          className="absolute left-2 lg:left-4 top-1/2 -translate-y-1/2 bg-white/95 hover:bg-white text-gray-800 p-2 lg:p-3 rounded-full shadow-xl transition-all duration-200 hover:scale-105 flex items-center justify-center backdrop-blur-sm"
                         >
                           <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
                           </svg>
                         </button>
                         <button
                           onClick={() => setSelectedImage((prev) => (prev + 1) % allImages.length)}
-                          className="absolute right-2 lg:right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-1.5 lg:p-2 rounded-full shadow-lg transition-colors flex items-center justify-center"
+                          className="absolute right-2 lg:right-4 top-1/2 -translate-y-1/2 bg-white/95 hover:bg-white text-gray-800 p-2 lg:p-3 rounded-full shadow-xl transition-all duration-200 hover:scale-105 flex items-center justify-center backdrop-blur-sm"
                         >
                           <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                           </svg>
                         </button>
                       </>
                     )}
                   </div>
-                  {/* Thumbnail strip - Now visible on ALL screen sizes */}
                   {allImages.length > 1 && (
-                    <div className="flex p-3 lg:p-4 gap-2 overflow-x-auto bg-gray-50">
+                    <div className="flex p-4 lg:p-5 gap-3 overflow-x-auto bg-gradient-to-r from-gray-50 to-gray-100/50">
                       {allImages.map((img, idx) => (
                         <button
                           key={idx}
                           onClick={() => setSelectedImage(idx)}
-                          className={`flex-shrink-0 w-16 h-16 lg:w-20 lg:h-20 rounded-lg overflow-hidden border-2 transition-all relative ${
-                            selectedImage === idx ? 'border-parque-purple ring-2 ring-parque-purple/20' : 'border-transparent hover:border-gray-300'
+                          className={`flex-shrink-0 w-16 h-16 lg:w-20 lg:h-20 rounded-xl overflow-hidden border-2 transition-all duration-300 relative ${
+                            selectedImage === idx 
+                              ? 'border-parque-purple ring-3 ring-parque-purple/30 shadow-lg scale-105' 
+                              : 'border-gray-200 hover:border-gray-300 hover:shadow-md hover:scale-102'
                           }`}
                         >
                           <Image 
@@ -447,7 +447,7 @@ export default function ClubDetailPage() {
                             alt={`${club.name} ${idx + 1}`}
                             fill
                             sizes="80px"
-                            quality={60}
+                            quality={70}
                             className="object-cover"
                             onError={() => handleThumbnailError(idx)}
                             placeholder="blur"
@@ -459,7 +459,7 @@ export default function ClubDetailPage() {
                   )}
                 </div>
               ) : (
-                <div className="bg-gradient-to-br from-parque-purple to-parque-green lg:rounded-2xl shadow-lg h-64 lg:h-96 flex items-center justify-center">
+                <div className="bg-gradient-to-br from-parque-purple to-parque-green lg:rounded-2xl shadow-xl h-64 lg:h-96 flex items-center justify-center">
                   <div className="text-white text-center">
                     <svg className="w-16 h-16 lg:w-24 lg:h-24 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -469,95 +469,104 @@ export default function ClubDetailPage() {
                 </div>
               )}
 
-              {/* Mobile-optimized Club Information */}
-              <div className="bg-white lg:rounded-2xl shadow-lg overflow-hidden">
-                {/* Club Header - Mobile Optimized */}
-                <div className="p-4 lg:p-6 border-b">
-                  <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">{club.name}</h1>
-                  <div className="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-4 text-gray-600 text-sm lg:text-base">
-                    <div className="flex items-center gap-2">
-                      <svg className="w-4 h-4 lg:w-5 lg:h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      <span className="break-words">{club.fullAddress}</span>
+              {/* Enhanced Club Information Card */}
+              <div className="bg-white lg:rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                {/* Club Header */}
+                <div className="p-6 lg:p-8 border-b border-gray-100">
+                  <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-3 leading-tight">{club.name}</h1>
+                  <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-6 text-gray-600">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </div>
+                      <span className="text-lg">{club.fullAddress}</span>
                     </div>
                     {club.googleData?.rating && (
-                      <div className="flex items-center gap-1">
-                        <span className="text-yellow-500">⭐</span>
-                        <span className="font-semibold">{club.googleData.rating}</span>
-                        <span className="text-gray-500">({club.googleData.userRatingsTotal} {locale === 'es' ? 'reseñas' : 'reviews'})</span>
+                      <div className="flex items-center gap-2 bg-yellow-50 px-4 py-2 rounded-full">
+                        <span className="text-yellow-500 text-lg">⭐</span>
+                        <span className="font-bold text-yellow-800">{club.googleData.rating}</span>
+                        <span className="text-yellow-700 text-sm">({club.googleData.userRatingsTotal} {locale === 'es' ? 'reseñas' : 'reviews'})</span>
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* FIXED: Courts & Quick Stats - Show sport breakdown WITHOUT emojis, moved to top */}
+                {/* Enhanced Courts & Stats Section */}
                 {courtInfo.total > 0 && (
-                  <div className="p-4 lg:p-6 bg-gray-50">
-                    <h3 className="text-sm font-semibold text-gray-700 mb-3 lg:text-base">{locale === 'es' ? 'Pistas' : 'Courts'}</h3>
+                  <div className="p-6 lg:p-8 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 border-b border-gray-100">
+                    <h3 className="text-xl font-bold text-gray-800 mb-5 flex items-center gap-3">
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                      </div>
+                      {locale === 'es' ? 'Instalaciones Deportivas' : 'Sports Facilities'}
+                    </h3>
                     
-                    {/* Display sports breakdown for new structure - NO EMOJIS */}
+                    {/* Display sports breakdown for new structure */}
                     {(courtInfo.sports.tennis > 0 || courtInfo.sports.padel > 0 || courtInfo.sports.pickleball > 0) ? (
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-parque-purple">{courtInfo.total}</div>
-                          <div className="text-sm text-gray-600">{locale === 'es' ? 'Pistas totales' : 'Total courts'}</div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                          <div className="text-3xl font-bold text-slate-700 mb-1">{courtInfo.total}</div>
+                          <div className="text-sm font-medium text-slate-600">{locale === 'es' ? 'Pistas totales' : 'Total courts'}</div>
                         </div>
                         {courtInfo.sports.tennis > 0 && (
-                          <div className="text-center">
-                            <div className="text-2xl font-bold text-green-600">{courtInfo.sports.tennis}</div>
-                            <div className="text-sm text-gray-600">{locale === 'es' ? 'Tenis' : 'Tennis'}</div>
+                          <div className="bg-white rounded-xl p-5 shadow-sm border border-green-100 hover:shadow-md transition-shadow">
+                            <div className="text-3xl font-bold text-green-600 mb-1">{courtInfo.sports.tennis}</div>
+                            <div className="text-sm font-medium text-green-700">{locale === 'es' ? 'Tenis' : 'Tennis'}</div>
                           </div>
                         )}
                         {courtInfo.sports.padel > 0 && (
-                          <div className="text-center">
-                            <div className="text-2xl font-bold text-blue-600">{courtInfo.sports.padel}</div>
-                            <div className="text-sm text-gray-600">{locale === 'es' ? 'Pádel' : 'Padel'}</div>
+                          <div className="bg-white rounded-xl p-5 shadow-sm border border-blue-100 hover:shadow-md transition-shadow">
+                            <div className="text-3xl font-bold text-blue-600 mb-1">{courtInfo.sports.padel}</div>
+                            <div className="text-sm font-medium text-blue-700">{locale === 'es' ? 'Pádel' : 'Padel'}</div>
                           </div>
                         )}
                         {courtInfo.sports.pickleball > 0 && (
-                          <div className="text-center">
-                            <div className="text-2xl font-bold text-orange-600">{courtInfo.sports.pickleball}</div>
-                            <div className="text-sm text-gray-600">Pickleball</div>
+                          <div className="bg-white rounded-xl p-5 shadow-sm border border-orange-100 hover:shadow-md transition-shadow">
+                            <div className="text-3xl font-bold text-orange-600 mb-1">{courtInfo.sports.pickleball}</div>
+                            <div className="text-sm font-medium text-orange-700">Pickleball</div>
                           </div>
                         )}
                         {courtInfo.indoor > 0 && (
-                          <div className="text-center">
-                            <div className="text-2xl font-bold text-purple-600">{courtInfo.indoor}</div>
-                            <div className="text-sm text-gray-600">{locale === 'es' ? 'Cubiertas' : 'Indoor'}</div>
+                          <div className="bg-white rounded-xl p-5 shadow-sm border border-purple-100 hover:shadow-md transition-shadow">
+                            <div className="text-3xl font-bold text-purple-600 mb-1">{courtInfo.indoor}</div>
+                            <div className="text-sm font-medium text-purple-700">{locale === 'es' ? 'Cubiertas' : 'Indoor'}</div>
                           </div>
                         )}
                         {club.pricing?.publicAccess !== null && (
-                          <div className="text-center">
-                            <div className="text-2xl font-bold text-gray-600">
+                          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                            <div className="text-3xl font-bold text-gray-700 mb-1">
                               {club.pricing.publicAccess ? '✓' : '✗'}
                             </div>
-                            <div className="text-sm text-gray-600">
+                            <div className="text-sm font-medium text-gray-600">
                               {club.pricing.publicAccess ? (locale === 'es' ? 'Público' : 'Public') : (locale === 'es' ? 'Privado' : 'Private')}
                             </div>
                           </div>
                         )}
                       </div>
                     ) : (
-                      // Fallback for old structure - just show basic info
+                      // Fallback for old structure
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-parque-purple">{courtInfo.total}</div>
-                          <div className="text-sm text-gray-600">{locale === 'es' ? 'Pistas totales' : 'Total courts'}</div>
+                        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                          <div className="text-3xl font-bold text-slate-700 mb-1">{courtInfo.total}</div>
+                          <div className="text-sm font-medium text-slate-600">{locale === 'es' ? 'Pistas totales' : 'Total courts'}</div>
                         </div>
                         {courtInfo.indoor > 0 && (
-                          <div className="text-center">
-                            <div className="text-2xl font-bold text-blue-600">{courtInfo.indoor}</div>
-                            <div className="text-sm text-gray-600">{locale === 'es' ? 'Cubiertas' : 'Indoor'}</div>
+                          <div className="bg-white rounded-xl p-5 shadow-sm border border-blue-100 hover:shadow-md transition-shadow">
+                            <div className="text-3xl font-bold text-blue-600 mb-1">{courtInfo.indoor}</div>
+                            <div className="text-sm font-medium text-blue-700">{locale === 'es' ? 'Cubiertas' : 'Indoor'}</div>
                           </div>
                         )}
                         {club.pricing?.publicAccess !== null && (
-                          <div className="text-center">
-                            <div className="text-2xl font-bold text-green-600">
+                          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                            <div className="text-3xl font-bold text-gray-700 mb-1">
                               {club.pricing.publicAccess ? '✓' : '✗'}
                             </div>
-                            <div className="text-sm text-gray-600">
+                            <div className="text-sm font-medium text-gray-600">
                               {club.pricing.publicAccess ? (locale === 'es' ? 'Público' : 'Public') : (locale === 'es' ? 'Privado' : 'Private')}
                             </div>
                           </div>
@@ -567,15 +576,15 @@ export default function ClubDetailPage() {
                   </div>
                 )}
 
-                {/* Mobile Tab Navigation - FIXED ALIGNMENT with override for global margin */}
+                {/* Mobile Tab Navigation */}
                 <div className="lg:hidden border-b sticky top-16 bg-white z-10">
                   <div className="flex">
                     <button
                       onClick={() => setActiveTab('info')}
-                      className={`flex-1 px-4 py-3 font-medium text-sm border-b-2 transition-colors !mb-0 ${
+                      className={`flex-1 px-6 py-4 font-semibold text-sm border-b-3 transition-all !mb-0 ${
                         activeTab === 'info' 
-                          ? 'border-parque-purple text-parque-purple' 
-                          : 'border-transparent text-gray-600'
+                          ? 'border-parque-purple text-parque-purple bg-parque-purple/5' 
+                          : 'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50'
                       }`}
                       style={{ marginBottom: '0' }}
                     >
@@ -583,10 +592,10 @@ export default function ClubDetailPage() {
                     </button>
                     <button
                       onClick={() => setActiveTab('amenities')}
-                      className={`flex-1 px-4 py-3 font-medium text-sm border-b-2 transition-colors !mb-0 ${
+                      className={`flex-1 px-6 py-4 font-semibold text-sm border-b-3 transition-all !mb-0 ${
                         activeTab === 'amenities' 
-                          ? 'border-parque-purple text-parque-purple' 
-                          : 'border-transparent text-gray-600'
+                          ? 'border-parque-purple text-parque-purple bg-parque-purple/5' 
+                          : 'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50'
                       }`}
                       style={{ marginBottom: '0' }}
                     >
@@ -599,22 +608,29 @@ export default function ClubDetailPage() {
                 <div className="lg:hidden">
                   {/* Info Tab */}
                   {activeTab === 'info' && (
-                    <div className="p-4 space-y-4">
+                    <div className="p-6 space-y-6">
                       {/* Description */}
                       {(club.description?.[locale] || club.description?.es) && (
                         <div>
-                          <h3 className="text-lg font-semibold mb-2">{locale === 'es' ? 'Acerca del Club' : 'About the Club'}</h3>
-                          <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-line">
+                          <h3 className="text-xl font-bold text-gray-800 mb-3">{locale === 'es' ? 'Acerca del Club' : 'About the Club'}</h3>
+                          <p className="text-gray-600 leading-relaxed whitespace-pre-line text-lg">
                             {club.description[locale] || club.description.es}
                           </p>
                         </div>
                       )}
 
-                      {/* Pricing - Using the updated formatPriceRange function */}
+                      {/* Enhanced Pricing Section */}
                       {(club.pricing?.courtRental?.hourly?.min !== null || club.pricing?.courtRental?.membership?.monthly !== null) && (
                         <div>
-                          <h3 className="text-lg font-semibold mb-3">{locale === 'es' ? 'Precios' : 'Pricing'}</h3>
-                          <div className="space-y-2">
+                          <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-3">
+                            <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                              <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                              </svg>
+                            </div>
+                            {locale === 'es' ? 'Tarifas' : 'Pricing'}
+                          </h3>
+                          <div className="space-y-3">
                             {club.pricing?.courtRental?.hourly && (() => {
                               const formattedPrice = formatPriceRange(
                                 club.pricing.courtRental.hourly.min,
@@ -622,18 +638,28 @@ export default function ClubDetailPage() {
                                 locale
                               )
                               return formattedPrice ? (
-                                <div className="bg-gray-50 p-3 rounded-lg">
-                                  <div className="text-xs text-gray-600 mb-1">{locale === 'es' ? 'Alquiler de pista' : 'Court rental'}</div>
-                                  <div className="text-xl font-bold text-parque-purple">
+                                <div className="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 p-5 rounded-xl">
+                                  <div className="flex items-center gap-3 mb-2">
+                                    <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <div className="text-sm font-medium text-emerald-800">{locale === 'es' ? 'Alquiler de pista' : 'Court rental'}</div>
+                                  </div>
+                                  <div className="text-2xl font-bold text-emerald-700">
                                     {formattedPrice}
                                   </div>
                                 </div>
                               ) : null
                             })()}
                             {club.pricing?.courtRental?.membership?.monthly !== null && club.pricing?.courtRental?.membership?.monthly !== undefined && (
-                              <div className="bg-gray-50 p-3 rounded-lg">
-                                <div className="text-xs text-gray-600 mb-1">{locale === 'es' ? 'Membresía mensual' : 'Monthly membership'}</div>
-                                <div className="text-xl font-bold text-parque-purple">
+                              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 p-5 rounded-xl">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                  </svg>
+                                  <div className="text-sm font-medium text-blue-800">{locale === 'es' ? 'Membresía mensual' : 'Monthly membership'}</div>
+                                </div>
+                                <div className="text-2xl font-bold text-blue-700">
                                   {club.pricing.courtRental.membership.monthly}€
                                 </div>
                               </div>
@@ -646,17 +672,19 @@ export default function ClubDetailPage() {
 
                   {/* Amenities Tab */}
                   {activeTab === 'amenities' && (
-                    <div className="p-4 space-y-4">
+                    <div className="p-6 space-y-6">
                       {hasAmenities && (
                         <div>
-                          <h3 className="text-lg font-semibold mb-3">{locale === 'es' ? 'Instalaciones' : 'Facilities'}</h3>
-                          <div className="grid grid-cols-1 gap-2">
+                          <h3 className="text-xl font-bold text-gray-800 mb-4">{locale === 'es' ? 'Instalaciones' : 'Facilities'}</h3>
+                          <div className="grid grid-cols-1 gap-3">
                             {Object.entries(club.amenities).filter(([_, value]) => value === true).map(([key]) => (
-                              <div key={key} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                                <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span className="text-gray-700 text-sm">
+                              <div key={key} className="flex items-center gap-4 p-4 bg-green-50 rounded-xl border border-green-100">
+                                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                </div>
+                                <span className="text-gray-800 font-medium">
                                   {key === 'parking' ? (locale === 'es' ? 'Parking' : 'Parking') :
                                    key === 'lighting' ? (locale === 'es' ? 'Iluminación' : 'Lighting') :
                                    key === 'proShop' ? (locale === 'es' ? 'Tienda Pro' : 'Pro Shop') :
@@ -675,14 +703,16 @@ export default function ClubDetailPage() {
 
                       {hasServices && (
                         <div>
-                          <h3 className="text-lg font-semibold mb-3">{locale === 'es' ? 'Servicios' : 'Services'}</h3>
-                          <div className="grid grid-cols-1 gap-2">
+                          <h3 className="text-xl font-bold text-gray-800 mb-4">{locale === 'es' ? 'Servicios' : 'Services'}</h3>
+                          <div className="grid grid-cols-1 gap-3">
                             {Object.entries(club.services).filter(([_, value]) => value === true).map(([key]) => (
-                              <div key={key} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                                <svg className="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <span className="text-gray-700 text-sm">
+                              <div key={key} className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                </div>
+                                <span className="text-gray-800 font-medium">
                                   {key === 'lessons' ? (locale === 'es' ? 'Clases' : 'Lessons') :
                                    key === 'coaching' ? (locale === 'es' ? 'Entrenamiento' : 'Coaching') :
                                    key === 'stringing' ? (locale === 'es' ? 'Encordado' : 'Stringing') :
@@ -699,13 +729,13 @@ export default function ClubDetailPage() {
                   )}
                 </div>
 
-                {/* Desktop Content - Hidden on Mobile */}
+                {/* Desktop Content */}
                 <div className="hidden lg:block">
                   {/* Description */}
                   {(club.description?.[locale] || club.description?.es) && (
-                    <div className="p-6 border-t">
-                      <h2 className="text-xl font-semibold mb-3">{locale === 'es' ? 'Acerca del Club' : 'About the Club'}</h2>
-                      <p className="text-gray-600 leading-relaxed whitespace-pre-line">
+                    <div className="p-8 border-b border-gray-100">
+                      <h2 className="text-2xl font-bold text-gray-800 mb-4">{locale === 'es' ? 'Acerca del Club' : 'About the Club'}</h2>
+                      <p className="text-gray-600 leading-relaxed whitespace-pre-line text-lg">
                         {club.description[locale] || club.description.es}
                       </p>
                     </div>
@@ -713,17 +743,19 @@ export default function ClubDetailPage() {
 
                   {/* Amenities & Services - Desktop */}
                   {(hasAmenities || hasServices) && (
-                    <div className="p-6 border-t">
+                    <div className="p-8 border-b border-gray-100">
                       {hasAmenities && (
-                        <div className="mb-6">
-                          <h3 className="text-lg font-semibold mb-3">{locale === 'es' ? 'Instalaciones' : 'Facilities'}</h3>
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        <div className="mb-8">
+                          <h3 className="text-xl font-bold text-gray-800 mb-5">{locale === 'es' ? 'Instalaciones' : 'Facilities'}</h3>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                             {Object.entries(club.amenities).filter(([_, value]) => value === true).map(([key]) => (
-                              <div key={key} className="flex items-center gap-2">
-                                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span className="text-gray-700">
+                              <div key={key} className="flex items-center gap-3 p-4 bg-green-50 rounded-xl border border-green-100 hover:bg-green-100 transition-colors">
+                                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                </div>
+                                <span className="text-gray-800 font-medium">
                                   {key === 'parking' ? (locale === 'es' ? 'Parking' : 'Parking') :
                                    key === 'lighting' ? (locale === 'es' ? 'Iluminación' : 'Lighting') :
                                    key === 'proShop' ? (locale === 'es' ? 'Tienda Pro' : 'Pro Shop') :
@@ -742,14 +774,16 @@ export default function ClubDetailPage() {
 
                       {hasServices && (
                         <div>
-                          <h3 className="text-lg font-semibold mb-3">{locale === 'es' ? 'Servicios' : 'Services'}</h3>
-                          <div className="grid grid-cols-2 gap-3">
+                          <h3 className="text-xl font-bold text-gray-800 mb-5">{locale === 'es' ? 'Servicios' : 'Services'}</h3>
+                          <div className="grid grid-cols-2 gap-4">
                             {Object.entries(club.services).filter(([_, value]) => value === true).map(([key]) => (
-                              <div key={key} className="flex items-center gap-2">
-                                <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <span className="text-gray-700">
+                              <div key={key} className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100 hover:bg-blue-100 transition-colors">
+                                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                </div>
+                                <span className="text-gray-800 font-medium">
                                   {key === 'lessons' ? (locale === 'es' ? 'Clases' : 'Lessons') :
                                    key === 'coaching' ? (locale === 'es' ? 'Entrenamiento' : 'Coaching') :
                                    key === 'stringing' ? (locale === 'es' ? 'Encordado' : 'Stringing') :
@@ -765,11 +799,18 @@ export default function ClubDetailPage() {
                     </div>
                   )}
 
-                  {/* Pricing - Desktop - Using the updated formatPriceRange function */}
+                  {/* Enhanced Pricing Section - Desktop */}
                   {(club.pricing?.courtRental?.hourly?.min !== null || club.pricing?.courtRental?.membership?.monthly !== null) && (
-                    <div className="p-6 border-t bg-gray-50">
-                      <h2 className="text-xl font-semibold mb-4">{locale === 'es' ? 'Precios' : 'Pricing'}</h2>
-                      <div className="grid md:grid-cols-2 gap-4">
+                    <div className="p-8 bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50/30">
+                      <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-4">
+                        <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+                          <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                          </svg>
+                        </div>
+                        {locale === 'es' ? 'Tarifas' : 'Pricing'}
+                      </h2>
+                      <div className="grid md:grid-cols-2 gap-6">
                         {club.pricing?.courtRental?.hourly && (() => {
                           const formattedPrice = formatPriceRange(
                             club.pricing.courtRental.hourly.min,
@@ -777,18 +818,38 @@ export default function ClubDetailPage() {
                             locale
                           )
                           return formattedPrice ? (
-                            <div className="bg-white p-4 rounded-lg">
-                              <div className="text-sm text-gray-600 mb-1">{locale === 'es' ? 'Alquiler de pista' : 'Court rental'}</div>
-                              <div className="text-2xl font-bold text-parque-purple">
+                            <div className="bg-white p-6 rounded-2xl shadow-lg border-2 border-emerald-100 hover:shadow-xl transition-shadow">
+                              <div className="flex items-center gap-4 mb-4">
+                                <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+                                  <svg className="w-7 h-7 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                </div>
+                                <div>
+                                  <div className="text-sm font-semibold text-emerald-800">{locale === 'es' ? 'Alquiler de pista' : 'Court rental'}</div>
+                                  <div className="text-xs text-emerald-600">{locale === 'es' ? 'Tarifa por hora' : 'Hourly rate'}</div>
+                                </div>
+                              </div>
+                              <div className="text-3xl font-bold text-emerald-700">
                                 {formattedPrice}
                               </div>
                             </div>
                           ) : null
                         })()}
                         {club.pricing?.courtRental?.membership?.monthly !== null && club.pricing?.courtRental?.membership?.monthly !== undefined && (
-                          <div className="bg-white p-4 rounded-lg">
-                            <div className="text-sm text-gray-600 mb-1">{locale === 'es' ? 'Membresía mensual' : 'Monthly membership'}</div>
-                            <div className="text-2xl font-bold text-parque-purple">
+                          <div className="bg-white p-6 rounded-2xl shadow-lg border-2 border-blue-100 hover:shadow-xl transition-shadow">
+                            <div className="flex items-center gap-4 mb-4">
+                              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                                <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                              </div>
+                              <div>
+                                <div className="text-sm font-semibold text-blue-800">{locale === 'es' ? 'Membresía mensual' : 'Monthly membership'}</div>
+                                <div className="text-xs text-blue-600">{locale === 'es' ? 'Pago mensual' : 'Monthly payment'}</div>
+                              </div>
+                            </div>
+                            <div className="text-3xl font-bold text-blue-700">
                               {club.pricing.courtRental.membership.monthly}€
                             </div>
                           </div>
@@ -799,27 +860,37 @@ export default function ClubDetailPage() {
                 </div>
               </div>
 
-              {/* Map Section - NOW VISIBLE ON MOBILE TOO */}
+              {/* Enhanced Map Section */}
               {club.location?.coordinates && (
-                <div className="bg-white lg:rounded-2xl shadow-lg overflow-hidden">
-                  <div className="p-4 lg:p-6 border-b">
-                    <h2 className="text-lg lg:text-xl font-semibold">{locale === 'es' ? 'Ubicación' : 'Location'}</h2>
-                    <p className="text-xs lg:text-sm text-gray-600 mt-1">
-                      {locale === 'es' ? 'Vista satélite con controles de zoom' : 'Satellite view with zoom controls'}
+                <div className="bg-white lg:rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                  <div className="p-6 lg:p-8 border-b border-gray-100">
+                    <h2 className="text-xl lg:text-2xl font-bold text-gray-800 flex items-center gap-3">
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </div>
+                      {locale === 'es' ? 'Ubicación' : 'Location'}
+                    </h2>
+                    <p className="text-sm text-gray-500 mt-2">
+                      {locale === 'es' ? 'Vista satélite con controles interactivos' : 'Satellite view with interactive controls'}
                     </p>
                   </div>
                   <div id="club-map" className="h-64 lg:h-96"></div>
-                  <div className="p-3 lg:p-4 bg-gray-50">
+                  <div className="p-4 lg:p-6 bg-gray-50 border-t border-gray-100">
                     <a 
                       href={club.location.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${club.location.coordinates.lat},${club.location.coordinates.lng}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-parque-purple hover:underline text-sm"
+                      className="inline-flex items-center gap-3 text-parque-purple hover:text-parque-purple/80 font-medium transition-colors group"
                     >
-                      <svg className="w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                      {locale === 'es' ? 'Ver en Google Maps' : 'View on Google Maps'}
+                      <div className="w-8 h-8 bg-parque-purple/10 rounded-lg flex items-center justify-center group-hover:bg-parque-purple/20 transition-colors">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </div>
+                      {locale === 'es' ? 'Abrir en Google Maps' : 'Open in Google Maps'}
                     </a>
                   </div>
                 </div>
@@ -828,24 +899,31 @@ export default function ClubDetailPage() {
 
             {/* Right Column - Contact & Actions (Desktop) */}
             <div className="hidden lg:block space-y-6">
-              {/* Contact Card */}
-              <div className="bg-white rounded-2xl shadow-lg p-6">
-                <h3 className="text-lg font-semibold mb-4">{locale === 'es' ? 'Contacto' : 'Contact'}</h3>
+              {/* Enhanced Contact Card */}
+              <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  </div>
+                  {locale === 'es' ? 'Contacto' : 'Contact'}
+                </h3>
                 
                 <div className="space-y-4">
                   {club.contact?.phone && (
                     <a 
                       href={`tel:${club.contact.phone}`}
-                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl hover:from-green-100 hover:to-emerald-100 transition-colors border border-green-100"
                     >
-                      <div className="w-10 h-10 bg-parque-purple/10 rounded-full flex items-center justify-center">
-                        <svg className="w-5 h-5 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                         </svg>
                       </div>
                       <div>
-                        <div className="text-sm text-gray-600">{locale === 'es' ? 'Teléfono' : 'Phone'}</div>
-                        <div className="font-semibold">{club.contact.phone}</div>
+                        <div className="text-sm font-medium text-green-800">{locale === 'es' ? 'Teléfono' : 'Phone'}</div>
+                        <div className="font-bold text-green-900">{club.contact.phone}</div>
                       </div>
                     </a>
                   )}
@@ -853,16 +931,16 @@ export default function ClubDetailPage() {
                   {club.contact?.email && (
                     <a 
                       href={`mailto:${club.contact.email}`}
-                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl hover:from-blue-100 hover:to-indigo-100 transition-colors border border-blue-100"
                     >
-                      <div className="w-10 h-10 bg-parque-purple/10 rounded-full flex items-center justify-center">
-                        <svg className="w-5 h-5 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
                       </div>
                       <div>
-                        <div className="text-sm text-gray-600">Email</div>
-                        <div className="font-semibold text-sm break-all">{club.contact.email}</div>
+                        <div className="text-sm font-medium text-blue-800">Email</div>
+                        <div className="font-bold text-blue-900 text-sm break-all">{club.contact.email}</div>
                       </div>
                     </a>
                   )}
@@ -872,17 +950,17 @@ export default function ClubDetailPage() {
                       href={club.contact.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      className="flex items-center gap-4 p-4 bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl hover:from-purple-100 hover:to-violet-100 transition-colors border border-purple-100"
                     >
-                      <div className="w-10 h-10 bg-parque-purple/10 rounded-full flex items-center justify-center">
-                        <svg className="w-5 h-5 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
                         </svg>
                       </div>
                       <div>
-                        <div className="text-sm text-gray-600">{locale === 'es' ? 'Sitio web' : 'Website'}</div>
-                        <div className="font-semibold text-sm text-parque-purple">
-                          {locale === 'es' ? 'Visitar sitio' : 'Visit website'}
+                        <div className="text-sm font-medium text-purple-800">{locale === 'es' ? 'Sitio web' : 'Website'}</div>
+                        <div className="font-bold text-purple-900 text-sm">
+                          {locale === 'es' ? 'Visitar sitio web' : 'Visit website'}
                         </div>
                       </div>
                     </a>
@@ -892,23 +970,30 @@ export default function ClubDetailPage() {
 
               {/* Operating Hours */}
               {club.operatingHours && Object.values(club.operatingHours).some(h => h?.open) && (
-                <div className="bg-white rounded-2xl shadow-lg p-6">
-                  <h3 className="text-lg font-semibold mb-4">{locale === 'es' ? 'Horario' : 'Hours'}</h3>
-                  <div className="space-y-2 text-sm">
+                <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                  <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                    <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    {locale === 'es' ? 'Horario' : 'Hours'}
+                  </h3>
+                  <div className="space-y-3">
                     {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => {
                       const hours = club.operatingHours?.[day]
                       if (!hours || !hours.open || hours.open === 'closed') return null
                       
                       return (
-                        <div key={day} className="flex justify-between py-1">
-                          <span className="text-gray-600">
+                        <div key={day} className="flex justify-between items-center py-2 px-4 bg-gray-50 rounded-lg">
+                          <span className="text-gray-700 font-medium">
                             {locale === 'es' 
                               ? {monday: 'Lun', tuesday: 'Mar', wednesday: 'Mié', 
                                  thursday: 'Jue', friday: 'Vie', saturday: 'Sáb', 
                                  sunday: 'Dom'}[day]
                               : day.slice(0, 3)}
                           </span>
-                          <span className="font-medium">
+                          <span className="font-bold text-gray-800">
                             {hours.open} - {hours.close}
                           </span>
                         </div>
@@ -918,49 +1003,52 @@ export default function ClubDetailPage() {
                 </div>
               )}
 
-              {/* CTA Card */}
-              <div className="bg-gradient-to-br from-parque-purple to-parque-green text-white rounded-2xl shadow-lg p-6">
-                <h3 className="text-xl font-bold mb-3">
-                  {locale === 'es' 
-                    ? '¿Buscas compañeros de juego?'
-                    : 'Looking for playing partners?'}
-                </h3>
-                <p className="mb-4 text-white/90">
-                  {locale === 'es'
-                    ? 'Únete a nuestra liga amateur y encuentra jugadores de tu nivel'
-                    : 'Join our amateur league and find players at your level'}
-                </p>
-                <Link
-                  href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${city}`}
-                  className="block w-full bg-white text-parque-purple text-center py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
-                >
-                  {locale === 'es' ? 'Únete a la Liga' : 'Join the League'}
-                </Link>
+              {/* Enhanced CTA Card */}
+              <div className="bg-gradient-to-br from-parque-purple via-purple-600 to-parque-green text-white rounded-2xl shadow-xl p-8 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-black/20 to-transparent"></div>
+                <div className="relative">
+                  <h3 className="text-2xl font-bold mb-4">
+                    {locale === 'es' 
+                      ? '¿Buscas compañeros de juego?'
+                      : 'Looking for playing partners?'}
+                  </h3>
+                  <p className="mb-6 text-white/90 text-lg leading-relaxed">
+                    {locale === 'es'
+                      ? 'Únete a nuestra liga amateur y encuentra jugadores de tu nivel'
+                      : 'Join our amateur league and find players at your level'}
+                  </p>
+                  <Link
+                    href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${city}`}
+                    className="block w-full bg-white text-parque-purple text-center py-4 rounded-xl font-bold text-lg hover:bg-gray-50 transition-colors shadow-lg hover:shadow-xl"
+                  >
+                    {locale === 'es' ? 'Únete a la Liga' : 'Join the League'}
+                  </Link>
+                </div>
               </div>
 
               {/* Nearby Clubs */}
               {nearbyClubs.length > 0 && (
-                <div className="bg-white rounded-2xl shadow-lg p-6">
-                  <h3 className="text-lg font-semibold mb-4">
+                <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                  <h3 className="text-xl font-bold text-gray-800 mb-6">
                     {locale === 'es' ? 'Clubs Cercanos' : 'Nearby Clubs'}
                   </h3>
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {nearbyClubs.slice(0, 3).map(nearbyClub => {
                       const nearbyCourtInfo = getCourtInfo(nearbyClub.courts)
                       return (
                         <Link
                           key={nearbyClub._id}
                           href={`/${locale}/clubs/${city}/${nearbyClub.slug}`}
-                          className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                          className="block p-4 rounded-xl hover:bg-gray-50 transition-colors border border-gray-100 hover:border-gray-200 hover:shadow-md group"
                         >
-                          <h4 className="font-semibold text-gray-900">{nearbyClub.name}</h4>
-                          <p className="text-sm text-gray-600 mt-1">{nearbyClub.location?.address}</p>
+                          <h4 className="font-bold text-gray-900 group-hover:text-parque-purple transition-colors">{nearbyClub.name}</h4>
+                          <p className="text-sm text-gray-600 mt-2">{nearbyClub.location?.address}</p>
                           {nearbyCourtInfo.total > 0 && (
-                            <div className="flex items-center justify-between mt-2">
-                              <span className="text-xs text-gray-500">
+                            <div className="flex items-center justify-between mt-3">
+                              <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
                                 {nearbyCourtInfo.total} {locale === 'es' ? 'pistas' : 'courts'}
                               </span>
-                              <span className="text-parque-purple">→</span>
+                              <span className="text-parque-purple group-hover:translate-x-1 transition-transform">→</span>
                             </div>
                           )}
                         </Link>
@@ -974,13 +1062,13 @@ export default function ClubDetailPage() {
         </div>
       </section>
 
-      {/* Mobile Sticky Bottom Bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-50 pb-safe">
-        <div className="grid grid-cols-2 gap-2 p-3">
+      {/* Enhanced Mobile Sticky Bottom Bar */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-2xl z-50 pb-safe">
+        <div className="grid grid-cols-2 gap-3 p-4">
           {club.contact?.phone && (
             <a 
               href={`tel:${club.contact.phone}`}
-              className="flex items-center justify-center gap-2 bg-parque-purple text-white py-3 px-4 rounded-lg font-medium"
+              className="flex items-center justify-center gap-2 bg-parque-purple text-white py-4 px-4 rounded-xl font-semibold shadow-lg hover:bg-parque-purple/90 transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -992,9 +1080,9 @@ export default function ClubDetailPage() {
             onClick={() => setShowContactModal(true)}
             className={`flex items-center justify-center gap-2 ${
               club.contact?.phone 
-                ? 'bg-gray-100 text-gray-700' 
-                : 'bg-parque-purple text-white col-span-2'
-            } py-3 px-4 rounded-lg font-medium`}
+                ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' 
+                : 'bg-parque-purple text-white col-span-2 hover:bg-parque-purple/90'
+            } py-4 px-4 rounded-xl font-semibold shadow-lg transition-colors`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1004,57 +1092,57 @@ export default function ClubDetailPage() {
         </div>
       </div>
 
-      {/* Mobile Contact Modal */}
+      {/* Mobile Contact Modal - Enhanced */}
       {showContactModal && (
-        <div className="lg:hidden fixed inset-0 bg-black/50 z-50 flex items-end">
-          <div className="bg-white w-full rounded-t-2xl max-h-[80vh] overflow-y-auto pb-safe">
-            <div className="sticky top-0 bg-white p-4 border-b flex justify-between items-center">
-              <h3 className="text-lg font-semibold">{locale === 'es' ? 'Contacto e información' : 'Contact & Information'}</h3>
+        <div className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end">
+          <div className="bg-white w-full rounded-t-3xl max-h-[85vh] overflow-y-auto pb-safe shadow-2xl">
+            <div className="sticky top-0 bg-white p-6 border-b flex justify-between items-center rounded-t-3xl">
+              <h3 className="text-xl font-bold text-gray-800">{locale === 'es' ? 'Contacto e información' : 'Contact & Information'}</h3>
               <button
                 onClick={() => setShowContactModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
             
-            <div className="p-4 space-y-4">
+            <div className="p-6 space-y-6">
               {/* Contact Information */}
               {(club.contact?.phone || club.contact?.email || club.contact?.website) && (
                 <div>
-                  <h4 className="font-medium mb-3">{locale === 'es' ? 'Contacto' : 'Contact'}</h4>
-                  <div className="space-y-3">
+                  <h4 className="font-bold text-gray-800 mb-4">{locale === 'es' ? 'Contacto' : 'Contact'}</h4>
+                  <div className="space-y-4">
                     {club.contact?.phone && (
                       <a 
                         href={`tel:${club.contact.phone}`}
-                        className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                        className="flex items-center gap-4 p-4 bg-green-50 rounded-xl border border-green-100"
                       >
-                        <div className="w-10 h-10 bg-parque-purple/10 rounded-full flex items-center justify-center">
-                          <svg className="w-5 h-5 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                          <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                           </svg>
                         </div>
                         <div>
-                          <div className="text-xs text-gray-600">{locale === 'es' ? 'Teléfono' : 'Phone'}</div>
-                          <div className="font-medium">{club.contact.phone}</div>
+                          <div className="text-sm font-medium text-green-800">{locale === 'es' ? 'Teléfono' : 'Phone'}</div>
+                          <div className="font-bold text-green-900">{club.contact.phone}</div>
                         </div>
                       </a>
                     )}
                     {club.contact?.email && (
                       <a 
                         href={`mailto:${club.contact.email}`}
-                        className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                        className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl border border-blue-100"
                       >
-                        <div className="w-10 h-10 bg-parque-purple/10 rounded-full flex items-center justify-center">
-                          <svg className="w-5 h-5 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                          <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                           </svg>
                         </div>
                         <div>
-                          <div className="text-xs text-gray-600">Email</div>
-                          <div className="font-medium text-sm break-all">{club.contact.email}</div>
+                          <div className="text-sm font-medium text-blue-800">Email</div>
+                          <div className="font-bold text-blue-900 text-sm break-all">{club.contact.email}</div>
                         </div>
                       </a>
                     )}
@@ -1063,17 +1151,17 @@ export default function ClubDetailPage() {
                         href={club.contact.website}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                        className="flex items-center gap-4 p-4 bg-purple-50 rounded-xl border border-purple-100"
                       >
-                        <div className="w-10 h-10 bg-parque-purple/10 rounded-full flex items-center justify-center">
-                          <svg className="w-5 h-5 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                        <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                          <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 919-9" />
                           </svg>
                         </div>
                         <div>
-                          <div className="text-xs text-gray-600">{locale === 'es' ? 'Sitio web' : 'Website'}</div>
-                          <div className="font-medium text-sm text-parque-purple">
-                            {locale === 'es' ? 'Visitar sitio' : 'Visit website'}
+                          <div className="text-sm font-medium text-purple-800">{locale === 'es' ? 'Sitio web' : 'Website'}</div>
+                          <div className="font-bold text-purple-900 text-sm">
+                            {locale === 'es' ? 'Visitar sitio web' : 'Visit website'}
                           </div>
                         </div>
                       </a>
@@ -1085,22 +1173,22 @@ export default function ClubDetailPage() {
               {/* Operating Hours */}
               {club.operatingHours && Object.values(club.operatingHours).some(h => h?.open) && (
                 <div>
-                  <h4 className="font-medium mb-3">{locale === 'es' ? 'Horario' : 'Hours'}</h4>
-                  <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                  <h4 className="font-bold text-gray-800 mb-4">{locale === 'es' ? 'Horario' : 'Hours'}</h4>
+                  <div className="bg-gray-50 rounded-xl p-4 space-y-3">
                     {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(day => {
                       const hours = club.operatingHours?.[day]
                       if (!hours || !hours.open || hours.open === 'closed') return null
                       
                       return (
-                        <div key={day} className="flex justify-between text-sm">
-                          <span className="text-gray-600">
+                        <div key={day} className="flex justify-between items-center py-2 px-3 bg-white rounded-lg">
+                          <span className="text-gray-700 font-medium">
                             {locale === 'es' 
                               ? {monday: 'Lunes', tuesday: 'Martes', wednesday: 'Miércoles', 
                                  thursday: 'Jueves', friday: 'Viernes', saturday: 'Sábado', 
                                  sunday: 'Domingo'}[day]
                               : day.charAt(0).toUpperCase() + day.slice(1)}
                           </span>
-                          <span className="font-medium">
+                          <span className="font-bold text-gray-800">
                             {hours.open} - {hours.close}
                           </span>
                         </div>
@@ -1114,7 +1202,7 @@ export default function ClubDetailPage() {
               <div className="pt-4 border-t">
                 <Link
                   href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${city}`}
-                  className="block w-full bg-parque-purple text-white text-center py-3 rounded-lg font-semibold"
+                  className="block w-full bg-parque-purple text-white text-center py-4 rounded-xl font-bold text-lg shadow-lg"
                 >
                   {locale === 'es' ? 'Únete a la Liga' : 'Join the League'}
                 </Link>
