@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { checkMultipleClubsExistence, getExistingClubsSummary } from '@/lib/utils/duplicateDetection'
+import dbConnect from '@/lib/db/mongoose'
 
 // Dynamically import to handle if package is not installed
 let Client
@@ -107,6 +109,8 @@ export async function POST(request) {
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    await dbConnect()
 
     const { query, type, radius } = await request.json()
 
@@ -260,9 +264,21 @@ export async function POST(request) {
       // Enhanced formatting with area information
       const formattedResults = finalResults.map(formatPlaceData)
       
-      // Sort by rating and number of reviews
-      formattedResults.sort((a, b) => {
-        // First by rating (if available)
+      // ✨ NEW: Check for existing clubs in database
+      console.log('🔍 Checking for existing clubs in database...')
+      const resultsWithExistenceCheck = await checkMultipleClubsExistence(formattedResults)
+      
+      // Get summary of existing clubs
+      const existingSummary = getExistingClubsSummary(resultsWithExistenceCheck)
+      console.log('📊 Existing clubs summary:', existingSummary)
+      
+      // Sort by rating and number of reviews, but prioritize new clubs
+      resultsWithExistenceCheck.sort((a, b) => {
+        // First separate new vs existing
+        if (!a.alreadyExists && b.alreadyExists) return -1
+        if (a.alreadyExists && !b.alreadyExists) return 1
+        
+        // Within same category (new/existing), sort by rating
         if (a.rating && b.rating) {
           if (a.rating !== b.rating) {
             return b.rating - a.rating
@@ -277,31 +293,52 @@ export async function POST(request) {
         return b.user_ratings_total - a.user_ratings_total
       })
       
+      // Log existing clubs found
+      const existingClubs = resultsWithExistenceCheck.filter(club => club.alreadyExists)
+      if (existingClubs.length > 0) {
+        console.log(`\n🔄 Found ${existingClubs.length} existing clubs:`)
+        existingClubs.forEach(club => {
+          const existing = club.existingClub
+          console.log(`   • ${club.name}`)
+          console.log(`     → Matches: ${existing.name} (${existing.matchType}, ${existing.confidence}% confidence)`)
+          console.log(`     → Reason: ${existing.reason}`)
+          if (existing.slug) console.log(`     → View: /admin/clubs/${existing.id}/edit`)
+        })
+      }
+      
       // Log area preview information
-      if (formattedResults.length > 0) {
-        console.log('\n📍 Area Preview for found clubs:')
-        formattedResults.forEach(club => {
+      const newClubs = resultsWithExistenceCheck.filter(club => !club.alreadyExists)
+      if (newClubs.length > 0) {
+        console.log(`\n📍 Area Preview for ${newClubs.length} new clubs:`)
+        newClubs.forEach(club => {
           if (club.areaPreview?.specific || club.areaPreview?.locality) {
             console.log(`   • ${club.name}: ${club.areaPreview.specific || 'N/A'} / ${club.areaPreview.locality || 'N/A'}`)
           }
         })
       }
       
-      // Return formatted response with enhanced area information
+      // Return enhanced response with existence checking
       return NextResponse.json({
-        clubs: formattedResults,
-        totalResults: formattedResults.length,
+        clubs: resultsWithExistenceCheck,
+        totalResults: resultsWithExistenceCheck.length,
         query,
         type,
         radius,
         areaInfo: {
-          hasAreaData: formattedResults.some(club => 
+          hasAreaData: resultsWithExistenceCheck.some(club => 
             club.areaPreview?.specific || club.areaPreview?.locality
           ),
-          areasFound: formattedResults
+          areasFound: resultsWithExistenceCheck
             .filter(club => club.areaPreview?.specific)
             .map(club => club.areaPreview.specific)
         },
+        // ✨ NEW: Existing clubs information
+        existingSummary,
+        existingClubs: existingClubs.map(club => ({
+          googleName: club.name,
+          googlePlaceId: club.place_id,
+          existingClub: club.existingClub
+        })),
         warning: tennisPlaces.length === 0 && results.length > 0 
           ? 'No tennis-specific venues found. Showing all sports facilities.'
           : null
