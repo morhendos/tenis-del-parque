@@ -27,6 +27,79 @@ const DataQualityBadge = ({ type }) => {
   )
 }
 
+// ✨ NEW: Club existence status badge
+const ExistenceBadge = ({ club }) => {
+  if (!club.alreadyExists) {
+    return (
+      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border-blue-200">
+        <span className="mr-1">✨</span>
+        New Club
+      </span>
+    )
+  }
+
+  const existing = club.existingClub
+  let badgeColor = 'bg-red-100 text-red-800 border-red-200'
+  let icon = '🔄'
+  
+  if (existing.confidence >= 90) {
+    badgeColor = 'bg-red-100 text-red-800 border-red-200'
+    icon = '⚠️'
+  } else if (existing.confidence >= 70) {
+    badgeColor = 'bg-yellow-100 text-yellow-800 border-yellow-200'
+    icon = '⚠️'
+  } else {
+    badgeColor = 'bg-orange-100 text-orange-800 border-orange-200'
+    icon = '❓'
+  }
+
+  return (
+    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${badgeColor}`}>
+      <span className="mr-1">{icon}</span>
+      Already Added ({existing.confidence}%)
+    </span>
+  )
+}
+
+// ✨ NEW: Existing club details component
+const ExistingClubDetails = ({ club }) => {
+  if (!club.alreadyExists) return null
+
+  const existing = club.existingClub
+  const matchTypeLabels = {
+    'place_id': 'Google Place ID',
+    'coordinates': 'Location',
+    'name': 'Name similarity'
+  }
+
+  return (
+    <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs">
+      <div className="flex items-center justify-between mb-1">
+        <span className="font-medium text-red-800">
+          Matches existing club: "{existing.name}"
+        </span>
+        <span className="text-red-600">
+          {existing.confidence}% confidence
+        </span>
+      </div>
+      <div className="text-red-700 space-y-1">
+        <div>Match type: {matchTypeLabels[existing.matchType] || existing.matchType}</div>
+        <div>Reason: {existing.reason}</div>
+        {existing.city && (
+          <div>Location: {existing.area ? `${existing.area}, ` : ''}{existing.city}</div>
+        )}
+        {existing.distance && (
+          <div>Distance: {existing.distance}m apart</div>
+        )}
+        <div className="text-xs text-red-500 mt-1">
+          Import source: {existing.importSource || 'manual'} • 
+          Added: {existing.createdAt ? new Date(existing.createdAt).toLocaleDateString() : 'unknown'}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function GoogleMapsImporter({ onClose, onImportComplete }) {
   const [step, setStep] = useState('search') // search, preview, importing, complete
   const [searchQuery, setSearchQuery] = useState('')
@@ -38,6 +111,9 @@ export default function GoogleMapsImporter({ onClose, onImportComplete }) {
   const [selectedClubs, setSelectedClubs] = useState([])
   const [importProgress, setImportProgress] = useState(0)
   const [importResults, setImportResults] = useState(null)
+  
+  // ✨ NEW: Store existence summary
+  const [existingSummary, setExistingSummary] = useState(null)
 
   // Search for clubs
   const handleSearch = async () => {
@@ -69,7 +145,12 @@ export default function GoogleMapsImporter({ onClose, onImportComplete }) {
       }
 
       setSearchResults(data.clubs || [])
-      setSelectedClubs(data.clubs?.map(club => club.place_id) || [])
+      setExistingSummary(data.existingSummary || null)
+      
+      // ✨ UPDATED: Only select new clubs by default, exclude existing ones
+      const newClubs = (data.clubs || []).filter(club => !club.alreadyExists)
+      setSelectedClubs(newClubs.map(club => club.place_id))
+      
       setStep('preview')
     } catch (err) {
       console.error('Search error:', err)
@@ -79,8 +160,14 @@ export default function GoogleMapsImporter({ onClose, onImportComplete }) {
     }
   }
 
-  // Toggle club selection
+  // ✨ UPDATED: Toggle club selection (disabled for existing clubs)
   const toggleClubSelection = (placeId) => {
+    const club = searchResults.find(c => c.place_id === placeId)
+    if (club?.alreadyExists) {
+      // Don't allow selection of existing clubs
+      return
+    }
+    
     setSelectedClubs(prev => 
       prev.includes(placeId) 
         ? prev.filter(id => id !== placeId)
@@ -88,12 +175,15 @@ export default function GoogleMapsImporter({ onClose, onImportComplete }) {
     )
   }
 
-  // Select/deselect all
+  // ✨ UPDATED: Select/deselect all (only new clubs)
   const toggleSelectAll = () => {
-    if (selectedClubs.length === searchResults.length) {
+    const newClubs = searchResults.filter(club => !club.alreadyExists)
+    const newClubIds = newClubs.map(club => club.place_id)
+    
+    if (selectedClubs.length === newClubIds.length) {
       setSelectedClubs([])
     } else {
-      setSelectedClubs(searchResults.map(club => club.place_id))
+      setSelectedClubs(newClubIds)
     }
   }
 
@@ -306,90 +396,149 @@ export default function GoogleMapsImporter({ onClose, onImportComplete }) {
     </div>
   )
 
-  // Enhanced preview step with data quality information
-  const renderPreviewStep = () => (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-medium text-gray-900">
-          Found {searchResults.length} tennis clubs
-        </h3>
-        <button
-          onClick={toggleSelectAll}
-          className="text-sm text-parque-purple hover:text-purple-700"
-        >
-          {selectedClubs.length === searchResults.length ? 'Deselect All' : 'Select All'}
-        </button>
-      </div>
-
-      {/* Data source legend */}
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm">
-        <span className="font-medium">Data that will be imported:</span>
-        <span className="ml-4">✓ Name & Address</span>
-        <span className="ml-4">✓ Coordinates</span>
-        <span className="ml-4">✓ Phone & Website</span>
-        <span className="ml-4">✓ Google Rating</span>
-        <span className="ml-4">✓ Photos (if available)</span>
-      </div>
-
-      <div className="max-h-96 overflow-y-auto space-y-2 border border-gray-200 rounded-lg p-2">
-        {searchResults.map((club) => (
-          <div
-            key={club.place_id}
-            className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+  // ✨ UPDATED: Enhanced preview step with existence checking
+  const renderPreviewStep = () => {
+    const newClubs = searchResults.filter(club => !club.alreadyExists)
+    const existingClubs = searchResults.filter(club => club.alreadyExists)
+    
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-medium text-gray-900">
+            Found {searchResults.length} tennis clubs
+          </h3>
+          <button
+            onClick={toggleSelectAll}
+            disabled={newClubs.length === 0}
+            className="text-sm text-parque-purple hover:text-purple-700 disabled:text-gray-400 disabled:cursor-not-allowed"
           >
-            <input
-              type="checkbox"
-              checked={selectedClubs.includes(club.place_id)}
-              onChange={() => toggleClubSelection(club.place_id)}
-              className="mt-1 rounded text-parque-purple focus:ring-parque-purple"
-            />
-            <div className="flex-1">
-              <h4 className="font-medium text-gray-900">{club.name}</h4>
-              <p className="text-sm text-gray-600">{club.formatted_address}</p>
-              <div className="flex items-center space-x-4 mt-1">
-                {club.rating && (
-                  <span className="text-sm text-gray-500">
-                    ⭐ {club.rating} ({club.user_ratings_total} reviews)
-                  </span>
-                )}
-                {club.opening_hours && (
-                  <span className="text-sm text-green-600">
-                    {club.opening_hours.open_now ? '🟢 Open now' : '🔴 Closed'}
-                  </span>
-                )}
-                {club.website && (
-                  <span className="text-sm text-blue-600">🌐 Website</span>
-                )}
-                {club.formatted_phone_number && (
-                  <span className="text-sm text-gray-600">📞 Phone</span>
-                )}
-                {club.photos && club.photos.length > 0 && (
-                  <span className="text-sm text-purple-600">📷 {club.photos.length} photos</span>
-                )}
+            {selectedClubs.length === newClubs.length ? 'Deselect All' : 'Select All'}
+          </button>
+        </div>
+
+        {/* ✨ NEW: Summary of results */}
+        {existingSummary && (
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-2 text-sm">
+            <div className="font-medium text-gray-900 mb-2">Search Results Summary:</div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <span className="text-green-700 font-medium">✨ New clubs: {existingSummary.new}</span>
+                <div className="text-gray-600">Ready to import</div>
+              </div>
+              <div>
+                <span className="text-red-700 font-medium">🔄 Already added: {existingSummary.existing}</span>
+                <div className="text-gray-600">Will be skipped</div>
               </div>
             </div>
+            
+            {existingSummary.existing > 0 && (
+              <div className="mt-3 pt-2 border-t border-gray-300">
+                <div className="text-gray-600">Match confidence:</div>
+                <div className="flex space-x-4 mt-1">
+                  {existingSummary.highConfidence > 0 && (
+                    <span className="text-red-600">High: {existingSummary.highConfidence}</span>
+                  )}
+                  {existingSummary.mediumConfidence > 0 && (
+                    <span className="text-yellow-600">Medium: {existingSummary.mediumConfidence}</span>
+                  )}
+                  {existingSummary.lowConfidence > 0 && (
+                    <span className="text-orange-600">Low: {existingSummary.lowConfidence}</span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
-        ))}
-      </div>
+        )}
 
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-        <p className="text-sm text-yellow-800 font-medium mb-2">
-          ⚠️ Important: You&apos;ll need to add the following manually after import:
-        </p>
-        <ul className="text-sm text-yellow-700 space-y-1">
-          <li>• Club description and details</li>
-          <li>• Number and type of courts</li>
-          <li>• Amenities and facilities</li>
-          <li>• Services offered</li>
-          <li>• Pricing information</li>
-          <li>• Email and social media links</li>
-        </ul>
-        <p className="text-sm text-yellow-800 mt-2 font-medium">
-          Only verified data from Google will be imported. All other fields will remain empty until you add them.
-        </p>
+        {/* Data source legend */}
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm">
+          <span className="font-medium">Data that will be imported:</span>
+          <span className="ml-4">✓ Name & Address</span>
+          <span className="ml-4">✓ Coordinates</span>
+          <span className="ml-4">✓ Phone & Website</span>
+          <span className="ml-4">✓ Google Rating</span>
+          <span className="ml-4">✓ Photos (if available)</span>
+        </div>
+
+        <div className="max-h-96 overflow-y-auto space-y-2 border border-gray-200 rounded-lg p-2">
+          {searchResults.map((club) => (
+            <div
+              key={club.place_id}
+              className={`flex items-start space-x-3 p-3 rounded-lg transition-colors ${
+                club.alreadyExists 
+                  ? 'bg-red-50 opacity-75' 
+                  : 'hover:bg-gray-50'
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={selectedClubs.includes(club.place_id)}
+                onChange={() => toggleClubSelection(club.place_id)}
+                disabled={club.alreadyExists}
+                className={`mt-1 rounded focus:ring-parque-purple ${
+                  club.alreadyExists 
+                    ? 'text-gray-400 cursor-not-allowed' 
+                    : 'text-parque-purple'
+                }`}
+              />
+              <div className="flex-1">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1 mr-2">
+                    <h4 className={`font-medium ${club.alreadyExists ? 'text-gray-600' : 'text-gray-900'}`}>
+                      {club.name}
+                    </h4>
+                    <p className="text-sm text-gray-600">{club.formatted_address}</p>
+                  </div>
+                  <ExistenceBadge club={club} />
+                </div>
+                
+                <div className="flex items-center space-x-4 mt-1">
+                  {club.rating && (
+                    <span className="text-sm text-gray-500">
+                      ⭐ {club.rating} ({club.user_ratings_total} reviews)
+                    </span>
+                  )}
+                  {club.opening_hours && (
+                    <span className="text-sm text-green-600">
+                      {club.opening_hours.open_now ? '🟢 Open now' : '🔴 Closed'}
+                    </span>
+                  )}
+                  {club.website && (
+                    <span className="text-sm text-blue-600">🌐 Website</span>
+                  )}
+                  {club.formatted_phone_number && (
+                    <span className="text-sm text-gray-600">📞 Phone</span>
+                  )}
+                  {club.photos && club.photos.length > 0 && (
+                    <span className="text-sm text-purple-600">📷 {club.photos.length} photos</span>
+                  )}
+                </div>
+                
+                <ExistingClubDetails club={club} />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <p className="text-sm text-yellow-800 font-medium mb-2">
+            ⚠️ Important: You'll need to add the following manually after import:
+          </p>
+          <ul className="text-sm text-yellow-700 space-y-1">
+            <li>• Club description and details</li>
+            <li>• Number and type of courts</li>
+            <li>• Amenities and facilities</li>
+            <li>• Services offered</li>
+            <li>• Pricing information</li>
+            <li>• Email and social media links</li>
+          </ul>
+          <p className="text-sm text-yellow-800 mt-2 font-medium">
+            Only verified data from Google will be imported. All other fields will remain empty until you add them.
+          </p>
+        </div>
       </div>
-    </div>
-  )
+    )
+  }
 
   // Render importing step
   const renderImportingStep = () => (
@@ -480,6 +629,8 @@ export default function GoogleMapsImporter({ onClose, onImportComplete }) {
       </div>
     </div>
   )
+
+  const newClubsCount = searchResults.filter(club => !club.alreadyExists).length
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
