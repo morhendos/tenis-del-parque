@@ -116,6 +116,8 @@ root/
 │   ├── api
 │   │   ├── admin
 │   │   │   ├── areas
+│   │   │   │   ├── recalculate-assignments
+│   │   │   │   │   └── route.js
 │   │   │   │   └── route.js
 │   │   │   ├── auth
 │   │   │   │   └── check
@@ -204,6 +206,9 @@ root/
 │   │   ├── clubs
 │   │   │   ├── [city]
 │   │   │   │   └── [slug]
+│   │   │   │       └── route.js
+│   │   │   ├── city
+│   │   │   │   └── [city]
 │   │   │   │       └── route.js
 │   │   │   ├── photo
 │   │   │   │   └── route.js
@@ -474,7 +479,8 @@ root/
 │   │   └── User.js
 │   └── utils
 │       ├── apiHelpers.js
-│       ├── areaMapping.js
+│       ├── areaLoader.js
+│       ├── clubAssignmentCache.js
 │       ├── geographicBoundaries.js
 │       ├── matchResultUtils.js
 │       ├── phoneUtils.js
@@ -534,6 +540,8 @@ root/
 │   ├── linkPlayersToUsers.js
 │   ├── migrateActivationTokens.js
 │   ├── migrateCourtsData.mjs
+│   ├── populateAssignments.js
+│   ├── populateClubAssignments.mjs
 │   ├── seedCities.js
 │   ├── seedCitiesEnhanced.js
 │   ├── seedCitiesProduction.js
