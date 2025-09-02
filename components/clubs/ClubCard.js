@@ -211,7 +211,7 @@ export default function ClubCard({ club, locale }) {
 
   return (
     <Link
-      href={`/${locale}/clubs/${leagueForUrl}/${club.slug}`}
+      href={`/${locale}/${locale === 'es' ? 'clubes' : 'clubs'}/${leagueForUrl}/${club.slug}`}
       className="group block bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden h-full transform hover:-translate-y-1 cursor-pointer relative"
     >
       {/* Image Section - 40% of card height */}
