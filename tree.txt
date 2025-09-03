@@ -19,6 +19,15 @@ root/
 │   │   │   │   │       └── page.js
 │   │   │   │   └── page.js
 │   │   │   └── page.js
+│   │   ├── clubes
+│   │   │   ├── [city]
+│   │   │   │   ├── [slug]
+│   │   │   │   │   └── page.js
+│   │   │   │   ├── area
+│   │   │   │   │   └── [area]
+│   │   │   │   │       └── page.js
+│   │   │   │   └── page.js
+│   │   │   └── page.js
 │   │   ├── elo
 │   │   │   └── page.js
 │   │   ├── forgot-password
@@ -357,6 +366,9 @@ root/
 │   │   ├── LeagueCard.js
 │   │   ├── PublicScheduleTab.js
 │   │   └── ScoringSystem.js
+│   ├── pages
+│   │   ├── ClubsPageContent.js
+│   │   └── LeaguesPageContent.js
 │   ├── player
 │   │   ├── DashboardHeader.js
 │   │   ├── LeagueCard.js
