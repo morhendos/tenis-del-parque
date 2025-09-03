@@ -7,6 +7,7 @@ import { multiLeagueHomeContent } from '@/lib/content/multiLeagueHomeContent'
 import Navigation from '@/components/common/Navigation'
 import Footer from '@/components/common/Footer'
 import LeagueCard from '@/components/league/LeagueCard'
+import { TennisPreloaderFullScreen } from '@/components/ui/TennisPreloader'
 
 export default function LeaguesPageContent() {
   const params = useParams()
@@ -75,16 +76,15 @@ export default function LeaguesPageContent() {
   const comingSoonLeagues = leagues.filter(league => league.status === 'coming_soon')
   const inactiveLeagues = leagues.filter(league => league.status === 'inactive')
 
+  // 🎾 Use standardized TennisPreloader for loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-parque-bg via-white to-white">
         <Navigation locale={locale} />
-        <div className="container mx-auto px-4 py-32 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
-          <p className="mt-4 text-gray-600">
-            {locale === 'es' ? 'Cargando ligas...' : 'Loading leagues...'}
-          </p>
-        </div>
+        <TennisPreloaderFullScreen 
+          text={locale === 'es' ? 'Cargando ligas...' : 'Loading leagues...'} 
+          locale={locale} 
+        />
       </div>
     )
   }
