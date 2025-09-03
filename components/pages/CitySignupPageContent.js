@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Navigation from '@/components/common/Navigation'
 import SignupSection from '@/components/home/SignupSection'
 import Footer from '@/components/common/Footer'
+import { TennisPreloaderFullScreen } from '@/components/ui/TennisPreloader'
 import { homeContent } from '@/lib/content/homeContent'
 import { multiLeagueHomeContent } from '@/lib/content/multiLeagueHomeContent'
 
@@ -170,18 +171,9 @@ export default function CitySignupPageContent({ locale }) {
     }
   }
 
-  // Show loading state
+  // Show loading state with new standardized preloader
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-parque-bg via-white to-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 tennis-ball mb-4 animate-bounce mx-auto"></div>
-          <div className="text-parque-purple/60 text-lg font-light">
-            {locale === 'es' ? 'Cargando...' : 'Loading...'}
-          </div>
-        </div>
-      </div>
-    )
+    return <TennisPreloaderFullScreen locale={locale} />
   }
 
   // Show error if league not found or inactive
