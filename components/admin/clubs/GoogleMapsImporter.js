@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { TennisPreloaderSmall, TennisPreloaderInline } from '@/components/ui/TennisPreloader'
 
 // Data quality badge component
 const DataQualityBadge = ({ type }) => {
@@ -540,18 +541,16 @@ export default function GoogleMapsImporter({ onClose, onImportComplete }) {
     )
   }
 
-  // Render importing step
+  // 🎾 UPDATED: Render importing step with standardized tennis preloader
   const renderImportingStep = () => (
     <div className="text-center py-8">
-      <div className="inline-flex items-center justify-center w-16 h-16 bg-parque-purple rounded-full mb-4">
-        <svg className="w-8 h-8 text-white animate-spin" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-      </div>
-      <h3 className="text-lg font-medium text-gray-900 mb-2">Importing Clubs...</h3>
-      <p className="text-gray-600 mb-4">This may take a few moments</p>
-      <div className="w-full max-w-xs mx-auto bg-gray-200 rounded-full h-2.5">
+      <TennisPreloaderInline 
+        size="xl" 
+        text="Importing clubs..."
+        locale="en"
+        className="py-8"
+      />
+      <div className="w-full max-w-xs mx-auto bg-gray-200 rounded-full h-2.5 mt-6">
         <div 
           className="bg-parque-purple h-2.5 rounded-full transition-all duration-500"
           style={{ width: `${importProgress}%` }}
@@ -698,13 +697,11 @@ export default function GoogleMapsImporter({ onClose, onImportComplete }) {
                   disabled={loading || !searchQuery.trim()}
                   className="px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-parque-purple/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                 >
-                  {loading && (
-                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
+                  {loading ? (
+                    <TennisPreloaderSmall locale="en" />
+                  ) : (
+                    <span>Search</span>
                   )}
-                  <span>Search</span>
                 </button>
               )}
               {step === 'preview' && (
