@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import Navigation from '@/components/common/Navigation'
 import Footer from '@/components/common/Footer'
 import CityCard from '@/components/cities/CityCard'
+import { TennisPreloaderFullScreen } from '@/components/ui/TennisPreloader'
 import { homeContent } from '@/lib/content/homeContent'
 import { 
   AREA_DISPLAY_NAMES, 
@@ -186,16 +187,15 @@ export default function ClubsPageContent() {
   // Only show cities with clubs
   const citiesWithClubs = filteredCities.filter(city => city.clubCount > 0)
 
+  // 🎾 Use standardized TennisPreloader for loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
         <Navigation locale={locale} />
-        <div className="container mx-auto px-4 py-32 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
-          <p className="mt-4 text-gray-600">
-            {locale === 'es' ? 'Cargando clubes...' : 'Loading clubs...'}
-          </p>
-        </div>
+        <TennisPreloaderFullScreen 
+          text={locale === 'es' ? 'Cargando clubes...' : 'Loading clubs...'} 
+          locale={locale} 
+        />
       </div>
     )
   }
