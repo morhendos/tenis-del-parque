@@ -50,7 +50,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
     es: {
       home: 'Inicio',
       leagues: 'Ligas',
-      clubs: 'Clubs',
+      clubs: 'Clubes',
       rules: 'Reglamento',
       elo: 'ELO Puntos',
       swiss: 'Sistema Suizo',
