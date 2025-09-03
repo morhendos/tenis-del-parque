@@ -1,16 +1,5 @@
-import { redirect } from 'next/navigation';
+import LeaguesPageContent from '@/components/pages/LeaguesPageContent'
 
-// English route that redirects to Spanish 'ligas' page
-export default function LeaguesPageEnglish({ params }) {
-  const { locale } = params;
-  
-  // Redirect to the ligas page
-  redirect(`/${locale}/ligas`);
-}
-
-// Generate static params
-export async function generateStaticParams() {
-  return [
-    { locale: 'en' }
-  ];
+export default function LeaguesPage() {
+  return <LeaguesPageContent />
 }

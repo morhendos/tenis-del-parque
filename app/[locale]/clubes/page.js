@@ -1,5 +1,5 @@
 import ClubsPageContent from '@/components/pages/ClubsPageContent'
 
-export default function ClubsPage() {
+export default function ClubesPage() {
   return <ClubsPageContent />
 }

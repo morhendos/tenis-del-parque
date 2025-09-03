@@ -94,7 +94,7 @@ export default function CityCard({ city, leagueCount = 0, className = '' }) {
   // Determine the link URL based on whether the city has leagues
   const linkUrl = displayLeagueCount > 0 
     ? `/${locale}/${locale === 'es' ? 'ligas' : 'leagues'}`
-    : `/${locale}/clubs/${city.slug || city.name?.es?.toLowerCase() || 'ciudad'}`
+    : `/${locale}/${locale === 'es' ? 'clubes' : 'clubs'}/${city.slug || city.name?.es?.toLowerCase() || 'ciudad'}`
 
   return (
     <Link 

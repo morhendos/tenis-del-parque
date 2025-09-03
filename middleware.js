@@ -116,8 +116,8 @@ export default withAuth(
         '/swiss': `/${locale}/swiss`,
         '/activate': `/${locale}/activate`,
         '/leagues': `/${locale}/${locale === 'es' ? 'ligas' : 'leagues'}`,
+        '/clubs': `/${locale}/${locale === 'es' ? 'clubes' : 'clubs'}`,
         '/sotogrande': `/${locale}/sotogrande`,
-        '/clubs': `/${locale}/clubs`,
         '/forgot-password': `/${locale}/forgot-password`,
         '/reset-password': `/${locale}/reset-password`,
         // Add player route mappings
@@ -254,6 +254,7 @@ export default withAuth(
           '/sotogrande',
           '/registro',
           '/clubs',
+          '/clubes',
           '/forgot-password',
           '/reset-password'
         ]
@@ -263,6 +264,7 @@ export default withAuth(
                              pathWithoutLocale.startsWith('/signup/') ||
                              pathWithoutLocale.startsWith('/registro/') ||
                              pathWithoutLocale.startsWith('/clubs/') ||
+                             pathWithoutLocale.startsWith('/clubes/') ||
                              pathWithoutLocale.match(/^\/[^\/]+\/liga\/[^\/]+$/)
         
         if (isPublicRoute) return true

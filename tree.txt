@@ -10,6 +10,15 @@ root/
 │   │   │           └── page.js
 │   │   ├── activate
 │   │   │   └── page.js
+│   │   ├── clubes
+│   │   │   ├── [city]
+│   │   │   │   ├── [slug]
+│   │   │   │   │   └── page.js
+│   │   │   │   ├── area
+│   │   │   │   │   └── [area]
+│   │   │   │   │       └── page.js
+│   │   │   │   └── page.js
+│   │   │   └── page.js
 │   │   ├── clubs
 │   │   │   ├── [city]
 │   │   │   │   ├── [slug]
@@ -357,6 +366,10 @@ root/
 │   │   ├── LeagueCard.js
 │   │   ├── PublicScheduleTab.js
 │   │   └── ScoringSystem.js
+│   ├── pages
+│   │   ├── CitySignupPageContent.js
+│   │   ├── ClubsPageContent.js
+│   │   └── LeaguesPageContent.js
 │   ├── player
 │   │   ├── DashboardHeader.js
 │   │   ├── LeagueCard.js

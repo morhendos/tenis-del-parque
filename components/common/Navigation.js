@@ -50,7 +50,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
     es: {
       home: 'Inicio',
       leagues: 'Ligas',
-      clubs: 'Clubs',
+      clubs: 'Clubes',
       rules: 'Reglamento',
       elo: 'ELO Puntos',
       swiss: 'Sistema Suizo',
@@ -215,7 +215,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
             <div className="hidden lg:flex items-center space-x-6">
               <NavLink href="/" buttonKey="home">{t.home}</NavLink>
               <NavLink href={`/${validLocale === 'es' ? 'ligas' : 'leagues'}`} buttonKey="leagues">{t.leagues}</NavLink>
-              <NavLink href="/clubs" buttonKey="clubs">{t.clubs}</NavLink>
+              <NavLink href={`/${validLocale === 'es' ? 'clubes' : 'clubs'}`} buttonKey="clubs">{t.clubs}</NavLink>
               <NavLink href={`/${validLocale === 'es' ? 'reglas' : 'rules'}`} buttonKey="rules">{t.rules}</NavLink>
               <NavLink href="/swiss" buttonKey="swiss">{t.swiss}</NavLink>
               <NavLink href="/elo" buttonKey="elo">{t.elo}</NavLink>
@@ -331,7 +331,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
               </NavLink>
               
               <NavLink 
-                href="/clubs" 
+                href={`/${validLocale === 'es' ? 'clubes' : 'clubs'}`} 
                 onClick={() => setIsMobileMenuOpen(false)}
                 buttonKey="mobile-clubs"
               >
