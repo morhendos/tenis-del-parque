@@ -10,7 +10,7 @@ root/
 │   │   │           └── page.js
 │   │   ├── activate
 │   │   │   └── page.js
-│   │   ├── clubs
+│   │   ├── clubes
 │   │   │   ├── [city]
 │   │   │   │   ├── [slug]
 │   │   │   │   │   └── page.js
@@ -19,7 +19,7 @@ root/
 │   │   │   │   │       └── page.js
 │   │   │   │   └── page.js
 │   │   │   └── page.js
-│   │   ├── clubes
+│   │   ├── clubs
 │   │   │   ├── [city]
 │   │   │   │   ├── [slug]
 │   │   │   │   │   └── page.js
