@@ -11,7 +11,8 @@
     "seed:leagues": "node scripts/seedLeagues.js",
     "seed:cities": "node scripts/seedCities.js",
     "create-admin": "node scripts/createAdminUser.js",
-    "unlock-accounts": "node scripts/unlockAccounts.js"
+    "unlock-accounts": "node scripts/unlockAccounts.js",
+    "generate-sitemap": "node scripts/generateSitemap.js"
   },
   "dependencies": {
     "@googlemaps/google-maps-services-js": "^3.4.2",

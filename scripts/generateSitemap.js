@@ -1,14 +1,24 @@
-import mongoose from 'mongoose'
-import dotenv from 'dotenv'
-import Club from '../lib/models/Club.js'
-import fs from 'fs/promises'
-import path from 'path'
-import { fileURLToPath } from 'url'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+const mongoose = require('mongoose')
+const dotenv = require('dotenv')
+const fs = require('fs').promises
+const path = require('path')
 
 dotenv.config({ path: '.env.local' })
+
+// Minimal Club schema for sitemap generation - only fields we actually use
+const ClubSchema = new mongoose.Schema({
+  slug: String,
+  location: {
+    city: String,
+    area: String
+  },
+  status: String
+}, { 
+  timestamps: true,
+  collection: 'clubs' // Ensure we use the same collection as the main model
+})
+
+const Club = mongoose.models.Club || mongoose.model('Club', ClubSchema)
 
 const DOMAIN = 'https://www.tenisdp.es'
 const LOCALES = ['es', 'en']

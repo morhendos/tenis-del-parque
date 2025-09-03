@@ -76,7 +76,7 @@ const ExistingClubDetails = ({ club }) => {
     <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs">
       <div className="flex items-center justify-between mb-1">
         <span className="font-medium text-red-800">
-          Matches existing club: "{existing.name}"
+          Matches existing club: &quot;{existing.name}&quot;
         </span>
         <span className="text-red-600">
           {existing.confidence}% confidence
@@ -522,7 +522,7 @@ export default function GoogleMapsImporter({ onClose, onImportComplete }) {
 
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <p className="text-sm text-yellow-800 font-medium mb-2">
-            ⚠️ Important: You'll need to add the following manually after import:
+            ⚠️ Important: You&apos;ll need to add the following manually after import:
           </p>
           <ul className="text-sm text-yellow-700 space-y-1">
             <li>• Club description and details</li>
