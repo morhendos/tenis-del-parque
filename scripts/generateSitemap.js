@@ -13,14 +13,14 @@ dotenv.config({ path: '.env.local' })
 const DOMAIN = 'https://www.tenisdp.es'
 const LOCALES = ['es', 'en']
 
-// Static pages configuration
+// Static pages configuration with locale-aware paths
 const STATIC_PAGES = [
   { path: '', priority: '1.0', changefreq: 'weekly' },
   { path: 'reglas', pathEn: 'rules', priority: '0.7', changefreq: 'monthly' },
   { path: 'elo', priority: '0.7', changefreq: 'monthly' },
   { path: 'swiss', priority: '0.6', changefreq: 'monthly' },
   { path: 'ligas', pathEn: 'leagues', priority: '0.8', changefreq: 'weekly' },
-  { path: 'clubs', priority: '0.9', changefreq: 'weekly' },
+  { path: 'clubes', pathEn: 'clubs', priority: '0.9', changefreq: 'weekly' },
   { path: 'login', priority: '0.5', changefreq: 'monthly' }
 ]
 
@@ -40,6 +40,11 @@ function generateUrl(loc, alternates, changefreq = 'weekly', priority = '0.5') {
   xml += `  </url>\n`
   
   return xml
+}
+
+// Helper function to get locale-aware club path
+function getClubPath(locale) {
+  return locale === 'es' ? 'clubes' : 'clubs'
 }
 
 async function generateSitemap() {
@@ -86,27 +91,45 @@ async function generateSitemap() {
       })
     })
 
-    // Add city pages
+    // Add city pages with locale-aware club paths
     const activeCities = [...new Set(clubs.map(club => club.location.city))]
     activeCities.forEach(city => {
       LOCALES.forEach(locale => {
-        const loc = `${DOMAIN}/${locale}/clubs/${city}`
+        const clubPath = getClubPath(locale)
+        const loc = `${DOMAIN}/${locale}/${clubPath}/${city}`
         const alternates = LOCALES.map(altLocale => ({
           lang: altLocale,
-          href: `${DOMAIN}/${altLocale}/clubs/${city}`
+          href: `${DOMAIN}/${altLocale}/${getClubPath(altLocale)}/${city}`
         }))
         
         sitemap += generateUrl(loc, alternates, 'weekly', '0.8')
       })
     })
 
-    // Add individual club pages
-    clubs.forEach(club => {
+    // Add area pages with locale-aware club paths
+    const areas = [...new Set(clubs.filter(club => club.location?.area).map(club => `${club.location.city}-${club.location.area}`))]
+    areas.forEach(areaKey => {
+      const [city, area] = areaKey.split('-')
       LOCALES.forEach(locale => {
-        const loc = `${DOMAIN}/${locale}/clubs/${club.location.city}/${club.slug}`
+        const clubPath = getClubPath(locale)
+        const loc = `${DOMAIN}/${locale}/${clubPath}/${city}/area/${area}`
         const alternates = LOCALES.map(altLocale => ({
           lang: altLocale,
-          href: `${DOMAIN}/${altLocale}/clubs/${club.location.city}/${club.slug}`
+          href: `${DOMAIN}/${altLocale}/${getClubPath(altLocale)}/${city}/area/${area}`
+        }))
+        
+        sitemap += generateUrl(loc, alternates, 'weekly', '0.7')
+      })
+    })
+
+    // Add individual club pages with locale-aware paths
+    clubs.forEach(club => {
+      LOCALES.forEach(locale => {
+        const clubPath = getClubPath(locale)
+        const loc = `${DOMAIN}/${locale}/${clubPath}/${club.location.city}/${club.slug}`
+        const alternates = LOCALES.map(altLocale => ({
+          lang: altLocale,
+          href: `${DOMAIN}/${altLocale}/${getClubPath(altLocale)}/${club.location.city}/${club.slug}`
         }))
         
         sitemap += generateUrl(loc, alternates, 'weekly', '0.7')
@@ -137,6 +160,11 @@ async function generateSitemap() {
     
     console.log('Sitemap generated successfully!')
     console.log(`Total URLs: ${(sitemap.match(/<url>/g) || []).length}`)
+    console.log('URLs with proper locale-aware paths:')
+    console.log('  ✅ /es/clubes/* (Spanish)')
+    console.log('  ✅ /en/clubs/* (English)')
+    console.log('  ✅ /es/ligas (Spanish)')
+    console.log('  ✅ /en/leagues (English)')
     
   } catch (error) {
     console.error('Error generating sitemap:', error)
