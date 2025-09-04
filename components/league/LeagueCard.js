@@ -19,10 +19,10 @@ const getGenericLeagueFallback = (cityName) => {
     </svg>
   `.trim()
   
-  // Use Buffer for Node.js compatibility (works in both server and client)
+  // Fix btoa Latin1 error by properly encoding UTF-8 strings
   const base64 = typeof window !== 'undefined' 
-    ? btoa(svgContent) // Client-side
-    : Buffer.from(svgContent).toString('base64') // Server-side
+    ? btoa(unescape(encodeURIComponent(svgContent))) // Client-side: Convert UTF-8 to Latin1
+    : Buffer.from(svgContent, 'utf8').toString('base64') // Server-side: Properly handle UTF-8
     
   return 'data:image/svg+xml;base64,' + base64
 }
