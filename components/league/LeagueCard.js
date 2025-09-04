@@ -81,9 +81,9 @@ export default function LeagueCard({ league, content, locale }) {
     year: 'numeric' 
   }) : null;
   
-  // FIXED: Get city image with better fallback logic
+  // FIXED: Get city image with better fallback logic and updated slug mapping
   const getCityImage = () => {
-    console.log('Getting city image for league:', league.name, 'cityData:', league.cityData)
+    console.log('Getting city image for league:', league.name, 'citySlug:', citySlug, 'cityData:', league.cityData)
     
     // Priority 1: City photos from Google Maps (via cityData)
     if (league.cityData?.images?.main && !imageError) {
@@ -105,7 +105,7 @@ export default function LeagueCard({ league, content, locale }) {
       return league.city.images.main
     }
     
-    // Priority 3: Legacy static images (for backward compatibility)
+    // Priority 3: Legacy static images (for backward compatibility) - UPDATED mapping
     const hasCustomImage = ['liga-de-sotogrande', 'sotogrande', 'liga-de-malaga', 'liga-de-estepona', 'liga-de-marbella'].includes(citySlug);
     if (hasCustomImage && !imageError) {
       console.log('Using legacy static image for:', citySlug)
@@ -116,7 +116,7 @@ export default function LeagueCard({ league, content, locale }) {
         'liga-de-malaga': 'malaga-01.avif',
         'liga-de-marbella': 'marbella-02.webp'
       }
-      return `/${imageMap[citySlug] || `${citySlug}-01.jpg`}`
+      return `/${imageMap[citySlug] || 'sotogrande-01.jpg'}`
     }
     
     // Priority 4: Fallback to consistent gradient with league trophy
