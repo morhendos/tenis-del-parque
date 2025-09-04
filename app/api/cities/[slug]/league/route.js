@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
-import { connectDB } from '@/lib/db/mongodb'
+import dbConnect from '@/lib/db/mongoose'
 import League from '@/lib/models/League'
 import City from '@/lib/models/City'
 
 export async function GET(request, { params }) {
   try {
-    await connectDB()
+    await dbConnect()
     
     const { slug } = params
     
