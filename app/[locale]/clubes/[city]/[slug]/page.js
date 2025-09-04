@@ -24,10 +24,15 @@ export default function ClubDetailPage() {
   const [imageError, setImageError] = useState({})
   const [imageLoading, setImageLoading] = useState({})
   
+  // NEW: League URL state
+  const [leagueUrl, setLeagueUrl] = useState(null)
+  const [loadingLeagueUrl, setLoadingLeagueUrl] = useState(true)
+  
   const t = homeContent[locale] || homeContent['es']
 
   useEffect(() => {
     fetchClubDetails()
+    fetchLeagueUrl() // NEW: Fetch the correct league URL
   }, [city, slug])
 
   const fetchClubDetails = async () => {
@@ -44,6 +49,81 @@ export default function ClubDetailPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // NEW: Function to get the correct league URL for this city
+  const fetchLeagueUrl = async () => {
+    try {
+      setLoadingLeagueUrl(true)
+      const response = await fetch(`/api/cities/${city}/league`)
+      
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.league?.slug) {
+          // Use the specific league slug
+          setLeagueUrl(`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${data.league.slug}`)
+          console.log(`🎯 Found league for ${city}: ${data.league.slug}`)
+        } else {
+          // Fallback: no league found for this city
+          setLeagueUrl(`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${city}`)
+          console.log(`⚠️ No league found for ${city}, using fallback URL`)
+        }
+      } else {
+        // Fallback on error
+        setLeagueUrl(`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${city}`)
+        console.log(`❌ Error fetching league for ${city}, using fallback URL`)
+      }
+    } catch (error) {
+      console.error('Error fetching league URL:', error)
+      // Fallback on error
+      setLeagueUrl(`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${city}`)
+    } finally {
+      setLoadingLeagueUrl(false)
+    }
+  }
+
+  // NEW: Component for the Join League CTA with proper URL
+  const JoinLeagueCTA = ({ className = "" }) => {
+    if (loadingLeagueUrl) {
+      return (
+        <div className={`bg-gradient-to-br from-parque-purple via-purple-600 to-parque-green text-white rounded-xl shadow-lg p-6 ${className}`}>
+          <h3 className="text-xl font-bold mb-4">
+            {locale === 'es' 
+              ? '¿Buscas compañeros de juego?'
+              : 'Looking for playing partners?'}
+          </h3>
+          <p className="mb-6 text-white/90 leading-relaxed">
+            {locale === 'es'
+              ? 'Únete a nuestra liga amateur y encuentra jugadores de tu nivel'
+              : 'Join our amateur league and find players at your level'}
+          </p>
+          <div className="block w-full bg-white/20 text-white text-center py-3 rounded-lg font-bold animate-pulse">
+            {locale === 'es' ? 'Cargando...' : 'Loading...'}
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <div className={`bg-gradient-to-br from-parque-purple via-purple-600 to-parque-green text-white rounded-xl shadow-lg p-6 ${className}`}>
+        <h3 className="text-xl font-bold mb-4">
+          {locale === 'es' 
+            ? '¿Buscas compañeros de juego?'
+            : 'Looking for playing partners?'}
+        </h3>
+        <p className="mb-6 text-white/90 leading-relaxed">
+          {locale === 'es'
+            ? 'Únete a nuestra liga amateur y encuentra jugadores de tu nivel'
+            : 'Join our amateur league and find players at your level'}
+        </p>
+        <Link
+          href={leagueUrl}
+          className="block w-full bg-white text-parque-purple text-center py-3 rounded-lg font-bold hover:bg-gray-50 transition-colors"
+        >
+          {locale === 'es' ? 'Únete a la Liga' : 'Join the League'}
+        </Link>
+      </div>
+    )
   }
 
   // Helper function to format price display - UPDATED to show single prices without prefix
@@ -469,32 +549,13 @@ export default function ClubDetailPage() {
                 </div>
               )}
 
-              {/* Club Information, Description, Pricing, Map etc. continue same as original... */}
-              {/* For brevity in this example, I'll add a simplified version and link to join the league */}
-              
+              {/* Club Information */}
               <div className="bg-white lg:rounded-2xl shadow-lg p-6 lg:p-8">
                 <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4">{club.name}</h1>
                 <p className="text-gray-600 mb-6">{club.fullAddress}</p>
                 
-                {/* Enhanced CTA */}
-                <div className="bg-gradient-to-br from-parque-purple via-purple-600 to-parque-green text-white rounded-xl shadow-lg p-6">
-                  <h3 className="text-xl font-bold mb-4">
-                    {locale === 'es' 
-                      ? '¿Buscas compañeros de juego?'
-                      : 'Looking for playing partners?'}
-                  </h3>
-                  <p className="mb-6 text-white/90 leading-relaxed">
-                    {locale === 'es'
-                      ? 'Únete a nuestra liga amateur y encuentra jugadores de tu nivel'
-                      : 'Join our amateur league and find players at your level'}
-                  </p>
-                  <Link
-                    href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${city}`}
-                    className="block w-full bg-white text-parque-purple text-center py-3 rounded-lg font-bold hover:bg-gray-50 transition-colors"
-                  >
-                    {locale === 'es' ? 'Únete a la Liga' : 'Join the League'}
-                  </Link>
-                </div>
+                {/* Updated CTA with dynamic league URL */}
+                <JoinLeagueCTA />
               </div>
             </div>
 
@@ -574,7 +635,7 @@ export default function ClubDetailPage() {
         </div>
       </div>
 
-      {/* Mobile Contact Modal - Simplified */}
+      {/* Mobile Contact Modal */}
       {showContactModal && (
         <div className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end">
           <div className="bg-white w-full rounded-t-3xl max-h-[85vh] overflow-y-auto pb-safe shadow-lg">
@@ -618,14 +679,20 @@ export default function ClubDetailPage() {
                 </div>
               )}
 
-              {/* CTA */}
+              {/* CTA in modal with dynamic URL */}
               <div className="pt-4 border-t">
-                <Link
-                  href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${city}`}
-                  className="block w-full bg-parque-purple text-white text-center py-4 rounded-xl font-bold text-lg shadow-lg"
-                >
-                  {locale === 'es' ? 'Únete a la Liga' : 'Join the League'}
-                </Link>
+                {loadingLeagueUrl ? (
+                  <div className="block w-full bg-gray-300 text-transparent text-center py-4 rounded-xl font-bold text-lg shadow-lg animate-pulse">
+                    Loading...
+                  </div>
+                ) : (
+                  <Link
+                    href={leagueUrl}
+                    className="block w-full bg-parque-purple text-white text-center py-4 rounded-xl font-bold text-lg shadow-lg"
+                  >
+                    {locale === 'es' ? 'Únete a la Liga' : 'Join the League'}
+                  </Link>
+                )}
               </div>
             </div>
           </div>
