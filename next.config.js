@@ -43,18 +43,18 @@ const nextConfig = {
         source: '/:locale(es)/clubes/:city/:slug',
         destination: '/:locale/clubs/:city/:slug'
       },
-      
-      // Phase 2: Leagues/Ligas rewrite
       {
         source: '/:locale(es)/ligas',
         destination: '/:locale/leagues'
       },
-
-      // Phase 3: Signup/Registro rewrite (handles parameter name difference)
       {
         source: '/:locale(es)/registro/:ciudad',
         destination: '/:locale/signup/:ciudad'
-      }
+      },
+      {   
+        source: '/:locale(es)/reglas',
+        destination: '/:locale/rules'
+      },
     ]
   }
 }
