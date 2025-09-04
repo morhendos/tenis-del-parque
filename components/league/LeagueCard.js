@@ -267,20 +267,13 @@ export default function LeagueCard({ league, content, locale }) {
           </div>
         )}
         
-        {/* Show launch date for coming soon leagues */}
+        {/* Show launch date for coming soon leagues - REMOVED interested count */}
         {isComingSoon && formattedDate && (
           <div className="mb-4">
             <p className="text-sm text-gray-500">
               {content?.cities?.startsIn || (locale === 'es' ? 'Lanzamiento' : 'Launch')}: {' '}
               <span className="font-semibold text-gray-700">{formattedDate}</span>
             </p>
-            {league.waitingListCount > 0 && (
-              <p className="text-sm text-gray-500 mt-1">
-                <span className="font-semibold text-gray-700">{league.waitingListCount}</span> {
-                  content?.cities?.interested || (locale === 'es' ? 'interesados' : 'interested')
-                }
-              </p>
-            )}
           </div>
         )}
         
