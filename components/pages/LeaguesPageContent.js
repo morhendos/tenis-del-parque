@@ -36,11 +36,11 @@ export default function LeaguesPageContent({ locale: propLocale }) {
         console.warn('Leagues API failed, using demo data')
         // If API fails, show ALL demo leagues including the 4 coming soon ones
         setLeagues([
-          // Active league
+          // Active league - FIXED: Use proper slug that matches API expectations
           {
             _id: 'demo-sotogrande',
             name: 'Liga de Sotogrande',
-            slug: 'sotogrande',
+            slug: 'liga-de-sotogrande', // This should match the API route
             location: {
               city: 'Sotogrande',
               region: 'Andalucía',
@@ -315,7 +315,7 @@ export default function LeaguesPageContent({ locale: propLocale }) {
                 : 'We are working to bring you more leagues in different locations. Stay tuned!'}
             </p>
             <a 
-              href={`/${locale}/sotogrande`}
+              href={`/${locale}/liga-de-sotogrande`}
               className="inline-block bg-parque-purple text-white px-8 py-3 rounded-full hover:bg-parque-purple/90 transition-colors font-medium"
             >
               {locale === 'es' ? 'Ver Liga Disponible' : 'View Available League'}
