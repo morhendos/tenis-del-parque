@@ -5,12 +5,14 @@ import { useRouter } from 'next/navigation'
 import useLeaguesData from '../../../lib/hooks/useLeaguesData'
 import ImportCSVModal from '../../../components/admin/leagues/ImportCSVModal'
 import LeagueFormModal from '../../../components/admin/leagues/LeagueFormModal'
+import LeagueCityLinker from '../../../components/admin/leagues/LeagueCityLinker'
 
 export default function AdminLeaguesPage() {
   const router = useRouter()
   const [importModal, setImportModal] = useState({ show: false })
   const [importResult, setImportResult] = useState(null)
   const [formModal, setFormModal] = useState({ show: false, league: null })
+  const [activeTab, setActiveTab] = useState('overview') // NEW: Tab state
   
   const {
     leagues,
@@ -105,9 +107,9 @@ export default function AdminLeaguesPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Leagues</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Leagues Management</h2>
           <div className="mt-1">
-            <p className="text-gray-600">Manage your tennis leagues and their status</p>
+            <p className="text-gray-600">Manage your tennis leagues and their connections</p>
             <p className="text-sm text-gray-500 mt-1">Set leagues as active or coming soon to control homepage display</p>
           </div>
         </div>
@@ -139,91 +141,130 @@ export default function AdminLeaguesPage() {
         </div>
       )}
 
-      {/* Leagues Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {leagues.map((league) => {
-          const currentSeason = league.seasons?.find(s => s.status === 'registration_open' || s.status === 'active') || league.seasons?.[0]
-          const playerCount = league.playerCount || 0
-          
-          return (
-            <div 
-              key={league._id} 
-              onClick={() => handleLeagueClick(league._id, league.name)}
-              className="bg-white rounded-lg shadow-md hover:shadow-lg hover:border-parque-purple hover:border transition-all cursor-pointer group relative"
-              title={`Click to manage ${league.name}`}
-            >
-              {/* Edit button */}
-              <button
-                onClick={(e) => handleEditClick(e, league)}
-                className="absolute top-4 right-4 p-2 bg-gray-100 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-200"
-                title="Edit league settings"
-              >
-                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-              </button>
-
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-xl font-semibold text-gray-900 group-hover:text-parque-purple transition-colors">
-                    {league.name}
-                  </h3>
-                  <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(league.status)}`}>
-                    {league.status?.replace('_', ' ').toUpperCase()}
-                  </span>
-                </div>
-                
-                <div className="space-y-3 text-sm">
-                  <div className="flex items-center text-gray-600">
-                    <span className="text-lg mr-2">📍</span>
-                    <span>{league.location?.city}, {league.location?.region}</span>
-                  </div>
-                  <div className="flex items-center text-gray-600">
-                    <span className="text-lg mr-2">📅</span>
-                    <span>{currentSeason?.name || 'No active season'}</span>
-                  </div>
-                  <div className="flex items-center text-gray-600">
-                    <span className="text-lg mr-2">👥</span>
-                    <span>{playerCount} players</span>
-                  </div>
-                  {league.waitingListCount > 0 && (
-                    <div className="flex items-center text-gray-600">
-                      <span className="text-lg mr-2">⏳</span>
-                      <span>{league.waitingListCount} on waiting list</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="mt-6 grid grid-cols-2 gap-2">
-                  <button
-                    onClick={(e) => handleMatchesClick(e, league._id, league.name)}
-                    className="px-4 py-2 bg-parque-purple text-white text-sm rounded-lg hover:bg-opacity-90 transition-colors"
-                  >
-                    Matches
-                  </button>
-                  <button
-                    onClick={(e) => handlePlayersClick(e, league._id, league.name)}
-                    className="px-4 py-2 bg-parque-green text-white text-sm rounded-lg hover:bg-opacity-90 transition-colors"
-                  >
-                    Players
-                  </button>
-                </div>
-              </div>
-            </div>
-          )
-        })}
+      {/* NEW: Tabs Navigation */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'overview'
+                ? 'border-parque-purple text-parque-purple'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            League Overview
+          </button>
+          <button
+            onClick={() => setActiveTab('city-links')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'city-links'
+                ? 'border-parque-purple text-parque-purple'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            City Connections
+            <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              Fix Registration URLs
+            </span>
+          </button>
+        </nav>
       </div>
 
-      {leagues.length === 0 && !loading && (
-        <div className="text-center py-12 bg-white rounded-lg shadow">
-          <p className="text-gray-600 mb-4">No leagues found. Create your first league to get started.</p>
-          <button
-            onClick={handleCreateNew}
-            className="px-6 py-3 bg-parque-purple text-white rounded-lg hover:bg-parque-purple/90"
-          >
-            Create First League
-          </button>
-        </div>
+      {/* Tab Content */}
+      {activeTab === 'overview' && (
+        <>
+          {/* Leagues Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {leagues.map((league) => {
+              const currentSeason = league.seasons?.find(s => s.status === 'registration_open' || s.status === 'active') || league.seasons?.[0]
+              const playerCount = league.playerCount || 0
+              
+              return (
+                <div 
+                  key={league._id} 
+                  onClick={() => handleLeagueClick(league._id, league.name)}
+                  className="bg-white rounded-lg shadow-md hover:shadow-lg hover:border-parque-purple hover:border transition-all cursor-pointer group relative"
+                  title={`Click to manage ${league.name}`}
+                >
+                  {/* Edit button */}
+                  <button
+                    onClick={(e) => handleEditClick(e, league)}
+                    className="absolute top-4 right-4 p-2 bg-gray-100 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-200"
+                    title="Edit league settings"
+                  >
+                    <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+
+                  <div className="p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <h3 className="text-xl font-semibold text-gray-900 group-hover:text-parque-purple transition-colors">
+                        {league.name}
+                      </h3>
+                      <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(league.status)}`}>
+                        {league.status?.replace('_', ' ').toUpperCase()}
+                      </span>
+                    </div>
+                    
+                    <div className="space-y-3 text-sm">
+                      <div className="flex items-center text-gray-600">
+                        <span className="text-lg mr-2">📍</span>
+                        <span>{league.location?.city}, {league.location?.region}</span>
+                      </div>
+                      <div className="flex items-center text-gray-600">
+                        <span className="text-lg mr-2">📅</span>
+                        <span>{currentSeason?.name || 'No active season'}</span>
+                      </div>
+                      <div className="flex items-center text-gray-600">
+                        <span className="text-lg mr-2">👥</span>
+                        <span>{playerCount} players</span>
+                      </div>
+                      {league.waitingListCount > 0 && (
+                        <div className="flex items-center text-gray-600">
+                          <span className="text-lg mr-2">⏳</span>
+                          <span>{league.waitingListCount} on waiting list</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mt-6 grid grid-cols-2 gap-2">
+                      <button
+                        onClick={(e) => handleMatchesClick(e, league._id, league.name)}
+                        className="px-4 py-2 bg-parque-purple text-white text-sm rounded-lg hover:bg-opacity-90 transition-colors"
+                      >
+                        Matches
+                      </button>
+                      <button
+                        onClick={(e) => handlePlayersClick(e, league._id, league.name)}
+                        className="px-4 py-2 bg-parque-green text-white text-sm rounded-lg hover:bg-opacity-90 transition-colors"
+                      >
+                        Players
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {leagues.length === 0 && !loading && (
+            <div className="text-center py-12 bg-white rounded-lg shadow">
+              <p className="text-gray-600 mb-4">No leagues found. Create your first league to get started.</p>
+              <button
+                onClick={handleCreateNew}
+                className="px-6 py-3 bg-parque-purple text-white rounded-lg hover:bg-parque-purple/90"
+              >
+                Create First League
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* NEW: City Links Tab */}
+      {activeTab === 'city-links' && (
+        <LeagueCityLinker />
       )}
 
       {/* Import Modal */}
