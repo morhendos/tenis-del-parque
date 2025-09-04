@@ -36,8 +36,32 @@ export default function LeagueCard({ league, content, locale }) {
   const citySlug = league.slug;
   const cityContent = content?.cities?.cityDescriptions?.[citySlug];
   
-  // Extract location string from location object or cityData
-  const locationString = league.cityData?.name || league.location?.city || league.location?.region || league.name;
+  // FIXED: Properly extract city name as string
+  const getCityName = () => {
+    // Method 1: Use league's getCityName if available
+    if (typeof league.getCityName === 'function') {
+      return league.getCityName()
+    }
+    
+    // Method 2: From cityData (handle both string and object)
+    if (league.cityData?.name) {
+      if (typeof league.cityData.name === 'string') {
+        return league.cityData.name
+      } else if (typeof league.cityData.name === 'object') {
+        return league.cityData.name.es || league.cityData.name.en || 'Unknown'
+      }
+    }
+    
+    // Method 3: From location object
+    if (league.location?.city) {
+      return league.location.city
+    }
+    
+    // Method 4: Fallback to league name
+    return league.name || 'Unknown'
+  }
+  
+  const locationString = getCityName()
   const regionString = league.location?.region || 'España';
   
   // Check if registration is open for active leagues
@@ -57,10 +81,13 @@ export default function LeagueCard({ league, content, locale }) {
     year: 'numeric' 
   }) : null;
   
-  // Get city image with priority to Google Maps photos
+  // FIXED: Get city image with better fallback logic
   const getCityImage = () => {
+    console.log('Getting city image for league:', league.name, 'cityData:', league.cityData)
+    
     // Priority 1: City photos from Google Maps (via cityData)
     if (league.cityData?.images?.main && !imageError) {
+      console.log('Using cityData main image:', league.cityData.images.main)
       // If it's a Google photo reference, use the public proxy
       if (league.cityData.images.googlePhotoReference) {
         return `/api/cities/photo?photo_reference=${league.cityData.images.googlePhotoReference}&maxwidth=800`
@@ -69,17 +96,31 @@ export default function LeagueCard({ league, content, locale }) {
       return league.cityData.images.main
     }
     
-    // Priority 2: Legacy static images (for backward compatibility)
-    const hasCustomImage = ['liga-de-sotogrande', 'liga-de-malaga', 'liga-de-estepona', 'liga-de-marbella'].includes(citySlug);
-    if (hasCustomImage && !imageError) {
-      return `/${citySlug === 'liga-de-sotogrande' ? 'sotogrande-01.jpg' : 
-        citySlug === 'liga-de-estepona' ? 'estepona-01.webp' :
-        citySlug === 'liga-de-malaga' ? 'malaga-01.avif' : 
-        citySlug === 'liga-de-marbella' ? 'marbella-02.webp' : 
-             `${citySlug}-01.jpg`}`
+    // Priority 2: Check if populated city has images
+    if (league.city?.images?.main && !imageError) {
+      console.log('Using populated city main image:', league.city.images.main)
+      if (league.city.images.googlePhotoReference) {
+        return `/api/cities/photo?photo_reference=${league.city.images.googlePhotoReference}&maxwidth=800`
+      }
+      return league.city.images.main
     }
     
-    // Priority 3: Fallback to consistent gradient with league trophy
+    // Priority 3: Legacy static images (for backward compatibility)
+    const hasCustomImage = ['liga-de-sotogrande', 'sotogrande', 'liga-de-malaga', 'liga-de-estepona', 'liga-de-marbella'].includes(citySlug);
+    if (hasCustomImage && !imageError) {
+      console.log('Using legacy static image for:', citySlug)
+      const imageMap = {
+        'liga-de-sotogrande': 'sotogrande-01.jpg',
+        'sotogrande': 'sotogrande-01.jpg',
+        'liga-de-estepona': 'estepona-01.webp',
+        'liga-de-malaga': 'malaga-01.avif',
+        'liga-de-marbella': 'marbella-02.webp'
+      }
+      return `/${imageMap[citySlug] || `${citySlug}-01.jpg`}`
+    }
+    
+    // Priority 4: Fallback to consistent gradient with league trophy
+    console.log('Using fallback gradient for:', locationString)
     return getGenericLeagueFallback(locationString)
   }
 
@@ -93,7 +134,7 @@ export default function LeagueCard({ league, content, locale }) {
     setImageLoading(false)
   }
   
-  // Get the appropriate button text and link with proper Spanish URLs
+  // FIXED: Get the appropriate button text and link with proper Spanish URLs
   const getButtonConfig = () => {
     if (isActive) {
       if (activeSeason) {
