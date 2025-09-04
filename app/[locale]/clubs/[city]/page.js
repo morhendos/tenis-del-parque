@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Navigation from '@/components/common/Navigation'
 import Footer from '@/components/common/Footer'
 import ClubCard from '@/components/clubs/ClubCard'
+import { TennisPreloaderFullScreen } from '@/components/ui/TennisPreloader'
 import { homeContent } from '@/lib/content/homeContent'
 import { LEAGUE_NAMES } from '@/lib/utils/geographicBoundaries'
 
@@ -330,16 +331,15 @@ export default function CityClubsPage() {
     }
   }, [clubs])
 
+  // 🎾 Use standardized TennisPreloader for loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
         <Navigation locale={locale} />
-        <div className="container mx-auto px-4 py-32 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
-          <p className="mt-4 text-gray-600">
-            {locale === 'es' ? 'Cargando clubs...' : 'Loading clubs...'}
-          </p>
-        </div>
+        <TennisPreloaderFullScreen 
+          text={locale === 'es' ? 'Cargando clubs...' : 'Loading clubs...'} 
+          locale={locale} 
+        />
       </div>
     )
   }
