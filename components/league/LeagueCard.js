@@ -93,7 +93,7 @@ export default function LeagueCard({ league, content, locale }) {
     setImageLoading(false)
   }
   
-  // Get the appropriate button text and link
+  // Get the appropriate button text and link with proper Spanish URLs
   const getButtonConfig = () => {
     if (isActive) {
       if (activeSeason) {
@@ -110,9 +110,11 @@ export default function LeagueCard({ league, content, locale }) {
         className: 'bg-parque-purple text-white hover:bg-parque-purple/90'
       };
     } else if (isComingSoon) {
+      // Use proper Spanish URL for registration
+      const registrationUrl = locale === 'es' ? 'registro' : 'signup'
       return {
         text: content?.cities?.preRegister || (locale === 'es' ? 'Pre-registro' : 'Pre-register'),
-        href: `/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${citySlug}`,
+        href: `/${locale}/${registrationUrl}/${citySlug}`,
         className: 'bg-parque-green text-white hover:bg-parque-green/90'
       };
     } else {
