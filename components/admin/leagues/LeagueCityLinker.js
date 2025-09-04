@@ -300,8 +300,8 @@ export default function LeagueCityLinker() {
           <h4 className="font-medium mb-2">🎯 How this fixes the registration flow:</h4>
           <ul className="space-y-1 text-xs">
             <li>• Club pages in linked cities will redirect to the correct league registration</li>
-            <li>• Example: Malaga club → "Join League" → /es/registro/liga-de-malaga ✅</li>
-            <li>• Unlinked cities fall back to /es/registro/{city} (may result in 404)</li>
+            <li>• Example: Malaga club → &quot;Join League&quot; → /es/registro/liga-de-malaga ✅</li>
+            <li>• Unlinked cities fall back to /es/registro/{'{city}'} (may result in 404)</li>
             <li>• Each city should have at most one active league linked</li>
           </ul>
         </div>
