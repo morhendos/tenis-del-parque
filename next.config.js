@@ -22,6 +22,28 @@ const nextConfig = {
       },
     ],
   },
+  
+  // Rewrite Spanish "clubes" URLs to use the unified "clubs" implementation
+  async rewrites() {
+    return [
+      {
+        source: '/:locale(es)/clubes',
+        destination: '/:locale/clubs'
+      },
+      {
+        source: '/:locale(es)/clubes/:city',
+        destination: '/:locale/clubs/:city'
+      },
+      {
+        source: '/:locale(es)/clubes/:city/area/:area',
+        destination: '/:locale/clubs/:city/area/:area'
+      },
+      {
+        source: '/:locale(es)/clubes/:city/:slug',
+        destination: '/:locale/clubs/:city/:slug'
+      }
+    ]
+  }
 }
 
 module.exports = nextConfig

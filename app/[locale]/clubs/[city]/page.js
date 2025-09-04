@@ -357,7 +357,7 @@ export default function CityClubsPage() {
                 {locale === 'es' ? 'Inicio' : 'Home'}
               </Link>
               <span>/</span>
-              <Link href={`/${locale}/clubs`} className="hover:text-white">
+              <Link href={`/${locale}/${locale === 'es' ? 'clubes' : 'clubs'}`} className="hover:text-white">
                 {locale === 'es' ? 'Clubs' : 'Clubs'}
               </Link>
               <span>/</span>
