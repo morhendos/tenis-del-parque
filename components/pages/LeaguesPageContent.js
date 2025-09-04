@@ -34,9 +34,9 @@ export default function LeaguesPageContent({ locale: propLocale }) {
         setLeagues(data.leagues || [])
       } else {
         console.warn('Leagues API failed, using demo data')
-        // If API fails, show ALL demo leagues including the 4 coming soon ones
+        // If API fails, show demo leagues - FIXED: Only 3 coming soon leagues (no Fuengirola)
         setLeagues([
-          // Active league - FIXED: Use proper slug that matches API expectations
+          // Active league
           {
             _id: 'demo-sotogrande',
             name: 'Liga de Sotogrande',
@@ -65,7 +65,7 @@ export default function LeaguesPageContent({ locale: propLocale }) {
               images: { main: '/sotogrande-01.jpg', googlePhotoReference: null }
             }
           },
-          // All 4 Coming Soon leagues
+          // Only 3 Coming Soon leagues (removed Fuengirola)
           {
             _id: 'demo-malaga',
             name: 'Liga de Málaga',
@@ -133,29 +133,6 @@ export default function LeaguesPageContent({ locale: propLocale }) {
             cityData: {
               name: 'Estepona',
               images: { main: '/estepona-01.webp', googlePhotoReference: null }
-            }
-          },
-          {
-            _id: 'demo-fuengirola',
-            name: 'Liga de Fuengirola',
-            slug: 'liga-de-fuengirola',
-            location: {
-              city: 'Fuengirola',
-              region: 'Andalucía',
-              country: 'España'
-            },
-            description: {
-              es: 'Liga de tenis amateur en Fuengirola. Próximo lanzamiento con enfoque en jugadores principiantes e intermedios.',
-              en: 'Amateur tennis league in Fuengirola. Coming soon with focus on beginner and intermediate players.'
-            },
-            seasons: [],
-            playerCount: 0,
-            status: 'coming_soon',
-            expectedLaunchDate: '2025-12-15',
-            waitingListCount: 6,
-            cityData: {
-              name: 'Fuengirola',
-              images: { main: '', googlePhotoReference: null }
             }
           }
         ])
