@@ -263,7 +263,7 @@ export default function CitySignupPageContent({ locale }) {
           </div>
         </div>
 
-        {/* Coming Soon Notice */}
+        {/* Coming Soon Notice - REMOVED interested count */}
         {isComingSoon && (
           <div className="container mx-auto px-4 pt-8">
             <div className="max-w-2xl mx-auto">
@@ -276,11 +276,6 @@ export default function CitySignupPageContent({ locale }) {
                     ? `Estamos preparando el lanzamiento de la liga en ${league.name}. Pre-regístrate ahora para ser de los primeros en jugar.`
                     : `We're preparing to launch the league in ${league.name}. Pre-register now to be among the first to play.`}
                 </p>
-                {league.waitingListCount > 0 && (
-                  <p className="text-sm text-blue-600 mt-2">
-                    <span className="font-semibold">{league.waitingListCount}</span> {content.cities.interested}
-                  </p>
-                )}
               </div>
             </div>
           </div>
