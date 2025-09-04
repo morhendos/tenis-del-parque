@@ -19,6 +19,7 @@ export default function ClubsPageContent() {
   const [cities, setCities] = useState([])
   const [clubs, setClubs] = useState([]) // For area stats
   const [loading, setLoading] = useState(true)
+  const [clubsLoading, setClubsLoading] = useState(true)
   const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [showAreaDetails, setShowAreaDetails] = useState(false)
@@ -109,6 +110,7 @@ export default function ClubsPageContent() {
   // Fetch clubs for area statistics
   const fetchClubs = async () => {
     try {
+      setClubsLoading(true)
       const response = await fetch('/api/clubs?limit=1000') // Get all clubs for stats
       if (response.ok) {
         const data = await response.json()
@@ -116,6 +118,8 @@ export default function ClubsPageContent() {
       }
     } catch (error) {
       console.error('Error fetching clubs for stats:', error)
+    } finally {
+      setClubsLoading(false)
     }
   }
 
@@ -151,9 +155,10 @@ export default function ClubsPageContent() {
         }
       })
       
-      // Also calculate total club count per city using GPS assignment
-      const cityClubCount = clubs.filter(club => club.league === city.slug).length
-      city.clubCount = cityClubCount // Update the city object with correct count
+      // Calculate GPS-based club count for area stats, but preserve original database clubCount
+      const gpsBasedClubCount = clubs.filter(club => club.league === city.slug).length
+      city.gpsClubCount = gpsBasedClubCount // Store GPS-based count separately
+      // Keep original city.clubCount from database for display
     })
 
     // Sort top areas by club count
@@ -186,9 +191,26 @@ export default function ClubsPageContent() {
 
   // Only show cities with clubs
   const citiesWithClubs = filteredCities.filter(city => city.clubCount > 0)
+  
+  // Debug information
+  console.log('ClubsPageContent Debug:', {
+    loading,
+    clubsLoading,
+    citiesCount: cities.length,
+    filteredCitiesCount: filteredCities.length,
+    citiesWithClubsCount: citiesWithClubs.length,
+    clubsCount: clubs.length,
+    searchTerm,
+    sampleCity: cities[0] ? {
+      name: cities[0].name,
+      clubCount: cities[0].clubCount,
+      gpsClubCount: cities[0].gpsClubCount
+    } : null
+  })
 
   // 🎾 Use standardized TennisPreloader for loading state
-  if (loading) {
+  // Show loading while either cities or clubs are loading
+  if (loading || clubsLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
         <Navigation locale={locale} />
@@ -330,7 +352,7 @@ export default function ClubsPageContent() {
                   {locale === 'es' ? 'Ver Todas las Ciudades' : 'View All Cities'}
                 </button>
               </>
-            ) : (
+            ) : cities.length === 0 ? (
               <>
                 <div className="text-6xl mb-6">🏗️</div>
                 <h2 className="text-3xl font-light text-gray-900 mb-4">
@@ -347,6 +369,32 @@ export default function ClubsPageContent() {
                 >
                   {locale === 'es' ? 'Ver Ligas Disponibles' : 'View Available Leagues'}
                 </a>
+              </>
+            ) : (
+              <>
+                <div className="text-6xl mb-6">🎾</div>
+                <h2 className="text-3xl font-light text-gray-900 mb-4">
+                  {locale === 'es' ? 'Ciudades en Desarrollo' : 'Cities in Development'}
+                </h2>
+                <p className="text-gray-600 mb-8">
+                  {locale === 'es' 
+                    ? 'Tenemos ciudades registradas pero aún estamos añadiendo clubes. ¡Pronto tendrás más opciones disponibles!'
+                    : 'We have cities registered but are still adding clubs. More options will be available soon!'}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <a 
+                    href={`/${locale}/${locale === 'es' ? 'ligas' : 'leagues'}`}
+                    className="inline-block bg-parque-purple text-white px-6 py-3 rounded-full hover:bg-parque-purple/90 transition-colors font-medium"
+                  >
+                    {locale === 'es' ? 'Ver Ligas Disponibles' : 'View Available Leagues'}
+                  </a>
+                  <a 
+                    href={`/${locale}`}
+                    className="inline-block border-2 border-parque-purple text-parque-purple px-6 py-3 rounded-full hover:bg-parque-purple hover:text-white transition-colors font-medium"
+                  >
+                    {locale === 'es' ? 'Lista de Espera' : 'Join Waiting List'}
+                  </a>
+                </div>
               </>
             )}
           </div>
