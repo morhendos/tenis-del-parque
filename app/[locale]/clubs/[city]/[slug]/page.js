@@ -26,6 +26,12 @@ export default function ClubDetailPage() {
   
   const t = homeContent[locale] || homeContent['es']
 
+  // Helper function to convert city slug to league slug
+  const getCityLeagueSlug = (citySlug) => {
+    if (!citySlug) return null
+    return `liga-de-${citySlug}`
+  }
+
   useEffect(() => {
     fetchClubDetails()
   }, [city, slug])
@@ -948,7 +954,7 @@ export default function ClubDetailPage() {
                     >
                       <div className="w-12 h-12 bg-parque-purple/10 rounded-xl flex items-center justify-center flex-shrink-0">
                         <svg className="w-6 h-6 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 919-9" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s1.343-9-3-9m-9 9a9 9 0 919-9" />
                         </svg>
                       </div>
                       <div>
@@ -1035,7 +1041,7 @@ export default function ClubDetailPage() {
                       : 'Join our amateur league and find players at your level'}
                   </p>
                   <Link
-                    href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${city}`}
+                    href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${getCityLeagueSlug(city)}`}
                     className="block w-full bg-white text-parque-purple text-center py-4 rounded-xl font-bold text-lg hover:bg-gray-50 transition-colors shadow-lg hover:shadow-xl"
                   >
                     {locale === 'es' ? 'Únete a la Liga' : 'Join the League'}
@@ -1172,7 +1178,7 @@ export default function ClubDetailPage() {
                       >
                         <div className="w-12 h-12 bg-parque-purple/10 rounded-xl flex items-center justify-center">
                           <svg className="w-6 h-6 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 919-9" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s1.343-9-3-9m-9 9a9 9 0 919-9" />
                           </svg>
                         </div>
                         <div>
@@ -1239,7 +1245,7 @@ export default function ClubDetailPage() {
               {/* CTA */}
               <div className="pt-4 border-t">
                 <Link
-                  href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${city}`}
+                  href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${getCityLeagueSlug(city)}`}
                   className="block w-full bg-parque-purple text-white text-center py-4 rounded-xl font-bold text-lg shadow-lg"
                 >
                   {locale === 'es' ? 'Únete a la Liga' : 'Join the League'}
