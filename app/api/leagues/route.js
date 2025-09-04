@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import dbConnect from '../../../lib/db/mongoose'
 import League from '../../../lib/models/League'
 import Player from '../../../lib/models/Player'
+import City from '../../../lib/models/City'  // 🚨 FIXED: Import City model
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
