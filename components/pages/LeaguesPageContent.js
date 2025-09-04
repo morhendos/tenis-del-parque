@@ -9,9 +9,10 @@ import Footer from '@/components/common/Footer'
 import LeagueCard from '@/components/league/LeagueCard'
 import { TennisPreloaderFullScreen } from '@/components/ui/TennisPreloader'
 
-export default function LeaguesPageContent() {
+export default function LeaguesPageContent({ locale: propLocale }) {
   const params = useParams()
-  const locale = params.locale || 'es'
+  // Use prop locale first, fallback to params, then default
+  const locale = propLocale || params?.locale || 'es'
   const [leagues, setLeagues] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -29,8 +30,10 @@ export default function LeaguesPageContent() {
       const response = await fetch('/api/leagues')
       if (response.ok) {
         const data = await response.json()
+        console.log('Leagues API response:', data) // Debug log
         setLeagues(data.leagues || [])
       } else {
+        console.warn('Leagues API failed, using demo data')
         // If API fails, show demo leagues
         setLeagues([
           {
@@ -58,6 +61,53 @@ export default function LeaguesPageContent() {
             status: 'active',
             cityData: {
               name: { es: 'Sotogrande', en: 'Sotogrande' },
+              images: { main: '', googlePhotoReference: null }
+            }
+          },
+          // Add some coming soon leagues for demo
+          {
+            _id: 'demo-malaga',
+            name: 'Liga de Málaga',
+            slug: 'liga-de-malaga',
+            location: {
+              city: 'Málaga',
+              region: 'Andalucía', 
+              country: 'España'
+            },
+            description: {
+              es: 'Liga de tenis amateur en Málaga. Próximo lanzamiento con sistema competitivo y divertido.',
+              en: 'Amateur tennis league in Málaga. Coming soon with competitive and fun system.'
+            },
+            seasons: [],
+            playerCount: 0,
+            status: 'coming_soon',
+            expectedLaunchDate: '2025-10-01',
+            waitingListCount: 15,
+            cityData: {
+              name: { es: 'Málaga', en: 'Málaga' },
+              images: { main: '', googlePhotoReference: null }
+            }
+          },
+          {
+            _id: 'demo-marbella',
+            name: 'Liga de Marbella',
+            slug: 'liga-de-marbella',
+            location: {
+              city: 'Marbella',
+              region: 'Andalucía',
+              country: 'España'
+            },
+            description: {
+              es: 'Liga de tenis amateur en Marbella. Próximo lanzamiento en la Costa del Sol.',
+              en: 'Amateur tennis league in Marbella. Coming soon to Costa del Sol.'
+            },
+            seasons: [],
+            playerCount: 0,
+            status: 'coming_soon',
+            expectedLaunchDate: '2025-11-01', 
+            waitingListCount: 12,
+            cityData: {
+              name: { es: 'Marbella', en: 'Marbella' },
               images: { main: '', googlePhotoReference: null }
             }
           }
