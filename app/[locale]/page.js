@@ -57,6 +57,7 @@ export default function MultiLeagueHomePage() {
   const [language, setLanguage] = useState(validLocale);
   const [leagues, setLeagues] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   
   const content = multiLeagueHomeContent[validLocale] || multiLeagueHomeContent[i18n.defaultLocale];
   const footerContent = homeContent[validLocale]?.footer || homeContent[i18n.defaultLocale]?.footer;
@@ -68,220 +69,25 @@ export default function MultiLeagueHomePage() {
   
   const fetchLeagues = async () => {
     try {
+      console.log('🔄 Home page: Fetching leagues from API...');
       const response = await fetch('/api/leagues');
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Home page leagues API response:', data); // Debug log
+      const data = await response.json();
+      
+      console.log('📊 Home page API response:', data);
+      
+      if (response.ok && data.success) {
+        console.log('✅ Home page: API success, using real database data');
         setLeagues(data.leagues || []);
+        setError(null);
       } else {
-        console.warn('Leagues API failed, using demo data');
-        // FIXED: If API fails, show comprehensive demo leagues - same as leagues page
-        setLeagues([
-          // Active league
-          {
-            _id: 'demo-sotogrande',
-            name: 'Liga de Sotogrande',
-            slug: 'liga-de-sotogrande',
-            location: {
-              city: 'Sotogrande',
-              region: 'Andalucía',
-              country: 'España'
-            },
-            description: {
-              es: 'La primera liga amateur de tenis en Sotogrande. Sistema suizo, rankings ELO y ambiente competitivo pero relajado.',
-              en: 'The first amateur tennis league in Sotogrande. Swiss system, ELO rankings and competitive but relaxed atmosphere.'
-            },
-            seasons: [
-              {
-                name: 'Verano 2025',
-                status: 'active',
-                startDate: '2025-07-07',
-                price: { isFree: true }
-              }
-            ],
-            playerCount: 20,
-            status: 'active',
-            cityData: {
-              name: 'Sotogrande',
-              images: { main: '/sotogrande-01.jpg', googlePhotoReference: null }
-            }
-          },
-          // Coming Soon leagues (3 total - removed Fuengirola)
-          {
-            _id: 'demo-malaga',
-            name: 'Liga de Málaga',
-            slug: 'liga-de-malaga',
-            location: {
-              city: 'Málaga',
-              region: 'Andalucía', 
-              country: 'España'
-            },
-            description: {
-              es: 'Liga de tenis amateur en Málaga. Próximo lanzamiento con sistema competitivo y divertido.',
-              en: 'Amateur tennis league in Málaga. Coming soon with competitive and fun system.'
-            },
-            seasons: [],
-            playerCount: 0,
-            status: 'coming_soon',
-            expectedLaunchDate: '2025-10-01',
-            waitingListCount: 15,
-            cityData: {
-              name: 'Málaga',
-              images: { main: '/malaga-01.avif', googlePhotoReference: null }
-            }
-          },
-          {
-            _id: 'demo-marbella',
-            name: 'Liga de Marbella',
-            slug: 'liga-de-marbella',
-            location: {
-              city: 'Marbella',
-              region: 'Andalucía',
-              country: 'España'
-            },
-            description: {
-              es: 'Liga de tenis amateur en Marbella. Próximo lanzamiento en la Costa del Sol.',
-              en: 'Amateur tennis league in Marbella. Coming soon to Costa del Sol.'
-            },
-            seasons: [],
-            playerCount: 0,
-            status: 'coming_soon',
-            expectedLaunchDate: '2025-11-01', 
-            waitingListCount: 12,
-            cityData: {
-              name: 'Marbella',
-              images: { main: '/marbella-02.webp', googlePhotoReference: null }
-            }
-          },
-          {
-            _id: 'demo-estepona',
-            name: 'Liga de Estepona',
-            slug: 'liga-de-estepona',
-            location: {
-              city: 'Estepona',
-              region: 'Andalucía',
-              country: 'España'
-            },
-            description: {
-              es: 'Liga de tenis amateur en Estepona. Próximo lanzamiento en la Costa del Sol occidental.',
-              en: 'Amateur tennis league in Estepona. Coming soon to the western Costa del Sol.'
-            },
-            seasons: [],
-            playerCount: 0,
-            status: 'coming_soon',
-            expectedLaunchDate: '2025-12-01',
-            waitingListCount: 8,
-            cityData: {
-              name: 'Estepona',
-              images: { main: '/estepona-01.webp', googlePhotoReference: null }
-            }
-          }
-        ]);
+        console.error('❌ Home page: API failed', data);
+        setError(data.message || 'Failed to load leagues');
+        setLeagues([]);
       }
     } catch (error) {
-      console.error('Error fetching leagues:', error);
-      // FIXED: Also show demo data on network errors
-      setLeagues([
-        // Active league
-        {
-          _id: 'demo-sotogrande',
-          name: 'Liga de Sotogrande',
-          slug: 'liga-de-sotogrande',
-          location: {
-            city: 'Sotogrande',
-            region: 'Andalucía',
-            country: 'España'
-          },
-          description: {
-            es: 'La primera liga amateur de tenis en Sotogrande. Sistema suizo, rankings ELO y ambiente competitivo pero relajado.',
-            en: 'The first amateur tennis league in Sotogrande. Swiss system, ELO rankings and competitive but relaxed atmosphere.'
-          },
-          seasons: [
-            {
-              name: 'Verano 2025',
-              status: 'active',
-              startDate: '2025-07-07',
-              price: { isFree: true }
-            }
-          ],
-          playerCount: 20,
-          status: 'active',
-          cityData: {
-            name: 'Sotogrande',
-            images: { main: '/sotogrande-01.jpg', googlePhotoReference: null }
-          }
-        },
-        // Coming Soon leagues
-        {
-          _id: 'demo-malaga',
-          name: 'Liga de Málaga',
-          slug: 'liga-de-malaga',
-          location: {
-            city: 'Málaga',
-            region: 'Andalucía', 
-            country: 'España'
-          },
-          description: {
-            es: 'Liga de tenis amateur en Málaga. Próximo lanzamiento con sistema competitivo y divertido.',
-            en: 'Amateur tennis league in Málaga. Coming soon with competitive and fun system.'
-          },
-          seasons: [],
-          playerCount: 0,
-          status: 'coming_soon',
-          expectedLaunchDate: '2025-10-01',
-          waitingListCount: 15,
-          cityData: {
-            name: 'Málaga',
-            images: { main: '/malaga-01.avif', googlePhotoReference: null }
-          }
-        },
-        {
-          _id: 'demo-marbella',
-          name: 'Liga de Marbella',
-          slug: 'liga-de-marbella',
-          location: {
-            city: 'Marbella',
-            region: 'Andalucía',
-            country: 'España'
-          },
-          description: {
-            es: 'Liga de tenis amateur en Marbella. Próximo lanzamiento en la Costa del Sol.',
-            en: 'Amateur tennis league in Marbella. Coming soon to Costa del Sol.'
-          },
-          seasons: [],
-          playerCount: 0,
-          status: 'coming_soon',
-          expectedLaunchDate: '2025-11-01', 
-          waitingListCount: 12,
-          cityData: {
-            name: 'Marbella',
-            images: { main: '/marbella-02.webp', googlePhotoReference: null }
-          }
-        },
-        {
-          _id: 'demo-estepona',
-          name: 'Liga de Estepona',
-          slug: 'liga-de-estepona',
-          location: {
-            city: 'Estepona',
-            region: 'Andalucía',
-            country: 'España'
-          },
-          description: {
-            es: 'Liga de tenis amateur en Estepona. Próximo lanzamiento en la Costa del Sol occidental.',
-            en: 'Amateur tennis league in Estepona. Coming soon to the western Costa del Sol.'
-          },
-          seasons: [],
-          playerCount: 0,
-          status: 'coming_soon',
-          expectedLaunchDate: '2025-12-01',
-          waitingListCount: 8,
-          cityData: {
-            name: 'Estepona',
-            images: { main: '/estepona-01.webp', googlePhotoReference: null }
-          }
-        }
-      ]);
+      console.error('❌ Home page: Network error fetching leagues:', error);
+      setError(error.message);
+      setLeagues([]);
     } finally {
       setLoading(false);
     }
@@ -306,7 +112,7 @@ export default function MultiLeagueHomePage() {
       
       <SolutionSection content={content.solution} />
       
-      {/* Cities Section - Now Dynamic */}
+      {/* Cities Section - Now using REAL database data */}
       <section id="cities" className="py-20 px-4 bg-gray-50">
         <div className="container mx-auto">
           <div className="text-center mb-16">
@@ -324,6 +130,40 @@ export default function MultiLeagueHomePage() {
               <p className="mt-4 text-gray-600">
                 {validLocale === 'es' ? 'Cargando ligas...' : 'Loading leagues...'}
               </p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12 max-w-2xl mx-auto">
+              <div className="text-6xl mb-6">⚠️</div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                {validLocale === 'es' ? 'Error cargando ligas' : 'Error loading leagues'}
+              </h3>
+              <p className="text-gray-600 mb-6">
+                {error}
+              </p>
+              <button 
+                onClick={fetchLeagues}
+                className="bg-parque-purple text-white px-6 py-3 rounded-lg hover:bg-parque-purple/90 transition-colors"
+              >
+                {validLocale === 'es' ? 'Reintentar' : 'Retry'}
+              </button>
+            </div>
+          ) : leagues.length === 0 ? (
+            <div className="text-center py-12 max-w-2xl mx-auto">
+              <div className="text-6xl mb-6">🎾</div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                {validLocale === 'es' ? 'No hay ligas disponibles' : 'No leagues available'}
+              </h3>
+              <p className="text-gray-600 mb-6">
+                {validLocale === 'es' 
+                  ? 'Actualmente no hay ligas en la base de datos. Estamos trabajando para agregar más.'
+                  : 'There are currently no leagues in the database. We are working to add more.'}
+              </p>
+              <Link
+                href={`/${validLocale}/${validLocale === 'es' ? 'ligas' : 'leagues'}`}
+                className="inline-block bg-parque-purple text-white px-6 py-3 rounded-lg hover:bg-parque-purple/90 transition-colors"
+              >
+                {validLocale === 'es' ? 'Ver todas las ligas' : 'View all leagues'}
+              </Link>
             </div>
           ) : (
             <>
