@@ -34,8 +34,9 @@ export default function LeaguesPageContent({ locale: propLocale }) {
         setLeagues(data.leagues || [])
       } else {
         console.warn('Leagues API failed, using demo data')
-        // If API fails, show demo leagues
+        // If API fails, show ALL demo leagues including the 4 coming soon ones
         setLeagues([
+          // Active league
           {
             _id: 'demo-sotogrande',
             name: 'Liga de Sotogrande',
@@ -60,11 +61,11 @@ export default function LeaguesPageContent({ locale: propLocale }) {
             playerCount: 20,
             status: 'active',
             cityData: {
-              name: { es: 'Sotogrande', en: 'Sotogrande' },
-              images: { main: '', googlePhotoReference: null }
+              name: 'Sotogrande',
+              images: { main: '/sotogrande-01.jpg', googlePhotoReference: null }
             }
           },
-          // Add some coming soon leagues for demo
+          // All 4 Coming Soon leagues
           {
             _id: 'demo-malaga',
             name: 'Liga de Málaga',
@@ -84,8 +85,8 @@ export default function LeaguesPageContent({ locale: propLocale }) {
             expectedLaunchDate: '2025-10-01',
             waitingListCount: 15,
             cityData: {
-              name: { es: 'Málaga', en: 'Málaga' },
-              images: { main: '', googlePhotoReference: null }
+              name: 'Málaga',
+              images: { main: '/malaga-01.avif', googlePhotoReference: null }
             }
           },
           {
@@ -107,7 +108,53 @@ export default function LeaguesPageContent({ locale: propLocale }) {
             expectedLaunchDate: '2025-11-01', 
             waitingListCount: 12,
             cityData: {
-              name: { es: 'Marbella', en: 'Marbella' },
+              name: 'Marbella',
+              images: { main: '/marbella-02.webp', googlePhotoReference: null }
+            }
+          },
+          {
+            _id: 'demo-estepona',
+            name: 'Liga de Estepona',
+            slug: 'liga-de-estepona',
+            location: {
+              city: 'Estepona',
+              region: 'Andalucía',
+              country: 'España'
+            },
+            description: {
+              es: 'Liga de tenis amateur en Estepona. Próximo lanzamiento en la Costa del Sol occidental.',
+              en: 'Amateur tennis league in Estepona. Coming soon to the western Costa del Sol.'
+            },
+            seasons: [],
+            playerCount: 0,
+            status: 'coming_soon',
+            expectedLaunchDate: '2025-12-01',
+            waitingListCount: 8,
+            cityData: {
+              name: 'Estepona',
+              images: { main: '/estepona-01.webp', googlePhotoReference: null }
+            }
+          },
+          {
+            _id: 'demo-fuengirola',
+            name: 'Liga de Fuengirola',
+            slug: 'liga-de-fuengirola',
+            location: {
+              city: 'Fuengirola',
+              region: 'Andalucía',
+              country: 'España'
+            },
+            description: {
+              es: 'Liga de tenis amateur en Fuengirola. Próximo lanzamiento con enfoque en jugadores principiantes e intermedios.',
+              en: 'Amateur tennis league in Fuengirola. Coming soon with focus on beginner and intermediate players.'
+            },
+            seasons: [],
+            playerCount: 0,
+            status: 'coming_soon',
+            expectedLaunchDate: '2025-12-15',
+            waitingListCount: 6,
+            cityData: {
+              name: 'Fuengirola',
               images: { main: '', googlePhotoReference: null }
             }
           }
@@ -125,6 +172,13 @@ export default function LeaguesPageContent({ locale: propLocale }) {
   const activeLeagues = leagues.filter(league => league.status === 'active')
   const comingSoonLeagues = leagues.filter(league => league.status === 'coming_soon')
   const inactiveLeagues = leagues.filter(league => league.status === 'inactive')
+
+  console.log('League counts:', {
+    total: leagues.length,
+    active: activeLeagues.length,
+    comingSoon: comingSoonLeagues.length,
+    inactive: inactiveLeagues.length
+  })
 
   // 🎾 Use standardized TennisPreloader for loading state
   if (loading) {
