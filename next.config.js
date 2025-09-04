@@ -48,6 +48,12 @@ const nextConfig = {
       {
         source: '/:locale(es)/ligas',
         destination: '/:locale/leagues'
+      },
+
+      // Phase 3: Signup/Registro rewrite (handles parameter name difference)
+      {
+        source: '/:locale(es)/registro/:ciudad',
+        destination: '/:locale/signup/:ciudad'
       }
     ]
   }
