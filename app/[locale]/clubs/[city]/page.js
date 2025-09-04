@@ -37,6 +37,12 @@ export default function CityClubsPage() {
   
   const t = homeContent[locale] || homeContent['es']
 
+  // Helper function to convert city slug to league slug
+  const getCityLeagueSlug = (citySlug) => {
+    if (!citySlug) return null
+    return `liga-de-${citySlug}`
+  }
+
   // City information - now completely dynamic based on GPS assignments
   const getCityDisplayInfo = (citySlug, apiCityInfo) => {
     const baseInfo = {
@@ -84,11 +90,15 @@ export default function CityClubsPage() {
         ...info,
         name: apiCityInfo.name || info.name,
         league: apiCityInfo.league,
+        leagueSlug: getCityLeagueSlug(apiCityInfo.league || citySlug),
         color: apiCityInfo.color
       }
     }
     
-    return info
+    return {
+      ...info,
+      leagueSlug: getCityLeagueSlug(citySlug)
+    }
   }
 
   useEffect(() => {
@@ -770,7 +780,7 @@ export default function CityClubsPage() {
           </p>
           <div className="flex gap-4 justify-center">
             <Link
-              href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${city}`}
+              href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${currentCity.leagueSlug || getCityLeagueSlug(city)}`}
               className="inline-block px-8 py-4 bg-white text-parque-purple rounded-lg font-medium text-lg hover:bg-gray-100 transition-colors"
             >
               {locale === 'es' ? 'Únete a la Liga' : 'Join the League'}
