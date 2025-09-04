@@ -23,9 +23,10 @@ const nextConfig = {
     ],
   },
   
-  // Rewrite Spanish "clubes" URLs to use the unified "clubs" implementation
+  // Rewrite Spanish URLs to use unified English implementations
   async rewrites() {
     return [
+      // Phase 1: Clubs/Clubes rewrites
       {
         source: '/:locale(es)/clubes',
         destination: '/:locale/clubs'
@@ -41,6 +42,12 @@ const nextConfig = {
       {
         source: '/:locale(es)/clubes/:city/:slug',
         destination: '/:locale/clubs/:city/:slug'
+      },
+      
+      // Phase 2: Leagues/Ligas rewrite
+      {
+        source: '/:locale(es)/ligas',
+        destination: '/:locale/leagues'
       }
     ]
   }
