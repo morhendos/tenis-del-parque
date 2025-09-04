@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import dbConnect from '../../../../../lib/db/mongoose'
 import League from '../../../../../lib/models/League'
+import City from '../../../../../lib/models/City'
 import { requireAdmin } from '../../../../../lib/auth/apiAuth'
 
 // Force dynamic rendering for this route
@@ -75,6 +76,71 @@ export async function PUT(request, { params }) {
 
   } catch (error) {
     console.error('Error updating league:', error)
+    return NextResponse.json(
+      { error: 'Failed to update league: ' + error.message },
+      { status: 500 }
+    )
+  }
+}
+
+// NEW: PATCH method for partial updates (specifically for city linking)
+export async function PATCH(request, { params }) {
+  try {
+    const { session, error } = await requireAdmin(request)
+    if (error) return error
+
+    const { id } = params
+
+    // Connect to database
+    await dbConnect()
+
+    // Parse request body
+    const data = await request.json()
+
+    // Find the league
+    const league = await League.findById(id)
+    if (!league) {
+      return NextResponse.json(
+        { error: 'League not found' },
+        { status: 404 }
+      )
+    }
+
+    // Handle city linking/unlinking
+    if (data.hasOwnProperty('city')) {
+      if (data.city) {
+        // Validate that the city exists
+        const city = await City.findById(data.city)
+        if (!city) {
+          return NextResponse.json(
+            { error: 'City not found' },
+            { status: 400 }
+          )
+        }
+        league.city = data.city
+      } else {
+        // Unlink from city
+        league.city = null
+      }
+    }
+
+    // Handle other partial updates
+    if (data.status !== undefined) league.status = data.status
+    if (data.displayOrder !== undefined) league.displayOrder = data.displayOrder
+
+    // Save the updated league
+    await league.save()
+
+    // Return the updated league with populated city data
+    const updatedLeague = await League.findById(id).populate('city', 'slug name')
+
+    return NextResponse.json({
+      success: true,
+      league: updatedLeague
+    })
+
+  } catch (error) {
+    console.error('Error patching league:', error)
     return NextResponse.json(
       { error: 'Failed to update league: ' + error.message },
       { status: 500 }
