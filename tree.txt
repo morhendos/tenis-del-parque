@@ -1,7 +1,11 @@
 root/
+├── CLEANUP_INSTRUCTIONS.md
+├── PHASE2_CLEANUP_INSTRUCTIONS.md
+├── PHASE3_CLEANUP_INSTRUCTIONS.md
 ├── PR_README.md
 ├── README.md
 ├── SOLUTION_SUMMARY.md
+├── TENNIS_PRELOADER_STANDARDIZATION.md
 ├── app
 │   ├── [locale]
 │   │   ├── [location]
@@ -9,15 +13,6 @@ root/
 │   │   │       └── [season]
 │   │   │           └── page.js
 │   │   ├── activate
-│   │   │   └── page.js
-│   │   ├── clubes
-│   │   │   ├── [city]
-│   │   │   │   ├── [slug]
-│   │   │   │   │   └── page.js
-│   │   │   │   ├── area
-│   │   │   │   │   └── [area]
-│   │   │   │   │       └── page.js
-│   │   │   │   └── page.js
 │   │   │   └── page.js
 │   │   ├── clubs
 │   │   │   ├── [city]
@@ -34,8 +29,6 @@ root/
 │   │   │   └── page.js
 │   │   ├── layout.js
 │   │   ├── leagues
-│   │   │   └── page.js
-│   │   ├── ligas
 │   │   │   └── page.js
 │   │   ├── login
 │   │   │   └── page.js
@@ -55,9 +48,6 @@ root/
 │   │   │   ├── profile
 │   │   │   │   └── page.js
 │   │   │   └── rules
-│   │   │       └── page.js
-│   │   ├── registro
-│   │   │   └── [ciudad]
 │   │   │       └── page.js
 │   │   ├── reglas
 │   │   │   ├── RulesPageContent.js
@@ -209,6 +199,9 @@ root/
 │   │   │   └── reset-password
 │   │   │       └── route.js
 │   │   ├── cities
+│   │   │   ├── [slug]
+│   │   │   │   └── league
+│   │   │   │       └── route.js
 │   │   │   ├── photo
 │   │   │   │   └── route.js
 │   │   │   └── route.js
@@ -313,6 +306,7 @@ root/
 │   │   │       └── LocationSection.js
 │   │   ├── leagues
 │   │   │   ├── ImportCSVModal.js
+│   │   │   ├── LeagueCityLinker.js
 │   │   │   └── LeagueFormModal.js
 │   │   ├── matches
 │   │   │   ├── MatchCard.js
@@ -544,6 +538,7 @@ root/
 │   └── web-app-manifest-512x512.png
 ├── scripts
 │   ├── checkAuth.mjs
+│   ├── cleanup-clubes-duplicates.sh
 │   ├── cleanup-old-editors.sh
 │   ├── createAdminUser.js
 │   ├── createSeasons.js
