@@ -60,6 +60,16 @@ export default function ScoringSystem({ language, totalPlayers, currentRound }) 
             </span>
           </div>
         </div>
+        
+        {/* Walkover rule */}
+        <div className="mt-3 pt-2 border-t border-gray-200">
+          <div className="flex items-center justify-center space-x-2">
+            <div className="w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-xs font-bold">2</div>
+            <span className="text-gray-600 text-xs">
+              {language === 'es' ? 'Victoria por Walkover' : 'Walkover Win'}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );
