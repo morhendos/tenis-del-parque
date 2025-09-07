@@ -3,13 +3,16 @@ import dbConnect from '../../../../../lib/db/mongoose'
 import Match from '../../../../../lib/models/Match'
 import Player from '../../../../../lib/models/Player'
 import { requirePlayer } from '../../../../../lib/auth/apiAuth'
+import mongoose from 'mongoose'
 
 export async function POST(request) {
+  let session = null
+  
   try {
     await dbConnect()
     
     // Use new NextAuth authentication system
-    const { session, error } = await requirePlayer(request)
+    const { session: authSession, error } = await requirePlayer(request)
     if (error) return error
 
     const { matchId, sets, walkover, retiredPlayer } = await request.json()
@@ -29,9 +32,9 @@ export async function POST(request) {
     }
 
     // Get player from session's playerId
-    if (!session.user.playerId) {
+    if (!authSession.user.playerId) {
       // Try to find player by email as fallback
-      const playerByEmail = await Player.findOne({ email: session.user.email.toLowerCase() })
+      const playerByEmail = await Player.findOne({ email: authSession.user.email.toLowerCase() })
       
       if (!playerByEmail) {
         return NextResponse.json({ 
@@ -46,16 +49,16 @@ export async function POST(request) {
       return NextResponse.json({ 
         success: false, 
         error: 'Your user account is not properly linked to your player profile. Please contact support.',
-        details: `Found player with email ${session.user.email} but accounts are not linked.`
+        details: `Found player with email ${authSession.user.email} but accounts are not linked.`
       }, { status: 404 })
     }
 
-    const userPlayer = await Player.findById(session.user.playerId)
+    const userPlayer = await Player.findById(authSession.user.playerId)
     if (!userPlayer) {
       return NextResponse.json({ 
         success: false, 
         error: 'Player profile not found. Please contact support.',
-        details: `PlayerId ${session.user.playerId} not found in database.`
+        details: `PlayerId ${authSession.user.playerId} not found in database.`
       }, { status: 404 })
     }
 
@@ -179,94 +182,148 @@ export async function POST(request) {
       winner = player1SetsWon > player2SetsWon ? match.players.player1 : match.players.player2
     }
 
-    // Get both players for ELO calculation
-    const [player1, player2] = await Promise.all([
-      Player.findById(match.players.player1),
-      Player.findById(match.players.player2)
-    ])
+    // Start a database transaction to ensure all operations succeed or fail together
+    session = await mongoose.startSession()
+    await session.startTransaction()
 
-    // Calculate ELO changes only for non-walkover matches
-    const player1Won = winner.equals(match.players.player1)
-    let eloChange = 0;
-    
-    if (!walkover) {
-      eloChange = calculateEloChange(
-        player1.stats.eloRating,
-        player2.stats.eloRating,
-        player1Won
-      )
-    }
+    try {
+      // Get both players for ELO calculation
+      const [player1, player2] = await Promise.all([
+        Player.findById(match.players.player1).session(session),
+        Player.findById(match.players.player2).session(session)
+      ])
 
-    // Update match with result and ELO changes
-    match.result = {
-      winner: winner,
-      score: {
-        sets: resultSets,
-        walkover: walkover || false,
-        retiredPlayer: retiredPlayer || null
-      },
-      playedAt: new Date()
-    }
-    
-    match.status = 'completed'
-    
-    // Apply ELO changes (will be 0 for walkovers)
-    match.eloChanges = {
-      player1: {
-        before: player1.stats.eloRating,
-        after: player1.stats.eloRating + eloChange,
-        change: eloChange
-      },
-      player2: {
-        before: player2.stats.eloRating,
-        after: player2.stats.eloRating - eloChange,
-        change: -eloChange
+      // Calculate ELO changes only for non-walkover matches
+      const player1Won = winner.equals(match.players.player1)
+      let eloChange = 0;
+      
+      if (!walkover) {
+        eloChange = calculateEloChange(
+          player1.stats.eloRating,
+          player2.stats.eloRating,
+          player1Won
+        )
       }
-    }
 
-    // Save match first
-    await match.save()
+      // Update match with result and ELO changes
+      match.result = {
+        winner: winner,
+        score: {
+          sets: resultSets,
+          walkover: walkover || false,
+          retiredPlayer: retiredPlayer || null
+        },
+        playedAt: new Date()
+      }
+      
+      match.status = 'completed'
+      
+      // Apply ELO changes (will be 0 for walkovers)
+      match.eloChanges = {
+        player1: {
+          before: player1.stats.eloRating,
+          after: player1.stats.eloRating + eloChange,
+          change: eloChange
+        },
+        player2: {
+          before: player2.stats.eloRating,
+          after: player2.stats.eloRating - eloChange,
+          change: -eloChange
+        }
+      }
 
-    // Update player stats using the Player model method
-    await Promise.all([
-      player1.updateMatchStats({
-        won: player1Won,
-        eloChange: match.eloChanges.player1.change,
-        score: match.getScoreDisplay(),
+      // Update player stats manually (avoid the updateMatchStats method for now)
+      
+      // Player 1 stats
+      player1.stats.matchesPlayed += 1
+      if (player1Won) player1.stats.matchesWon += 1
+      
+      // Update ELO
+      player1.stats.eloRating += eloChange
+      if (player1.stats.eloRating > player1.stats.highestElo) {
+        player1.stats.highestElo = player1.stats.eloRating
+      }
+      if (player1.stats.eloRating < player1.stats.lowestElo) {
+        player1.stats.lowestElo = player1.stats.eloRating
+      }
+      
+      // Update sets won/lost stats
+      player1.stats.setsWon = (player1.stats.setsWon || 0) + player1SetsWon
+      player1.stats.setsLost = (player1.stats.setsLost || 0) + player2SetsWon
+      
+      // Add to match history (limit to last 20 matches to avoid performance issues)
+      player1.matchHistory.unshift({
+        match: match._id,
         opponent: player2._id,
-        matchId: match._id,
-        round: match.round,
-        date: match.result.playedAt
-      }),
-      player2.updateMatchStats({
-        won: !player1Won,
-        eloChange: match.eloChanges.player2.change,
+        result: player1Won ? 'won' : 'lost',
         score: match.getScoreDisplay(),
-        opponent: player1._id,
-        matchId: match._id,
+        eloChange: eloChange,
+        eloAfter: player1.stats.eloRating,
         round: match.round,
         date: match.result.playedAt
       })
-    ])
+      
+      // Keep only last 20 matches in history to avoid bloat
+      if (player1.matchHistory.length > 20) {
+        player1.matchHistory = player1.matchHistory.slice(0, 20)
+      }
 
-    // Update sets won/lost stats
-    player1.stats.setsWon = (player1.stats.setsWon || 0) + player1SetsWon
-    player1.stats.setsLost = (player1.stats.setsLost || 0) + player2SetsWon
-    
-    player2.stats.setsWon = (player2.stats.setsWon || 0) + player2SetsWon
-    player2.stats.setsLost = (player2.stats.setsLost || 0) + player1SetsWon
-    
-    // Save both players with updated stats
-    await Promise.all([player1.save(), player2.save()])
+      // Player 2 stats
+      player2.stats.matchesPlayed += 1
+      if (!player1Won) player2.stats.matchesWon += 1
+      
+      // Update ELO
+      player2.stats.eloRating -= eloChange
+      if (player2.stats.eloRating > player2.stats.highestElo) {
+        player2.stats.highestElo = player2.stats.eloRating
+      }
+      if (player2.stats.eloRating < player2.stats.lowestElo) {
+        player2.stats.lowestElo = player2.stats.eloRating
+      }
+      
+      // Update sets won/lost stats
+      player2.stats.setsWon = (player2.stats.setsWon || 0) + player2SetsWon
+      player2.stats.setsLost = (player2.stats.setsLost || 0) + player1SetsWon
+      
+      // Add to match history (limit to last 20 matches to avoid performance issues)
+      player2.matchHistory.unshift({
+        match: match._id,
+        opponent: player1._id,
+        result: player1Won ? 'lost' : 'won',
+        score: match.getScoreDisplay(),
+        eloChange: -eloChange,
+        eloAfter: player2.stats.eloRating,
+        round: match.round,
+        date: match.result.playedAt
+      })
+      
+      // Keep only last 20 matches in history to avoid bloat
+      if (player2.matchHistory.length > 20) {
+        player2.matchHistory = player2.matchHistory.slice(0, 20)
+      }
 
-    // Populate match data for response
-    await match.populate('players.player1 players.player2 league')
+      // Save all documents within the transaction
+      await match.save({ session })
+      await player1.save({ session })
+      await player2.save({ session })
 
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Match result submitted successfully',
-      match: match
-    })
+      // Commit the transaction
+      await session.commitTransaction()
+
+      // Populate match data for response (outside transaction)
+      await match.populate('players.player1 players.player2 league')
+
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Match result submitted successfully',
+        match: match
+      })
+
+    } catch (transactionError) {
+      // Rollback the transaction
+      await session.abortTransaction()
+      throw transactionError
+    }
 
   } catch (error) {
     console.error('Error submitting match result:', error)
@@ -288,8 +345,14 @@ export async function POST(request) {
     
     return NextResponse.json({ 
       success: false, 
-      error: 'Internal server error' 
+      error: 'Internal server error',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     }, { status: 500 })
+  } finally {
+    // Always end the session
+    if (session) {
+      await session.endSession()
+    }
   }
 }
 
