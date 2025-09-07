@@ -3,6 +3,7 @@ import dbConnect from '../../../../../lib/db/mongoose'
 import Match from '../../../../../lib/models/Match'
 import Player from '../../../../../lib/models/Player'
 import { requireAdmin } from '../../../../../lib/auth/apiAuth'
+import mongoose from 'mongoose'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
@@ -43,9 +44,11 @@ export async function GET(request, { params }) {
 
 // PATCH /api/admin/matches/[id] - Update match
 export async function PATCH(request, { params }) {
+  let session = null
+  
   try {
     // Check authentication
-    const { session, error } = await requireAdmin(request)
+    const { session: authSession, error } = await requireAdmin(request)
     if (error) return error
 
     const { id } = params
@@ -53,6 +56,11 @@ export async function PATCH(request, { params }) {
 
     // Connect to database
     await dbConnect()
+
+    // Handle special "reset to unplayed" action
+    if (body.action === 'resetToUnplayed') {
+      return await resetMatchToUnplayed(id)
+    }
 
     // Find the match
     const match = await Match.findById(id)
@@ -65,7 +73,7 @@ export async function PATCH(request, { params }) {
       // Don't allow changing players for completed matches
       if (match.status === 'completed') {
         return NextResponse.json(
-          { error: 'Cannot change players for completed matches' },
+          { error: 'Cannot change players for completed matches. Reset to unplayed first.' },
           { status: 400 }
         )
       }
@@ -136,50 +144,63 @@ export async function PATCH(request, { params }) {
       match.wildCardUsed = body.wildCardUsed
     }
 
-    // Handle result entry
+    // Handle result entry/update
     if (body.result) {
-      // Validate result data
-      if (!body.result.winner) {
-        return NextResponse.json(
-          { error: 'Result must include a winner' },
-          { status: 400 }
-        )
-      }
+      // Start transaction for result updates
+      session = await mongoose.startSession()
+      await session.startTransaction()
 
-      // Verify winner is one of the players
-      const winnerId = body.result.winner
-      const player1Id = match.players.player1.toString()
-      const player2Id = match.players.player2.toString()
-      
-      if (winnerId !== player1Id && winnerId !== player2Id) {
-        return NextResponse.json(
-          { error: 'Winner must be one of the match players' },
-          { status: 400 }
-        )
-      }
+      try {
+        // Validate result data
+        if (!body.result.winner) {
+          return NextResponse.json(
+            { error: 'Result must include a winner' },
+            { status: 400 }
+          )
+        }
 
-      // Get both players
-      const [player1, player2] = await Promise.all([
-        Player.findById(player1Id),
-        Player.findById(player2Id)
-      ])
+        // Verify winner is one of the players
+        const winnerId = body.result.winner
+        const player1Id = match.players.player1.toString()
+        const player2Id = match.players.player2.toString()
+        
+        if (winnerId !== player1Id && winnerId !== player2Id) {
+          return NextResponse.json(
+            { error: 'Winner must be one of the match players' },
+            { status: 400 }
+          )
+        }
 
-      // Calculate ELO changes (if result is being entered for the first time)
-      if (!match.result || !match.result.winner) {
+        // Get both players
+        const [player1, player2] = await Promise.all([
+          Player.findById(player1Id).session(session),
+          Player.findById(player2Id).session(session)
+        ])
+
+        // If this match already has a result, we need to reverse the old stats first
+        if (match.result && match.result.winner && match.eloChanges) {
+          await reverseMatchStats(match, player1, player2, session)
+        }
+
+        // Calculate ELO changes for the new result
         const player1Won = winnerId === player1Id
-        const eloChange = calculateEloChange(
-          player1.stats.eloRating,
-          player2.stats.eloRating,
-          player1Won
-        )
+        let eloChange = 0
+        
+        // Only calculate ELO for non-walkover matches
+        if (!body.result.score?.walkover) {
+          eloChange = calculateEloChange(
+            player1.stats.eloRating,
+            player2.stats.eloRating,
+            player1Won
+          )
+        }
 
         // Update match with result and ELO changes
         match.result = body.result
         match.result.playedAt = new Date()
         match.status = 'completed'
         
-        // FIXED: Apply ELO changes correctly
-        // eloChange is the amount player1's rating should change
+        // Apply ELO changes
         match.eloChanges = {
           player1: {
             before: player1.stats.eloRating,
@@ -212,52 +233,24 @@ export async function PATCH(request, { params }) {
           player2SetsWon = player1Won ? 0 : 2
         }
 
-        // Update player stats
-        await Promise.all([
-          player1.updateMatchStats({
-            won: player1Won,
-            eloChange: match.eloChanges.player1.change,
-            score: match.getScoreDisplay(),
-            opponent: player2Id,
-            matchId: match._id,
-            round: match.round,
-            date: match.result.playedAt
-          }),
-          player2.updateMatchStats({
-            won: !player1Won,
-            eloChange: match.eloChanges.player2.change,
-            score: match.getScoreDisplay(),
-            opponent: player1Id,
-            matchId: match._id,
-            round: match.round,
-            date: match.result.playedAt
-          })
-        ])
+        // Update player stats manually
+        await updatePlayerStatsManually(match, player1, player2, player1Won, player1SetsWon, player2SetsWon, session)
 
-        // Update sets won/lost (no longer updating totalPoints)
-        player1.stats.setsWon = (player1.stats.setsWon || 0) + player1SetsWon
-        player1.stats.setsLost = (player1.stats.setsLost || 0) + player2SetsWon
-        
-        player2.stats.setsWon = (player2.stats.setsWon || 0) + player2SetsWon
-        player2.stats.setsLost = (player2.stats.setsLost || 0) + player1SetsWon
-        
-        // Save both players with updated stats
-        await Promise.all([player1.save(), player2.save()])
+        // Save all within transaction
+        await match.save({ session })
+        await player1.save({ session })
+        await player2.save({ session })
 
-        // Handle wild card usage if specified
-        if (body.wildCardUsed) {
-          if (body.wildCardUsed.player1 && player1.hasWildCardsAvailable()) {
-            await player1.useWildCard(match._id, 'Match scheduling')
-          }
-          if (body.wildCardUsed.player2 && player2.hasWildCardsAvailable()) {
-            await player2.useWildCard(match._id, 'Match scheduling')
-          }
-        }
+        await session.commitTransaction()
+
+      } catch (transactionError) {
+        await session.abortTransaction()
+        throw transactionError
       }
+    } else {
+      // Save the match for non-result updates
+      await match.save()
     }
-
-    // Save the match
-    await match.save()
 
     // Return updated match with populated data
     await match.populate('players.player1 players.player2 league')
@@ -273,6 +266,10 @@ export async function PATCH(request, { params }) {
       { error: error.message || 'Failed to update match' },
       { status: 500 }
     )
+  } finally {
+    if (session) {
+      await session.endSession()
+    }
   }
 }
 
@@ -297,7 +294,7 @@ export async function DELETE(request, { params }) {
     // Don't allow deletion of completed matches
     if (match.status === 'completed') {
       return NextResponse.json(
-        { error: 'Cannot delete completed matches' },
+        { error: 'Cannot delete completed matches. Reset to unplayed first.' },
         { status: 400 }
       )
     }
@@ -316,6 +313,221 @@ export async function DELETE(request, { params }) {
       { error: 'Failed to cancel match' },
       { status: 500 }
     )
+  }
+}
+
+// Helper function to reset match to unplayed state
+async function resetMatchToUnplayed(matchId) {
+  let session = null
+  
+  try {
+    session = await mongoose.startSession()
+    await session.startTransaction()
+
+    // Find the match
+    const match = await Match.findById(matchId).session(session)
+    if (!match) {
+      await session.abortTransaction()
+      return NextResponse.json({ error: 'Match not found' }, { status: 404 })
+    }
+
+    // Only allow resetting completed matches
+    if (match.status !== 'completed' || !match.result) {
+      await session.abortTransaction()
+      return NextResponse.json(
+        { error: 'Can only reset completed matches' },
+        { status: 400 }
+      )
+    }
+
+    // Get both players
+    const [player1, player2] = await Promise.all([
+      Player.findById(match.players.player1).session(session),
+      Player.findById(match.players.player2).session(session)
+    ])
+
+    if (!player1 || !player2) {
+      await session.abortTransaction()
+      return NextResponse.json({ error: 'Players not found' }, { status: 404 })
+    }
+
+    // Reverse the match stats
+    await reverseMatchStats(match, player1, player2, session)
+
+    // Reset match to unplayed state
+    match.result = undefined
+    match.eloChanges = undefined
+    match.status = 'scheduled'
+
+    // Save all changes
+    await match.save({ session })
+    await player1.save({ session })
+    await player2.save({ session })
+
+    await session.commitTransaction()
+
+    // Return updated match with populated data
+    await match.populate('players.player1 players.player2 league')
+
+    return NextResponse.json({
+      message: 'Match reset to unplayed successfully',
+      match
+    })
+
+  } catch (error) {
+    if (session) {
+      await session.abortTransaction()
+    }
+    console.error('Error resetting match:', error)
+    return NextResponse.json(
+      { error: error.message || 'Failed to reset match' },
+      { status: 500 }
+    )
+  } finally {
+    if (session) {
+      await session.endSession()
+    }
+  }
+}
+
+// Helper function to reverse match statistics
+async function reverseMatchStats(match, player1, player2, session) {
+  if (!match.eloChanges || !match.result) return
+
+  // Reverse ELO changes
+  player1.stats.eloRating -= match.eloChanges.player1.change
+  player2.stats.eloRating -= match.eloChanges.player2.change
+
+  // Recalculate highest/lowest ELO (simplified - just check current)
+  if (player1.stats.eloRating > player1.stats.highestElo) {
+    player1.stats.highestElo = player1.stats.eloRating
+  }
+  if (player1.stats.eloRating < player1.stats.lowestElo) {
+    player1.stats.lowestElo = player1.stats.eloRating
+  }
+  if (player2.stats.eloRating > player2.stats.highestElo) {
+    player2.stats.highestElo = player2.stats.eloRating
+  }
+  if (player2.stats.eloRating < player2.stats.lowestElo) {
+    player2.stats.lowestElo = player2.stats.eloRating
+  }
+
+  // Reverse match count and wins
+  player1.stats.matchesPlayed = Math.max(0, player1.stats.matchesPlayed - 1)
+  player2.stats.matchesPlayed = Math.max(0, player2.stats.matchesPlayed - 1)
+
+  const player1Won = match.result.winner.toString() === match.players.player1.toString()
+  if (player1Won) {
+    player1.stats.matchesWon = Math.max(0, player1.stats.matchesWon - 1)
+  } else {
+    player2.stats.matchesWon = Math.max(0, player2.stats.matchesWon - 1)
+  }
+
+  // Reverse sets won/lost
+  if (match.result.score && match.result.score.sets) {
+    let player1SetsWon = 0
+    let player2SetsWon = 0
+
+    match.result.score.sets.forEach(set => {
+      if (set.player1 > set.player2) {
+        player1SetsWon++
+      } else {
+        player2SetsWon++
+      }
+    })
+
+    player1.stats.setsWon = Math.max(0, (player1.stats.setsWon || 0) - player1SetsWon)
+    player1.stats.setsLost = Math.max(0, (player1.stats.setsLost || 0) - player2SetsWon)
+    player2.stats.setsWon = Math.max(0, (player2.stats.setsWon || 0) - player2SetsWon)
+    player2.stats.setsLost = Math.max(0, (player2.stats.setsLost || 0) - player1SetsWon)
+  } else if (match.result.score?.walkover) {
+    // Reverse walkover sets (winner had 2-0)
+    if (player1Won) {
+      player1.stats.setsWon = Math.max(0, (player1.stats.setsWon || 0) - 2)
+      player2.stats.setsLost = Math.max(0, (player2.stats.setsLost || 0) - 2)
+    } else {
+      player2.stats.setsWon = Math.max(0, (player2.stats.setsWon || 0) - 2)
+      player1.stats.setsLost = Math.max(0, (player1.stats.setsLost || 0) - 2)
+    }
+  }
+
+  // Remove this match from both players' match history
+  player1.matchHistory = player1.matchHistory.filter(
+    h => h.match && !h.match.equals(match._id)
+  )
+  player2.matchHistory = player2.matchHistory.filter(
+    h => h.match && !h.match.equals(match._id)
+  )
+}
+
+// Helper function to update player stats manually (same as player API)
+async function updatePlayerStatsManually(match, player1, player2, player1Won, player1SetsWon, player2SetsWon, session) {
+  // Player 1 stats
+  player1.stats.matchesPlayed += 1
+  if (player1Won) player1.stats.matchesWon += 1
+  
+  // Update ELO
+  player1.stats.eloRating += match.eloChanges.player1.change
+  if (player1.stats.eloRating > player1.stats.highestElo) {
+    player1.stats.highestElo = player1.stats.eloRating
+  }
+  if (player1.stats.eloRating < player1.stats.lowestElo) {
+    player1.stats.lowestElo = player1.stats.eloRating
+  }
+  
+  // Update sets won/lost stats
+  player1.stats.setsWon = (player1.stats.setsWon || 0) + player1SetsWon
+  player1.stats.setsLost = (player1.stats.setsLost || 0) + player2SetsWon
+  
+  // Add to match history (limit to last 20 matches to avoid performance issues)
+  player1.matchHistory.unshift({
+    match: match._id,
+    opponent: player2._id,
+    result: player1Won ? 'won' : 'lost',
+    score: match.getScoreDisplay(),
+    eloChange: match.eloChanges.player1.change,
+    eloAfter: player1.stats.eloRating,
+    round: match.round,
+    date: match.result.playedAt
+  })
+  
+  // Keep only last 20 matches in history to avoid bloat
+  if (player1.matchHistory.length > 20) {
+    player1.matchHistory = player1.matchHistory.slice(0, 20)
+  }
+
+  // Player 2 stats
+  player2.stats.matchesPlayed += 1
+  if (!player1Won) player2.stats.matchesWon += 1
+  
+  // Update ELO
+  player2.stats.eloRating -= match.eloChanges.player1.change
+  if (player2.stats.eloRating > player2.stats.highestElo) {
+    player2.stats.highestElo = player2.stats.eloRating
+  }
+  if (player2.stats.eloRating < player2.stats.lowestElo) {
+    player2.stats.lowestElo = player2.stats.eloRating
+  }
+  
+  // Update sets won/lost stats
+  player2.stats.setsWon = (player2.stats.setsWon || 0) + player2SetsWon
+  player2.stats.setsLost = (player2.stats.setsLost || 0) + player1SetsWon
+  
+  // Add to match history (limit to last 20 matches to avoid performance issues)
+  player2.matchHistory.unshift({
+    match: match._id,
+    opponent: player1._id,
+    result: player1Won ? 'lost' : 'won',
+    score: match.getScoreDisplay(),
+    eloChange: -match.eloChanges.player1.change,
+    eloAfter: player2.stats.eloRating,
+    round: match.round,
+    date: match.result.playedAt
+  })
+  
+  // Keep only last 20 matches in history to avoid bloat
+  if (player2.matchHistory.length > 20) {
+    player2.matchHistory = player2.matchHistory.slice(0, 20)
   }
 }
 
