@@ -24,6 +24,9 @@ export default function MatchResultCard({
     match.players.player2._id === player._id
   )
 
+  // Check if this is a walkover match
+  const isWalkover = match.result?.score?.walkover === true
+
   // Calculate final score and determine actual winner for player matches
   let myScore = 0, opponentScore = 0
   if (match.result?.score?.sets && isPlayerMatch) {
@@ -57,19 +60,20 @@ export default function MatchResultCard({
     ? (match.players.player1._id === player._id ? isPlayer1Winner : isPlayer2Winner)
     : isWinner
 
+  // For walkover matches, we don't show confetti or treat it as a "real" win
   useEffect(() => {
-    if (isPlayerMatch && actualIsWinner) {
+    if (isPlayerMatch && actualIsWinner && !isWalkover) {
       setShowConfetti(true)
       // Stop confetti after 5 seconds
       const timer = setTimeout(() => setShowConfetti(false), 5000)
       return () => clearTimeout(timer)
     }
-  }, [isPlayerMatch, actualIsWinner])
+  }, [isPlayerMatch, actualIsWinner, isWalkover])
 
   return (
     <>
-      {/* Confetti Animation - Only for player's winning matches */}
-      {showConfetti && isPlayerMatch && actualIsWinner && (
+      {/* Confetti Animation - Only for player's winning matches (NOT walkovers) */}
+      {showConfetti && isPlayerMatch && actualIsWinner && !isWalkover && (
         <div className="fixed inset-0 pointer-events-none z-[60]">
           <div className="confetti-container">
             {[...Array(50)].map((_, i) => (
@@ -92,19 +96,23 @@ export default function MatchResultCard({
         <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden animate-scale-in">
           {/* Header */}
           <div className={`p-6 text-center ${
-            isPlayerMatch && actualIsWinner 
-              ? 'bg-gradient-to-br from-green-500 to-emerald-600' 
-              : 'bg-gradient-to-br from-gray-500 to-gray-600'
+            isWalkover 
+              ? 'bg-gradient-to-br from-gray-400 to-gray-500'  // Neutral styling for walkovers
+              : (isPlayerMatch && actualIsWinner 
+                ? 'bg-gradient-to-br from-green-500 to-emerald-600' 
+                : 'bg-gradient-to-br from-gray-500 to-gray-600')
           } text-white`}>
             <div className="text-6xl mb-3">
-              {isPlayerMatch && actualIsWinner ? '🏆' : '🎾'}
+              {isWalkover ? '📝' : (isPlayerMatch && actualIsWinner ? '🏆' : '🎾')}
             </div>
             <h2 className="text-3xl font-bold mb-2">
-              {isPlayerMatch 
-                ? (actualIsWinner 
-                  ? (language === 'es' ? '¡Victoria!' : 'Victory!') 
-                  : (language === 'es' ? 'Partido Completado' : 'Match Complete'))
-                : (language === 'es' ? 'Resultado del Partido' : 'Match Result')}
+              {isWalkover 
+                ? (language === 'es' ? 'Walkover' : 'Walkover')
+                : (isPlayerMatch 
+                  ? (actualIsWinner 
+                    ? (language === 'es' ? '¡Victoria!' : 'Victory!') 
+                    : (language === 'es' ? 'Partido Completado' : 'Match Complete'))
+                  : (language === 'es' ? 'Resultado del Partido' : 'Match Result'))}
             </h2>
             <p className="text-lg opacity-90">
               {language === 'es' ? 'Ronda' : 'Round'} {match.round}
@@ -125,8 +133,12 @@ export default function MatchResultCard({
                           <div className="text-sm text-gray-600 mb-1">
                             {player?.name}
                           </div>
-                          <div className={`text-3xl font-bold ${actualIsWinner ? 'text-green-600' : 'text-gray-700'}`}>
-                            {myScore}
+                          <div className={`text-3xl font-bold ${
+                            isWalkover 
+                              ? 'text-gray-700'  // Neutral color for walkover
+                              : (actualIsWinner ? 'text-green-600' : 'text-gray-700')
+                          }`}>
+                            {isWalkover ? '–' : myScore}
                           </div>
                         </div>
                         <div className="text-2xl text-gray-400">vs</div>
@@ -134,8 +146,12 @@ export default function MatchResultCard({
                           <div className="text-sm text-gray-600 mb-1">
                             {opponent?.name}
                           </div>
-                          <div className={`text-3xl font-bold ${!actualIsWinner ? 'text-green-600' : 'text-gray-700'}`}>
-                            {opponentScore}
+                          <div className={`text-3xl font-bold ${
+                            isWalkover 
+                              ? 'text-gray-700'  // Neutral color for walkover
+                              : (!actualIsWinner ? 'text-green-600' : 'text-gray-700')
+                          }`}>
+                            {isWalkover ? '–' : opponentScore}
                           </div>
                         </div>
                       </>
@@ -145,8 +161,12 @@ export default function MatchResultCard({
                           <div className="text-sm text-gray-600 mb-1">
                             {opponent?.name}
                           </div>
-                          <div className={`text-3xl font-bold ${!actualIsWinner ? 'text-green-600' : 'text-gray-700'}`}>
-                            {opponentScore}
+                          <div className={`text-3xl font-bold ${
+                            isWalkover 
+                              ? 'text-gray-700'  // Neutral color for walkover
+                              : (!actualIsWinner ? 'text-green-600' : 'text-gray-700')
+                          }`}>
+                            {isWalkover ? '–' : opponentScore}
                           </div>
                         </div>
                         <div className="text-2xl text-gray-400">vs</div>
@@ -154,8 +174,12 @@ export default function MatchResultCard({
                           <div className="text-sm text-gray-600 mb-1">
                             {player?.name}
                           </div>
-                          <div className={`text-3xl font-bold ${actualIsWinner ? 'text-green-600' : 'text-gray-700'}`}>
-                            {myScore}
+                          <div className={`text-3xl font-bold ${
+                            isWalkover 
+                              ? 'text-gray-700'  // Neutral color for walkover
+                              : (actualIsWinner ? 'text-green-600' : 'text-gray-700')
+                          }`}>
+                            {isWalkover ? '–' : myScore}
                           </div>
                         </div>
                       </>
@@ -167,8 +191,12 @@ export default function MatchResultCard({
                       <div className="text-sm text-gray-600 mb-1">
                         {match.players.player1.name}
                       </div>
-                      <div className={`text-3xl font-bold ${isPlayer1Winner ? 'text-green-600' : 'text-gray-700'}`}>
-                        {p1Score}
+                      <div className={`text-3xl font-bold ${
+                        isWalkover 
+                          ? 'text-gray-700'
+                          : (isPlayer1Winner ? 'text-green-600' : 'text-gray-700')
+                      }`}>
+                        {isWalkover ? '–' : p1Score}
                       </div>
                     </div>
                     <div className="text-2xl text-gray-400">vs</div>
@@ -176,56 +204,75 @@ export default function MatchResultCard({
                       <div className="text-sm text-gray-600 mb-1">
                         {match.players.player2.name}
                       </div>
-                      <div className={`text-3xl font-bold ${isPlayer2Winner ? 'text-green-600' : 'text-gray-700'}`}>
-                        {p2Score}
+                      <div className={`text-3xl font-bold ${
+                        isWalkover 
+                          ? 'text-gray-700'
+                          : (isPlayer2Winner ? 'text-green-600' : 'text-gray-700')
+                      }`}>
+                        {isWalkover ? '–' : p2Score}
                       </div>
                     </div>
                   </>
                 )}
               </div>
 
-              {/* Set Details */}
-              <div className="border-t pt-3">
-                <h4 className="text-sm font-medium text-gray-700 mb-2">
-                  {language === 'es' ? 'Detalle de Sets' : 'Set Details'}
-                </h4>
-                <div className="flex gap-3 justify-center">
-                  {match.result?.score?.sets?.map((set, index) => {
-                    // Always show natural order: player1 vs player2
-                    const leftScore = set.player1
-                    const rightScore = set.player2
-                    
-                    let wonSet
-                    if (isPlayerMatch) {
-                      const isPlayer1 = match.players.player1._id === player._id
-                      wonSet = isPlayer1 
-                        ? set.player1 > set.player2  // Player is player1, won if player1 score higher
-                        : set.player2 > set.player1  // Player is player2, won if player2 score higher
-                    } else {
-                      // For non-player matches, color based on who won the set
-                      wonSet = isPlayer1Winner ? set.player1 > set.player2 : set.player2 > set.player1
-                    }
-                    
-                    return (
-                      <div 
-                        key={index} 
-                        className={`text-center px-3 py-2 rounded-lg ${
-                          isPlayerMatch 
-                            ? (wonSet ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700')
-                            : 'bg-gray-100 text-gray-700'
-                        }`}
-                      >
-                        <div className="text-lg font-bold">
-                          {leftScore}-{rightScore}
+              {/* Set Details - Only show for non-walkover matches */}
+              {!isWalkover && match.result?.score?.sets && match.result.score.sets.length > 0 && (
+                <div className="border-t pt-3">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">
+                    {language === 'es' ? 'Detalle de Sets' : 'Set Details'}
+                  </h4>
+                  <div className="flex gap-3 justify-center">
+                    {match.result.score.sets.map((set, index) => {
+                      // Always show natural order: player1 vs player2
+                      const leftScore = set.player1
+                      const rightScore = set.player2
+                      
+                      let wonSet
+                      if (isPlayerMatch) {
+                        const isPlayer1 = match.players.player1._id === player._id
+                        wonSet = isPlayer1 
+                          ? set.player1 > set.player2  // Player is player1, won if player1 score higher
+                          : set.player2 > set.player1  // Player is player2, won if player2 score higher
+                      } else {
+                        // For non-player matches, color based on who won the set
+                        wonSet = isPlayer1Winner ? set.player1 > set.player2 : set.player2 > set.player1
+                      }
+                      
+                      return (
+                        <div 
+                          key={index} 
+                          className={`text-center px-3 py-2 rounded-lg ${
+                            isPlayerMatch 
+                              ? (wonSet ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700')
+                              : 'bg-gray-100 text-gray-700'
+                          }`}
+                        >
+                          <div className="text-lg font-bold">
+                            {leftScore}-{rightScore}
+                          </div>
+                          <div className="text-xs opacity-75">
+                            {index === 2 ? 'Super TB' : `Set ${index + 1}`}
+                          </div>
                         </div>
-                        <div className="text-xs opacity-75">
-                          {index === 2 ? 'Super TB' : `Set ${index + 1}`}
-                        </div>
-                      </div>
-                    )
-                  })}
+                      )
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Walkover explanation */}
+              {isWalkover && (
+                <div className="border-t pt-3">
+                  <div className="text-center">
+                    <p className="text-sm text-gray-600">
+                      {language === 'es' 
+                        ? 'Uno de los jugadores no se presentó al partido'
+                        : 'One player did not show up for the match'}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Match Info */}
@@ -256,7 +303,7 @@ export default function MatchResultCard({
             {/* Action Buttons */}
             <div className="flex gap-3">
               {/* TODO: Re-enable share button when improved
-              {isPlayerMatch && actualIsWinner && (
+              {isPlayerMatch && actualIsWinner && !isWalkover && (
                 <button
                   onClick={() => {
                     const text = language === 'es' 
@@ -288,8 +335,8 @@ export default function MatchResultCard({
               </button>
             </div>
 
-            {/* Motivational Message - Only for player's own losing matches */}
-            {isPlayerMatch && !actualIsWinner && (
+            {/* Motivational Message - Only for player's own losing matches (NOT walkovers) */}
+            {isPlayerMatch && !actualIsWinner && !isWalkover && (
               <p className="text-center text-sm text-gray-500 mt-4">
                 {(() => {
                   const motivationalMessages = {
