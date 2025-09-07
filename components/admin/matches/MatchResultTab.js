@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import MatchResultForm from './MatchResultForm'
 import MatchResultDisplay from './MatchResultDisplay'
 
-export default function MatchResultTab({ match, onResultUpdate }) {
+export default function MatchResultTab({ match, onResultUpdate, onResetToUnplayed }) {
   const [isEditingResult, setIsEditingResult] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [resultForm, setResultForm] = useState(() => {
@@ -61,6 +61,7 @@ export default function MatchResultTab({ match, onResultUpdate }) {
         <MatchResultDisplay 
           match={match}
           onEdit={() => setIsEditingResult(true)}
+          onResetToUnplayed={onResetToUnplayed}
         />
       ) : (
         <div>
