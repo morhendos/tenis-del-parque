@@ -13,6 +13,7 @@ import { useParams } from 'next/navigation';
 import { cityInfo, i18n } from '@/lib/i18n/config';
 import { multiLeagueHomeContent } from '@/lib/content/multiLeagueHomeContent';
 import { homeContent } from '@/lib/content/homeContent';
+import { TennisPreloaderInline } from '@/components/ui/TennisPreloader';
 
 // Feature Card Component
 function FeatureCard({ feature }) {
@@ -95,6 +96,7 @@ export default function MultiLeagueHomePage() {
   
   // Organize leagues by status
   const activeLeagues = leagues.filter(league => league.status === 'active');
+  const registrationOpenLeagues = leagues.filter(league => league.status === 'registration_open');
   const comingSoonLeagues = leagues.filter(league => league.status === 'coming_soon');
   
   return (
@@ -125,11 +127,11 @@ export default function MultiLeagueHomePage() {
           </div>
           
           {loading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
-              <p className="mt-4 text-gray-600">
-                {validLocale === 'es' ? 'Cargando ligas...' : 'Loading leagues...'}
-              </p>
+            <div className="py-12">
+              <TennisPreloaderInline 
+                text={validLocale === 'es' ? 'Cargando ligas...' : 'Loading leagues...'}
+                locale={validLocale}
+              />
             </div>
           ) : error ? (
             <div className="text-center py-12 max-w-2xl mx-auto">
@@ -172,6 +174,22 @@ export default function MultiLeagueHomePage() {
                 <div className="mb-12">
                   <div className="flex flex-wrap justify-center gap-8">
                     {activeLeagues.map((league) => (
+                      <LeagueCard
+                        key={league._id}
+                        league={league}
+                        content={content}
+                        locale={validLocale}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Registration Open Leagues - Centered */}
+              {registrationOpenLeagues.length > 0 && (
+                <div className="mb-12">
+                  <div className="flex flex-wrap justify-center gap-8">
+                    {registrationOpenLeagues.map((league) => (
                       <LeagueCard
                         key={league._id}
                         league={league}
