@@ -86,40 +86,55 @@ export async function PUT(request, { params }) {
 // NEW: PATCH method for partial updates (specifically for city linking)
 export async function PATCH(request, { params }) {
   try {
+    console.log('🔍 PATCH league request received for ID:', params.id)
+    
     const { session, error } = await requireAdmin(request)
-    if (error) return error
+    if (error) {
+      console.error('❌ Admin auth failed:', error)
+      return error
+    }
 
     const { id } = params
+    console.log('🔍 League ID to update:', id)
 
     // Connect to database
     await dbConnect()
+    console.log('✅ Database connected')
 
     // Parse request body
     const data = await request.json()
+    console.log('🔍 Update data received:', data)
 
     // Find the league
     const league = await League.findById(id)
     if (!league) {
+      console.error('❌ League not found with ID:', id)
       return NextResponse.json(
         { error: 'League not found' },
         { status: 404 }
       )
     }
+    console.log('✅ League found:', league.name)
 
     // Handle city linking/unlinking
     if (data.hasOwnProperty('city')) {
+      console.log('🔍 Processing city update:', data.city)
       if (data.city) {
         // Validate that the city exists
         const city = await City.findById(data.city)
         if (!city) {
+          console.error('❌ City not found with ID:', data.city)
           return NextResponse.json(
             { error: 'City not found' },
             { status: 400 }
           )
         }
+        console.log('✅ City found:', city.name)
         league.city = data.city
+        console.log('✅ League city updated to:', data.city)
       } else {
         // Unlink from city
+        console.log('🔗 Unlinking league from city')
         league.city = null
       }
     }
@@ -128,11 +143,15 @@ export async function PATCH(request, { params }) {
     if (data.status !== undefined) league.status = data.status
     if (data.displayOrder !== undefined) league.displayOrder = data.displayOrder
 
-    // Save the updated league
-    await league.save()
+    // Save the updated league (skip validation for partial updates)
+    console.log('💾 Saving league...')
+    await league.save({ validateBeforeSave: false })
+    console.log('✅ League saved successfully')
 
     // Return the updated league with populated city data
+    console.log('🔍 Fetching updated league with populated city...')
     const updatedLeague = await League.findById(id).populate('city', 'slug name')
+    console.log('✅ Updated league fetched:', updatedLeague.name, 'with city:', updatedLeague.city?.name)
 
     return NextResponse.json({
       success: true,

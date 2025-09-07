@@ -54,12 +54,14 @@ export default function LeaguesPageContent({ locale: propLocale }) {
   // Organize leagues by status
   const activeLeagues = leagues.filter(league => league.status === 'active')
   const comingSoonLeagues = leagues.filter(league => league.status === 'coming_soon')
+  const registrationOpenLeagues = leagues.filter(league => league.status === 'registration_open')
   const inactiveLeagues = leagues.filter(league => league.status === 'inactive')
 
   console.log('League counts:', {
     total: leagues.length,
     active: activeLeagues.length,
     comingSoon: comingSoonLeagues.length,
+    registrationOpen: registrationOpenLeagues.length,
     inactive: inactiveLeagues.length
   })
 
@@ -153,6 +155,25 @@ export default function LeaguesPageContent({ locale: propLocale }) {
                 </h2>
                 <div className="flex flex-wrap justify-center gap-8">
                   {activeLeagues.map((league) => (
+                    <LeagueCard
+                      key={league._id}
+                      league={league}
+                      content={content}
+                      locale={locale}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Registration Open Leagues */}
+            {registrationOpenLeagues.length > 0 && (
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+                  {locale === 'es' ? 'Inscripciones Abiertas' : 'Registration Open'}
+                </h2>
+                <div className="flex flex-wrap justify-center gap-8">
+                  {registrationOpenLeagues.map((league) => (
                     <LeagueCard
                       key={league._id}
                       league={league}

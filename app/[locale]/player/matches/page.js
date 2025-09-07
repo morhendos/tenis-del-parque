@@ -7,6 +7,7 @@ import { MatchModals } from '@/components/player/MatchModals'
 import MatchResultCard from '@/components/player/MatchResultCard'
 import { toast } from '@/components/ui/Toast'
 import { processMatchResult } from '@/lib/utils/matchResultUtils'
+import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
 
 export default function PlayerMatches() {
   const params = useParams()
@@ -227,15 +228,10 @@ export default function PlayerMatches() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-gray-200 rounded-full"></div>
-            <div className="absolute top-0 left-0 w-16 h-16 border-4 border-parque-purple rounded-full animate-spin border-t-transparent"></div>
-          </div>
-          <p className="mt-4 text-gray-600 animate-pulse">
-            {locale === 'es' ? 'Cargando partidos...' : 'Loading matches...'}
-          </p>
-        </div>
+        <TennisPreloaderInline 
+          text={locale === 'es' ? 'Cargando partidos...' : 'Loading matches...'}
+          locale={locale}
+        />
       </div>
     )
   }

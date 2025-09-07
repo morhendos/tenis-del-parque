@@ -10,6 +10,7 @@ import StandingsTable from '@/components/player/StandingsTable'
 import ResultsTab from '@/components/player/ResultsTab'
 import ScheduleTab from '@/components/player/ScheduleTab'
 import { getSeasonDisplayName } from '@/lib/utils/seasonUtils.client'
+import { TennisPreloaderFullScreen } from '@/components/ui/TennisPreloader'
 
 export default function LeagueSeasonPage() {
   const params = useParams()
@@ -159,12 +160,10 @@ export default function LeagueSeasonPage() {
           </div>
         </button>
 
-        <div className={`container mx-auto px-4 text-center transition-all duration-300 ${showNavigation ? 'py-24' : 'py-12'}`}>
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
-          <p className="mt-4 text-gray-600">
-            {language === 'es' ? 'Cargando información de la liga...' : 'Loading league information...'}
-          </p>
-        </div>
+        <TennisPreloaderFullScreen 
+          text={language === 'es' ? 'Cargando información de la liga...' : 'Loading league information...'}
+          locale={language}
+        />
       </div>
     )
   }
