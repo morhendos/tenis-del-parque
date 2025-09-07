@@ -1,30 +1,66 @@
-import React from 'react'
+import React, { useState } from 'react'
 
-export default function MatchResultDisplay({ match, onEdit }) {
+export default function MatchResultDisplay({ match, onEdit, onResetToUnplayed }) {
+  const [isResetting, setIsResetting] = useState(false)
+
+  const handleResetToUnplayed = async () => {
+    if (!confirm('Are you sure you want to reset this match to unplayed? This will reverse all ELO changes and player statistics.')) {
+      return
+    }
+
+    setIsResetting(true)
+    try {
+      await onResetToUnplayed()
+    } catch (error) {
+      console.error('Error resetting match:', error)
+    } finally {
+      setIsResetting(false)
+    }
+  }
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-lg font-semibold text-gray-900">Match Result</h3>
-        <button
-          onClick={onEdit}
-          className="text-sm text-parque-purple hover:underline"
-        >
-          Edit Result
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={onEdit}
+            className="text-sm text-parque-purple hover:underline"
+          >
+            Edit Result
+          </button>
+          <button
+            onClick={handleResetToUnplayed}
+            disabled={isResetting}
+            className="text-sm text-red-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isResetting ? 'Resetting...' : 'Reset to Unplayed'}
+          </button>
+        </div>
       </div>
       
       {/* Winner Section */}
-      <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 text-center mb-6 border border-green-200">
-        <div className="text-4xl mb-4">🏆</div>
-        <h4 className="text-2xl font-bold text-green-800 mb-4">
+      <div className={`rounded-lg p-6 text-center mb-6 border ${
+        match.result.score?.walkover 
+          ? 'bg-gradient-to-r from-gray-50 to-gray-100 border-gray-200'
+          : 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200'
+      }`}>
+        <div className="text-4xl mb-4">
+          {match.result.score?.walkover ? '📝' : '🏆'}
+        </div>
+        <h4 className={`text-2xl font-bold mb-4 ${
+          match.result.score?.walkover ? 'text-gray-700' : 'text-green-800'
+        }`}>
           {match.result.winner === match.players.player1._id 
             ? match.players.player1.name 
-            : match.players.player2.name} Wins!
+            : match.players.player2.name} {match.result.score?.walkover ? 'Wins by Walkover' : 'Wins!'}
         </h4>
         
         {/* Set Score Summary */}
         {match.result.score?.sets && match.result.score.sets.length > 0 && (
-          <div className="text-lg font-semibold text-green-700 mb-2">
+          <div className={`text-lg font-semibold mb-2 ${
+            match.result.score?.walkover ? 'text-gray-600' : 'text-green-700'
+          }`}>
             Sets Won: {(() => {
               const player1Sets = match.result.score.sets.filter(set => 
                 parseInt(set.player1) > parseInt(set.player2)
@@ -54,8 +90,8 @@ export default function MatchResultDisplay({ match, onEdit }) {
         )}
       </div>
 
-      {/* Detailed Score Breakdown */}
-      {match.result.score?.sets && match.result.score.sets.length > 0 && (
+      {/* Detailed Score Breakdown - Only show for non-walkover matches */}
+      {match.result.score?.sets && match.result.score.sets.length > 0 && !match.result.score?.walkover && (
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
           <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
             <h4 className="font-semibold text-gray-900">Set by Set Breakdown</h4>
@@ -146,6 +182,56 @@ export default function MatchResultDisplay({ match, onEdit }) {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* Walkover explanation */}
+      {match.result.score?.walkover && (
+        <div className="bg-gray-50 rounded-lg p-4 mb-6">
+          <h4 className="font-semibold text-gray-900 mb-2">Walkover Match</h4>
+          <p className="text-sm text-gray-600">
+            One player did not show up for the scheduled match. No sets were played.
+          </p>
+        </div>
+      )}
+
+      {/* ELO Changes Display */}
+      {match.eloChanges && (
+        <div className="bg-blue-50 rounded-lg p-4 mb-6 border border-blue-200">
+          <h4 className="font-semibold text-gray-900 mb-3">ELO Rating Changes</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex justify-between items-center">
+              <span className="font-medium text-gray-900">{match.players.player1.name}:</span>
+              <div className="text-right">
+                <div className="text-sm text-gray-600">
+                  {match.eloChanges.player1.before} → {match.eloChanges.player1.after}
+                </div>
+                <div className={`font-semibold ${
+                  match.eloChanges.player1.change >= 0 ? 'text-green-600' : 'text-red-600'
+                }`}>
+                  {match.eloChanges.player1.change >= 0 ? '+' : ''}{match.eloChanges.player1.change}
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="font-medium text-gray-900">{match.players.player2.name}:</span>
+              <div className="text-right">
+                <div className="text-sm text-gray-600">
+                  {match.eloChanges.player2.before} → {match.eloChanges.player2.after}
+                </div>
+                <div className={`font-semibold ${
+                  match.eloChanges.player2.change >= 0 ? 'text-green-600' : 'text-red-600'
+                }`}>
+                  {match.eloChanges.player2.change >= 0 ? '+' : ''}{match.eloChanges.player2.change}
+                </div>
+              </div>
+            </div>
+          </div>
+          {match.result.score?.walkover && (
+            <div className="mt-3 text-xs text-gray-500">
+              * No ELO changes for walkover matches
+            </div>
+          )}
         </div>
       )}
 
