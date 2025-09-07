@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
-import dbConnect from '../../../../lib/db/mongoose'
-import League from '../../../../lib/models/League'
-import City from '../../../../lib/models/City'
+import dbConnect from '../../../lib/db/mongoose'
+import League from '../../../lib/models/League'
+import City from '../../../lib/models/City'
 
 export const dynamic = 'force-dynamic'
 
