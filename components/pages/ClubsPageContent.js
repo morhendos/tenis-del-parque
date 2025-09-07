@@ -38,70 +38,19 @@ export default function ClubsPageContent() {
       if (response.ok) {
         const data = await response.json()
         setCities(data.cities || [])
+        console.log('✅ Cities loaded from API:', data.cities?.length || 0)
+        if (data.corrections > 0) {
+          console.log(`🔧 ${data.corrections} club count corrections applied`)
+        }
       } else {
-        // Enhanced demo cities with area context
-        setCities([
-          {
-            _id: 'demo-sotogrande',
-            slug: 'sotogrande',
-            name: { es: 'Sotogrande', en: 'Sotogrande' },
-            province: 'Cádiz',
-            clubCount: 5,
-            leagueCount: 1,
-            coordinates: { lat: 36.2847, lng: -5.2558 },
-            images: { main: '', googlePhotoReference: null },
-            hasCoordinates: true,
-            hasImages: false,
-            hasAreas: true,
-            areaCount: 4
-          },
-          {
-            _id: 'demo-marbella',
-            slug: 'marbella',
-            name: { es: 'Marbella', en: 'Marbella' },
-            province: 'Málaga',
-            clubCount: 15,
-            leagueCount: 0,
-            coordinates: { lat: 36.5101, lng: -4.8824 },
-            images: { main: '', googlePhotoReference: null },
-            hasCoordinates: true,
-            hasImages: false,
-            hasAreas: true,
-            areaCount: 13
-          },
-          {
-            _id: 'demo-estepona',
-            slug: 'estepona',
-            name: { es: 'Estepona', en: 'Estepona' },
-            province: 'Málaga',
-            clubCount: 8,
-            leagueCount: 0,
-            coordinates: { lat: 36.4285, lng: -5.1450 },
-            images: { main: '', googlePhotoReference: null },
-            hasCoordinates: true,
-            hasImages: false,
-            hasAreas: true,
-            areaCount: 6
-          },
-          {
-            _id: 'demo-malaga',
-            slug: 'malaga',
-            name: { es: 'Málaga', en: 'Málaga' },
-            province: 'Málaga',
-            clubCount: 12,
-            leagueCount: 0,
-            coordinates: { lat: 36.7213, lng: -4.4214 },
-            images: { main: '', googlePhotoReference: null },
-            hasCoordinates: true,
-            hasImages: false,
-            hasAreas: true,
-            areaCount: 8
-          }
-        ])
+        console.error('❌ Failed to fetch cities from API')
+        setError('Failed to load cities')
+        setCities([]) // No fallback data - show proper error handling
       }
     } catch (err) {
-      console.error('Error fetching cities:', err)
+      console.error('❌ Error fetching cities:', err)
       setError(err.message)
+      setCities([]) // No fallback data - show proper error handling
     } finally {
       setLoading(false)
     }
@@ -115,9 +64,14 @@ export default function ClubsPageContent() {
       if (response.ok) {
         const data = await response.json()
         setClubs(data.clubs || [])
+        console.log('✅ Clubs loaded for area stats:', data.clubs?.length || 0)
+      } else {
+        console.error('❌ Failed to fetch clubs for area stats')
+        setClubs([])
       }
     } catch (error) {
-      console.error('Error fetching clubs for stats:', error)
+      console.error('❌ Error fetching clubs for stats:', error)
+      setClubs([])
     } finally {
       setClubsLoading(false)
     }
@@ -154,11 +108,6 @@ export default function ClubsPageContent() {
           })
         }
       })
-      
-      // Calculate GPS-based club count for area stats, but preserve original database clubCount
-      const gpsBasedClubCount = clubs.filter(club => club.league === city.slug).length
-      city.gpsClubCount = gpsBasedClubCount // Store GPS-based count separately
-      // Keep original city.clubCount from database for display
     })
 
     // Sort top areas by club count
@@ -203,8 +152,7 @@ export default function ClubsPageContent() {
     searchTerm,
     sampleCity: cities[0] ? {
       name: cities[0].name,
-      clubCount: cities[0].clubCount,
-      gpsClubCount: cities[0].gpsClubCount
+      clubCount: cities[0].clubCount
     } : null
   })
 
@@ -218,6 +166,39 @@ export default function ClubsPageContent() {
           text={locale === 'es' ? 'Cargando clubes...' : 'Loading clubs...'} 
           locale={locale} 
         />
+      </div>
+    )
+  }
+
+  // Show error state if API failed
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+        <Navigation locale={locale} />
+        <div className="container mx-auto px-4 py-16">
+          <div className="text-center py-16 max-w-2xl mx-auto">
+            <div className="text-6xl mb-6">⚠️</div>
+            <h2 className="text-3xl font-light text-gray-900 mb-4">
+              {locale === 'es' ? 'Error de Conexión' : 'Connection Error'}
+            </h2>
+            <p className="text-gray-600 mb-8">
+              {locale === 'es' 
+                ? 'No pudimos cargar la información de las ciudades. Por favor, inténtalo de nuevo.'
+                : 'We couldn\'t load city information. Please try again.'}
+            </p>
+            <button
+              onClick={() => {
+                setError(null)
+                fetchCities()
+                fetchClubs()
+              }}
+              className="inline-block bg-parque-purple text-white px-6 py-3 rounded-full hover:bg-parque-purple/90 transition-colors font-medium"
+            >
+              {locale === 'es' ? 'Reintentar' : 'Retry'}
+            </button>
+          </div>
+        </div>
+        <Footer content={t.footer} />
       </div>
     )
   }
