@@ -59,10 +59,11 @@ export async function POST(request) {
       )
     }
 
-    // Check if player already exists in this league
+    // 🔧 UPDATED: Check if player already exists in this specific league AND season
     const existingPlayer = await Player.findOne({ 
       email: email.toLowerCase(),
-      league: league._id 
+      league: league._id,
+      season: season  // Now checking season too!
     })
     
     if (existingPlayer) {
@@ -70,11 +71,22 @@ export async function POST(request) {
         { 
           success: false, 
           error: language === 'es'
-            ? 'Este email ya está registrado en esta liga'
-            : 'This email is already registered in this league'
+            ? 'Ya estás registrado en esta liga y temporada'
+            : 'You are already registered for this league and season'
         },
         { status: 409 }
       )
+    }
+
+    // 🔧 NEW: Check if this email exists in other leagues (for better UX messaging)
+    const existingPlayerElsewhere = await Player.findOne({ 
+      email: email.toLowerCase()
+    }).populate('league', 'name slug')
+    
+    let isExistingUser = false
+    if (existingPlayerElsewhere) {
+      isExistingUser = true
+      console.log(`Existing player ${email} registering for new league: ${league.name} (${season})`)
     }
 
     // Get additional metadata
@@ -84,10 +96,10 @@ export async function POST(request) {
                      headers.get('x-real-ip') || 
                      'unknown'
 
-    // Create new player
+    // Create new player record for this league/season
     const player = new Player({
       name,
-      email,
+      email: email.toLowerCase(),
       whatsapp,
       level,
       league: league._id,
@@ -118,17 +130,32 @@ export async function POST(request) {
       })
     }
 
+    // 🔧 IMPROVED: Customize success message for existing vs new users
+    let successMessage
+    if (isExistingUser) {
+      successMessage = language === 'es'
+        ? league.status === 'coming_soon' 
+          ? '¡Te has registrado en una nueva liga! Estás en la lista de espera.'
+          : '¡Te has registrado exitosamente en una nueva liga! Te contactaremos pronto.'
+        : league.status === 'coming_soon'
+          ? 'You\'ve registered for a new league! You\'re on the waiting list.'
+          : 'You\'ve successfully registered for a new league! We\'ll contact you soon.'
+    } else {
+      successMessage = language === 'es'
+        ? league.status === 'coming_soon' 
+          ? '¡Bienvenido! Estás en la lista de espera. Te contactaremos cuando la liga esté lista.'
+          : '¡Bienvenido! Registro exitoso. Te contactaremos pronto.'
+        : league.status === 'coming_soon'
+          ? 'Welcome! You\'re on the waiting list. We\'ll contact you when the league is ready.'
+          : 'Welcome! Registration successful. We\'ll contact you soon.'
+    }
+
     // Return success response
     return Response.json(
       {
         success: true,
-        message: language === 'es'
-          ? league.status === 'coming_soon' 
-            ? '¡Estás en la lista de espera! Te contactaremos cuando la liga esté lista.'
-            : '¡Registro exitoso! Te contactaremos pronto.'
-          : league.status === 'coming_soon'
-            ? 'You\'re on the waiting list! We\'ll contact you when the league is ready.'
-            : 'Registration successful! We\'ll contact you soon.',
+        message: successMessage,
+        isExistingUser, // 🔧 NEW: Flag to indicate if this was an existing user
         player: {
           id: player._id,
           name: player.name,
@@ -158,6 +185,20 @@ export async function POST(request) {
           errors: errors
         },
         { status: 400 }
+      )
+    }
+
+    // 🔧 NEW: Handle MongoDB duplicate key errors (from compound unique index)
+    if (error.code === 11000) {
+      // This happens when the compound unique index (email + league + season) is violated
+      return Response.json(
+        { 
+          success: false, 
+          error: language === 'es'
+            ? 'Ya estás registrado en esta liga y temporada'
+            : 'You are already registered for this league and season'
+        },
+        { status: 409 }
       )
     }
 
@@ -191,10 +232,14 @@ export async function GET() {
       }
     }
     
+    // 🔧 NEW: Also get total unique email addresses for insights
+    const uniqueEmails = await Player.distinct('email')
+    
     return Response.json({
       success: true,
       message: 'Player registration API is working',
-      stats
+      stats,
+      totalUniqueEmails: uniqueEmails.length
     })
   } catch (error) {
     return Response.json(
