@@ -24,7 +24,8 @@ export default function MatchDetailPage() {
     setSuccess,
     updateSchedule,
     updateResult,
-    updatePlayers
+    updatePlayers,
+    resetToUnplayed
   } = useMatchDetail(matchId)
 
   const tabs = [
@@ -159,6 +160,7 @@ export default function MatchDetailPage() {
               <MatchResultTab 
                 match={match}
                 onResultUpdate={updateResult}
+                onResetToUnplayed={resetToUnplayed}
               />
             )}
           </div>
