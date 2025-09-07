@@ -185,13 +185,17 @@ export async function POST(request) {
       Player.findById(match.players.player2)
     ])
 
-    // Calculate ELO changes
+    // Calculate ELO changes only for non-walkover matches
     const player1Won = winner.equals(match.players.player1)
-    const eloChange = calculateEloChange(
-      player1.stats.eloRating,
-      player2.stats.eloRating,
-      player1Won
-    )
+    let eloChange = 0;
+    
+    if (!walkover) {
+      eloChange = calculateEloChange(
+        player1.stats.eloRating,
+        player2.stats.eloRating,
+        player1Won
+      )
+    }
 
     // Update match with result and ELO changes
     match.result = {
@@ -206,8 +210,7 @@ export async function POST(request) {
     
     match.status = 'completed'
     
-    // FIXED: Apply ELO changes correctly
-    // eloChange is the amount player1's rating should change
+    // Apply ELO changes (will be 0 for walkovers)
     match.eloChanges = {
       player1: {
         before: player1.stats.eloRating,
