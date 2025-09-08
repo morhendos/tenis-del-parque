@@ -4,8 +4,29 @@
 // CRITICAL: This script migrates from old structure (multiple Player docs per email) 
 // to new structure (one Player doc with registrations array)
 
-import dbConnect from '../lib/db/mongoose.js'
-import mongoose from 'mongoose'
+const mongoose = require('mongoose')
+
+// Load environment variables
+require('dotenv').config({ path: '.env.local' })
+
+// Database connection function
+async function dbConnect() {
+  if (!process.env.MONGODB_URI) {
+    throw new Error('Please add your MongoDB URI to .env.local')
+  }
+  
+  if (mongoose.connections[0].readyState) {
+    return
+  }
+  
+  try {
+    await mongoose.connect(process.env.MONGODB_URI)
+    console.log('✅ Connected to MongoDB')
+  } catch (error) {
+    console.error('❌ MongoDB connection error:', error)
+    throw error
+  }
+}
 
 // Define the OLD Player schema for migration purposes
 const OldPlayerSchema = new mongoose.Schema({
@@ -52,6 +73,31 @@ const OldPlayerSchema = new mongoose.Schema({
 }, { collection: 'players' }) // Explicitly use existing collection
 
 const OldPlayer = mongoose.model('OldPlayer', OldPlayerSchema)
+
+// Define a minimal League schema for population purposes
+const LeagueSchema = new mongoose.Schema({
+  name: String,
+  slug: String,
+  skillLevel: String,
+  season: {
+    year: Number,
+    type: String,
+    number: Number
+  },
+  city: { type: mongoose.Schema.Types.ObjectId, ref: 'City' },
+  location: {
+    city: String,
+    area: String,
+    coordinates: {
+      lat: Number,
+      lng: Number
+    }
+  },
+  status: String,
+  // Add other fields as needed for migration
+}, { collection: 'leagues' })
+
+const League = mongoose.model('League', LeagueSchema)
 
 // Define the NEW Player schema
 const NewPlayerSchema = new mongoose.Schema({
@@ -412,4 +458,4 @@ if (process.argv[1].endsWith('migrateToNewPlayerModel.js')) {
   }
 }
 
-export { migratePlayerModel, performCutover, rollbackMigration }
+module.exports = { migratePlayerModel, performCutover, rollbackMigration }
