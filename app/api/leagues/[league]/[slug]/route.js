@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import dbConnect from '../../../../lib/db/mongoose'
-import League from '../../../../lib/models/League'
+import dbConnect from '../../../../../lib/db/mongoose'
+import League from '../../../../../lib/models/League'
 
 export const dynamic = 'force-dynamic'
 
@@ -8,7 +8,18 @@ export async function GET(request, { params }) {
   try {
     await dbConnect()
     
-    const { league: slug } = params
+    const { slug } = params
+    console.log('🔍 Fetching league by slug:', slug)
+    
+    // First, let's see ALL leagues to debug
+    const allLeagues = await League.find({})
+      .select('name slug status season')
+      .lean()
+    
+    console.log('🔍 All leagues in database:')
+    allLeagues.forEach(l => {
+      console.log(`- ${l.name} | slug: ${l.slug} | status: ${l.status}`)
+    })
     
     // Find league by slug and populate city data
     const league = await League.findOne({ 
@@ -19,6 +30,16 @@ export async function GET(request, { params }) {
     .lean()
 
     if (!league) {
+      console.log('❌ League not found with slug:', slug)
+      console.log('🔍 Trying to find league with any status...')
+      
+      // Try to find with any status to see if it exists
+      const anyStatusLeague = await League.findOne({ slug: slug }).select('name slug status').lean()
+      if (anyStatusLeague) {
+        console.log('⚠️ League exists but has wrong status:', anyStatusLeague.status)
+      } else {
+        console.log('❌ League does not exist at all with slug:', slug)
+      }
       return NextResponse.json(
         { 
           success: false,
@@ -29,6 +50,7 @@ export async function GET(request, { params }) {
       )
     }
 
+    console.log('✅ League found:', league.name)
 
     // Transform league data for frontend
     const cityData = league.city || {}

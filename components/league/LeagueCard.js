@@ -33,7 +33,30 @@ export default function LeagueCard({ league, content, locale }) {
 
   const isActive = league.status === 'active';
   const isComingSoon = league.status === 'coming_soon';
-  const citySlug = league.slug;
+  const isRegistrationOpen = league.status === 'registration_open';
+  
+  // Get the actual city slug from the league's city data
+  const getCitySlug = () => {
+    // Method 1: From populated city data
+    if (league.city?.slug) {
+      return league.city.slug;
+    }
+    // Method 2: From cityData
+    if (league.cityData?.slug) {
+      return league.cityData.slug;
+    }
+    // Method 3: Try to extract from league slug (fallback)
+    // League slugs are typically like "cityname-season-year" or "liga-de-cityname"
+    const leagueSlug = league.slug;
+    if (leagueSlug.includes('sotogrande')) return 'sotogrande';
+    if (leagueSlug.includes('marbella')) return 'marbella';
+    if (leagueSlug.includes('estepona')) return 'estepona';
+    if (leagueSlug.includes('malaga')) return 'malaga';
+    // Default fallback
+    return leagueSlug.split('-')[0];
+  };
+  
+  const citySlug = getCitySlug();
   const cityContent = content?.cities?.cityDescriptions?.[citySlug];
   
   // FIXED: Properly extract city name as string
@@ -137,25 +160,33 @@ export default function LeagueCard({ league, content, locale }) {
   // FIXED: Get the appropriate button text and link with proper Spanish URLs
   const getButtonConfig = () => {
     if (isActive) {
-      if (activeSeason) {
-        const seasonSlug = activeSeason.name.toLowerCase().replace(/\s+/g, '');
-        return {
-          text: locale === 'es' ? 'Ver Liga' : 'View League',
-          href: `/${locale}/${citySlug}/liga/${seasonSlug}`,
-          className: 'bg-parque-purple text-white hover:bg-parque-purple/90'
-        };
-      }
+      // For active leagues, use the SEO-friendly URL: /{locale}/{location}/liga/{season}
+      const seasonSlug = (league.season?.type && league.season?.year) ? 
+        `${league.season.type}${league.season.year}` : 
+        'verano2025'; // fallback for leagues without season data
+      
+      
       return {
         text: locale === 'es' ? 'Ver Liga' : 'View League',
-        href: `/${locale}/${citySlug}/liga/verano2025`,
+        href: `/${locale}/${citySlug}/liga/${seasonSlug}`,
         className: 'bg-parque-purple text-white hover:bg-parque-purple/90'
+      };
+    } else if (isRegistrationOpen) {
+      // Registration is open - show join/register button
+      // Use the league slug for specific league registration
+      const registrationUrl = locale === 'es' ? 'registro' : 'signup'
+      const href = `/${locale}/${registrationUrl}/${league.slug}`
+      return {
+        text: content?.cities?.joinLeague || (locale === 'es' ? 'Inscribirse' : 'Join League'),
+        href: href,
+        className: 'bg-parque-green text-white hover:bg-parque-green/90'
       };
     } else if (isComingSoon) {
       // Use proper Spanish URL for registration
       const registrationUrl = locale === 'es' ? 'registro' : 'signup'
       return {
         text: content?.cities?.preRegister || (locale === 'es' ? 'Pre-registro' : 'Pre-register'),
-        href: `/${locale}/${registrationUrl}/${citySlug}`,
+        href: `/${locale}/${registrationUrl}/${league.slug}`,
         className: 'bg-parque-green text-white hover:bg-parque-green/90'
       };
     } else {
@@ -171,19 +202,23 @@ export default function LeagueCard({ league, content, locale }) {
   
   return (
     <div className={`relative bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 w-full max-w-sm ${
-      !isActive && !isComingSoon ? 'opacity-60' : ''
+      !isActive && !isComingSoon && !isRegistrationOpen ? 'opacity-60' : ''
     }`}>
       {/* Status Badge */}
       <div className="absolute top-4 right-4 z-10">
         <span className={`px-3 py-1 rounded-full text-sm font-medium ${
           isActive 
             ? 'bg-green-100 text-green-800' 
+            : isRegistrationOpen
+            ? 'bg-orange-100 text-orange-800'
             : isComingSoon
             ? 'bg-blue-100 text-blue-800'
             : 'bg-gray-100 text-gray-600'
         }`}>
           {isActive 
             ? (content?.cities?.available || (locale === 'es' ? 'Activa' : 'Active'))
+            : isRegistrationOpen
+            ? (content?.cities?.registrationOpen || (locale === 'es' ? 'Inscripciones Abiertas' : 'Registration Open'))
             : isComingSoon 
             ? (content?.cities?.comingSoon || (locale === 'es' ? 'Próximamente' : 'Coming Soon'))
             : (locale === 'es' ? 'Inactiva' : 'Inactive')
@@ -226,8 +261,8 @@ export default function LeagueCard({ league, content, locale }) {
           </p>
         )}
         
-        {/* Show player count for active leagues */}
-        {isActive && league.playerCount > 0 && (
+        {/* Show player count for active and registration open leagues */}
+        {(isActive || isRegistrationOpen) && league.playerCount > 0 && (
           <div className="flex items-center justify-between mb-4">
             <div className="text-sm text-gray-500">
               <span className="font-semibold text-gray-700">{league.playerCount}</span> {
@@ -240,8 +275,8 @@ export default function LeagueCard({ league, content, locale }) {
           </div>
         )}
         
-        {/* Show season info for active leagues */}
-        {isActive && activeSeason && (
+        {/* Show season info for active and registration open leagues */}
+        {(isActive || isRegistrationOpen) && activeSeason && (
           <div className="mb-4 space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">🏆 {activeSeason.name}</span>

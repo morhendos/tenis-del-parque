@@ -6,13 +6,15 @@ import useLeaguesData from '../../../lib/hooks/useLeaguesData'
 import ImportCSVModal from '../../../components/admin/leagues/ImportCSVModal'
 import LeagueFormModal from '../../../components/admin/leagues/LeagueFormModal'
 import LeagueCityLinker from '../../../components/admin/leagues/LeagueCityLinker'
+import LeagueSeasonEditor from '../../../components/admin/leagues/LeagueSeasonEditor'
 
 export default function AdminLeaguesPage() {
   const router = useRouter()
   const [importModal, setImportModal] = useState({ show: false })
   const [importResult, setImportResult] = useState(null)
   const [formModal, setFormModal] = useState({ show: false, league: null })
-  const [activeTab, setActiveTab] = useState('overview') // NEW: Tab state
+  const [seasonEditor, setSeasonEditor] = useState({ show: false, league: null })
+  const [activeTab, setActiveTab] = useState('overview')
   
   const {
     leagues,
@@ -55,6 +57,11 @@ export default function AdminLeaguesPage() {
     setFormModal({ show: true, league: null })
   }
 
+  // NEW: Navigate to create season page
+  const handleCreateSeason = () => {
+    router.push('/admin/leagues/seasons/create')
+  }
+
   const handleFormSubmit = async (formData) => {
     try {
       const endpoint = formModal.league 
@@ -85,13 +92,43 @@ export default function AdminLeaguesPage() {
     switch (status) {
       case 'active':
         return 'bg-green-100 text-green-800'
+      case 'registration_open':
+        return 'bg-blue-100 text-blue-800'
       case 'coming_soon':
         return 'bg-yellow-100 text-yellow-800'
+      case 'completed':
+        return 'bg-purple-100 text-purple-800'
       case 'inactive':
         return 'bg-gray-100 text-gray-800'
       default:
         return 'bg-gray-100 text-gray-800'
     }
+  }
+
+  // NEW: Get skill level badge color
+  const getSkillLevelBadgeColor = (skillLevel) => {
+    switch (skillLevel) {
+      case 'beginner':
+        return 'bg-green-50 text-green-700 border-green-200'
+      case 'intermediate':
+        return 'bg-yellow-50 text-yellow-700 border-yellow-200'
+      case 'advanced':
+        return 'bg-red-50 text-red-700 border-red-200'
+      case 'all':
+      default:
+        return 'bg-gray-50 text-gray-700 border-gray-200'
+    }
+  }
+
+  // NEW: Get skill level display name
+  const getSkillLevelName = (skillLevel) => {
+    const names = {
+      all: 'General',
+      beginner: 'Principiantes',
+      intermediate: 'Intermedio',
+      advanced: 'Avanzado'
+    }
+    return names[skillLevel] || skillLevel
   }
 
   if (loading) {
@@ -109,11 +146,17 @@ export default function AdminLeaguesPage() {
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Leagues Management</h2>
           <div className="mt-1">
-            <p className="text-gray-600">Manage your tennis leagues and their connections</p>
-            <p className="text-sm text-gray-500 mt-1">Set leagues as active or coming soon to control homepage display</p>
+            <p className="text-gray-600">Manage your tennis leagues, seasons, and skill levels</p>
+            <p className="text-sm text-gray-500 mt-1">Create new seasons for existing leagues or start completely new leagues</p>
           </div>
         </div>
         <div className="flex space-x-3">
+          <button
+            onClick={handleCreateSeason}
+            className="px-4 py-2 bg-parque-green text-white rounded-lg hover:bg-parque-green/90"
+          >
+            🏆 Create Season
+          </button>
           <button
             onClick={handleCreateNew}
             className="px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-parque-purple/90"
@@ -141,7 +184,7 @@ export default function AdminLeaguesPage() {
         </div>
       )}
 
-      {/* NEW: Tabs Navigation */}
+      {/* Tabs Navigation */}
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex space-x-8">
           <button
@@ -167,17 +210,56 @@ export default function AdminLeaguesPage() {
               Fix Registration URLs
             </span>
           </button>
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'settings'
+                ? 'border-parque-purple text-parque-purple'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            League Settings
+            <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+              Season Data
+            </span>
+          </button>
         </nav>
       </div>
 
       {/* Tab Content */}
       {activeTab === 'overview' && (
         <>
+          {/* NEW: Quick Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white p-4 rounded-lg shadow">
+              <div className="text-2xl font-bold text-gray-900">{leagues.length}</div>
+              <div className="text-sm text-gray-600">Total Leagues</div>
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow">
+              <div className="text-2xl font-bold text-green-600">
+                {leagues.filter(l => l.status === 'active').length}
+              </div>
+              <div className="text-sm text-gray-600">Active</div>
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow">
+              <div className="text-2xl font-bold text-yellow-600">
+                {leagues.filter(l => l.status === 'coming_soon').length}
+              </div>
+              <div className="text-sm text-gray-600">Coming Soon</div>
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow">
+              <div className="text-2xl font-bold text-blue-600">
+                {leagues.filter(l => l.status === 'registration_open').length}
+              </div>
+              <div className="text-sm text-gray-600">Open for Registration</div>
+            </div>
+          </div>
+
           {/* Leagues Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {leagues.map((league) => {
               const currentSeason = league.seasons?.find(s => s.status === 'registration_open' || s.status === 'active') || league.seasons?.[0]
-              const playerCount = league.playerCount || 0
+              const playerCount = league.stats?.registeredPlayers || league.playerCount || 0
               
               return (
                 <div 
@@ -199,12 +281,29 @@ export default function AdminLeaguesPage() {
 
                   <div className="p-6">
                     <div className="flex justify-between items-start mb-4">
-                      <h3 className="text-xl font-semibold text-gray-900 group-hover:text-parque-purple transition-colors">
-                        {league.name}
-                      </h3>
-                      <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(league.status)}`}>
-                        {league.status?.replace('_', ' ').toUpperCase()}
-                      </span>
+                      <div className="flex-1">
+                        <h3 className="text-xl font-semibold text-gray-900 group-hover:text-parque-purple transition-colors">
+                          {league.name}
+                        </h3>
+                        {/* NEW: Season info */}
+                        {league.season && (
+                          <div className="text-sm text-gray-500 mt-1">
+                            {league.season.type} {league.season.year}
+                            {league.season.number > 1 && ` - T${league.season.number}`}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-col items-end space-y-2">
+                        <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(league.status)}`}>
+                          {league.status?.replace('_', ' ').toUpperCase()}
+                        </span>
+                        {/* NEW: Skill level badge */}
+                        {league.skillLevel && league.skillLevel !== 'all' && (
+                          <span className={`inline-block px-2 py-1 text-xs font-medium rounded border ${getSkillLevelBadgeColor(league.skillLevel)}`}>
+                            {getSkillLevelName(league.skillLevel)}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     
                     <div className="space-y-3 text-sm">
@@ -212,18 +311,50 @@ export default function AdminLeaguesPage() {
                         <span className="text-lg mr-2">📍</span>
                         <span>{league.location?.city}, {league.location?.region}</span>
                       </div>
-                      <div className="flex items-center text-gray-600">
-                        <span className="text-lg mr-2">📅</span>
-                        <span>{currentSeason?.name || 'No active season'}</span>
-                      </div>
+                      
+                      {/* NEW: Expected launch date for coming soon leagues */}
+                      {league.status === 'coming_soon' && league.expectedLaunchDate && (
+                        <div className="flex items-center text-gray-600">
+                          <span className="text-lg mr-2">🚀</span>
+                          <span>Launch: {new Date(league.expectedLaunchDate).toLocaleDateString()}</span>
+                        </div>
+                      )}
+                      
+                      {/* Season dates for active leagues */}
+                      {league.seasonConfig?.startDate && (
+                        <div className="flex items-center text-gray-600">
+                          <span className="text-lg mr-2">📅</span>
+                          <span>
+                            {new Date(league.seasonConfig.startDate).toLocaleDateString()}
+                            {league.seasonConfig.endDate && ` - ${new Date(league.seasonConfig.endDate).toLocaleDateString()}`}
+                          </span>
+                        </div>
+                      )}
+                      
                       <div className="flex items-center text-gray-600">
                         <span className="text-lg mr-2">👥</span>
                         <span>{playerCount} players</span>
+                        {league.seasonConfig?.maxPlayers && (
+                          <span className="text-gray-400"> / {league.seasonConfig.maxPlayers} max</span>
+                        )}
                       </div>
+                      
                       {league.waitingListCount > 0 && (
                         <div className="flex items-center text-gray-600">
                           <span className="text-lg mr-2">⏳</span>
                           <span>{league.waitingListCount} on waiting list</span>
+                        </div>
+                      )}
+
+                      {/* NEW: Pricing info */}
+                      {league.seasonConfig?.price && (
+                        <div className="flex items-center text-gray-600">
+                          <span className="text-lg mr-2">💰</span>
+                          <span>
+                            {league.seasonConfig.price.isFree 
+                              ? 'Free' 
+                              : `${league.seasonConfig.price.amount}€`}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -251,18 +382,26 @@ export default function AdminLeaguesPage() {
           {leagues.length === 0 && !loading && (
             <div className="text-center py-12 bg-white rounded-lg shadow">
               <p className="text-gray-600 mb-4">No leagues found. Create your first league to get started.</p>
-              <button
-                onClick={handleCreateNew}
-                className="px-6 py-3 bg-parque-purple text-white rounded-lg hover:bg-parque-purple/90"
-              >
-                Create First League
-              </button>
+              <div className="space-x-4">
+                <button
+                  onClick={handleCreateNew}
+                  className="px-6 py-3 bg-parque-purple text-white rounded-lg hover:bg-parque-purple/90"
+                >
+                  Create First League
+                </button>
+                <button
+                  onClick={handleCreateSeason}
+                  className="px-6 py-3 bg-parque-green text-white rounded-lg hover:bg-parque-green/90"
+                >
+                  Create Season
+                </button>
+              </div>
             </div>
           )}
         </>
       )}
 
-      {/* NEW: City Links Tab */}
+      {/* City Links Tab */}
       {activeTab === 'city-links' && (
         <LeagueCityLinker />
       )}

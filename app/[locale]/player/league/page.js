@@ -8,6 +8,7 @@ import StandingsTable from '@/components/player/StandingsTable'
 import ScheduleTab from '@/components/player/ScheduleTab'
 import ResultsTab from '@/components/player/ResultsTab'
 import PlayoffExplanation from '@/components/player/PlayoffExplanation'
+import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
 
 export default function PlayerLeague() {
   const [activeTab, setActiveTab] = useState(LEAGUE_TABS.STANDINGS)
@@ -23,12 +24,10 @@ export default function PlayerLeague() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
-          <p className="mt-4 text-gray-600">
-            {language === 'es' ? 'Cargando datos de la liga...' : 'Loading league data...'}
-          </p>
-        </div>
+        <TennisPreloaderInline 
+          text={language === 'es' ? 'Cargando datos de la liga...' : 'Loading league data...'}
+          locale={language}
+        />
       </div>
     )
   }

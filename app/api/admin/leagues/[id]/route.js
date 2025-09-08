@@ -127,9 +127,11 @@ export async function PATCH(request, { params }) {
     // Handle other partial updates
     if (data.status !== undefined) league.status = data.status
     if (data.displayOrder !== undefined) league.displayOrder = data.displayOrder
+    if (data.season !== undefined) league.season = data.season
+    if (data.seasonConfig !== undefined) league.seasonConfig = data.seasonConfig
 
-    // Save the updated league
-    await league.save()
+    // Save the updated league (skip validation for partial updates)
+    await league.save({ validateBeforeSave: false })
 
     // Return the updated league with populated city data
     const updatedLeague = await League.findById(id).populate('city', 'slug name')
