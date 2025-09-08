@@ -46,6 +46,7 @@ export async function PUT(request, { params }) {
     // Update fields
     if (data.name !== undefined) league.name = data.name
     if (data.slug !== undefined) league.slug = data.slug.toLowerCase()
+    if (data.skillLevel !== undefined) league.skillLevel = data.skillLevel
     if (data.status !== undefined) league.status = data.status
     if (data.displayOrder !== undefined) league.displayOrder = data.displayOrder
     if (data.expectedLaunchDate !== undefined) league.expectedLaunchDate = data.expectedLaunchDate
@@ -125,6 +126,7 @@ export async function PATCH(request, { params }) {
     }
 
     // Handle other partial updates
+    if (data.skillLevel !== undefined) league.skillLevel = data.skillLevel
     if (data.status !== undefined) league.status = data.status
     if (data.displayOrder !== undefined) league.displayOrder = data.displayOrder
     if (data.season !== undefined) league.season = data.season

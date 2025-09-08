@@ -4,6 +4,7 @@ export default function LeagueFormModal({ show, league, onClose, onSubmit }) {
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
+    skillLevel: 'all',
     status: 'coming_soon',
     location: {
       city: '',
@@ -26,6 +27,7 @@ export default function LeagueFormModal({ show, league, onClose, onSubmit }) {
       setFormData({
         name: league.name || '',
         slug: league.slug || '',
+        skillLevel: league.skillLevel || 'all',
         status: league.status || 'coming_soon',
         location: {
           city: league.location?.city || '',
@@ -45,6 +47,7 @@ export default function LeagueFormModal({ show, league, onClose, onSubmit }) {
       setFormData({
         name: '',
         slug: '',
+        skillLevel: 'all',
         status: 'coming_soon',
         location: {
           city: '',
@@ -192,6 +195,25 @@ export default function LeagueFormModal({ show, league, onClose, onSubmit }) {
                 <p className="text-red-500 text-sm mt-1">{errors.slug}</p>
               )}
             </div>
+          </div>
+          
+          {/* Skill Level */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Skill Level
+            </label>
+            <select
+              name="skillLevel"
+              value={formData.skillLevel}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            >
+              <option value="all">All Levels</option>
+              <option value="beginner">Beginner</option>
+              <option value="intermediate">Intermediate</option>
+              <option value="advanced">Advanced</option>
+            </select>
+            <p className="text-sm text-gray-500 mt-1">Target skill level for this league</p>
           </div>
           
           {/* Status and Display Order */}

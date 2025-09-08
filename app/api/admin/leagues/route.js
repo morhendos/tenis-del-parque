@@ -85,6 +85,7 @@ export async function POST(request) {
     const league = new League({
       name: data.name,
       slug: data.slug.toLowerCase(),
+      skillLevel: data.skillLevel || 'all',
       status: data.status || 'coming_soon',
       location: {
         city: data.location.city,

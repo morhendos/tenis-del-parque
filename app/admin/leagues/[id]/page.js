@@ -11,6 +11,8 @@ export default function LeagueManagementPage() {
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('overview')
   const [showSeasonEditor, setShowSeasonEditor] = useState(false)
+  const [skillLevelEditing, setSkillLevelEditing] = useState(false)
+  const [tempSkillLevel, setTempSkillLevel] = useState('')
   const params = useParams()
   const router = useRouter()
   const leagueId = params.id
@@ -65,6 +67,68 @@ export default function LeagueManagementPage() {
     }
   }
 
+  // Skill level editing functions
+  const handleSkillLevelEdit = () => {
+    setTempSkillLevel(league.skillLevel || 'all')
+    setSkillLevelEditing(true)
+  }
+
+  const handleSkillLevelCancel = () => {
+    setSkillLevelEditing(false)
+    setTempSkillLevel('')
+  }
+
+  const handleSkillLevelSave = async () => {
+    try {
+      const response = await fetch(`/api/admin/leagues/${leagueId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ skillLevel: tempSkillLevel })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update skill level')
+      }
+
+      const result = await response.json()
+      setLeague(result.league)
+      setSkillLevelEditing(false)
+      setTempSkillLevel('')
+      
+      // Show success message
+      alert('Skill level updated successfully!')
+      
+    } catch (error) {
+      console.error('Error updating skill level:', error)
+      alert('Error updating skill level: ' + error.message)
+    }
+  }
+
+  // Helper functions for skill level display
+  const getSkillLevelName = (skillLevel) => {
+    const names = {
+      'all': 'All Levels',
+      'beginner': 'Beginner',
+      'intermediate': 'Intermediate', 
+      'advanced': 'Advanced'
+    }
+    return names[skillLevel] || skillLevel
+  }
+
+  const getSkillLevelBadgeColor = (skillLevel) => {
+    switch (skillLevel) {
+      case 'beginner':
+        return 'bg-green-50 text-green-700 border-green-200'
+      case 'intermediate':
+        return 'bg-yellow-50 text-yellow-700 border-yellow-200'
+      case 'advanced':
+        return 'bg-red-50 text-red-700 border-red-200'
+      case 'all':
+      default:
+        return 'bg-gray-50 text-gray-700 border-gray-200'
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -109,9 +173,16 @@ export default function LeagueManagementPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">{league.name}</h1>
-            <p className="mt-2 text-parque-bg opacity-90">
-              {league.location?.city}, {league.location?.region}
-            </p>
+            <div className="flex items-center gap-3 mt-2">
+              <p className="text-parque-bg opacity-90">
+                {league.location?.city}, {league.location?.region}
+              </p>
+              {league.skillLevel && league.skillLevel !== 'all' && (
+                <span className={`inline-block px-2 py-1 text-xs font-medium rounded border ${getSkillLevelBadgeColor(league.skillLevel)} bg-white bg-opacity-20 border-white border-opacity-30`}>
+                  {getSkillLevelName(league.skillLevel)}
+                </span>
+              )}
+            </div>
             {currentSeason && (
               <p className="mt-1 text-parque-bg opacity-90">
                 {currentSeason.name} • {currentSeason.status.replace('_', ' ').toUpperCase()}
@@ -262,6 +333,10 @@ export default function LeagueManagementPage() {
                         <dd className="font-medium">{league.location?.city}, {league.location?.region}</dd>
                       </div>
                       <div>
+                        <dt className="text-gray-600">Skill Level:</dt>
+                        <dd className="font-medium">{getSkillLevelName(league.skillLevel || 'all')}</dd>
+                      </div>
+                      <div>
                         <dt className="text-gray-600">Created:</dt>
                         <dd className="font-medium">{new Date(league.createdAt).toLocaleDateString()}</dd>
                       </div>
@@ -330,6 +405,80 @@ export default function LeagueManagementPage() {
                   >
                     {league.season ? 'Edit Season Data' : 'Add Season Data'}
                   </button>
+                </div>
+              </div>
+              
+              {/* Skill Level Management */}
+              <div className="bg-white border rounded-lg">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900">Skill Level Management</h3>
+                  <p className="text-sm text-gray-600">Configure the target skill level for this league</p>
+                </div>
+                <div className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-900 mb-2">Current Skill Level</h4>
+                      {!skillLevelEditing ? (
+                        <div className="flex items-center gap-3">
+                          <span className={`inline-block px-3 py-1 text-sm font-medium rounded border ${getSkillLevelBadgeColor(league.skillLevel || 'all')}`}>
+                            {getSkillLevelName(league.skillLevel || 'all')}
+                          </span>
+                          <p className="text-sm text-gray-600">
+                            {league.skillLevel === 'all' || !league.skillLevel 
+                              ? 'This league accepts players of all skill levels'
+                              : `This league is targeted for ${getSkillLevelName(league.skillLevel).toLowerCase()} players`
+                            }
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-3">
+                          <select
+                            value={tempSkillLevel}
+                            onChange={(e) => setTempSkillLevel(e.target.value)}
+                            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-parque-purple"
+                          >
+                            <option value="all">All Levels</option>
+                            <option value="beginner">Beginner</option>
+                            <option value="intermediate">Intermediate</option>
+                            <option value="advanced">Advanced</option>
+                          </select>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={handleSkillLevelSave}
+                              className="px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-parque-purple/90 transition-colors text-sm"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={handleSkillLevelCancel}
+                              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {!skillLevelEditing && (
+                      <button
+                        onClick={handleSkillLevelEdit}
+                        className="ml-4 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                      >
+                        Edit Skill Level
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h5 className="font-medium text-blue-900 mb-2">💡 Skill Level Guide</h5>
+                    <div className="text-sm text-blue-800 space-y-1">
+                      <p><strong>All Levels:</strong> Open to players of any skill level</p>
+                      <p><strong>Beginner:</strong> New players or those learning the basics</p>
+                      <p><strong>Intermediate:</strong> Players with solid fundamentals and some experience</p>
+                      <p><strong>Advanced:</strong> Experienced players with strong technical skills</p>
+                    </div>
+                  </div>
                 </div>
               </div>
               
