@@ -33,7 +33,7 @@ export async function POST(request) {
       )
     }
 
-    // Validate league exists (include both active and coming_soon leagues)
+    // Validate league exists
     let league
     if (leagueId) {
       league = await League.findById(leagueId)
@@ -59,24 +59,6 @@ export async function POST(request) {
       )
     }
 
-    // Check if player already exists in this league
-    const existingPlayer = await Player.findOne({ 
-      email: email.toLowerCase(),
-      league: league._id 
-    })
-    
-    if (existingPlayer) {
-      return Response.json(
-        { 
-          success: false, 
-          error: language === 'es'
-            ? 'Este email ya está registrado en esta liga'
-            : 'This email is already registered in this league'
-        },
-        { status: 409 }
-      )
-    }
-
     // Get additional metadata
     const headers = request.headers
     const userAgent = headers.get('user-agent') || ''
@@ -84,56 +66,140 @@ export async function POST(request) {
                      headers.get('x-real-ip') || 
                      'unknown'
 
-    // Create new player
-    const player = new Player({
-      name,
-      email,
-      whatsapp,
-      level,
-      league: league._id,
-      season,
-      // For coming soon leagues, set status to 'waiting'
-      status: league.status === 'coming_soon' ? 'waiting' : 'pending',
-      metadata: {
-        language,
-        source: 'web',
-        userAgent,
-        ipAddress
+    // Check if player already exists (by email)
+    let player = await Player.findOne({ email: email.toLowerCase() })
+    
+    let isNewPlayer = false
+    let isExistingUser = false
+    
+    if (player) {
+      // EXISTING PLAYER - check if already registered for this league/season
+      isExistingUser = true
+      
+      const existingRegistration = player.getLeagueRegistration(league._id, season)
+      
+      if (existingRegistration) {
+        return Response.json(
+          { 
+            success: false, 
+            error: language === 'es'
+              ? 'Ya estás registrado en esta liga y temporada'
+              : 'You are already registered for this league and season'
+          },
+          { status: 409 }
+        )
       }
-    })
+      
+      // Add new league registration to existing player
+      try {
+        await player.addLeagueRegistration(
+          league._id, 
+          season, 
+          level, 
+          league.status === 'coming_soon' ? 'waiting' : 'pending'
+        )
+        
+        console.log(`Existing player ${email} registered for new league: ${league.name} (${season})`)
+        
+      } catch (registrationError) {
+        return Response.json(
+          { 
+            success: false, 
+            error: language === 'es'
+              ? 'Error al registrarte en esta liga'
+              : 'Error registering for this league'
+          },
+          { status: 400 }
+        )
+      }
+      
+    } else {
+      // NEW PLAYER - create new player with first league registration
+      isNewPlayer = true
+      
+      const initialElo = getInitialEloByLevel(level)
+      
+      player = new Player({
+        name,
+        email: email.toLowerCase(),
+        whatsapp,
+        registrations: [{
+          league: league._id,
+          season: season,
+          level: level,
+          status: league.status === 'coming_soon' ? 'waiting' : 'pending',
+          stats: {
+            eloRating: initialElo,
+            highestElo: initialElo,
+            lowestElo: initialElo
+          }
+        }],
+        preferences: {
+          preferredLanguage: language
+        },
+        metadata: {
+          source: 'web',
+          userAgent,
+          ipAddress
+        }
+      })
 
-    // Save to database
-    await player.save()
+      // Save new player
+      await player.save()
+      console.log(`New player ${email} registered for league: ${league.name} (${season})`)
+    }
 
-    // Update league stats based on league status
+    // Update league stats
     if (league.status === 'coming_soon') {
-      // For coming soon leagues, increment waiting list count
       await League.findByIdAndUpdate(league._id, {
         $inc: { 'waitingListCount': 1 }
       })
     } else {
-      // For active leagues, increment total players
       await League.findByIdAndUpdate(league._id, {
         $inc: { 'stats.totalPlayers': 1 }
       })
+    }
+
+    // Get the registration we just created
+    const registration = player.getLeagueRegistration(league._id, season)
+
+    // Customize success message
+    let successMessage
+    if (isNewPlayer) {
+      successMessage = language === 'es'
+        ? league.status === 'coming_soon' 
+          ? '¡Bienvenido! Estás en la lista de espera. Te contactaremos cuando la liga esté lista.'
+          : '¡Bienvenido! Registro exitoso. Te contactaremos pronto.'
+        : league.status === 'coming_soon'
+          ? 'Welcome! You\'re on the waiting list. We\'ll contact you when the league is ready.'
+          : 'Welcome! Registration successful. We\'ll contact you soon.'
+    } else {
+      successMessage = language === 'es'
+        ? league.status === 'coming_soon' 
+          ? '¡Te has registrado en una nueva liga! Estás en la lista de espera.'
+          : '¡Te has registrado exitosamente en una nueva liga! Te contactaremos pronto.'
+        : league.status === 'coming_soon'
+          ? 'You\'ve registered for a new league! You\'re on the waiting list.'
+          : 'You\'ve successfully registered for a new league! We\'ll contact you soon.'
     }
 
     // Return success response
     return Response.json(
       {
         success: true,
-        message: language === 'es'
-          ? league.status === 'coming_soon' 
-            ? '¡Estás en la lista de espera! Te contactaremos cuando la liga esté lista.'
-            : '¡Registro exitoso! Te contactaremos pronto.'
-          : league.status === 'coming_soon'
-            ? 'You\'re on the waiting list! We\'ll contact you when the league is ready.'
-            : 'Registration successful! We\'ll contact you soon.',
+        message: successMessage,
+        isNewPlayer,
+        isExistingUser,
         player: {
           id: player._id,
           name: player.name,
           email: player.email,
-          level: player.level,
+          totalLeagueRegistrations: player.registrations.length,
+          currentRegistration: {
+            level: registration.level,
+            status: registration.status,
+            registeredAt: registration.registeredAt
+          },
           league: {
             id: league._id,
             name: league.name,
@@ -161,6 +227,20 @@ export async function POST(request) {
       )
     }
 
+    // Handle MongoDB duplicate key errors
+    if (error.code === 11000) {
+      // Check if it's email duplication (shouldn't happen with our new logic)
+      if (error.keyPattern?.email) {
+        return Response.json(
+          { 
+            success: false, 
+            error: 'Email already exists - this should not happen, please contact support'
+          },
+          { status: 409 }
+        )
+      }
+    }
+
     // Handle other errors
     return Response.json(
       { 
@@ -172,17 +252,31 @@ export async function POST(request) {
   }
 }
 
+// Helper function (should match the one in Player model)
+function getInitialEloByLevel(level) {
+  const eloRatings = {
+    'beginner': 1180,
+    'intermediate': 1200,
+    'advanced': 1250
+  }
+  return eloRatings[level] || 1200
+}
+
 // GET method to check API health and get stats
 export async function GET() {
   try {
     await dbConnect()
     
-    // Get stats for all leagues (including coming soon)
+    // Get stats for all leagues
     const leagues = await League.find({ status: { $in: ['active', 'coming_soon'] } })
     const stats = {}
     
     for (const league of leagues) {
-      const playerCount = await Player.countDocuments({ league: league._id })
+      // Count unique players registered for this league (using new aggregation)
+      const playerCount = await Player.countDocuments({
+        'registrations.league': league._id
+      })
+      
       stats[league.slug] = {
         name: league.name,
         status: league.status,
@@ -191,9 +285,20 @@ export async function GET() {
       }
     }
     
+    // Get total unique players across all leagues
+    const totalUniquePlayers = await Player.countDocuments({})
+    
+    // Get total registrations across all leagues
+    const totalRegistrations = await Player.aggregate([
+      { $unwind: '$registrations' },
+      { $count: 'total' }
+    ])
+    
     return Response.json({
       success: true,
-      message: 'Player registration API is working',
+      message: 'Player registration API is working with new model',
+      totalUniquePlayers,
+      totalRegistrations: totalRegistrations[0]?.total || 0,
       stats
     })
   } catch (error) {
