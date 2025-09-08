@@ -87,49 +87,72 @@ export default function LeagueSeasonPage() {
       if (!leagueRes.ok) throw new Error('League not found')
       const leagueData = await leagueRes.json()
       
-      // Find the season using the API
-      const seasonRes = await fetch(`/api/seasons/${season}?language=${language}`)
-      if (!seasonRes.ok) {
-        throw new Error(`Season ${season} not found`)
-      }
-      const seasonObj = await seasonRes.json()
-      
       setLeague(leagueData.league)
-      setCurrentSeason(seasonObj)
       
       if (leagueData.league.config?.roundsPerSeason) {
         setTotalRounds(leagueData.league.config.roundsPerSeason)
       }
       
-      // Use the season's database key for API calls
-      const dbSeasonKey = seasonObj.dbKey // e.g., "summer-2025"
+      // Use the league slug for API calls instead of location
+      const leagueSlug = leagueData.league.slug
+      console.log('🔍 Using league slug for API calls:', leagueSlug)
       
-      // Fetch standings
-      const standingsRes = await fetch(`/api/leagues/${location}/standings?season=${dbSeasonKey}`)
-      if (standingsRes.ok) {
-        const standingsData = await standingsRes.json()
-        setStandings(standingsData)
+      // If the league has season data, use it; otherwise use fallback
+      const dbSeasonKey = leagueData.league.season ? 
+        `${leagueData.league.season.type}-${leagueData.league.season.year}` :
+        'summer-2025' // fallback for leagues without season data
+      
+      console.log('🔍 Using season key:', dbSeasonKey)
+      
+      // Set current season info
+      if (leagueData.league.season) {
+        setCurrentSeason({
+          ...leagueData.league.season,
+          dbKey: dbSeasonKey,
+          displayName: getSeasonDisplayName(leagueData.league.season, language)
+        })
+      } else {
+        // Create fallback season for older leagues
+        setCurrentSeason({
+          type: 'summer',
+          year: 2025,
+          dbKey: dbSeasonKey,
+          displayName: language === 'es' ? 'Verano 2025' : 'Summer 2025'
+        })
       }
       
-      // Fetch completed matches
-      const matchesRes = await fetch(`/api/leagues/${location}/matches?season=${dbSeasonKey}&status=completed&limit=200`)
-
-      if (matchesRes.ok) {
-        const matchesData = await matchesRes.json()
-        setMatches(matchesData.matches || [])
+      // Fetch standings using league slug
+      try {
+        const standingsRes = await fetch(`/api/leagues/${leagueSlug}/standings?season=${dbSeasonKey}`)
+        if (standingsRes.ok) {
+          const standingsData = await standingsRes.json()
+          setStandings(standingsData)
+        }
+      } catch (err) {
+        console.log('Standings not available for this league')
       }
       
-      // Fetch scheduled matches
-      const scheduleRes = await fetch(`/api/leagues/${location}/matches?season=${dbSeasonKey}&status=scheduled&limit=200`)
-
-      if (scheduleRes.ok) {
-        const scheduleData = await scheduleRes.json()
-        console.log(`LeagueSeasonPage: Received ${scheduleData.matches?.length || 0} scheduled matches from API`)
-        console.log(`LeagueSeasonPage: Matches by round:`, (scheduleData.matches || []).reduce((acc, match) => {
-          acc[match.round] = (acc[match.round] || 0) + 1
-          return acc
-        }, {}))
-        setSchedule(scheduleData.matches || [])
+      // Fetch completed matches using league slug
+      try {
+        const matchesRes = await fetch(`/api/leagues/${leagueSlug}/matches?season=${dbSeasonKey}&status=completed&limit=200`)
+        if (matchesRes.ok) {
+          const matchesData = await matchesRes.json()
+          setMatches(matchesData.matches || [])
+        }
+      } catch (err) {
+        console.log('Matches not available for this league')
+      }
+      
+      // Fetch scheduled matches using league slug
+      try {
+        const scheduleRes = await fetch(`/api/leagues/${leagueSlug}/matches?season=${dbSeasonKey}&status=scheduled&limit=200`)
+        if (scheduleRes.ok) {
+          const scheduleData = await scheduleRes.json()
+          setSchedule(scheduleData.matches || [])
+          console.log(`LeagueSeasonPage: Received ${scheduleData.matches?.length || 0} scheduled matches from API`)
+        }
+      } catch (err) {
+        console.log('Schedule not available for this league')
       }
       
     } catch (err) {

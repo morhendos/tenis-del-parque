@@ -86,6 +86,9 @@ export async function GET(request, { params }) {
     }
     
     console.log('✅ League found:', league.name)
+    console.log('🔍 League season data:', league.season)
+    console.log('🔍 League seasons array:', league.seasons)
+    console.log('🔍 League location:', league.location)
     
     return NextResponse.json({
       success: true,

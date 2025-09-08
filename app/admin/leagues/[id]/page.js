@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import LeagueSeasonEditor from '../../../../components/admin/leagues/LeagueSeasonEditor'
 
 export default function LeagueManagementPage() {
   const [league, setLeague] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('overview')
+  const [showSeasonEditor, setShowSeasonEditor] = useState(false)
   const params = useParams()
   const router = useRouter()
   const leagueId = params.id
@@ -294,15 +296,75 @@ export default function LeagueManagementPage() {
 
           {activeTab === 'settings' && (
             <div className="space-y-6">
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <p className="text-yellow-800">
-                  <strong>Settings panel coming soon!</strong> This will include league configuration, season management, and other administrative options.
-                </p>
+              {/* Season Management */}
+              <div className="bg-white border rounded-lg">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900">Season Management</h3>
+                  <p className="text-sm text-gray-600">Configure season information and dates</p>
+                </div>
+                <div className="p-6">
+                  {/* Current Season Info */}
+                  {league.season ? (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                      <h4 className="font-medium text-green-800 mb-2">✅ Season Data Available</h4>
+                      <div className="text-sm text-green-700 space-y-1">
+                        <p><strong>Type:</strong> {league.season.type} {league.season.year}</p>
+                        <p><strong>Number:</strong> Season {league.season.number}</p>
+                        {league.seasonConfig?.startDate && (
+                          <p><strong>Dates:</strong> {new Date(league.seasonConfig.startDate).toLocaleDateString()} - {new Date(league.seasonConfig.endDate).toLocaleDateString()}</p>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                      <h4 className="font-medium text-yellow-800 mb-2">⚠️ Missing Season Data</h4>
+                      <p className="text-sm text-yellow-700">
+                        This league doesn't have season information. Add season data to enable proper URL generation and functionality.
+                      </p>
+                    </div>
+                  )}
+                  
+                  <button
+                    onClick={() => setShowSeasonEditor(true)}
+                    className="bg-parque-purple text-white px-6 py-3 rounded-lg hover:bg-parque-purple/90 transition-colors"
+                  >
+                    {league.season ? 'Edit Season Data' : 'Add Season Data'}
+                  </button>
+                </div>
+              </div>
+              
+              {/* Other Settings */}
+              <div className="bg-white border rounded-lg">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900">Other Settings</h3>
+                  <p className="text-sm text-gray-600">Additional league configuration options</p>
+                </div>
+                <div className="p-6">
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <p className="text-gray-600">
+                      Additional settings like scoring system, playoff configuration, and other options coming soon.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* Season Editor Modal */}
+      {showSeasonEditor && (
+        <LeagueSeasonEditor
+          leagueId={leagueId}
+          onClose={() => setShowSeasonEditor(false)}
+          onUpdate={(updatedLeague) => {
+            setLeague(updatedLeague)
+            setShowSeasonEditor(false)
+            // Refresh the page to show updated data
+            fetchLeague()
+          }}
+        />
+      )}
     </div>
   )
 } 

@@ -142,6 +142,8 @@ export async function PATCH(request, { params }) {
     // Handle other partial updates
     if (data.status !== undefined) league.status = data.status
     if (data.displayOrder !== undefined) league.displayOrder = data.displayOrder
+    if (data.season !== undefined) league.season = data.season
+    if (data.seasonConfig !== undefined) league.seasonConfig = data.seasonConfig
 
     // Save the updated league (skip validation for partial updates)
     console.log('💾 Saving league...')
