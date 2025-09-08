@@ -394,7 +394,7 @@ export default function LeagueManagementPage() {
                     <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                       <h4 className="font-medium text-yellow-800 mb-2">⚠️ Missing Season Data</h4>
                       <p className="text-sm text-yellow-700">
-                        This league doesn't have season information. Add season data to enable proper URL generation and functionality.
+                        This league doesn&apos;t have season information. Add season data to enable proper URL generation and functionality.
                       </p>
                     </div>
                   )}
