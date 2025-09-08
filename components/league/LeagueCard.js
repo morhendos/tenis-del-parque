@@ -37,7 +37,6 @@ export default function LeagueCard({ league, content, locale }) {
   
   // Get the actual city slug from the league's city data
   const getCitySlug = () => {
-    
     // Method 1: From populated city data
     if (league.city?.slug) {
       return league.city.slug;
@@ -166,7 +165,6 @@ export default function LeagueCard({ league, content, locale }) {
         `${league.season.type}${league.season.year}` : 
         'verano2025'; // fallback for leagues without season data
       
-      console.log('🔍 Active league season data:', league.season, 'Generated slug:', seasonSlug)
       
       return {
         text: locale === 'es' ? 'Ver Liga' : 'View League',

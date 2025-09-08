@@ -13,8 +13,6 @@ export async function GET(request, { params }) {
     const { searchParams } = new URL(request.url)
     const season = searchParams.get('season') // e.g., "summer2025"
     
-    console.log('🔍 Looking for league by location:', location, 'season:', season)
-    
     // First, find the city by slug
     const city = await City.findOne({ 
       slug: location.toLowerCase(),
@@ -22,14 +20,11 @@ export async function GET(request, { params }) {
     })
     
     if (!city) {
-      console.log('❌ City not found:', location)
       return NextResponse.json(
         { error: 'City not found' },
         { status: 404 }
       )
     }
-    
-    console.log('✅ City found:', city.name)
     
     // Parse season if provided
     let seasonQuery = {}
@@ -42,7 +37,6 @@ export async function GET(request, { params }) {
           'season.type': type,
           'season.year': parseInt(year)
         }
-        console.log('🔍 Parsed season:', seasonQuery)
       }
     }
     
@@ -53,15 +47,12 @@ export async function GET(request, { params }) {
       ...seasonQuery
     }
     
-    console.log('🔍 League query:', query)
     
     const league = await League.findOne(query)
       .populate('city', 'slug name images coordinates googleData province')
       .lean()
     
     if (!league) {
-      console.log('❌ League not found with query:', query)
-      
       // Try to find any league for this city as fallback
       const fallbackLeague = await League.findOne({
         city: city._id,
@@ -71,7 +62,6 @@ export async function GET(request, { params }) {
       .lean()
       
       if (fallbackLeague) {
-        console.log('✅ Found fallback league:', fallbackLeague.name)
         return NextResponse.json({
           success: true,
           league: fallbackLeague,
@@ -85,10 +75,6 @@ export async function GET(request, { params }) {
       )
     }
     
-    console.log('✅ League found:', league.name)
-    console.log('🔍 League season data:', league.season)
-    console.log('🔍 League seasons array:', league.seasons)
-    console.log('🔍 League location:', league.location)
     
     return NextResponse.json({
       success: true,

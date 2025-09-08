@@ -11,18 +11,6 @@ export async function GET() {
     
     console.log('🔍 Fetching leagues for public display...')
     
-    // First, let's see all leagues to debug
-    const allLeagues = await League.find({})
-      .populate('city', 'slug name')
-      .select('name status season city createdAt')
-      .sort({ createdAt: -1 })
-      .limit(10)
-    
-    console.log('🔍 Recent leagues (all statuses):')
-    allLeagues.forEach(league => {
-      console.log(`- ${league.name} | Status: ${league.status} | City: ${league.city?.name?.es || 'No city'} | Created: ${league.createdAt}`)
-    })
-    
     // Get all public leagues with city data
     const leagues = await League.find({ 
       status: { $in: ['active', 'coming_soon', 'registration_open'] } 

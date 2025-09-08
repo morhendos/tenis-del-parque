@@ -95,14 +95,11 @@ export default function LeagueSeasonPage() {
       
       // Use the league slug for API calls instead of location
       const leagueSlug = leagueData.league.slug
-      console.log('🔍 Using league slug for API calls:', leagueSlug)
       
       // If the league has season data, use it; otherwise use fallback
       const dbSeasonKey = leagueData.league.season ? 
         `${leagueData.league.season.type}-${leagueData.league.season.year}` :
         'summer-2025' // fallback for leagues without season data
-      
-      console.log('🔍 Using season key:', dbSeasonKey)
       
       // Set current season info
       if (leagueData.league.season) {

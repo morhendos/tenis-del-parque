@@ -69,8 +69,6 @@ export async function POST(request) {
         return NextResponse.json({ error: 'Base league ID is required for new season' }, { status: 400 })
       }
 
-      console.log('🔍 Creating new season for base league:', baseLeagueId)
-      console.log('🔍 Season data:', seasonData)
       
       newLeague = await League.createNewSeason(baseLeagueId, seasonData)
     }
