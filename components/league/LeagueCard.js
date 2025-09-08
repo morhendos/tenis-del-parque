@@ -37,38 +37,24 @@ export default function LeagueCard({ league, content, locale }) {
   
   // Get the actual city slug from the league's city data
   const getCitySlug = () => {
-    console.log('🔍 FULL LEAGUE DATA:');
-    console.log('- League name:', league.name);
-    console.log('- League slug:', league.slug);
-    console.log('- League status:', league.status);
-    console.log('- League season:', league.season);
-    console.log('- League city:', league.city);
-    console.log('- League cityData:', league.cityData);
     
     // Method 1: From populated city data
     if (league.city?.slug) {
-      console.log('✅ Using city.slug:', league.city.slug);
       return league.city.slug;
     }
     // Method 2: From cityData
     if (league.cityData?.slug) {
-      console.log('✅ Using cityData.slug:', league.cityData.slug);
       return league.cityData.slug;
     }
     // Method 3: Try to extract from league slug (fallback)
     // League slugs are typically like "cityname-season-year" or "liga-de-cityname"
     const leagueSlug = league.slug;
-    if (leagueSlug.includes('sotogrande')) {
-      console.log('✅ Extracted sotogrande from league slug');
-      return 'sotogrande';
-    }
+    if (leagueSlug.includes('sotogrande')) return 'sotogrande';
     if (leagueSlug.includes('marbella')) return 'marbella';
     if (leagueSlug.includes('estepona')) return 'estepona';
     if (leagueSlug.includes('malaga')) return 'malaga';
     // Default fallback
-    const fallback = leagueSlug.split('-')[0];
-    console.log('⚠️ Using fallback city slug:', fallback);
-    return fallback;
+    return leagueSlug.split('-')[0];
   };
   
   const citySlug = getCitySlug();
@@ -175,17 +161,16 @@ export default function LeagueCard({ league, content, locale }) {
   // FIXED: Get the appropriate button text and link with proper Spanish URLs
   const getButtonConfig = () => {
     if (isActive) {
-      if (activeSeason) {
-        const seasonSlug = activeSeason.name.toLowerCase().replace(/\s+/g, '');
-        return {
-          text: locale === 'es' ? 'Ver Liga' : 'View League',
-          href: `/${locale}/${citySlug}/liga/${seasonSlug}`,
-          className: 'bg-parque-purple text-white hover:bg-parque-purple/90'
-        };
-      }
+      // For active leagues, use the SEO-friendly URL: /{locale}/{location}/liga/{season}
+      const seasonSlug = (league.season?.type && league.season?.year) ? 
+        `${league.season.type}${league.season.year}` : 
+        'verano2025'; // fallback for leagues without season data
+      
+      console.log('🔍 Active league season data:', league.season, 'Generated slug:', seasonSlug)
+      
       return {
         text: locale === 'es' ? 'Ver Liga' : 'View League',
-        href: `/${locale}/${citySlug}/liga/verano2025`,
+        href: `/${locale}/${citySlug}/liga/${seasonSlug}`,
         className: 'bg-parque-purple text-white hover:bg-parque-purple/90'
       };
     } else if (isRegistrationOpen) {
@@ -193,7 +178,6 @@ export default function LeagueCard({ league, content, locale }) {
       // Use the league slug for specific league registration
       const registrationUrl = locale === 'es' ? 'registro' : 'signup'
       const href = `/${locale}/${registrationUrl}/${league.slug}`
-      console.log('🔗 Registration URL for', league.name, ':', href)
       return {
         text: content?.cities?.joinLeague || (locale === 'es' ? 'Inscribirse' : 'Join League'),
         href: href,

@@ -82,8 +82,8 @@ export default function LeagueSeasonPage() {
     try {
       setLoading(true)
       
-      // Fetch league data
-      const leagueRes = await fetch(`/api/leagues/${location}`)
+      // Fetch league data by location and season
+      const leagueRes = await fetch(`/api/leagues/location/${location}?season=${season}`)
       if (!leagueRes.ok) throw new Error('League not found')
       const leagueData = await leagueRes.json()
       

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import dbConnect from '../../../../lib/db/mongoose'
-import League from '../../../../lib/models/League'
+import dbConnect from '../../../../../lib/db/mongoose'
+import League from '../../../../../lib/models/League'
 
 export const dynamic = 'force-dynamic'
 
@@ -8,7 +8,7 @@ export async function GET(request, { params }) {
   try {
     await dbConnect()
     
-    const { league: slug } = params
+    const { slug } = params
     console.log('🔍 Fetching league by slug:', slug)
     
     // First, let's see ALL leagues to debug
