@@ -117,6 +117,34 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://www.tenisdp.es/es/clubes/estepona</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/estepona"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/estepona"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/en/clubs/estepona</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/estepona"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/estepona"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/es/clubes/malaga</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/malaga"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/malaga"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/en/clubs/malaga</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/malaga"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/malaga"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://www.tenisdp.es/es/clubes/marbella</loc>
     <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella"/>
@@ -145,6 +173,20 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://www.tenisdp.es/es/clubes/marbella/area/el</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/area/el"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/area/el"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/en/clubs/marbella/area/el</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/area/el"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/area/el"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.tenisdp.es/es/clubes/sotogrande/racquet-leisure-la-reserva-club</loc>
     <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/sotogrande/racquet-leisure-la-reserva-club"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/sotogrande/racquet-leisure-la-reserva-club"/>
@@ -159,16 +201,16 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.tenisdp.es/es/clubes/sotogrande/el-octogono</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/sotogrande/el-octogono"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/sotogrande/el-octogono"/>
+    <loc>https://www.tenisdp.es/es/clubes/sotogrande/club-de-tenis-y-padel-el-octogono-de-sotogrande</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/sotogrande/club-de-tenis-y-padel-el-octogono-de-sotogrande"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/sotogrande/club-de-tenis-y-padel-el-octogono-de-sotogrande"/>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.tenisdp.es/en/clubs/sotogrande/el-octogono</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/sotogrande/el-octogono"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/sotogrande/el-octogono"/>
+    <loc>https://www.tenisdp.es/en/clubs/sotogrande/club-de-tenis-y-padel-el-octogono-de-sotogrande</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/sotogrande/club-de-tenis-y-padel-el-octogono-de-sotogrande"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/sotogrande/club-de-tenis-y-padel-el-octogono-de-sotogrande"/>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -187,156 +229,86 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.tenisdp.es/es/clubes/marbella/club-de-tenis-troyanos-tennis-academy</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/club-de-tenis-troyanos-tennis-academy"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/club-de-tenis-troyanos-tennis-academy"/>
+    <loc>https://www.tenisdp.es/es/clubes/estepona/centro-de-tenis-y-formacion-la-academia</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/estepona/centro-de-tenis-y-formacion-la-academia"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/estepona/centro-de-tenis-y-formacion-la-academia"/>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.tenisdp.es/en/clubs/marbella/club-de-tenis-troyanos-tennis-academy</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/club-de-tenis-troyanos-tennis-academy"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/club-de-tenis-troyanos-tennis-academy"/>
+    <loc>https://www.tenisdp.es/en/clubs/estepona/centro-de-tenis-y-formacion-la-academia</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/estepona/centro-de-tenis-y-formacion-la-academia"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/estepona/centro-de-tenis-y-formacion-la-academia"/>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.tenisdp.es/es/clubes/marbella/certified-gptcarpttennis-coach-for-all-level</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/certified-gptcarpttennis-coach-for-all-level"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/certified-gptcarpttennis-coach-for-all-level"/>
+    <loc>https://www.tenisdp.es/es/clubes/estepona/club-de-tenis-y-padel-bel-air</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/estepona/club-de-tenis-y-padel-bel-air"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/estepona/club-de-tenis-y-padel-bel-air"/>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.tenisdp.es/en/clubs/marbella/certified-gptcarpttennis-coach-for-all-level</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/certified-gptcarpttennis-coach-for-all-level"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/certified-gptcarpttennis-coach-for-all-level"/>
+    <loc>https://www.tenisdp.es/en/clubs/estepona/club-de-tenis-y-padel-bel-air</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/estepona/club-de-tenis-y-padel-bel-air"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/estepona/club-de-tenis-y-padel-bel-air"/>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.tenisdp.es/es/clubes/marbella/club-tenis-de-mesa-marbella</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/club-tenis-de-mesa-marbella"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/club-tenis-de-mesa-marbella"/>
+    <loc>https://www.tenisdp.es/es/clubes/estepona/club-de-tenis-y-padel-estepona</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/estepona/club-de-tenis-y-padel-estepona"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/estepona/club-de-tenis-y-padel-estepona"/>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.tenisdp.es/en/clubs/marbella/club-tenis-de-mesa-marbella</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/club-tenis-de-mesa-marbella"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/club-tenis-de-mesa-marbella"/>
+    <loc>https://www.tenisdp.es/en/clubs/estepona/club-de-tenis-y-padel-estepona</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/estepona/club-de-tenis-y-padel-estepona"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/estepona/club-de-tenis-y-padel-estepona"/>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.tenisdp.es/es/clubes/marbella/tga-tennis-academy</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/tga-tennis-academy"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/tga-tennis-academy"/>
+    <loc>https://www.tenisdp.es/es/clubes/estepona/racquet-club-villa-padierna</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/estepona/racquet-club-villa-padierna"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/estepona/racquet-club-villa-padierna"/>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.tenisdp.es/en/clubs/marbella/tga-tennis-academy</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/tga-tennis-academy"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/tga-tennis-academy"/>
+    <loc>https://www.tenisdp.es/en/clubs/estepona/racquet-club-villa-padierna</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/estepona/racquet-club-villa-padierna"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/estepona/racquet-club-villa-padierna"/>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.tenisdp.es/es/clubes/marbella/rafa-nadal-tennis-center-marbella</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/rafa-nadal-tennis-center-marbella"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/rafa-nadal-tennis-center-marbella"/>
+    <loc>https://www.tenisdp.es/es/clubes/malaga/centro-deportivo-cortijo-alto</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/malaga/centro-deportivo-cortijo-alto"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/malaga/centro-deportivo-cortijo-alto"/>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.tenisdp.es/en/clubs/marbella/rafa-nadal-tennis-center-marbella</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/rafa-nadal-tennis-center-marbella"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/rafa-nadal-tennis-center-marbella"/>
+    <loc>https://www.tenisdp.es/en/clubs/malaga/centro-deportivo-cortijo-alto</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/malaga/centro-deportivo-cortijo-alto"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/malaga/centro-deportivo-cortijo-alto"/>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.tenisdp.es/es/clubes/marbella/echevarrisports-tennis-padel-academy</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/echevarrisports-tennis-padel-academy"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/echevarrisports-tennis-padel-academy"/>
+    <loc>https://www.tenisdp.es/es/clubes/marbella/miraflores-tennis-club</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/miraflores-tennis-club"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/miraflores-tennis-club"/>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.tenisdp.es/en/clubs/marbella/echevarrisports-tennis-padel-academy</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/echevarrisports-tennis-padel-academy"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/echevarrisports-tennis-padel-academy"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.tenisdp.es/es/clubes/marbella/tennis-brothers-marbella-club</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/tennis-brothers-marbella-club"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/tennis-brothers-marbella-club"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.tenisdp.es/en/clubs/marbella/tennis-brothers-marbella-club</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/tennis-brothers-marbella-club"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/tennis-brothers-marbella-club"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.tenisdp.es/es/clubes/marbella/puente-romano-tennis-club</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/puente-romano-tennis-club"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/puente-romano-tennis-club"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.tenisdp.es/en/clubs/marbella/puente-romano-tennis-club</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/puente-romano-tennis-club"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/puente-romano-tennis-club"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.tenisdp.es/es/clubes/marbella/club-de-tenis-y-padel-bel-air</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/club-de-tenis-y-padel-bel-air"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/club-de-tenis-y-padel-bel-air"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.tenisdp.es/en/clubs/marbella/club-de-tenis-y-padel-bel-air</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/club-de-tenis-y-padel-bel-air"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/club-de-tenis-y-padel-bel-air"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.tenisdp.es/es/clubes/marbella/aloha-tennis-club</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/aloha-tennis-club"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/aloha-tennis-club"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.tenisdp.es/en/clubs/marbella/aloha-tennis-club</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/aloha-tennis-club"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/aloha-tennis-club"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.tenisdp.es/es/clubes/marbella/urbel-rosario-marbella-real-club-de-tennis</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/urbel-rosario-marbella-real-club-de-tennis"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/urbel-rosario-marbella-real-club-de-tennis"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.tenisdp.es/en/clubs/marbella/urbel-rosario-marbella-real-club-de-tennis</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/urbel-rosario-marbella-real-club-de-tennis"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/urbel-rosario-marbella-real-club-de-tennis"/>
+    <loc>https://www.tenisdp.es/en/clubs/marbella/miraflores-tennis-club</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/miraflores-tennis-club"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/miraflores-tennis-club"/>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -355,6 +327,118 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.tenisdp.es/es/clubes/malaga/la-capellania-club-de-tenis-alhaurin-de-la-torre</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/malaga/la-capellania-club-de-tenis-alhaurin-de-la-torre"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/malaga/la-capellania-club-de-tenis-alhaurin-de-la-torre"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/en/clubs/malaga/la-capellania-club-de-tenis-alhaurin-de-la-torre</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/malaga/la-capellania-club-de-tenis-alhaurin-de-la-torre"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/malaga/la-capellania-club-de-tenis-alhaurin-de-la-torre"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/es/clubes/malaga/real-club-social-el-candado</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/malaga/real-club-social-el-candado"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/malaga/real-club-social-el-candado"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/en/clubs/malaga/real-club-social-el-candado</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/malaga/real-club-social-el-candado"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/malaga/real-club-social-el-candado"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/es/clubes/malaga/inacua-centro-raqueta</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/malaga/inacua-centro-raqueta"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/malaga/inacua-centro-raqueta"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/en/clubs/malaga/inacua-centro-raqueta</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/malaga/inacua-centro-raqueta"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/malaga/inacua-centro-raqueta"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/es/clubes/malaga/club-de-tenis-malaga</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/malaga/club-de-tenis-malaga"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/malaga/club-de-tenis-malaga"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/en/clubs/malaga/club-de-tenis-malaga</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/malaga/club-de-tenis-malaga"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/malaga/club-de-tenis-malaga"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/es/clubes/malaga/club-de-tenis-torremolinos-view</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/malaga/club-de-tenis-torremolinos-view"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/malaga/club-de-tenis-torremolinos-view"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/en/clubs/malaga/club-de-tenis-torremolinos-view</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/malaga/club-de-tenis-torremolinos-view"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/malaga/club-de-tenis-torremolinos-view"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/es/clubes/malaga/centro-deportivo-fili-pinos-del-limonar</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/malaga/centro-deportivo-fili-pinos-del-limonar"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/malaga/centro-deportivo-fili-pinos-del-limonar"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/en/clubs/malaga/centro-deportivo-fili-pinos-del-limonar</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/malaga/centro-deportivo-fili-pinos-del-limonar"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/malaga/centro-deportivo-fili-pinos-del-limonar"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/es/clubes/marbella/rafa-nadal-tennis-center-marbella</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/rafa-nadal-tennis-center-marbella"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/rafa-nadal-tennis-center-marbella"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/en/clubs/marbella/rafa-nadal-tennis-center-marbella</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/rafa-nadal-tennis-center-marbella"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/rafa-nadal-tennis-center-marbella"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/es/clubes/malaga/club-de-tenis-y-padel-lew-hoad</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/malaga/club-de-tenis-y-padel-lew-hoad"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/malaga/club-de-tenis-y-padel-lew-hoad"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/en/clubs/malaga/club-de-tenis-y-padel-lew-hoad</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/malaga/club-de-tenis-y-padel-lew-hoad"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/malaga/club-de-tenis-y-padel-lew-hoad"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.tenisdp.es/es/clubes/marbella/los-monteros-racket-club-tennis-padel</loc>
     <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/los-monteros-racket-club-tennis-padel"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/los-monteros-racket-club-tennis-padel"/>
@@ -369,86 +453,30 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.tenisdp.es/es/clubes/marbella/roza-rossa-tennis-club</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/roza-rossa-tennis-club"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/roza-rossa-tennis-club"/>
+    <loc>https://www.tenisdp.es/es/clubes/malaga/vals-sport-ave-maria</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/malaga/vals-sport-ave-maria"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/malaga/vals-sport-ave-maria"/>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.tenisdp.es/en/clubs/marbella/roza-rossa-tennis-club</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/roza-rossa-tennis-club"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/roza-rossa-tennis-club"/>
+    <loc>https://www.tenisdp.es/en/clubs/malaga/vals-sport-ave-maria</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/malaga/vals-sport-ave-maria"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/malaga/vals-sport-ave-maria"/>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.tenisdp.es/es/clubes/marbella/club-internacional-de-tenis-tennis-padel</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/club-internacional-de-tenis-tennis-padel"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/club-internacional-de-tenis-tennis-padel"/>
+    <loc>https://www.tenisdp.es/es/clubes/malaga/club-de-raqueta-de-benalmadena</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/malaga/club-de-raqueta-de-benalmadena"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/malaga/club-de-raqueta-de-benalmadena"/>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.tenisdp.es/en/clubs/marbella/club-internacional-de-tenis-tennis-padel</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/club-internacional-de-tenis-tennis-padel"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/club-internacional-de-tenis-tennis-padel"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.tenisdp.es/es/clubes/marbella/real-club-padel-marbella</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/real-club-padel-marbella"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/real-club-padel-marbella"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.tenisdp.es/en/clubs/marbella/real-club-padel-marbella</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/real-club-padel-marbella"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/real-club-padel-marbella"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.tenisdp.es/es/clubes/marbella/club-de-padel-y-tenis-el-mirador</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/club-de-padel-y-tenis-el-mirador"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/club-de-padel-y-tenis-el-mirador"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.tenisdp.es/en/clubs/marbella/club-de-padel-y-tenis-el-mirador</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/club-de-padel-y-tenis-el-mirador"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/club-de-padel-y-tenis-el-mirador"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.tenisdp.es/es/clubes/marbella/royal-tennis-club-marbella</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/royal-tennis-club-marbella"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/royal-tennis-club-marbella"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.tenisdp.es/en/clubs/marbella/royal-tennis-club-marbella</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/royal-tennis-club-marbella"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/royal-tennis-club-marbella"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.tenisdp.es/es/clubes/marbella/nac-club-de-padel-nueva-alcantara</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/nac-club-de-padel-nueva-alcantara"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/nac-club-de-padel-nueva-alcantara"/>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.tenisdp.es/en/clubs/marbella/nac-club-de-padel-nueva-alcantara</loc>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/nac-club-de-padel-nueva-alcantara"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/nac-club-de-padel-nueva-alcantara"/>
+    <loc>https://www.tenisdp.es/en/clubs/malaga/club-de-raqueta-de-benalmadena</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/malaga/club-de-raqueta-de-benalmadena"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/malaga/club-de-raqueta-de-benalmadena"/>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -463,6 +491,20 @@
     <loc>https://www.tenisdp.es/en/clubs/marbella/manolo-santana-racquets-club-tennis-padel-fitness</loc>
     <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/manolo-santana-racquets-club-tennis-padel-fitness"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/manolo-santana-racquets-club-tennis-padel-fitness"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/es/clubes/marbella/roza-rossa-tennis-club</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/roza-rossa-tennis-club"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/roza-rossa-tennis-club"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.tenisdp.es/en/clubs/marbella/roza-rossa-tennis-club</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.tenisdp.es/es/clubes/marbella/roza-rossa-tennis-club"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.tenisdp.es/en/clubs/marbella/roza-rossa-tennis-club"/>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
