@@ -9,6 +9,12 @@ Allow: /
 Disallow: /admin/
 Disallow: /admin-login
 Disallow: /api/
+# Allow specific API endpoints needed for page rendering
+Allow: /api/cities
+Allow: /api/clubs$
+Allow: /api/clubs?*
+Allow: /api/clubs/city/
+Allow: /api/clubs/*/
 Disallow: /player/
 
 # Disallow authentication pages
@@ -30,6 +36,12 @@ User-agent: Googlebot
 Allow: /
 Disallow: /admin/
 Disallow: /api/
+# Allow specific API endpoints needed for page rendering
+Allow: /api/cities
+Allow: /api/clubs$
+Allow: /api/clubs?*
+Allow: /api/clubs/city/
+Allow: /api/clubs/*/
 Disallow: /player/
 Crawl-delay: 0
 
@@ -37,6 +49,12 @@ User-agent: Bingbot
 Allow: /
 Disallow: /admin/
 Disallow: /api/
+# Allow specific API endpoints needed for page rendering
+Allow: /api/cities
+Allow: /api/clubs$
+Allow: /api/clubs?*
+Allow: /api/clubs/city/
+Allow: /api/clubs/*/
 Disallow: /player/
 Crawl-delay: 1
 
