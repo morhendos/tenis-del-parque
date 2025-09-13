@@ -95,9 +95,9 @@ export async function GET(request) {
         ]
       },
       contact: {
-        email: 'info@tenisdelparque.com',
+        email: 'info@tenisdp.es',
         whatsapp: '+34600000000',
-        website: 'https://tenisdelparque.com'
+        website: 'https://www.tenisdp.es'
       },
       status: 'active',
       stats: {

@@ -23,7 +23,7 @@ const raleway = Raleway({
 })
 
 export const metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_URL || 'https://tenisdelparque.com'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_URL || 'https://www.tenisdp.es'),
   title: {
     template: '%s | Tenis del Parque',
     default: 'Tenis del Parque - Amateur Tennis League'

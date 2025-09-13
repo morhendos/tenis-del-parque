@@ -16,7 +16,7 @@ export async function generateMetadata({ params }) {
     description: locale === 'es'
       ? 'Únete a la liga de tenis amateur más grande de España. Encuentra jugadores de tu nivel, juega partidos cada semana y mejora tu juego.'
       : 'Join Spain\'s largest amateur tennis league. Find players at your level, play matches every week, and improve your game.',
-    metadataBase: new URL(process.env.NEXT_PUBLIC_URL || 'https://tenisdelparque.com'),
+    metadataBase: new URL(process.env.NEXT_PUBLIC_URL || 'https://www.tenisdp.es'),
     alternates: {
       canonical: `/${locale}`,
       languages: {
@@ -60,8 +60,8 @@ export default function LocaleLayout({ children, params }) {
     '@context': 'https://schema.org',
     '@type': 'SportsOrganization',
     name: 'Tenis del Parque',
-    url: 'https://tenisdelparque.com',
-    logo: 'https://tenisdelparque.com/logo.png',
+    url: 'https://www.tenisdp.es',
+    logo: 'https://www.tenisdp.es/logo.png',
     description: locale === 'es' 
       ? 'Liga de tenis amateur organizando partidos semanales en toda España'
       : 'Amateur tennis league organizing weekly matches across Spain',

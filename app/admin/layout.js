@@ -306,7 +306,7 @@ export default function AdminLayout({ children }) {
                   {session?.user?.name || 'Admin User'}
                 </p>
                 <p className="text-xs text-gray-500 truncate">
-                  {session?.user?.email || 'admin@tenisdelparque.com'}
+                  {session?.user?.email || 'admin@tenisdp.es'}
                 </p>
               </div>
             </div>
