@@ -1,5 +1,6 @@
 import dbConnect from '@/lib/db/mongoose'
 import League from '@/lib/models/League'
+import City from '@/lib/models/City' // Import City model for population
 import HomePageSSG from '@/components/pages/HomePageSSG'
 
 // Generate static params for all locales
@@ -49,10 +50,11 @@ async function getLeaguesData() {
   try {
     await dbConnect()
     
-    // Get all leagues with basic information - FIXED: Added slug field
+    // Get all leagues with city data for images - FIXED: Added city population and image fields
     const leagues = await League.find({})
+      .populate('city', 'slug name images coordinates googleData province')
       .sort({ status: 1, 'location.city': 1, name: 1 })
-      .select('name slug status location currentSeason playerCount maxPlayers description')
+      .select('name slug status location currentSeason playerCount maxPlayers description city cityData')
       .lean() // Convert to plain objects for serialization
     
     // Organize leagues by status for better performance

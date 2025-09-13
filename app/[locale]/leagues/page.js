@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import dbConnect from '@/lib/db/mongoose'
 import League from '@/lib/models/League'
+import City from '@/lib/models/City' // Import City model for population
 import LeaguesPageSSG from '@/components/pages/LeaguesPageSSG'
 import { TennisPreloaderFullScreen } from '@/components/ui/TennisPreloader'
 
@@ -60,10 +61,11 @@ async function getLeaguesData() {
   try {
     await dbConnect()
     
-    // Get all leagues with detailed information - FIXED: Added slug field
+    // Get all leagues with detailed information including city data - FIXED: Added city population and image fields
     const leagues = await League.find({})
+      .populate('city', 'slug name images coordinates googleData province')
       .sort({ status: 1, 'location.city': 1, name: 1 })
-      .select('name slug status location currentSeason playerCount maxPlayers description registrationOpen')
+      .select('name slug status location currentSeason playerCount maxPlayers description registrationOpen city cityData')
       .lean() // Convert to plain objects for serialization
     
     // Get statistics
