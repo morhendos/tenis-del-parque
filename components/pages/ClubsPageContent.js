@@ -77,46 +77,6 @@ export default function ClubsPageContent() {
     }
   }
 
-  // Calculate area statistics using GPS-based assignment
-  const getAreaStatistics = () => {
-    const stats = {
-      totalAreas: 0,
-      areasWithClubs: 0,
-      citiesWithAreas: 0,
-      topAreas: []
-    }
-
-    cities.forEach(city => {
-      const cityAreas = getAreasForCitySync(city.slug)
-      stats.totalAreas += cityAreas.length
-      stats.citiesWithAreas++
-      
-      cityAreas.forEach(area => {
-        // Use GPS-based league assignment instead of database city field
-        const areaClubs = clubs.filter(club => 
-          club.league === city.slug && club.location?.area === area
-        )
-        
-        if (areaClubs.length > 0) {
-          stats.areasWithClubs++
-          stats.topAreas.push({
-            area,
-            city: city.slug,
-            count: areaClubs.length,
-            displayName: AREA_DISPLAY_NAMES[area] || area,
-            cityDisplayName: CITY_DISPLAY_NAMES[city.slug] || city.name?.es || city.slug
-          })
-        }
-      })
-    })
-
-    // Sort top areas by club count
-    stats.topAreas.sort((a, b) => b.count - a.count)
-    
-    return stats
-  }
-
-  const areaStats = getAreaStatistics()
 
   // Enhanced search with area awareness
   const filteredCities = cities.filter(city => {
@@ -262,34 +222,6 @@ export default function ClubsPageContent() {
         </div>
       </section>
 
-      {/* Popular Areas Section - Only show if there are areas with clubs */}
-      {areaStats.topAreas.length > 0 && !searchTerm && (
-        <section className="py-12 bg-white border-b">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-                {locale === 'es' ? 'Áreas Populares' : 'Popular Areas'}
-              </h2>
-              <p className="text-gray-600">
-                {locale === 'es' ? 'Explora clubes por zonas específicas' : 'Explore clubs by specific areas'}
-              </p>
-            </div>
-            
-            <div className="flex flex-wrap justify-center gap-3">
-              {areaStats.topAreas.slice(0, 8).map((area) => (
-                <a
-                  key={`${area.city}-${area.area}`}
-                  href={`/${locale}/${locale === 'es' ? 'clubes' : 'clubs'}/${area.city}/area/${area.area}`}
-                  className="group inline-flex items-center gap-2 bg-gray-50 hover:bg-parque-purple hover:text-white px-4 py-2 rounded-full transition-all border border-gray-200 hover:border-parque-purple"
-                >
-                  <span className="font-medium">{area.displayName}</span>
-                  <span className="text-sm opacity-75">({area.count})</span>
-                </a>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* Cities Grid */}
       <section className="container mx-auto px-4 py-16">
