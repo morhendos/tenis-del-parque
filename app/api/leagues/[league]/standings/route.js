@@ -325,8 +325,8 @@ export async function GET(request, { params }) {
           gamesWon: stats.gamesWon,
           gamesLost: stats.gamesLost,
           totalPoints: stats.points,
-          eloRating: player.stats?.eloRating || 1200,
-          eloChange: (player.stats?.eloRating || 1200) - 1200 // Change from starting ELO
+          eloRating: player.eloRating || 1200, // Use global ELO rating
+          eloChange: (player.eloRating || 1200) - 1200 // Change from starting ELO
         }
       }
     })

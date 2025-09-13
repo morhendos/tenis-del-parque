@@ -7,6 +7,21 @@ import mongoose from 'mongoose'
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
 
+// Helper function to get player level for a specific league
+function getPlayerLevelForLeague(player, leagueId, season) {
+  if (!player.registrations || player.registrations.length === 0) {
+    return 'intermediate' // Default level
+  }
+  
+  // Find registration for this league/season
+  const registration = player.registrations.find(reg => 
+    reg.league.toString() === leagueId.toString() && 
+    reg.season === season
+  )
+  
+  return registration?.level || player.registrations[0]?.level || 'intermediate'
+}
+
 export async function GET(request, { params }) {
   try {
     await dbConnect()
@@ -58,10 +73,10 @@ export async function GET(request, { params }) {
     
     console.log('API: Match query:', JSON.stringify(matchQuery))
     
-    // Get matches with player details
+    // Get matches with player details (using global ELO)
     const matches = await Match.find(matchQuery)
-      .populate('players.player1', 'name level stats.eloRating')
-      .populate('players.player2', 'name level stats.eloRating')
+      .populate('players.player1', 'name eloRating registrations')
+      .populate('players.player2', 'name eloRating registrations')
       .populate('result.winner', 'name')
       .sort({ round: 1, 'schedule.confirmedDate': 1 })
       .limit(limit)
@@ -82,14 +97,14 @@ export async function GET(request, { params }) {
           player1: match.players.player1 ? {
             _id: match.players.player1._id,
             name: match.players.player1.name,
-            level: match.players.player1.level,
-            eloRating: match.players.player1.stats?.eloRating || 1200
+            level: getPlayerLevelForLeague(match.players.player1, match.league, match.season),
+            eloRating: match.players.player1.eloRating || 1200 // Global ELO
           } : null,
           player2: match.players.player2 ? {
             _id: match.players.player2._id,
             name: match.players.player2.name,
-            level: match.players.player2.level,
-            eloRating: match.players.player2.stats?.eloRating || 1200
+            level: getPlayerLevelForLeague(match.players.player2, match.league, match.season),
+            eloRating: match.players.player2.eloRating || 1200 // Global ELO
           } : null
         },
         schedule: {
