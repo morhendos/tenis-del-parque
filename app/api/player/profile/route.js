@@ -27,10 +27,9 @@ export async function GET(request) {
       )
     }
 
-    // Get player details by email
+    // Get player details by email using new structure
     const player = await Player.findOne({ email: user.email })
-      .populate('league', 'name slug location')
-      .populate('matchHistory.opponent', 'name')
+      .populate('registrations.league', 'name slug location')
 
     if (!player) {
       return NextResponse.json(
@@ -39,6 +38,11 @@ export async function GET(request) {
       )
     }
 
+    // Get the most recent/active registration for backward compatibility
+    const activeRegistration = player.registrations && player.registrations.length > 0 
+      ? player.registrations[0] // Use first registration as primary
+      : null
+
     return NextResponse.json({
       player: {
         _id: player._id,
@@ -46,15 +50,18 @@ export async function GET(request) {
         email: player.email,
         phone: player.whatsapp, // Map whatsapp field to phone for frontend
         whatsapp: player.whatsapp,
-        level: player.level,
-        league: player.league,
-        season: player.season,
-        status: player.status,
-        stats: player.stats,
-        wildCards: player.wildCards,
+        // Use data from active registration for backward compatibility
+        level: activeRegistration?.level || 'intermediate',
+        league: activeRegistration?.league || null,
+        season: activeRegistration?.season || null,
+        status: activeRegistration?.status || 'active',
+        stats: activeRegistration?.stats || {},
+        wildCards: activeRegistration?.wildCards || { total: 3, used: 0, history: [] },
         emergencyContact: player.emergencyContact,
-        registeredAt: player.registeredAt,
-        createdAt: player.createdAt
+        registeredAt: activeRegistration?.registeredAt || player.createdAt,
+        createdAt: player.createdAt,
+        // Include all registrations for multi-league support
+        registrations: player.registrations || []
       },
       user: {
         id: user._id,
