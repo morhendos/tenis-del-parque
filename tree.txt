@@ -22,6 +22,7 @@ root/
 │   │   │   │   │   └── [area]
 │   │   │   │   │       └── page.js
 │   │   │   │   └── page.js
+│   │   │   ├── page-client-side-backup.js
 │   │   │   └── page.js
 │   │   ├── elo
 │   │   │   └── page.js
@@ -224,8 +225,6 @@ root/
 │   │   │   │   └── route.js
 │   │   │   └── route.js
 │   │   ├── debug
-│   │   │   ├── city-images
-│   │   │   │   └── route.js
 │   │   │   └── league
 │   │   │       └── [slug]
 │   │   ├── leagues
@@ -379,6 +378,7 @@ root/
 │   ├── pages
 │   │   ├── CitySignupPageContent.js
 │   │   ├── ClubsPageContent.js
+│   │   ├── ClubsPageSSG.js
 │   │   ├── LeaguesPageContent.js
 │   │   └── RulesPageContent.js
 │   ├── player
