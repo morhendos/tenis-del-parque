@@ -60,10 +60,10 @@ async function getLeaguesData() {
   try {
     await dbConnect()
     
-    // Get all leagues with detailed information
+    // Get all leagues with detailed information - FIXED: Added slug field
     const leagues = await League.find({})
       .sort({ status: 1, 'location.city': 1, name: 1 })
-      .select('name status location currentSeason playerCount maxPlayers description registrationOpen')
+      .select('name slug status location currentSeason playerCount maxPlayers description registrationOpen')
       .lean() // Convert to plain objects for serialization
     
     // Get statistics
