@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server'
 import dbConnect from '../../../../lib/db/mongoose'
 import League from '../../../../lib/models/League'
+import City from '../../../../lib/models/City' // Import City model for population
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request, { params }) {
   try {
+    console.log('🔍 API: Fetching league with slug:', params.league)
     await dbConnect()
+    console.log('✅ API: Database connected')
     
     const { league: slug } = params
     
@@ -18,16 +21,33 @@ export async function GET(request, { params }) {
     .populate('city', 'slug name images coordinates googleData province')
     .lean()
 
+    console.log('📊 API: League query result:', !!league ? 'Found' : 'Not found')
+
     if (!league) {
+      console.log('❌ API: League not found for slug:', slug)
+      
+      // Debug: Show available leagues
+      const availableLeagues = await League.find({})
+        .select('slug status')
+        .lean()
+      
+      console.log('📋 API: Available league slugs:', availableLeagues.map(l => `${l.slug} (${l.status})`))
+      
       return NextResponse.json(
         { 
           success: false,
           error: 'League not found',
-          message: 'The league you are looking for does not exist or is not active.'
+          message: 'The league you are looking for does not exist or is not active.',
+          debug: {
+            requestedSlug: slug,
+            availableLeagues: availableLeagues.map(l => ({ slug: l.slug, status: l.status }))
+          }
         },
         { status: 404 }
       )
     }
+
+    console.log('✅ API: League found:', league.name)
 
 
     // Transform league data for frontend
