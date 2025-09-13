@@ -68,17 +68,42 @@ async function getLeaguesData() {
       .select('name slug status location currentSeason playerCount maxPlayers description registrationOpen city cityData')
       .lean() // Convert to plain objects for serialization
     
+    // Serialize data properly for client components (remove Mongoose ObjectIds)
+    const serializedLeagues = leagues.map(league => ({
+      ...league,
+      _id: league._id.toString(),
+      city: league.city ? {
+        ...league.city,
+        _id: league.city._id.toString(),
+        // Clean up googleData photos to remove ObjectId buffers
+        googleData: league.city.googleData ? {
+          ...league.city.googleData,
+          photos: league.city.googleData.photos?.map(photo => ({
+            photo_reference: photo.photo_reference,
+            width: photo.width,
+            height: photo.height,
+            html_attributions: photo.html_attributions
+            // Remove _id field that contains buffer
+          })) || []
+        } : undefined
+      } : null,
+      cityData: league.cityData ? {
+        ...league.cityData,
+        _id: league.cityData._id?.toString()
+      } : null
+    }))
+    
     // Get statistics
     const stats = {
-      total: leagues.length,
-      active: leagues.filter(l => l.status === 'active').length,
-      registrationOpen: leagues.filter(l => l.status === 'registration_open').length,
-      comingSoon: leagues.filter(l => l.status === 'coming_soon').length,
-      cities: [...new Set(leagues.map(l => l.location?.city).filter(Boolean))].length
+      total: serializedLeagues.length,
+      active: serializedLeagues.filter(l => l.status === 'active').length,
+      registrationOpen: serializedLeagues.filter(l => l.status === 'registration_open').length,
+      comingSoon: serializedLeagues.filter(l => l.status === 'coming_soon').length,
+      cities: [...new Set(serializedLeagues.map(l => l.location?.city).filter(Boolean))].length
     }
     
     return {
-      leagues,
+      leagues: serializedLeagues,
       stats,
       lastUpdated: new Date().toISOString()
     }

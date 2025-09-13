@@ -57,17 +57,42 @@ async function getLeaguesData() {
       .select('name slug status location currentSeason playerCount maxPlayers description city cityData')
       .lean() // Convert to plain objects for serialization
     
+    // Serialize data properly for client components (remove Mongoose ObjectIds)
+    const serializedLeagues = leagues.map(league => ({
+      ...league,
+      _id: league._id.toString(),
+      city: league.city ? {
+        ...league.city,
+        _id: league.city._id.toString(),
+        // Clean up googleData photos to remove ObjectId buffers
+        googleData: league.city.googleData ? {
+          ...league.city.googleData,
+          photos: league.city.googleData.photos?.map(photo => ({
+            photo_reference: photo.photo_reference,
+            width: photo.width,
+            height: photo.height,
+            html_attributions: photo.html_attributions
+            // Remove _id field that contains buffer
+          })) || []
+        } : undefined
+      } : null,
+      cityData: league.cityData ? {
+        ...league.cityData,
+        _id: league.cityData._id?.toString()
+      } : null
+    }))
+    
     // Organize leagues by status for better performance
-    const activeLeagues = leagues.filter(league => league.status === 'active')
-    const registrationOpenLeagues = leagues.filter(league => league.status === 'registration_open')
-    const comingSoonLeagues = leagues.filter(league => league.status === 'coming_soon')
+    const activeLeagues = serializedLeagues.filter(league => league.status === 'active')
+    const registrationOpenLeagues = serializedLeagues.filter(league => league.status === 'registration_open')
+    const comingSoonLeagues = serializedLeagues.filter(league => league.status === 'coming_soon')
     
     return {
-      leagues: leagues,
+      leagues: serializedLeagues,
       activeLeagues,
       registrationOpenLeagues, 
       comingSoonLeagues,
-      total: leagues.length,
+      total: serializedLeagues.length,
       activeCount: activeLeagues.length
     }
   } catch (error) {
