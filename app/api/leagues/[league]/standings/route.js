@@ -41,24 +41,80 @@ export async function GET(request, { params }) {
       )
     }
     
-    // Build query for players - include ALL players, not just active ones
-    const playerQuery = { 
-      league: league._id, 
-      season: season
-      // Removed status filter to show all players
+    // Build query for players using new registrations structure
+    const playerQuery = {
+      'registrations.league': league._id,
+      'registrations.season': season
     }
-    if (level) playerQuery.level = level
+    if (level) playerQuery['registrations.level'] = level
     
-    // Get players
+    // Get players with matching registrations
     let players = await Player.find(playerQuery).lean()
+    
+    // Transform players to match the expected structure
+    // Extract the relevant registration data for each player
+    players = players.map(player => {
+      const registration = player.registrations.find(reg => 
+        reg.league.toString() === league._id.toString() && 
+        reg.season === season &&
+        (!level || reg.level === level)
+      )
+      
+      if (!registration) return null
+      
+      return {
+        _id: player._id,
+        name: player.name,
+        email: player.email,
+        whatsapp: player.whatsapp,
+        userId: player.userId,
+        level: registration.level,
+        status: registration.status,
+        registeredAt: registration.registeredAt,
+        stats: registration.stats,
+        matchHistory: registration.matchHistory,
+        wildCards: registration.wildCards,
+        notes: registration.notes,
+        // Keep player-level data
+        preferences: player.preferences,
+        metadata: player.metadata
+      }
+    }).filter(Boolean) // Remove null entries
     
     // FALLBACK: If no players found with exact season, try without season filter
     if (players.length === 0) {
       console.log('No players found with exact season, trying without season filter...')
-      const fallbackQuery = { league: league._id }
-      if (level) fallbackQuery.level = level
+      const fallbackQuery = { 'registrations.league': league._id }
+      if (level) fallbackQuery['registrations.level'] = level
       
-      players = await Player.find(fallbackQuery).lean()
+      const fallbackPlayers = await Player.find(fallbackQuery).lean()
+      
+      players = fallbackPlayers.map(player => {
+        const registration = player.registrations.find(reg => 
+          reg.league.toString() === league._id.toString() &&
+          (!level || reg.level === level)
+        )
+        
+        if (!registration) return null
+        
+        return {
+          _id: player._id,
+          name: player.name,
+          email: player.email,
+          whatsapp: player.whatsapp,
+          userId: player.userId,
+          level: registration.level,
+          status: registration.status,
+          registeredAt: registration.registeredAt,
+          stats: registration.stats,
+          matchHistory: registration.matchHistory,
+          wildCards: registration.wildCards,
+          notes: registration.notes,
+          preferences: player.preferences,
+          metadata: player.metadata
+        }
+      }).filter(Boolean)
+      
       console.log(`Fallback: Found ${players.length} players without season filter`)
     }
     
