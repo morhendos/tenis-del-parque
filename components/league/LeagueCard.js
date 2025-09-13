@@ -45,15 +45,18 @@ export default function LeagueCard({ league, content, locale }) {
     if (league.cityData?.slug) {
       return league.cityData.slug;
     }
-    // Method 3: Try to extract from league slug (fallback)
-    // League slugs are typically like "cityname-season-year" or "liga-de-cityname"
+    // Method 3: Try to extract from league slug (fallback) - FIXED: Add safety check
     const leagueSlug = league.slug;
-    if (leagueSlug.includes('sotogrande')) return 'sotogrande';
-    if (leagueSlug.includes('marbella')) return 'marbella';
-    if (leagueSlug.includes('estepona')) return 'estepona';
-    if (leagueSlug.includes('malaga')) return 'malaga';
-    // Default fallback
-    return leagueSlug.split('-')[0];
+    if (leagueSlug && typeof leagueSlug === 'string') {
+      if (leagueSlug.includes('sotogrande')) return 'sotogrande';
+      if (leagueSlug.includes('marbella')) return 'marbella';
+      if (leagueSlug.includes('estepona')) return 'estepona';
+      if (leagueSlug.includes('malaga')) return 'malaga';
+      // Default fallback
+      return leagueSlug.split('-')[0];
+    }
+    // Final fallback if no slug is available
+    return league.location?.city || 'unknown';
   };
   
   const citySlug = getCitySlug();
@@ -173,20 +176,22 @@ export default function LeagueCard({ league, content, locale }) {
       };
     } else if (isRegistrationOpen) {
       // Registration is open - show join/register button
-      // Use the league slug for specific league registration
+      // Use the league slug for specific league registration - FIXED: Add safety check
       const registrationUrl = locale === 'es' ? 'registro' : 'signup'
-      const href = `/${locale}/${registrationUrl}/${league.slug}`
+      const safeSlug = league.slug || citySlug || 'unknown'
+      const href = `/${locale}/${registrationUrl}/${safeSlug}`
       return {
         text: content?.cities?.joinLeague || (locale === 'es' ? 'Inscribirse' : 'Join League'),
         href: href,
         className: 'bg-parque-green text-white hover:bg-parque-green/90'
       };
     } else if (isComingSoon) {
-      // Use proper Spanish URL for registration
+      // Use proper Spanish URL for registration - FIXED: Add safety check
       const registrationUrl = locale === 'es' ? 'registro' : 'signup'
+      const safeSlug = league.slug || citySlug || 'unknown'
       return {
         text: content?.cities?.preRegister || (locale === 'es' ? 'Pre-registro' : 'Pre-register'),
-        href: `/${locale}/${registrationUrl}/${league.slug}`,
+        href: `/${locale}/${registrationUrl}/${safeSlug}`,
         className: 'bg-parque-green text-white hover:bg-parque-green/90'
       };
     } else {
