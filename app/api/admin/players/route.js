@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import mongoose from 'mongoose'
 import dbConnect from '../../../../lib/db/mongoose'
 import Player from '../../../../lib/models/Player'
 import User from '../../../../lib/models/User'
@@ -51,7 +52,7 @@ export async function GET(request) {
     let matchConditions = {}
     
     if (league) {
-      matchConditions['registrations.league'] = { $eq: require('mongoose').Types.ObjectId(league) }
+      matchConditions['registrations.league'] = new mongoose.Types.ObjectId(league)
     }
     
     if (status) {
