@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import mongoose from 'mongoose'
 import dbConnect from '../../../../lib/db/mongoose'
 import League from '../../../../lib/models/League'
 import Player from '../../../../lib/models/Player'
@@ -20,17 +21,43 @@ export async function GET(request) {
       .sort({ displayOrder: 1, 'location.city': 1 })
       .lean()
 
-    // Get player count for each league
+    // Get player counts for each league using the new registrations structure
     const leaguesWithStats = await Promise.all(leagues.map(async (league) => {
-      const playerCount = await Player.countDocuments({ 
-        league: league._id,
-        status: { $in: ['pending', 'confirmed', 'active'] }
+      
+      // Count players with active statuses (pending, confirmed, active) in this league
+      const activePlayerCount = await Player.countDocuments({ 
+        'registrations': {
+          $elemMatch: {
+            'league': league._id,
+            'status': { $in: ['pending', 'confirmed', 'active'] }
+          }
+        }
       })
 
-      return {
+      // Count players on waiting list for this league
+      const waitingPlayerCount = await Player.countDocuments({ 
+        'registrations': {
+          $elemMatch: {
+            'league': league._id,
+            'status': 'waiting'
+          }
+        }
+      })
+
+      // Update the league document with the correct counts
+      const updatedLeague = {
         ...league,
-        playerCount
+        playerCount: activePlayerCount,
+        waitingListCount: waitingPlayerCount,
+        // Update stats object
+        stats: {
+          ...league.stats,
+          registeredPlayers: activePlayerCount,
+          totalPlayers: activePlayerCount + waitingPlayerCount
+        }
       }
+
+      return updatedLeague
     }))
 
     return NextResponse.json({
@@ -102,7 +129,8 @@ export async function POST(request) {
       waitingListCount: 0,
       stats: {
         totalPlayers: 0,
-        totalMatches: 0
+        totalMatches: 0,
+        registeredPlayers: 0
       },
       config: {
         roundsPerSeason: 8,
