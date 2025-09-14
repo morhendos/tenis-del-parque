@@ -44,8 +44,9 @@ export async function POST(request, { params }) {
       return Math.round(K * (actualA - expectedA))
     }
 
-    // Reset player to initial ELO
-    const initialElo = getInitialEloByLevel(player.level)
+    // Reset player to initial ELO based on their primary registration level
+    const primaryLevel = player.registrations?.[0]?.level || 'intermediate'
+    const initialElo = getInitialEloByLevel(primaryLevel)
     let currentElo = initialElo
     let highestElo = initialElo
     let lowestElo = initialElo
@@ -82,7 +83,7 @@ export async function POST(request, { params }) {
       // Get opponent's current ELO (we need to recalculate in proper order)
       // For now, use their stored ELO rating - in a full system recompute, 
       // we'd need to process all players together
-      const opponentElo = opponent.stats?.eloRating || 1200
+      const opponentElo = opponent.eloRating || 1200
 
       // Calculate ELO change for this player
       const eloChange = calculateEloChange(currentElo, opponentElo, playerWon)
@@ -133,10 +134,10 @@ export async function POST(request, { params }) {
       updatedMatches++
     }
 
-    // Update player's ELO statistics
-    player.stats.eloRating = currentElo
-    player.stats.highestElo = highestElo
-    player.stats.lowestElo = lowestElo
+    // Update player's GLOBAL ELO statistics
+    player.eloRating = currentElo
+    player.highestElo = highestElo
+    player.lowestElo = lowestElo
 
     // Update match history with correct ELO values
     const updatedMatchHistory = []
@@ -155,7 +156,11 @@ export async function POST(request, { params }) {
       })
     }
     
-    player.matchHistory = updatedMatchHistory
+    // Update match history in the primary registration
+    if (player.registrations && player.registrations.length > 0) {
+      player.registrations[0].matchHistory = updatedMatchHistory
+    }
+    
     await player.save()
 
     console.log(`ELO recalculation complete for ${player.name}:`)
@@ -169,7 +174,7 @@ export async function POST(request, { params }) {
       player: {
         id: player._id,
         name: player.name,
-        level: player.level
+        level: primaryLevel
       },
       elo: {
         initial: initialElo,
