@@ -5,6 +5,42 @@ import Player from '../../../../../lib/models/Player'
 import { requirePlayer } from '../../../../../lib/auth/apiAuth'
 import mongoose from 'mongoose'
 
+// Helper function to get player registration for a league/season
+function getPlayerRegistration(player, leagueId, season) {
+  if (!player.registrations || player.registrations.length === 0) {
+    // Fallback: create a default registration if none exists
+    return {
+      league: leagueId,
+      season: season,
+      stats: {
+        matchesPlayed: 0,
+        matchesWon: 0,
+        totalPoints: 0,
+        setsWon: 0,
+        setsLost: 0,
+        gamesWon: 0,
+        gamesLost: 0,
+        retirements: 0,
+        walkovers: 0
+      },
+      matchHistory: []
+    }
+  }
+  
+  // Find registration for this league/season
+  let registration = player.registrations.find(reg => 
+    reg.league.toString() === leagueId.toString() && 
+    reg.season === season
+  )
+  
+  if (!registration) {
+    // Use first registration as fallback
+    registration = player.registrations[0]
+  }
+  
+  return registration
+}
+
 export async function POST(request) {
   let session = null
   
@@ -199,8 +235,8 @@ export async function POST(request) {
       
       if (!walkover) {
         eloChange = calculateEloChange(
-          player1.stats.eloRating,
-          player2.stats.eloRating,
+          player1.eloRating || 1200,
+          player2.eloRating || 1200,
           player1Won
         )
       }
@@ -218,88 +254,91 @@ export async function POST(request) {
       
       match.status = 'completed'
       
-      // Apply ELO changes (will be 0 for walkovers)
+      // Apply ELO changes using GLOBAL ELO (will be 0 for walkovers)
       match.eloChanges = {
         player1: {
-          before: player1.stats.eloRating,
-          after: player1.stats.eloRating + eloChange,
+          before: player1.eloRating || 1200,
+          after: (player1.eloRating || 1200) + eloChange,
           change: eloChange
         },
         player2: {
-          before: player2.stats.eloRating,
-          after: player2.stats.eloRating - eloChange,
+          before: player2.eloRating || 1200,
+          after: (player2.eloRating || 1200) - eloChange,
           change: -eloChange
         }
       }
 
-      // Update player stats manually (avoid the updateMatchStats method for now)
+      // Get player registrations for league-specific stats
+      const player1Reg = getPlayerRegistration(player1, match.league, match.season)
+      const player2Reg = getPlayerRegistration(player2, match.league, match.season)
+
+      // Update GLOBAL ELO (player level)
+      player1.eloRating = (player1.eloRating || 1200) + eloChange
+      player2.eloRating = (player2.eloRating || 1200) - eloChange
       
-      // Player 1 stats
-      player1.stats.matchesPlayed += 1
-      if (player1Won) player1.stats.matchesWon += 1
-      
-      // Update ELO
-      player1.stats.eloRating += eloChange
-      if (player1.stats.eloRating > player1.stats.highestElo) {
-        player1.stats.highestElo = player1.stats.eloRating
+      // Update global highest/lowest ELO
+      if (player1.eloRating > (player1.highestElo || 1200)) {
+        player1.highestElo = player1.eloRating
       }
-      if (player1.stats.eloRating < player1.stats.lowestElo) {
-        player1.stats.lowestElo = player1.stats.eloRating
+      if (player1.eloRating < (player1.lowestElo || 1200)) {
+        player1.lowestElo = player1.eloRating
+      }
+      if (player2.eloRating > (player2.highestElo || 1200)) {
+        player2.highestElo = player2.eloRating
+      }
+      if (player2.eloRating < (player2.lowestElo || 1200)) {
+        player2.lowestElo = player2.eloRating
       }
       
-      // Update sets won/lost stats
-      player1.stats.setsWon = (player1.stats.setsWon || 0) + player1SetsWon
-      player1.stats.setsLost = (player1.stats.setsLost || 0) + player2SetsWon
+      // Update LEAGUE-SPECIFIC stats (registration level)
+      // Player 1 league stats
+      player1Reg.stats.matchesPlayed += 1
+      if (player1Won) player1Reg.stats.matchesWon += 1
+      
+      player1Reg.stats.setsWon = (player1Reg.stats.setsWon || 0) + player1SetsWon
+      player1Reg.stats.setsLost = (player1Reg.stats.setsLost || 0) + player2SetsWon
       
       // Add to match history (limit to last 20 matches to avoid performance issues)
-      player1.matchHistory.unshift({
+      if (!player1Reg.matchHistory) player1Reg.matchHistory = []
+      player1Reg.matchHistory.unshift({
         match: match._id,
         opponent: player2._id,
         result: player1Won ? 'won' : 'lost',
         score: match.getScoreDisplay(),
         eloChange: eloChange,
-        eloAfter: player1.stats.eloRating,
+        eloAfter: player1.eloRating, // Use global ELO
         round: match.round,
         date: match.result.playedAt
       })
       
       // Keep only last 20 matches in history to avoid bloat
-      if (player1.matchHistory.length > 20) {
-        player1.matchHistory = player1.matchHistory.slice(0, 20)
+      if (player1Reg.matchHistory.length > 20) {
+        player1Reg.matchHistory = player1Reg.matchHistory.slice(0, 20)
       }
 
-      // Player 2 stats
-      player2.stats.matchesPlayed += 1
-      if (!player1Won) player2.stats.matchesWon += 1
+      // Player 2 LEAGUE-SPECIFIC stats
+      player2Reg.stats.matchesPlayed += 1
+      if (!player1Won) player2Reg.stats.matchesWon += 1
       
-      // Update ELO
-      player2.stats.eloRating -= eloChange
-      if (player2.stats.eloRating > player2.stats.highestElo) {
-        player2.stats.highestElo = player2.stats.eloRating
-      }
-      if (player2.stats.eloRating < player2.stats.lowestElo) {
-        player2.stats.lowestElo = player2.stats.eloRating
-      }
-      
-      // Update sets won/lost stats
-      player2.stats.setsWon = (player2.stats.setsWon || 0) + player2SetsWon
-      player2.stats.setsLost = (player2.stats.setsLost || 0) + player1SetsWon
+      player2Reg.stats.setsWon = (player2Reg.stats.setsWon || 0) + player2SetsWon
+      player2Reg.stats.setsLost = (player2Reg.stats.setsLost || 0) + player1SetsWon
       
       // Add to match history (limit to last 20 matches to avoid performance issues)
-      player2.matchHistory.unshift({
+      if (!player2Reg.matchHistory) player2Reg.matchHistory = []
+      player2Reg.matchHistory.unshift({
         match: match._id,
         opponent: player1._id,
         result: player1Won ? 'lost' : 'won',
         score: match.getScoreDisplay(),
         eloChange: -eloChange,
-        eloAfter: player2.stats.eloRating,
+        eloAfter: player2.eloRating, // Use global ELO
         round: match.round,
         date: match.result.playedAt
       })
       
       // Keep only last 20 matches in history to avoid bloat
-      if (player2.matchHistory.length > 20) {
-        player2.matchHistory = player2.matchHistory.slice(0, 20)
+      if (player2Reg.matchHistory.length > 20) {
+        player2Reg.matchHistory = player2Reg.matchHistory.slice(0, 20)
       }
 
       // Save all documents within the transaction
