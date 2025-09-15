@@ -1,200 +1,281 @@
-import dbConnect from '../lib/db/mongoose.js'
-import League from '../lib/models/League.js'
-import mongoose from 'mongoose'
+#!/usr/bin/env node
 
 /**
  * Script to manage WhatsApp groups for leagues
+ * Usage: node scripts/manageWhatsAppGroups.js [command] [options]
  * 
- * Usage:
- * node scripts/manageWhatsAppGroups.js list                    - List all leagues
- * node scripts/manageWhatsAppGroups.js update <id> <code>      - Update a league with WhatsApp invite code
- * node scripts/manageWhatsAppGroups.js activate <id>           - Activate WhatsApp group for a league
- * node scripts/manageWhatsAppGroups.js deactivate <id>         - Deactivate WhatsApp group for a league
+ * Commands:
+ *   list                    - List all leagues and their WhatsApp group status
+ *   update [league-slug]    - Update WhatsApp group for a specific league
+ *   update-all              - Update all leagues interactively
+ *   clear [league-slug]     - Clear WhatsApp group for a specific league
  * 
- * Example:
- * node scripts/manageWhatsAppGroups.js update 6123456789abcdef12345678 ABC123DEF456
+ * Examples:
+ *   node scripts/manageWhatsAppGroups.js list
+ *   node scripts/manageWhatsAppGroups.js update sotogrande
+ *   node scripts/manageWhatsAppGroups.js update-all
  */
 
+import mongoose from 'mongoose'
+import readline from 'readline'
+import dotenv from 'dotenv'
+import League from '../lib/models/League.js'
+import dbConnect from '../lib/db/mongoose.js'
+
+// Load environment variables
+dotenv.config({ path: '.env.local' })
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+})
+
+const question = (query) => new Promise((resolve) => rl.question(query, resolve))
+
+// Colors for console output
+const colors = {
+  reset: '\x1b[0m',
+  bright: '\x1b[1m',
+  dim: '\x1b[2m',
+  red: '\x1b[31m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  magenta: '\x1b[35m',
+  cyan: '\x1b[36m'
+}
+
+const log = {
+  info: (msg) => console.log(`${colors.blue}ℹ${colors.reset} ${msg}`),
+  success: (msg) => console.log(`${colors.green}✓${colors.reset} ${msg}`),
+  error: (msg) => console.log(`${colors.red}✗${colors.reset} ${msg}`),
+  warning: (msg) => console.log(`${colors.yellow}⚠${colors.reset} ${msg}`),
+  title: (msg) => console.log(`\n${colors.bright}${colors.cyan}${msg}${colors.reset}\n`)
+}
+
 async function listLeagues() {
-  await dbConnect()
+  log.title('📋 Leagues and WhatsApp Groups Status')
   
-  const leagues = await League.find({
-    status: { $in: ['active', 'coming_soon', 'registration_open'] }
-  }).select('name slug status whatsappGroup')
+  const leagues = await League.find({}).sort({ displayOrder: 1, createdAt: 1 })
   
-  console.log('\n📋 Active Leagues:\n')
-  console.log('=====================================\n')
+  if (leagues.length === 0) {
+    log.warning('No leagues found in database')
+    return
+  }
+  
+  console.log('Total leagues:', leagues.length)
+  console.log('')
   
   for (const league of leagues) {
-    console.log(`📍 ${league.name}`)
-    console.log(`   ID: ${league._id}`)
+    const hasGroup = league.whatsappGroup?.isActive
+    const status = hasGroup ? '✅' : '❌'
+    const statusColor = hasGroup ? colors.green : colors.red
+    
+    console.log(`${statusColor}${status}${colors.reset} ${colors.bright}${league.name}${colors.reset}`)
     console.log(`   Slug: ${league.slug}`)
     console.log(`   Status: ${league.status}`)
     
-    if (league.whatsappGroup?.inviteCode) {
-      console.log(`   WhatsApp: ✅ ${league.whatsappGroup.isActive ? 'Active' : 'Inactive'}`)
-      console.log(`   Invite: https://chat.whatsapp.com/${league.whatsappGroup.inviteCode}`)
+    if (hasGroup) {
+      console.log(`   WhatsApp Group: ${league.whatsappGroup.name || 'Unnamed'}`)
+      console.log(`   Invite Code: ${league.whatsappGroup.inviteCode}`)
+      console.log(`   Admin Phone: ${league.whatsappGroup.adminPhone || 'Not set'}`)
     } else {
-      console.log(`   WhatsApp: ❌ Not configured`)
+      console.log(`   ${colors.dim}No WhatsApp group configured${colors.reset}`)
     }
     console.log('')
   }
 }
 
-async function updateWhatsAppGroup(leagueId, inviteCode, adminPhone = null) {
-  await dbConnect()
-  
-  if (!mongoose.Types.ObjectId.isValid(leagueId)) {
-    console.error('❌ Invalid league ID format')
-    process.exit(1)
-  }
-  
-  const league = await League.findById(leagueId)
+async function updateLeague(slug) {
+  const league = await League.findOne({ slug })
   
   if (!league) {
-    console.error('❌ League not found')
-    process.exit(1)
+    log.error(`League with slug '${slug}' not found`)
+    return
   }
   
+  log.title(`📱 Update WhatsApp Group for: ${league.name}`)
+  
+  // Show current status
+  if (league.whatsappGroup?.isActive) {
+    log.info('Current WhatsApp group configuration:')
+    console.log(`   Name: ${league.whatsappGroup.name || 'Not set'}`)
+    console.log(`   Invite Code: ${league.whatsappGroup.inviteCode}`)
+    console.log(`   Admin Phone: ${league.whatsappGroup.adminPhone || 'Not set'}`)
+    console.log('')
+  } else {
+    log.info('No WhatsApp group currently configured')
+    console.log('')
+  }
+  
+  // Ask for confirmation to update
+  const confirm = await question('Do you want to update this league\'s WhatsApp group? (y/n): ')
+  
+  if (confirm.toLowerCase() !== 'y') {
+    log.info('Update cancelled')
+    return
+  }
+  
+  // Get WhatsApp group details
+  console.log('\n' + colors.cyan + 'Enter WhatsApp group details:' + colors.reset)
+  console.log(colors.dim + '(Press Enter to keep existing value)' + colors.reset + '\n')
+  
+  const inviteLink = await question('WhatsApp invite link (https://chat.whatsapp.com/ABC123...): ')
+  let inviteCode = league.whatsappGroup?.inviteCode || ''
+  
+  if (inviteLink) {
+    // Extract invite code from link
+    const match = inviteLink.match(/chat\\.whatsapp\\.com\\/([A-Za-z0-9]+)/)
+    if (match) {
+      inviteCode = match[1]
+      log.success(`Extracted invite code: ${inviteCode}`)
+    } else {
+      log.error('Invalid WhatsApp invite link format')
+      return
+    }
+  }
+  
+  const groupName = await question(`Group name [${league.whatsappGroup?.name || league.name + ' - Jugadores'}]: `)
+  const adminPhone = await question(`Admin phone number [${league.whatsappGroup?.adminPhone || process.env.ADMIN_WHATSAPP || '+34612345678'}]: `)
+  const isActive = await question('Is group active? (y/n) [y]: ')
+  
+  // Update the league
   const updateData = {
-    'whatsappGroup.inviteCode': inviteCode,
-    'whatsappGroup.name': `${league.name} - Jugadores`,
-    'whatsappGroup.isActive': true,
-    'whatsappGroup.createdAt': new Date()
+    'whatsappGroup.inviteCode': inviteCode || league.whatsappGroup?.inviteCode,
+    'whatsappGroup.name': groupName || league.whatsappGroup?.name || `${league.name} - Jugadores`,
+    'whatsappGroup.adminPhone': adminPhone || league.whatsappGroup?.adminPhone || process.env.ADMIN_WHATSAPP,
+    'whatsappGroup.isActive': isActive.toLowerCase() !== 'n',
+    'whatsappGroup.createdAt': league.whatsappGroup?.createdAt || new Date()
   }
   
-  if (adminPhone) {
-    updateData['whatsappGroup.adminPhone'] = adminPhone
+  await League.findByIdAndUpdate(league._id, updateData)
+  
+  log.success(`WhatsApp group updated for ${league.name}`)
+  
+  // Show the invite link
+  if (updateData['whatsappGroup.inviteCode']) {
+    console.log('')
+    log.info('Full invite link:')
+    console.log(`   ${colors.bright}https://chat.whatsapp.com/${updateData['whatsappGroup.inviteCode']}${colors.reset}`)
   }
-  
-  await League.findByIdAndUpdate(leagueId, updateData)
-  
-  console.log(`✅ WhatsApp group updated for ${league.name}`)
-  console.log(`   Invite link: https://chat.whatsapp.com/${inviteCode}`)
 }
 
-async function activateWhatsAppGroup(leagueId) {
-  await dbConnect()
+async function updateAllLeagues() {
+  log.title('📱 Update WhatsApp Groups for All Leagues')
   
-  if (!mongoose.Types.ObjectId.isValid(leagueId)) {
-    console.error('❌ Invalid league ID format')
-    process.exit(1)
+  const leagues = await League.find({ status: { $in: ['active', 'coming_soon', 'registration_open'] } })
+    .sort({ displayOrder: 1, createdAt: 1 })
+  
+  log.info(`Found ${leagues.length} active/upcoming leagues`)
+  console.log('')
+  
+  for (const league of leagues) {
+    const hasGroup = league.whatsappGroup?.isActive
+    const skipOption = hasGroup ? ' (s to skip)' : ''
+    
+    console.log(`\n${colors.bright}${colors.magenta}League: ${league.name}${colors.reset}`)
+    console.log(`Status: ${league.status}`)
+    
+    if (hasGroup) {
+      console.log(`Current WhatsApp: ${league.whatsappGroup.name || 'Configured'}`)
+    }
+    
+    const action = await question(`Update this league?${skipOption} (y/n/s): `)
+    
+    if (action.toLowerCase() === 'y') {
+      await updateLeague(league.slug)
+    } else if (action.toLowerCase() === 's') {
+      log.info('Skipped')
+    } else {
+      log.info('Skipped')
+    }
   }
   
-  const league = await League.findById(leagueId)
+  log.success('All leagues processed!')
+}
+
+async function clearLeague(slug) {
+  const league = await League.findOne({ slug })
   
   if (!league) {
-    console.error('❌ League not found')
-    process.exit(1)
+    log.error(`League with slug '${slug}' not found`)
+    return
   }
   
-  if (!league.whatsappGroup?.inviteCode) {
-    console.error('❌ League does not have a WhatsApp invite code configured')
-    process.exit(1)
+  log.warning(`This will clear the WhatsApp group for: ${league.name}`)
+  
+  const confirm = await question('Are you sure? (y/n): ')
+  
+  if (confirm.toLowerCase() !== 'y') {
+    log.info('Clear cancelled')
+    return
   }
   
-  await League.findByIdAndUpdate(leagueId, {
-    'whatsappGroup.isActive': true
+  await League.findByIdAndUpdate(league._id, {
+    'whatsappGroup.isActive': false,
+    'whatsappGroup.inviteCode': null
   })
   
-  console.log(`✅ WhatsApp group activated for ${league.name}`)
+  log.success(`WhatsApp group cleared for ${league.name}`)
 }
 
-async function deactivateWhatsAppGroup(leagueId) {
-  await dbConnect()
-  
-  if (!mongoose.Types.ObjectId.isValid(leagueId)) {
-    console.error('❌ Invalid league ID format')
-    process.exit(1)
-  }
-  
-  const league = await League.findById(leagueId)
-  
-  if (!league) {
-    console.error('❌ League not found')
-    process.exit(1)
-  }
-  
-  await League.findByIdAndUpdate(leagueId, {
-    'whatsappGroup.isActive': false
-  })
-  
-  console.log(`✅ WhatsApp group deactivated for ${league.name}`)
-}
-
-// Main execution
 async function main() {
   const command = process.argv[2]
-  const leagueId = process.argv[3]
-  const inviteCode = process.argv[4]
-  const adminPhone = process.argv[5]
+  const param = process.argv[3]
   
   try {
+    // Connect to database
+    await dbConnect()
+    log.success('Connected to database')
+    
     switch (command) {
       case 'list':
         await listLeagues()
         break
         
       case 'update':
-        if (!leagueId || !inviteCode) {
-          console.error('❌ Usage: node manageWhatsAppGroups.js update <leagueId> <inviteCode> [adminPhone]')
-          process.exit(1)
+        if (!param) {
+          log.error('Please provide a league slug')
+          console.log('Usage: node scripts/manageWhatsAppGroups.js update [league-slug]')
+        } else {
+          await updateLeague(param)
         }
-        await updateWhatsAppGroup(leagueId, inviteCode, adminPhone)
         break
         
-      case 'activate':
-        if (!leagueId) {
-          console.error('❌ Usage: node manageWhatsAppGroups.js activate <leagueId>')
-          process.exit(1)
-        }
-        await activateWhatsAppGroup(leagueId)
+      case 'update-all':
+        await updateAllLeagues()
         break
         
-      case 'deactivate':
-        if (!leagueId) {
-          console.error('❌ Usage: node manageWhatsAppGroups.js deactivate <leagueId>')
-          process.exit(1)
+      case 'clear':
+        if (!param) {
+          log.error('Please provide a league slug')
+          console.log('Usage: node scripts/manageWhatsAppGroups.js clear [league-slug]')
+        } else {
+          await clearLeague(param)
         }
-        await deactivateWhatsAppGroup(leagueId)
         break
         
       default:
-        console.log(`
-📱 WhatsApp Group Management Script
-====================================
-
-Usage:
-  node scripts/manageWhatsAppGroups.js list
-    - List all active leagues and their WhatsApp status
-    
-  node scripts/manageWhatsAppGroups.js update <leagueId> <inviteCode> [adminPhone]
-    - Update a league with WhatsApp invite code
-    - inviteCode: The code from https://chat.whatsapp.com/ABC123...
-    - adminPhone: Optional admin phone number (e.g., +34612345678)
-    
-  node scripts/manageWhatsAppGroups.js activate <leagueId>
-    - Activate WhatsApp group for a league
-    
-  node scripts/manageWhatsAppGroups.js deactivate <leagueId>
-    - Deactivate WhatsApp group for a league
-
-Example:
-  node scripts/manageWhatsAppGroups.js update 6123456789abcdef12345678 ABC123DEF456 +34612345678
-
-How to get invite code:
-  1. Create a WhatsApp group for the league
-  2. Go to group settings → "Invite via link"
-  3. Copy the link (e.g., https://chat.whatsapp.com/ABC123DEF456)
-  4. Use only the code part: ABC123DEF456
-        `)
+        log.title('WhatsApp Group Management Tool')
+        console.log('Usage: node scripts/manageWhatsAppGroups.js [command] [options]\n')
+        console.log('Commands:')
+        console.log('  list                    - List all leagues and their WhatsApp group status')
+        console.log('  update [league-slug]    - Update WhatsApp group for a specific league')
+        console.log('  update-all              - Update all leagues interactively')
+        console.log('  clear [league-slug]     - Clear WhatsApp group for a specific league')
+        console.log('\nExamples:')
+        console.log('  node scripts/manageWhatsAppGroups.js list')
+        console.log('  node scripts/manageWhatsAppGroups.js update sotogrande')
+        console.log('  node scripts/manageWhatsAppGroups.js update-all')
     }
-    
-    process.exit(0)
   } catch (error) {
-    console.error('❌ Error:', error.message)
-    process.exit(1)
+    log.error(`Error: ${error.message}`)
+    console.error(error)
+  } finally {
+    rl.close()
+    process.exit(0)
   }
 }
 
+// Run the script
 main()
