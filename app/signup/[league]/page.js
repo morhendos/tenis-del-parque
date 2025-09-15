@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Navigation from '../../../components/common/Navigation'
 import SignupSection from '../../../components/home/SignupSection'
+import EnhancedSuccessMessage from '../../../components/ui/EnhancedSuccessMessage'
 import Footer from '../../../components/common/Footer'
 import { useLanguage } from '../../../lib/hooks/useLanguage'
 import { homeContent } from '../../../lib/content/homeContent'
@@ -27,6 +28,7 @@ export default function LeagueSignupPage() {
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState({})
+  const [registrationData, setRegistrationData] = useState(null)
 
   const t = homeContent[language]
 
@@ -119,13 +121,22 @@ export default function LeagueSignupPage() {
       const data = await response.json()
       
       if (response.ok && data.success) {
-        setIsSubmitted(true)
         console.log('Player registered:', data.player)
         
-        // Redirect to home after 5 seconds
-        setTimeout(() => {
-          router.push('/sotogrande')
-        }, 5000)
+        // Store registration data for success message
+        setRegistrationData({
+          playerName: formData.name,
+          leagueName: league.name,
+          leagueStatus: league.status,
+          expectedStartDate: league.expectedLaunchDate || league.seasonConfig?.startDate,
+          whatsappGroupLink: data.player?.league?.whatsappGroup?.inviteLink,
+          shareUrl: `${window.location.origin}/signup/${league.slug}`
+        })
+        
+        setIsSubmitted(true)
+        
+        // Don't auto-redirect - let user interact with success message
+        // They can share, join WhatsApp group, or go back home manually
       } else {
         // Handle API errors
         if (response.status === 409) {
@@ -215,6 +226,48 @@ export default function LeagueSignupPage() {
     )
   }
 
+  // Show enhanced success message if submitted
+  if (isSubmitted && registrationData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-parque-bg via-white to-white">
+        <Navigation 
+          currentPage="signup" 
+          language={language} 
+          onLanguageChange={setLanguage} 
+        />
+        
+        <div className="pt-16">
+          {/* League Header */}
+          <div className="bg-gradient-to-br from-parque-purple/10 to-parque-green/10 py-16">
+            <div className="container mx-auto px-4 text-center">
+              <h1 className="text-5xl md:text-6xl font-light text-parque-purple mb-4">
+                {league.name}
+              </h1>
+              <p className="text-xl text-gray-600 mb-2">
+                {league.location.city}, {league.location.region}
+              </p>
+            </div>
+          </div>
+
+          {/* Enhanced Success Message */}
+          <div className="container mx-auto px-4 py-8">
+            <EnhancedSuccessMessage 
+              playerName={registrationData.playerName}
+              leagueName={registrationData.leagueName}
+              leagueStatus={registrationData.leagueStatus}
+              expectedStartDate={registrationData.expectedStartDate}
+              whatsappGroupLink={registrationData.whatsappGroupLink}
+              shareUrl={registrationData.shareUrl}
+              language={language}
+            />
+          </div>
+        </div>
+        
+        <Footer content={t.footer} />
+      </div>
+    )
+  }
+
   // Custom content for the signup page
   const signupContent = {
     ...t.signup,
@@ -262,17 +315,19 @@ export default function LeagueSignupPage() {
           </div>
         )}
 
-        {/* Signup Form */}
-        <SignupSection 
-          content={signupContent} 
-          formData={formData} 
-          isSubmitted={isSubmitted} 
-          isSubmitting={isSubmitting} 
-          onSubmit={handleSubmit} 
-          onChange={handleChange} 
-          language={language}
-          errors={errors}
-        />
+        {/* Signup Form - Only show if not submitted */}
+        {!isSubmitted && (
+          <SignupSection 
+            content={signupContent} 
+            formData={formData} 
+            isSubmitted={false} 
+            isSubmitting={isSubmitting} 
+            onSubmit={handleSubmit} 
+            onChange={handleChange} 
+            language={language}
+            errors={errors}
+          />
+        )}
       </div>
       
       <Footer content={t.footer} />
