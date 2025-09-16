@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Navigation from '../../../../components/common/Navigation'
 import SignupSection from '../../../../components/home/SignupSection'
 import EnhancedSuccessMessage from '../../../../components/ui/EnhancedSuccessMessage'
@@ -11,7 +11,6 @@ import { i18n } from '../../../../lib/i18n/config'
 
 export default function LeagueRegistrationPage() {
   const params = useParams()
-  const router = useRouter()
   const leagueSlug = params.league
   const locale = params.locale || 'es'
   
@@ -124,22 +123,33 @@ export default function LeagueRegistrationPage() {
       const data = await response.json()
       
       if (response.ok && data.success) {
-        console.log('✅ Player registered:', data.player)
+        console.log('✅ Player registered successfully:', data)
+        
+        // Extract WhatsApp group info from the correct path in API response
+        const whatsappGroupLink = data.player?.league?.whatsappGroup?.inviteLink || null
         
         // Store registration data for enhanced success message
         setRegistrationData({
           playerName: formData.name,
           leagueName: league.name,
           leagueStatus: league.status,
-          expectedStartDate: league.expectedLaunchDate || league.seasonConfig?.startDate,
-          whatsappGroupLink: data.player?.league?.whatsappGroup?.inviteLink,
+          expectedStartDate: league.expectedLaunchDate || league.seasonConfig?.startDate || league.seasons?.[0]?.startDate,
+          whatsappGroupLink: whatsappGroupLink,
           shareUrl: `${window.location.origin}/${validLocale}/registro/${league.slug}`
+        })
+        
+        console.log('📋 Registration data prepared:', {
+          playerName: formData.name,
+          leagueName: league.name,
+          leagueStatus: league.status,
+          whatsappGroupLink: whatsappGroupLink
         })
         
         setIsSubmitted(true)
         
-        // Don't auto-redirect - let user interact with success message
-        // They can share, join WhatsApp group, or go back home manually
+        // NO AUTO-REDIRECT - User stays on success page and can interact with it
+        // They can share, join WhatsApp group, or manually navigate back
+        
       } else {
         // Handle API errors
         if (response.status === 409) {
@@ -215,12 +225,12 @@ export default function LeagueRegistrationPage() {
               ? 'La liga que buscas no existe o no está activa.'
               : 'The league you are looking for does not exist or is not active.'}
           </p>
-          <button 
-            onClick={() => router.push(`/${validLocale}`)}
-            className="bg-parque-purple text-white px-8 py-3 rounded-full hover:bg-parque-purple/90 transition-colors"
+          <a 
+            href={`/${validLocale}`}
+            className="inline-block bg-parque-purple text-white px-8 py-3 rounded-full hover:bg-parque-purple/90 transition-colors"
           >
             {validLocale === 'es' ? 'Volver al inicio' : 'Back to home'}
-          </button>
+          </a>
         </div>
         <Footer content={t.footer} />
       </div>
@@ -246,7 +256,7 @@ export default function LeagueRegistrationPage() {
             </div>
           </div>
 
-          {/* Enhanced Success Message */}
+          {/* Enhanced Success Message Component */}
           <div className="container mx-auto px-4 py-8">
             <EnhancedSuccessMessage 
               playerName={registrationData.playerName}
