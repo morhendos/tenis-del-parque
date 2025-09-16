@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Navigation from '../../../components/common/Navigation'
 import SignupSection from '../../../components/home/SignupSection'
 import EnhancedSuccessMessage from '../../../components/ui/EnhancedSuccessMessage'
@@ -11,7 +11,6 @@ import { homeContent } from '../../../lib/content/homeContent'
 
 export default function LeagueSignupPage() {
   const params = useParams()
-  const router = useRouter()
   const leagueSlug = params.league
   
   const { language, setLanguage, isLanguageLoaded } = useLanguage()
@@ -114,29 +113,40 @@ export default function LeagueSignupPage() {
           language,
           leagueId: league._id,
           leagueSlug: league.slug,
-          season: league.seasons?.[0]?.name || 'summer-2025'
+          season: league.seasons?.[0]?.name || league.season?.type + '-' + league.season?.year || 'summer-2025'
         })
       })
       
       const data = await response.json()
       
       if (response.ok && data.success) {
-        console.log('Player registered:', data.player)
+        console.log('✅ Player registered successfully:', data)
         
-        // Store registration data for success message
+        // Extract WhatsApp group info from the correct path in API response
+        const whatsappGroupLink = data.player?.league?.whatsappGroup?.inviteLink || null
+        
+        // Store registration data for enhanced success message
         setRegistrationData({
           playerName: formData.name,
           leagueName: league.name,
           leagueStatus: league.status,
-          expectedStartDate: league.expectedLaunchDate || league.seasonConfig?.startDate,
-          whatsappGroupLink: data.player?.league?.whatsappGroup?.inviteLink,
+          expectedStartDate: league.expectedLaunchDate || league.seasonConfig?.startDate || league.seasons?.[0]?.startDate,
+          whatsappGroupLink: whatsappGroupLink,
           shareUrl: `${window.location.origin}/signup/${league.slug}`
+        })
+        
+        console.log('📋 Registration data prepared:', {
+          playerName: formData.name,
+          leagueName: league.name,
+          leagueStatus: league.status,
+          whatsappGroupLink: whatsappGroupLink
         })
         
         setIsSubmitted(true)
         
-        // Don't auto-redirect - let user interact with success message
-        // They can share, join WhatsApp group, or go back home manually
+        // NO AUTO-REDIRECT - User stays on success page and can interact with it
+        // They can share, join WhatsApp group, or manually navigate back
+        
       } else {
         // Handle API errors
         if (response.status === 409) {
@@ -157,7 +167,7 @@ export default function LeagueSignupPage() {
         }
       }
     } catch (error) {
-      console.error('Registration error:', error)
+      console.error('❌ Registration error:', error)
       setErrors({ 
         submit: language === 'es' 
           ? 'Error de conexión. Por favor, inténtalo de nuevo.' 
@@ -214,12 +224,12 @@ export default function LeagueSignupPage() {
               ? 'La liga que buscas no existe o no está activa.'
               : 'The league you are looking for does not exist or is not active.'}
           </p>
-          <button 
-            onClick={() => router.push('/sotogrande')}
-            className="bg-parque-purple text-white px-8 py-3 rounded-full hover:bg-parque-purple/90 transition-colors"
+          <a 
+            href="/"
+            className="inline-block bg-parque-purple text-white px-8 py-3 rounded-full hover:bg-parque-purple/90 transition-colors"
           >
             {language === 'es' ? 'Volver al inicio' : 'Back to home'}
-          </button>
+          </a>
         </div>
         <Footer content={t.footer} />
       </div>
@@ -244,12 +254,12 @@ export default function LeagueSignupPage() {
                 {league.name}
               </h1>
               <p className="text-xl text-gray-600 mb-2">
-                {league.location.city}, {league.location.region}
+                {league.location?.city}, {league.location?.region}
               </p>
             </div>
           </div>
 
-          {/* Enhanced Success Message */}
+          {/* Enhanced Success Message Component */}
           <div className="container mx-auto px-4 py-8">
             <EnhancedSuccessMessage 
               playerName={registrationData.playerName}
@@ -272,7 +282,7 @@ export default function LeagueSignupPage() {
   const signupContent = {
     ...t.signup,
     title: `${language === 'es' ? 'Únete a' : 'Join'} ${league.name}`,
-    subtitle: league.description?.[language] || t.signup.subtitle
+    subtitle: league.description?.[language] || league.description?.es || t.signup.subtitle
   }
 
   return (
@@ -291,13 +301,16 @@ export default function LeagueSignupPage() {
               {league.name}
             </h1>
             <p className="text-xl text-gray-600 mb-2">
-              {league.location.city}, {league.location.region}
+              {league.location?.city}, {league.location?.region}
             </p>
-            {league.seasons?.[0] && (
+            {(league.seasons?.[0] || league.season) && (
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full text-sm">
                 <span className="w-2 h-2 bg-parque-green rounded-full animate-pulse"></span>
                 <span className="text-gray-700">
-                  {language === 'es' ? 'Inscripciones abiertas' : 'Registration open'} - {league.seasons[0].name}
+                  {language === 'es' ? 'Inscripciones abiertas' : 'Registration open'} - {
+                    league.seasons?.[0]?.name || 
+                    (league.season ? `${league.season.type} ${league.season.year}` : '')
+                  }
                 </span>
               </div>
             )}
