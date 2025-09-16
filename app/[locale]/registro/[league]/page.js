@@ -129,26 +129,31 @@ export default function LeagueRegistrationPage() {
         const whatsappGroupLink = data.player?.league?.whatsappGroup?.inviteLink || null
         
         // Store registration data for enhanced success message
+        // Use proper locale-based share URL
+        const shareUrl = validLocale === 'es' 
+          ? `${window.location.origin}/es/registro/${league.slug}`
+          : `${window.location.origin}/en/signup/${league.slug}`
+        
         setRegistrationData({
           playerName: formData.name,
           leagueName: league.name,
           leagueStatus: league.status,
           expectedStartDate: league.expectedLaunchDate || league.seasonConfig?.startDate || league.seasons?.[0]?.startDate,
           whatsappGroupLink: whatsappGroupLink,
-          shareUrl: `${window.location.origin}/${validLocale}/registro/${league.slug}`
+          shareUrl: shareUrl
         })
         
         console.log('📋 Registration data prepared:', {
           playerName: formData.name,
           leagueName: league.name,
           leagueStatus: league.status,
-          whatsappGroupLink: whatsappGroupLink
+          whatsappGroupLink: whatsappGroupLink,
+          shareUrl: shareUrl
         })
         
         setIsSubmitted(true)
         
         // NO AUTO-REDIRECT - User stays on success page and can interact with it
-        // They can share, join WhatsApp group, or manually navigate back
         
       } else {
         // Handle API errors
