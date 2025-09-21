@@ -1,6 +1,7 @@
 import dbConnect from '../../../../lib/db/mongoose'
 import Player from '../../../../lib/models/Player'
 import League from '../../../../lib/models/League'
+import User from '../../../../lib/models/User'
 import { generateWelcomeEmail } from '../../../../lib/email/templates/welcomeEmail'
 import { sendEmail } from '../../../../lib/email/resend'
 
@@ -73,6 +74,8 @@ export async function POST(request) {
     
     let isNewPlayer = false
     let isExistingUser = false
+    let hasUserAccount = false
+    let activationLink = null
     
     if (player) {
       // EXISTING PLAYER - check if already registered for this league/season
@@ -151,6 +154,24 @@ export async function POST(request) {
       console.log(`New player ${email} registered for league: ${league.name} (${season})`)
     }
 
+    // Check if player has a user account
+    if (player.userId) {
+      // Check if the user actually exists
+      const user = await User.findById(player.userId)
+      if (user && user.emailVerified) {
+        hasUserAccount = true
+        console.log(`Player ${email} already has an active user account`)
+      } else if (user && !user.emailVerified && user.activationToken) {
+        // User exists but not activated - regenerate activation link
+        const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://tenisdp.es'
+        activationLink = `${baseUrl}/activate?token=${encodeURIComponent(user.activationToken)}`
+        console.log(`Player ${email} has pending activation - regenerating link`)
+      }
+    } else {
+      // No user account yet - they'll get activation link later via WhatsApp from admin
+      console.log(`Player ${email} will receive activation link when league starts`)
+    }
+
     // Update league stats
     if (league.status === 'coming_soon') {
       await League.findByIdAndUpdate(league._id, {
@@ -165,30 +186,33 @@ export async function POST(request) {
     // Get the registration we just created
     const registration = player.getLeagueRegistration(league._id, season)
 
-    // Send welcome email
+    // Send welcome email with improved template
     try {
       // Get WhatsApp group info if available
       const whatsappGroupInfo = league.getWhatsAppGroupInfo ? league.getWhatsAppGroupInfo() : null
 
-      // Generate email content
+      // Generate email content with new parameters
       const emailData = generateWelcomeEmail(
         {
           playerName: player.name,
           playerEmail: player.email,
           playerWhatsApp: player.whatsapp,
           playerLevel: registration.level,
-          language: language || 'es'
+          language: language || 'es',
+          hasUserAccount: hasUserAccount,
+          activationLink: activationLink,
+          isExistingPlayer: !isNewPlayer
         },
         {
           leagueName: league.name,
           leagueStatus: league.status,
           expectedStartDate: league.seasonConfig?.startDate || league.expectedLaunchDate,
           whatsappGroupLink: whatsappGroupInfo?.inviteLink || null,
-          shareUrl: `${process.env.NEXT_PUBLIC_URL || 'https://tenisdelparque.com'}/signup/${league.slug}`
+          shareUrl: `${process.env.NEXT_PUBLIC_URL || 'https://tenisdp.es'}/${language === 'en' ? 'en/signup' : 'es/registro'}/${league.slug}`
         },
         {
-          unsubscribeUrl: `${process.env.NEXT_PUBLIC_URL || 'https://tenisdelparque.com'}/unsubscribe?email=${encodeURIComponent(player.email)}`,
-          adminContact: whatsappGroupInfo?.adminContact || process.env.ADMIN_WHATSAPP || null
+          unsubscribeUrl: `${process.env.NEXT_PUBLIC_URL || 'https://tenisdp.es'}/unsubscribe?email=${encodeURIComponent(player.email)}`,
+          loginUrl: `${process.env.NEXT_PUBLIC_URL || 'https://tenisdp.es'}/login`
         }
       )
 
@@ -222,13 +246,23 @@ export async function POST(request) {
           ? "Welcome! You're on the waiting list. We'll contact you when the league is ready."
           : "Welcome! Registration successful. We'll contact you soon."
     } else {
-      successMessage = language === 'es'
-        ? league.status === 'coming_soon' 
-          ? '¡Te has registrado en una nueva liga! Estás en la lista de espera.'
-          : '¡Te has registrado exitosamente en una nueva liga! Te contactaremos pronto.'
-        : league.status === 'coming_soon'
-          ? "You've registered for a new league! You're on the waiting list."
-          : "You've successfully registered for a new league! We'll contact you soon."
+      if (hasUserAccount) {
+        successMessage = language === 'es'
+          ? league.status === 'coming_soon' 
+            ? '¡Te has registrado en una nueva liga! Ya tienes una cuenta, puedes acceder en cualquier momento.'
+            : '¡Te has registrado exitosamente en una nueva liga! Accede a tu cuenta para ver los detalles.'
+          : league.status === 'coming_soon'
+            ? "You've registered for a new league! You already have an account, you can access it anytime."
+            : "You've successfully registered for a new league! Login to your account to see details."
+      } else {
+        successMessage = language === 'es'
+          ? league.status === 'coming_soon' 
+            ? '¡Te has registrado en una nueva liga! Estás en la lista de espera.'
+            : '¡Te has registrado exitosamente en una nueva liga! Te contactaremos pronto.'
+          : league.status === 'coming_soon'
+            ? "You've registered for a new league! You're on the waiting list."
+            : "You've successfully registered for a new league! We'll contact you soon."
+      }
     }
 
     // Return success response with WhatsApp group info
@@ -240,6 +274,7 @@ export async function POST(request) {
         message: successMessage,
         isNewPlayer,
         isExistingUser,
+        hasUserAccount,
         player: {
           id: player._id,
           name: player.name,
@@ -351,10 +386,16 @@ export async function GET() {
     
     return Response.json({
       success: true,
-      message: 'Player registration API is working with email integration',
+      message: 'Player registration API is working with improved email integration',
       totalUniquePlayers,
       totalRegistrations: totalRegistrations[0]?.total || 0,
-      stats
+      stats,
+      emailConfig: {
+        provider: 'Resend',
+        contactEmail: 'info@tenisdp.es',
+        contactPhone: '+34 652 714 328',
+        website: 'tenisdp.es'
+      }
     })
   } catch (error) {
     return Response.json(
