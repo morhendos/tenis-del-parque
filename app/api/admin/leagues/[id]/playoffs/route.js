@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
-import dbConnect from '../../../../../lib/db/mongoose'
-import League from '../../../../../lib/models/League'
-import Match from '../../../../../lib/models/Match'
-import Player from '../../../../../lib/models/Player'
-import { requireAdmin } from '../../../../../lib/auth/apiAuth'
+import dbConnect from '../../../../../../lib/db/mongoose'
+import League from '../../../../../../lib/models/League'
+import Match from '../../../../../../lib/models/Match'
+import Player from '../../../../../../lib/models/Player'
+import { requireAdmin } from '../../../../../../lib/auth/apiAuth'
 
 // GET /api/admin/leagues/[id]/playoffs - Get playoff status and bracket
 export async function GET(request, { params }) {
