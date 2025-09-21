@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
-import dbConnect from '../../../../../lib/db/mongoose'
-import League from '../../../../../lib/models/League'
-import { requireAdmin } from '../../../../../lib/auth/apiAuth'
+import dbConnect from '../../../../../../lib/db/mongoose'
+import League from '../../../../../../lib/models/League'
+import { requireAdmin } from '../../../../../../lib/auth/apiAuth'
 
 // GET /api/admin/leagues/[id] - Get single league details
 export async function GET(request, { params }) {
