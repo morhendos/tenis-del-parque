@@ -1,193 +1,93 @@
 import { NextResponse } from 'next/server'
 import dbConnect from '../../../../../lib/db/mongoose'
 import League from '../../../../../lib/models/League'
-import City from '../../../../../lib/models/City'
 import { requireAdmin } from '../../../../../lib/auth/apiAuth'
 
-// Force dynamic rendering for this route
-export const dynamic = 'force-dynamic'
+// GET /api/admin/leagues/[id] - Get single league details
+export async function GET(request, { params }) {
+  try {
+    const { session, error } = await requireAdmin(request)
+    if (error) return error
 
+    await dbConnect()
+    
+    const league = await League.findById(params.id)
+      .populate('city', 'name slug')
+      .populate('playoffConfig.qualifiedPlayers.groupA.player')
+      .populate('playoffConfig.qualifiedPlayers.groupB.player')
+    
+    if (!league) {
+      return NextResponse.json({ error: 'League not found' }, { status: 404 })
+    }
+    
+    return NextResponse.json({
+      success: true,
+      league: league
+    })
+    
+  } catch (error) {
+    console.error('Error fetching league:', error)
+    return NextResponse.json(
+      { error: 'Failed to fetch league' },
+      { status: 500 }
+    )
+  }
+}
+
+// PUT /api/admin/leagues/[id] - Update league
 export async function PUT(request, { params }) {
   try {
     const { session, error } = await requireAdmin(request)
     if (error) return error
 
-    const { id } = params
-
-    // Connect to database
     await dbConnect()
-
-    // Parse request body
-    const data = await request.json()
-
-    // Find the league
-    const league = await League.findById(id)
+    
+    const body = await request.json()
+    
+    const league = await League.findByIdAndUpdate(
+      params.id,
+      body,
+      { new: true, runValidators: true }
+    ).populate('city', 'name slug')
+    
     if (!league) {
-      return NextResponse.json(
-        { error: 'League not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'League not found' }, { status: 404 })
     }
-
-    // Check if slug is being changed and if it already exists
-    if (data.slug && data.slug !== league.slug) {
-      const existingLeague = await League.findOne({ 
-        slug: data.slug,
-        _id: { $ne: id }
-      })
-      if (existingLeague) {
-        return NextResponse.json(
-          { error: 'A league with this slug already exists' },
-          { status: 400 }
-        )
-      }
-    }
-
-    // Update fields
-    if (data.name !== undefined) league.name = data.name
-    if (data.slug !== undefined) league.slug = data.slug.toLowerCase()
-    if (data.skillLevel !== undefined) league.skillLevel = data.skillLevel
-    if (data.status !== undefined) league.status = data.status
-    if (data.displayOrder !== undefined) league.displayOrder = data.displayOrder
-    if (data.expectedLaunchDate !== undefined) league.expectedLaunchDate = data.expectedLaunchDate
-
-    // Update location
-    if (data.location) {
-      league.location = {
-        ...league.location,
-        ...data.location
-      }
-    }
-
-    // Update descriptions
-    if (data.description) {
-      league.description = {
-        ...league.description,
-        ...data.description
-      }
-    }
-
-    // Save the updated league
-    await league.save()
-
+    
     return NextResponse.json({
       success: true,
-      league
+      message: 'League updated successfully',
+      league: league
     })
-
+    
   } catch (error) {
     console.error('Error updating league:', error)
     return NextResponse.json(
-      { error: 'Failed to update league: ' + error.message },
+      { error: 'Failed to update league' },
       { status: 500 }
     )
   }
 }
 
-// NEW: PATCH method for partial updates (specifically for city linking)
-export async function PATCH(request, { params }) {
-  try {
-    const { session, error } = await requireAdmin(request)
-    if (error) return error
-
-    const { id } = params
-
-    // Connect to database
-    await dbConnect()
-
-    // Parse request body
-    const data = await request.json()
-
-    // Find the league
-    const league = await League.findById(id)
-    if (!league) {
-      return NextResponse.json(
-        { error: 'League not found' },
-        { status: 404 }
-      )
-    }
-
-    // Handle city linking/unlinking
-    if (data.hasOwnProperty('city')) {
-      if (data.city) {
-        // Validate that the city exists
-        const city = await City.findById(data.city)
-        if (!city) {
-          return NextResponse.json(
-            { error: 'City not found' },
-            { status: 400 }
-          )
-        }
-        league.city = data.city
-      } else {
-        // Unlink from city
-        league.city = null
-      }
-    }
-
-    // Handle other partial updates
-    if (data.skillLevel !== undefined) league.skillLevel = data.skillLevel
-    if (data.status !== undefined) league.status = data.status
-    if (data.displayOrder !== undefined) league.displayOrder = data.displayOrder
-    if (data.season !== undefined) league.season = data.season
-    if (data.seasonConfig !== undefined) league.seasonConfig = data.seasonConfig
-
-    // Save the updated league (skip validation for partial updates)
-    await league.save({ validateBeforeSave: false })
-
-    // Return the updated league with populated city data
-    const updatedLeague = await League.findById(id).populate('city', 'slug name')
-
-    return NextResponse.json({
-      success: true,
-      league: updatedLeague
-    })
-
-  } catch (error) {
-    console.error('Error patching league:', error)
-    return NextResponse.json(
-      { error: 'Failed to update league: ' + error.message },
-      { status: 500 }
-    )
-  }
-}
-
+// DELETE /api/admin/leagues/[id] - Delete league
 export async function DELETE(request, { params }) {
   try {
     const { session, error } = await requireAdmin(request)
     if (error) return error
 
-    const { id } = params
-
-    // Connect to database
     await dbConnect()
-
-    // Check if league has players
-    const Player = (await import('../../../../../lib/models/Player')).default
-    const playerCount = await Player.countDocuments({ league: id })
     
-    if (playerCount > 0) {
-      return NextResponse.json(
-        { error: 'Cannot delete league with existing players' },
-        { status: 400 }
-      )
-    }
-
-    // Delete the league
-    const result = await League.findByIdAndDelete(id)
+    const league = await League.findByIdAndDelete(params.id)
     
-    if (!result) {
-      return NextResponse.json(
-        { error: 'League not found' },
-        { status: 404 }
-      )
+    if (!league) {
+      return NextResponse.json({ error: 'League not found' }, { status: 404 })
     }
-
+    
     return NextResponse.json({
       success: true,
       message: 'League deleted successfully'
     })
-
+    
   } catch (error) {
     console.error('Error deleting league:', error)
     return NextResponse.json(
