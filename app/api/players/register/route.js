@@ -76,6 +76,7 @@ export async function POST(request) {
     let isExistingUser = false
     let hasUserAccount = false
     let activationLink = null
+    let user = null
     
     if (player) {
       // EXISTING PLAYER - check if already registered for this league/season
@@ -118,6 +119,15 @@ export async function POST(request) {
         )
       }
       
+      // Check if player has a user account
+      if (player.userId) {
+        user = await User.findById(player.userId)
+        if (user && user.emailVerified) {
+          hasUserAccount = true
+          console.log(`Player ${email} already has an active user account`)
+        }
+      }
+      
     } else {
       // NEW PLAYER - create new player with first league registration
       isNewPlayer = true
@@ -154,22 +164,80 @@ export async function POST(request) {
       console.log(`New player ${email} registered for league: ${league.name} (${season})`)
     }
 
-    // Check if player has a user account
-    if (player.userId) {
-      // Check if the user actually exists
-      const user = await User.findById(player.userId)
-      if (user && user.emailVerified) {
-        hasUserAccount = true
-        console.log(`Player ${email} already has an active user account`)
-      } else if (user && !user.emailVerified && user.activationToken) {
-        // User exists but not activated - regenerate activation link
+    // Create or update user account if needed
+    if (!hasUserAccount) {
+      // Check if user exists but not linked to player
+      user = await User.findOne({ email: email.toLowerCase() })
+      
+      if (!user) {
+        // Create new user account with temporary password
+        console.log(`Creating new user account for ${email}`)
+        
+        user = new User({
+          email: email.toLowerCase(),
+          password: 'temporary_' + Math.random().toString(36).substring(2, 15), // Temporary password
+          role: 'player',
+          playerId: player._id,
+          isActive: true,
+          emailVerified: false
+        })
+        
+        // Generate activation token
+        const activationToken = await user.generateActivationToken()
+        await user.save()
+        
+        // Update player with userId
+        player.userId = user._id
+        player.status = 'confirmed' // Player has account now
+        await player.save()
+        
+        // Generate activation link
         const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://tenisdp.es'
-        activationLink = `${baseUrl}/activate?token=${encodeURIComponent(user.activationToken)}`
-        console.log(`Player ${email} has pending activation - regenerating link`)
+        activationLink = `${baseUrl}/activate?token=${encodeURIComponent(activationToken)}`
+        
+        console.log(`Generated activation link for ${email}: ${activationLink}`)
+        
+      } else if (!user.emailVerified) {
+        // User exists but not verified - regenerate activation token
+        console.log(`User exists but not verified, regenerating activation token for ${email}`)
+        
+        const activationToken = await user.generateActivationToken()
+        
+        // Link user to player if not already linked
+        if (!user.playerId) {
+          user.playerId = player._id
+        }
+        await user.save()
+        
+        // Update player with userId if not already set
+        if (!player.userId) {
+          player.userId = user._id
+          player.status = 'confirmed'
+          await player.save()
+        }
+        
+        // Generate activation link
+        const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://tenisdp.es'
+        activationLink = `${baseUrl}/activate?token=${encodeURIComponent(activationToken)}`
+        
+        console.log(`Regenerated activation link for ${email}: ${activationLink}`)
+        
+      } else {
+        // User is already verified
+        hasUserAccount = true
+        console.log(`User ${email} already has a verified account`)
+        
+        // Link user to player if not already linked
+        if (!user.playerId) {
+          user.playerId = player._id
+          await user.save()
+        }
+        if (!player.userId) {
+          player.userId = user._id
+          player.status = 'active'
+          await player.save()
+        }
       }
-    } else {
-      // No user account yet - they'll get activation link later via WhatsApp from admin
-      console.log(`Player ${email} will receive activation link when league starts`)
     }
 
     // Update league stats
@@ -186,12 +254,12 @@ export async function POST(request) {
     // Get the registration we just created
     const registration = player.getLeagueRegistration(league._id, season)
 
-    // Send welcome email with improved template
+    // Send welcome email with activation link
     try {
       // Get WhatsApp group info if available
       const whatsappGroupInfo = league.getWhatsAppGroupInfo ? league.getWhatsAppGroupInfo() : null
 
-      // Generate email content with new parameters
+      // Generate email content with activation link
       const emailData = generateWelcomeEmail(
         {
           playerName: player.name,
@@ -200,7 +268,7 @@ export async function POST(request) {
           playerLevel: registration.level,
           language: language || 'es',
           hasUserAccount: hasUserAccount,
-          activationLink: activationLink,
+          activationLink: activationLink, // Will be null if user already has verified account
           isExistingPlayer: !isNewPlayer
         },
         {
@@ -225,7 +293,7 @@ export async function POST(request) {
       })
 
       if (emailResult.success) {
-        console.log(`Welcome email sent to ${player.email}`)
+        console.log(`Welcome email sent to ${player.email} ${activationLink ? 'with activation link' : 'with login link'}`)
       } else {
         console.error(`Failed to send welcome email to ${player.email}:`, emailResult.error)
       }
@@ -237,35 +305,25 @@ export async function POST(request) {
 
     // Customize success message
     let successMessage
-    if (isNewPlayer) {
+    if (activationLink) {
       successMessage = language === 'es'
-        ? league.status === 'coming_soon' 
-          ? '¡Bienvenido! Estás en la lista de espera. Te contactaremos cuando la liga esté lista.'
-          : '¡Bienvenido! Registro exitoso. Te contactaremos pronto.'
-        : league.status === 'coming_soon'
-          ? "Welcome! You're on the waiting list. We'll contact you when the league is ready."
-          : "Welcome! Registration successful. We'll contact you soon."
+        ? '¡Registro exitoso! Te hemos enviado un email con el enlace para crear tu contraseña.'
+        : 'Registration successful! We\'ve sent you an email with a link to create your password.'
+    } else if (hasUserAccount) {
+      successMessage = language === 'es'
+        ? isNewPlayer 
+          ? '¡Bienvenido! Ya tienes una cuenta activa. Puedes acceder en cualquier momento.'
+          : '¡Te has registrado en una nueva liga! Ya tienes una cuenta, puedes acceder en cualquier momento.'
+        : isNewPlayer
+          ? 'Welcome! You already have an active account. You can login anytime.'
+          : 'You\'ve registered for a new league! You already have an account, you can login anytime.'
     } else {
-      if (hasUserAccount) {
-        successMessage = language === 'es'
-          ? league.status === 'coming_soon' 
-            ? '¡Te has registrado en una nueva liga! Ya tienes una cuenta, puedes acceder en cualquier momento.'
-            : '¡Te has registrado exitosamente en una nueva liga! Accede a tu cuenta para ver los detalles.'
-          : league.status === 'coming_soon'
-            ? "You've registered for a new league! You already have an account, you can access it anytime."
-            : "You've successfully registered for a new league! Login to your account to see details."
-      } else {
-        successMessage = language === 'es'
-          ? league.status === 'coming_soon' 
-            ? '¡Te has registrado en una nueva liga! Estás en la lista de espera.'
-            : '¡Te has registrado exitosamente en una nueva liga! Te contactaremos pronto.'
-          : league.status === 'coming_soon'
-            ? "You've registered for a new league! You're on the waiting list."
-            : "You've successfully registered for a new league! We'll contact you soon."
-      }
+      successMessage = language === 'es'
+        ? '¡Registro exitoso! Revisa tu email para activar tu cuenta.'
+        : 'Registration successful! Check your email to activate your account.'
     }
 
-    // Return success response with WhatsApp group info
+    // Return success response with account info
     const whatsappGroupInfo = league.getWhatsAppGroupInfo ? league.getWhatsAppGroupInfo() : null
     
     return Response.json(
@@ -275,6 +333,7 @@ export async function POST(request) {
         isNewPlayer,
         isExistingUser,
         hasUserAccount,
+        hasActivationLink: !!activationLink,
         player: {
           id: player._id,
           name: player.name,
@@ -291,7 +350,8 @@ export async function POST(request) {
             slug: league.slug,
             status: league.status,
             whatsappGroup: whatsappGroupInfo
-          }
+          },
+          accountStatus: activationLink ? 'pending_activation' : (hasUserAccount ? 'active' : 'no_account')
         }
       },
       { status: 201 }
@@ -363,6 +423,12 @@ export async function GET() {
         'registrations.league': league._id
       })
       
+      // Count users with accounts
+      const playersWithAccounts = await Player.countDocuments({
+        'registrations.league': league._id,
+        userId: { $exists: true, $ne: null }
+      })
+      
       // Get WhatsApp group info if available
       const whatsappGroupInfo = league.getWhatsAppGroupInfo ? league.getWhatsAppGroupInfo() : null
       
@@ -371,12 +437,17 @@ export async function GET() {
         status: league.status,
         totalPlayers: league.status === 'active' ? playerCount : 0,
         waitingList: league.status === 'coming_soon' ? playerCount : 0,
+        playersWithAccounts,
         hasWhatsAppGroup: !!whatsappGroupInfo
       }
     }
     
     // Get total unique players across all leagues
     const totalUniquePlayers = await Player.countDocuments({})
+    
+    // Get total users with accounts
+    const totalUsersWithAccounts = await User.countDocuments({ role: 'player' })
+    const totalVerifiedAccounts = await User.countDocuments({ role: 'player', emailVerified: true })
     
     // Get total registrations across all leagues
     const totalRegistrations = await Player.aggregate([
@@ -386,15 +457,18 @@ export async function GET() {
     
     return Response.json({
       success: true,
-      message: 'Player registration API is working with improved email integration',
+      message: 'Player registration API with automatic account creation',
       totalUniquePlayers,
+      totalUsersWithAccounts,
+      totalVerifiedAccounts,
       totalRegistrations: totalRegistrations[0]?.total || 0,
       stats,
       emailConfig: {
         provider: 'Resend',
         contactEmail: 'info@tenisdp.es',
         contactPhone: '+34 652 714 328',
-        website: 'tenisdp.es'
+        website: 'tenisdp.es',
+        features: ['automatic_account_creation', 'instant_activation_links', 'welcome_emails']
       }
     })
   } catch (error) {
