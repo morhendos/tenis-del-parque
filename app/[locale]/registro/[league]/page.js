@@ -1,16 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Navigation from '../../../../components/common/Navigation'
 import SignupSection from '../../../../components/home/SignupSection'
+import EnhancedSuccessMessage from '../../../../components/ui/EnhancedSuccessMessage'
 import Footer from '../../../../components/common/Footer'
 import { homeContent } from '../../../../lib/content/homeContent'
 import { i18n } from '../../../../lib/i18n/config'
 
 export default function LeagueRegistrationPage() {
   const params = useParams()
-  const router = useRouter()
   const leagueSlug = params.league
   const locale = params.locale || 'es'
   
@@ -30,6 +30,7 @@ export default function LeagueRegistrationPage() {
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState({})
+  const [registrationData, setRegistrationData] = useState(null)
 
   const t = homeContent[validLocale] || homeContent[i18n.defaultLocale]
 
@@ -115,20 +116,45 @@ export default function LeagueRegistrationPage() {
           language: validLocale,
           leagueId: league._id,
           leagueSlug: league.slug,
-          season: league.seasons?.[0]?.name || league.season?.type + '-' + league.season?.year
+          season: league.seasons?.[0]?.name || league.season?.type + '-' + league.season?.year || 'summer-2025'
         })
       })
       
       const data = await response.json()
       
       if (response.ok && data.success) {
-        setIsSubmitted(true)
-        console.log('✅ Player registered:', data.player)
+        console.log('✅ Player registered successfully:', data)
         
-        // Redirect to home after 5 seconds
-        setTimeout(() => {
-          router.push(`/${validLocale}`)
-        }, 5000)
+        // Extract WhatsApp group info from the correct path in API response
+        const whatsappGroupLink = data.player?.league?.whatsappGroup?.inviteLink || null
+        
+        // Store registration data for enhanced success message
+        // Use proper locale-based share URL
+        const shareUrl = validLocale === 'es' 
+          ? `${window.location.origin}/es/registro/${league.slug}`
+          : `${window.location.origin}/en/signup/${league.slug}`
+        
+        setRegistrationData({
+          playerName: formData.name,
+          leagueName: league.name,
+          leagueStatus: league.status,
+          expectedStartDate: league.expectedLaunchDate || league.seasonConfig?.startDate || league.seasons?.[0]?.startDate,
+          whatsappGroupLink: whatsappGroupLink,
+          shareUrl: shareUrl
+        })
+        
+        console.log('📋 Registration data prepared:', {
+          playerName: formData.name,
+          leagueName: league.name,
+          leagueStatus: league.status,
+          whatsappGroupLink: whatsappGroupLink,
+          shareUrl: shareUrl
+        })
+        
+        setIsSubmitted(true)
+        
+        // NO AUTO-REDIRECT - User stays on success page and can interact with it
+        
       } else {
         // Handle API errors
         if (response.status === 409) {
@@ -204,13 +230,51 @@ export default function LeagueRegistrationPage() {
               ? 'La liga que buscas no existe o no está activa.'
               : 'The league you are looking for does not exist or is not active.'}
           </p>
-          <button 
-            onClick={() => router.push(`/${validLocale}`)}
-            className="bg-parque-purple text-white px-8 py-3 rounded-full hover:bg-parque-purple/90 transition-colors"
+          <a 
+            href={`/${validLocale}`}
+            className="inline-block bg-parque-purple text-white px-8 py-3 rounded-full hover:bg-parque-purple/90 transition-colors"
           >
             {validLocale === 'es' ? 'Volver al inicio' : 'Back to home'}
-          </button>
+          </a>
         </div>
+        <Footer content={t.footer} />
+      </div>
+    )
+  }
+
+  // Show enhanced success message if submitted
+  if (isSubmitted && registrationData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-parque-bg via-white to-white">
+        <Navigation locale={validLocale} />
+        
+        <div className="pt-16">
+          {/* League Header */}
+          <div className="bg-gradient-to-br from-parque-purple/10 to-parque-green/10 py-16">
+            <div className="container mx-auto px-4 text-center">
+              <h1 className="text-5xl md:text-6xl font-light text-parque-purple mb-4">
+                {league.name}
+              </h1>
+              <p className="text-xl text-gray-600 mb-2">
+                {league.location?.city}, {league.location?.region}
+              </p>
+            </div>
+          </div>
+
+          {/* Enhanced Success Message Component */}
+          <div className="container mx-auto px-4 py-8">
+            <EnhancedSuccessMessage 
+              playerName={registrationData.playerName}
+              leagueName={registrationData.leagueName}
+              leagueStatus={registrationData.leagueStatus}
+              expectedStartDate={registrationData.expectedStartDate}
+              whatsappGroupLink={registrationData.whatsappGroupLink}
+              shareUrl={registrationData.shareUrl}
+              language={validLocale}
+            />
+          </div>
+        </div>
+        
         <Footer content={t.footer} />
       </div>
     )
@@ -262,17 +326,19 @@ export default function LeagueRegistrationPage() {
           </div>
         )}
 
-        {/* Signup Form */}
-        <SignupSection 
-          content={signupContent} 
-          formData={formData} 
-          isSubmitted={isSubmitted} 
-          isSubmitting={isSubmitting} 
-          onSubmit={handleSubmit} 
-          onChange={handleChange} 
-          language={validLocale}
-          errors={errors}
-        />
+        {/* Signup Form - Only show if not submitted */}
+        {!isSubmitted && (
+          <SignupSection 
+            content={signupContent} 
+            formData={formData} 
+            isSubmitted={false} 
+            isSubmitting={isSubmitting} 
+            onSubmit={handleSubmit} 
+            onChange={handleChange} 
+            language={validLocale}
+            errors={errors}
+          />
+        )}
       </div>
       
       <Footer content={t.footer} />

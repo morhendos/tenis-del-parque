@@ -1,19 +1,22 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import Navigation from '../../../components/common/Navigation'
-import SignupSection from '../../../components/home/SignupSection'
-import Footer from '../../../components/common/Footer'
-import { useLanguage } from '../../../lib/hooks/useLanguage'
-import { homeContent } from '../../../lib/content/homeContent'
+import { useParams } from 'next/navigation'
+import Navigation from '../../../../components/common/Navigation'
+import SignupSection from '../../../../components/home/SignupSection'
+import EnhancedSuccessMessage from '../../../../components/ui/EnhancedSuccessMessage'
+import Footer from '../../../../components/common/Footer'
+import { homeContent } from '../../../../lib/content/homeContent'
+import { i18n } from '../../../../lib/i18n/config'
 
-export default function LeagueSignupPage() {
+export default function LeagueRegistrationPage() {
   const params = useParams()
-  const router = useRouter()
   const leagueSlug = params.league
+  const locale = params.locale || 'es'
   
-  const { language, setLanguage, isLanguageLoaded } = useLanguage()
+  // Validate locale
+  const validLocale = i18n.locales.includes(locale) ? locale : i18n.defaultLocale
+  
   const [league, setLeague] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -27,8 +30,9 @@ export default function LeagueSignupPage() {
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState({})
+  const [registrationData, setRegistrationData] = useState(null)
 
-  const t = homeContent[language]
+  const t = homeContent[validLocale] || homeContent[i18n.defaultLocale]
 
   // Fetch league information
   useEffect(() => {
@@ -87,7 +91,7 @@ export default function LeagueSignupPage() {
     e.preventDefault()
     
     if (!league) {
-      setErrors({ submit: 'League information not available' })
+      setErrors({ submit: validLocale === 'es' ? 'Información de la liga no disponible' : 'League information not available' })
       return
     }
     
@@ -109,23 +113,48 @@ export default function LeagueSignupPage() {
         },
         body: JSON.stringify({
           ...formData,
-          language,
+          language: validLocale,
           leagueId: league._id,
           leagueSlug: league.slug,
-          season: league.seasons?.[0]?.name || 'summer-2025'
+          season: league.seasons?.[0]?.name || league.season?.type + '-' + league.season?.year || 'summer-2025'
         })
       })
       
       const data = await response.json()
       
       if (response.ok && data.success) {
-        setIsSubmitted(true)
-        console.log('Player registered:', data.player)
+        console.log('✅ Player registered successfully:', data)
         
-        // Redirect to home after 5 seconds
-        setTimeout(() => {
-          router.push('/sotogrande')
-        }, 5000)
+        // Extract WhatsApp group info from the correct path in API response
+        const whatsappGroupLink = data.player?.league?.whatsappGroup?.inviteLink || null
+        
+        // Store registration data for enhanced success message
+        // Use proper locale-based share URL
+        const shareUrl = validLocale === 'es' 
+          ? `${window.location.origin}/es/registro/${league.slug}`
+          : `${window.location.origin}/en/signup/${league.slug}`
+        
+        setRegistrationData({
+          playerName: formData.name,
+          leagueName: league.name,
+          leagueStatus: league.status,
+          expectedStartDate: league.expectedLaunchDate || league.seasonConfig?.startDate || league.seasons?.[0]?.startDate,
+          whatsappGroupLink: whatsappGroupLink,
+          shareUrl: shareUrl
+        })
+        
+        console.log('📋 Registration data prepared:', {
+          playerName: formData.name,
+          leagueName: league.name,
+          leagueStatus: league.status,
+          whatsappGroupLink: whatsappGroupLink,
+          shareUrl: shareUrl
+        })
+        
+        setIsSubmitted(true)
+        
+        // NO AUTO-REDIRECT - User stays on success page and can interact with it
+        
       } else {
         // Handle API errors
         if (response.status === 409) {
@@ -142,13 +171,13 @@ export default function LeagueSignupPage() {
           setErrors(apiErrors)
         } else {
           // Generic error
-          setErrors({ submit: data.error || 'Something went wrong. Please try again.' })
+          setErrors({ submit: data.error || (validLocale === 'es' ? 'Algo salió mal. Por favor, inténtalo de nuevo.' : 'Something went wrong. Please try again.') })
         }
       }
     } catch (error) {
-      console.error('Registration error:', error)
+      console.error('❌ Registration error:', error)
       setErrors({ 
-        submit: language === 'es' 
+        submit: validLocale === 'es' 
           ? 'Error de conexión. Por favor, inténtalo de nuevo.' 
           : 'Connection error. Please try again.' 
       })
@@ -174,12 +203,14 @@ export default function LeagueSignupPage() {
   }
 
   // Show loading state
-  if (!isLanguageLoaded || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-parque-bg via-white to-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 tennis-ball mb-4 animate-bounce mx-auto"></div>
-          <div className="text-parque-purple/60 text-lg font-light">Loading...</div>
+          <div className="text-parque-purple/60 text-lg font-light">
+            {validLocale === 'es' ? 'Cargando...' : 'Loading...'}
+          </div>
         </div>
       </div>
     )
@@ -189,27 +220,61 @@ export default function LeagueSignupPage() {
   if (error || !league) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-parque-bg via-white to-white">
-        <Navigation 
-          currentPage="signup" 
-          language={language} 
-          onLanguageChange={setLanguage} 
-        />
+        <Navigation locale={validLocale} />
         <div className="container mx-auto px-4 py-32 text-center">
           <h1 className="text-4xl font-light text-parque-purple mb-4">
-            {language === 'es' ? 'Liga no encontrada' : 'League not found'}
+            {validLocale === 'es' ? 'Liga no encontrada' : 'League not found'}
           </h1>
           <p className="text-gray-600 mb-8">
-            {language === 'es' 
+            {validLocale === 'es' 
               ? 'La liga que buscas no existe o no está activa.'
               : 'The league you are looking for does not exist or is not active.'}
           </p>
-          <button 
-            onClick={() => router.push('/sotogrande')}
-            className="bg-parque-purple text-white px-8 py-3 rounded-full hover:bg-parque-purple/90 transition-colors"
+          <a 
+            href={`/${validLocale}`}
+            className="inline-block bg-parque-purple text-white px-8 py-3 rounded-full hover:bg-parque-purple/90 transition-colors"
           >
-            {language === 'es' ? 'Volver al inicio' : 'Back to home'}
-          </button>
+            {validLocale === 'es' ? 'Volver al inicio' : 'Back to home'}
+          </a>
         </div>
+        <Footer content={t.footer} />
+      </div>
+    )
+  }
+
+  // Show enhanced success message if submitted
+  if (isSubmitted && registrationData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-parque-bg via-white to-white">
+        <Navigation locale={validLocale} />
+        
+        <div className="pt-16">
+          {/* League Header */}
+          <div className="bg-gradient-to-br from-parque-purple/10 to-parque-green/10 py-16">
+            <div className="container mx-auto px-4 text-center">
+              <h1 className="text-5xl md:text-6xl font-light text-parque-purple mb-4">
+                {league.name}
+              </h1>
+              <p className="text-xl text-gray-600 mb-2">
+                {league.location?.city}, {league.location?.region}
+              </p>
+            </div>
+          </div>
+
+          {/* Enhanced Success Message Component */}
+          <div className="container mx-auto px-4 py-8">
+            <EnhancedSuccessMessage 
+              playerName={registrationData.playerName}
+              leagueName={registrationData.leagueName}
+              leagueStatus={registrationData.leagueStatus}
+              expectedStartDate={registrationData.expectedStartDate}
+              whatsappGroupLink={registrationData.whatsappGroupLink}
+              shareUrl={registrationData.shareUrl}
+              language={validLocale}
+            />
+          </div>
+        </div>
+        
         <Footer content={t.footer} />
       </div>
     )
@@ -218,17 +283,13 @@ export default function LeagueSignupPage() {
   // Custom content for the signup page
   const signupContent = {
     ...t.signup,
-    title: `${language === 'es' ? 'Únete a' : 'Join'} ${league.name}`,
-    subtitle: league.description?.[language] || t.signup.subtitle
+    title: `${validLocale === 'es' ? 'Únete a' : 'Join'} ${league.name}`,
+    subtitle: league.description?.[validLocale] || league.description?.es || t.signup.subtitle
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-parque-bg via-white to-white">
-      <Navigation 
-        currentPage="signup" 
-        language={language} 
-        onLanguageChange={setLanguage} 
-      />
+      <Navigation locale={validLocale} />
       
       <div className="pt-16">
         {/* League Header */}
@@ -238,13 +299,16 @@ export default function LeagueSignupPage() {
               {league.name}
             </h1>
             <p className="text-xl text-gray-600 mb-2">
-              {league.location.city}, {league.location.region}
+              {league.location?.city}, {league.location?.region}
             </p>
-            {league.seasons?.[0] && (
+            {(league.seasons?.[0] || league.season) && (
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full text-sm">
                 <span className="w-2 h-2 bg-parque-green rounded-full animate-pulse"></span>
                 <span className="text-gray-700">
-                  {language === 'es' ? 'Inscripciones abiertas' : 'Registration open'} - {league.seasons[0].name}
+                  {validLocale === 'es' ? 'Inscripciones abiertas' : 'Registration open'} - {
+                    league.seasons?.[0]?.name || 
+                    (league.season ? `${league.season.type} ${league.season.year}` : '')
+                  }
                 </span>
               </div>
             )}
@@ -262,17 +326,19 @@ export default function LeagueSignupPage() {
           </div>
         )}
 
-        {/* Signup Form */}
-        <SignupSection 
-          content={signupContent} 
-          formData={formData} 
-          isSubmitted={isSubmitted} 
-          isSubmitting={isSubmitting} 
-          onSubmit={handleSubmit} 
-          onChange={handleChange} 
-          language={language}
-          errors={errors}
-        />
+        {/* Signup Form - Only show if not submitted */}
+        {!isSubmitted && (
+          <SignupSection 
+            content={signupContent} 
+            formData={formData} 
+            isSubmitted={false} 
+            isSubmitting={isSubmitting} 
+            onSubmit={handleSubmit} 
+            onChange={handleChange} 
+            language={validLocale}
+            errors={errors}
+          />
+        )}
       </div>
       
       <Footer content={t.footer} />

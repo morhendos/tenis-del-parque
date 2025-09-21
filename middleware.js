@@ -102,6 +102,26 @@ export default withAuth(
       locale => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
     );
     
+    // NEW: Handle locale-specific registration routes
+    // Map /en/registro/[league] to /en/signup/[league]
+    // Map /es/signup/[league] to /es/registro/[league]
+    if (pathnameHasLocale) {
+      const [, locale, route, ...rest] = pathname.split('/');
+      
+      // Handle wrong locale-route combinations
+      if (locale === 'en' && route === 'registro') {
+        // English users should see /signup not /registro
+        const newPath = `/en/signup/${rest.join('/')}`;
+        return NextResponse.redirect(new URL(newPath, req.url));
+      }
+      
+      if (locale === 'es' && route === 'signup') {
+        // Spanish users should see /registro not /signup
+        const newPath = `/es/registro/${rest.join('/')}`;
+        return NextResponse.redirect(new URL(newPath, req.url));
+      }
+    }
+    
     // If pathname doesn't have locale, redirect to the same path with locale
     if (!pathnameHasLocale) {
       const locale = getLocale(req);
@@ -109,7 +129,7 @@ export default withAuth(
       // Special handling for existing routes to maintain compatibility
       const routeMapping = {
         '/': `/${locale}`,
-        '/signup': `/${locale}/registro`,
+        '/signup': locale === 'es' ? `/${locale}/registro` : `/${locale}/signup`,
         '/login': `/${locale}/login`,
         '/elo': `/${locale}/elo`,
         '/rules': `/${locale}/${locale === 'es' ? 'reglas' : 'rules'}`,
@@ -237,7 +257,7 @@ export default withAuth(
         }
         
         // Remove locale prefix for easier matching
-        const pathWithoutLocale = pathname.replace(/^\/(es|en)/, '') || '/'
+        const pathWithoutLocale = pathname.replace(/^\/(?:es|en)/, '') || '/'
         
         // Public routes that don't require auth
         const publicRoutes = [

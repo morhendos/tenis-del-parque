@@ -2,9 +2,11 @@ root/
 ├── CLEANUP_INSTRUCTIONS.md
 ├── PHASE2_CLEANUP_INSTRUCTIONS.md
 ├── PHASE3_CLEANUP_INSTRUCTIONS.md
+├── PROPER_SOLUTION_README.md
 ├── PR_README.md
 ├── README.md
 ├── SOLUTION_SUMMARY.md
+├── SSG_CONVERSION_README.md
 ├── TENNIS_PRELOADER_STANDARDIZATION.md
 ├── app
 │   ├── [locale]
@@ -60,7 +62,7 @@ root/
 │   │   ├── rules
 │   │   │   └── page.js
 │   │   ├── signup
-│   │   │   └── [city]
+│   │   │   └── [league]
 │   │   │       └── page.js
 │   │   └── swiss
 │   │       └── page.js
@@ -270,10 +272,7 @@ root/
 │   ├── icon0.svg
 │   ├── icon1.png
 │   ├── layout.js
-│   ├── providers.js
-│   └── signup
-│       └── [league]
-│           └── page.js
+│   └── providers.js
 ├── components
 │   ├── admin
 │   │   ├── areas
@@ -376,10 +375,15 @@ root/
 │   │   ├── PublicScheduleTab.js
 │   │   └── ScoringSystem.js
 │   ├── pages
+│   │   ├── CityClubsPageSSG.js
 │   │   ├── CitySignupPageContent.js
+│   │   ├── ClubDetailPageSSG.js
 │   │   ├── ClubsPageContent.js
 │   │   ├── ClubsPageSSG.js
+│   │   ├── EloPageSSG.js
+│   │   ├── HomePageSSG.js
 │   │   ├── LeaguesPageContent.js
+│   │   ├── LeaguesPageSSG.js
 │   │   └── RulesPageContent.js
 │   ├── player
 │   │   ├── DashboardHeader.js
@@ -402,6 +406,7 @@ root/
 │   │   └── RulesSidebar.js
 │   └── ui
 │       ├── AnnouncementModal.js
+│       ├── EnhancedSuccessMessage.js
 │       ├── TennisDividers.js
 │       ├── TennisIcons.js
 │       ├── TennisPreloader.js
@@ -433,6 +438,7 @@ root/
 │   ├── GOOGLE_MAPS_IMPORT_SPEC.md
 │   ├── GOOGLE_MAPS_SETUP.md
 │   ├── HOMEPAGE_LEAGUE_IMPLEMENTATION_PLAN.md
+│   ├── IMPLEMENTATION_GUIDE.md
 │   ├── MULTI_SEASON_LEAGUE_SYSTEM.md
 │   ├── MULTI_SPORT_COURTS.md
 │   ├── NUMBER_OF_PLAYERS_IN_COSTA_DEL_SOL.md
@@ -441,17 +447,21 @@ root/
 │   ├── PRODUCT_LED_GROWTH.md
 │   ├── PR_MULTILINGUAL_IMPLEMENTATION.md
 │   ├── README.md
+│   ├── REGISTRATION_ROUTES_REFACTORING.md
 │   ├── RESEND_EMAIL_SETUP.md
 │   ├── SCORING_SYSTEM_INTEGRATION.md
 │   ├── SEASON_SYSTEM_REFACTOR.md
 │   ├── SEO Strategy
+│   ├── SEO_ACTION_PLAN.md
 │   ├── SEO_CHECKLIST.md
 │   ├── SEO_CLUBS_DIRECTORY_TODO.md
 │   ├── SEO_IMPLEMENTATION_PLAN.md
 │   ├── SEO_LAUNCH_CHECKLIST.md
+│   ├── SIMPLIFIED_USER_ACQUISITION_PLAN.md
 │   ├── STRATEGY_TO_GET_75_FIRST_USERS.md
 │   ├── UX_IMPROVEMENTS_SUMMARY.md
 │   ├── VERCEL_BLOB_STORAGE_SETUP.md
+│   ├── WAITING_LIST_SYSTEM.md
 │   └── as
 ├── jsconfig.json
 ├── lib
@@ -479,7 +489,9 @@ root/
 │   │   ├── mongodb.js
 │   │   └── mongoose.js
 │   ├── email
-│   │   └── resend.js
+│   │   ├── resend.js
+│   │   └── templates
+│   │       └── welcomeEmail.js
 │   ├── hooks
 │   │   ├── useActiveSection.js
 │   │   ├── useAuth.js
@@ -510,12 +522,14 @@ root/
 │       ├── geographicBoundaries.js
 │       ├── matchResultUtils.js
 │       ├── phoneUtils.js
+│       ├── playerModelHelpers.js
 │       ├── playerNameUtils.js
 │       ├── rulesIcons.js
 │       ├── seasonUtils.client.js
 │       ├── seasonUtils.js
 │       ├── spanishTextUtils.js
-│       └── swissPairing.js
+│       ├── swissPairing.js
+│       └── whatsappUtils.js
 ├── middleware.js
 ├── next.config.js
 ├── package-lock.json
@@ -562,11 +576,16 @@ root/
 │   ├── debugClubCourts.js
 │   ├── diagnoseLinkIssues.js
 │   ├── directFix.js
+│   ├── fixEloStructure.js
 │   ├── fixMismatchedLinks.js
+│   ├── fixSeenAnnouncements.js
+│   ├── fixUserPlayerReferences.js
 │   ├── generateSitemap.js
 │   ├── linkPlayersToUsers.js
+│   ├── manageWhatsAppGroups.js
 │   ├── migrateActivationTokens.js
 │   ├── migrateCourtsData.mjs
+│   ├── migrateToNewPlayerModel.js
 │   ├── populateAssignments.js
 │   ├── populateClubAssignments.mjs
 │   ├── seedCities.js
@@ -574,7 +593,9 @@ root/
 │   ├── seedCitiesProduction.js
 │   ├── seedLeagues.js
 │   ├── seedSeasons.mjs
+│   ├── setupWhatsAppGroups.js
 │   ├── test-city-photo-refresh.sh
+│   ├── testEmailSending.js
 │   ├── tree.js
 │   └── unlockAccounts.js
 ├── styles

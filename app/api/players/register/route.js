@@ -1,6 +1,8 @@
 import dbConnect from '../../../../lib/db/mongoose'
 import Player from '../../../../lib/models/Player'
 import League from '../../../../lib/models/League'
+import { generateWelcomeEmail } from '../../../../lib/email/templates/welcomeEmail'
+import { sendEmail } from '../../../../lib/email/resend'
 
 export async function POST(request) {
   try {
@@ -163,6 +165,52 @@ export async function POST(request) {
     // Get the registration we just created
     const registration = player.getLeagueRegistration(league._id, season)
 
+    // Send welcome email
+    try {
+      // Get WhatsApp group info if available
+      const whatsappGroupInfo = league.getWhatsAppGroupInfo ? league.getWhatsAppGroupInfo() : null
+
+      // Generate email content
+      const emailData = generateWelcomeEmail(
+        {
+          playerName: player.name,
+          playerEmail: player.email,
+          playerWhatsApp: player.whatsapp,
+          playerLevel: registration.level,
+          language: language || 'es'
+        },
+        {
+          leagueName: league.name,
+          leagueStatus: league.status,
+          expectedStartDate: league.seasonConfig?.startDate || league.expectedLaunchDate,
+          whatsappGroupLink: whatsappGroupInfo?.inviteLink || null,
+          shareUrl: `${process.env.NEXT_PUBLIC_URL || 'https://tenisdelparque.com'}/signup/${league.slug}`
+        },
+        {
+          unsubscribeUrl: `${process.env.NEXT_PUBLIC_URL || 'https://tenisdelparque.com'}/unsubscribe?email=${encodeURIComponent(player.email)}`,
+          adminContact: whatsappGroupInfo?.adminContact || process.env.ADMIN_WHATSAPP || null
+        }
+      )
+
+      // Send the email
+      const emailResult = await sendEmail({
+        to: player.email,
+        subject: emailData.subject,
+        html: emailData.html,
+        text: emailData.text
+      })
+
+      if (emailResult.success) {
+        console.log(`Welcome email sent to ${player.email}`)
+      } else {
+        console.error(`Failed to send welcome email to ${player.email}:`, emailResult.error)
+      }
+
+    } catch (emailError) {
+      console.error('Error sending welcome email:', emailError)
+      // Don't fail registration if email fails - just log it
+    }
+
     // Customize success message
     let successMessage
     if (isNewPlayer) {
@@ -171,19 +219,21 @@ export async function POST(request) {
           ? '¡Bienvenido! Estás en la lista de espera. Te contactaremos cuando la liga esté lista.'
           : '¡Bienvenido! Registro exitoso. Te contactaremos pronto.'
         : league.status === 'coming_soon'
-          ? 'Welcome! You\'re on the waiting list. We\'ll contact you when the league is ready.'
-          : 'Welcome! Registration successful. We\'ll contact you soon.'
+          ? "Welcome! You're on the waiting list. We'll contact you when the league is ready."
+          : "Welcome! Registration successful. We'll contact you soon."
     } else {
       successMessage = language === 'es'
         ? league.status === 'coming_soon' 
           ? '¡Te has registrado en una nueva liga! Estás en la lista de espera.'
           : '¡Te has registrado exitosamente en una nueva liga! Te contactaremos pronto.'
         : league.status === 'coming_soon'
-          ? 'You\'ve registered for a new league! You\'re on the waiting list.'
-          : 'You\'ve successfully registered for a new league! We\'ll contact you soon.'
+          ? "You've registered for a new league! You're on the waiting list."
+          : "You've successfully registered for a new league! We'll contact you soon."
     }
 
-    // Return success response
+    // Return success response with WhatsApp group info
+    const whatsappGroupInfo = league.getWhatsAppGroupInfo ? league.getWhatsAppGroupInfo() : null
+    
     return Response.json(
       {
         success: true,
@@ -204,7 +254,8 @@ export async function POST(request) {
             id: league._id,
             name: league.name,
             slug: league.slug,
-            status: league.status
+            status: league.status,
+            whatsappGroup: whatsappGroupInfo
           }
         }
       },
@@ -277,11 +328,15 @@ export async function GET() {
         'registrations.league': league._id
       })
       
+      // Get WhatsApp group info if available
+      const whatsappGroupInfo = league.getWhatsAppGroupInfo ? league.getWhatsAppGroupInfo() : null
+      
       stats[league.slug] = {
         name: league.name,
         status: league.status,
         totalPlayers: league.status === 'active' ? playerCount : 0,
-        waitingList: league.status === 'coming_soon' ? playerCount : 0
+        waitingList: league.status === 'coming_soon' ? playerCount : 0,
+        hasWhatsAppGroup: !!whatsappGroupInfo
       }
     }
     
@@ -296,7 +351,7 @@ export async function GET() {
     
     return Response.json({
       success: true,
-      message: 'Player registration API is working with new model',
+      message: 'Player registration API is working with email integration',
       totalUniquePlayers,
       totalRegistrations: totalRegistrations[0]?.total || 0,
       stats
