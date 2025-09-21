@@ -42,7 +42,7 @@ export async function GET(request) {
       .populate({
         path: 'playerId',
         populate: {
-          path: 'league',
+          path: 'registrations.league',
           select: 'name slug'
         }
       })
@@ -50,26 +50,59 @@ export async function GET(request) {
       .sort({ createdAt: -1 })
 
     // Transform data for frontend
-    const transformedUsers = users.map(user => ({
-      _id: user._id,
-      email: user.email,
-      role: user.role,
-      isActive: user.isActive,
-      emailVerified: user.emailVerified,
-      lastLogin: user.lastLogin,
-      createdAt: user.createdAt,
-      // Lock information
-      loginAttempts: user.loginAttempts || 0,
-      lockUntil: user.lockUntil,
-      isLocked: user.isLocked,
-      player: user.playerId ? {
-        _id: user.playerId._id,
-        name: user.playerId.name,
-        email: user.playerId.email,
-        level: user.playerId.level,
-        league: user.playerId.league
-      } : null
-    }))
+    const transformedUsers = users.map(user => {
+      // Prepare player data with new structure
+      let playerData = null
+      
+      if (user.playerId) {
+        // Get the most recent registration or the first one
+        const registration = user.playerId.registrations && user.playerId.registrations.length > 0
+          ? user.playerId.registrations[user.playerId.registrations.length - 1]
+          : null
+        
+        playerData = {
+          _id: user.playerId._id,
+          name: user.playerId.name,
+          email: user.playerId.email,
+          // Handle new registration structure
+          level: registration ? registration.level : null,
+          league: registration && registration.league ? {
+            _id: registration.league._id,
+            name: registration.league.name,
+            slug: registration.league.slug
+          } : null,
+          // Include registration status if available
+          status: registration ? registration.status : null,
+          // Include all registrations for reference
+          registrations: user.playerId.registrations ? user.playerId.registrations.map(reg => ({
+            league: reg.league ? {
+              _id: reg.league._id,
+              name: reg.league.name,
+              slug: reg.league.slug
+            } : null,
+            season: reg.season,
+            level: reg.level,
+            status: reg.status,
+            registeredAt: reg.registeredAt
+          })) : []
+        }
+      }
+      
+      return {
+        _id: user._id,
+        email: user.email,
+        role: user.role,
+        isActive: user.isActive,
+        emailVerified: user.emailVerified,
+        lastLogin: user.lastLogin,
+        createdAt: user.createdAt,
+        // Lock information
+        loginAttempts: user.loginAttempts || 0,
+        lockUntil: user.lockUntil,
+        isLocked: user.isLocked,
+        player: playerData
+      }
+    })
 
     return NextResponse.json({ 
       success: true, 
