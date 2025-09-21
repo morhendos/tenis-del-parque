@@ -84,8 +84,15 @@ export async function GET(request, { params }) {
     
     console.log('API: Found', matches.length, 'matches')
     
+    // Filter out matches with null player references (orphaned after CSV import)
+    const validMatches = matches.filter(match => 
+      match.players?.player1 && match.players?.player2
+    )
+    
+    console.log('API: Filtered out', matches.length - validMatches.length, 'invalid matches')
+    
     // Format matches for frontend
-    const formattedMatches = matches.map(match => {
+    const formattedMatches = validMatches.map(match => {
       const scoreString = match.result?.score?.sets?.map(set => 
         `${set.player1}-${set.player2}`
       ).join(', ') || ''

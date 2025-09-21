@@ -12,13 +12,19 @@ export default function ResultsTab({ matches, language, player = null }) {
 
   // Get unique rounds from matches
   const rounds = useMemo(() => {
-    const uniqueRounds = [...new Set(matches.map(match => match.round))].sort((a, b) => b - a)
+    const validMatches = matches.filter(match => match.players?.player1 && match.players?.player2)
+    const uniqueRounds = [...new Set(validMatches.map(match => match.round))].sort((a, b) => b - a)
     return uniqueRounds
   }, [matches])
 
   // Filter matches based on search and round
   const filteredMatches = useMemo(() => {
     return matches.filter(match => {
+      // Safety check: skip matches with invalid player data
+      if (!match.players?.player1 || !match.players?.player2) {
+        console.warn('Skipping match with null player reference:', match._id)
+        return false
+      }
       // Search filter
       if (filters.search) {
         const searchLower = filters.search.toLowerCase()
@@ -115,8 +121,8 @@ export default function ResultsTab({ matches, language, player = null }) {
           {filteredMatches.map((match) => {
             const scoreData = getMatchScore(match)
             
-            const isPlayer1Winner = match.result?.winner?._id === match.players.player1._id
-            const isPlayer2Winner = match.result?.winner?._id === match.players.player2._id
+            const isPlayer1Winner = match.result?.winner?._id === match.players.player1?._id
+            const isPlayer2Winner = match.result?.winner?._id === match.players.player2?._id
             
             return (
               <div 
