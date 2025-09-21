@@ -1,15 +1,16 @@
 # Tenis del Parque - Sotogrande 🎾
 
-A modern, multilingual tennis league platform built with Next.js and MongoDB, featuring ELO rankings, Swiss tournament system, multi-league support, match management, and comprehensive admin panel. Starting July 2025!
+A modern, multilingual tennis league platform built with Next.js and MongoDB, featuring ELO rankings, Swiss tournament system, multi-league support, match management, playoff tournaments, and comprehensive admin panel. Starting July 2025!
 
 ## 🚀 Overview
 
-Tenis del Parque is a sophisticated web application that combines cutting-edge web technologies with professional tennis league management. The platform supports multiple leagues, player registration with database persistence, match scheduling and results tracking, and provides comprehensive information about league rules, ELO & Swiss systems.
+Tenis del Parque is a sophisticated web application that combines cutting-edge web technologies with professional tennis league management. The platform supports multiple leagues, player registration with database persistence, match scheduling and results tracking, playoff tournaments with bracket visualization, and provides comprehensive information about league rules, ELO & Swiss systems.
 
 ### ✨ Key Features
 
 - **🏆 Multi-League Support**: Scalable architecture supporting multiple tennis leagues
 - **🎾 Match Management**: Complete match scheduling, result tracking, and ELO calculations  
+- **🏅 Playoff System**: Tournament-style playoffs with quarterfinals, semifinals, and finals
 - **👨‍💼 Admin Panel**: Comprehensive admin interface with player invitation system
 - **👤 Player Dashboard**: Personalized player hub with league standings, matches, and profile
 - **📧 Invitation System**: WhatsApp-based player invitations with activation links
@@ -23,6 +24,150 @@ Tenis del Parque is a sophisticated web application that combines cutting-edge w
 - **📱 WhatsApp Integration**: Normalized phone numbers for reliable WhatsApp links
 - **🚀 Starting July 2025**: Liga de Sotogrande launches when enough players registered
 
+## 🏆 Playoff System
+
+### Overview
+The playoff system provides a complete tournament management solution with knockout-style brackets for the top players from the regular season.
+
+### Features
+- **🎯 Automatic Qualification**: Top 8 players qualify for playoffs (configurable to 16 with 2 groups)
+- **🏅 Tournament Bracket**: Visual bracket display with quarterfinals, semifinals, and finals
+- **🎮 Seeding System**: Standard tournament seeding (1v8, 4v5, 3v6, 2v7)
+- **📊 Separate Tracking**: Playoff matches don't affect regular season points
+- **🏆 Championship Display**: Visual champion celebration when tournament completes
+- **📱 Responsive Bracket**: Mobile-optimized tournament display
+
+### Playoff Configuration
+```javascript
+// League Model - playoffConfig
+{
+  enabled: Boolean,              // Enable/disable playoffs
+  numberOfGroups: 1 | 2,        // 1 group (top 8) or 2 groups (top 16)
+  groupAPlayers: 8,             // Players in Group A
+  groupBPlayers: 8,             // Players in Group B (if enabled)
+  format: 'tournament',         // Tournament format
+  currentPhase: String,         // 'regular_season' | 'playoffs_groupA' | 'completed'
+  qualifiedPlayers: {
+    groupA: [{ player, seed, regularSeasonPosition }],
+    groupB: [{ player, seed, regularSeasonPosition }]
+  },
+  bracket: {
+    groupA: {
+      quarterfinals: [{ matchId, seed1, seed2, winner }],
+      semifinals: [{ matchId, fromMatch1, fromMatch2, winner }],
+      final: { matchId, winner },
+      thirdPlace: { matchId, winner }
+    },
+    groupB: { /* same structure */ }
+  }
+}
+```
+
+### Match Types
+```javascript
+// Match Model - Extended for Playoffs
+{
+  matchType: 'regular' | 'playoff',  // Distinguish match types
+  playoffInfo: {                     // Playoff-specific data
+    group: 'A' | 'B',
+    stage: 'quarterfinal' | 'semifinal' | 'final' | 'third_place',
+    matchNumber: Number,
+    seed1: Number,
+    seed2: Number
+  }
+}
+```
+
+### Admin Playoff Management
+
+#### Accessing Playoff Management
+1. Navigate to Admin Panel → Leagues → Select League
+2. Click "Playoffs" tab or "Manage Playoffs" button
+3. The button shows a pulse indicator when playoffs are active
+
+#### Workflow
+1. **Configuration**: Set number of playoff groups (1 or 2)
+2. **Initialization**: Click "Initialize Playoffs" when regular season ends
+3. **Qualification**: Top 8 players automatically qualify and are seeded
+4. **Match Creation**: Quarterfinals created automatically
+5. **Progress Tracking**: Enter match results as played
+6. **Advancement**: Winners automatically advance to next round
+7. **Next Rounds**: Create semifinals after quarterfinals complete
+8. **Championship**: Create finals after semifinals complete
+
+#### Tournament Bracket Component
+```javascript
+import TournamentBracket from '@/components/league/TournamentBracket'
+
+<TournamentBracket
+  bracket={playoffBracket}        // Bracket structure from league
+  qualifiedPlayers={players}      // Qualified players with seeds
+  matches={playoffMatches}        // Playoff match data
+  group="A"                       // Group identifier
+  language="es"                   // Language for display
+  onMatchClick={handleMatchClick} // Click handler for matches
+/>
+```
+
+### API Endpoints for Playoffs
+
+#### Get Playoff Status
+```
+GET /api/admin/leagues/[id]/playoffs
+Returns: {
+  playoffConfig: object,
+  currentPhase: string,
+  matches: array
+}
+```
+
+#### Initialize Playoffs
+```
+POST /api/admin/leagues/[id]/playoffs
+Body: {
+  action: 'initialize',
+  numberOfGroups: 1 | 2
+}
+Returns: Initialized playoff configuration
+```
+
+#### Create Next Round Matches
+```
+POST /api/admin/leagues/[id]/playoffs
+Body: {
+  action: 'createMatches',
+  group: 'A' | 'B',
+  stage: 'semifinal' | 'final' | 'third_place'
+}
+Returns: Created match details
+```
+
+#### Advance Winner
+```
+POST /api/admin/leagues/[id]/playoffs
+Body: {
+  action: 'advanceWinner',
+  matchId: string,
+  winnerId: string,
+  group: 'A' | 'B',
+  stage: string
+}
+Returns: Updated bracket
+```
+
+### Migration Script (Optional)
+While not required due to MongoDB's schemaless nature, you can run the migration script for data consistency:
+
+```bash
+# Add playoff fields to existing data
+node scripts/migrate-playoff-fields.js
+```
+
+This script:
+- Sets `matchType: 'regular'` on existing matches
+- Adds default `playoffConfig` to existing leagues
+- Is safe to run multiple times (idempotent)
+
 ## 🛠️ Tech Stack
 
 - **Framework**: Next.js 14 with App Router
@@ -34,6 +179,7 @@ Tenis del Parque is a sophisticated web application that combines cutting-edge w
 - **Authentication**: JWT-based authentication with secure HTTP-only cookies
 - **Communication**: WhatsApp integration with phone number normalization
 - **Internationalization**: Custom language system with localStorage and user preferences
+- **Visualization**: Tournament bracket component for playoff display
 
 ## 🔌 Database Connection Pattern
 
@@ -165,6 +311,10 @@ import dbConnect from '../../../../lib/db/mongoose'
 // Example: app/api/admin/auth/login/route.js, app/api/admin/auth/check/route.js  
 import dbConnect from '../../../../../lib/db/mongoose'
 
+// ✅ 6 levels up - For routes in app/api/admin/leagues/[id]/playoffs/
+// Example: app/api/admin/leagues/[id]/playoffs/route.js
+import dbConnect from '../../../../../../lib/db/mongoose'
+
 // ✅ 4 levels up - For routes in app/api/[directory]/
 // Example: app/api/auth/login/route.js, app/api/players/register/route.js
 import dbConnect from '../../../../lib/db/mongoose'
@@ -174,6 +324,8 @@ import dbConnect from '../../../../lib/db/mongoose'
 - `app/api/[dir]/` → `../../../../lib/` (4 levels)
 - `app/api/admin/[dir]/` → `../../../../lib/` (4 levels)  
 - `app/api/admin/auth/[dir]/` → `../../../../../lib/` (5 levels)
+- `app/api/admin/leagues/[id]/` → `../../../../../lib/` (5 levels)
+- `app/api/admin/leagues/[id]/playoffs/` → `../../../../../../lib/` (6 levels)
 
 **Why This Matters**:
 - **Module Resolution**: Wrong paths cause "Module not found" errors
@@ -370,6 +522,8 @@ tenis-del-parque/
 ├── app/                         # Next.js App Router pages
 │   ├── admin/                   # Admin panel
 │   │   ├── leagues/             # League management
+│   │   │   └── [id]/
+│   │   │       └── playoffs/    # Playoff management page
 │   │   ├── matches/             # Match management
 │   │   ├── players/             # Player management with invitation system
 │   │   ├── users/               # User account management
@@ -385,6 +539,9 @@ tenis-del-parque/
 │   │   ├── admin/               # Admin API endpoints
 │   │   │   ├── auth/            # Admin authentication
 │   │   │   ├── leagues/         # League operations
+│   │   │   │   └── [id]/        
+│   │   │   │       ├── route.js # League CRUD operations
+│   │   │   │       └── playoffs/ # Playoff management API
 │   │   │   ├── matches/         # Match CRUD operations
 │   │   │   ├── players/         # Player management with export/import
 │   │   │   └── users/           # User invitation system
@@ -429,6 +586,8 @@ tenis-del-parque/
 │   ├── common/                  # Shared components (Navigation, Footer)
 │   ├── elo/                     # ELO page components
 │   ├── home/                    # Home page components
+│   ├── league/                  # League components
+│   │   └── TournamentBracket.js # Playoff bracket visualization
 │   ├── rules/                   # Rules page components
 │   ├── analytics/               # Analytics integration (GA, Clarity)
 │   └── ui/                      # UI components (WelcomeModal, Icons, etc.)
@@ -446,8 +605,8 @@ tenis-del-parque/
 │   │   └── mongoose.js          # Mongoose connection handler
 │   ├── models/                  # Database models
 │   │   ├── Player.js            # Player model with match history
-│   │   ├── League.js            # League model
-│   │   ├── Match.js             # Match model with ELO tracking
+│   │   ├── League.js            # League model with playoff config
+│   │   ├── Match.js             # Match model with playoff support
 │   │   └── User.js              # User authentication model
 │   ├── hooks/                   # Custom React hooks
 │   │   ├── useLanguage.js       # Language detection and management
@@ -464,6 +623,7 @@ tenis-del-parque/
 │       └── rulesIcons.js        # Rules page icon mappings
 ├── scripts/                     # Utility scripts
 │   ├── seedLeagues.js           # Database seeder for leagues
+│   ├── migrate-playoff-fields.js # Optional playoff migration script
 │   └── tree.js                  # Project structure generator
 ├── docs/                        # Documentation
 │   └── MATCH_MANAGEMENT_GUIDE.md # Match management implementation guide
@@ -525,6 +685,7 @@ npm run start         # Start production server
 npm run lint          # Run ESLint
 npm run seed:leagues  # Seed database with initial leagues
 npm run create-admin  # Create an admin user for the admin panel
+node scripts/migrate-playoff-fields.js  # Optional: Add playoff fields to existing data
 ```
 
 ### Admin Setup
@@ -585,7 +746,7 @@ Once created, you can access the admin panel at [http://localhost:3000/admin](ht
 }
 ```
 
-### League Model
+### League Model (Extended for Playoffs)
 ```javascript
 {
   name: String,              // e.g., 'Liga de Sotogrande'
@@ -609,16 +770,31 @@ Once created, you can access the admin panel at [http://localhost:3000/admin](ht
     wildCardsPerPlayer: Number,
     playoffPlayers: Number,
     levels: Array
+  },
+  playoffConfig: {           // Playoff tournament configuration
+    enabled: Boolean,
+    numberOfGroups: Number,  // 1 or 2
+    currentPhase: String,    // 'regular_season', 'playoffs_groupA', etc.
+    qualifiedPlayers: Object,// Seeded players for each group
+    bracket: Object          // Tournament bracket structure
   }
 }
 ```
 
-### Match Model
+### Match Model (Extended for Playoffs)
 ```javascript
 {
   league: ObjectId,          // Reference to League
   season: String,            // Season identifier
   round: Number,             // Round number
+  matchType: String,         // 'regular' or 'playoff'
+  playoffInfo: {             // Playoff-specific information
+    group: String,           // 'A' or 'B'
+    stage: String,           // 'quarterfinal', 'semifinal', 'final', 'third_place'
+    matchNumber: Number,     // Match identifier within stage
+    seed1: Number,           // First player seed
+    seed2: Number            // Second player seed
+  },
   players: {
     player1: ObjectId,
     player2: ObjectId
@@ -635,7 +811,7 @@ Once created, you can access the admin panel at [http://localhost:3000/admin](ht
       retiredPlayer: ObjectId
     }
   },
-  eloChanges: {              // ELO tracking
+  eloChanges: {              // ELO tracking (regular season only)
     player1: {
       before: Number,
       after: Number,
@@ -657,6 +833,7 @@ Once created, you can access the admin panel at [http://localhost:3000/admin](ht
 - **🏆 Multi-League Architecture**: Support for multiple tennis leagues across different locations
 - **📊 Player Registration**: Complete signup flow with MongoDB persistence
 - **🎾 Match Management**: Schedule matches, track results, calculate ELO ratings
+- **🏅 Playoff Tournaments**: Knockout-style playoffs with visual bracket display
 - **👨‍💼 Admin Panel**: Protected admin interface for complete league control
 - **🌐 Dynamic League Pages**: Each league has its own signup page (`/signup/[league-slug]`)
 - **📅 Flexible Timeline**: League starts July 2025, no registration deadline
@@ -666,6 +843,8 @@ Once created, you can access the admin panel at [http://localhost:3000/admin](ht
 - **League Management**: View and manage multiple leagues
 - **Player Management**: Update player status, view statistics, export/import data
 - **Invitation System**: Send WhatsApp invitations with bilingual messages
+- **Playoff Management**: Initialize playoffs, create matches, track progress
+- **Tournament Bracket**: Visual bracket display with match results
 - **Re-invite Capability**: Handle failed activations and incomplete registrations  
 - **User Management**: View user accounts, activation status, and pending invitations
 - **Match Scheduling**: Create matches between players
@@ -684,11 +863,13 @@ Once created, you can access the admin panel at [http://localhost:3000/admin](ht
 - **🔄 State Management**: Custom React hooks for language, authentication, and UI state
 - **🏗️ Route Protection**: Middleware-based authentication for admin and player areas
 - **📊 Debugging**: Comprehensive logging and error tracking for production issues
+- **🏆 Tournament Visualization**: Interactive bracket component for playoff display
 
 ### League Features
 - **🎯 Swiss Tournament System**: Fair pairing system
 - **📈 ELO Rankings**: Dynamic skill-based rating system (K-factor: 32)
 - **🏅 Three Levels**: Beginner, Intermediate, and Advanced divisions
+- **🏆 Playoff System**: Top 8 players qualify for knockout tournament
 - **⚡ Wild Cards**: Flexible scheduling system
 - **💰 Free First Season**: No cost for inaugural season
 
@@ -819,6 +1000,16 @@ Body: FormData with CSV file
 Returns: Import results
 ```
 
+#### Playoff Management
+```
+GET /api/admin/leagues/[id]/playoffs
+Returns: Playoff configuration and matches
+
+POST /api/admin/leagues/[id]/playoffs
+Body: { action: 'initialize' | 'createMatches' | 'advanceWinner', ...params }
+Returns: Updated playoff state
+```
+
 See the [Admin Panel Documentation](./app/admin/README.md) for complete API reference.
 
 ## 🔧 Environment Variables
@@ -883,7 +1074,8 @@ NEXT_PUBLIC_CLARITY_ID=your_microsoft_clarity_id
 - **Now - June 2025**: Open registration period
 - **June 2025**: Contact registered players with details
 - **July 2025**: Liga de Sotogrande begins!
-- **October 2025**: Season ends with playoffs
+- **September 2025**: Regular season ends, playoffs begin
+- **October 2025**: Season ends with playoff championship
 
 ## 🚀 Deployment
 
