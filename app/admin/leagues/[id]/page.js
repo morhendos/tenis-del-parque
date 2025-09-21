@@ -55,6 +55,7 @@ export default function LeagueManagementPage() {
     { id: 'overview', name: 'Overview', icon: '📊' },
     { id: 'players', name: 'Players', icon: '👥' },
     { id: 'matches', name: 'Matches', icon: '🎾' },
+    { id: 'playoffs', name: 'Playoffs', icon: '🏆' },
     { id: 'settings', name: 'Settings', icon: '⚙️' }
   ]
 
@@ -64,6 +65,8 @@ export default function LeagueManagementPage() {
       router.push(`/admin/players?league=${leagueId}`)
     } else if (tabId === 'matches') {
       router.push(`/admin/matches?league=${leagueId}`)
+    } else if (tabId === 'playoffs') {
+      router.push(`/admin/leagues/${leagueId}/playoffs`)
     }
   }
 
@@ -129,6 +132,18 @@ export default function LeagueManagementPage() {
     }
   }
 
+  // Get playoff phase display
+  const getPlayoffPhaseDisplay = () => {
+    const phase = league?.playoffConfig?.currentPhase || 'regular_season'
+    const phases = {
+      'regular_season': { text: 'Regular Season', color: 'text-blue-600' },
+      'playoffs_groupA': { text: 'Playoffs - Group A', color: 'text-purple-600' },
+      'playoffs_groupB': { text: 'Playoffs - Group B', color: 'text-purple-600' },
+      'completed': { text: 'Season Completed', color: 'text-green-600' }
+    }
+    return phases[phase] || { text: phase, color: 'text-gray-600' }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -152,6 +167,7 @@ export default function LeagueManagementPage() {
   }
 
   const currentSeason = league.seasons?.find(s => s.status === 'registration_open' || s.status === 'active') || league.seasons?.[0]
+  const playoffPhase = getPlayoffPhaseDisplay()
 
   return (
     <div className="space-y-6">
@@ -193,6 +209,9 @@ export default function LeagueManagementPage() {
           <div className="text-right">
             <div className="text-2xl font-bold">{league.playerCount || 0}</div>
             <div className="text-sm opacity-90">Players</div>
+            <div className={`text-sm mt-2 font-medium ${playoffPhase.color}`}>
+              {playoffPhase.text}
+            </div>
           </div>
         </div>
       </div>
@@ -248,8 +267,10 @@ export default function LeagueManagementPage() {
                   <div className="flex items-center">
                     <span className="text-2xl mr-3">🏆</span>
                     <div>
-                      <p className="text-sm font-medium text-gray-600">Current Round</p>
-                      <p className="text-2xl font-bold text-gray-900">-</p>
+                      <p className="text-sm font-medium text-gray-600">Current Phase</p>
+                      <p className="text-sm font-bold text-gray-900">
+                        {playoffPhase.text}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -294,13 +315,16 @@ export default function LeagueManagementPage() {
                   </button>
 
                   <button
-                    onClick={() => router.push(`/admin/matches/generate-round?league=${leagueId}`)}
-                    className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    onClick={() => router.push(`/admin/leagues/${leagueId}/playoffs`)}
+                    className="flex items-center p-4 border border-purple-200 rounded-lg hover:bg-purple-50 transition-colors relative"
                   >
-                    <span className="text-2xl mr-3">🎯</span>
+                    {league?.playoffConfig?.currentPhase !== 'regular_season' && (
+                      <span className="absolute top-2 right-2 w-2 h-2 bg-purple-600 rounded-full animate-pulse"></span>
+                    )}
+                    <span className="text-2xl mr-3">🏆</span>
                     <div className="text-left">
-                      <p className="font-medium text-gray-900">Generate Round</p>
-                      <p className="text-sm text-gray-600">Create new match round</p>
+                      <p className="font-medium text-gray-900">Manage Playoffs</p>
+                      <p className="text-sm text-gray-600">Tournament bracket & settings</p>
                     </div>
                   </button>
 
@@ -337,6 +361,12 @@ export default function LeagueManagementPage() {
                         <dd className="font-medium">{getSkillLevelName(league.skillLevel || 'all')}</dd>
                       </div>
                       <div>
+                        <dt className="text-gray-600">Playoff Groups:</dt>
+                        <dd className="font-medium">
+                          {league?.playoffConfig?.numberOfGroups || 1} Group(s)
+                        </dd>
+                      </div>
+                      <div>
                         <dt className="text-gray-600">Created:</dt>
                         <dd className="font-medium">{new Date(league.createdAt).toLocaleDateString()}</dd>
                       </div>
@@ -359,6 +389,12 @@ export default function LeagueManagementPage() {
                           <dt className="text-gray-600">Start Date:</dt>
                           <dd className="font-medium">
                             {currentSeason.startDate ? new Date(currentSeason.startDate).toLocaleDateString() : 'TBD'}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-gray-600">Phase:</dt>
+                          <dd className={`font-medium ${playoffPhase.color}`}>
+                            {playoffPhase.text}
                           </dd>
                         </div>
                       </dl>
