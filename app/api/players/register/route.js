@@ -219,16 +219,16 @@ export async function POST(request) {
           ? '¡Bienvenido! Estás en la lista de espera. Te contactaremos cuando la liga esté lista.'
           : '¡Bienvenido! Registro exitoso. Te contactaremos pronto.'
         : league.status === 'coming_soon'
-          ? 'Welcome! You\\'re on the waiting list. We\\'ll contact you when the league is ready.'
-          : 'Welcome! Registration successful. We\\'ll contact you soon.'
+          ? "Welcome! You're on the waiting list. We'll contact you when the league is ready."
+          : "Welcome! Registration successful. We'll contact you soon."
     } else {
       successMessage = language === 'es'
         ? league.status === 'coming_soon' 
           ? '¡Te has registrado en una nueva liga! Estás en la lista de espera.'
           : '¡Te has registrado exitosamente en una nueva liga! Te contactaremos pronto.'
         : league.status === 'coming_soon'
-          ? 'You\\'ve registered for a new league! You\\'re on the waiting list.'
-          : 'You\\'ve successfully registered for a new league! We\\'ll contact you soon.'
+          ? "You've registered for a new league! You're on the waiting list."
+          : "You've successfully registered for a new league! We'll contact you soon."
     }
 
     // Return success response with WhatsApp group info
