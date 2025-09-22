@@ -14,6 +14,9 @@ export default function LeaguePlayoffsAdmin() {
   const [playoffMatches, setPlayoffMatches] = useState([])
   const [regularSeasonComplete, setRegularSeasonComplete] = useState(false)
   const [numberOfGroups, setNumberOfGroups] = useState(1)
+  const [standings, setStandings] = useState([])
+  const [eligiblePlayerCount, setEligiblePlayerCount] = useState(0)
+  const [seasonIdentifier, setSeasonIdentifier] = useState('')
   
   useEffect(() => {
     if (leagueId) {
@@ -42,6 +45,13 @@ export default function LeaguePlayoffsAdmin() {
       if (data.success) {
         setPlayoffConfig(data.playoffConfig)
         setPlayoffMatches(data.matches)
+        setStandings(data.standings || [])
+        setEligiblePlayerCount(data.eligiblePlayerCount || 0)
+        setSeasonIdentifier(data.seasonIdentifier || '')
+        console.log('Playoff data:', data)
+        console.log('Eligible players:', data.eligiblePlayerCount)
+        console.log('Season identifier:', data.seasonIdentifier)
+        console.log('League slug:', data.leagueSlug)
       }
     } catch (error) {
       console.error('Error fetching playoff data:', error)
@@ -51,7 +61,12 @@ export default function LeaguePlayoffsAdmin() {
   }
   
   const handleInitializePlayoffs = async () => {
-    if (!confirm('Are you sure you want to initialize playoffs? This will lock the regular season standings.')) {
+    if (eligiblePlayerCount < 8) {
+      alert(`Cannot initialize playoffs: Only ${eligiblePlayerCount} eligible players found. Need at least 8.`)
+      return
+    }
+    
+    if (!confirm(`Initialize playoffs with top ${numberOfGroups === 2 ? '16' : '8'} players?\n\nTop 8 players:\n${standings.slice(0, 8).map(s => `${s.position}. ${s.player.name} (${s.stats.totalPoints} pts)`).join('\n')}`)) {
       return
     }
     
@@ -147,7 +162,92 @@ export default function LeaguePlayoffsAdmin() {
         <p className="mt-2 text-sm text-gray-600">
           League: {league?.name} | Status: {currentPhase.replace(/_/g, ' ').toUpperCase()}
         </p>
+        <p className="text-xs text-gray-500 mt-1">
+          Season ID: {seasonIdentifier || 'Loading...'} | League Slug: {league?.slug}
+        </p>
       </div>
+      
+      {/* Eligible Players Display */}
+      {currentPhase === 'regular_season' && (
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <h2 className="text-xl font-semibold mb-4">Current Standings</h2>
+          
+          {eligiblePlayerCount === 0 ? (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-800">
+                ⚠️ No eligible players found! This could mean:
+              </p>
+              <ul className="list-disc list-inside mt-2 text-sm text-red-700">
+                <li>Players are not properly registered for this league</li>
+                <li>The season identifier mismatch (check season ID above)</li>
+                <li>No matches have been played yet</li>
+                <li>Player registrations use a different season value than "{seasonIdentifier}"</li>
+              </ul>
+            </div>
+          ) : (
+            <div>
+              <p className="mb-4 text-green-700">
+                ✅ Found {eligiblePlayerCount} eligible players with completed matches
+              </p>
+              
+              {/* Show top 16 players */}
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Position
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Player
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Points
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Matches
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Playoff Group
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {standings.map((standing, index) => (
+                      <tr key={standing.player._id} className={index === 7 ? 'border-b-2 border-purple-500' : ''}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {standing.position}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {standing.player.name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {standing.stats.totalPoints}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {standing.stats.matchesPlayed}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {index < 8 && (
+                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                              Group A
+                            </span>
+                          )}
+                          {index >= 8 && index < 16 && numberOfGroups === 2 && (
+                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                              Group B
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       
       {/* Configuration Section */}
       {currentPhase === 'regular_season' && (
@@ -163,9 +263,12 @@ export default function LeaguePlayoffsAdmin() {
                 value={numberOfGroups}
                 onChange={(e) => setNumberOfGroups(Number(e.target.value))}
                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm rounded-md"
+                disabled={eligiblePlayerCount < 16 && numberOfGroups === 2}
               >
                 <option value={1}>1 Group (Group A only - Top 8)</option>
-                <option value={2}>2 Groups (Group A: Top 8, Group B: 9-16)</option>
+                <option value={2} disabled={eligiblePlayerCount < 16}>
+                  2 Groups (Group A: Top 8, Group B: 9-16) {eligiblePlayerCount < 16 && '(Need 16+ players)'}
+                </option>
               </select>
             </div>
             
@@ -173,15 +276,21 @@ export default function LeaguePlayoffsAdmin() {
               <button
                 onClick={handleUpdateConfig}
                 className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+                disabled={eligiblePlayerCount < 8}
               >
                 Save Configuration
               </button>
               
               <button
                 onClick={handleInitializePlayoffs}
-                className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
+                className={`px-4 py-2 rounded text-white ${
+                  eligiblePlayerCount >= 8 
+                    ? 'bg-purple-600 hover:bg-purple-700' 
+                    : 'bg-gray-400 cursor-not-allowed'
+                }`}
+                disabled={eligiblePlayerCount < 8}
               >
-                Initialize Playoffs
+                Initialize Playoffs {eligiblePlayerCount < 8 && `(Need ${8 - eligiblePlayerCount} more players)`}
               </button>
             </div>
           </div>
@@ -271,6 +380,8 @@ export default function LeaguePlayoffsAdmin() {
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mt-8">
         <h3 className="text-lg font-semibold text-blue-800 mb-2">Instructions</h3>
         <ul className="list-disc list-inside text-sm text-blue-700 space-y-1">
+          <li>Check the eligible players count before initializing playoffs</li>
+          <li>You need at least 8 players who have played matches to start playoffs</li>
           <li>Configure the number of playoff groups before initializing</li>
           <li>Initialize playoffs when regular season is complete</li>
           <li>Quarterfinal matches are created automatically with proper seeding</li>
