@@ -107,12 +107,17 @@ export async function POST(request, { params }) {
 async function initializePlayoffs(league, data) {
   const { numberOfGroups = 1 } = data
   
+  console.log('📊 Calculating regular season standings...')
   // Get regular season standings
   const standings = await calculateRegularSeasonStandings(league._id, league.season?.type || 'summer-2025')
   
+  console.log(`👥 Found ${standings.length} eligible players for playoffs`)
+  console.log('Players:', standings.map(s => ({ name: s.player.name, points: s.stats.totalPoints, matches: s.stats.matchesPlayed })))
+  
   if (standings.length < 8) {
+    console.error(`❌ Not enough players: ${standings.length} < 8`)
     return NextResponse.json(
-      { error: 'Need at least 8 players to start playoffs' },
+      { error: `Need at least 8 players to start playoffs. Found only ${standings.length} eligible players.` },
       { status: 400 }
     )
   }
@@ -185,6 +190,8 @@ async function initializePlayoffs(league, data) {
   if (numberOfGroups === 2) {
     await createQuarterfinalMatches(league, 'B')
   }
+  
+  console.log('✅ Playoffs initialized successfully!')
   
   return NextResponse.json({
     success: true,
@@ -405,6 +412,10 @@ async function completePlayoffPhase(league, data) {
 
 // Helper function to calculate regular season standings
 async function calculateRegularSeasonStandings(leagueId, season) {
+  console.log('📊 calculateRegularSeasonStandings - Starting')
+  console.log('🏆 League ID:', leagueId)
+  console.log('📅 Season:', season)
+  
   // Get all regular season matches
   const matches = await Match.find({
     league: leagueId,
@@ -413,11 +424,27 @@ async function calculateRegularSeasonStandings(leagueId, season) {
     status: 'completed'
   }).populate('players.player1 players.player2')
   
-  // Get all players in the league
-  const players = await Player.findByLeague(leagueId, season, { status: 'active' })
+  console.log(`🎾 Found ${matches.length} completed matches`)
+  
+  // Get all players in the league - Include both 'active' AND 'confirmed' statuses
+  // This is the key fix - we were only getting 'active' players before
+  const players = await Player.findByLeague(leagueId, season)
+  
+  console.log(`👥 Found ${players.length} total players in league`)
+  
+  // Filter to only players who have played at least one match
+  const playersWithMatches = players.filter(player => {
+    const hasMatches = matches.some(m => m.hasPlayer(player._id))
+    if (!hasMatches) {
+      console.log(`⚠️ Player ${player.name} has no matches`)
+    }
+    return hasMatches
+  })
+  
+  console.log(`🎯 ${playersWithMatches.length} players have played matches`)
   
   // Calculate standings
-  const standings = players.map(player => {
+  const standings = playersWithMatches.map(player => {
     const playerMatches = matches.filter(m => 
       m.hasPlayer(player._id)
     )
@@ -486,6 +513,14 @@ async function calculateRegularSeasonStandings(leagueId, season) {
   standings.forEach((standing, index) => {
     standing.position = index + 1
   })
+  
+  console.log('✅ Standings calculated successfully')
+  console.log('Top 8 players:', standings.slice(0, 8).map(s => ({
+    position: s.position,
+    name: s.player.name,
+    points: s.stats.totalPoints,
+    matches: s.stats.matchesPlayed
+  })))
   
   return standings
 }
