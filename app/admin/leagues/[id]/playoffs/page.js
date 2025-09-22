@@ -181,7 +181,7 @@ export default function LeaguePlayoffsAdmin() {
                 <li>Players are not properly registered for this league</li>
                 <li>The season identifier mismatch (check season ID above)</li>
                 <li>No matches have been played yet</li>
-                <li>Player registrations use a different season value than "{seasonIdentifier}"</li>
+                <li>Player registrations use a different season value than &quot;{seasonIdentifier}&quot;</li>
               </ul>
             </div>
           ) : (
