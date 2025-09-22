@@ -32,11 +32,18 @@ export async function GET(request, { params }) {
     // Get all playoff matches for this league
     const playoffMatches = await Match.findPlayoffMatches(league._id)
     
+    // Calculate current standings to show on page
+    const seasonIdentifier = constructSeasonIdentifier(league)
+    const standings = await calculateRegularSeasonStandings(league._id, seasonIdentifier)
+    
     return NextResponse.json({
       success: true,
       playoffConfig: league.playoffConfig,
       currentPhase: league.playoffConfig?.currentPhase || 'regular_season',
-      matches: playoffMatches
+      matches: playoffMatches,
+      standings: standings.slice(0, 16), // Top 16 for potential Group B
+      eligiblePlayerCount: standings.length,
+      seasonIdentifier
     })
     
   } catch (error) {
@@ -70,6 +77,7 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: 'League not found' }, { status: 404 })
     }
     console.log('✅ League found:', league.name)
+    console.log('📅 League season:', league.season)
     
     // Handle different playoff actions
     switch (action) {
@@ -103,16 +111,34 @@ export async function POST(request, { params }) {
   }
 }
 
+// Helper function to construct season identifier
+function constructSeasonIdentifier(league) {
+  // Construct season identifier like 'summer-2025' or 'summer-2025-2'
+  let seasonId = `${league.season.type}-${league.season.year}`
+  if (league.season.number > 1) {
+    seasonId += `-${league.season.number}`
+  }
+  return seasonId
+}
+
 // Initialize playoffs from regular season standings
 async function initializePlayoffs(league, data) {
   const { numberOfGroups = 1 } = data
   
-  console.log('📊 Calculating regular season standings...')
+  const seasonIdentifier = constructSeasonIdentifier(league)
+  console.log('📊 Calculating regular season standings for season:', seasonIdentifier)
+  
   // Get regular season standings
-  const standings = await calculateRegularSeasonStandings(league._id, league.season?.type || 'summer-2025')
+  const standings = await calculateRegularSeasonStandings(league._id, seasonIdentifier)
   
   console.log(`👥 Found ${standings.length} eligible players for playoffs`)
-  console.log('Players:', standings.map(s => ({ name: s.player.name, points: s.stats.totalPoints, matches: s.stats.matchesPlayed })))
+  if (standings.length > 0) {
+    console.log('Top players:', standings.slice(0, 8).map(s => ({ 
+      name: s.player.name, 
+      points: s.stats.totalPoints, 
+      matches: s.stats.matchesPlayed 
+    })))
+  }
   
   if (standings.length < 8) {
     console.error(`❌ Not enough players: ${standings.length} < 8`)
@@ -186,9 +212,9 @@ async function initializePlayoffs(league, data) {
   await league.save({ validateModifiedOnly: true })
   
   // Create quarterfinal matches
-  await createQuarterfinalMatches(league, 'A')
+  await createQuarterfinalMatches(league, 'A', seasonIdentifier)
   if (numberOfGroups === 2) {
-    await createQuarterfinalMatches(league, 'B')
+    await createQuarterfinalMatches(league, 'B', seasonIdentifier)
   }
   
   console.log('✅ Playoffs initialized successfully!')
@@ -201,7 +227,7 @@ async function initializePlayoffs(league, data) {
 }
 
 // Create quarterfinal matches
-async function createQuarterfinalMatches(league, group) {
+async function createQuarterfinalMatches(league, group, seasonIdentifier) {
   const bracket = group === 'A' ? league.playoffConfig.bracket.groupA : league.playoffConfig.bracket.groupB
   const qualifiedPlayers = group === 'A' ? 
     league.playoffConfig.qualifiedPlayers.groupA : 
@@ -215,7 +241,7 @@ async function createQuarterfinalMatches(league, group) {
     if (player1 && player2) {
       const match = new Match({
         league: league._id,
-        season: league.season?.type || 'summer-2025',
+        season: seasonIdentifier,
         round: 9, // Use round 9 for quarterfinals
         matchType: 'playoff',
         playoffInfo: {
@@ -288,6 +314,7 @@ async function updatePlayoffConfig(league, data) {
 // Create playoff matches for next stage
 async function createPlayoffMatches(league, data) {
   const { group, stage } = data
+  const seasonIdentifier = constructSeasonIdentifier(league)
   
   if (!['A', 'B'].includes(group) || !['semifinal', 'final', 'third_place'].includes(stage)) {
     return NextResponse.json({ error: 'Invalid group or stage' }, { status: 400 })
@@ -305,7 +332,7 @@ async function createPlayoffMatches(league, data) {
       if (qf1.winner && qf2.winner) {
         const match = new Match({
           league: league._id,
-          season: league.season?.type || 'summer-2025',
+          season: seasonIdentifier,
           round: 10, // Use round 10 for semifinals
           matchType: 'playoff',
           playoffInfo: {
@@ -332,7 +359,7 @@ async function createPlayoffMatches(league, data) {
     if (sf1.winner && sf2.winner) {
       const match = new Match({
         league: league._id,
-        season: league.season?.type || 'summer-2025',
+        season: seasonIdentifier,
         round: 11, // Use round 11 for final
         matchType: 'playoff',
         playoffInfo: {
@@ -414,7 +441,7 @@ async function completePlayoffPhase(league, data) {
 async function calculateRegularSeasonStandings(leagueId, season) {
   console.log('📊 calculateRegularSeasonStandings - Starting')
   console.log('🏆 League ID:', leagueId)
-  console.log('📅 Season:', season)
+  console.log('📅 Season identifier:', season)
   
   // Get all regular season matches
   const matches = await Match.find({
@@ -424,19 +451,26 @@ async function calculateRegularSeasonStandings(leagueId, season) {
     status: 'completed'
   }).populate('players.player1 players.player2')
   
-  console.log(`🎾 Found ${matches.length} completed matches`)
+  console.log(`🎾 Found ${matches.length} completed matches for season ${season}`)
   
-  // Get all players in the league - Include both 'active' AND 'confirmed' statuses
-  // This is the key fix - we were only getting 'active' players before
+  // Get all players in the league - no status filter
   const players = await Player.findByLeague(leagueId, season)
   
-  console.log(`👥 Found ${players.length} total players in league`)
+  console.log(`👥 Found ${players.length} total players registered for league and season`)
+  if (players.length > 0) {
+    console.log('Sample players:', players.slice(0, 3).map(p => ({
+      name: p.name,
+      registrations: p.registrations.filter(r => 
+        r.league.toString() === leagueId.toString() && r.season === season
+      ).map(r => ({ season: r.season, status: r.status }))
+    })))
+  }
   
   // Filter to only players who have played at least one match
   const playersWithMatches = players.filter(player => {
     const hasMatches = matches.some(m => m.hasPlayer(player._id))
     if (!hasMatches) {
-      console.log(`⚠️ Player ${player.name} has no matches`)
+      console.log(`⚠️ Player ${player.name} has no matches in season ${season}`)
     }
     return hasMatches
   })
@@ -515,12 +549,14 @@ async function calculateRegularSeasonStandings(leagueId, season) {
   })
   
   console.log('✅ Standings calculated successfully')
-  console.log('Top 8 players:', standings.slice(0, 8).map(s => ({
-    position: s.position,
-    name: s.player.name,
-    points: s.stats.totalPoints,
-    matches: s.stats.matchesPlayed
-  })))
+  if (standings.length > 0) {
+    console.log('Top 8 players:', standings.slice(0, 8).map(s => ({
+      position: s.position,
+      name: s.player.name,
+      points: s.stats.totalPoints,
+      matches: s.stats.matchesPlayed
+    })))
+  }
   
   return standings
 }
