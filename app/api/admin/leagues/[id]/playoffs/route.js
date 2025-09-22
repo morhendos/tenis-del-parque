@@ -51,39 +51,53 @@ export async function GET(request, { params }) {
 // POST /api/admin/leagues/[id]/playoffs - Initialize or update playoffs
 export async function POST(request, { params }) {
   try {
+    console.log('🏆 POST /api/admin/leagues/[id]/playoffs - Starting request')
+    console.log('📋 Params:', params)
+    
     const { session, error } = await requireAdmin(request)
     if (error) return error
 
     await dbConnect()
+    console.log('✅ Database connected')
     
     const body = await request.json()
+    console.log('📦 Request body:', body)
     const { action } = body
     
     const league = await League.findById(params.id)
     if (!league) {
+      console.error('❌ League not found for ID:', params.id)
       return NextResponse.json({ error: 'League not found' }, { status: 404 })
     }
+    console.log('✅ League found:', league.name)
     
     // Handle different playoff actions
     switch (action) {
       case 'initialize':
+        console.log('🚀 Initializing playoffs')
         return await initializePlayoffs(league, body)
       case 'updateConfig':
+        console.log('⚙️ Updating playoff config')
         return await updatePlayoffConfig(league, body)
       case 'createMatches':
+        console.log('🎾 Creating playoff matches')
         return await createPlayoffMatches(league, body)
       case 'advanceWinner':
+        console.log('🏅 Advancing winner')
         return await advanceWinner(league, body)
       case 'completePhase':
+        console.log('🏁 Completing playoff phase')
         return await completePlayoffPhase(league, body)
       default:
+        console.error('❌ Invalid action:', action)
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
     }
     
   } catch (error) {
-    console.error('Error managing playoffs:', error)
+    console.error('❌ Error managing playoffs:', error)
+    console.error('Stack trace:', error.stack)
     return NextResponse.json(
-      { error: 'Failed to manage playoffs' },
+      { error: 'Failed to manage playoffs', details: error.message },
       { status: 500 }
     )
   }
@@ -164,7 +178,7 @@ async function initializePlayoffs(league, data) {
     }
   }
   
-  await league.save()
+  await league.save({ validateModifiedOnly: true })
   
   // Create quarterfinal matches
   await createQuarterfinalMatches(league, 'A')
@@ -218,18 +232,44 @@ async function createQuarterfinalMatches(league, group) {
     }
   }
   
-  await league.save()
+  await league.save({ validateModifiedOnly: true })
 }
 
 // Update playoff configuration
 async function updatePlayoffConfig(league, data) {
-  const { numberOfGroups } = data
+  console.log('⚙️ updatePlayoffConfig - Starting')
+  console.log('📊 League:', league.name, 'ID:', league._id)
+  console.log('📦 Data:', data)
   
-  if (numberOfGroups !== undefined) {
-    league.playoffConfig.numberOfGroups = numberOfGroups
+  const { numberOfGroups } = data
+  console.log('🔢 numberOfGroups:', numberOfGroups)
+  
+  // Initialize playoffConfig if it doesn't exist
+  if (!league.playoffConfig) {
+    console.log('🆕 Initializing new playoffConfig')
+    league.playoffConfig = {
+      enabled: false,
+      numberOfGroups: 1,
+      groupAPlayers: 8,
+      groupBPlayers: 0,
+      format: 'tournament',
+      currentPhase: 'regular_season'
+    }
+  } else {
+    console.log('✅ Existing playoffConfig found:', league.playoffConfig)
   }
   
-  await league.save()
+  if (numberOfGroups !== undefined) {
+    console.log('🔄 Updating numberOfGroups from', league.playoffConfig.numberOfGroups, 'to', numberOfGroups)
+    league.playoffConfig.numberOfGroups = numberOfGroups
+    // Adjust groupBPlayers based on numberOfGroups
+    league.playoffConfig.groupBPlayers = numberOfGroups === 2 ? 8 : 0
+    console.log('👥 groupBPlayers set to:', league.playoffConfig.groupBPlayers)
+  }
+  
+  console.log('💾 Saving league...')
+  await league.save({ validateModifiedOnly: true })
+  console.log('✅ League saved successfully')
   
   return NextResponse.json({
     success: true,
@@ -304,7 +344,7 @@ async function createPlayoffMatches(league, data) {
     }
   }
   
-  await league.save()
+  await league.save({ validateModifiedOnly: true })
   
   return NextResponse.json({
     success: true,
@@ -332,7 +372,7 @@ async function advanceWinner(league, data) {
     bracket.final.winner = winnerId
   }
   
-  await league.save()
+  await league.save({ validateModifiedOnly: true })
   
   return NextResponse.json({
     success: true,
@@ -354,7 +394,7 @@ async function completePlayoffPhase(league, data) {
     league.playoffConfig.currentPhase = 'completed'
   }
   
-  await league.save()
+  await league.save({ validateModifiedOnly: true })
   
   return NextResponse.json({
     success: true,
