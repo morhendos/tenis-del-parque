@@ -41,10 +41,13 @@ export async function GET(request, { params }) {
       )
     }
     
+    // Use the league's season ObjectId for matching (the correct approach)
+    console.log('API: League season:', league.season)
+    
     // Build query for players using new registrations structure
     const playerQuery = {
       'registrations.league': league._id,
-      'registrations.season': season
+      'registrations.season': league.season // Use league's Season ObjectId, not URL parameter
     }
     if (level) playerQuery['registrations.level'] = level
     
@@ -56,7 +59,7 @@ export async function GET(request, { params }) {
     players = players.map(player => {
       const registration = player.registrations.find(reg => 
         reg.league.toString() === league._id.toString() && 
-        reg.season === season &&
+        reg.season.toString() === league.season.toString() && // Compare ObjectIds properly
         (!level || reg.level === level)
       )
       
@@ -121,7 +124,7 @@ export async function GET(request, { params }) {
     // Get all completed matches for the league and season
     const matches = await Match.find({
       league: league._id,
-      season: season,
+      season: league.season, // Use league's Season ObjectId, not URL parameter
       status: 'completed'
     }).lean()
     

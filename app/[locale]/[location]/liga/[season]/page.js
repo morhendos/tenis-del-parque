@@ -96,20 +96,28 @@ export default function LeagueSeasonPage() {
       // Use the league slug for API calls instead of location
       const leagueSlug = leagueData.league.slug
       
-      // If the league has season data, use it; otherwise use fallback
-      const dbSeasonKey = leagueData.league.season ? 
-        `${leagueData.league.season.type}-${leagueData.league.season.year}` :
-        'summer-2025' // fallback for leagues without season data
+      // Build season key with proper validation and fallbacks
+      let dbSeasonKey = 'summer-2025' // default fallback
+      
+      if (leagueData.league.season && 
+          leagueData.league.season.type && 
+          leagueData.league.season.year) {
+        dbSeasonKey = `${leagueData.league.season.type}-${leagueData.league.season.year}`
+      } else {
+        console.warn('League season data incomplete, using fallback:', leagueData.league.season)
+      }
       
       // Set current season info
-      if (leagueData.league.season) {
+      if (leagueData.league.season && 
+          leagueData.league.season.type && 
+          leagueData.league.season.year) {
         setCurrentSeason({
           ...leagueData.league.season,
           dbKey: dbSeasonKey,
           displayName: getSeasonDisplayName(leagueData.league.season, language)
         })
       } else {
-        // Create fallback season for older leagues
+        // Create fallback season for leagues with incomplete season data
         setCurrentSeason({
           type: 'summer',
           year: 2025,

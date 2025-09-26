@@ -12,12 +12,34 @@ export async function GET(request, { params }) {
     await dbConnect()
     
     const league = await League.findById(params.id)
-      .populate('city', 'name slug')
-      .populate('playoffConfig.qualifiedPlayers.groupA.player')
-      .populate('playoffConfig.qualifiedPlayers.groupB.player')
+    
+    // Safely populate city only if it's a valid reference (legacy data may have string slug)
+    try {
+      if (league?.city && typeof league.city !== 'string') {
+        await league.populate('city', 'name slug')
+      }
+    } catch (populateCityError) {
+      console.warn('Warning: Could not populate city for league:', populateCityError.message)
+      // Continue without city population
+    }
     
     if (!league) {
       return NextResponse.json({ error: 'League not found' }, { status: 404 })
+    }
+    
+    // Safely populate playoff players if they exist
+    if (league.playoffConfig?.qualifiedPlayers) {
+      try {
+        if (league.playoffConfig.qualifiedPlayers.groupA?.length > 0) {
+          await league.populate('playoffConfig.qualifiedPlayers.groupA.player')
+        }
+        if (league.playoffConfig.qualifiedPlayers.groupB?.length > 0) {
+          await league.populate('playoffConfig.qualifiedPlayers.groupB.player')
+        }
+      } catch (populateError) {
+        console.warn('Warning: Could not populate playoff players:', populateError.message)
+        // Continue without playoff player population
+      }
     }
     
     return NextResponse.json({

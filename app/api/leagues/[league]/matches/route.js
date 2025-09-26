@@ -62,11 +62,12 @@ export async function GET(request, { params }) {
     }
     
     console.log('API: Found league:', league.name, 'with ID:', league._id)
+    console.log('API: League season:', league.season)
     
-    // Build query for matches
+    // Use the league's season ObjectId for matching (the correct approach)
     const matchQuery = { 
       league: league._id, 
-      season: season
+      season: league.season // Use league's Season ObjectId, not the URL parameter
     }
     if (status) matchQuery.status = status
     if (round) matchQuery.round = parseInt(round)
@@ -138,22 +139,22 @@ export async function GET(request, { params }) {
     })
     
     // Get match statistics
-    const totalMatches = await Match.countDocuments({ league: league._id, season })
+    const totalMatches = await Match.countDocuments({ league: league._id, season: league.season })
     const completedMatches = await Match.countDocuments({ 
       league: league._id, 
-      season, 
+      season: league.season, 
       status: 'completed' 
     })
     const scheduledMatches = await Match.countDocuments({ 
       league: league._id, 
-      season, 
+      season: league.season, 
       status: 'scheduled' 
     })
     
     // Get current round info
     const latestRound = await Match.findOne({ 
       league: league._id, 
-      season 
+      season: league.season 
     }).sort({ round: -1 }).select('round')
     
     return NextResponse.json({

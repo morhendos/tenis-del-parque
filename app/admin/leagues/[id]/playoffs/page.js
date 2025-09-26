@@ -32,9 +32,11 @@ export default function LeaguePlayoffsAdmin() {
       if (data.success) {
         setLeague(data.league)
         setNumberOfGroups(data.league.playoffConfig?.numberOfGroups || 1)
+      } else {
+        console.warn('League endpoint failed, will use data from playoff endpoint')
       }
     } catch (error) {
-      console.error('Error fetching league:', error)
+      console.warn('Error fetching league (will use playoff data):', error)
     }
   }
   
@@ -48,6 +50,16 @@ export default function LeaguePlayoffsAdmin() {
         setStandings(data.standings || [])
         setEligiblePlayerCount(data.eligiblePlayerCount || 0)
         setSeasonIdentifier(data.seasonIdentifier || '')
+        
+        // If league data is not set (due to league endpoint failure), use data from playoff endpoint
+        if (!league && data.leagueSlug) {
+          setLeague({
+            name: data.leagueName || 'Liga de Sotogrande',
+            slug: data.leagueSlug,
+            playoffConfig: data.playoffConfig
+          })
+        }
+        
         console.log('Playoff data:', data)
         console.log('Eligible players:', data.eligiblePlayerCount)
         console.log('Season identifier:', data.seasonIdentifier)

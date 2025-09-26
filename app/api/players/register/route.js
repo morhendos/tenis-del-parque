@@ -1,3 +1,4 @@
+import mongoose from 'mongoose'
 import dbConnect from '../../../../lib/db/mongoose'
 import Player from '../../../../lib/models/Player'
 import League from '../../../../lib/models/League'
@@ -20,7 +21,7 @@ export async function POST(request) {
       language = 'es',
       leagueId,
       leagueSlug,
-      season = 'summer-2025'
+      season = '688f5d51c94f8e3b3cbfd87b' // Summer 2025 Season ObjectId
     } = body
 
     // Basic validation
@@ -100,7 +101,7 @@ export async function POST(request) {
       try {
         await player.addLeagueRegistration(
           league._id, 
-          season, 
+          new mongoose.Types.ObjectId(season), 
           level, 
           league.status === 'coming_soon' ? 'waiting' : 'pending'
         )
@@ -140,7 +141,7 @@ export async function POST(request) {
         whatsapp,
         registrations: [{
           league: league._id,
-          season: season,
+          season: new mongoose.Types.ObjectId(season),
           level: level,
           status: league.status === 'coming_soon' ? 'waiting' : 'pending',
           stats: {

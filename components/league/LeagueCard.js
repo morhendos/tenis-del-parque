@@ -109,11 +109,8 @@ export default function LeagueCard({ league, content, locale }) {
   
   // FIXED: Get city image with better fallback logic and updated slug mapping
   const getCityImage = () => {
-    console.log('Getting city image for league:', league.name, 'citySlug:', citySlug, 'cityData:', league.cityData)
-    
     // Priority 1: City photos from Google Maps (via cityData)
     if (league.cityData?.images?.main && !imageError) {
-      console.log('Using cityData main image:', league.cityData.images.main)
       // If it's a Google photo reference, use the public proxy
       if (league.cityData.images.googlePhotoReference) {
         return `/api/cities/photo?photo_reference=${league.cityData.images.googlePhotoReference}&maxwidth=800`
@@ -124,7 +121,6 @@ export default function LeagueCard({ league, content, locale }) {
     
     // Priority 2: Check if populated city has images
     if (league.city?.images?.main && !imageError) {
-      console.log('Using populated city main image:', league.city.images.main)
       if (league.city.images.googlePhotoReference) {
         return `/api/cities/photo?photo_reference=${league.city.images.googlePhotoReference}&maxwidth=800`
       }

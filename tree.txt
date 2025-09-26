@@ -98,7 +98,9 @@ root/
 │   │   ├── layout.js
 │   │   ├── leagues
 │   │   │   ├── [id]
-│   │   │   │   └── page.js
+│   │   │   │   ├── page.js
+│   │   │   │   └── playoffs
+│   │   │   │       └── page.js
 │   │   │   ├── page.js
 │   │   │   └── seasons
 │   │   │       └── create
@@ -157,6 +159,8 @@ root/
 │   │   │   │   └── route.js
 │   │   │   ├── leagues
 │   │   │   │   ├── [id]
+│   │   │   │   │   ├── playoffs
+│   │   │   │   │   │   └── route.js
 │   │   │   │   │   └── route.js
 │   │   │   │   ├── export
 │   │   │   │   │   └── route.js
@@ -373,7 +377,8 @@ root/
 │   ├── league
 │   │   ├── LeagueCard.js
 │   │   ├── PublicScheduleTab.js
-│   │   └── ScoringSystem.js
+│   │   ├── ScoringSystem.js
+│   │   └── TournamentBracket.js
 │   ├── pages
 │   │   ├── CityClubsPageSSG.js
 │   │   ├── CitySignupPageContent.js
@@ -567,27 +572,39 @@ root/
 │   ├── web-app-manifest-192x192.png
 │   └── web-app-manifest-512x512.png
 ├── scripts
+│   ├── addWalkoverResult.js
 │   ├── checkAuth.mjs
+│   ├── checkMatch.js
+│   ├── checkMatchSeasons.js
+│   ├── checkSeasonData.js
 │   ├── cleanup-clubes-duplicates.sh
 │   ├── cleanup-old-editors.sh
+│   ├── comparePointCalculations.js
 │   ├── createAdminUser.js
 │   ├── createSeasons.js
 │   ├── createTestData.js
 │   ├── debugClubCourts.js
 │   ├── diagnoseLinkIssues.js
 │   ├── directFix.js
+│   ├── findTomaszMatches.js
+│   ├── findTomaszSimple.js
 │   ├── fixEloStructure.js
+│   ├── fixLeagueSeasonData.js
+│   ├── fixLeagueSeasonData.mjs
+│   ├── fixLeaguesToUseSeasonIds.js
 │   ├── fixMismatchedLinks.js
 │   ├── fixSeenAnnouncements.js
 │   ├── fixUserPlayerReferences.js
 │   ├── generateSitemap.js
 │   ├── linkPlayersToUsers.js
 │   ├── manageWhatsAppGroups.js
+│   ├── migrate-playoff-fields.js
 │   ├── migrateActivationTokens.js
 │   ├── migrateCourtsData.mjs
 │   ├── migrateToNewPlayerModel.js
 │   ├── populateAssignments.js
 │   ├── populateClubAssignments.mjs
+│   ├── restoreTomaszPlayer.js
 │   ├── seedCities.js
 │   ├── seedCitiesEnhanced.js
 │   ├── seedCitiesProduction.js
@@ -596,6 +613,7 @@ root/
 │   ├── setupWhatsAppGroups.js
 │   ├── test-city-photo-refresh.sh
 │   ├── testEmailSending.js
+│   ├── testSeasonComparison.js
 │   ├── tree.js
 │   └── unlockAccounts.js
 ├── styles

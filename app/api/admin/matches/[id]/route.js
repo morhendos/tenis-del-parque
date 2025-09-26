@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import dbConnect from '../../../../../lib/db/mongoose'
 import Match from '../../../../../lib/models/Match'
 import Player from '../../../../../lib/models/Player'
+import League from '../../../../../lib/models/League'
 import { requireAdmin } from '../../../../../lib/auth/apiAuth'
 import mongoose from 'mongoose'
 
@@ -108,10 +109,17 @@ export async function PATCH(request, { params }) {
         )
       }
 
-      if (newPlayer1.league.toString() !== match.league.toString() ||
-          newPlayer2.league.toString() !== match.league.toString()) {
+      // Check if players have registrations for this league (more flexible than old league field)
+      const player1HasReg = newPlayer1.registrations?.some(reg => 
+        reg.league.toString() === match.league.toString()
+      )
+      const player2HasReg = newPlayer2.registrations?.some(reg => 
+        reg.league.toString() === match.league.toString()
+      )
+      
+      if (!player1HasReg || !player2HasReg) {
         return NextResponse.json(
-          { error: 'Players must belong to the same league as the match' },
+          { error: 'Players must be registered for the same league as the match' },
           { status: 400 }
         )
       }
@@ -148,9 +156,9 @@ export async function PATCH(request, { params }) {
     if (body.result) {
       // Start transaction for result updates
       session = await mongoose.startSession()
-      await session.startTransaction()
-
+      
       try {
+        await session.startTransaction()
         // Validate result data
         if (!body.result.winner) {
           return NextResponse.json(
@@ -248,8 +256,11 @@ export async function PATCH(request, { params }) {
         await session.commitTransaction()
 
       } catch (transactionError) {
-        await session.abortTransaction()
-        throw transactionError
+        if (session && session.inTransaction()) {
+          await session.abortTransaction()
+        }
+        console.error('Transaction error:', transactionError)
+        throw new Error(`Failed to update match result: ${transactionError.message}`)
       }
     } else {
       // Save the match for non-result updates
@@ -272,7 +283,15 @@ export async function PATCH(request, { params }) {
     )
   } finally {
     if (session) {
-      await session.endSession()
+      try {
+        if (session.inTransaction()) {
+          await session.abortTransaction()
+        }
+      } catch (err) {
+        console.warn('Error aborting transaction:', err.message)
+      } finally {
+        await session.endSession()
+      }
     }
   }
 }
@@ -419,7 +438,7 @@ function getPlayerRegistration(player, leagueId, season) {
   // Find registration for this league/season
   let registration = player.registrations.find(reg => 
     reg.league.toString() === leagueId.toString() && 
-    reg.season === season
+    reg.season.toString() === season.toString()
   )
   
   if (!registration) {

@@ -3,6 +3,7 @@ import mongoose from 'mongoose'
 import dbConnect from '../../../../lib/db/mongoose'
 import League from '../../../../lib/models/League'
 import Player from '../../../../lib/models/Player'
+import City from '../../../../lib/models/City'
 import { requireAdmin } from '../../../../lib/auth/apiAuth'
 
 // Force dynamic rendering for this route
@@ -108,11 +109,38 @@ export async function POST(request) {
       )
     }
 
+    // Validate required fields including season data
+    if (!data.season?.type || !data.season?.year) {
+      return NextResponse.json(
+        { error: 'Missing required season data (type and year)' },
+        { status: 400 }
+      )
+    }
+
+    // Validate city reference if provided
+    let cityId = null
+    if (data.cityId) {
+      const city = await City.findById(data.cityId)
+      if (!city) {
+        return NextResponse.json(
+          { error: 'Invalid city reference' },
+          { status: 400 }
+        )
+      }
+      cityId = data.cityId
+    }
+
     // Create new league
     const league = new League({
       name: data.name,
       slug: data.slug.toLowerCase(),
       skillLevel: data.skillLevel || 'all',
+      season: {
+        type: data.season.type,
+        year: data.season.year,
+        number: data.season.number || 1
+      },
+      city: cityId, // Required field
       status: data.status || 'coming_soon',
       location: {
         city: data.location.city,
@@ -133,9 +161,9 @@ export async function POST(request) {
         registeredPlayers: 0
       },
       config: {
-        roundsPerSeason: 8,
-        wildCardsPerPlayer: 4,
-        playoffPlayers: 8
+        roundsPerSeason: data.config?.roundsPerSeason || 8,
+        wildCardsPerPlayer: data.config?.wildCardsPerPlayer || 4,
+        playoffPlayers: data.config?.playoffPlayers || 8
       }
     })
 
