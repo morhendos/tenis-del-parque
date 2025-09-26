@@ -21,19 +21,12 @@ export default function PlayerLeague() {
   const locale = params.locale || 'es'
   const language = locale
 
-  // Add Playoffs tab to the existing tabs
-  const tabs = [
-    ...getLeagueTabs(language),
-    {
-      id: 'playoffs',
-      label: language === 'es' ? 'Playoffs' : 'Playoffs',
-      icon: '🏆'
-    }
-  ]
+  // Use tabs from constants - now includes playoffs
+  const tabs = getLeagueTabs(language)
 
   // Fetch playoff data when playoffs tab is selected
   useEffect(() => {
-    if (activeTab === 'playoffs' && player?.league?.slug && !playoffData) {
+    if (activeTab === LEAGUE_TABS.PLAYOFFS && player?.league?.slug && !playoffData) {
       fetchPlayoffData()
     }
   }, [activeTab, player?.league?.slug])
@@ -208,7 +201,7 @@ export default function PlayerLeague() {
             />
           )}
           
-          {activeTab === 'playoffs' && (
+          {activeTab === LEAGUE_TABS.PLAYOFFS && (
             loadingPlayoffs ? (
               <div className="flex items-center justify-center min-h-[400px]">
                 <TennisPreloaderInline 

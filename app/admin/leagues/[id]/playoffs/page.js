@@ -106,6 +106,37 @@ export default function LeaguePlayoffsAdmin() {
     }
   }
   
+  const handleResetPlayoffs = async () => {
+    if (!confirm('⚠️ WARNING: This will RESET all playoff data and recalculate based on current standings.\n\nThis will:\n• Delete all playoff matches\n• Recalculate qualified players from current standings\n• Reset the playoff bracket\n\nAre you sure?')) {
+      return
+    }
+    
+    try {
+      // First, update the league to reset playoff phase
+      const resetRes = await fetch(`/api/admin/leagues/${leagueId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          playoffConfig: {
+            ...league.playoffConfig,
+            currentPhase: 'regular_season',
+            enabled: false
+          }
+        })
+      })
+      
+      if (resetRes.ok) {
+        // Then re-initialize with fresh data
+        await handleInitializePlayoffs()
+      } else {
+        alert('Failed to reset playoffs')
+      }
+    } catch (error) {
+      console.error('Error resetting playoffs:', error)
+      alert('Failed to reset playoffs')
+    }
+  }
+  
   const handleUpdateConfig = async () => {
     try {
       const res = await fetch(`/api/admin/leagues/${leagueId}/playoffs`, {
@@ -312,6 +343,19 @@ export default function LeaguePlayoffsAdmin() {
       {/* Playoff Bracket Display */}
       {isPlayoffsActive && (
         <>
+          {/* Reset Playoffs Button */}
+          <div className="mb-4 flex justify-end">
+            <button
+              onClick={handleResetPlayoffs}
+              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Reset & Recalculate Playoffs
+            </button>
+          </div>
+          
           {/* Group A Bracket */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">
             <div className="flex justify-between items-center mb-4">
@@ -396,6 +440,7 @@ export default function LeaguePlayoffsAdmin() {
           <li>You need at least 8 players who have played matches to start playoffs</li>
           <li>Configure the number of playoff groups before initializing</li>
           <li>Initialize playoffs when regular season is complete</li>
+          <li>If playoffs show wrong players, use "Reset & Recalculate Playoffs" button</li>
           <li>Quarterfinal matches are created automatically with proper seeding</li>
           <li>Create semifinal matches after quarterfinals are complete</li>
           <li>Create final matches after semifinals are complete</li>
