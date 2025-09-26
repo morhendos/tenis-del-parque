@@ -100,11 +100,60 @@ export async function GET(request, { params }) {
     
     console.log(`✅ Generated standings for ${standings.length} players with matches`)
     
+    // Populate qualified players with full player data
+    let populatedPlayoffConfig = league.playoffConfig || {}
+    if (populatedPlayoffConfig.qualifiedPlayers) {
+      // Create a map for quick player lookups
+      const playerMap = new Map()
+      players.forEach(p => playerMap.set(p._id.toString(), p))
+      
+      // Populate Group A players
+      if (populatedPlayoffConfig.qualifiedPlayers.groupA) {
+        populatedPlayoffConfig.qualifiedPlayers.groupA = populatedPlayoffConfig.qualifiedPlayers.groupA.map(qp => ({
+          ...qp,
+          player: playerMap.get(qp.player.toString()) || { _id: qp.player, name: 'Unknown Player' }
+        }))
+      }
+      
+      // Populate Group B players
+      if (populatedPlayoffConfig.qualifiedPlayers.groupB) {
+        populatedPlayoffConfig.qualifiedPlayers.groupB = populatedPlayoffConfig.qualifiedPlayers.groupB.map(qp => ({
+          ...qp,
+          player: playerMap.get(qp.player.toString()) || { _id: qp.player, name: 'Unknown Player' }
+        }))
+      }
+    }
+    
+    // Get playoff matches
+    const playoffMatches = await mongoose.connection.db.collection('matches').find({
+      league: new mongoose.Types.ObjectId(LEAGUE_ID),
+      season: new mongoose.Types.ObjectId(SEASON_ID),
+      matchType: 'playoff'
+    }).toArray()
+    
+    // Populate player data in playoff matches
+    const populatedPlayoffMatches = playoffMatches.map(match => {
+      const playerMap = new Map()
+      players.forEach(p => playerMap.set(p._id.toString(), p))
+      
+      return {
+        ...match,
+        players: {
+          player1: playerMap.get(match.players.player1.toString()) || { _id: match.players.player1, name: 'Unknown' },
+          player2: playerMap.get(match.players.player2.toString()) || { _id: match.players.player2, name: 'Unknown' }
+        },
+        result: match.result ? {
+          ...match.result,
+          winner: playerMap.get(match.result.winner?.toString()) || match.result.winner
+        } : null
+      }
+    })
+    
     return NextResponse.json({
       success: true,
-      playoffConfig: league.playoffConfig || {},
+      playoffConfig: populatedPlayoffConfig,
       currentPhase: league.playoffConfig?.currentPhase || 'regular_season',
-      matches: [], // Simplified
+      matches: populatedPlayoffMatches,
       standings: standings.slice(0, 16),
       eligiblePlayerCount: standings.length,
       seasonIdentifier: SEASON_ID,

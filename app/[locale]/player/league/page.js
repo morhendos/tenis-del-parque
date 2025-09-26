@@ -1,24 +1,60 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useLeagueData } from '@/lib/hooks/useLeagueData'
 import { getLeagueTabs, LEAGUE_TABS, DEFAULT_TOTAL_ROUNDS } from '@/lib/constants/leagueConstants'
 import StandingsTable from '@/components/player/StandingsTable'
 import ScheduleTab from '@/components/player/ScheduleTab'
 import ResultsTab from '@/components/player/ResultsTab'
+import PlayoffsTab from '@/components/player/PlayoffsTab'
 import PlayoffExplanation from '@/components/player/PlayoffExplanation'
 import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
 
 export default function PlayerLeague() {
   const [activeTab, setActiveTab] = useState(LEAGUE_TABS.STANDINGS)
+  const [playoffData, setPlayoffData] = useState(null)
+  const [loadingPlayoffs, setLoadingPlayoffs] = useState(false)
   const { standings, matches, schedule, loading, error, player, refetch } = useLeagueData()
   const router = useRouter()
   const params = useParams()
   const locale = params.locale || 'es'
   const language = locale
 
-  const tabs = getLeagueTabs(language)
+  // Add Playoffs tab to the existing tabs
+  const tabs = [
+    ...getLeagueTabs(language),
+    {
+      id: 'playoffs',
+      label: language === 'es' ? 'Playoffs' : 'Playoffs',
+      icon: '🏆'
+    }
+  ]
+
+  // Fetch playoff data when playoffs tab is selected
+  useEffect(() => {
+    if (activeTab === 'playoffs' && player?.league?.slug && !playoffData) {
+      fetchPlayoffData()
+    }
+  }, [activeTab, player?.league?.slug])
+
+  const fetchPlayoffData = async () => {
+    if (!player?.league?.slug) return
+    
+    setLoadingPlayoffs(true)
+    try {
+      const response = await fetch(`/api/leagues/${player.league.slug}/playoffs`)
+      const data = await response.json()
+      
+      if (data.success) {
+        setPlayoffData(data)
+      }
+    } catch (error) {
+      console.error('Error fetching playoff data:', error)
+    } finally {
+      setLoadingPlayoffs(false)
+    }
+  }
 
   // Show loading until data is loaded
   if (loading) {
@@ -171,8 +207,25 @@ export default function PlayerLeague() {
               player={player}
             />
           )}
+          
+          {activeTab === 'playoffs' && (
+            loadingPlayoffs ? (
+              <div className="flex items-center justify-center min-h-[400px]">
+                <TennisPreloaderInline 
+                  text={language === 'es' ? 'Cargando playoffs...' : 'Loading playoffs...'}
+                  locale={language}
+                />
+              </div>
+            ) : (
+              <PlayoffsTab
+                playoffConfig={playoffData?.playoffConfig}
+                matches={playoffData?.matches || []}
+                language={language}
+              />
+            )
+          )}
         </div>
       </div>
     </div>
   )
-} 
+}
