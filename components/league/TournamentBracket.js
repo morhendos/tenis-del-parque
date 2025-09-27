@@ -7,7 +7,9 @@ export default function TournamentBracket({
   matches,
   group = 'A',
   language = 'es',
-  onMatchClick 
+  onMatchClick,
+  hideTitle = false,  // New prop to optionally hide title
+  hideLegend = false  // New prop to optionally hide legend
 }) {
   // Helper to get player by seed
   const getPlayerBySeed = (seed) => {
@@ -53,7 +55,7 @@ export default function TournamentBracket({
     
     return (
       <div 
-        className={`border rounded-lg p-3 mb-2 cursor-pointer transition-all hover:shadow-md ${statusColor}`}
+        className={`border rounded-lg p-3 cursor-pointer transition-all hover:shadow-md ${statusColor}`}
         onClick={() => onMatchClick && onMatchClick(match)}
       >
         <div className="text-xs text-gray-500 mb-1">
@@ -84,36 +86,57 @@ export default function TournamentBracket({
     )
   }
 
-  // Render connecting lines
-  const ConnectorLine = ({ direction = 'horizontal' }) => {
-    if (direction === 'horizontal') {
-      return <div className="w-8 border-t-2 border-gray-300 self-center"></div>
-    }
-    return <div className="h-full border-l-2 border-gray-300 mx-4"></div>
+  // Get winners for podium
+  const getChampion = () => {
+    if (!bracket?.final?.winner) return null
+    return qualifiedPlayers?.find(p => p.player._id === bracket.final.winner)?.player
+  }
+
+  const getRunnerUp = () => {
+    const finalMatch = matches?.find(m => m.playoffInfo?.stage === 'final')
+    if (!finalMatch || !finalMatch.result?.winner) return null
+    const champion = getChampion()
+    // Find the other player in the final who is not the champion
+    const player1 = finalMatch.players?.player1
+    const player2 = finalMatch.players?.player2
+    if (player1?._id === champion?._id) return player2
+    if (player2?._id === champion?._id) return player1
+    return null
+  }
+
+  const getThirdPlace = () => {
+    const thirdPlaceMatch = matches?.find(m => m.playoffInfo?.stage === 'third_place')
+    if (!thirdPlaceMatch || !thirdPlaceMatch.result?.winner) return null
+    const winnerId = thirdPlaceMatch.result.winner
+    return thirdPlaceMatch.players?.player1?._id === winnerId 
+      ? thirdPlaceMatch.players.player1 
+      : thirdPlaceMatch.players.player2
   }
 
   return (
     <div className="overflow-x-auto">
       <div className="min-w-[1200px] p-4">
-        {/* Title */}
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">
-            {language === 'es' ? 'Playoff Grupo' : 'Playoff Group'} {group}
-          </h2>
-          <p className="text-sm text-gray-600 mt-1">
-            {language === 'es' ? 'Formato de eliminación directa' : 'Single elimination format'}
-          </p>
-        </div>
+        {/* Title - only show if not hidden */}
+        {!hideTitle && (
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">
+              {language === 'es' ? 'Playoff Grupo' : 'Playoff Group'} {group}
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              {language === 'es' ? 'Formato de eliminación directa' : 'Single elimination format'}
+            </p>
+          </div>
+        )}
 
         {/* Tournament Bracket Grid */}
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-stretch gap-4">
           
           {/* Quarterfinals Column */}
-          <div className="flex-1">
+          <div className="flex-1 flex flex-col">
             <h3 className="text-lg font-semibold mb-4 text-center text-gray-700">
               {language === 'es' ? 'Cuartos de Final' : 'Quarterfinals'}
             </h3>
-            <div className="space-y-8">
+            <div className="flex-1 flex flex-col justify-around">
               {[0, 1, 2, 3].map((i) => {
                 const qfMatch = bracket?.quarterfinals?.[i]
                 const matchData = matches?.find(m => 
@@ -124,31 +147,26 @@ export default function TournamentBracket({
                 const player2 = getPlayerBySeed(qfMatch?.seed2 || (i * 2 + 2))
                 
                 return (
-                  <MatchBox
-                    key={`qf-${i}`}
-                    match={matchData}
-                    player1={player1}
-                    player2={player2}
-                    stage="quarterfinal"
-                    matchNumber={i + 1}
-                  />
+                  <div key={`qf-${i}`} className="mb-4">
+                    <MatchBox
+                      match={matchData}
+                      player1={player1}
+                      player2={player2}
+                      stage="quarterfinal"
+                      matchNumber={i + 1}
+                    />
+                  </div>
                 )
               })}
             </div>
           </div>
 
-          {/* Connector Lines QF to SF */}
-          <div className="flex flex-col justify-around h-full px-4">
-            <ConnectorLine direction="horizontal" />
-            <ConnectorLine direction="horizontal" />
-          </div>
-
           {/* Semifinals Column */}
-          <div className="flex-1">
+          <div className="flex-1 flex flex-col">
             <h3 className="text-lg font-semibold mb-4 text-center text-gray-700">
               {language === 'es' ? 'Semifinales' : 'Semifinals'}
             </h3>
-            <div className="space-y-8 pt-16">
+            <div className="flex-1 flex flex-col justify-center gap-12">
               {[0, 1].map((i) => {
                 const sfMatch = bracket?.semifinals?.[i]
                 const matchData = matches?.find(m => 
@@ -163,33 +181,27 @@ export default function TournamentBracket({
                 const player2 = qf2?.winner ? qualifiedPlayers?.find(p => p.player._id === qf2.winner)?.player : null
                 
                 return (
-                  <div key={`sf-${i}`} className="mb-16">
-                    <MatchBox
-                      match={matchData}
-                      player1={player1}
-                      player2={player2}
-                      stage="semifinal"
-                      matchNumber={i + 1}
-                    />
-                  </div>
+                  <MatchBox
+                    key={`sf-${i}`}
+                    match={matchData}
+                    player1={player1}
+                    player2={player2}
+                    stage="semifinal"
+                    matchNumber={i + 1}
+                  />
                 )
               })}
             </div>
           </div>
 
-          {/* Connector Lines SF to Finals */}
-          <div className="flex flex-col justify-center h-full px-4">
-            <ConnectorLine direction="horizontal" />
-          </div>
-
           {/* Finals Column */}
-          <div className="flex-1">
+          <div className="flex-1 flex flex-col">
             <h3 className="text-lg font-semibold mb-4 text-center text-gray-700">
               {language === 'es' ? 'Finales' : 'Finals'}
             </h3>
-            <div className="pt-32">
-              {/* Final */}
-              <div className="mb-8">
+            <div className="flex-1 flex flex-col justify-center">
+              {/* Final Match */}
+              <div className="mb-6">
                 <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-1">
                   {(() => {
                     const finalMatch = bracket?.final
@@ -216,7 +228,7 @@ export default function TournamentBracket({
                 </div>
               </div>
               
-              {/* 3rd Place */}
+              {/* 3rd Place Match */}
               <div>
                 <h4 className="text-sm font-medium text-gray-600 mb-2 text-center">
                   {language === 'es' ? '3er/4to Puesto' : '3rd/4th Place'}
@@ -244,43 +256,70 @@ export default function TournamentBracket({
             </div>
           </div>
 
-          {/* Winner Display */}
-          <div className="flex-1">
+          {/* Podium Display - Improved with 1st, 2nd, 3rd places */}
+          <div className="flex-1 flex flex-col">
             <h3 className="text-lg font-semibold mb-4 text-center text-gray-700">
-              {language === 'es' ? 'Campeón' : 'Champion'}
+              {language === 'es' ? 'Podio' : 'Podium'}
             </h3>
-            <div className="pt-32">
-              <div className="bg-gradient-to-br from-yellow-400 to-yellow-600 text-white rounded-lg p-6 text-center shadow-lg">
-                <div className="text-3xl mb-2">🏆</div>
-                <div className="text-xl font-bold">
-                  {bracket?.final?.winner ? 
-                    formatName(qualifiedPlayers?.find(p => p.player._id === bracket.final.winner)?.player) : 
-                    '—'
-                  }
+            <div className="flex-1 flex flex-col justify-center">
+              <div className="space-y-3">
+                {/* 1st Place - Champion */}
+                <div className="bg-gradient-to-br from-yellow-400 to-yellow-600 text-white rounded-lg p-4 text-center shadow-lg transform hover:scale-105 transition-transform">
+                  <div className="text-2xl mb-1">🥇</div>
+                  <div className="text-xs uppercase tracking-wider opacity-90">
+                    {language === 'es' ? 'Campeón' : 'Champion'}
+                  </div>
+                  <div className="text-lg font-bold mt-1">
+                    {formatName(getChampion())}
+                  </div>
+                  <div className="text-xs mt-1 opacity-90">
+                    {language === 'es' ? 'Grupo' : 'Group'} {group}
+                  </div>
                 </div>
-                <div className="text-sm mt-2">
-                  {language === 'es' ? 'Grupo' : 'Group'} {group}
+
+                {/* 2nd Place - Runner-up */}
+                <div className="bg-gradient-to-br from-gray-300 to-gray-500 text-white rounded-lg p-3 text-center shadow-lg transform hover:scale-105 transition-transform">
+                  <div className="text-xl mb-1">🥈</div>
+                  <div className="text-xs uppercase tracking-wider opacity-90">
+                    {language === 'es' ? 'Subcampeón' : 'Runner-up'}
+                  </div>
+                  <div className="text-base font-bold mt-1">
+                    {formatName(getRunnerUp())}
+                  </div>
+                </div>
+
+                {/* 3rd Place */}
+                <div className="bg-gradient-to-br from-orange-400 to-orange-600 text-white rounded-lg p-3 text-center shadow-lg transform hover:scale-105 transition-transform">
+                  <div className="text-xl mb-1">🥉</div>
+                  <div className="text-xs uppercase tracking-wider opacity-90">
+                    {language === 'es' ? 'Tercer Lugar' : 'Third Place'}
+                  </div>
+                  <div className="text-base font-bold mt-1">
+                    {formatName(getThirdPlace())}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Legend */}
-        <div className="mt-8 flex justify-center space-x-6 text-sm">
-          <div className="flex items-center">
-            <div className="w-4 h-4 bg-green-50 border border-green-300 rounded mr-2"></div>
-            <span>{language === 'es' ? 'Completado' : 'Completed'}</span>
+        {/* Legend - only show if not hidden */}
+        {!hideLegend && (
+          <div className="mt-8 flex justify-center space-x-6 text-sm">
+            <div className="flex items-center">
+              <div className="w-4 h-4 bg-green-50 border border-green-300 rounded mr-2"></div>
+              <span>{language === 'es' ? 'Completado' : 'Completed'}</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-4 h-4 bg-blue-50 border border-blue-300 rounded mr-2"></div>
+              <span>{language === 'es' ? 'Programado' : 'Scheduled'}</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-4 h-4 bg-gray-100 border border-gray-300 rounded mr-2"></div>
+              <span>{language === 'es' ? 'Pendiente' : 'Pending'}</span>
+            </div>
           </div>
-          <div className="flex items-center">
-            <div className="w-4 h-4 bg-blue-50 border border-blue-300 rounded mr-2"></div>
-            <span>{language === 'es' ? 'Programado' : 'Scheduled'}</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-4 h-4 bg-gray-100 border border-gray-300 rounded mr-2"></div>
-            <span>{language === 'es' ? 'Pendiente' : 'Pending'}</span>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   )

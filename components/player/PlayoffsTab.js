@@ -47,22 +47,10 @@ export default function PlayoffsTab({ playoffConfig, matches, language = 'es' })
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900">
-          {language === 'es' ? 'Fase de Playoffs' : 'Playoff Phase'}
-        </h2>
-        <p className="text-sm text-gray-600 mt-2">
-          {language === 'es' 
-            ? `Los mejores ${playoffConfig.numberOfGroups === 2 ? '16' : '8'} jugadores compiten por el título` 
-            : `Top ${playoffConfig.numberOfGroups === 2 ? '16' : '8'} players compete for the title`}
-        </p>
-      </div>
-
       {/* Group A Bracket */}
       {(currentPhase === 'playoffs_groupA' || currentPhase === 'playoffs_groupB' || currentPhase === 'completed') && (
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h3 className="text-xl font-semibold mb-4 text-center">
+        <div>
+          <h3 className="text-xl font-semibold mb-4 text-center text-gray-800">
             {language === 'es' ? 'Grupo A - Top 8' : 'Group A - Top 8'}
           </h3>
           <TournamentBracket
@@ -71,6 +59,8 @@ export default function PlayoffsTab({ playoffConfig, matches, language = 'es' })
             matches={matches.filter(m => m.playoffInfo?.group === 'A')}
             group="A"
             language={language}
+            hideTitle={true}  // Hide title since we already have one
+            hideLegend={false} // Keep legend only once at the bottom
           />
         </div>
       )}
@@ -78,8 +68,8 @@ export default function PlayoffsTab({ playoffConfig, matches, language = 'es' })
       {/* Group B Bracket (if enabled) */}
       {playoffConfig.numberOfGroups === 2 && 
        (currentPhase === 'playoffs_groupB' || currentPhase === 'completed') && (
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h3 className="text-xl font-semibold mb-4 text-center">
+        <div className="mt-12">
+          <h3 className="text-xl font-semibold mb-4 text-center text-gray-800">
             {language === 'es' ? 'Grupo B - Posiciones 9-16' : 'Group B - Positions 9-16'}
           </h3>
           <TournamentBracket
@@ -88,27 +78,14 @@ export default function PlayoffsTab({ playoffConfig, matches, language = 'es' })
             matches={matches.filter(m => m.playoffInfo?.group === 'B')}
             group="B"
             language={language}
+            hideTitle={true}   // Hide title
+            hideLegend={true}  // Hide legend for Group B to avoid duplication
           />
         </div>
       )}
 
-      {/* Completed Status */}
-      {currentPhase === 'completed' && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
-          <div className="text-4xl mb-4">🏆</div>
-          <h3 className="text-xl font-semibold text-green-800 mb-2">
-            {language === 'es' ? '¡Playoffs Completados!' : 'Playoffs Completed!'}
-          </h3>
-          <p className="text-green-700">
-            {language === 'es' 
-              ? 'Felicitaciones a todos los participantes.' 
-              : 'Congratulations to all participants.'}
-          </p>
-        </div>
-      )}
-
-      {/* Legend */}
-      <div className="flex justify-center space-x-6 text-sm">
+      {/* Legend - Show once at the bottom */}
+      <div className="flex justify-center space-x-6 text-sm pt-6">
         <div className="flex items-center">
           <div className="w-4 h-4 bg-green-50 border border-green-300 rounded mr-2"></div>
           <span>{language === 'es' ? 'Completado' : 'Completed'}</span>
@@ -122,6 +99,21 @@ export default function PlayoffsTab({ playoffConfig, matches, language = 'es' })
           <span>{language === 'es' ? 'Pendiente' : 'Pending'}</span>
         </div>
       </div>
+
+      {/* Completed Status */}
+      {currentPhase === 'completed' && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center mt-8">
+          <div className="text-4xl mb-4">🏆</div>
+          <h3 className="text-xl font-semibold text-green-800 mb-2">
+            {language === 'es' ? '¡Playoffs Completados!' : 'Playoffs Completed!'}
+          </h3>
+          <p className="text-green-700">
+            {language === 'es' 
+              ? 'Felicitaciones a todos los participantes.' 
+              : 'Congratulations to all participants.'}
+          </p>
+        </div>
+      )}
     </div>
   )
 }
