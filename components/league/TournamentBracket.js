@@ -277,11 +277,11 @@ export default function TournamentBracket({
                   </div>
                 </div>
 
-                {/* 2nd Place - Runner-up */}
+                {/* 2nd Place */}
                 <div className="bg-gradient-to-br from-gray-300 to-gray-500 text-white rounded-lg p-3 text-center shadow-lg transform hover:scale-105 transition-transform">
                   <div className="text-xl mb-1">🥈</div>
                   <div className="text-xs uppercase tracking-wider opacity-90">
-                    {language === 'es' ? 'Subcampeón' : 'Runner-up'}
+                    {language === 'es' ? 'Segundo Lugar' : 'Second Place'}
                   </div>
                   <div className="text-base font-bold mt-1">
                     {formatName(getRunnerUp())}

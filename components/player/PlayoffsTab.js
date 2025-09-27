@@ -60,7 +60,7 @@ export default function PlayoffsTab({ playoffConfig, matches, language = 'es' })
             group="A"
             language={language}
             hideTitle={true}  // Hide title since we already have one
-            hideLegend={false} // Keep legend only once at the bottom
+            hideLegend={playoffConfig.numberOfGroups === 2} // Hide legend if we have Group B
           />
         </div>
       )}
@@ -79,26 +79,10 @@ export default function PlayoffsTab({ playoffConfig, matches, language = 'es' })
             group="B"
             language={language}
             hideTitle={true}   // Hide title
-            hideLegend={true}  // Hide legend for Group B to avoid duplication
+            hideLegend={false}  // Show legend on last bracket
           />
         </div>
       )}
-
-      {/* Legend - Show once at the bottom */}
-      <div className="flex justify-center space-x-6 text-sm pt-6">
-        <div className="flex items-center">
-          <div className="w-4 h-4 bg-green-50 border border-green-300 rounded mr-2"></div>
-          <span>{language === 'es' ? 'Completado' : 'Completed'}</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-4 h-4 bg-blue-50 border border-blue-300 rounded mr-2"></div>
-          <span>{language === 'es' ? 'Programado' : 'Scheduled'}</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-4 h-4 bg-gray-100 border border-gray-300 rounded mr-2"></div>
-          <span>{language === 'es' ? 'Pendiente' : 'Pending'}</span>
-        </div>
-      </div>
 
       {/* Completed Status */}
       {currentPhase === 'completed' && (
