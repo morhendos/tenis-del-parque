@@ -297,7 +297,7 @@ export default function LeagueSeasonPage() {
         </div>
       </section>
 
-      {/* Navigation Tabs - Clean and Simple */}
+      {/* Navigation Tabs - Clean and Simple - FIXED ORDER: Playoffs is now second */}
       <section 
         ref={(el) => setTabsRef(el)}
         className={`transition-all duration-300 ${
@@ -311,9 +311,9 @@ export default function LeagueSeasonPage() {
             <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
               {[
                 { id: 'standings', label: language === 'es' ? 'Clasificación' : 'Standings' },
+                { id: 'playoffs', label: language === 'es' ? 'Playoffs' : 'Playoffs' },
                 { id: 'schedule', label: language === 'es' ? 'Calendario' : 'Schedule' },
                 { id: 'matches', label: language === 'es' ? 'Resultados' : 'Results' },
-                { id: 'playoffs', label: language === 'es' ? 'Playoffs' : 'Playoffs' },
                 ...(currentSeason && currentSeason.status === 'registration_open' ? [{ id: 'register', label: language === 'es' ? 'Inscribirse' : 'Register' }] : [])
               ].map((tab) => (
                 <button
@@ -329,9 +329,9 @@ export default function LeagueSeasonPage() {
                     {/* Mobile: Show abbreviated labels */}
                     <span className="sm:hidden">
                       {tab.id === 'standings' && (language === 'es' ? 'Clas.' : 'Stand.')}
+                      {tab.id === 'playoffs' && 'Playoffs'}
                       {tab.id === 'schedule' && (language === 'es' ? 'Cal.' : 'Sched.')}
                       {tab.id === 'matches' && (language === 'es' ? 'Result.' : 'Results')}
-                      {tab.id === 'playoffs' && 'Playoffs'}
                       {tab.id === 'register' && (language === 'es' ? 'Reg.' : 'Reg.')}
                     </span>
                     {/* Desktop: Show full labels */}
