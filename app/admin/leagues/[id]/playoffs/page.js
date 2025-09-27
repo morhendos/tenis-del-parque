@@ -17,6 +17,7 @@ export default function LeaguePlayoffsAdmin() {
   const [standings, setStandings] = useState([])
   const [eligiblePlayerCount, setEligiblePlayerCount] = useState(0)
   const [seasonIdentifier, setSeasonIdentifier] = useState('')
+  const [playoffsInitialized, setPlayoffsInitialized] = useState(false)
   
   useEffect(() => {
     if (leagueId) {
@@ -50,6 +51,7 @@ export default function LeaguePlayoffsAdmin() {
         setStandings(data.standings || [])
         setEligiblePlayerCount(data.eligiblePlayerCount || 0)
         setSeasonIdentifier(data.seasonIdentifier || '')
+        setPlayoffsInitialized(data.playoffsInitialized || false)
         
         // If league data is not set (due to league endpoint failure), use data from playoff endpoint
         if (!league && data.leagueSlug) {
@@ -64,6 +66,7 @@ export default function LeaguePlayoffsAdmin() {
         console.log('Eligible players:', data.eligiblePlayerCount)
         console.log('Season identifier:', data.seasonIdentifier)
         console.log('League slug:', data.leagueSlug)
+        console.log('Playoffs initialized:', data.playoffsInitialized)
       }
     } catch (error) {
       console.error('Error fetching playoff data:', error)
@@ -78,7 +81,7 @@ export default function LeaguePlayoffsAdmin() {
       return
     }
     
-    if (!confirm(`Initialize playoffs with top ${numberOfGroups === 2 ? '16' : '8'} players?\n\nTop 8 players:\n${standings.slice(0, 8).map(s => `${s.position}. ${s.player.name} (${s.stats.totalPoints} pts)`).join('\n')}`)) {
+    if (!confirm(`Initialize playoffs with top ${numberOfGroups === 2 ? '16' : '8'} players?\n\nTop 8 players:\n${standings.slice(0, 8).map(s => `${s.position}. ${s.player.name} (${s.stats.totalPoints} pts)`).join('\n')}\n\n⚠️ IMPORTANT: These players will be LOCKED IN for the playoffs and cannot be changed!`)) {
       return
     }
     
@@ -94,7 +97,7 @@ export default function LeaguePlayoffsAdmin() {
       
       const data = await res.json()
       if (data.success) {
-        alert('Playoffs initialized successfully!')
+        alert('Playoffs initialized successfully! Players are now locked in.')
         await fetchPlayoffData()
         await fetchLeagueData()
       } else {
@@ -107,7 +110,7 @@ export default function LeaguePlayoffsAdmin() {
   }
   
   const handleResetPlayoffs = async () => {
-    if (!confirm('⚠️ WARNING: This will RESET all playoff data and recalculate based on current standings.\n\nThis will:\n• Delete all playoff matches\n• Recalculate qualified players from current standings\n• Reset the playoff bracket\n\nAre you sure?')) {
+    if (!confirm('⚠️ WARNING: This will RESET all playoff data and recalculate based on current standings.\n\nThis will:\n• Delete all playoff matches\n• Recalculate qualified players from current standings\n• Reset the playoff bracket\n• Lock in the NEW top players\n\nAre you sure?')) {
       return
     }
     
@@ -120,7 +123,8 @@ export default function LeaguePlayoffsAdmin() {
           playoffConfig: {
             ...league.playoffConfig,
             currentPhase: 'regular_season',
-            enabled: false
+            enabled: false,
+            qualifiedPlayers: { groupA: [], groupB: [] } // Clear qualified players
           }
         })
       })
@@ -213,7 +217,21 @@ export default function LeaguePlayoffsAdmin() {
       {/* Eligible Players Display */}
       {currentPhase === 'regular_season' && (
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">Current Standings</h2>
+          <h2 className="text-xl font-semibold mb-4">
+            {playoffsInitialized ? '🔒 Locked-in Playoff Players' : 'Current Standings'}
+          </h2>
+          
+          {playoffsInitialized && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+              <p className="text-yellow-800 font-semibold">
+                ⚠️ Playoffs have been initialized - these players are LOCKED IN
+              </p>
+              <p className="text-sm text-yellow-700 mt-1">
+                The standings shown below are the qualified players at the time playoffs were initialized.
+                To recalculate with current standings, use the &quot;Reset & Recalculate Playoffs&quot; button.
+              </p>
+            </div>
+          )}
           
           {eligiblePlayerCount === 0 ? (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -230,7 +248,7 @@ export default function LeaguePlayoffsAdmin() {
           ) : (
             <div>
               <p className="mb-4 text-green-700">
-                ✅ Found {eligiblePlayerCount} eligible players with completed matches
+                ✅ {playoffsInitialized ? 'Qualified' : 'Found'} {eligiblePlayerCount} eligible players {playoffsInitialized ? '(locked in)' : 'with completed matches'}
               </p>
               
               {/* Show top 16 players */}
@@ -239,19 +257,19 @@ export default function LeaguePlayoffsAdmin() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Position
+                        {playoffsInitialized ? 'Qualification Position' : 'Position'}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Player
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Points
+                        Points {playoffsInitialized && '(at qualification)'}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Matches
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Playoff Group
+                        {playoffsInitialized ? 'Playoff Seed' : 'Playoff Group'}
                       </th>
                     </tr>
                   </thead>
@@ -271,15 +289,29 @@ export default function LeaguePlayoffsAdmin() {
                           {standing.stats.matchesPlayed}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          {index < 8 && (
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                              Group A
-                            </span>
-                          )}
-                          {index >= 8 && index < 16 && numberOfGroups === 2 && (
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                              Group B
-                            </span>
+                          {playoffsInitialized ? (
+                            standing.seed && (
+                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                standing.group === 'A' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-blue-100 text-blue-800'
+                              }`}>
+                                {standing.group === 'A' ? 'Group A' : 'Group B'} - Seed {standing.seed}
+                              </span>
+                            )
+                          ) : (
+                            <>
+                              {index < 8 && (
+                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                  Group A
+                                </span>
+                              )}
+                              {index >= 8 && index < 16 && numberOfGroups === 2 && (
+                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                  Group B
+                                </span>
+                              )}
+                            </>
                           )}
                         </td>
                       </tr>
@@ -293,7 +325,7 @@ export default function LeaguePlayoffsAdmin() {
       )}
       
       {/* Configuration Section */}
-      {currentPhase === 'regular_season' && (
+      {currentPhase === 'regular_season' && !playoffsInitialized && (
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
           <h2 className="text-xl font-semibold mb-4">Playoff Configuration</h2>
           
@@ -355,6 +387,40 @@ export default function LeaguePlayoffsAdmin() {
               Reset & Recalculate Playoffs
             </button>
           </div>
+          
+          {/* Locked Players Notice */}
+          {playoffConfig?.qualifiedPlayers?.groupA?.length > 0 && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <h3 className="text-blue-800 font-semibold mb-2">🔒 Playoff Players Locked In</h3>
+              <p className="text-sm text-blue-700 mb-2">
+                The following players qualified for playoffs and are locked into the bracket:
+              </p>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="font-semibold text-blue-800">Group A:</p>
+                  <ol className="list-decimal list-inside text-blue-700">
+                    {playoffConfig.qualifiedPlayers.groupA.map((qp, idx) => (
+                      <li key={idx}>
+                        Seed {qp.seed}: {qp.player?.name || 'Loading...'}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+                {playoffConfig.qualifiedPlayers.groupB?.length > 0 && (
+                  <div>
+                    <p className="font-semibold text-blue-800">Group B:</p>
+                    <ol className="list-decimal list-inside text-blue-700">
+                      {playoffConfig.qualifiedPlayers.groupB.map((qp, idx) => (
+                        <li key={idx}>
+                          Seed {qp.seed}: {qp.player?.name || 'Loading...'}
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           
           {/* Group A Bracket */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">
@@ -439,8 +505,9 @@ export default function LeaguePlayoffsAdmin() {
           <li>Check the eligible players count before initializing playoffs</li>
           <li>You need at least 8 players who have played matches to start playoffs</li>
           <li>Configure the number of playoff groups before initializing</li>
-          <li>Initialize playoffs when regular season is complete</li>
-          <li>If playoffs show wrong players, use "Reset & Recalculate Playoffs" button</li>
+          <li>Initialize playoffs when regular season is complete - this will LOCK IN the qualified players</li>
+          <li>Once initialized, playoff players are locked and won&apos;t change even if regular season standings change</li>
+          <li>If playoffs show wrong players, use &quot;Reset & Recalculate Playoffs&quot; button to re-lock with current standings</li>
           <li>Quarterfinal matches are created automatically with proper seeding</li>
           <li>Create semifinal matches after quarterfinals are complete</li>
           <li>Create final matches after semifinals are complete</li>
