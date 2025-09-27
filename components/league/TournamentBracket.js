@@ -222,14 +222,42 @@ export default function TournamentBracket({
             </div>
           </div>
 
-          {/* Finals Column - SPANS 2 COLUMNS FOR FULL WIDTH MATCHES */}
+          {/* Finals Column - SWAPPED ORDER: 3RD PLACE FIRST, GRAND FINAL LAST */}
           <div className="col-span-2 flex flex-col min-w-0">
             <h3 className="text-base font-semibold mb-3 text-center text-gray-700">
               {language === 'es' ? 'Finales' : 'Finals'}
             </h3>
             <div className="flex-1 flex items-center">
               <div className="grid grid-cols-2 gap-3 w-full">
-                {/* Final Match - FULL WIDTH IN ITS GRID CELL */}
+                {/* 3rd Place Match - NOW FIRST */}
+                <div className="w-full">
+                  <h4 className="text-xs font-medium text-gray-600 mb-2 text-center">
+                    {language === 'es' ? '3er/4to Puesto' : '3rd/4th Place'}
+                  </h4>
+                  <div className="bg-gray-50 border border-gray-300 rounded-lg p-1">
+                    {(() => {
+                      const thirdPlaceMatch = bracket?.thirdPlace
+                      const matchData = matches?.find(m => 
+                        m._id === thirdPlaceMatch?.matchId ||
+                        m.playoffInfo?.stage === 'third_place'
+                      )
+                      
+                      // Get losers from semifinals
+                      // This would need more complex logic to track SF losers
+                      
+                      return (
+                        <MatchBox
+                          match={matchData}
+                          player1={null}
+                          player2={null}
+                          stage="third_place"
+                        />
+                      )
+                    })()}
+                  </div>
+                </div>
+                
+                {/* Grand Final - NOW SECOND (LAST) */}
                 <div className="w-full">
                   <h4 className="text-xs font-medium text-gray-600 mb-2 text-center">
                     {language === 'es' ? '1er/2do Puesto' : '1st/2nd Place'}
@@ -254,34 +282,6 @@ export default function TournamentBracket({
                           player1={player1}
                           player2={player2}
                           stage="final"
-                        />
-                      )
-                    })()}
-                  </div>
-                </div>
-                
-                {/* 3rd Place Match - FULL WIDTH IN ITS GRID CELL */}
-                <div className="w-full">
-                  <h4 className="text-xs font-medium text-gray-600 mb-2 text-center">
-                    {language === 'es' ? '3er/4to Puesto' : '3rd/4th Place'}
-                  </h4>
-                  <div className="bg-gray-50 border border-gray-300 rounded-lg p-1">
-                    {(() => {
-                      const thirdPlaceMatch = bracket?.thirdPlace
-                      const matchData = matches?.find(m => 
-                        m._id === thirdPlaceMatch?.matchId ||
-                        m.playoffInfo?.stage === 'third_place'
-                      )
-                      
-                      // Get losers from semifinals
-                      // This would need more complex logic to track SF losers
-                      
-                      return (
-                        <MatchBox
-                          match={matchData}
-                          player1={null}
-                          player2={null}
-                          stage="third_place"
                         />
                       )
                     })()}
