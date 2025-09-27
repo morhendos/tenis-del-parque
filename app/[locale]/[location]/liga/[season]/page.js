@@ -9,6 +9,7 @@ import ScoringSystem from '@/components/league/ScoringSystem'
 import StandingsTable from '@/components/player/StandingsTable'
 import ResultsTab from '@/components/player/ResultsTab'
 import ScheduleTab from '@/components/player/ScheduleTab'
+import PlayoffsTab from '@/components/player/PlayoffsTab'
 import { getSeasonDisplayName } from '@/lib/utils/seasonUtils.client'
 import { TennisPreloaderFullScreen } from '@/components/ui/TennisPreloader'
 
@@ -30,12 +31,21 @@ export default function LeagueSeasonPage() {
   const [isTabsSticky, setIsTabsSticky] = useState(false)
   const [tabsRef, setTabsRef] = useState(null)
   const [tabsOriginalTop, setTabsOriginalTop] = useState(0)
+  const [playoffData, setPlayoffData] = useState(null)
+  const [loadingPlayoffs, setLoadingPlayoffs] = useState(false)
 
   const t = homeContent[language]
 
   useEffect(() => {
     fetchLeagueData()
   }, [location, season, locale])
+
+  // Fetch playoff data when playoffs tab is selected
+  useEffect(() => {
+    if (activeTab === 'playoffs' && league?.slug && !playoffData) {
+      fetchPlayoffData()
+    }
+  }, [activeTab, league?.slug])
 
   // If register tab is active but registration is closed, switch to standings
   useEffect(() => {
@@ -77,6 +87,24 @@ export default function LeagueSeasonPage() {
 
     return () => window.removeEventListener('scroll', handleScroll)
   }, [tabsOriginalTop])
+
+  const fetchPlayoffData = async () => {
+    if (!league?.slug) return
+    
+    setLoadingPlayoffs(true)
+    try {
+      const response = await fetch(`/api/leagues/${league.slug}/playoffs`)
+      const data = await response.json()
+      
+      if (data.success) {
+        setPlayoffData(data)
+      }
+    } catch (error) {
+      console.error('Error fetching playoff data:', error)
+    } finally {
+      setLoadingPlayoffs(false)
+    }
+  }
 
   const fetchLeagueData = async () => {
     try {
@@ -167,8 +195,6 @@ export default function LeagueSeasonPage() {
       setLoading(false)
     }
   }
-
-
 
   if (loading) {
     return (
@@ -287,6 +313,7 @@ export default function LeagueSeasonPage() {
                 { id: 'standings', label: language === 'es' ? 'Clasificación' : 'Standings' },
                 { id: 'schedule', label: language === 'es' ? 'Calendario' : 'Schedule' },
                 { id: 'matches', label: language === 'es' ? 'Resultados' : 'Results' },
+                { id: 'playoffs', label: language === 'es' ? 'Playoffs' : 'Playoffs' },
                 ...(currentSeason && currentSeason.status === 'registration_open' ? [{ id: 'register', label: language === 'es' ? 'Inscribirse' : 'Register' }] : [])
               ].map((tab) => (
                 <button
@@ -304,6 +331,7 @@ export default function LeagueSeasonPage() {
                       {tab.id === 'standings' && (language === 'es' ? 'Clas.' : 'Stand.')}
                       {tab.id === 'schedule' && (language === 'es' ? 'Cal.' : 'Sched.')}
                       {tab.id === 'matches' && (language === 'es' ? 'Result.' : 'Results')}
+                      {tab.id === 'playoffs' && 'Playoffs'}
                       {tab.id === 'register' && (language === 'es' ? 'Reg.' : 'Reg.')}
                     </span>
                     {/* Desktop: Show full labels */}
@@ -527,6 +555,48 @@ export default function LeagueSeasonPage() {
                 </div>
               </div>
               <ResultsTab matches={matches} language={language} />
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'playoffs' && (
+          <div className="max-w-[1400px] mx-auto">
+            <div className="bg-white rounded-lg md:rounded-xl shadow-md md:shadow-lg p-3 md:p-6 lg:p-8">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6">
+                <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-parque-purple mb-2 sm:mb-0">
+                  {language === 'es' ? 'Playoffs' : 'Playoffs'}
+                </h2>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm md:text-base text-gray-600 font-medium">
+                    {currentSeason ? currentSeason.name : getSeasonDisplayName(season, language)}
+                  </span>
+                  {playoffData?.currentPhase && playoffData.currentPhase !== 'regular_season' && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                      {playoffData.currentPhase === 'playoffs_groupA' && 
+                        (language === 'es' ? 'Grupo A Activo' : 'Group A Active')
+                      }
+                      {playoffData.currentPhase === 'playoffs_groupB' && 
+                        (language === 'es' ? 'Grupo B Activo' : 'Group B Active')
+                      }
+                      {playoffData.currentPhase === 'completed' && 
+                        (language === 'es' ? 'Playoffs Completados' : 'Playoffs Completed')
+                      }
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              {loadingPlayoffs ? (
+                <div className="flex items-center justify-center min-h-[400px]">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple"></div>
+                </div>
+              ) : (
+                <PlayoffsTab
+                  playoffConfig={playoffData?.playoffConfig}
+                  matches={playoffData?.matches || []}
+                  language={language}
+                />
+              )}
             </div>
           </div>
         )}
