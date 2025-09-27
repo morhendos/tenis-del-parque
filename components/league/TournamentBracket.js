@@ -222,63 +222,70 @@ export default function TournamentBracket({
             </div>
           </div>
 
-          {/* Finals Column - HORIZONTAL LAYOUT */}
+          {/* Finals Column - HORIZONTAL LAYOUT WITH HEADERS FOR BOTH */}
           <div className="flex flex-col">
             <h3 className="text-lg font-semibold mb-4 text-center text-gray-700">
               {language === 'es' ? 'Finales' : 'Finals'}
             </h3>
             <div className="flex-1 flex items-center">
               <div className="grid grid-cols-2 gap-4 w-full">
-                {/* Final Match */}
-                <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-1">
-                  {(() => {
-                    const finalMatch = bracket?.final
-                    const matchData = matches?.find(m => 
-                      m._id === finalMatch?.matchId ||
-                      m.playoffInfo?.stage === 'final'
-                    )
-                    
-                    // Get winners from semifinals
-                    const sf1 = bracket?.semifinals?.[0]
-                    const sf2 = bracket?.semifinals?.[1]
-                    const player1 = sf1?.winner ? qualifiedPlayers?.find(p => p.player._id === sf1.winner)?.player : null
-                    const player2 = sf2?.winner ? qualifiedPlayers?.find(p => p.player._id === sf2.winner)?.player : null
-                    
-                    return (
-                      <MatchBox
-                        match={matchData}
-                        player1={player1}
-                        player2={player2}
-                        stage="final"
-                      />
-                    )
-                  })()}
+                {/* Final Match - WITH HEADER */}
+                <div>
+                  <h4 className="text-sm font-medium text-gray-600 mb-2 text-center">
+                    {language === 'es' ? '1er/2do Puesto' : '1st/2nd Place'}
+                  </h4>
+                  <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-1">
+                    {(() => {
+                      const finalMatch = bracket?.final
+                      const matchData = matches?.find(m => 
+                        m._id === finalMatch?.matchId ||
+                        m.playoffInfo?.stage === 'final'
+                      )
+                      
+                      // Get winners from semifinals
+                      const sf1 = bracket?.semifinals?.[0]
+                      const sf2 = bracket?.semifinals?.[1]
+                      const player1 = sf1?.winner ? qualifiedPlayers?.find(p => p.player._id === sf1.winner)?.player : null
+                      const player2 = sf2?.winner ? qualifiedPlayers?.find(p => p.player._id === sf2.winner)?.player : null
+                      
+                      return (
+                        <MatchBox
+                          match={matchData}
+                          player1={player1}
+                          player2={player2}
+                          stage="final"
+                        />
+                      )
+                    })()}
+                  </div>
                 </div>
                 
-                {/* 3rd Place Match */}
+                {/* 3rd Place Match - WITH EXISTING HEADER */}
                 <div>
                   <h4 className="text-sm font-medium text-gray-600 mb-2 text-center">
                     {language === 'es' ? '3er/4to Puesto' : '3rd/4th Place'}
                   </h4>
-                  {(() => {
-                    const thirdPlaceMatch = bracket?.thirdPlace
-                    const matchData = matches?.find(m => 
-                      m._id === thirdPlaceMatch?.matchId ||
-                      m.playoffInfo?.stage === 'third_place'
-                    )
-                    
-                    // Get losers from semifinals
-                    // This would need more complex logic to track SF losers
-                    
-                    return (
-                      <MatchBox
-                        match={matchData}
-                        player1={null}
-                        player2={null}
-                        stage="third_place"
-                      />
-                    )
-                  })()}
+                  <div className="bg-gray-50 border border-gray-300 rounded-lg p-1">
+                    {(() => {
+                      const thirdPlaceMatch = bracket?.thirdPlace
+                      const matchData = matches?.find(m => 
+                        m._id === thirdPlaceMatch?.matchId ||
+                        m.playoffInfo?.stage === 'third_place'
+                      )
+                      
+                      // Get losers from semifinals
+                      // This would need more complex logic to track SF losers
+                      
+                      return (
+                        <MatchBox
+                          match={matchData}
+                          player1={null}
+                          player2={null}
+                          stage="third_place"
+                        />
+                      )
+                    })()}
+                  </div>
                 </div>
               </div>
             </div>
