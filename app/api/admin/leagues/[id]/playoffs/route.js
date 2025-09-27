@@ -6,6 +6,41 @@ import Match from '../../../../../../lib/models/Match'
 import Player from '../../../../../../lib/models/Player'
 import { requireAdmin } from '../../../../../../lib/auth/apiAuth'
 
+// CRITICAL: This is THE SINGLE SOURCE OF TRUTH for sorting standings
+// This MUST match EXACTLY the sorting used in /api/leagues/[league]/standings/route.js
+// Both GET preview and initialize MUST use this exact same function
+function sortStandingsForPlayoffs(standings) {
+  return standings.sort((a, b) => {
+    // We skip status priority for playoffs (all players are active/confirmed)
+    
+    // Primary: Has played matches (players with matches first)
+    const aHasPlayed = a.stats.matchesPlayed > 0
+    const bHasPlayed = b.stats.matchesPlayed > 0
+    
+    if (aHasPlayed !== bHasPlayed) {
+      return bHasPlayed ? 1 : -1  // Players who have played come first
+    }
+    
+    // Secondary: total points (highest first)
+    if (a.stats.totalPoints !== b.stats.totalPoints) {
+      return b.stats.totalPoints - a.stats.totalPoints
+    }
+    
+    // Tertiary: set difference (best first)
+    const aSetDiff = (a.stats.setsWon || 0) - (a.stats.setsLost || 0)
+    const bSetDiff = (b.stats.setsWon || 0) - (b.stats.setsLost || 0)
+    if (aSetDiff !== bSetDiff) return bSetDiff - aSetDiff
+    
+    // Quaternary: game difference (best first)
+    const aGameDiff = (a.stats.gamesWon || 0) - (a.stats.gamesLost || 0)
+    const bGameDiff = (b.stats.gamesWon || 0) - (b.stats.gamesLost || 0)
+    if (aGameDiff !== bGameDiff) return bGameDiff - aGameDiff
+    
+    // Quinary: alphabetical by name
+    return a.player.name.localeCompare(b.player.name)
+  })
+}
+
 // GET /api/admin/leagues/[id]/playoffs - Get playoff status and bracket
 export async function GET(request, { params }) {
   try {
@@ -89,14 +124,14 @@ export async function GET(request, { params }) {
           return {
             position: qp.regularSeasonPosition || qp.seed,
             player: { _id: qp.player, name: 'Unknown Player' },
-            stats: { totalPoints: 0, matchesPlayed: 0 },
+            stats: qp.qualificationStats || { totalPoints: 0, matchesPlayed: 0 },
             group: qp.group,
             seed: qp.seed
           }
         }
         
-        // Calculate stats for display (but position remains fixed from qualification)
-        const stats = calculatePlayerStats(player._id, matches)
+        // Use stored qualification stats if available
+        const stats = qp.qualificationStats || calculatePlayerStats(player._id, matches)
         
         return {
           position: qp.regularSeasonPosition || qp.seed,
@@ -142,43 +177,17 @@ export async function GET(request, { params }) {
             match.players.player2.toString() === player._id.toString()
           )
         })
-        .map((player, index) => ({
-          position: index + 1,
+        .map(player => ({
           player: {
             _id: player._id,
             name: player.name
           },
-          stats: calculatePlayerStats(player._id, matches)
+          stats: calculatePlayerStats(player._id, matches),
+          position: 0 // Will be set after sorting
         }))
-        .sort((a, b) => {
-          // Use the SAME sorting logic as public league standings for consistency
-          
-          // Primary: Has played matches (players with matches first)
-          const aHasPlayed = a.stats.matchesPlayed > 0
-          const bHasPlayed = b.stats.matchesPlayed > 0
-          
-          if (aHasPlayed !== bHasPlayed) {
-            return bHasPlayed ? 1 : -1  // Players who have played come first
-          }
-          
-          // Secondary: total points (highest first)
-          if (a.stats.totalPoints !== b.stats.totalPoints) {
-            return b.stats.totalPoints - a.stats.totalPoints
-          }
-          
-          // Tertiary: set difference (best first)
-          const aSetDiff = (a.stats.setsWon || 0) - (a.stats.setsLost || 0)
-          const bSetDiff = (b.stats.setsWon || 0) - (b.stats.setsLost || 0)
-          if (aSetDiff !== bSetDiff) return bSetDiff - aSetDiff
-          
-          // Quaternary: game difference (best first)
-          const aGameDiff = (a.stats.gamesWon || 0) - (a.stats.gamesLost || 0)
-          const bGameDiff = (b.stats.gamesWon || 0) - (b.stats.gamesLost || 0)
-          if (aGameDiff !== bGameDiff) return bGameDiff - aGameDiff
-          
-          // Quinary: alphabetical by name
-          return a.player.name.localeCompare(b.player.name)
-        })
+      
+      // USE THE STANDARDIZED SORTING FUNCTION
+      standings = sortStandingsForPlayoffs(standings)
       
       // Update positions after sorting
       standings.forEach((standing, index) => {
@@ -186,6 +195,14 @@ export async function GET(request, { params }) {
       })
       
       console.log(`✅ Generated fresh standings for ${standings.length} players with matches`)
+      console.log('Preview top 8 for playoffs:', standings.slice(0, 8).map(s => ({
+        position: s.position,
+        name: s.player.name,
+        points: s.stats.totalPoints,
+        matches: s.stats.matchesPlayed,
+        setDiff: s.stats.setsWon - s.stats.setsLost,
+        gameDiff: s.stats.gamesWon - s.stats.gamesLost
+      })))
     }
     
     // Get playoff matches
@@ -300,15 +317,18 @@ async function initializePlayoffs(league, data) {
   const seasonId = new mongoose.Types.ObjectId('688f5d51c94f8e3b3cbfd87b') // Summer 2025
   console.log('📊 Calculating regular season standings for season ID:', seasonId)
   
-  // Get regular season standings
+  // Get regular season standings - THIS MUST USE EXACT SAME LOGIC AS PREVIEW
   const standings = await calculateRegularSeasonStandings(league._id, seasonId)
   
   console.log(`👥 Found ${standings.length} eligible players for playoffs`)
   if (standings.length > 0) {
-    console.log('Top players:', standings.slice(0, 8).map(s => ({ 
+    console.log('🔒 TOP 8 PLAYERS THAT WILL BE LOCKED IN:', standings.slice(0, 8).map(s => ({ 
+      position: s.position,
       name: s.player.name, 
       points: s.stats.totalPoints, 
-      matches: s.stats.matchesPlayed 
+      matches: s.stats.matchesPlayed,
+      setDiff: s.stats.setsWon - s.stats.setsLost,
+      gameDiff: s.stats.gamesWon - s.stats.gamesLost
     })))
   }
   
@@ -327,11 +347,13 @@ async function initializePlayoffs(league, data) {
     regularSeasonPosition: standing.position,
     // Store their qualification stats for reference
     qualificationStats: {
-      points: standing.stats.totalPoints,
+      totalPoints: standing.stats.totalPoints,
       matchesPlayed: standing.stats.matchesPlayed,
       matchesWon: standing.stats.matchesWon,
       setsWon: standing.stats.setsWon,
-      setsLost: standing.stats.setsLost
+      setsLost: standing.stats.setsLost,
+      gamesWon: standing.stats.gamesWon,
+      gamesLost: standing.stats.gamesLost
     }
   }))
   
@@ -342,11 +364,13 @@ async function initializePlayoffs(league, data) {
         seed: index + 1,
         regularSeasonPosition: standing.position,
         qualificationStats: {
-          points: standing.stats.totalPoints,
+          totalPoints: standing.stats.totalPoints,
           matchesPlayed: standing.stats.matchesPlayed,
           matchesWon: standing.stats.matchesWon,
           setsWon: standing.stats.setsWon,
-          setsLost: standing.stats.setsLost
+          setsLost: standing.stats.setsLost,
+          gamesWon: standing.stats.gamesWon,
+          gamesLost: standing.stats.gamesLost
         }
       }))
     : []
@@ -702,6 +726,7 @@ async function completePlayoffPhase(league, data) {
 }
 
 // Helper function to calculate regular season standings
+// THIS MUST USE THE EXACT SAME SORTING AS THE PREVIEW!
 async function calculateRegularSeasonStandings(leagueId, season) {
   console.log('📊 calculateRegularSeasonStandings - Starting')
   console.log('🏆 League ID:', leagueId)
@@ -769,7 +794,7 @@ async function calculateRegularSeasonStandings(leagueId, season) {
         stats.matchesLost++
       }
       
-      // Calculate sets
+      // Calculate sets and games
       if (match.result?.score?.sets) {
         match.result.score.sets.forEach(set => {
           const isPlayer1 = match.players.player1.toString() === player._id.toString()
@@ -785,6 +810,13 @@ async function calculateRegularSeasonStandings(leagueId, season) {
             stats.setsLost++
           }
         })
+      } else if (match.result?.score?.walkover) {
+        // For walkovers
+        const isWinner = match.result?.winner?.toString() === player._id.toString()
+        stats.setsWon += isWinner ? 2 : 0
+        stats.setsLost += isWinner ? 0 : 2
+        stats.gamesWon += isWinner ? 12 : 0  // 6-0, 6-0
+        stats.gamesLost += isWinner ? 0 : 12
       }
     })
     
@@ -795,35 +827,27 @@ async function calculateRegularSeasonStandings(leagueId, season) {
     }
   })
   
-  // Sort by points, then by matches won, then by sets difference
-  standings.sort((a, b) => {
-    if (b.stats.totalPoints !== a.stats.totalPoints) {
-      return b.stats.totalPoints - a.stats.totalPoints
-    }
-    if (b.stats.matchesWon !== a.stats.matchesWon) {
-      return b.stats.matchesWon - a.stats.matchesWon
-    }
-    const setsDiffA = a.stats.setsWon - a.stats.setsLost
-    const setsDiffB = b.stats.setsWon - b.stats.setsLost
-    return setsDiffB - setsDiffA
-  })
+  // USE THE STANDARDIZED SORTING FUNCTION - EXACT SAME AS PREVIEW!
+  const sortedStandings = sortStandingsForPlayoffs(standings)
   
   // Assign positions
-  standings.forEach((standing, index) => {
+  sortedStandings.forEach((standing, index) => {
     standing.position = index + 1
   })
   
-  console.log('✅ Standings calculated successfully')
-  if (standings.length > 0) {
-    console.log('Top 8 players:', standings.slice(0, 8).map(s => ({
+  console.log('✅ Standings calculated successfully with EXACT SAME SORTING as preview')
+  if (sortedStandings.length > 0) {
+    console.log('Top 8 players (using STANDARDIZED SORT):', sortedStandings.slice(0, 8).map(s => ({
       position: s.position,
       name: s.player.name,
       points: s.stats.totalPoints,
-      matches: s.stats.matchesPlayed
+      matches: s.stats.matchesPlayed,
+      setDiff: s.stats.setsWon - s.stats.setsLost,
+      gameDiff: s.stats.gamesWon - s.stats.gamesLost
     })))
   }
   
-  return standings
+  return sortedStandings
 }
 
 // Helper function to calculate points for a player from a raw match object
@@ -907,6 +931,8 @@ function calculatePlayerStats(playerId, matches) {
       // For walkovers, winner gets 2-0 in sets
       stats.setsWon += isWinner ? 2 : 0
       stats.setsLost += isWinner ? 0 : 2
+      stats.gamesWon += isWinner ? 12 : 0  // 6-0, 6-0
+      stats.gamesLost += isWinner ? 0 : 12
       return
     }
     
