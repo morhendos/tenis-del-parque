@@ -114,8 +114,8 @@ export default function TournamentBracket({
   }
 
   return (
-    <div className="overflow-x-auto">
-      <div className="min-w-[1400px] p-4">
+    <div className="w-full">
+      <div className="w-full p-4">
         {/* Title - only show if not hidden */}
         {!hideTitle && (
           <div className="text-center mb-6">
@@ -128,15 +128,15 @@ export default function TournamentBracket({
           </div>
         )}
 
-        {/* Tournament Bracket Grid - 5 COLUMNS FOR PROPER WIDTH */}
-        <div className="grid grid-cols-5 gap-6">
+        {/* Tournament Bracket Grid - OPTIMIZED FOR NO SCROLLBAR */}
+        <div className="grid grid-cols-5 gap-3 max-w-full">
           
           {/* Quarterfinals Column */}
-          <div className="flex flex-col">
-            <h3 className="text-lg font-semibold mb-4 text-center text-gray-700">
+          <div className="flex flex-col min-w-0">
+            <h3 className="text-base font-semibold mb-3 text-center text-gray-700">
               {language === 'es' ? 'Cuartos de Final' : 'Quarterfinals'}
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {[0, 1, 2, 3].map((i) => {
                 const qfMatch = bracket?.quarterfinals?.[i]
                 const matchData = matches?.find(m => 
@@ -161,11 +161,11 @@ export default function TournamentBracket({
           </div>
 
           {/* Semifinals Column - PROPERLY SIZED AND CENTERED */}
-          <div className="flex flex-col">
-            <h3 className="text-lg font-semibold mb-4 text-center text-gray-700">
+          <div className="flex flex-col min-w-0">
+            <h3 className="text-base font-semibold mb-3 text-center text-gray-700">
               {language === 'es' ? 'Semifinales' : 'Semifinals'}
             </h3>
-            <div className="flex flex-col justify-around flex-1 py-8">
+            <div className="flex flex-col justify-around flex-1 py-6">
               {/* Top semifinal - centered between QF1 and QF2 */}
               <div className="w-full">
                 {(() => {
@@ -223,15 +223,15 @@ export default function TournamentBracket({
           </div>
 
           {/* Finals Column - SPANS 2 COLUMNS FOR FULL WIDTH MATCHES */}
-          <div className="col-span-2 flex flex-col">
-            <h3 className="text-lg font-semibold mb-4 text-center text-gray-700">
+          <div className="col-span-2 flex flex-col min-w-0">
+            <h3 className="text-base font-semibold mb-3 text-center text-gray-700">
               {language === 'es' ? 'Finales' : 'Finals'}
             </h3>
             <div className="flex-1 flex items-center">
-              <div className="grid grid-cols-2 gap-6 w-full">
+              <div className="grid grid-cols-2 gap-3 w-full">
                 {/* Final Match - FULL WIDTH IN ITS GRID CELL */}
                 <div className="w-full">
-                  <h4 className="text-sm font-medium text-gray-600 mb-2 text-center">
+                  <h4 className="text-xs font-medium text-gray-600 mb-2 text-center">
                     {language === 'es' ? '1er/2do Puesto' : '1st/2nd Place'}
                   </h4>
                   <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-1">
@@ -262,7 +262,7 @@ export default function TournamentBracket({
                 
                 {/* 3rd Place Match - FULL WIDTH IN ITS GRID CELL */}
                 <div className="w-full">
-                  <h4 className="text-sm font-medium text-gray-600 mb-2 text-center">
+                  <h4 className="text-xs font-medium text-gray-600 mb-2 text-center">
                     {language === 'es' ? '3er/4to Puesto' : '3rd/4th Place'}
                   </h4>
                   <div className="bg-gray-50 border border-gray-300 rounded-lg p-1">
@@ -291,42 +291,42 @@ export default function TournamentBracket({
             </div>
           </div>
 
-          {/* Podium Display - REDUCED TO 1 COLUMN */}
-          <div className="flex flex-col">
-            <h3 className="text-lg font-semibold mb-4 text-center text-gray-700">
+          {/* Podium Display - COMPACT VERSION */}
+          <div className="flex flex-col min-w-0">
+            <h3 className="text-base font-semibold mb-3 text-center text-gray-700">
               {language === 'es' ? 'Podio' : 'Podium'}
             </h3>
             <div className="flex-1 flex flex-col justify-center">
               <div className="space-y-2">
-                {/* 1st Place - Champion - SMALLER CARD */}
-                <div className="bg-gradient-to-br from-yellow-400 to-yellow-600 text-white rounded-lg p-3 text-center shadow-lg transform hover:scale-105 transition-transform">
-                  <div className="text-xl mb-1">🥇</div>
-                  <div className="text-xs uppercase tracking-wider opacity-90">
+                {/* 1st Place - Champion - COMPACT */}
+                <div className="bg-gradient-to-br from-yellow-400 to-yellow-600 text-white rounded-lg p-2 text-center shadow transform hover:scale-105 transition-transform">
+                  <div className="text-lg">🥇</div>
+                  <div className="text-[10px] uppercase tracking-wider opacity-90">
                     {language === 'es' ? 'Campeón' : 'Champion'}
                   </div>
-                  <div className="text-sm font-bold mt-1">
+                  <div className="text-xs font-bold mt-0.5 truncate px-1">
                     {formatName(getChampion())}
                   </div>
                 </div>
 
-                {/* 2nd Place - SMALLER CARD */}
-                <div className="bg-gradient-to-br from-gray-300 to-gray-500 text-white rounded-lg p-2 text-center shadow-lg transform hover:scale-105 transition-transform">
-                  <div className="text-lg mb-1">🥈</div>
-                  <div className="text-xs uppercase tracking-wider opacity-90">
+                {/* 2nd Place - COMPACT */}
+                <div className="bg-gradient-to-br from-gray-300 to-gray-500 text-white rounded-lg p-2 text-center shadow transform hover:scale-105 transition-transform">
+                  <div className="text-base">🥈</div>
+                  <div className="text-[10px] uppercase tracking-wider opacity-90">
                     {language === 'es' ? '2do' : '2nd'}
                   </div>
-                  <div className="text-sm font-bold mt-1">
+                  <div className="text-xs font-bold mt-0.5 truncate px-1">
                     {formatName(getRunnerUp())}
                   </div>
                 </div>
 
-                {/* 3rd Place - SMALLER CARD */}
-                <div className="bg-gradient-to-br from-orange-400 to-orange-600 text-white rounded-lg p-2 text-center shadow-lg transform hover:scale-105 transition-transform">
-                  <div className="text-lg mb-1">🥉</div>
-                  <div className="text-xs uppercase tracking-wider opacity-90">
+                {/* 3rd Place - COMPACT */}
+                <div className="bg-gradient-to-br from-orange-400 to-orange-600 text-white rounded-lg p-2 text-center shadow transform hover:scale-105 transition-transform">
+                  <div className="text-base">🥉</div>
+                  <div className="text-[10px] uppercase tracking-wider opacity-90">
                     {language === 'es' ? '3ro' : '3rd'}
                   </div>
-                  <div className="text-sm font-bold mt-1">
+                  <div className="text-xs font-bold mt-0.5 truncate px-1">
                     {formatName(getThirdPlace())}
                   </div>
                 </div>
@@ -337,17 +337,17 @@ export default function TournamentBracket({
 
         {/* Legend - only show if not hidden */}
         {!hideLegend && (
-          <div className="mt-8 flex justify-center space-x-6 text-sm">
+          <div className="mt-6 flex justify-center space-x-4 text-xs">
             <div className="flex items-center">
-              <div className="w-4 h-4 bg-green-50 border border-green-300 rounded mr-2"></div>
+              <div className="w-3 h-3 bg-green-50 border border-green-300 rounded mr-1.5"></div>
               <span>{language === 'es' ? 'Completado' : 'Completed'}</span>
             </div>
             <div className="flex items-center">
-              <div className="w-4 h-4 bg-blue-50 border border-blue-300 rounded mr-2"></div>
+              <div className="w-3 h-3 bg-blue-50 border border-blue-300 rounded mr-1.5"></div>
               <span>{language === 'es' ? 'Programado' : 'Scheduled'}</span>
             </div>
             <div className="flex items-center">
-              <div className="w-4 h-4 bg-gray-100 border border-gray-300 rounded mr-2"></div>
+              <div className="w-3 h-3 bg-gray-100 border border-gray-300 rounded mr-1.5"></div>
               <span>{language === 'es' ? 'Pendiente' : 'Pending'}</span>
             </div>
           </div>
