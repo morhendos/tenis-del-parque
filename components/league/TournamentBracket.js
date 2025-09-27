@@ -115,7 +115,7 @@ export default function TournamentBracket({
 
   return (
     <div className="overflow-x-auto">
-      <div className="min-w-[1200px] p-4">
+      <div className="min-w-[1400px] p-4">
         {/* Title - only show if not hidden */}
         {!hideTitle && (
           <div className="text-center mb-6">
@@ -128,8 +128,8 @@ export default function TournamentBracket({
           </div>
         )}
 
-        {/* Tournament Bracket Grid - IMPROVED LAYOUT WITH PROPER SIZING */}
-        <div className="grid grid-cols-4 gap-8">
+        {/* Tournament Bracket Grid - 5 COLUMNS FOR PROPER WIDTH */}
+        <div className="grid grid-cols-5 gap-6">
           
           {/* Quarterfinals Column */}
           <div className="flex flex-col">
@@ -222,15 +222,15 @@ export default function TournamentBracket({
             </div>
           </div>
 
-          {/* Finals Column - HORIZONTAL LAYOUT WITH HEADERS FOR BOTH */}
-          <div className="flex flex-col">
+          {/* Finals Column - SPANS 2 COLUMNS FOR FULL WIDTH MATCHES */}
+          <div className="col-span-2 flex flex-col">
             <h3 className="text-lg font-semibold mb-4 text-center text-gray-700">
               {language === 'es' ? 'Finales' : 'Finals'}
             </h3>
             <div className="flex-1 flex items-center">
-              <div className="grid grid-cols-2 gap-4 w-full">
-                {/* Final Match - WITH HEADER */}
-                <div>
+              <div className="grid grid-cols-2 gap-6 w-full">
+                {/* Final Match - FULL WIDTH IN ITS GRID CELL */}
+                <div className="w-full">
                   <h4 className="text-sm font-medium text-gray-600 mb-2 text-center">
                     {language === 'es' ? '1er/2do Puesto' : '1st/2nd Place'}
                   </h4>
@@ -260,8 +260,8 @@ export default function TournamentBracket({
                   </div>
                 </div>
                 
-                {/* 3rd Place Match - WITH EXISTING HEADER */}
-                <div>
+                {/* 3rd Place Match - FULL WIDTH IN ITS GRID CELL */}
+                <div className="w-full">
                   <h4 className="text-sm font-medium text-gray-600 mb-2 text-center">
                     {language === 'es' ? '3er/4to Puesto' : '3rd/4th Place'}
                   </h4>
@@ -291,42 +291,42 @@ export default function TournamentBracket({
             </div>
           </div>
 
-          {/* Podium Display - Improved with 1st, 2nd, 3rd places */}
+          {/* Podium Display - REDUCED TO 1 COLUMN */}
           <div className="flex flex-col">
             <h3 className="text-lg font-semibold mb-4 text-center text-gray-700">
               {language === 'es' ? 'Podio' : 'Podium'}
             </h3>
             <div className="flex-1 flex flex-col justify-center">
-              <div className="space-y-3">
-                {/* 1st Place - Champion - REMOVED GROUP A */}
-                <div className="bg-gradient-to-br from-yellow-400 to-yellow-600 text-white rounded-lg p-4 text-center shadow-lg transform hover:scale-105 transition-transform">
-                  <div className="text-2xl mb-1">🥇</div>
+              <div className="space-y-2">
+                {/* 1st Place - Champion - SMALLER CARD */}
+                <div className="bg-gradient-to-br from-yellow-400 to-yellow-600 text-white rounded-lg p-3 text-center shadow-lg transform hover:scale-105 transition-transform">
+                  <div className="text-xl mb-1">🥇</div>
                   <div className="text-xs uppercase tracking-wider opacity-90">
                     {language === 'es' ? 'Campeón' : 'Champion'}
                   </div>
-                  <div className="text-lg font-bold mt-1">
+                  <div className="text-sm font-bold mt-1">
                     {formatName(getChampion())}
                   </div>
                 </div>
 
-                {/* 2nd Place */}
-                <div className="bg-gradient-to-br from-gray-300 to-gray-500 text-white rounded-lg p-3 text-center shadow-lg transform hover:scale-105 transition-transform">
-                  <div className="text-xl mb-1">🥈</div>
+                {/* 2nd Place - SMALLER CARD */}
+                <div className="bg-gradient-to-br from-gray-300 to-gray-500 text-white rounded-lg p-2 text-center shadow-lg transform hover:scale-105 transition-transform">
+                  <div className="text-lg mb-1">🥈</div>
                   <div className="text-xs uppercase tracking-wider opacity-90">
-                    {language === 'es' ? 'Segundo Lugar' : 'Second Place'}
+                    {language === 'es' ? '2do' : '2nd'}
                   </div>
-                  <div className="text-base font-bold mt-1">
+                  <div className="text-sm font-bold mt-1">
                     {formatName(getRunnerUp())}
                   </div>
                 </div>
 
-                {/* 3rd Place */}
-                <div className="bg-gradient-to-br from-orange-400 to-orange-600 text-white rounded-lg p-3 text-center shadow-lg transform hover:scale-105 transition-transform">
-                  <div className="text-xl mb-1">🥉</div>
+                {/* 3rd Place - SMALLER CARD */}
+                <div className="bg-gradient-to-br from-orange-400 to-orange-600 text-white rounded-lg p-2 text-center shadow-lg transform hover:scale-105 transition-transform">
+                  <div className="text-lg mb-1">🥉</div>
                   <div className="text-xs uppercase tracking-wider opacity-90">
-                    {language === 'es' ? 'Tercer Lugar' : 'Third Place'}
+                    {language === 'es' ? '3ro' : '3rd'}
                   </div>
-                  <div className="text-base font-bold mt-1">
+                  <div className="text-sm font-bold mt-1">
                     {formatName(getThirdPlace())}
                   </div>
                 </div>
