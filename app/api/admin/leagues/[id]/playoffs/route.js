@@ -17,7 +17,7 @@ export async function GET(request, { params }) {
     const LEAGUE_ID = params.id
     const SEASON_ID = '688f5d51c94f8e3b3cbfd87b'
     
-    console.log('🔍 SIMPLE PLAYOFF ENDPOINT - League:', LEAGUE_ID, 'Season:', SEASON_ID)
+    console.log('🔍 PLAYOFF ENDPOINT - League:', LEAGUE_ID, 'Season:', SEASON_ID)
     
     // Get league with direct query
     const league = await mongoose.connection.db.collection('leagues').findOne({
@@ -28,7 +28,7 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: 'League not found' }, { status: 404 })
     }
     
-    // Get players directly from database - we know this works
+    // Get players directly from database
     const players = await mongoose.connection.db.collection('players').find({
       registrations: {
         $elemMatch: {
@@ -51,63 +51,71 @@ export async function GET(request, { params }) {
     
     console.log(`✅ Found ${matches.length} completed matches`)
     
-    // Create simple standings
-    const standings = players
-      .filter(player => {
-        // Only include players who have played matches
-        return matches.some(match => 
-          match.players.player1.toString() === player._id.toString() ||
-          match.players.player2.toString() === player._id.toString()
-        )
-      })
-      .map((player, index) => ({
-        position: index + 1,
-        player: {
-          _id: player._id,
-          name: player.name
-        },
-        stats: calculatePlayerStats(player._id, matches)
-      }))
-      .sort((a, b) => {
-        // Use the SAME sorting logic as public league standings for consistency
-        
-        // Primary: Has played matches (players with matches first)
-        const aHasPlayed = a.stats.matchesPlayed > 0
-        const bHasPlayed = b.stats.matchesPlayed > 0
-        
-        if (aHasPlayed !== bHasPlayed) {
-          return bHasPlayed ? 1 : -1  // Players who have played come first
-        }
-        
-        // Secondary: total points (highest first)
-        if (a.stats.totalPoints !== b.stats.totalPoints) {
-          return b.stats.totalPoints - a.stats.totalPoints
-        }
-        
-        // Tertiary: set difference (best first)
-        const aSetDiff = (a.stats.setsWon || 0) - (a.stats.setsLost || 0)
-        const bSetDiff = (b.stats.setsWon || 0) - (b.stats.setsLost || 0)
-        if (aSetDiff !== bSetDiff) return bSetDiff - aSetDiff
-        
-        // Quaternary: game difference (best first)
-        const aGameDiff = (a.stats.gamesWon || 0) - (a.stats.gamesLost || 0)
-        const bGameDiff = (b.stats.gamesWon || 0) - (b.stats.gamesLost || 0)
-        if (aGameDiff !== bGameDiff) return bGameDiff - aGameDiff
-        
-        // Quinary: alphabetical by name
-        return a.player.name.localeCompare(b.player.name)
-      })
-    
-    console.log(`✅ Generated standings for ${standings.length} players with matches`)
-    
-    // Populate qualified players with full player data
+    let standings = []
     let populatedPlayoffConfig = league.playoffConfig || {}
-    if (populatedPlayoffConfig.qualifiedPlayers) {
+    
+    // CRITICAL FIX: Check if playoffs are already initialized
+    const playoffsInitialized = populatedPlayoffConfig.enabled && 
+                                populatedPlayoffConfig.qualifiedPlayers?.groupA?.length > 0
+    
+    if (playoffsInitialized) {
+      console.log('🏆 Playoffs already initialized - using stored qualified players')
+      
       // Create a map for quick player lookups
       const playerMap = new Map()
       players.forEach(p => playerMap.set(p._id.toString(), p))
       
-      // Populate Group A players
+      // Build standings from the STORED qualified players
+      const qualifiedGroupA = populatedPlayoffConfig.qualifiedPlayers.groupA || []
+      const qualifiedGroupB = populatedPlayoffConfig.qualifiedPlayers.groupB || []
+      
+      // Combine both groups for standings display
+      const allQualified = [
+        ...qualifiedGroupA.map(qp => ({
+          ...qp,
+          group: 'A'
+        })),
+        ...qualifiedGroupB.map(qp => ({
+          ...qp,
+          group: 'B'
+        }))
+      ]
+      
+      // Create standings based on the stored qualified players
+      standings = allQualified.map(qp => {
+        const player = playerMap.get(qp.player.toString())
+        if (!player) {
+          console.warn(`Player ${qp.player} not found in current players list`)
+          return {
+            position: qp.regularSeasonPosition || qp.seed,
+            player: { _id: qp.player, name: 'Unknown Player' },
+            stats: { totalPoints: 0, matchesPlayed: 0 },
+            group: qp.group,
+            seed: qp.seed
+          }
+        }
+        
+        // Calculate stats for display (but position remains fixed from qualification)
+        const stats = calculatePlayerStats(player._id, matches)
+        
+        return {
+          position: qp.regularSeasonPosition || qp.seed,
+          player: {
+            _id: player._id,
+            name: player.name
+          },
+          stats,
+          group: qp.group,
+          seed: qp.seed
+        }
+      })
+      
+      // Sort by original qualification position
+      standings.sort((a, b) => a.position - b.position)
+      
+      console.log('✅ Using stored playoff qualifiers:', standings.length, 'players')
+      
+      // Populate qualified players with full player data
       if (populatedPlayoffConfig.qualifiedPlayers.groupA) {
         populatedPlayoffConfig.qualifiedPlayers.groupA = populatedPlayoffConfig.qualifiedPlayers.groupA.map(qp => ({
           ...qp,
@@ -115,13 +123,69 @@ export async function GET(request, { params }) {
         }))
       }
       
-      // Populate Group B players
       if (populatedPlayoffConfig.qualifiedPlayers.groupB) {
         populatedPlayoffConfig.qualifiedPlayers.groupB = populatedPlayoffConfig.qualifiedPlayers.groupB.map(qp => ({
           ...qp,
           player: playerMap.get(qp.player.toString()) || { _id: qp.player, name: 'Unknown Player' }
         }))
       }
+      
+    } else {
+      console.log('📊 Playoffs not initialized - calculating current standings')
+      
+      // Create fresh standings for display (pre-playoff)
+      standings = players
+        .filter(player => {
+          // Only include players who have played matches
+          return matches.some(match => 
+            match.players.player1.toString() === player._id.toString() ||
+            match.players.player2.toString() === player._id.toString()
+          )
+        })
+        .map((player, index) => ({
+          position: index + 1,
+          player: {
+            _id: player._id,
+            name: player.name
+          },
+          stats: calculatePlayerStats(player._id, matches)
+        }))
+        .sort((a, b) => {
+          // Use the SAME sorting logic as public league standings for consistency
+          
+          // Primary: Has played matches (players with matches first)
+          const aHasPlayed = a.stats.matchesPlayed > 0
+          const bHasPlayed = b.stats.matchesPlayed > 0
+          
+          if (aHasPlayed !== bHasPlayed) {
+            return bHasPlayed ? 1 : -1  // Players who have played come first
+          }
+          
+          // Secondary: total points (highest first)
+          if (a.stats.totalPoints !== b.stats.totalPoints) {
+            return b.stats.totalPoints - a.stats.totalPoints
+          }
+          
+          // Tertiary: set difference (best first)
+          const aSetDiff = (a.stats.setsWon || 0) - (a.stats.setsLost || 0)
+          const bSetDiff = (b.stats.setsWon || 0) - (b.stats.setsLost || 0)
+          if (aSetDiff !== bSetDiff) return bSetDiff - aSetDiff
+          
+          // Quaternary: game difference (best first)
+          const aGameDiff = (a.stats.gamesWon || 0) - (a.stats.gamesLost || 0)
+          const bGameDiff = (b.stats.gamesWon || 0) - (b.stats.gamesLost || 0)
+          if (aGameDiff !== bGameDiff) return bGameDiff - aGameDiff
+          
+          // Quinary: alphabetical by name
+          return a.player.name.localeCompare(b.player.name)
+        })
+      
+      // Update positions after sorting
+      standings.forEach((standing, index) => {
+        standing.position = index + 1
+      })
+      
+      console.log(`✅ Generated fresh standings for ${standings.length} players with matches`)
     }
     
     // Get playoff matches
@@ -132,10 +196,10 @@ export async function GET(request, { params }) {
     }).toArray()
     
     // Populate player data in playoff matches
+    const playerMap = new Map()
+    players.forEach(p => playerMap.set(p._id.toString(), p))
+    
     const populatedPlayoffMatches = playoffMatches.map(match => {
-      const playerMap = new Map()
-      players.forEach(p => playerMap.set(p._id.toString(), p))
-      
       return {
         ...match,
         players: {
@@ -154,11 +218,12 @@ export async function GET(request, { params }) {
       playoffConfig: populatedPlayoffConfig,
       currentPhase: league.playoffConfig?.currentPhase || 'regular_season',
       matches: populatedPlayoffMatches,
-      standings: standings.slice(0, 16),
-      eligiblePlayerCount: standings.length,
+      standings: standings.slice(0, 16), // Show top 16 for display
+      eligiblePlayerCount: playoffsInitialized ? standings.length : standings.filter(s => s.stats.matchesPlayed > 0).length,
       seasonIdentifier: SEASON_ID,
       leagueSlug: league.slug,
-      leagueName: league.name // Add league name so we don't need the other endpoint
+      leagueName: league.name,
+      playoffsInitialized // Let the frontend know if playoffs are locked in
     })
     
   } catch (error) {
@@ -255,11 +320,19 @@ async function initializePlayoffs(league, data) {
     )
   }
   
-  // Prepare qualified players for Group A (top 8)
+  // CRITICAL: Store the qualified players with their qualification-time stats
   const groupAPlayers = standings.slice(0, 8).map((standing, index) => ({
     player: standing.player._id,
     seed: index + 1,
-    regularSeasonPosition: standing.position
+    regularSeasonPosition: standing.position,
+    // Store their qualification stats for reference
+    qualificationStats: {
+      points: standing.stats.totalPoints,
+      matchesPlayed: standing.stats.matchesPlayed,
+      matchesWon: standing.stats.matchesWon,
+      setsWon: standing.stats.setsWon,
+      setsLost: standing.stats.setsLost
+    }
   }))
   
   // Prepare qualified players for Group B (9-16) if enabled
@@ -267,7 +340,14 @@ async function initializePlayoffs(league, data) {
     ? standings.slice(8, 16).map((standing, index) => ({
         player: standing.player._id,
         seed: index + 1,
-        regularSeasonPosition: standing.position
+        regularSeasonPosition: standing.position,
+        qualificationStats: {
+          points: standing.stats.totalPoints,
+          matchesPlayed: standing.stats.matchesPlayed,
+          matchesWon: standing.stats.matchesWon,
+          setsWon: standing.stats.setsWon,
+          setsLost: standing.stats.setsLost
+        }
       }))
     : []
   
@@ -280,6 +360,7 @@ async function initializePlayoffs(league, data) {
     format: 'tournament',
     currentPhase: 'playoffs_groupA',
     playoffStartDate: new Date(),
+    // This is the key: Store the qualified players permanently
     qualifiedPlayers: {
       groupA: groupAPlayers,
       groupB: groupBPlayers
@@ -325,6 +406,10 @@ async function initializePlayoffs(league, data) {
   }
   
   console.log('✅ Playoffs initialized successfully!')
+  console.log('🔒 Qualified players locked in:', {
+    groupA: groupAPlayers.map(p => ({ seed: p.seed, position: p.regularSeasonPosition })),
+    groupB: groupBPlayers.map(p => ({ seed: p.seed, position: p.regularSeasonPosition }))
+  })
   
   return NextResponse.json({
     success: true,
@@ -484,6 +569,75 @@ async function createPlayoffMatches(league, data) {
       await match.save()
       bracket.final.matchId = match._id
     }
+    
+    // Also create 3rd place match with semifinal losers
+    // Need to find the losers from semifinals
+    const sf1Match = await Match.findById(sf1.matchId)
+    const sf2Match = await Match.findById(sf2.matchId)
+    
+    if (sf1Match?.result?.winner && sf2Match?.result?.winner) {
+      const sf1Loser = sf1Match.players.player1.toString() === sf1.winner.toString() 
+        ? sf1Match.players.player2 
+        : sf1Match.players.player1
+      const sf2Loser = sf2Match.players.player1.toString() === sf2.winner.toString()
+        ? sf2Match.players.player2
+        : sf2Match.players.player1
+      
+      const thirdPlaceMatch = new Match({
+        league: league._id,
+        season: seasonId,
+        round: 11, // Same round as final
+        matchType: 'playoff',
+        playoffInfo: {
+          group,
+          stage: 'third_place'
+        },
+        players: {
+          player1: sf1Loser,
+          player2: sf2Loser
+        },
+        status: 'scheduled'
+      })
+      
+      await thirdPlaceMatch.save()
+      bracket.thirdPlace.matchId = thirdPlaceMatch._id
+    }
+  } else if (stage === 'third_place') {
+    // Create third place match only (if not created with finals)
+    const sf1 = bracket.semifinals[0]
+    const sf2 = bracket.semifinals[1]
+    
+    // Get semifinal matches to find losers
+    const sf1Match = await Match.findById(sf1.matchId)
+    const sf2Match = await Match.findById(sf2.matchId)
+    
+    if (sf1Match?.result?.winner && sf2Match?.result?.winner) {
+      const sf1Loser = sf1Match.players.player1.toString() === sf1Match.result.winner.toString() 
+        ? sf1Match.players.player2 
+        : sf1Match.players.player1
+      const sf2Loser = sf2Match.players.player1.toString() === sf2Match.result.winner.toString()
+        ? sf2Match.players.player2
+        : sf2Match.players.player1
+      
+      const match = new Match({
+        league: league._id,
+        season: seasonId,
+        round: 11,
+        matchType: 'playoff',
+        playoffInfo: {
+          group,
+          stage: 'third_place'
+        },
+        players: {
+          player1: sf1Loser,
+          player2: sf2Loser
+        },
+        status: 'scheduled'
+      })
+      
+      await match.save()
+      bracket.thirdPlace.matchId = match._id
+    }
   }
   
   await league.save({ validateModifiedOnly: true })
@@ -512,6 +666,8 @@ async function advanceWinner(league, data) {
     }
   } else if (stage === 'final') {
     bracket.final.winner = winnerId
+  } else if (stage === 'third_place') {
+    bracket.thirdPlace.winner = winnerId
   }
   
   await league.save({ validateModifiedOnly: true })
@@ -551,7 +707,7 @@ async function calculateRegularSeasonStandings(leagueId, season) {
   console.log('🏆 League ID:', leagueId)
   console.log('📅 Season identifier:', season)
   
-  // Use regular Mongoose query - the schema should work now
+  // Use regular Mongoose query
   const matches = await Match.find({
     league: leagueId,
     season: season,
@@ -559,7 +715,7 @@ async function calculateRegularSeasonStandings(leagueId, season) {
     status: 'completed'
   }).populate('players.player1 players.player2')
   
-  console.log(`🎾 Found ${matches.length} completed matches for season "${season}"`)
+  console.log(`🎾 Found ${matches.length} completed matches for season`)
   
   // Use direct MongoDB query that we know works
   const playerObjects = await mongoose.connection.db.collection('players').find({
@@ -567,37 +723,18 @@ async function calculateRegularSeasonStandings(leagueId, season) {
       $elemMatch: {
         league: leagueId,
         season: season,
-        status: { $in: ['confirmed', 'active'] } // Remove pending since there are 0
+        status: { $in: ['confirmed', 'active'] }
       }
     }
   }).toArray()
   
-  console.log(`👥 Found ${playerObjects.length} total players registered for league and season "${season}"`)
-  
-  // Debug: Let's see what seasons are actually stored in the Player registrations
-  if (playerObjects.length === 0) {
-    // Try to find ANY players for this league to debug
-    const allLeaguePlayers = await Player.find({
-      'registrations.league': leagueId
-    })
-    console.log(`🔍 Debug: Found ${allLeaguePlayers.length} total players for this league (any season)`)
-    if (allLeaguePlayers.length > 0) {
-      console.log('📝 Sample seasons in registrations:', 
-        allLeaguePlayers.slice(0, 3).map(p => ({
-          name: p.name,
-          registrations: p.registrations
-            .filter(r => r.league.toString() === leagueId.toString())
-            .map(r => r.season)
-        }))
-      )
-    }
-  }
+  console.log(`👥 Found ${playerObjects.length} total players registered`)
   
   // Filter to only players who have played at least one match
   const playersWithMatches = playerObjects.filter(player => {
     const hasMatches = matches.some(m => m.hasPlayer(player._id))
     if (!hasMatches) {
-      console.log(`⚠️ Player ${player.name} has no matches in season "${season}"`)
+      console.log(`⚠️ Player ${player.name} has no matches`)
     }
     return hasMatches
   })
@@ -622,7 +759,7 @@ async function calculateRegularSeasonStandings(leagueId, season) {
     }
     
     playerMatches.forEach(match => {
-      // Calculate points manually since we're using raw MongoDB objects
+      // Calculate points manually
       const points = calculatePointsForPlayer(match, player._id)
       stats.totalPoints += points
       
@@ -813,9 +950,4 @@ function calculatePlayerStats(playerId, matches) {
   })
   
   return stats
-}
-
-// Simple points calculation for a player across all their matches (kept for backward compatibility)
-function calculatePlayerPoints(playerId, matches) {
-  return calculatePlayerStats(playerId, matches).totalPoints
 }
