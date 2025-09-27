@@ -222,14 +222,14 @@ export default function TournamentBracket({
             </div>
           </div>
 
-          {/* Finals Column - SIDE BY SIDE FOR BETTER ALIGNMENT */}
+          {/* Finals Column - HORIZONTAL LAYOUT */}
           <div className="flex flex-col">
             <h3 className="text-lg font-semibold mb-4 text-center text-gray-700">
               {language === 'es' ? 'Finales' : 'Finals'}
             </h3>
-            <div className="flex flex-col justify-around flex-1 py-8">
-              {/* Final Match - Aligned with top semifinal */}
-              <div className="w-full">
+            <div className="flex-1 flex items-center">
+              <div className="grid grid-cols-2 gap-4 w-full">
+                {/* Final Match */}
                 <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-1">
                   {(() => {
                     const finalMatch = bracket?.final
@@ -254,32 +254,32 @@ export default function TournamentBracket({
                     )
                   })()}
                 </div>
-              </div>
-              
-              {/* 3rd Place Match - Aligned with bottom semifinal */}
-              <div className="w-full">
-                <h4 className="text-sm font-medium text-gray-600 mb-2 text-center">
-                  {language === 'es' ? '3er/4to Puesto' : '3rd/4th Place'}
-                </h4>
-                {(() => {
-                  const thirdPlaceMatch = bracket?.thirdPlace
-                  const matchData = matches?.find(m => 
-                    m._id === thirdPlaceMatch?.matchId ||
-                    m.playoffInfo?.stage === 'third_place'
-                  )
-                  
-                  // Get losers from semifinals
-                  // This would need more complex logic to track SF losers
-                  
-                  return (
-                    <MatchBox
-                      match={matchData}
-                      player1={null}
-                      player2={null}
-                      stage="third_place"
-                    />
-                  )
-                })()}
+                
+                {/* 3rd Place Match */}
+                <div>
+                  <h4 className="text-sm font-medium text-gray-600 mb-2 text-center">
+                    {language === 'es' ? '3er/4to Puesto' : '3rd/4th Place'}
+                  </h4>
+                  {(() => {
+                    const thirdPlaceMatch = bracket?.thirdPlace
+                    const matchData = matches?.find(m => 
+                      m._id === thirdPlaceMatch?.matchId ||
+                      m.playoffInfo?.stage === 'third_place'
+                    )
+                    
+                    // Get losers from semifinals
+                    // This would need more complex logic to track SF losers
+                    
+                    return (
+                      <MatchBox
+                        match={matchData}
+                        player1={null}
+                        player2={null}
+                        stage="third_place"
+                      />
+                    )
+                  })()}
+                </div>
               </div>
             </div>
           </div>
@@ -291,7 +291,7 @@ export default function TournamentBracket({
             </h3>
             <div className="flex-1 flex flex-col justify-center">
               <div className="space-y-3">
-                {/* 1st Place - Champion */}
+                {/* 1st Place - Champion - REMOVED GROUP A */}
                 <div className="bg-gradient-to-br from-yellow-400 to-yellow-600 text-white rounded-lg p-4 text-center shadow-lg transform hover:scale-105 transition-transform">
                   <div className="text-2xl mb-1">🥇</div>
                   <div className="text-xs uppercase tracking-wider opacity-90">
@@ -299,9 +299,6 @@ export default function TournamentBracket({
                   </div>
                   <div className="text-lg font-bold mt-1">
                     {formatName(getChampion())}
-                  </div>
-                  <div className="text-xs mt-1 opacity-90">
-                    {language === 'es' ? 'Grupo' : 'Group'} {group}
                   </div>
                 </div>
 
