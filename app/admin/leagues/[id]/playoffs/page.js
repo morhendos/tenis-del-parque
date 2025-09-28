@@ -68,21 +68,28 @@ export default function LeaguePlayoffsAdmin() {
         console.log('League slug:', data.leagueSlug)
         console.log('Playoffs initialized:', data.playoffsInitialized)
       }
+      return data // Return the data so we can use it
     } catch (error) {
       console.error('Error fetching playoff data:', error)
+      return null
     } finally {
       setLoading(false)
     }
   }
   
-  const handleInitializePlayoffs = async () => {
+  const handleInitializePlayoffs = async (skipConfirm = false) => {
     if (eligiblePlayerCount < 8) {
       alert(`Cannot initialize playoffs: Only ${eligiblePlayerCount} eligible players found. Need at least 8.`)
       return
     }
     
-    if (!confirm(`Initialize playoffs with top ${numberOfGroups === 2 ? '16' : '8'} players?\n\nTop 8 players:\n${standings.slice(0, 8).map(s => `${s.position}. ${s.player.name} (${s.stats.totalPoints} pts)`).join('\n')}\n\n⚠️ IMPORTANT: These players will be LOCKED IN for the playoffs and cannot be changed!`)) {
-      return
+    // Show confirmation with current standings
+    if (!skipConfirm) {
+      const confirmMessage = `Initialize playoffs with top ${numberOfGroups === 2 ? '16' : '8'} players?\n\nTop 8 players:\n${standings.slice(0, 8).map(s => `${s.position}. ${s.player.name} (${s.stats.totalPoints} pts)`).join('\n')}\n\n⚠️ IMPORTANT: These players will be LOCKED IN for the playoffs and cannot be changed!`
+      
+      if (!confirm(confirmMessage)) {
+        return
+      }
     }
     
     try {
@@ -115,6 +122,9 @@ export default function LeaguePlayoffsAdmin() {
     }
     
     try {
+      // Show loading indicator while resetting
+      alert('Resetting playoffs... Please wait.')
+      
       // First, update the league to reset playoff phase
       const resetRes = await fetch(`/api/admin/leagues/${leagueId}`, {
         method: 'PUT',
@@ -130,8 +140,26 @@ export default function LeaguePlayoffsAdmin() {
       })
       
       if (resetRes.ok) {
-        // Then re-initialize with fresh data
-        await handleInitializePlayoffs()
+        // CRITICAL FIX: Refresh the playoff data BEFORE initializing
+        // This ensures we get fresh standings calculated by the service
+        alert('Playoffs reset. Fetching fresh standings...')
+        const freshData = await fetchPlayoffData()
+        
+        // Wait a bit to ensure state is updated
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
+        if (freshData && freshData.success && freshData.standings && freshData.standings.length >= 8) {
+          // Now show confirmation with the FRESH standings
+          const freshStandings = freshData.standings
+          const confirmMessage = `Playoffs have been reset. Ready to initialize with the current top ${numberOfGroups === 2 ? '16' : '8'} players:\n\nTop 8 players:\n${freshStandings.slice(0, 8).map((s, idx) => `${idx + 1}. ${s.player.name} (${s.stats.totalPoints} pts)`).join('\n')}\n\n⚠️ These players will be LOCKED IN for the playoffs. Continue?`
+          
+          if (confirm(confirmMessage)) {
+            // Now initialize with fresh data
+            await handleInitializePlayoffs(true) // Skip the normal confirm since we just showed it
+          }
+        } else {
+          alert('Failed to get fresh standings after reset. Please refresh the page and try again.')
+        }
       } else {
         alert('Failed to reset playoffs')
       }
@@ -242,7 +270,7 @@ export default function LeaguePlayoffsAdmin() {
                 <li>Players are not properly registered for this league</li>
                 <li>The season identifier mismatch (check season ID above)</li>
                 <li>No matches have been played yet</li>
-                <li>Player registrations use a different season value than &quot;{seasonIdentifier}&quot;</li>
+                <li>Player registrations use a different season value than "{seasonIdentifier}"</li>
               </ul>
             </div>
           ) : (
@@ -357,7 +385,7 @@ export default function LeaguePlayoffsAdmin() {
               </button>
               
               <button
-                onClick={handleInitializePlayoffs}
+                onClick={() => handleInitializePlayoffs(false)}
                 className={`px-4 py-2 rounded text-white ${
                   eligiblePlayerCount >= 8 
                     ? 'bg-purple-600 hover:bg-purple-700' 
