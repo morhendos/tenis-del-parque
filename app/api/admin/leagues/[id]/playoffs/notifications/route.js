@@ -19,7 +19,7 @@ export async function POST(request, { params }) {
     await dbConnect()
     
     const body = await request.json()
-    const { action, group = 'A' } = body
+    const { action, group = 'A', playerId } = body
     
     const league = await League.findById(params.id)
     if (!league) {
@@ -120,12 +120,64 @@ export async function POST(request, { params }) {
         user,
         data: notificationData,
         hasEmail: !!(player.email || user?.email),
-        hasWhatsApp: !!player.whatsapp
+        hasWhatsApp: !!player.whatsapp,
+        playerId: player._id.toString()
       })
     }
     
     // Process based on action
-    if (action === 'sendEmails') {
+    if (action === 'sendIndividualEmail') {
+      // NEW ACTION: Send email to a specific player
+      if (!resend) {
+        return NextResponse.json({ 
+          error: 'Email service not configured. Please set RESEND_API_KEY in environment variables.' 
+        }, { status: 503 })
+      }
+      
+      if (!playerId) {
+        return NextResponse.json({ error: 'Player ID is required for individual email' }, { status: 400 })
+      }
+      
+      const notification = notifications.find(n => n.playerId === playerId)
+      if (!notification) {
+        return NextResponse.json({ error: 'Player not found in qualified players' }, { status: 404 })
+      }
+      
+      if (!notification.hasEmail) {
+        return NextResponse.json({ error: `No email address for ${notification.player.name}` }, { status: 400 })
+      }
+      
+      try {
+        const emailContent = generatePlayoffEmail(notification.data)
+        
+        const { data, error } = await resend.emails.send({
+          from: 'Tenis del Parque <noreply@tenisdp.es>',
+          to: notification.data.playerEmail,
+          subject: emailContent.subject,
+          html: emailContent.html
+        })
+        
+        if (error) {
+          return NextResponse.json({ 
+            success: false, 
+            error: `Failed to send: ${error.message}` 
+          }, { status: 500 })
+        }
+        
+        return NextResponse.json({
+          success: true,
+          message: `Test email sent successfully to ${notification.player.name} (${notification.data.playerEmail})`,
+          player: notification.player.name,
+          email: notification.data.playerEmail
+        })
+      } catch (err) {
+        return NextResponse.json({ 
+          success: false, 
+          error: `Error sending email: ${err.message}` 
+        }, { status: 500 })
+      }
+      
+    } else if (action === 'sendEmails') {
       if (!resend) {
         return NextResponse.json({ 
           error: 'Email service not configured. Please set RESEND_API_KEY in environment variables.' 
@@ -216,6 +268,7 @@ export async function POST(request, { params }) {
         
         previews.push({
           player: notification.player.name,
+          playerId: notification.playerId,
           seed: notification.data.seed,
           email: notification.data.playerEmail,
           whatsapp: notification.player.whatsapp,
