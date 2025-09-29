@@ -9,6 +9,9 @@ import Footer from '../../../../components/common/Footer'
 import { homeContent } from '../../../../lib/content/homeContent'
 import { i18n } from '../../../../lib/i18n/config'
 
+// Default Season ObjectId for Summer 2025
+const DEFAULT_SEASON_ID = '688f5d51c94f8e3b3cbfd87b'
+
 export default function LeagueRegistrationPage() {
   const params = useParams()
   const leagueSlug = params.league
@@ -45,6 +48,7 @@ export default function LeagueRegistrationPage() {
         }
         const data = await response.json()
         console.log('✅ League data loaded:', data.league)
+        console.log('📅 Available seasons:', data.league.seasons)
         setLeague(data.league)
       } catch (err) {
         console.error('❌ Error fetching league:', err)
@@ -106,6 +110,16 @@ export default function LeagueRegistrationPage() {
     setIsSubmitting(true)
     
     try {
+      // FIXED: Get the season ObjectId instead of the name
+      // Priority: 1) Active/Open season 2) First season 3) Default to Summer 2025
+      const currentSeason = league.seasons?.find(s => 
+        s.status === 'registration_open' || s.status === 'active'
+      ) || league.seasons?.[0]
+      
+      const seasonId = currentSeason?._id || DEFAULT_SEASON_ID
+      
+      console.log('📅 Using season ID:', seasonId, 'from season:', currentSeason?.name)
+      
       const response = await fetch('/api/players/register', {
         method: 'POST',
         headers: {
@@ -116,7 +130,7 @@ export default function LeagueRegistrationPage() {
           language: validLocale,
           leagueId: league._id,
           leagueSlug: league.slug,
-          season: league.seasons?.[0]?.name || league.season?.type + '-' + league.season?.year || 'summer-2025'
+          season: seasonId // Now sending the ObjectId instead of a string
         })
       })
       
@@ -148,7 +162,8 @@ export default function LeagueRegistrationPage() {
           leagueName: league.name,
           leagueStatus: league.status,
           whatsappGroupLink: whatsappGroupLink,
-          shareUrl: shareUrl
+          shareUrl: shareUrl,
+          seasonUsed: seasonId
         })
         
         setIsSubmitted(true)
@@ -287,6 +302,14 @@ export default function LeagueRegistrationPage() {
     subtitle: league.description?.[validLocale] || league.description?.es || t.signup.subtitle
   }
 
+  // Get current season display name
+  const currentSeason = league.seasons?.find(s => 
+    s.status === 'registration_open' || s.status === 'active'
+  ) || league.seasons?.[0]
+  
+  const seasonDisplayName = currentSeason?.name || 
+    (league.season ? `${league.season.type} ${league.season.year}` : 'Summer 2025')
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-parque-bg via-white to-white">
       <Navigation locale={validLocale} />
@@ -301,14 +324,11 @@ export default function LeagueRegistrationPage() {
             <p className="text-xl text-gray-600 mb-2">
               {league.location?.city}, {league.location?.region}
             </p>
-            {(league.seasons?.[0] || league.season) && (
+            {currentSeason && (
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full text-sm">
                 <span className="w-2 h-2 bg-parque-green rounded-full animate-pulse"></span>
                 <span className="text-gray-700">
-                  {validLocale === 'es' ? 'Inscripciones abiertas' : 'Registration open'} - {
-                    league.seasons?.[0]?.name || 
-                    (league.season ? `${league.season.type} ${league.season.year}` : '')
-                  }
+                  {validLocale === 'es' ? 'Inscripciones abiertas' : 'Registration open'} - {seasonDisplayName}
                 </span>
               </div>
             )}
