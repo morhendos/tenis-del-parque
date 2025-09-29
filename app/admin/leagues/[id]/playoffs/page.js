@@ -1,6 +1,24 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+/**
+ * CRITICAL RULE FOR ALL JSX/REACT CODE:
+ * =====================================
+ * NEVER use unescaped quotes in JSX text content!
+ * 
+ * ❌ WRONG: <p>Click the "button" here</p>
+ * ✅ RIGHT: <p>Click the &quot;button&quot; here</p>
+ * 
+ * Common HTML entities to use:
+ * - " becomes &quot; or &ldquo;/&rdquo;
+ * - ' becomes &apos; or &#39;
+ * - & becomes &amp;
+ * - < becomes &lt;
+ * - > becomes &gt;
+ * 
+ * This prevents build errors in production!
+ */
+
+import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import TournamentBracket from '@/components/league/TournamentBracket'
 
@@ -26,14 +44,7 @@ export default function LeaguePlayoffsAdmin() {
   const [sendingNotifications, setSendingNotifications] = useState(false)
   const [whatsappMessages, setWhatsappMessages] = useState([])
   
-  useEffect(() => {
-    if (leagueId) {
-      fetchLeagueData()
-      fetchPlayoffData()
-    }
-  }, [leagueId])
-  
-  const fetchLeagueData = async () => {
+  const fetchLeagueData = useCallback(async () => {
     try {
       const res = await fetch(`/api/admin/leagues/${leagueId}`)
       const data = await res.json()
@@ -46,9 +57,9 @@ export default function LeaguePlayoffsAdmin() {
     } catch (error) {
       console.warn('Error fetching league (will use playoff data):', error)
     }
-  }
+  }, [leagueId])
   
-  const fetchPlayoffData = async () => {
+  const fetchPlayoffData = useCallback(async () => {
     try {
       const res = await fetch(`/api/admin/leagues/${leagueId}/playoffs`)
       const data = await res.json()
@@ -82,7 +93,14 @@ export default function LeaguePlayoffsAdmin() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [leagueId, league])
+  
+  useEffect(() => {
+    if (leagueId) {
+      fetchLeagueData()
+      fetchPlayoffData()
+    }
+  }, [leagueId, fetchLeagueData, fetchPlayoffData])
   
   const handleInitializePlayoffs = async (skipConfirm = false) => {
     if (eligiblePlayerCount < 8) {
@@ -253,6 +271,34 @@ export default function LeaguePlayoffsAdmin() {
     }
   }
   
+  const handleSendIndividualEmail = async (playerId) => {
+    if (!confirm('Send a test email to this player?')) {
+      return
+    }
+    
+    try {
+      const res = await fetch(`/api/admin/leagues/${leagueId}/playoffs/notifications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'sendIndividualEmail',
+          group: notificationGroup,
+          playerId
+        })
+      })
+      
+      const data = await res.json()
+      if (data.success) {
+        alert(data.message)
+      } else {
+        alert('Error: ' + (data.error || 'Failed to send test email'))
+      }
+    } catch (error) {
+      console.error('Error sending test email:', error)
+      alert('Failed to send test email')
+    }
+  }
+  
   const handleSendEmails = async () => {
     if (!confirm('This will send congratulation emails to all qualified players in Group ' + notificationGroup + '. Continue?')) {
       return
@@ -346,7 +392,7 @@ export default function LeaguePlayoffsAdmin() {
               </p>
               <p className="text-sm text-yellow-700 mt-1">
                 The standings shown below are the qualified players at the time playoffs were initialized.
-                To recalculate with current standings, use the &quot;Reset & Recalculate Playoffs&quot; button.
+                To recalculate with current standings, use the &quot;Reset &amp; Recalculate Playoffs&quot; button.
               </p>
             </div>
           )}
@@ -360,7 +406,7 @@ export default function LeaguePlayoffsAdmin() {
                 <li>Players are not properly registered for this league</li>
                 <li>The season identifier mismatch (check season ID above)</li>
                 <li>No matches have been played yet</li>
-                <li>Player registrations use a different season value than "{seasonIdentifier}"</li>
+                <li>Player registrations use a different season value than &quot;{seasonIdentifier}&quot;</li>
               </ul>
             </div>
           ) : (
@@ -520,7 +566,7 @@ export default function LeaguePlayoffsAdmin() {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              Reset & Recalculate Playoffs
+              Reset &amp; Recalculate Playoffs
             </button>
           </div>
           
@@ -644,7 +690,7 @@ export default function LeaguePlayoffsAdmin() {
           <li>Initialize playoffs when regular season is complete - this will LOCK IN the qualified players</li>
           <li>Once initialized, playoff players are locked and won&apos;t change even if regular season standings change</li>
           <li>Send notification emails and WhatsApp messages to qualified players</li>
-          <li>If playoffs show wrong players, use &quot;Reset & Recalculate Playoffs&quot; button to re-lock with current standings</li>
+          <li>If playoffs show wrong players, use &quot;Reset &amp; Recalculate Playoffs&quot; button to re-lock with current standings</li>
           <li>Quarterfinal matches are created automatically with proper seeding</li>
           <li>Create semifinal matches after quarterfinals are complete</li>
           <li>Create final matches after semifinals are complete</li>
@@ -674,11 +720,12 @@ export default function LeaguePlayoffsAdmin() {
                             <th className="pb-2">Opponent</th>
                             <th className="pb-2">Email</th>
                             <th className="pb-2">WhatsApp</th>
+                            <th className="pb-2">Action</th>
                           </tr>
                         </thead>
                         <tbody className="text-sm">
                           {notificationPreview.previews.map((p) => (
-                            <tr key={p.player} className="border-t border-gray-200">
+                            <tr key={p.playerId} className="border-t border-gray-200">
                               <td className="py-2">#{p.seed}</td>
                               <td className="py-2">{p.player}</td>
                               <td className="py-2">{p.opponent}</td>
@@ -694,6 +741,16 @@ export default function LeaguePlayoffsAdmin() {
                                   <span className="text-green-600">✓</span>
                                 ) : (
                                   <span className="text-red-600">✗</span>
+                                )}
+                              </td>
+                              <td className="py-2">
+                                {p.hasEmail && (
+                                  <button
+                                    onClick={() => handleSendIndividualEmail(p.playerId)}
+                                    className="text-purple-600 hover:text-purple-800 text-xs underline"
+                                  >
+                                    Test Email
+                                  </button>
                                 )}
                               </td>
                             </tr>
