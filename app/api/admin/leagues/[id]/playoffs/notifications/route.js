@@ -127,7 +127,7 @@ export async function POST(request, { params }) {
     
     // Process based on action
     if (action === 'sendIndividualEmail') {
-      // NEW ACTION: Send email to a specific player
+      // INDIVIDUAL EMAIL FEATURE: Send email to a specific player for testing
       if (!resend) {
         return NextResponse.json({ 
           error: 'Email service not configured. Please set RESEND_API_KEY in environment variables.' 
@@ -168,7 +168,8 @@ export async function POST(request, { params }) {
           success: true,
           message: `Test email sent successfully to ${notification.player.name} (${notification.data.playerEmail})`,
           player: notification.player.name,
-          email: notification.data.playerEmail
+          email: notification.data.playerEmail,
+          emailId: data?.id
         })
       } catch (err) {
         return NextResponse.json({ 
@@ -178,6 +179,7 @@ export async function POST(request, { params }) {
       }
       
     } else if (action === 'sendEmails') {
+      // BULK EMAIL: Send to all qualified players
       if (!resend) {
         return NextResponse.json({ 
           error: 'Email service not configured. Please set RESEND_API_KEY in environment variables.' 
@@ -208,7 +210,8 @@ export async function POST(request, { params }) {
             emailResults.push({
               player: notification.player.name,
               email: notification.data.playerEmail,
-              success: true
+              success: true,
+              emailId: data?.id
             })
           }
         } catch (err) {
@@ -224,7 +227,7 @@ export async function POST(request, { params }) {
       })
       
     } else if (action === 'generateWhatsApp') {
-      // Generate WhatsApp messages and links
+      // WHATSAPP MESSAGES: Generate messages and links
       const whatsappMessages = []
       
       for (const notification of notifications) {
@@ -260,7 +263,7 @@ export async function POST(request, { params }) {
       })
       
     } else if (action === 'preview') {
-      // Generate preview of notifications
+      // PREVIEW: Show what will be sent without actually sending
       const previews = []
       
       for (const notification of notifications) {
@@ -275,7 +278,8 @@ export async function POST(request, { params }) {
           hasEmail: notification.hasEmail,
           hasWhatsApp: notification.hasWhatsApp,
           emailSubject: emailContent.subject,
-          opponent: notification.data.opponentName
+          opponent: notification.data.opponentName,
+          language: notification.data.language
         })
       }
       
@@ -283,17 +287,24 @@ export async function POST(request, { params }) {
         success: true,
         previews,
         group,
-        totalPlayers: previews.length
+        totalPlayers: previews.length,
+        actions: {
+          sendIndividualEmail: 'Send test email to one player',
+          sendEmails: 'Send emails to all players',
+          generateWhatsApp: 'Generate WhatsApp messages'
+        }
       })
       
     } else {
-      return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
+      return NextResponse.json({ 
+        error: 'Invalid action. Valid actions: preview, sendIndividualEmail, sendEmails, generateWhatsApp' 
+      }, { status: 400 })
     }
     
   } catch (error) {
-    console.error('Error sending playoff notifications:', error)
+    console.error('Error in playoff notifications:', error)
     return NextResponse.json(
-      { error: 'Failed to send notifications', details: error.message },
+      { error: 'Failed to process notifications', details: error.message },
       { status: 500 }
     )
   }
