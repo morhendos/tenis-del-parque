@@ -5,11 +5,56 @@ export default function LeagueCard({ player, language }) {
     return null
   }
 
+  // Function to get season display name
+  const getSeasonDisplayName = () => {
+    // If league has season information, use it to create a proper name
+    if (player.league?.season) {
+      const seasonNames = {
+        es: {
+          spring: 'Primavera',
+          summer: 'Verano',
+          autumn: 'Otoño',
+          winter: 'Invierno',
+          annual: 'Anual'
+        },
+        en: {
+          spring: 'Spring',
+          summer: 'Summer',
+          autumn: 'Autumn',
+          winter: 'Winter',
+          annual: 'Annual'
+        }
+      }
+      
+      const season = player.league.season
+      const seasonType = season.type || 'summer'
+      const seasonYear = season.year || 2025
+      const seasonNumber = season.number > 1 ? ` ${season.number}` : ''
+      
+      const localizedSeasonName = seasonNames[language || 'es'][seasonType] || seasonType
+      return `${localizedSeasonName} ${seasonYear}${seasonNumber}`
+    }
+    
+    // Fallback: If we have a string that looks like a season name, use it
+    if (player.season && typeof player.season === 'string') {
+      // Check if it's an ObjectId (24 hex characters) or a proper season name
+      if (/^[0-9a-f]{24}$/i.test(player.season)) {
+        // It's an ObjectId, show a default season
+        return language === 'es' ? 'Verano 2025' : 'Summer 2025'
+      }
+      // It might be a proper season name, return it
+      return player.season
+    }
+    
+    // Default fallback
+    return language === 'es' ? 'Temporada Actual' : 'Current Season'
+  }
+
   return (
     <div 
       className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden transform transition-all hover:shadow-xl animate-scale-in" 
       style={{ 
-        animationDelay: '0.5s', // Changed from 0.5s to 0s - no delay!
+        animationDelay: '0.5s',
         animationFillMode: 'both',
         opacity: 0,
         transform: 'scale(0.9)'
@@ -30,7 +75,9 @@ export default function LeagueCard({ player, language }) {
             </div>
             <div>
               <h3 className="text-lg sm:text-xl font-bold text-gray-900">{player.league.name}</h3>
-              <p className="text-sm text-gray-600">{language === 'es' ? 'Temporada' : 'Season'}: {player.season}</p>
+              <p className="text-sm text-gray-600">
+                {language === 'es' ? 'Temporada' : 'Season'}: {getSeasonDisplayName()}
+              </p>
               
               {/* Stats Pills */}
               <div className="flex flex-wrap gap-2 mt-2">
@@ -38,7 +85,12 @@ export default function LeagueCard({ player, language }) {
                   ELO: {player.stats?.eloRating || 1200}
                 </span>
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-green-100 to-emerald-100 text-green-800">
-                  {language === 'es' ? 'Nivel' : 'Level'}: {player.level}
+                  {language === 'es' ? 'Nivel' : 'Level'}: {
+                    player.level === 'beginner' ? (language === 'es' ? 'Principiante' : 'Beginner') :
+                    player.level === 'intermediate' ? (language === 'es' ? 'Intermedio' : 'Intermediate') :
+                    player.level === 'advanced' ? (language === 'es' ? 'Avanzado' : 'Advanced') :
+                    player.level
+                  }
                 </span>
               </div>
             </div>
@@ -58,4 +110,4 @@ export default function LeagueCard({ player, language }) {
       </div>
     </div>
   )
-} 
+}
