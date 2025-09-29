@@ -76,9 +76,20 @@ export default withAuth(
     const pathname = req.nextUrl.pathname
 
     // CRITICAL FIX: Handle incorrect playoff links sent via WhatsApp
-    // Redirect /en/liga-de-sotogrande/playoffs to /en/sotogrande/liga/verano2025?tab=playoffs
-    // Redirect /es/liga-de-sotogrande/playoffs to /es/sotogrande/liga/verano2025?tab=playoffs
+    // Handle both with and without locale prefix
+    // Redirect /liga-de-sotogrande/playoffs to /[locale]/sotogrande/liga/verano2025?tab=playoffs
+    // Redirect /[locale]/liga-de-sotogrande/playoffs to /[locale]/sotogrande/liga/verano2025?tab=playoffs
+    if (pathname.match(/^\/liga-de-sotogrande\/(playoffs)?$/)) {
+      // No locale prefix - detect locale and redirect
+      const locale = getLocale(req)
+      const newUrl = new URL(`/${locale}/sotogrande/liga/verano2025`, req.url)
+      newUrl.searchParams.set('tab', 'playoffs')
+      console.log(`[Playoff Link Fix] Redirecting from ${pathname} to ${newUrl.pathname}${newUrl.search}`)
+      return NextResponse.redirect(newUrl)
+    }
+    
     if (pathname.match(/^\/(es|en)\/liga-de-sotogrande\/(playoffs)?$/)) {
+      // Has locale prefix - use it in redirect
       const locale = pathname.split('/')[1]
       const newUrl = new URL(`/${locale}/sotogrande/liga/verano2025`, req.url)
       newUrl.searchParams.set('tab', 'playoffs')
@@ -257,6 +268,13 @@ export default withAuth(
           return true
         }
         
+        // CRITICAL: Allow the incorrect playoff URLs as public routes
+        // These will be redirected by the middleware above
+        if (pathname.match(/^\/liga-de-sotogrande\/(playoffs)?$/) || 
+            pathname.match(/^\/(es|en)\/liga-de-sotogrande\/(playoffs)?$/)) {
+          return true
+        }
+        
         // Admin routes always require authentication and admin role
         if (pathname.startsWith('/admin')) {
           return token && token.role === 'admin'
@@ -287,7 +305,9 @@ export default withAuth(
           '/clubs',
           '/clubes',
           '/forgot-password',
-          '/reset-password'
+          '/reset-password',
+          '/liga-de-sotogrande',
+          '/liga-de-sotogrande/playoffs'
         ]
         
         // Check if it's a public route
@@ -296,6 +316,7 @@ export default withAuth(
                              pathWithoutLocale.startsWith('/registro/') ||
                              pathWithoutLocale.startsWith('/clubs/') ||
                              pathWithoutLocale.startsWith('/clubes/') ||
+                             pathWithoutLocale.startsWith('/liga-de-sotogrande') ||
                              pathWithoutLocale.match(/^\/[^\/]+\/liga\/[^\/]+$/)
         
         if (isPublicRoute) return true
