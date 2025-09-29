@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
-import dbConnect from '../../../../../../lib/db/mongoose'
-import League from '../../../../../../lib/models/League'
-import Player from '../../../../../../lib/models/Player'
-import User from '../../../../../../lib/models/User'
-import { requireAdmin } from '../../../../../../lib/auth/apiAuth'
-import { generatePlayoffEmail } from '../../../../../../lib/email/templates/playoffEmail'
+import dbConnect from '../../../../../../../lib/db/mongoose'
+import League from '../../../../../../../lib/models/League'
+import Player from '../../../../../../../lib/models/Player'
+import User from '../../../../../../../lib/models/User'
+import { requireAdmin } from '../../../../../../../lib/auth/apiAuth'
+import { generatePlayoffEmail } from '../../../../../../../lib/email/templates/playoffEmail'
 import { Resend } from 'resend'
-import { normalizePhoneForWhatsApp, createWhatsAppLink } from '../../../../../../lib/utils/phoneUtils'
+import { normalizePhoneForWhatsApp, createWhatsAppLink } from '../../../../../../../lib/utils/phoneUtils'
 
 // Initialize Resend if API key is available
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
