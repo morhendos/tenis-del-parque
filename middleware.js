@@ -75,6 +75,17 @@ export default withAuth(
     const token = req.nextauth.token
     const pathname = req.nextUrl.pathname
 
+    // CRITICAL FIX: Handle incorrect playoff links sent via WhatsApp
+    // Redirect /en/liga-de-sotogrande/playoffs to /en/sotogrande/liga/verano2025?tab=playoffs
+    // Redirect /es/liga-de-sotogrande/playoffs to /es/sotogrande/liga/verano2025?tab=playoffs
+    if (pathname.match(/^\/(es|en)\/liga-de-sotogrande\/(playoffs)?$/)) {
+      const locale = pathname.split('/')[1]
+      const newUrl = new URL(`/${locale}/sotogrande/liga/verano2025`, req.url)
+      newUrl.searchParams.set('tab', 'playoffs')
+      console.log(`[Playoff Link Fix] Redirecting from ${pathname} to ${newUrl.pathname}${newUrl.search}`)
+      return NextResponse.redirect(newUrl)
+    }
+
     // Handle authentication for protected routes
     if (token) {
       // Admin routes protection
