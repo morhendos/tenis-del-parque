@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import Navigation from '@/components/common/Navigation'
 import Footer from '@/components/common/Footer'
 import { homeContent } from '@/lib/content/homeContent'
@@ -15,6 +15,7 @@ import { TennisPreloaderFullScreen } from '@/components/ui/TennisPreloader'
 
 export default function LeagueSeasonPage() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const { locale, location, season } = params
   const language = locale || 'es'
   
@@ -35,6 +36,15 @@ export default function LeagueSeasonPage() {
   const [loadingPlayoffs, setLoadingPlayoffs] = useState(false)
 
   const t = homeContent[language]
+
+  // Check for tab query parameter on mount and set the active tab accordingly
+  useEffect(() => {
+    const tabParam = searchParams.get('tab')
+    if (tabParam && ['standings', 'playoffs', 'schedule', 'matches', 'register'].includes(tabParam)) {
+      setActiveTab(tabParam)
+      console.log(`[League Page] Setting active tab from URL parameter: ${tabParam}`)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     fetchLeagueData()
