@@ -40,6 +40,21 @@ export default function TournamentBracket({
     return match.result?.winner?._id === player._id || match.result?.winner === player._id
   }
 
+  // Helper to get winner from a completed match
+  const getMatchWinner = (match) => {
+    if (!match || match.status !== 'completed' || !match.result?.winner) return null
+    
+    // Find the winner player object from the match
+    const winnerId = match.result.winner._id || match.result.winner
+    if (match.players.player1._id === winnerId || match.players.player1._id?.toString() === winnerId?.toString()) {
+      return match.players.player1
+    }
+    if (match.players.player2._id === winnerId || match.players.player2._id?.toString() === winnerId?.toString()) {
+      return match.players.player2
+    }
+    return null
+  }
+
   // Get match status color
   const getMatchStatusColor = (match) => {
     if (!match) return 'bg-gray-100'
@@ -66,22 +81,44 @@ export default function TournamentBracket({
         </div>
         
         <div className={`flex items-center justify-between py-1 ${isWinner(player1, match) ? 'font-bold' : ''}`}>
-          <span className="text-sm">{formatName(player1)}</span>
-          {player1?.seed && <span className="text-xs text-gray-400 ml-2">({player1.seed})</span>}
+          <div className="flex items-center">
+            <span className="text-sm">{formatName(player1)}</span>
+            {player1?.seed && <span className="text-xs text-gray-400 ml-2">({player1.seed})</span>}
+          </div>
+          {result && (
+            <span className="text-xs text-gray-600 font-mono">
+              {result.score?.split(', ').map((set, index) => {
+                const [p1Score, p2Score] = set.split('-')
+                return (
+                  <span key={index} className="ml-1">
+                    {p1Score}
+                  </span>
+                )
+              })}
+            </span>
+          )}
         </div>
         
         <div className="border-t my-1"></div>
         
         <div className={`flex items-center justify-between py-1 ${isWinner(player2, match) ? 'font-bold' : ''}`}>
-          <span className="text-sm">{formatName(player2)}</span>
-          {player2?.seed && <span className="text-xs text-gray-400 ml-2">({player2.seed})</span>}
-        </div>
-        
-        {result && (
-          <div className="mt-2 pt-2 border-t text-xs text-center text-gray-600">
-            {result.score}
+          <div className="flex items-center">
+            <span className="text-sm">{formatName(player2)}</span>
+            {player2?.seed && <span className="text-xs text-gray-400 ml-2">({player2.seed})</span>}
           </div>
-        )}
+          {result && (
+            <span className="text-xs text-gray-600 font-mono">
+              {result.score?.split(', ').map((set, index) => {
+                const [p1Score, p2Score] = set.split('-')
+                return (
+                  <span key={index} className="ml-1">
+                    {p2Score}
+                  </span>
+                )
+              })}
+            </span>
+          )}
+        </div>
       </div>
     )
   }
@@ -175,11 +212,15 @@ export default function TournamentBracket({
                     (m.playoffInfo?.stage === 'semifinal' && m.playoffInfo?.matchNumber === 1)
                   )
                   
-                  // Get winners from quarterfinals
-                  const qf1 = bracket?.quarterfinals?.[0]
-                  const qf2 = bracket?.quarterfinals?.[1]
-                  const player1 = qf1?.winner ? qualifiedPlayers?.find(p => p.player._id === qf1.winner)?.player : null
-                  const player2 = qf2?.winner ? qualifiedPlayers?.find(p => p.player._id === qf2.winner)?.player : null
+                  // Get winners from quarterfinals matches
+                  const qf1Match = matches?.find(m => 
+                    m.playoffInfo?.stage === 'quarterfinal' && m.playoffInfo?.matchNumber === 1
+                  )
+                  const qf2Match = matches?.find(m => 
+                    m.playoffInfo?.stage === 'quarterfinal' && m.playoffInfo?.matchNumber === 2
+                  )
+                  const player1 = getMatchWinner(qf1Match)
+                  const player2 = getMatchWinner(qf2Match)
                   
                   return (
                     <MatchBox
@@ -202,11 +243,15 @@ export default function TournamentBracket({
                     (m.playoffInfo?.stage === 'semifinal' && m.playoffInfo?.matchNumber === 2)
                   )
                   
-                  // Get winners from quarterfinals
-                  const qf3 = bracket?.quarterfinals?.[2]
-                  const qf4 = bracket?.quarterfinals?.[3]
-                  const player1 = qf3?.winner ? qualifiedPlayers?.find(p => p.player._id === qf3.winner)?.player : null
-                  const player2 = qf4?.winner ? qualifiedPlayers?.find(p => p.player._id === qf4.winner)?.player : null
+                  // Get winners from quarterfinals matches
+                  const qf3Match = matches?.find(m => 
+                    m.playoffInfo?.stage === 'quarterfinal' && m.playoffInfo?.matchNumber === 3
+                  )
+                  const qf4Match = matches?.find(m => 
+                    m.playoffInfo?.stage === 'quarterfinal' && m.playoffInfo?.matchNumber === 4
+                  )
+                  const player1 = getMatchWinner(qf3Match)
+                  const player2 = getMatchWinner(qf4Match)
                   
                   return (
                     <MatchBox
@@ -270,11 +315,15 @@ export default function TournamentBracket({
                         m.playoffInfo?.stage === 'final'
                       )
                       
-                      // Get winners from semifinals
-                      const sf1 = bracket?.semifinals?.[0]
-                      const sf2 = bracket?.semifinals?.[1]
-                      const player1 = sf1?.winner ? qualifiedPlayers?.find(p => p.player._id === sf1.winner)?.player : null
-                      const player2 = sf2?.winner ? qualifiedPlayers?.find(p => p.player._id === sf2.winner)?.player : null
+                      // Get winners from semifinals matches
+                      const sf1Match = matches?.find(m => 
+                        m.playoffInfo?.stage === 'semifinal' && m.playoffInfo?.matchNumber === 1
+                      )
+                      const sf2Match = matches?.find(m => 
+                        m.playoffInfo?.stage === 'semifinal' && m.playoffInfo?.matchNumber === 2
+                      )
+                      const player1 = getMatchWinner(sf1Match)
+                      const player2 = getMatchWinner(sf2Match)
                       
                       return (
                         <MatchBox

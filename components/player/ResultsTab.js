@@ -136,7 +136,19 @@ export default function ResultsTab({ matches, language, player = null }) {
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center space-x-3">
                         <span className="bg-parque-purple text-white px-3 py-1 rounded-full text-sm font-medium">
-                          {language === 'es' ? 'Ronda' : 'Round'} {match.round}
+                          {match.matchType === 'playoff' && match.playoffInfo?.stage ? (
+                            (() => {
+                              const stageNames = {
+                                quarterfinal: language === 'es' ? 'Cuartos de Final' : 'Quarterfinals',
+                                semifinal: language === 'es' ? 'Semifinal' : 'Semifinals', 
+                                final: language === 'es' ? 'Final' : 'Final',
+                                third_place: language === 'es' ? '3er Puesto' : '3rd Place'
+                              }
+                              return stageNames[match.playoffInfo.stage] || `${language === 'es' ? 'Ronda' : 'Round'} ${match.round}`
+                            })()
+                          ) : (
+                            `${language === 'es' ? 'Ronda' : 'Round'} ${match.round}`
+                          )}
                         </span>
                         {match.schedule?.venue && (
                           <span className="text-gray-500 text-sm">

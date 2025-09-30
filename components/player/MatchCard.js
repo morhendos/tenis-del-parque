@@ -55,6 +55,34 @@ export default function MatchCard({
   const result = getMatchResult()
   const isWinner = result === 'won'
 
+  // Get display title for the match (playoff stage or round)
+  const getMatchTitle = () => {
+    if (match.matchType === 'playoff' && match.playoffInfo?.stage) {
+      const stageNames = {
+        quarterfinal: language === 'es' ? 'Cuartos de Final' : 'Quarterfinals',
+        semifinal: language === 'es' ? 'Semifinal' : 'Semifinals', 
+        final: language === 'es' ? 'Final' : 'Final',
+        third_place: language === 'es' ? '3er Puesto' : '3rd Place'
+      }
+      return stageNames[match.playoffInfo.stage] || `${language === 'es' ? 'Ronda' : 'Round'} ${match.round}`
+    }
+    return `${language === 'es' ? 'Ronda' : 'Round'} ${match.round}`
+  }
+
+  // Get display number for the match (playoff stage abbreviation or round number)
+  const getMatchNumber = () => {
+    if (match.matchType === 'playoff' && match.playoffInfo?.stage) {
+      const stageAbbr = {
+        quarterfinal: 'QF',
+        semifinal: 'SF',
+        final: 'F',
+        third_place: '3P'
+      }
+      return stageAbbr[match.playoffInfo.stage] || match.round
+    }
+    return match.round
+  }
+
   // Determine the score display for completed matches
   let myScore, opponentScore
   if (!isUpcoming && match.result?.score?.sets && player) {
@@ -98,12 +126,12 @@ export default function MatchCard({
                 : 'bg-gradient-to-br from-red-500 to-pink-600'
             }`}>
               <span className="text-white font-bold text-lg">
-                {match.round}
+                {getMatchNumber()}
               </span>
             </div>
             <div>
               <h3 className="font-semibold text-gray-900">
-                {language === 'es' ? 'Ronda' : 'Round'} {match.round}
+                {getMatchTitle()}
               </h3>
               <div className="text-sm text-gray-700 font-medium mt-1">
                 {isPublic || !player ? (

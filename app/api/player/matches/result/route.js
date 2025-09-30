@@ -346,6 +346,42 @@ export async function POST(request) {
       await player1.save({ session })
       await player2.save({ session })
 
+      // If this is a playoff match, update the bracket with the winner
+      if (match.matchType === 'playoff' && match.playoffInfo) {
+        const League = mongoose.model('League')
+        const league = await League.findById(match.league).session(session)
+        
+        if (league && league.playoffConfig) {
+          const { group, stage } = match.playoffInfo
+          const bracket = group === 'A' ? league.playoffConfig.bracket.groupA : league.playoffConfig.bracket.groupB
+          
+          if (stage === 'quarterfinal') {
+            const qfIndex = bracket.quarterfinals.findIndex(qf => 
+              qf.matchId?.toString() === match._id.toString() ||
+              (qf.seed1 === match.playoffInfo.seed1 && qf.seed2 === match.playoffInfo.seed2)
+            )
+            if (qfIndex !== -1) {
+              bracket.quarterfinals[qfIndex].winner = winner
+              console.log(`Updated QF${qfIndex + 1} winner:`, winner.toString())
+            }
+          } else if (stage === 'semifinal') {
+            const sfIndex = bracket.semifinals.findIndex(sf => sf.matchId?.toString() === match._id.toString())
+            if (sfIndex !== -1) {
+              bracket.semifinals[sfIndex].winner = winner
+              console.log(`Updated SF${sfIndex + 1} winner:`, winner.toString())
+            }
+          } else if (stage === 'final') {
+            bracket.final.winner = winner
+            console.log('Updated Final winner:', winner.toString())
+          } else if (stage === 'third_place') {
+            bracket.thirdPlace.winner = winner
+            console.log('Updated 3rd Place winner:', winner.toString())
+          }
+          
+          await league.save({ session, validateModifiedOnly: true })
+        }
+      }
+
       // Commit the transaction
       await session.commitTransaction()
 
