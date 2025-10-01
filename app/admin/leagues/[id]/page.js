@@ -13,6 +13,11 @@ export default function LeagueManagementPage() {
   const [showSeasonEditor, setShowSeasonEditor] = useState(false)
   const [skillLevelEditing, setSkillLevelEditing] = useState(false)
   const [tempSkillLevel, setTempSkillLevel] = useState('')
+  
+  // Playoff configuration editing states
+  const [playoffEditing, setPlayoffEditing] = useState(false)
+  const [tempPlayoffConfig, setTempPlayoffConfig] = useState({})
+  
   const params = useParams()
   const router = useRouter()
   const leagueId = params.id
@@ -104,6 +109,53 @@ export default function LeagueManagementPage() {
     } catch (error) {
       console.error('Error updating skill level:', error)
       alert('Error updating skill level: ' + error.message)
+    }
+  }
+
+  // Playoff configuration editing functions
+  const handlePlayoffEdit = () => {
+    setTempPlayoffConfig({
+      enabled: league?.playoffConfig?.enabled ?? true,
+      numberOfGroups: league?.playoffConfig?.numberOfGroups ?? 1,
+      groupAPlayers: league?.playoffConfig?.groupAPlayers ?? 8,
+      groupBPlayers: league?.playoffConfig?.groupBPlayers ?? 8
+    })
+    setPlayoffEditing(true)
+  }
+
+  const handlePlayoffCancel = () => {
+    setPlayoffEditing(false)
+    setTempPlayoffConfig({})
+  }
+
+  const handlePlayoffSave = async () => {
+    try {
+      const response = await fetch(`/api/admin/leagues/${leagueId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          playoffConfig: {
+            ...league.playoffConfig,
+            ...tempPlayoffConfig
+          }
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update playoff configuration')
+      }
+
+      const result = await response.json()
+      setLeague(result.league)
+      setPlayoffEditing(false)
+      setTempPlayoffConfig({})
+      
+      // Show success message
+      alert('Playoff configuration updated successfully!')
+      
+    } catch (error) {
+      console.error('Error updating playoff configuration:', error)
+      alert('Error updating playoff configuration: ' + error.message)
     }
   }
 
@@ -518,6 +570,183 @@ export default function LeagueManagementPage() {
                 </div>
               </div>
               
+              {/* Playoff Configuration */}
+              <div className="bg-white border rounded-lg">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900">Playoff Configuration</h3>
+                  <p className="text-sm text-gray-600">Configure playoff structure and settings</p>
+                </div>
+                <div className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-900 mb-3">Current Playoff Settings</h4>
+                      {!playoffEditing ? (
+                        <div className="space-y-3">
+                          {/* Playoff Status */}
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm font-medium text-gray-600">Status:</span>
+                            <span className={`inline-block px-3 py-1 text-sm font-medium rounded-lg ${
+                              league?.playoffConfig?.enabled !== false
+                                ? 'bg-green-50 text-green-700 border border-green-200'
+                                : 'bg-red-50 text-red-700 border border-red-200'
+                            }`}>
+                              {league?.playoffConfig?.enabled !== false ? 'Enabled' : 'Disabled'}
+                            </span>
+                          </div>
+                          
+                          {league?.playoffConfig?.enabled !== false && (
+                            <>
+                              {/* Number of Groups */}
+                              <div className="flex items-center gap-3">
+                                <span className="text-sm font-medium text-gray-600">Playoff Groups:</span>
+                                <span className="text-sm text-gray-900">
+                                  {league?.playoffConfig?.numberOfGroups === 2 ? 'Group A & Group B' : 'Group A Only'}
+                                </span>
+                              </div>
+                              
+                              {/* Group Sizes */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                <div className="bg-gray-50 rounded-lg p-3">
+                                  <span className="text-sm font-medium text-gray-600">Group A Players:</span>
+                                  <div className="text-lg font-bold text-gray-900">
+                                    {league?.playoffConfig?.groupAPlayers || 8}
+                                  </div>
+                                  <span className="text-xs text-gray-500">Top performers</span>
+                                </div>
+                                
+                                {league?.playoffConfig?.numberOfGroups === 2 && (
+                                  <div className="bg-gray-50 rounded-lg p-3">
+                                    <span className="text-sm font-medium text-gray-600">Group B Players:</span>
+                                    <div className="text-lg font-bold text-gray-900">
+                                      {league?.playoffConfig?.groupBPlayers || 8}
+                                    </div>
+                                    <span className="text-xs text-gray-500">Middle tier players</span>
+                                  </div>
+                                )}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {/* Enable/Disable Playoffs */}
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="checkbox"
+                              id="playoffEnabled"
+                              checked={tempPlayoffConfig.enabled}
+                              onChange={(e) => setTempPlayoffConfig({ ...tempPlayoffConfig, enabled: e.target.checked })}
+                              className="w-4 h-4 text-parque-purple focus:ring-parque-purple border-gray-300 rounded"
+                            />
+                            <label htmlFor="playoffEnabled" className="text-sm font-medium text-gray-700">
+                              Enable Playoffs
+                            </label>
+                          </div>
+                          
+                          {tempPlayoffConfig.enabled && (
+                            <>
+                              {/* Number of Groups */}
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Playoff Structure
+                                </label>
+                                <select
+                                  value={tempPlayoffConfig.numberOfGroups}
+                                  onChange={(e) => setTempPlayoffConfig({ ...tempPlayoffConfig, numberOfGroups: parseInt(e.target.value) })}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-parque-purple"
+                                >
+                                  <option value={1}>Single Group (Group A only)</option>
+                                  <option value={2}>Two Groups (Group A & Group B)</option>
+                                </select>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {tempPlayoffConfig.numberOfGroups === 2 
+                                    ? 'Two separate tournaments for different skill levels'
+                                    : 'Single tournament for top players only'
+                                  }
+                                </p>
+                              </div>
+                              
+                              {/* Group A Players */}
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Group A Players (Top Tier)
+                                </label>
+                                <input
+                                  type="number"
+                                  min="4"
+                                  max="16"
+                                  value={tempPlayoffConfig.groupAPlayers}
+                                  onChange={(e) => setTempPlayoffConfig({ ...tempPlayoffConfig, groupAPlayers: parseInt(e.target.value) })}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-parque-purple"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Number of top-ranked players qualifying for Group A playoffs
+                                </p>
+                              </div>
+                              
+                              {/* Group B Players (if enabled) */}
+                              {tempPlayoffConfig.numberOfGroups === 2 && (
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Group B Players (Middle Tier)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    min="4"
+                                    max="16"
+                                    value={tempPlayoffConfig.groupBPlayers}
+                                    onChange={(e) => setTempPlayoffConfig({ ...tempPlayoffConfig, groupBPlayers: parseInt(e.target.value) })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-parque-purple"
+                                  />
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    Number of middle-ranked players qualifying for Group B playoffs
+                                  </p>
+                                </div>
+                              )}
+                            </>
+                          )}
+                          
+                          {/* Save/Cancel buttons */}
+                          <div className="flex gap-2 pt-2">
+                            <button
+                              onClick={handlePlayoffSave}
+                              className="px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-parque-purple/90 transition-colors text-sm"
+                            >
+                              Save Configuration
+                            </button>
+                            <button
+                              onClick={handlePlayoffCancel}
+                              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {!playoffEditing && (
+                      <button
+                        onClick={handlePlayoffEdit}
+                        className="ml-4 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                      >
+                        Edit Configuration
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                    <h5 className="font-medium text-purple-900 mb-2">🏆 Playoff Configuration Guide</h5>
+                    <div className="text-sm text-purple-800 space-y-1">
+                      <p><strong>Single Group:</strong> Only the top players compete in playoffs (traditional format)</p>
+                      <p><strong>Two Groups:</strong> Separate tournaments for different skill levels (more inclusive)</p>
+                      <p><strong>Group A:</strong> Top-ranked players compete for the championship</p>
+                      <p><strong>Group B:</strong> Middle-tier players compete in their own tournament</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Other Settings */}
               <div className="bg-white border rounded-lg">
                 <div className="px-6 py-4 border-b border-gray-200">
@@ -527,7 +756,7 @@ export default function LeagueManagementPage() {
                 <div className="p-6">
                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                     <p className="text-gray-600">
-                      Additional settings like scoring system, playoff configuration, and other options coming soon.
+                      Additional settings like scoring system and other options coming soon.
                     </p>
                   </div>
                 </div>
