@@ -80,6 +80,7 @@ root/
 │   │   │   ├── new
 │   │   │   │   └── page.js
 │   │   │   └── page.js
+│   │   ├── cleanup-playoffs
 │   │   ├── clubs
 │   │   │   ├── [id]
 │   │   │   │   └── edit
@@ -140,6 +141,7 @@ root/
 │   │   │   │   ├── route.js
 │   │   │   │   └── search-google
 │   │   │   │       └── route.js
+│   │   │   ├── cleanup-duplicate-playoffs
 │   │   │   ├── clubs
 │   │   │   │   ├── [id]
 │   │   │   │   │   └── route.js
@@ -160,6 +162,8 @@ root/
 │   │   │   ├── leagues
 │   │   │   │   ├── [id]
 │   │   │   │   │   ├── playoffs
+│   │   │   │   │   │   ├── notifications
+│   │   │   │   │   │   │   └── route.js
 │   │   │   │   │   │   └── route.js
 │   │   │   │   │   └── route.js
 │   │   │   │   ├── export
@@ -238,6 +242,8 @@ root/
 │   │   │   │   ├── [slug]
 │   │   │   │   │   └── route.js
 │   │   │   │   ├── matches
+│   │   │   │   │   └── route.js
+│   │   │   │   ├── playoffs
 │   │   │   │   │   └── route.js
 │   │   │   │   ├── route.js
 │   │   │   │   └── standings
@@ -398,6 +404,7 @@ root/
 │   │   ├── MatchModals.js
 │   │   ├── MatchResultCard.js
 │   │   ├── PlayoffExplanation.js
+│   │   ├── PlayoffsTab.js
 │   │   ├── QuickActions.js
 │   │   ├── QuickMatchActions.js
 │   │   ├── ResultsTab.js
@@ -496,6 +503,7 @@ root/
 │   ├── email
 │   │   ├── resend.js
 │   │   └── templates
+│   │       ├── playoffEmail.js
 │   │       └── welcomeEmail.js
 │   ├── hooks
 │   │   ├── useActiveSection.js
@@ -519,6 +527,8 @@ root/
 │   │   ├── Player.js
 │   │   ├── Season.js
 │   │   └── User.js
+│   ├── services
+│   │   └── standingsService.js
 │   └── utils
 │       ├── apiHelpers.js
 │       ├── areaLoader.js

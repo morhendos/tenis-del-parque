@@ -398,7 +398,7 @@ export default function LeagueSeasonPage() {
               {standings && standings.unifiedStandings ? (
                 <div>
                   {/* League Progress Summary */}
-                  {(matches.length > 0 || schedule.length > 0) && (
+                  {/* {(matches.length > 0 || schedule.length > 0) && (
                     <div className="mb-6 bg-gray-50 rounded-lg p-4">
                       <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-3">
                         {language === 'es' ? 'Progreso de la Liga' : 'League Progress'}
@@ -453,8 +453,8 @@ export default function LeagueSeasonPage() {
                           </>
                         )}
                       </div>
-                    </div>
-                  )}
+                    </div> 
+                  )}*/}
                   
                   <StandingsTable 
                     players={standings.unifiedStandings} 
