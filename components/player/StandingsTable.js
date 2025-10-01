@@ -1,33 +1,61 @@
 import React from 'react'
 import { formatPlayerNameForStandings } from '@/lib/utils/playerNameUtils'
 
-export default function StandingsTable({ players, language, unified = false }) {
+export default function StandingsTable({ players, language, unified = false, playoffConfig = null }) {
+  // Get playoff configuration or use defaults
+  const numberOfGroups = playoffConfig?.numberOfGroups ?? 2
+  const groupAPlayers = playoffConfig?.groupAPlayers ?? 8
+  const groupBPlayers = playoffConfig?.groupBPlayers ?? 8
+  const playoffsEnabled = playoffConfig?.enabled !== false
+
   const getPositionStyle = (position) => {
     // Unified subtle violet gradient background with left border indicators
     const baseStyle = "bg-gradient-to-r from-violet-50/30 via-white to-violet-50/20 border-gray-200 shadow-violet-100/50"
     
+    if (!playoffsEnabled) {
+      return baseStyle
+    }
+    
     // Add subtle left border color for qualification zones
-    if (position <= 8) return `${baseStyle} border-l-4 border-l-blue-500`
-    if (position <= 16) return `${baseStyle} border-l-4 border-l-green-500`
+    if (position <= groupAPlayers) return `${baseStyle} border-l-4 border-l-blue-500`
+    if (numberOfGroups === 2 && position <= groupAPlayers + groupBPlayers) return `${baseStyle} border-l-4 border-l-green-500`
     return baseStyle
   }
 
   const getPositionBadgeStyle = (position) => {
+    if (!playoffsEnabled) {
+      return 'bg-gray-500 text-white ring-2 ring-gray-200'
+    }
+
     // More prominent badges to compensate for unified row backgrounds
-    if (position <= 8) return 'bg-blue-600 text-white ring-2 ring-blue-200'
-    if (position <= 16) return 'bg-green-600 text-white ring-2 ring-green-200'
+    if (position <= groupAPlayers) return 'bg-blue-600 text-white ring-2 ring-blue-200'
+    if (numberOfGroups === 2 && position <= groupAPlayers + groupBPlayers) return 'bg-green-600 text-white ring-2 ring-green-200'
     return 'bg-gray-500 text-white ring-2 ring-gray-200'
   }
 
   const getPositionLabel = (position) => {
-    if (position <= 8) return language === 'es' ? 'Playoff A' : 'Playoff A'
-    if (position <= 16) return language === 'es' ? 'Playoff B' : 'Playoff B'
+    if (!playoffsEnabled) {
+      return language === 'es' ? 'Liga' : 'League'
+    }
+
+    if (position <= groupAPlayers) return language === 'es' ? 'Playoff A' : 'Playoff A'
+    if (numberOfGroups === 2 && position <= groupAPlayers + groupBPlayers) return language === 'es' ? 'Playoff B' : 'Playoff B'
     return language === 'es' ? 'Liga' : 'League' // More neutral than "Eliminated"
   }
 
   const getWinPercentage = (won, total) => {
     if (total === 0) return 0
     return Math.round((won / total) * 100)
+  }
+
+  // Helper function to determine if position qualifies for playoffs
+  const qualifiesForPlayoffs = (position) => {
+    if (!playoffsEnabled) return false
+    if (numberOfGroups === 1) {
+      return position <= groupAPlayers
+    } else {
+      return position <= groupAPlayers + groupBPlayers
+    }
   }
 
   // Helper function to get player status styling
@@ -52,32 +80,37 @@ export default function StandingsTable({ players, language, unified = false }) {
 
   return (
     <div>
-      {/* Playoff Qualification Legend */}
-      <div className="mb-6 bg-gradient-to-r from-violet-50/50 to-violet-50/30 rounded-lg p-4 border border-violet-100/40">
-        <h3 className="text-sm font-semibold text-violet-800 mb-3">
-          {language === 'es' ? 'Clasificación a Playoffs' : 'Playoff Qualification'}
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-          <div className="flex items-center space-x-3">
-            <div className="w-4 h-4 bg-blue-600 rounded"></div>
-            <span className="text-gray-700">
-              <span className="font-medium">1-8:</span> {language === 'es' ? 'Playoff A' : 'Playoff A'}
-            </span>
-          </div>
-          <div className="flex items-center space-x-3">
-            <div className="w-4 h-4 bg-green-600 rounded"></div>
-            <span className="text-gray-700">
-              <span className="font-medium">9-16:</span> {language === 'es' ? 'Playoff B' : 'Playoff B'}
-            </span>
-          </div>
-          <div className="flex items-center space-x-3">
-            <div className="w-4 h-4 bg-gray-500 rounded"></div>
-            <span className="text-gray-700">
-              <span className="font-medium">17+:</span> {language === 'es' ? 'Liga Regular' : 'Regular League'}
-            </span>
+      {/* Playoff Qualification Legend - Only show if playoffs are enabled */}
+      {playoffsEnabled && (
+        <div className="mb-6 bg-gradient-to-r from-violet-50/50 to-violet-50/30 rounded-lg p-4 border border-violet-100/40">
+          <h3 className="text-sm font-semibold text-violet-800 mb-3">
+            {language === 'es' ? 'Clasificación a Playoffs' : 'Playoff Qualification'}
+          </h3>
+          <div className={`grid grid-cols-1 ${numberOfGroups === 2 ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-3 text-sm`}>
+            <div className="flex items-center space-x-3">
+              <div className="w-4 h-4 bg-blue-600 rounded"></div>
+              <span className="text-gray-700">
+                <span className="font-medium">1-{groupAPlayers}:</span> {language === 'es' ? 'Playoff A' : 'Playoff A'}
+              </span>
+            </div>
+            {numberOfGroups === 2 && (
+              <div className="flex items-center space-x-3">
+                <div className="w-4 h-4 bg-green-600 rounded"></div>
+                <span className="text-gray-700">
+                  <span className="font-medium">{groupAPlayers + 1}-{groupAPlayers + groupBPlayers}:</span> {language === 'es' ? 'Playoff B' : 'Playoff B'}
+                </span>
+              </div>
+            )}
+            <div className="flex items-center space-x-3">
+              <div className="w-4 h-4 bg-gray-500 rounded"></div>
+              <span className="text-gray-700">
+                <span className="font-medium">{(numberOfGroups === 2 ? groupAPlayers + groupBPlayers : groupAPlayers) + 1}+:</span> {language === 'es' ? 'Liga Regular' : 'Regular League'}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
       {/* Mobile-first card layout for small screens */}
       <div className="block md:hidden space-y-4">
         {players.map((standing, index) => {
@@ -97,10 +130,10 @@ export default function StandingsTable({ players, language, unified = false }) {
                       {standing.position}
                     </div>
                     {/* Playoff qualification indicator - only show for playoff positions */}
-                    {standing.position <= 16 && (
+                    {playoffsEnabled && qualifiesForPlayoffs(standing.position) && (
                       <div className="ml-2 text-xs">
                         <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          standing.position <= 8 ? 'bg-blue-100 text-blue-700' :
+                          standing.position <= groupAPlayers ? 'bg-blue-100 text-blue-700' :
                           'bg-green-100 text-green-700'
                         }`}>
                           {getPositionLabel(standing.position)}
@@ -266,9 +299,9 @@ export default function StandingsTable({ players, language, unified = false }) {
                       </div>
                     </td>
                     <td className="px-6 py-5 whitespace-nowrap text-center">
-                      {standing.position <= 16 ? (
+                      {playoffsEnabled && qualifiesForPlayoffs(standing.position) ? (
                         <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                          standing.position <= 8 ? 'bg-blue-100 text-blue-800' :
+                          standing.position <= groupAPlayers ? 'bg-blue-100 text-blue-800' :
                           'bg-green-100 text-green-800'
                         }`}>
                           {getPositionLabel(standing.position)}
