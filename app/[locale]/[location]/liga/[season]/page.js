@@ -460,6 +460,7 @@ export default function LeagueSeasonPage() {
                     players={standings.unifiedStandings} 
                     language={language}
                     unified={true}
+                    playoffConfig={league?.playoffConfig}
                   />
                   
                   {/* Add the Scoring System component here */}
