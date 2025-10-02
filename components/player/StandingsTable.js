@@ -38,7 +38,12 @@ export default function StandingsTable({ players, language, unified = false, pla
       return language === 'es' ? 'Liga' : 'League'
     }
 
-    if (position <= groupAPlayers) return language === 'es' ? 'Playoff A' : 'Playoff A'
+    if (position <= groupAPlayers) {
+      // If only one group, just call it "Playoff", not "Playoff A"
+      return numberOfGroups === 1 
+        ? (language === 'es' ? 'Playoff' : 'Playoff')
+        : (language === 'es' ? 'Playoff A' : 'Playoff A')
+    }
     if (numberOfGroups === 2 && position <= groupAPlayers + groupBPlayers) return language === 'es' ? 'Playoff B' : 'Playoff B'
     return language === 'es' ? 'Liga' : 'League' // More neutral than "Eliminated"
   }
@@ -90,7 +95,11 @@ export default function StandingsTable({ players, language, unified = false, pla
             <div className="flex items-center space-x-3">
               <div className="w-4 h-4 bg-blue-600 rounded"></div>
               <span className="text-gray-700">
-                <span className="font-medium">1-{groupAPlayers}:</span> {language === 'es' ? 'Playoff A' : 'Playoff A'}
+                <span className="font-medium">1-{groupAPlayers}:</span> {
+                  numberOfGroups === 1 
+                    ? (language === 'es' ? 'Playoff' : 'Playoff')
+                    : (language === 'es' ? 'Playoff A' : 'Playoff A')
+                }
               </span>
             </div>
             {numberOfGroups === 2 && (
