@@ -1,5 +1,22 @@
 // Scoring System Component
 export default function ScoringSystem({ language, totalPlayers, currentRound }) {
+  // Function to get tournament phase name from round number
+  const getTournamentPhase = (round) => {
+    const playoffRounds = {
+      9: language === 'es' ? 'Cuartos de Final' : 'Quarterfinals',
+      10: language === 'es' ? 'Semifinal' : 'Semifinals', 
+      11: language === 'es' ? 'Final' : 'Final',
+      12: language === 'es' ? '3er Puesto' : '3rd Place'
+    }
+    
+    return playoffRounds[round] || (language === 'es' ? `Ronda ${round}` : `Round ${round}`)
+  }
+
+  // Function to get the display text for current phase - always show "current round"
+  const getCurrentPhaseDisplay = () => {
+    return language === 'es' ? 'ronda actual' : 'current round'
+  }
+
   return (
     <div className="mt-8 text-center">
       {/* Enhanced league stats */}
@@ -21,9 +38,11 @@ export default function ScoringSystem({ language, totalPlayers, currentRound }) 
             <span className="text-blue-600 font-bold">🎯</span>
           </div>
           <div>
-            <div className="text-lg font-bold text-gray-900">{currentRound || 0}</div>
+            <div className="text-lg font-bold text-gray-900">
+              {currentRound >= 9 ? getTournamentPhase(currentRound) : (currentRound || 0)}
+            </div>
             <div className="text-xs text-gray-500">
-              {language === 'es' ? 'ronda actual' : 'current round'}
+              {getCurrentPhaseDisplay()}
             </div>
           </div>
         </div>
