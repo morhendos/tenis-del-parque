@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 export function MatchModals({ 
   showResultModal,
@@ -30,6 +30,22 @@ export function MatchModals({
   const [submitting, setSubmitting] = useState(false)
   const [validationErrors, setValidationErrors] = useState({})
   const [formError, setFormError] = useState('')
+  
+  // Refs for auto-focus functionality
+  const inputRefs = useRef({})
+  
+  // Helper function to get next input key
+  const getNextInputKey = (currentSetIndex, currentField, setsLength) => {
+    if (currentField === 'myScore') {
+      return `${currentSetIndex}-opponentScore`
+    } else if (currentField === 'opponentScore') {
+      // Move to next set's myScore, if it exists
+      if (currentSetIndex + 1 < setsLength) {
+        return `${currentSetIndex + 1}-myScore`
+      }
+    }
+    return null
+  }
 
   const getOpponent = (match) => {
     if (!player || !match) return null
@@ -137,6 +153,17 @@ export function MatchModals({
     }
     
     setResultForm({ ...resultForm, sets: newSets })
+    
+    // Auto-focus to next input when user enters a number
+    if (value !== '' && !isNaN(value) && value.trim() !== '') {
+      const nextInputKey = getNextInputKey(index, field, newSets.length)
+      if (nextInputKey && inputRefs.current[nextInputKey]) {
+        // Small delay to ensure the state update is processed
+        setTimeout(() => {
+          inputRefs.current[nextInputKey].focus()
+        }, 10)
+      }
+    }
   }
 
   const validateSetScore = (setIndex, myScore, oppScore) => {
@@ -400,6 +427,7 @@ export function MatchModals({
                             placeholder={language === 'es' ? 'Yo' : 'Me'}
                             value={set.myScore}
                             onChange={(e) => handleSetChange(index, 'myScore', e.target.value)}
+                            ref={(el) => inputRefs.current[`${index}-myScore`] = el}
                             className={`w-20 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-transparent text-center font-medium ${
                               validationErrors[`set${index}`] ? 'border-red-300' : 'border-gray-300'
                             }`}
@@ -413,6 +441,7 @@ export function MatchModals({
                             placeholder={language === 'es' ? 'Rival' : 'Opp'}
                             value={set.opponentScore}
                             onChange={(e) => handleSetChange(index, 'opponentScore', e.target.value)}
+                            ref={(el) => inputRefs.current[`${index}-opponentScore`] = el}
                             className={`w-20 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-transparent text-center font-medium ${
                               validationErrors[`set${index}`] ? 'border-red-300' : 'border-gray-300'
                             }`}

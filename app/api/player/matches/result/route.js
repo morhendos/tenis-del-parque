@@ -8,7 +8,7 @@ import mongoose from 'mongoose'
 // Helper function to get player registration for a league/season
 function getPlayerRegistration(player, leagueId, season) {
   if (!player.registrations || player.registrations.length === 0) {
-    // Fallback: create a default registration if none exists
+    // Fallback: create a default registration if none exists (no ELO - that's global)
     return {
       league: leagueId,
       season: season,
@@ -342,9 +342,9 @@ export async function POST(request) {
       }
 
       // Save all documents within the transaction
-      await match.save({ session })
-      await player1.save({ session })
-      await player2.save({ session })
+      await match.save({ session, validateModifiedOnly: true })
+      await player1.save({ session, validateModifiedOnly: true })
+      await player2.save({ session, validateModifiedOnly: true })
 
       // If this is a playoff match, update the bracket with the winner
       if (match.matchType === 'playoff' && match.playoffInfo) {

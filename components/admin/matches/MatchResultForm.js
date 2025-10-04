@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef } from 'react'
 
 export default function MatchResultForm({ 
   match, 
@@ -7,6 +7,21 @@ export default function MatchResultForm({
   onSubmit, 
   submitting 
 }) {
+  // Refs for auto-focus functionality
+  const inputRefs = useRef({})
+  
+  // Helper function to get next input key
+  const getNextInputKey = (currentSetIndex, currentPlayer, setsLength) => {
+    if (currentPlayer === 'player1') {
+      return `${currentSetIndex}-player2`
+    } else if (currentPlayer === 'player2') {
+      // Move to next set's player1, if it exists
+      if (currentSetIndex + 1 < setsLength) {
+        return `${currentSetIndex + 1}-player1`
+      }
+    }
+    return null
+  }
   const handleAddSet = () => {
     onResultFormChange({
       ...resultForm,
@@ -40,6 +55,17 @@ export default function MatchResultForm({
           onResultFormChange(prev => ({ ...prev, winner: match.players.player2._id }))
         }
       }
+      
+      // Auto-focus to next input when user enters a number
+      if (!isNaN(value) && value.trim() !== '') {
+        const nextInputKey = getNextInputKey(index, player, newSets.length)
+        if (nextInputKey && inputRefs.current[nextInputKey]) {
+          // Small delay to ensure the state update is processed
+          setTimeout(() => {
+            inputRefs.current[nextInputKey].focus()
+          }, 10)
+        }
+      }
     }
   }
 
@@ -63,6 +89,7 @@ export default function MatchResultForm({
                   max="7"
                   value={set.player1}
                   onChange={(e) => handleSetChange(index, 'player1', e.target.value)}
+                  ref={(el) => inputRefs.current[`${index}-player1`] = el}
                   className="w-16 h-12 text-center text-lg font-bold border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-transparent"
                   disabled={resultForm.walkover}
                 />
@@ -75,6 +102,7 @@ export default function MatchResultForm({
                   max="7"
                   value={set.player2}
                   onChange={(e) => handleSetChange(index, 'player2', e.target.value)}
+                  ref={(el) => inputRefs.current[`${index}-player2`] = el}
                   className="w-16 h-12 text-center text-lg font-bold border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-transparent"
                   disabled={resultForm.walkover}
                 />

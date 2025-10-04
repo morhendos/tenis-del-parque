@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { useLeagueData } from '@/lib/hooks/useLeagueData'
 import { getLeagueTabs, LEAGUE_TABS, DEFAULT_TOTAL_ROUNDS } from '@/lib/constants/leagueConstants'
 import StandingsTable from '@/components/player/StandingsTable'
@@ -13,16 +13,90 @@ import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
 
 export default function PlayerLeague() {
   const [activeTab, setActiveTab] = useState(LEAGUE_TABS.STANDINGS)
+  console.log('Current active tab:', activeTab) // Debug log
   const [playoffData, setPlayoffData] = useState(null)
   const [loadingPlayoffs, setLoadingPlayoffs] = useState(false)
   const { standings, matches, schedule, loading, error, player, refetch } = useLeagueData()
   const router = useRouter()
   const params = useParams()
+  const searchParams = useSearchParams()
   const locale = params.locale || 'es'
   const language = locale
 
   // Use tabs from constants - now includes playoffs
   const tabs = getLeagueTabs(language)
+
+  // Function to get season display name
+  const getSeasonDisplayName = () => {
+    // If league has season information, use it to create a proper name
+    if (player?.league?.season) {
+      const seasonNames = {
+        es: {
+          spring: 'Primavera',
+          summer: 'Verano',
+          autumn: 'Otoño',
+          winter: 'Invierno',
+          annual: 'Anual'
+        },
+        en: {
+          spring: 'Spring',
+          summer: 'Summer',
+          autumn: 'Autumn',
+          winter: 'Winter',
+          annual: 'Annual'
+        }
+      }
+      
+      const season = player.league.season
+      const seasonType = season.type || 'summer'
+      const seasonYear = season.year || 2025
+      const seasonNumber = season.number > 1 ? ` ${season.number}` : ''
+      
+      const localizedSeasonName = seasonNames[language || 'es'][seasonType] || seasonType
+      return `${localizedSeasonName} ${seasonYear}${seasonNumber}`
+    }
+    
+    // Fallback: If we have a string that looks like a season name, use it
+    if (player?.season && typeof player.season === 'string') {
+      // Check if it's an ObjectId (24 hex characters) or a proper season name
+      if (/^[0-9a-f]{24}$/i.test(player.season)) {
+        // It's an ObjectId, show a default season
+        return language === 'es' ? 'Verano 2025' : 'Summer 2025'
+      }
+      // It might be a proper season name, return it
+      return player.season
+    }
+    
+    // Default fallback
+    return language === 'es' ? 'Temporada Actual' : 'Current Season'
+  }
+
+  // Handle tab query parameter
+  useEffect(() => {
+    const tabParam = searchParams.get('tab')
+    console.log('Tab param from URL:', tabParam) // Debug log
+    console.log('Available tabs:', Object.values(LEAGUE_TABS)) // Debug log
+    console.log('Current URL:', window.location.href) // Debug log
+    
+    if (tabParam && Object.values(LEAGUE_TABS).includes(tabParam)) {
+      console.log('Setting active tab to:', tabParam) // Debug log
+      setActiveTab(tabParam)
+    } else if (tabParam) {
+      console.log('Invalid tab param:', tabParam) // Debug log
+    }
+  }, [searchParams])
+
+  // Also check on mount in case useSearchParams has issues
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const tabParam = urlParams.get('tab')
+    console.log('Tab param from window.location:', tabParam) // Debug log
+    
+    if (tabParam && Object.values(LEAGUE_TABS).includes(tabParam)) {
+      console.log('Setting active tab from window.location to:', tabParam) // Debug log
+      setActiveTab(tabParam)
+    }
+  }, [])
 
   // Fetch playoff data when playoffs tab is selected
   useEffect(() => {
@@ -126,10 +200,10 @@ export default function PlayerLeague() {
               <div>
                 <h1 className="text-3xl font-bold text-white">{player.league.name}</h1>
                 <p className="text-purple-100 mt-1">
-                  {language === 'es' ? 'Temporada' : 'Season'}: {player.season}
+                  {language === 'es' ? 'Temporada' : 'Season'}: {getSeasonDisplayName()}
                 </p>
                 <p className="text-purple-200 text-sm mt-1">
-                  {language === 'es' ? 'Tu ELO' : 'Your ELO'}: {player.stats?.eloRating || 1200}
+                  {language === 'es' ? 'Tu ELO' : 'Your ELO'}: {player.eloRating || 1200}
                 </p>
               </div>
             </div>

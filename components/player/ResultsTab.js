@@ -2,6 +2,23 @@ import React, { useState, useMemo } from 'react'
 import MatchResultCard from './MatchResultCard'
 import { formatPlayerNameForPublic } from '@/lib/utils/playerNameUtils'
 
+// Helper function to get round display name
+const getRoundDisplayName = (round, language) => {
+  if (round <= 8) {
+    return language === 'es' ? `Ronda ${round}` : `Round ${round}`
+  }
+  
+  // Playoff rounds (beyond regular season)
+  const playoffRounds = {
+    9: language === 'es' ? 'Cuartos de Final' : 'Quarterfinals',
+    10: language === 'es' ? 'Semifinal' : 'Semifinals', 
+    11: language === 'es' ? 'Final' : 'Final',
+    12: language === 'es' ? '3er Puesto' : '3rd Place'
+  }
+  
+  return playoffRounds[round] || (language === 'es' ? `Ronda ${round}` : `Round ${round}`)
+}
+
 export default function ResultsTab({ matches, language, player = null }) {
   const [filters, setFilters] = useState({
     search: '',
@@ -102,7 +119,7 @@ export default function ResultsTab({ matches, language, player = null }) {
               </option>
               {rounds.map(round => (
                 <option key={round} value={round}>
-                  {language === 'es' ? `Ronda ${round}` : `Round ${round}`}
+                  {getRoundDisplayName(round, language)}
                 </option>
               ))}
             </select>
@@ -144,10 +161,10 @@ export default function ResultsTab({ matches, language, player = null }) {
                                 final: language === 'es' ? 'Final' : 'Final',
                                 third_place: language === 'es' ? '3er Puesto' : '3rd Place'
                               }
-                              return stageNames[match.playoffInfo.stage] || `${language === 'es' ? 'Ronda' : 'Round'} ${match.round}`
+                              return stageNames[match.playoffInfo.stage] || getRoundDisplayName(match.round, language)
                             })()
                           ) : (
-                            `${language === 'es' ? 'Ronda' : 'Round'} ${match.round}`
+                            getRoundDisplayName(match.round, language)
                           )}
                         </span>
                         {match.schedule?.venue && (

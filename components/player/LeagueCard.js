@@ -1,6 +1,9 @@
 import Link from 'next/link'
+import { useParams } from 'next/navigation'
 
 export default function LeagueCard({ player, language }) {
+  const params = useParams()
+  const locale = params?.locale || 'es'
   if (!player?.league) {
     return null
   }
@@ -82,7 +85,7 @@ export default function LeagueCard({ player, language }) {
               {/* Stats Pills */}
               <div className="flex flex-wrap gap-2 mt-2">
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800">
-                  ELO: {player.stats?.eloRating || 1200}
+                  ELO: {player.eloRating || 1200}
                 </span>
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-green-100 to-emerald-100 text-green-800">
                   {language === 'es' ? 'Nivel' : 'Level'}: {
@@ -96,16 +99,27 @@ export default function LeagueCard({ player, language }) {
             </div>
           </div>
           
-          {/* Action Button */}
-          <Link
-            href="/player/league"
-            className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm font-medium rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-green-500/25"
-          >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-            {language === 'es' ? 'Ver Clasificación' : 'View Standings'}
-          </Link>
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <Link
+              href={`/${locale}/player/league`}
+              className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm font-medium rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-green-500/25"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              {language === 'es' ? 'Ver Clasificación' : 'View Standings'}
+            </Link>
+            <Link
+              href={`/${locale}/player/league?tab=playoffs`}
+              className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-sm font-medium rounded-xl hover:from-purple-600 hover:to-indigo-700 transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-purple-500/25"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              {language === 'es' ? 'Ver Playoffs' : 'View Playoffs'}
+            </Link>
+          </div>
         </div>
       </div>
     </div>

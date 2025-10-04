@@ -452,16 +452,13 @@ async function resetMatchToUnplayed(matchId) {
 // Helper function to get player registration for a league/season
 function getPlayerRegistration(player, leagueId, season) {
   if (!player.registrations || player.registrations.length === 0) {
-    // Fallback: create a default registration if none exists
+    // Fallback: create a default registration if none exists (no ELO - that's global)
     return {
       league: leagueId,
       season: season,
       stats: {
         matchesPlayed: 0,
         matchesWon: 0,
-        eloRating: 1200,
-        highestElo: 1200,
-        lowestElo: 1200,
         setsWon: 0,
         setsLost: 0,
         gamesWon: 0,
