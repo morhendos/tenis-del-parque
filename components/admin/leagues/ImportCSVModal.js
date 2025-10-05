@@ -39,7 +39,7 @@ export default function ImportCSVModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-lg w-full mx-4">
+      <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <h3 className="text-lg font-semibold mb-4">Import Leagues from CSV</h3>
         
         {!importResult ? (
@@ -48,26 +48,61 @@ export default function ImportCSVModal({
               <p className="text-sm text-gray-600 mb-4">
                 Upload a CSV file with league data. The CSV should have the following columns:
               </p>
-              <ul className="text-sm text-gray-600 list-disc list-inside mb-4">
-                <li>name (required)</li>
-                <li>type (public/private)</li>
-                <li>location_city (required)</li>
-                <li>location_region (required)</li>
-                <li>location_venue</li>
-                <li>surface (clay/hard/grass)</li>
-                <li>ball_type (pressurized/depressurized)</li>
-                <li>match_format (best_of_3/best_of_5/single_set)</li>
-                <li>season_name</li>
-                <li>season_status (draft/registration_open/active/completed)</li>
-              </ul>
-              <div className="mb-2">
-                <a 
-                  href="/leagues-import-template.csv" 
-                  download
-                  className="text-sm text-blue-600 hover:text-blue-800 underline"
-                >
-                  Download CSV template
-                </a>
+              
+              <div className="grid grid-cols-2 gap-2 text-sm mb-4">
+                <div>
+                  <p className="font-semibold text-gray-700">Required Fields:</p>
+                  <ul className="text-gray-600 list-disc list-inside">
+                    <li>name</li>
+                    <li>citySlug (e.g., sotogrande)</li>
+                    <li>seasonYear (e.g., 2025)</li>
+                    <li>seasonType (spring/summer/autumn/winter/annual)</li>
+                    <li>startDate (YYYY-MM-DD)</li>
+                    <li>endDate (YYYY-MM-DD)</li>
+                  </ul>
+                </div>
+                
+                <div>
+                  <p className="font-semibold text-gray-700">Optional Fields:</p>
+                  <ul className="text-gray-600 list-disc list-inside">
+                    <li>skillLevel (all/beginner/intermediate/advanced)</li>
+                    <li>seasonNumber (default: 1)</li>
+                    <li>descriptionEs</li>
+                    <li>descriptionEn</li>
+                    <li>registrationStart (YYYY-MM-DD)</li>
+                    <li>registrationEnd (YYYY-MM-DD)</li>
+                    <li>maxPlayers (default: 20)</li>
+                    <li>minPlayers (default: 8)</li>
+                    <li>priceAmount</li>
+                    <li>priceCurrency (default: EUR)</li>
+                    <li>isFree (true/false)</li>
+                    <li>roundsPerSeason (default: 8)</li>
+                    <li>wildCardsPerPlayer (default: 4)</li>
+                    <li>playoffPlayers (default: 8)</li>
+                    <li>status (active/coming_soon/registration_open)</li>
+                    <li>expectedLaunchDate (YYYY-MM-DD)</li>
+                    <li>displayOrder (default: 0)</li>
+                    <li>timezone (default: Europe/Madrid)</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800">
+                  <strong>Important:</strong> Make sure the cities you reference exist in the database first! 
+                  Use the citySlug exactly as it appears in your Cities list.
+                </p>
+              </div>
+
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800 mb-2">
+                  <strong>Example CSV:</strong>
+                </p>
+                <pre className="text-xs overflow-x-auto bg-white p-2 rounded border">
+{`name,citySlug,seasonYear,seasonType,startDate,endDate,skillLevel,status
+Liga de Sotogrande,sotogrande,2025,summer,2025-07-01,2025-09-30,all,coming_soon
+Liga de Marbella,marbella,2025,summer,2025-07-01,2025-09-30,all,coming_soon`}
+                </pre>
               </div>
             </div>
 
@@ -87,8 +122,7 @@ export default function ImportCSVModal({
 
             <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-sm text-blue-800">
-                <strong>Note:</strong> If a league with the same name already exists, its information will be updated. 
-                Each league can include season information which will be created or updated accordingly.
+                <strong>Note:</strong> If a league with the same slug already exists, its information will be updated.
               </p>
             </div>
 
@@ -126,7 +160,7 @@ export default function ImportCSVModal({
             {importResult.errors && importResult.errors.length > 0 && (
               <div className="mb-4">
                 <p className="text-sm font-medium text-gray-700 mb-2">Errors:</p>
-                <div className="max-h-40 overflow-y-auto bg-gray-50 p-2 rounded text-sm">
+                <div className="max-h-60 overflow-y-auto bg-gray-50 p-3 rounded text-sm space-y-1">
                   {importResult.errors.map((error, index) => (
                     <p key={index} className="text-red-600">{error}</p>
                   ))}

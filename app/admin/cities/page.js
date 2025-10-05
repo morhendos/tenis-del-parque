@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import CityGoogleEnhancer from '@/components/admin/cities/CityGoogleEnhancer'
+import ImportCSVModal from '@/components/admin/cities/ImportCSVModal'
 
 export default function AdminCitiesPage() {
   const router = useRouter()
@@ -13,6 +14,8 @@ export default function AdminCitiesPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [sortBy, setSortBy] = useState('displayOrder')
+  const [importModal, setImportModal] = useState({ show: false })
+  const [importResult, setImportResult] = useState(null)
 
   useEffect(() => {
     fetchCities()
@@ -63,6 +66,52 @@ export default function AdminCitiesPage() {
   const handleEnhancerSuccess = () => {
     fetchCities()
     setShowEnhancerModal(false)
+  }
+
+  const handleImportCSV = async (file) => {
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      
+      const response = await fetch('/api/admin/cities/import', {
+        method: 'POST',
+        body: formData
+      })
+      
+      const result = await response.json()
+      setImportResult(result)
+      
+      if (result.success) {
+        await fetchCities()
+      }
+      
+      return result
+    } catch (error) {
+      const errorResult = {
+        success: false,
+        message: 'Import failed: ' + error.message,
+        errors: [error.message]
+      }
+      setImportResult(errorResult)
+      return errorResult
+    }
+  }
+
+  const handleExportCSV = async () => {
+    try {
+      const response = await fetch('/api/admin/cities/export')
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `cities-export-${new Date().toISOString().split('T')[0]}.csv`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      alert('Export failed: ' + error.message)
+    }
   }
 
   const handleUpdateClubCounts = async () => {

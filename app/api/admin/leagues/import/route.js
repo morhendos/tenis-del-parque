@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import dbConnect from '../../../../../lib/db/mongoose'
 import League from '../../../../../lib/models/League'
+import City from '../../../../../lib/models/City'
 
 function parseCSV(csvText) {
   const lines = csvText.trim().split('\n')
@@ -69,69 +70,98 @@ export async function POST(request) {
     let updated = 0
     const errors = []
     
-    // Group data by league name to handle multiple seasons
-    const leagueGroups = {}
-    leaguesData.forEach((row, index) => {
-      if (!row.name || !row.location_city || !row.location_region) {
-        errors.push(`Row ${index + 2}: Missing required fields (name, location_city, location_region)`)
-        return
-      }
+    // Process each row
+    for (let i = 0; i < leaguesData.length; i++) {
+      const row = leaguesData[i]
       
-      if (!leagueGroups[row.name]) {
-        leagueGroups[row.name] = {
-          basicInfo: row,
-          seasons: []
-        }
+      // Skip empty rows
+      if (!row.name || !row.name.trim()) {
+        continue
       }
-      
-      if (row.season_name) {
-        leagueGroups[row.name].seasons.push({
-          name: row.season_name,
-          status: row.season_status || 'draft'
-        })
-      }
-    })
-    
-    // Process each league
-    for (const [leagueName, leagueData] of Object.entries(leagueGroups)) {
-      const { basicInfo, seasons } = leagueData
       
       try {
-        // Generate slug from name
-        const slug = leagueName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+        // Required fields validation
+        if (!row.citySlug) {
+          errors.push(`Row ${i + 2}: Missing citySlug`)
+          continue
+        }
+        
+        if (!row.seasonYear) {
+          errors.push(`Row ${i + 2}: Missing seasonYear`)
+          continue
+        }
+        
+        if (!row.seasonType) {
+          errors.push(`Row ${i + 2}: Missing seasonType`)
+          continue
+        }
+        
+        // Find the city
+        const city = await City.findOne({ slug: row.citySlug.toLowerCase() })
+        if (!city) {
+          errors.push(`Row ${i + 2}: City with slug "${row.citySlug}" not found`)
+          continue
+        }
+        
+        // Generate slug
+        const skillLevel = row.skillLevel || 'all'
+        const skillSlug = skillLevel === 'all' ? '' : `-${skillLevel}`
+        const seasonNumber = row.seasonNumber ? parseInt(row.seasonNumber) : 1
+        let slug = `${row.citySlug}${skillSlug}-${row.seasonType}-${row.seasonYear}`
+        if (seasonNumber > 1) {
+          slug += `-${seasonNumber}`
+        }
+        
+        // Parse dates
+        const startDate = row.startDate ? new Date(row.startDate) : new Date()
+        const endDate = row.endDate ? new Date(row.endDate) : new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
+        
+        // Prepare league document
+        const leagueDoc = {
+          name: row.name.trim(),
+          slug: slug.toLowerCase(),
+          skillLevel: skillLevel,
+          season: {
+            year: parseInt(row.seasonYear),
+            type: row.seasonType,
+            number: seasonNumber
+          },
+          city: city._id,
+          location: {
+            city: city.name.es || city.name.en,
+            region: city.province || 'Málaga',
+            country: city.country || 'Spain',
+            timezone: row.timezone || 'Europe/Madrid'
+          },
+          description: {
+            es: row.descriptionEs || '',
+            en: row.descriptionEn || ''
+          },
+          seasonConfig: {
+            startDate: startDate,
+            endDate: endDate,
+            registrationStart: row.registrationStart ? new Date(row.registrationStart) : null,
+            registrationEnd: row.registrationEnd ? new Date(row.registrationEnd) : null,
+            maxPlayers: row.maxPlayers ? parseInt(row.maxPlayers) : 20,
+            minPlayers: row.minPlayers ? parseInt(row.minPlayers) : 8,
+            price: {
+              amount: row.priceAmount ? parseFloat(row.priceAmount) : 0,
+              currency: row.priceCurrency || 'EUR',
+              isFree: row.isFree === 'true' || row.isFree === '1' || !row.priceAmount
+            }
+          },
+          config: {
+            roundsPerSeason: row.roundsPerSeason ? parseInt(row.roundsPerSeason) : 8,
+            wildCardsPerPlayer: row.wildCardsPerPlayer ? parseInt(row.wildCardsPerPlayer) : 4,
+            playoffPlayers: row.playoffPlayers ? parseInt(row.playoffPlayers) : 8
+          },
+          status: row.status || 'coming_soon',
+          expectedLaunchDate: row.expectedLaunchDate ? new Date(row.expectedLaunchDate) : null,
+          displayOrder: row.displayOrder ? parseInt(row.displayOrder) : 0
+        }
         
         // Check if league exists
-        const existingLeague = await League.findOne({ name: leagueName })
-        
-        const leagueDoc = {
-          name: leagueName,
-          slug,
-          type: basicInfo.type || 'public',
-          location: {
-            city: basicInfo.location_city,
-            region: basicInfo.location_region,
-            venue: basicInfo.location_venue || '',
-            country: 'Spain' // Default country
-          },
-          settings: {
-            surface: basicInfo.surface || 'clay',
-            ballType: basicInfo.ball_type || 'pressurized',
-            matchFormat: basicInfo.match_format || 'best_of_3'
-          },
-          seasons: seasons.length > 0 ? seasons.map(s => ({
-            name: s.name,
-            status: s.status,
-            startDate: new Date(),
-            endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days from now
-            maxPlayers: 100,
-            price: {
-              amount: 0,
-              currency: 'EUR',
-              isFree: true
-            }
-          })) : [],
-          status: 'active'
-        }
+        const existingLeague = await League.findOne({ slug: slug.toLowerCase() })
         
         if (existingLeague) {
           // Update existing league
@@ -144,7 +174,7 @@ export async function POST(request) {
           created++
         }
       } catch (error) {
-        errors.push(`Failed to process league "${leagueName}": ${error.message}`)
+        errors.push(`Failed to process league "${row.name}": ${error.message}`)
       }
     }
     

@@ -1,0 +1,5 @@
+name,citySlug,seasonYear,seasonType,startDate,endDate,skillLevel,status,maxPlayers,priceAmount,isFree,roundsPerSeason,descriptionEs,descriptionEn
+Liga de Sotogrande,sotogrande,2025,summer,2025-07-01,2025-09-30,all,coming_soon,20,0,true,8,Liga de verano en Sotogrande,Summer league in Sotogrande
+Liga de Marbella,marbella,2025,summer,2025-07-01,2025-09-30,all,coming_soon,20,0,true,8,Liga de verano en Marbella,Summer league in Marbella
+Liga de Estepona,estepona,2025,summer,2025-07-01,2025-09-30,all,coming_soon,20,0,true,8,Liga de verano en Estepona,Summer league in Estepona
+Liga de Malaga,malaga,2025,summer,2025-07-01,2025-09-30,all,coming_soon,20,0,true,8,Liga de verano en Málaga,Summer league in Málaga
