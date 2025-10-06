@@ -134,9 +134,13 @@ root/
 │   │   │   ├── cities
 │   │   │   │   ├── enhance-google
 │   │   │   │   │   └── route.js
+│   │   │   │   ├── export
+│   │   │   │   │   └── route.js
 │   │   │   │   ├── fetch-photos
 │   │   │   │   │   └── route.js
 │   │   │   │   ├── google-photo
+│   │   │   │   │   └── route.js
+│   │   │   │   ├── import
 │   │   │   │   │   └── route.js
 │   │   │   │   ├── route.js
 │   │   │   │   └── search-google
@@ -310,6 +314,7 @@ root/
 │   │   │   ├── CityEditor.js
 │   │   │   ├── CityGoogleEnhancer.js
 │   │   │   ├── CityImageManager.js
+│   │   │   ├── ImportCSVModal.js
 │   │   │   └── editor
 │   │   │       ├── BasicInfoSection.js
 │   │   │       ├── GoogleSearchSection.js
@@ -554,8 +559,10 @@ root/
 ├── postcss.config.js
 ├── public
 │   ├── apple-touch-icon.png
+│   ├── cities-import-template.csv
 │   ├── estepona-01.webp
 │   ├── favicon.ico
+│   ├── leagues-import-template.csv
 │   ├── logo-01.webp
 │   ├── logo-big.png
 │   ├── logo-horizontal-01.png
