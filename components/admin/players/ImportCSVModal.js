@@ -104,7 +104,7 @@ Bob Johnson,bob@example.com,+34600123458,1180,beginner,active,marbella-summer-20
               <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <p className="text-sm text-yellow-800">
                   <strong>⚠️ League Assignment:</strong> To assign players to leagues, include the <code className="bg-yellow-100 px-1 rounded">leagueSlug</code> column 
-                  with the exact league slug (e.g., "sotogrande-summer-2025"). You can find league slugs in the Leagues page.
+                  with the exact league slug (e.g., &quot;sotogrande-summer-2025&quot;). You can find league slugs in the Leagues page.
                 </p>
               </div>
 
