@@ -10,7 +10,7 @@ export async function POST(request) {
     // Get form data
     const formData = await request.formData()
     const file = formData.get('file')
-    const leagueId = formData.get('leagueId')
+    const defaultLeagueId = formData.get('leagueId') // Optional default league for players without league info
 
     if (!file) {
       return NextResponse.json(
@@ -31,38 +31,16 @@ export async function POST(request) {
       )
     }
 
-    // Parse headers
-    const headers = lines[0].toLowerCase().split(',').map(h => h.trim())
+    // Parse headers - handle both old and new formats
+    const headers = lines[0].toLowerCase().split(',').map(h => h.trim().replace(/^"|"$/g, ''))
     
-    // Required fields
-    const requiredFields = ['name', 'email', 'whatsapp']
+    // Check for required fields
+    const requiredFields = ['name', 'email']
     const missingFields = requiredFields.filter(field => !headers.includes(field))
     
     if (missingFields.length > 0) {
       return NextResponse.json(
         { error: `Missing required columns: ${missingFields.join(', ')}` },
-        { status: 400 }
-      )
-    }
-
-    // Get league if specified
-    let league = null
-    if (leagueId) {
-      league = await League.findById(leagueId).lean()
-      if (!league) {
-        return NextResponse.json(
-          { error: 'Invalid league ID' },
-          { status: 400 }
-        )
-      }
-    } else {
-      // Default to Sotogrande league if no league specified
-      league = await League.findOne({ slug: 'sotogrande' }).lean()
-    }
-
-    if (!league) {
-      return NextResponse.json(
-        { error: 'No league found. Please specify a valid league.' },
         { status: 400 }
       )
     }
@@ -74,6 +52,9 @@ export async function POST(request) {
       errors: []
     }
 
+    // Cache for leagues to avoid multiple DB queries
+    const leagueCache = new Map()
+
     for (let i = 1; i < lines.length; i++) {
       try {
         const values = parseCSVLine(lines[i])
@@ -81,13 +62,12 @@ export async function POST(request) {
 
         const rowData = {}
         headers.forEach((header, index) => {
-          rowData[header] = values[index]?.trim() || ''
+          rowData[header] = values[index]?.trim().replace(/^"|"$/g, '') || ''
         })
 
         // Validate required fields
-        const missingData = requiredFields.filter(field => !rowData[field])
-        if (missingData.length > 0) {
-          results.errors.push(`Row ${i + 1}: Missing ${missingData.join(', ')}`)
+        if (!rowData.name || !rowData.email) {
+          results.errors.push(`Row ${i + 1}: Missing name or email`)
           continue
         }
 
@@ -98,63 +78,152 @@ export async function POST(request) {
           continue
         }
 
-        // Validate level if provided
+        // Find the league for this player
+        let league = null
+        
+        // Try to find league by slug if provided
+        if (rowData.leagueslug || rowData.league_slug) {
+          const leagueSlug = rowData.leagueslug || rowData.league_slug
+          
+          // Check cache first
+          if (leagueCache.has(leagueSlug)) {
+            league = leagueCache.get(leagueSlug)
+          } else {
+            league = await League.findOne({ slug: leagueSlug }).lean()
+            if (league) {
+              leagueCache.set(leagueSlug, league)
+            }
+          }
+          
+          if (!league) {
+            results.errors.push(`Row ${i + 1}: League with slug "${leagueSlug}" not found`)
+            continue
+          }
+        } else if (defaultLeagueId) {
+          // Use the default league if no league slug in CSV
+          if (leagueCache.has('default')) {
+            league = leagueCache.get('default')
+          } else {
+            league = await League.findById(defaultLeagueId).lean()
+            if (league) {
+              leagueCache.set('default', league)
+            }
+          }
+        }
+
+        // Get level and status from CSV or use defaults
+        const level = rowData.level?.toLowerCase() || 'intermediate'
+        const status = rowData.status?.toLowerCase() || 'pending'
+        
+        // Validate level
         const validLevels = ['beginner', 'intermediate', 'advanced']
-        if (rowData.level && !validLevels.includes(rowData.level.toLowerCase())) {
+        if (!validLevels.includes(level)) {
           results.errors.push(`Row ${i + 1}: Invalid level. Must be: beginner, intermediate, or advanced`)
           continue
         }
 
-        // Validate status if provided
-        const validStatuses = ['pending', 'confirmed', 'active', 'inactive']
-        if (rowData.status && !validStatuses.includes(rowData.status.toLowerCase())) {
-          results.errors.push(`Row ${i + 1}: Invalid status. Must be: pending, confirmed, active, or inactive`)
+        // Validate status
+        const validStatuses = ['waiting', 'pending', 'confirmed', 'active', 'inactive']
+        if (!validStatuses.includes(status)) {
+          results.errors.push(`Row ${i + 1}: Invalid status. Must be: ${validStatuses.join(', ')}`)
           continue
         }
 
         // Check if player exists
-        const existingPlayer = await Player.findOne({ email: rowData.email })
+        let existingPlayer = await Player.findOne({ email: rowData.email.toLowerCase() })
 
         if (existingPlayer) {
-          // Determine the correct season to use
-          let season = 'summer-2025' // default fallback
-          if (league?.seasons?.length > 0) {
-            // Find active season or use the first season
-            const activeSeason = league.seasons.find(s => s.status === 'active' || s.status === 'registration_open')
-            season = activeSeason?.name || league.seasons[0].name
-          }
-
-          // Update existing player
+          // Update basic info
           existingPlayer.name = rowData.name
-          existingPlayer.whatsapp = rowData.whatsapp
-          if (rowData.level) existingPlayer.level = rowData.level.toLowerCase()
-          if (rowData.status) existingPlayer.status = rowData.status.toLowerCase()
-          if (league && !existingPlayer.league) existingPlayer.league = league._id
-          
-          // Update season to match current league season
-          existingPlayer.season = season
+          if (rowData.whatsapp) existingPlayer.whatsapp = rowData.whatsapp
+          if (rowData.elorating) existingPlayer.eloRating = parseFloat(rowData.elorating) || 1200
+
+          // Add league registration if league is specified and player not already registered
+          if (league) {
+            const existingRegistration = existingPlayer.registrations.find(reg => 
+              reg.league.toString() === league._id.toString()
+            )
+
+            if (!existingRegistration) {
+              // Create new registration for this league
+              existingPlayer.registrations.push({
+                league: league._id,
+                season: league.season || { year: 2025, type: 'summer', number: 1 },
+                level: level,
+                status: status,
+                registeredAt: rowData.registrationdate ? new Date(rowData.registrationdate) : new Date(),
+                stats: {
+                  matchesPlayed: 0,
+                  matchesWon: 0,
+                  totalPoints: 0,
+                  setsWon: 0,
+                  setsLost: 0,
+                  gamesWon: 0,
+                  gamesLost: 0,
+                  retirements: 0,
+                  walkovers: 0
+                },
+                matchHistory: [],
+                wildCards: {
+                  total: 3,
+                  used: 0,
+                  history: []
+                }
+              })
+            } else {
+              // Update existing registration
+              existingRegistration.level = level
+              existingRegistration.status = status
+            }
+          }
           
           await existingPlayer.save()
           results.updated++
         } else {
-          // Determine the correct season to use
-          let season = 'summer-2025' // default fallback
-          if (league?.seasons?.length > 0) {
-            // Find active season or use the first season
-            const activeSeason = league.seasons.find(s => s.status === 'active' || s.status === 'registration_open')
-            season = activeSeason?.name || league.seasons[0].name
-          }
-
           // Create new player
           const playerData = {
             name: rowData.name,
-            email: rowData.email,
-            whatsapp: rowData.whatsapp,
-            level: rowData.level?.toLowerCase() || 'intermediate',
-            status: rowData.status?.toLowerCase() || 'pending',
-            league: league?._id,
-            season: season,
-            registeredAt: new Date()
+            email: rowData.email.toLowerCase(),
+            whatsapp: rowData.whatsapp || '',
+            eloRating: rowData.elorating ? parseFloat(rowData.elorating) : 1200,
+            registrations: [],
+            preferences: {
+              emailNotifications: true,
+              whatsappNotifications: true,
+              preferredLanguage: 'es'
+            },
+            metadata: {
+              source: 'import',
+              firstRegistrationDate: rowData.registrationdate ? new Date(rowData.registrationdate) : new Date()
+            }
+          }
+
+          // Add league registration if league is specified
+          if (league) {
+            playerData.registrations.push({
+              league: league._id,
+              season: league.season || { year: 2025, type: 'summer', number: 1 },
+              level: level,
+              status: status,
+              registeredAt: rowData.registrationdate ? new Date(rowData.registrationdate) : new Date(),
+              stats: {
+                matchesPlayed: 0,
+                matchesWon: 0,
+                totalPoints: 0,
+                setsWon: 0,
+                setsLost: 0,
+                gamesWon: 0,
+                gamesLost: 0,
+                retirements: 0,
+                walkovers: 0
+              },
+              matchHistory: [],
+              wildCards: {
+                total: 3,
+                used: 0,
+                history: []
+              }
+            })
           }
 
           await Player.create(playerData)
@@ -170,6 +239,7 @@ export async function POST(request) {
     }
 
     return NextResponse.json({
+      success: true,
       message: `Import completed. Created: ${results.created}, Updated: ${results.updated}`,
       created: results.created,
       updated: results.updated,
@@ -195,7 +265,14 @@ function parseCSVLine(line) {
     const char = line[i]
     
     if (char === '"') {
-      inQuotes = !inQuotes
+      if (line[i + 1] === '"') {
+        // Escaped quote
+        current += '"'
+        i++
+      } else {
+        // Toggle quote state
+        inQuotes = !inQuotes
+      }
     } else if (char === ',' && !inQuotes) {
       result.push(current.trim())
       current = ''
@@ -205,7 +282,7 @@ function parseCSVLine(line) {
   }
   
   // Don't forget the last field
-  if (current) {
+  if (current || result.length > 0) {
     result.push(current.trim())
   }
   

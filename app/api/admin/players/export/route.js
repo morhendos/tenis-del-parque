@@ -1,5 +1,6 @@
 import dbConnect from '../../../../../lib/db/mongoose'
 import Player from '../../../../../lib/models/Player'
+import League from '../../../../../lib/models/League'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
@@ -11,36 +12,65 @@ export async function GET() {
     // Fetch all players with league info populated
     const players = await Player
       .find()
-      .populate('registrations.league', 'name')
+      .populate('registrations.league', 'name slug season')
       .sort({ 'metadata.firstRegistrationDate': -1 })
       .lean()
 
     // Create CSV content with headers
-    const headers = ['Name', 'Email', 'WhatsApp', 'ELO Rating', 'Leagues', 'Registration Date']
+    const headers = [
+      'name',
+      'email', 
+      'whatsapp',
+      'eloRating',
+      'level',
+      'status',
+      'leagueSlug',
+      'leagueName',
+      'seasonYear',
+      'seasonType',
+      'registrationDate'
+    ]
     
-    // Map players to CSV rows
-    const rows = players.map(player => {
-      // Get all league names
-      const leagues = player.registrations
-        ?.map(reg => reg.league?.name || 'N/A')
-        .join('; ') || 'N/A'
-      
-      // Get earliest registration date
-      const earliestDate = player.registrations
-        ?.reduce((earliest, reg) => {
-          const regDate = reg.registeredAt
-          return !earliest || regDate < earliest ? regDate : earliest
-        }, null) || player.metadata?.firstRegistrationDate || player.createdAt
-      
-      return [
-        player.name || '',
-        player.email || '',
-        player.whatsapp || '',
-        player.eloRating || 1200,
-        leagues,
-        earliestDate ? new Date(earliestDate).toISOString().split('T')[0] : ''
-      ]
-    })
+    // Map players to CSV rows (one row per league registration)
+    const rows = []
+    
+    for (const player of players) {
+      if (player.registrations && player.registrations.length > 0) {
+        // Create a row for each league registration
+        for (const reg of player.registrations) {
+          const league = reg.league
+          
+          rows.push([
+            player.name || '',
+            player.email || '',
+            player.whatsapp || '',
+            player.eloRating || 1200,
+            reg.level || 'intermediate',
+            reg.status || 'pending',
+            league?.slug || '',
+            league?.name || '',
+            league?.season?.year || '',
+            league?.season?.type || '',
+            reg.registeredAt ? new Date(reg.registeredAt).toISOString().split('T')[0] : ''
+          ])
+        }
+      } else {
+        // Player with no registrations - export basic info
+        rows.push([
+          player.name || '',
+          player.email || '',
+          player.whatsapp || '',
+          player.eloRating || 1200,
+          'intermediate', // default level
+          'pending', // default status
+          '', // no league slug
+          '', // no league name
+          '', // no season year
+          '', // no season type
+          player.createdAt ? new Date(player.createdAt).toISOString().split('T')[0] : ''
+        ])
+      }
+    }
 
     // Build CSV string with proper escaping
     const csvContent = [
@@ -49,11 +79,8 @@ export async function GET() {
         row.map(cell => {
           // Convert to string and escape quotes
           const str = String(cell)
-          // If cell contains comma, newline, or quote, wrap in quotes and escape internal quotes
-          if (str.includes(',') || str.includes('\n') || str.includes('"')) {
-            return `"${str.replace(/"/g, '""')}"`
-          }
-          return str
+          // Always wrap in quotes to handle commas and special characters
+          return `"${str.replace(/"/g, '""')}"`
         }).join(',')
       )
     ].join('\n')

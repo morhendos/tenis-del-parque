@@ -1,0 +1,6 @@
+name,email,whatsapp,eloRating,level,status,leagueSlug,registrationDate
+John Doe,john.doe@example.com,+34600123456,1200,intermediate,pending,sotogrande-summer-2025,2025-06-01
+Jane Smith,jane.smith@example.com,+34600123457,1250,advanced,confirmed,sotogrande-summer-2025,2025-06-01
+Bob Johnson,bob.johnson@example.com,+34600123458,1180,beginner,active,marbella-summer-2025,2025-06-02
+Alice Williams,alice.williams@example.com,+34600123459,1220,intermediate,confirmed,estepona-summer-2025,2025-06-02
+Charlie Brown,charlie.brown@example.com,+34600123460,1200,intermediate,pending,malaga-summer-2025,2025-06-03
