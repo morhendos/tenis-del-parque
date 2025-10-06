@@ -81,8 +81,8 @@ export async function POST(request) {
       
       try {
         // Required fields validation
-        if (!row.citySlug) {
-          errors.push(`Row ${i + 2}: Missing citySlug`)
+        if (!row.citySlug || !row.citySlug.trim()) {
+          errors.push(`Row ${i + 2}: Missing citySlug (this field is required to link the league to a city)`)
           continue
         }
         
@@ -99,7 +99,10 @@ export async function POST(request) {
         // Find the city
         const city = await City.findOne({ slug: row.citySlug.toLowerCase() })
         if (!city) {
-          errors.push(`Row ${i + 2}: City with slug "${row.citySlug}" not found`)
+          // List available cities for better error message
+          const availableCities = await City.find({}, 'slug').lean()
+          const cityList = availableCities.map(c => c.slug).join(', ')
+          errors.push(`Row ${i + 2}: City with slug "${row.citySlug}" not found. Available cities: ${cityList || 'none'}`)
           continue
         }
         
