@@ -79,9 +79,9 @@ export default function PlayerTableRow({
         {player.league?.name || 'N/A'}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-        <div>ELO: {player.stats?.eloRating || 1200}</div>
-        <div>W/L: {player.stats?.matchesWon || 0}/{player.stats?.matchesPlayed - player.stats?.matchesWon || 0}</div>
-        {player.stats?.matchesPlayed > 0 && (
+        <div>ELO: {player.eloRating || 1200}</div>
+        <div>W/L: {player.stats?.matchesWon || 0}/{(player.stats?.matchesPlayed || 0) - (player.stats?.matchesWon || 0)}</div>
+        {(player.stats?.matchesPlayed || 0) > 0 && (
           <button
             onClick={() => onRecalculateElo(player._id)}
             disabled={eloRecalculateLoading[`elo-${player._id}`]}

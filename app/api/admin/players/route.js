@@ -89,6 +89,10 @@ export async function GET(request) {
         registeredAt: '$registrations.registeredAt',
         createdAt: 1,
         updatedAt: 1,
+        // Global ELO fields (player level)
+        eloRating: 1,
+        highestElo: 1,
+        lowestElo: 1,
         // Flatten registration data to root level for backward compatibility
         level: '$registrations.level',
         status: '$registrations.status',
@@ -109,7 +113,6 @@ export async function GET(request) {
     // Sort by registration date (newest first)
     pipeline.push({ $sort: { registeredAt: -1 } })
 
-    console.log('Player aggregation pipeline:', JSON.stringify(pipeline, null, 2))
 
     // Execute aggregation
     const players = await Player.aggregate(pipeline)

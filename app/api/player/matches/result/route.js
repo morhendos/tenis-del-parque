@@ -4,6 +4,7 @@ import Match from '../../../../../lib/models/Match'
 import Player from '../../../../../lib/models/Player'
 import { requirePlayer } from '../../../../../lib/auth/apiAuth'
 import mongoose from 'mongoose'
+import { updatePlayerStatsOnMatchComplete } from '../../../../../lib/services/playerStatsService'
 
 // Helper function to get player registration for a league/season
 function getPlayerRegistration(player, leagueId, season) {
@@ -268,83 +269,8 @@ export async function POST(request) {
         }
       }
 
-      // Get player registrations for league-specific stats
-      const player1Reg = getPlayerRegistration(player1, match.league, match.season)
-      const player2Reg = getPlayerRegistration(player2, match.league, match.season)
-
-      // Update GLOBAL ELO (player level)
-      player1.eloRating = (player1.eloRating || 1200) + eloChange
-      player2.eloRating = (player2.eloRating || 1200) - eloChange
-      
-      // Update global highest/lowest ELO
-      if (player1.eloRating > (player1.highestElo || 1200)) {
-        player1.highestElo = player1.eloRating
-      }
-      if (player1.eloRating < (player1.lowestElo || 1200)) {
-        player1.lowestElo = player1.eloRating
-      }
-      if (player2.eloRating > (player2.highestElo || 1200)) {
-        player2.highestElo = player2.eloRating
-      }
-      if (player2.eloRating < (player2.lowestElo || 1200)) {
-        player2.lowestElo = player2.eloRating
-      }
-      
-      // Update LEAGUE-SPECIFIC stats (registration level)
-      // Player 1 league stats
-      player1Reg.stats.matchesPlayed += 1
-      if (player1Won) player1Reg.stats.matchesWon += 1
-      
-      player1Reg.stats.setsWon = (player1Reg.stats.setsWon || 0) + player1SetsWon
-      player1Reg.stats.setsLost = (player1Reg.stats.setsLost || 0) + player2SetsWon
-      
-      // Add to match history (limit to last 20 matches to avoid performance issues)
-      if (!player1Reg.matchHistory) player1Reg.matchHistory = []
-      player1Reg.matchHistory.unshift({
-        match: match._id,
-        opponent: player2._id,
-        result: player1Won ? 'won' : 'lost',
-        score: match.getScoreDisplay(),
-        eloChange: eloChange,
-        eloAfter: player1.eloRating, // Use global ELO
-        round: match.round,
-        date: match.result.playedAt
-      })
-      
-      // Keep only last 20 matches in history to avoid bloat
-      if (player1Reg.matchHistory.length > 20) {
-        player1Reg.matchHistory = player1Reg.matchHistory.slice(0, 20)
-      }
-
-      // Player 2 LEAGUE-SPECIFIC stats
-      player2Reg.stats.matchesPlayed += 1
-      if (!player1Won) player2Reg.stats.matchesWon += 1
-      
-      player2Reg.stats.setsWon = (player2Reg.stats.setsWon || 0) + player2SetsWon
-      player2Reg.stats.setsLost = (player2Reg.stats.setsLost || 0) + player1SetsWon
-      
-      // Add to match history (limit to last 20 matches to avoid performance issues)
-      if (!player2Reg.matchHistory) player2Reg.matchHistory = []
-      player2Reg.matchHistory.unshift({
-        match: match._id,
-        opponent: player1._id,
-        result: player1Won ? 'lost' : 'won',
-        score: match.getScoreDisplay(),
-        eloChange: -eloChange,
-        eloAfter: player2.eloRating, // Use global ELO
-        round: match.round,
-        date: match.result.playedAt
-      })
-      
-      // Keep only last 20 matches in history to avoid bloat
-      if (player2Reg.matchHistory.length > 20) {
-        player2Reg.matchHistory = player2Reg.matchHistory.slice(0, 20)
-      }
-
-      // Save all documents within the transaction
-      await match.save({ session, validateModifiedOnly: true })
-      await player1.save({ session, validateModifiedOnly: true })
-      await player2.save({ session, validateModifiedOnly: true })
+      // Update player stats using centralized service
+      await updatePlayerStatsOnMatchComplete(match, player1, player2, session)
 
       // If this is a playoff match, update the bracket with the winner
       if (match.matchType === 'playoff' && match.playoffInfo) {

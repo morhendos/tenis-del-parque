@@ -5,6 +5,10 @@ import Player from '../../../../../lib/models/Player'
 import League from '../../../../../lib/models/League'
 import { requireAdmin } from '../../../../../lib/auth/apiAuth'
 import mongoose from 'mongoose'
+import { 
+  updatePlayerStatsOnMatchComplete, 
+  reversePlayerStatsOnMatchReset 
+} from '../../../../../lib/services/playerStatsService'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
@@ -187,7 +191,7 @@ export async function PATCH(request, { params }) {
 
         // If this match already has a result, we need to reverse the old stats first
         if (match.result && match.result.winner && match.eloChanges) {
-          await reverseMatchStats(match, player1, player2, session)
+          await reversePlayerStatsOnMatchReset(match, player1, player2, session)
         }
 
         // Calculate ELO changes for the new result
@@ -245,13 +249,8 @@ export async function PATCH(request, { params }) {
           player2SetsWon = player1Won ? 0 : 2
         }
 
-        // Update player stats manually
-        await updatePlayerStatsManually(match, player1, player2, player1Won, player1SetsWon, player2SetsWon, session)
-
-        // Save all within transaction
-        await match.save({ session })
-        await player1.save({ session })
-        await player2.save({ session })
+        // Update player stats using centralized service
+        await updatePlayerStatsOnMatchComplete(match, player1, player2, session)
 
         // If this is a playoff match, update the bracket with the winner
         if (match.matchType === 'playoff' && match.playoffInfo && body.result?.winner) {
@@ -411,7 +410,7 @@ async function resetMatchToUnplayed(matchId) {
     }
 
     // Reverse the match stats
-    await reverseMatchStats(match, player1, player2, session)
+    await reversePlayerStatsOnMatchReset(match, player1, player2, session)
 
     // Reset match to unplayed state
     match.result = undefined
@@ -482,144 +481,9 @@ function getPlayerRegistration(player, leagueId, season) {
   return registration
 }
 
-// Helper function to reverse match statistics
-async function reverseMatchStats(match, player1, player2, session) {
-  if (!match.eloChanges || !match.result) return
+// Note: reverseMatchStats function has been replaced by centralized playerStatsService
 
-  // Get the relevant registrations for both players (for league-specific stats)
-  const player1Reg = getPlayerRegistration(player1, match.league, match.season)
-  const player2Reg = getPlayerRegistration(player2, match.league, match.season)
-
-  // Reverse GLOBAL ELO changes (player level)
-  player1.eloRating = (player1.eloRating || 1200) - match.eloChanges.player1.change
-  player2.eloRating = (player2.eloRating || 1200) - match.eloChanges.player2.change
-
-  // Note: We don't recalculate highest/lowest ELO here since that would require 
-  // full match history analysis. In a production system, you'd want to 
-  // recalculate these properly or track them more carefully.
-
-  // Reverse LEAGUE-SPECIFIC match count and wins
-  player1Reg.stats.matchesPlayed = Math.max(0, player1Reg.stats.matchesPlayed - 1)
-  player2Reg.stats.matchesPlayed = Math.max(0, player2Reg.stats.matchesPlayed - 1)
-
-  const player1Won = match.result.winner.toString() === match.players.player1.toString()
-  if (player1Won) {
-    player1Reg.stats.matchesWon = Math.max(0, player1Reg.stats.matchesWon - 1)
-  } else {
-    player2Reg.stats.matchesWon = Math.max(0, player2Reg.stats.matchesWon - 1)
-  }
-
-  // Reverse sets won/lost
-  if (match.result.score && match.result.score.sets) {
-    let player1SetsWon = 0
-    let player2SetsWon = 0
-
-    match.result.score.sets.forEach(set => {
-      if (set.player1 > set.player2) {
-        player1SetsWon++
-      } else {
-        player2SetsWon++
-      }
-    })
-
-    player1Reg.stats.setsWon = Math.max(0, (player1Reg.stats.setsWon || 0) - player1SetsWon)
-    player1Reg.stats.setsLost = Math.max(0, (player1Reg.stats.setsLost || 0) - player2SetsWon)
-    player2Reg.stats.setsWon = Math.max(0, (player2Reg.stats.setsWon || 0) - player2SetsWon)
-    player2Reg.stats.setsLost = Math.max(0, (player2Reg.stats.setsLost || 0) - player1SetsWon)
-  } else if (match.result.score?.walkover) {
-    // Reverse walkover sets (winner had 2-0)
-    if (player1Won) {
-      player1Reg.stats.setsWon = Math.max(0, (player1Reg.stats.setsWon || 0) - 2)
-      player2Reg.stats.setsLost = Math.max(0, (player2Reg.stats.setsLost || 0) - 2)
-    } else {
-      player2Reg.stats.setsWon = Math.max(0, (player2Reg.stats.setsWon || 0) - 2)
-      player1Reg.stats.setsLost = Math.max(0, (player1Reg.stats.setsLost || 0) - 2)
-    }
-  }
-
-  // Remove this match from both players' match history
-  player1Reg.matchHistory = (player1Reg.matchHistory || []).filter(
-    h => h.match && !h.match.equals(match._id)
-  )
-  player2Reg.matchHistory = (player2Reg.matchHistory || []).filter(
-    h => h.match && !h.match.equals(match._id)
-  )
-}
-
-// Helper function to update player stats manually (same as player API)
-async function updatePlayerStatsManually(match, player1, player2, player1Won, player1SetsWon, player2SetsWon, session) {
-  // Get the relevant registrations for both players (for league-specific stats)
-  const player1Reg = getPlayerRegistration(player1, match.league, match.season)
-  const player2Reg = getPlayerRegistration(player2, match.league, match.season)
-
-  // Update GLOBAL ELO (player level)
-  player1.eloRating = (player1.eloRating || 1200) + match.eloChanges.player1.change
-  player2.eloRating = (player2.eloRating || 1200) + match.eloChanges.player2.change
-  
-  // Update global highest/lowest ELO
-  if (player1.eloRating > (player1.highestElo || 1200)) {
-    player1.highestElo = player1.eloRating
-  }
-  if (player1.eloRating < (player1.lowestElo || 1200)) {
-    player1.lowestElo = player1.eloRating
-  }
-  if (player2.eloRating > (player2.highestElo || 1200)) {
-    player2.highestElo = player2.eloRating
-  }
-  if (player2.eloRating < (player2.lowestElo || 1200)) {
-    player2.lowestElo = player2.eloRating
-  }
-
-  // Update LEAGUE-SPECIFIC stats (registration level)
-  player1Reg.stats.matchesPlayed += 1
-  if (player1Won) player1Reg.stats.matchesWon += 1
-  
-  player1Reg.stats.setsWon = (player1Reg.stats.setsWon || 0) + player1SetsWon
-  player1Reg.stats.setsLost = (player1Reg.stats.setsLost || 0) + player2SetsWon
-  
-  // Add to match history (limit to last 20 matches to avoid performance issues)
-  if (!player1Reg.matchHistory) player1Reg.matchHistory = []
-  player1Reg.matchHistory.unshift({
-    match: match._id,
-    opponent: player2._id,
-    result: player1Won ? 'won' : 'lost',
-    score: match.getScoreDisplay(),
-    eloChange: match.eloChanges.player1.change,
-    eloAfter: player1.eloRating, // Use global ELO
-    round: match.round,
-    date: match.result.playedAt
-  })
-  
-  // Keep only last 20 matches in history to avoid bloat
-  if (player1Reg.matchHistory.length > 20) {
-    player1Reg.matchHistory = player1Reg.matchHistory.slice(0, 20)
-  }
-
-  // Player 2 LEAGUE-SPECIFIC stats
-  player2Reg.stats.matchesPlayed += 1
-  if (!player1Won) player2Reg.stats.matchesWon += 1
-  
-  player2Reg.stats.setsWon = (player2Reg.stats.setsWon || 0) + player2SetsWon
-  player2Reg.stats.setsLost = (player2Reg.stats.setsLost || 0) + player1SetsWon
-  
-  // Add to match history (limit to last 20 matches to avoid performance issues)
-  if (!player2Reg.matchHistory) player2Reg.matchHistory = []
-  player2Reg.matchHistory.unshift({
-    match: match._id,
-    opponent: player1._id,
-    result: player1Won ? 'lost' : 'won',
-    score: match.getScoreDisplay(),
-    eloChange: match.eloChanges.player2.change,
-    eloAfter: player2.eloRating, // Use global ELO
-    round: match.round,
-    date: match.result.playedAt
-  })
-  
-  // Keep only last 20 matches in history to avoid bloat
-  if (player2Reg.matchHistory.length > 20) {
-    player2Reg.matchHistory = player2Reg.matchHistory.slice(0, 20)
-  }
-}
+// Note: updatePlayerStatsManually function has been replaced by centralized playerStatsService
 
 // ELO calculation helper
 function calculateEloChange(ratingA, ratingB, aWon) {

@@ -23,7 +23,7 @@ export default function MatchOverviewTab({ match, onTabChange }) {
             </div>
             <div className="flex justify-between">
               <dt className="text-gray-600">Current ELO:</dt>
-              <dd className="font-medium text-gray-900">{match.players.player1.stats?.eloRating || 1200}</dd>
+              <dd className="font-medium text-gray-900">{match.players.player1.eloRating || 1200}</dd>
             </div>
             {match.eloChanges?.player1 && (
               <div className="flex justify-between">
@@ -56,7 +56,7 @@ export default function MatchOverviewTab({ match, onTabChange }) {
             </div>
             <div className="flex justify-between">
               <dt className="text-gray-600">Current ELO:</dt>
-              <dd className="font-medium text-gray-900">{match.players.player2.stats?.eloRating || 1200}</dd>
+              <dd className="font-medium text-gray-900">{match.players.player2.eloRating || 1200}</dd>
             </div>
             {match.eloChanges?.player2 && (
               <div className="flex justify-between">

@@ -402,9 +402,9 @@ export async function POST(request) {
 // Helper function (should match the one in Player model)
 function getInitialEloByLevel(level) {
   const eloRatings = {
-    'beginner': 1180,
+    'beginner': 1100,
     'intermediate': 1200,
-    'advanced': 1250
+    'advanced': 1300
   }
   return eloRatings[level] || 1200
 }
