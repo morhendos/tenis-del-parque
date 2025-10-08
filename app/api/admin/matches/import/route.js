@@ -3,6 +3,7 @@ import dbConnect from '../../../../../lib/db/mongoose'
 import Match from '../../../../../lib/models/Match'
 import Player from '../../../../../lib/models/Player'
 import League from '../../../../../lib/models/League'
+import mongoose from 'mongoose'
 
 export async function POST(request) {
   try {
@@ -99,9 +100,8 @@ export async function POST(request) {
           continue
         }
 
-        // Determine league and season
+        // Determine league
         let league = defaultLeague
-        let season = rowData.season || 'summer-2025'
 
         // If league name is provided in CSV, try to find it
         if (rowData.league && !league) {
@@ -114,13 +114,81 @@ export async function POST(request) {
         }
 
         // Default to player's league if still not found
-        if (!league && player1.league) {
-          league = await League.findById(player1.league).lean()
+        if (!league && player1.registrations && player1.registrations.length > 0) {
+          const registration = player1.registrations[0]
+          league = await League.findById(registration.league).lean()
         }
 
         if (!league) {
           results.errors.push(`Row ${i + 1}: No league found`)
           continue
+        }
+
+        // CRITICAL FIX: Determine the correct season format based on league
+        let season = null
+        
+        // Check what format the league is using for seasons
+        if (league.season) {
+          // Check if league.season is an ObjectId
+          if (mongoose.Types.ObjectId.isValid(league.season)) {
+            // League uses Season ObjectId - use the same ObjectId for match
+            season = league.season
+            console.log(`Using Season ObjectId from league: ${season}`)
+          } 
+          // Check if league.season is a nested object
+          else if (typeof league.season === 'object' && league.season.year && league.season.type) {
+            // League uses nested season object - use the same object for match
+            season = {
+              year: league.season.year,
+              type: league.season.type,
+              number: league.season.number || 1
+            }
+            console.log(`Using nested season object from league: ${JSON.stringify(season)}`)
+          }
+        }
+        
+        // Fallback: Try to parse from CSV or use default
+        if (!season) {
+          // Check if season is provided in CSV
+          if (rowData.season) {
+            // Try to parse season from CSV (e.g., "summer-2025")
+            const seasonParts = rowData.season.split('-')
+            if (seasonParts.length >= 2) {
+              const type = seasonParts[0].toLowerCase()
+              const year = parseInt(seasonParts[1])
+              
+              // Try to find Season document
+              const Season = mongoose.models.Season || mongoose.model('Season', new mongoose.Schema({
+                year: Number,
+                type: String
+              }))
+              
+              const seasonDoc = await Season.findOne({ 
+                type: type, 
+                year: year 
+              })
+              
+              if (seasonDoc) {
+                season = seasonDoc._id
+                console.log(`Found Season document for ${type} ${year}: ${season}`)
+              } else {
+                // Use as nested object
+                season = { type, year, number: 1 }
+                console.log(`Using parsed season as object: ${JSON.stringify(season)}`)
+              }
+            } else {
+              // Use the raw string (legacy format)
+              season = rowData.season
+            }
+          } else {
+            // Default to summer 2025 as nested object
+            season = {
+              type: 'summer',
+              year: 2025,
+              number: 1
+            }
+            console.log(`Using default season: ${JSON.stringify(season)}`)
+          }
         }
 
         // Check if match already exists
