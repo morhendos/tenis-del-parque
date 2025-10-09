@@ -56,8 +56,8 @@ export async function GET(request, { params }) {
   }
 }
 
-// PUT /api/admin/leagues/[id] - Update league
-export async function PUT(request, { params }) {
+// PATCH /api/admin/leagues/[id] - Update league
+export async function PATCH(request, { params }) {
   try {
     const { session, error } = await requireAdmin(request)
     if (error) return error

@@ -89,7 +89,7 @@ export default function LeagueManagementPage() {
   const handleSkillLevelSave = async () => {
     try {
       const response = await fetch(`/api/admin/leagues/${leagueId}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ skillLevel: tempSkillLevel })
       })
@@ -131,7 +131,7 @@ export default function LeagueManagementPage() {
   const handlePlayoffSave = async () => {
     try {
       const response = await fetch(`/api/admin/leagues/${leagueId}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           playoffConfig: {
@@ -173,11 +173,11 @@ export default function LeagueManagementPage() {
   const getSkillLevelBadgeColor = (skillLevel) => {
     switch (skillLevel) {
       case 'beginner':
-        return 'bg-green-50 text-green-700 border-green-200'
+        return 'bg-green-50 border-green-200'
       case 'intermediate':
-        return 'bg-yellow-50 text-yellow-700 border-yellow-200'
+        return 'bg-yellow-50 border-yellow-200'
       case 'advanced':
-        return 'bg-red-50 text-red-700 border-red-200'
+        return 'bg-red-50 border-red-200'
       case 'all':
       default:
         return 'bg-gray-50 text-gray-700 border-gray-200'
@@ -188,9 +188,9 @@ export default function LeagueManagementPage() {
   const getPlayoffPhaseDisplay = () => {
     const phase = league?.playoffConfig?.currentPhase || 'regular_season'
     const phases = {
-      'regular_season': { text: 'Regular Season', color: 'text-blue-600' },
-      'playoffs_groupA': { text: 'Playoffs - Group A', color: 'text-purple-600' },
-      'playoffs_groupB': { text: 'Playoffs - Group B', color: 'text-purple-600' },
+      'regular_season': { text: 'Regular Season', color: '' },
+      'playoffs_groupA': { text: 'Playoffs - Group A', color: '' },
+      'playoffs_groupB': { text: 'Playoffs - Group B', color: '' },
       'completed': { text: 'Season Completed', color: 'text-green-600' }
     }
     return phases[phase] || { text: phase, color: 'text-gray-600' }

@@ -68,7 +68,7 @@ export default function AdminLeaguesPage() {
         ? `/api/admin/leagues/${formModal.league._id}`
         : '/api/admin/leagues'
       
-      const method = formModal.league ? 'PUT' : 'POST'
+      const method = formModal.league ? 'PATCH' : 'POST'
       
       const response = await fetch(endpoint, {
         method,

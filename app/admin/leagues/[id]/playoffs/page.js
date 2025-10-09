@@ -152,7 +152,7 @@ export default function LeaguePlayoffsAdmin() {
       
       // First, update the league to reset playoff phase
       const resetRes = await fetch(`/api/admin/leagues/${leagueId}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           playoffConfig: {
