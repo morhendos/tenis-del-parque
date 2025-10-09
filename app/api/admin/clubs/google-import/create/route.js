@@ -4,6 +4,7 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import Club from '@/lib/models/Club'
 import City from '@/lib/models/City'
 import dbConnect from '@/lib/db/mongoose'
+import imageStorage from '@/lib/services/imageStorage'
 
 export async function POST(request) {
   try {
@@ -33,6 +34,7 @@ export async function POST(request) {
       duplicates: 0,
       citiesCreated: 0,
       areasProcessed: [],
+      imagesProcessed: 0,
       errors: []
     }
 
@@ -136,9 +138,36 @@ export async function POST(request) {
           administrativeCity: clubData.location.administrativeCity || null
         }
 
-        // Create the club with enhanced location data
+        // Process and download images before saving
+        let processedImages = {
+          main: clubData.images?.main || null,
+          gallery: clubData.images?.gallery || []
+        }
+
+        if (clubData.googleData?.photos && clubData.googleData.photos.length > 0) {
+          console.log(`📷 Processing ${clubData.googleData.photos.length} images for ${clubData.name}`)
+          
+          // Download all Google photos
+          const downloadedUrls = await imageStorage.processGooglePhotos(
+            clubData.googleData.photos,
+            process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
+            clubData.slug,
+            10 // Max 10 images
+          )
+
+          if (downloadedUrls.length > 0) {
+            processedImages.main = downloadedUrls[0] // First image as main
+            processedImages.gallery = downloadedUrls // All images in gallery
+            results.imagesProcessed += downloadedUrls.length
+            
+            console.log(`✅ Downloaded ${downloadedUrls.length} images for ${clubData.name}`)
+          }
+        }
+
+        // Create the club with enhanced location data and processed images
         const club = new Club({
           ...clubData,
+          images: processedImages, // Use downloaded images instead of Google URLs
           location: locationData,
           stats: { views: 0, clicks: 0 },
           createdBy: session.user.id,
@@ -151,6 +180,7 @@ export async function POST(request) {
         console.log(`   → Slug: ${club.slug}`)
         console.log(`   → Display: ${club.location.displayName}`)
         console.log(`   → League City: ${club.location.city}`)
+        console.log(`   → Images: ${processedImages.gallery.length} downloaded`)
         
         results.created++
         
@@ -181,6 +211,7 @@ export async function POST(request) {
     console.log(`   ❌ Failed: ${results.failed}`)
     console.log(`   🏙️  Cities created: ${results.citiesCreated}`)
     console.log(`   📍 Areas processed: ${results.areasProcessed.length}`)
+    console.log(`   📷 Images downloaded: ${results.imagesProcessed}`)
 
     // Log area mapping results
     if (results.areasProcessed.length > 0) {
