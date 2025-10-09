@@ -8,6 +8,7 @@ import DeletePlayerModal from '../../../components/admin/players/DeletePlayerMod
 import InvitationResultModal from '../../../components/admin/players/InvitationResultModal'
 import ImportCSVModal from '../../../components/admin/players/ImportCSVModal'
 import EloRecalculateModal from '../../../components/admin/players/EloRecalculateModal'
+import PlayerDetailsModal from '../../../components/admin/players/PlayerDetailsModal'
 
 function AdminPlayersContent() {
   const [deleteModal, setDeleteModal] = useState({ show: false, player: null })
@@ -15,6 +16,7 @@ function AdminPlayersContent() {
   const [importResult, setImportResult] = useState(null)
   const [eloRecalculateLoading, setEloRecalculateLoading] = useState({})
   const [eloRecalculateResult, setEloRecalculateResult] = useState(null)
+  const [detailsModal, setDetailsModal] = useState({ show: false, player: null })
   
   const {
     players,
@@ -32,6 +34,7 @@ function AdminPlayersContent() {
     handleLevelUpdate,
     handleInvitePlayer,
     handleDeletePlayer,
+    handleRemoveFromLeague,
     handleImportCSV,
     exportCSV
   } = usePlayersData()
@@ -40,6 +43,10 @@ function AdminPlayersContent() {
     if (!deleteModal.player) return
     await handleDeletePlayer(deleteModal.player._id)
     setDeleteModal({ show: false, player: null })
+  }
+
+  const handleViewDetails = (player) => {
+    setDetailsModal({ show: true, player })
   }
 
   const handleImport = async (file) => {
@@ -140,9 +147,12 @@ function AdminPlayersContent() {
         onInvite={handleInvitePlayer}
         onDelete={setDeleteModal}
         onRecalculateElo={handleRecalculateElo}
+        onRemoveFromLeague={handleRemoveFromLeague}
+        onViewDetails={handleViewDetails}
         updateLoading={updateLoading}
         invitationLoading={invitationLoading}
         eloRecalculateLoading={eloRecalculateLoading}
+        currentLeagueId={leagueParam}
       />
 
       {/* Modals */}
@@ -172,6 +182,11 @@ function AdminPlayersContent() {
       <EloRecalculateModal
         result={eloRecalculateResult}
         onClose={handleEloModalClose}
+      />
+
+      <PlayerDetailsModal
+        player={detailsModal.player}
+        onClose={() => setDetailsModal({ show: false, player: null })}
       />
     </div>
   )

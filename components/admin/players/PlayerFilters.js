@@ -1,6 +1,18 @@
 import React from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function PlayerFilters({ filters, onFilterChange, leagues, leagueParam }) {
+  const router = useRouter()
+
+  const handleLeagueChange = (leagueId) => {
+    if (leagueId) {
+      // Navigate to league-specific view
+      router.push(`/admin/players?league=${leagueId}`)
+    } else {
+      // Navigate to all players view
+      router.push('/admin/players')
+    }
+  }
   return (
     <div className="bg-white p-6 rounded-lg shadow">
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -56,8 +68,8 @@ export default function PlayerFilters({ filters, onFilterChange, leagues, league
             League
           </label>
           <select
-            value={filters.league || leagueParam || ''}
-            onChange={(e) => onFilterChange({ ...filters, league: e.target.value })}
+            value={leagueParam || ''}
+            onChange={(e) => handleLeagueChange(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-transparent"
           >
             <option value="">All Leagues</option>

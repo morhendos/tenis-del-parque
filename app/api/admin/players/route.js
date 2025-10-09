@@ -115,7 +115,21 @@ export async function GET(request) {
 
 
     // Execute aggregation
-    const players = await Player.aggregate(pipeline)
+    let players = await Player.aggregate(pipeline)
+
+    // If no league filter, deduplicate players (show each player only once)
+    if (!league && players.length > 0) {
+      const uniquePlayers = new Map()
+      
+      players.forEach(player => {
+        if (!uniquePlayers.has(player._id.toString())) {
+          // Keep the first registration (most recent due to sort)
+          uniquePlayers.set(player._id.toString(), player)
+        }
+      })
+      
+      players = Array.from(uniquePlayers.values())
+    }
 
     // If no league filter and we want ALL players across all leagues, 
     // we need a different approach since one player can be in multiple leagues

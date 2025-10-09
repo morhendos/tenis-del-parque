@@ -7,9 +7,12 @@ export default function PlayerTableRow({
   onInvite, 
   onDelete,
   onRecalculateElo,
+  onRemoveFromLeague,
+  onViewDetails,
   updateLoading,
   invitationLoading,
-  eloRecalculateLoading
+  eloRecalculateLoading,
+  currentLeagueId
 }) {
   const getInviteButtonConfig = (player) => {
     const canInvite = player.status === 'pending' && !player.userId
@@ -39,8 +42,19 @@ export default function PlayerTableRow({
     <tr className="hover:bg-gray-50">
       <td className="px-6 py-4 whitespace-nowrap">
         <div>
-          <div className="text-sm font-medium text-gray-900">
-            {player.name}
+          <div className="flex items-center space-x-2">
+            <div className="text-sm font-medium text-gray-900">
+              {player.name}
+            </div>
+            {onViewDetails && (
+              <button
+                onClick={() => onViewDetails(player)}
+                className="text-xs text-blue-600 hover:text-blue-800 underline"
+                title="View player details"
+              >
+                Details
+              </button>
+            )}
           </div>
           <div className="text-sm text-gray-500">
             Registered: {new Date(player.registeredAt).toLocaleDateString()}
@@ -74,9 +88,6 @@ export default function PlayerTableRow({
             </svg>
           </div>
         )}
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-        {player.league?.name || 'N/A'}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
         <div>ELO: {player.eloRating || 1200}</div>
@@ -144,12 +155,27 @@ export default function PlayerTableRow({
         )}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-        <button
-          onClick={() => onDelete({ show: true, player: player })}
-          className="text-red-600 hover:text-red-900"
-        >
-          Delete
-        </button>
+        <div className="flex items-center justify-end space-x-2">
+          {/* Remove from League - only show when viewing a specific league */}
+          {currentLeagueId && onRemoveFromLeague && (
+            <button
+              onClick={() => onRemoveFromLeague(player._id, currentLeagueId, player.league?.name)}
+              className="text-orange-600 hover:text-orange-900 text-xs"
+              title="Remove from this league only"
+            >
+              Remove from League
+            </button>
+          )}
+          
+          {/* Delete Player Completely */}
+          <button
+            onClick={() => onDelete({ show: true, player: player })}
+            className="text-red-600 hover:text-red-900 text-xs"
+            title="Delete player completely"
+          >
+            Delete Player
+          </button>
+        </div>
       </td>
     </tr>
   )

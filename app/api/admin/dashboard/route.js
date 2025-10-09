@@ -17,11 +17,16 @@ export async function GET(request) {
     // Get total player count
     const totalPlayers = await Player.countDocuments()
 
-    // Get player count by level
+    // Get player count by level (from registrations)
+    const levelCounts = await Player.aggregate([
+      { $unwind: '$registrations' },
+      { $group: { _id: '$registrations.level', count: { $sum: 1 } } }
+    ])
+    
     const byLevel = {
-      beginner: await Player.countDocuments({ level: 'beginner' }),
-      intermediate: await Player.countDocuments({ level: 'intermediate' }),
-      advanced: await Player.countDocuments({ level: 'advanced' })
+      beginner: levelCounts.find(l => l._id === 'beginner')?.count || 0,
+      intermediate: levelCounts.find(l => l._id === 'intermediate')?.count || 0,
+      advanced: levelCounts.find(l => l._id === 'advanced')?.count || 0
     }
 
     // Get player count by league
@@ -29,33 +34,60 @@ export async function GET(request) {
     const byLeague = {}
     
     for (const league of leagues) {
+      const count = await Player.countDocuments({ 
+        'registrations.league': league._id 
+      })
       byLeague[league.slug] = {
         name: league.name,
-        count: await Player.countDocuments({ league: league._id })
+        count: count
       }
     }
 
-    // Get recent registrations (last 10)
-    const recentPlayers = await Player
-      .find()
-      .sort({ registeredAt: -1 })
-      .limit(10)
-      .populate('league', 'name slug')
-      .lean()
+    // Get recent registrations (last 10) - using registrations array
+    const recentPlayers = await Player.aggregate([
+      { $unwind: '$registrations' },
+      { $sort: { 'registrations.registeredAt': -1 } },
+      { $limit: 10 },
+      {
+        $lookup: {
+          from: 'leagues',
+          localField: 'registrations.league',
+          foreignField: '_id',
+          as: 'league'
+        }
+      },
+      { $unwind: '$league' },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          email: 1,
+          registeredAt: '$registrations.registeredAt',
+          level: '$registrations.level',
+          status: '$registrations.status',
+          league: {
+            _id: '$league._id',
+            name: '$league.name',
+            slug: '$league.slug'
+          }
+        }
+      }
+    ])
 
-    // Get registration trends (last 7 days)
+    // Get registration trends (last 7 days) - using registrations array
     const sevenDaysAgo = new Date()
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
     
     const registrationsByDay = await Player.aggregate([
+      { $unwind: '$registrations' },
       {
         $match: {
-          registeredAt: { $gte: sevenDaysAgo }
+          'registrations.registeredAt': { $gte: sevenDaysAgo }
         }
       },
       {
         $group: {
-          _id: { $dateToString: { format: "%Y-%m-%d", date: "$registeredAt" } },
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$registrations.registeredAt" } },
           count: { $sum: 1 }
         }
       },

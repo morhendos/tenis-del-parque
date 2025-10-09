@@ -8,9 +8,12 @@ export default function PlayerTable({
   onInvite, 
   onDelete,
   onRecalculateElo,
+  onRemoveFromLeague,
+  onViewDetails,
   updateLoading,
   invitationLoading,
-  eloRecalculateLoading
+  eloRecalculateLoading,
+  currentLeagueId
 }) {
   if (players.length === 0) {
     return (
@@ -38,9 +41,6 @@ export default function PlayerTable({
                 Level
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                League
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Stats
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -64,9 +64,12 @@ export default function PlayerTable({
                 onInvite={onInvite}
                 onDelete={onDelete}
                 onRecalculateElo={onRecalculateElo}
+                onRemoveFromLeague={onRemoveFromLeague}
+                onViewDetails={onViewDetails}
                 updateLoading={updateLoading}
                 invitationLoading={invitationLoading}
                 eloRecalculateLoading={eloRecalculateLoading}
+                currentLeagueId={currentLeagueId}
               />
             ))}
           </tbody>
