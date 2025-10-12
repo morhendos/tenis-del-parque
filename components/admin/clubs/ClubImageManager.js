@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { toast } from '@/components/ui/Toast'
 
 export default function ClubImageManager({ club, onImagesUpdate, readOnly = false }) {
   const [selectedImage, setSelectedImage] = useState(null)
@@ -191,14 +192,15 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
       
       // Show results
       if (errors.length > 0) {
-        alert(`Upload completed with errors:\n${errors.join('\n')}`)
+        toast.warning(`Upload completed with ${errors.length} error(s)`)
+        console.error('Upload errors:', errors)
       } else if (uploadedUrls.length > 0) {
-        alert(`Successfully uploaded ${uploadedUrls.length} image(s)`)
+        toast.success(`Successfully uploaded ${uploadedUrls.length} image(s)`)
       }
       
     } catch (error) {
       console.error('Upload error:', error)
-      alert('Failed to upload images. Please try again.')
+      toast.error('Failed to upload images. Please try again.')
     } finally {
       setUploading(false)
       // Reset file input
@@ -219,28 +221,11 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
       }
     }
     onImagesUpdate(updatedClub)
+    toast.success('Main image updated')
   }
 
-  // Remove image with confirmation
+  // Remove image
   const removeImage = (image) => {
-    let confirmMessage = ''
-    
-    if (image.type === 'main') {
-      if (image.source === 'google') {
-        confirmMessage = 'Remove this Google Photo as the main image? (The photo will remain available in Google Photos below)'
-      } else {
-        confirmMessage = 'Remove this uploaded image as the main image?'
-      }
-    } else if (image.type === 'gallery') {
-      confirmMessage = 'Remove this image from the gallery?'
-    } else if (image.source === 'google' && !image.isUsed) {
-      confirmMessage = 'Remove this Google Photo from your available photos? (This will permanently remove it from this club)'
-    }
-
-    if (!confirm(confirmMessage)) {
-      return
-    }
-
     if (image.type === 'main') {
       const updatedClub = {
         ...club,
@@ -251,6 +236,7 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
         }
       }
       onImagesUpdate(updatedClub)
+      toast.success('Main image removed')
     } else if (image.type === 'gallery') {
       const updatedGallery = club.images.gallery.filter(url => url !== image.url)
       const updatedClub = {
@@ -261,6 +247,7 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
         }
       }
       onImagesUpdate(updatedClub)
+      toast.success('Image removed from gallery')
     } else if (image.source === 'google' && !image.isUsed && image.reference) {
       // Remove Google Photo from available pool
       const updatedGooglePhotos = club.googleData.photos.filter(
@@ -274,6 +261,7 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
         }
       }
       onImagesUpdate(updatedClub)
+      toast.success('Google Photo removed')
     }
     
     // Close modal if this image was being viewed
@@ -285,16 +273,12 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
   // Refresh Google Photos from Google Maps API
   const refreshGooglePhotos = async () => {
     if (!club?._id) {
-      alert('Club ID not found')
+      toast.error('Club ID not found')
       return
     }
 
     if (!club?.googlePlaceId) {
-      alert('This club was not imported from Google Maps and cannot refresh photos automatically.')
-      return
-    }
-
-    if (!confirm('Re-import photos from Google Maps? This will fetch the latest photos available on Google Maps for this club.')) {
+      toast.error('This club was not imported from Google Maps')
       return
     }
 
@@ -316,10 +300,10 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
       // Update club data with refreshed photos
       onImagesUpdate(data.club)
 
-      alert(`✅ ${data.message}`)
+      toast.success(data.message)
     } catch (error) {
       console.error('Error refreshing Google Photos:', error)
-      alert(`❌ Error: ${error.message}`)
+      toast.error(error.message || 'Failed to refresh Google Photos')
     } finally {
       setRefreshing(false)
     }
@@ -731,15 +715,6 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
               )}
               {selectedImage.width && selectedImage.height && (
                 <p className="text-xs opacity-75">{selectedImage.width} × {selectedImage.height}px</p>
-              )}
-              {!readOnly && (
-                <p className="text-xs text-red-300 mt-1">
-                  💡 {selectedImage.source === 'google' && selectedImage.isUsed 
-                    ? 'Can remove from use' 
-                    : selectedImage.source === 'google' && !selectedImage.isUsed
-                    ? 'Can remove from available photos'
-                    : 'Can delete this image'}
-                </p>
               )}
             </div>
 

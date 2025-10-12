@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
+import { ToastContainer } from '@/components/ui/Toast'
 
 export default function AdminLayout({ children }) {
   const pathname = usePathname()
@@ -399,6 +400,9 @@ export default function AdminLayout({ children }) {
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
+      
+      {/* Toast notifications */}
+      <ToastContainer />
     </div>
   )
 }

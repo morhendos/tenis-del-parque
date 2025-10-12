@@ -63,14 +63,23 @@ export async function POST(request) {
     console.log(`   Place ID: ${club.googlePlaceId}`)
 
     // Fetch fresh place details from Google Maps API
-    const response = await googleMapsClient.placeDetails({
-      params: {
-        key: apiKey,
-        place_id: club.googlePlaceId,
-        language: 'es',
-        fields: ['photos', 'name']
-      }
-    })
+    let response
+    try {
+      response = await googleMapsClient.placeDetails({
+        params: {
+          key: apiKey,
+          place_id: club.googlePlaceId,
+          language: 'es',
+          fields: ['photos', 'name']
+        },
+        timeout: 10000 // 10 second timeout
+      })
+    } catch (apiError) {
+      console.error('Google Maps API error:', apiError)
+      return NextResponse.json({
+        error: `Google Maps API error: ${apiError.response?.data?.error_message || apiError.message}`
+      }, { status: 500 })
+    }
 
     if (!response.data.result) {
       return NextResponse.json({
@@ -108,9 +117,16 @@ export async function POST(request) {
 
   } catch (error) {
     console.error('Error refreshing Google Photos:', error)
+    
+    // Return detailed error message
+    let errorMessage = 'Failed to refresh Google Photos'
+    if (error.message) {
+      errorMessage = error.message
+    }
+    
     return NextResponse.json({
-      error: 'Failed to refresh Google Photos',
-      details: error.message
+      error: errorMessage,
+      details: error.stack
     }, { status: 500 })
   }
 }
