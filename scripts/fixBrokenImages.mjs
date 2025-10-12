@@ -4,8 +4,92 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { dirname } from 'path'
 import dotenv from 'dotenv'
-import Club from '../lib/models/Club.js'
-import imageStorage from '../lib/services/imageStorage.js'
+// Define Club schema inline to avoid ES module import issues
+const clubSchema = new mongoose.Schema({
+  name: String,
+  slug: String,
+  images: {
+    main: String,
+    gallery: [String]
+  },
+  googleData: {
+    photos: [Object],
+    imagesFixed: Boolean,
+    imagesFixedAt: Date
+  }
+}, { collection: 'clubs' })
+
+const Club = mongoose.model('Club', clubSchema)
+
+// Inline image storage functions to avoid ES module import issues
+import fs from 'fs/promises'
+import crypto from 'crypto'
+
+class ImageStorageService {
+  constructor() {
+    this.baseDir = path.join(process.cwd(), 'public', 'uploads', 'clubs')
+    this.publicPath = '/uploads/clubs'
+  }
+
+  async ensureDirectory() {
+    try {
+      await fs.mkdir(this.baseDir, { recursive: true })
+    } catch (error) {
+      console.error('Error creating directory:', error)
+    }
+  }
+
+  generateFilename(clubSlug, originalName = '') {
+    const timestamp = Date.now()
+    const randomString = crypto.randomBytes(6).toString('hex')
+    const extension = originalName.split('.').pop() || 'jpg'
+    return `${clubSlug}-${timestamp}-${randomString}.${extension}`
+  }
+
+  async downloadAndSaveImage(imageUrl, clubSlug, imageType = 'gallery') {
+    try {
+      await this.ensureDirectory()
+      const response = await fetch(imageUrl)
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.statusText}`)
+      }
+      const buffer = Buffer.from(await response.arrayBuffer())
+      const filename = this.generateFilename(clubSlug)
+      const filepath = path.join(this.baseDir, filename)
+      await fs.writeFile(filepath, buffer)
+      return `${this.publicPath}/${filename}`
+    } catch (error) {
+      console.error('Error downloading image:', error)
+      return null
+    }
+  }
+
+  async downloadGooglePlacePhoto(photoReference, apiKey, clubSlug, maxWidth = 1200) {
+    try {
+      const googlePhotoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${maxWidth}&photo_reference=${photoReference}&key=${apiKey}`
+      return await this.downloadAndSaveImage(googlePhotoUrl, clubSlug)
+    } catch (error) {
+      console.error('Error downloading Google Place photo:', error)
+      return null
+    }
+  }
+
+  async processGooglePhotos(photos, apiKey, clubSlug, limit = 10) {
+    const downloadedUrls = []
+    const photosToProcess = photos.slice(0, limit)
+    for (const photo of photosToProcess) {
+      if (photo.photo_reference) {
+        const url = await this.downloadGooglePlacePhoto(photo.photo_reference, apiKey, clubSlug)
+        if (url) {
+          downloadedUrls.push(url)
+        }
+      }
+    }
+    return downloadedUrls
+  }
+}
+
+const imageStorage = new ImageStorageService()
 
 // Load environment variables
 const __filename = fileURLToPath(import.meta.url)

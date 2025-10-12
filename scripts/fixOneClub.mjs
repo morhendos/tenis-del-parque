@@ -14,8 +14,22 @@ const __dirname = dirname(__filename)
 // Load env vars
 dotenv.config({ path: path.resolve(__dirname, '../.env.local') })
 
-// Import the Club model
-import Club from '../lib/models/Club.js'
+// Define Club schema inline to avoid ES module import issues
+const clubSchema = new mongoose.Schema({
+  name: String,
+  slug: String,
+  images: {
+    main: String,
+    gallery: [String]
+  },
+  googleData: {
+    photos: [Object],
+    imagesFixed: Boolean,
+    imagesFixedAt: Date
+  }
+}, { collection: 'clubs' })
+
+const Club = mongoose.model('Club', clubSchema)
 
 // Simple image download function for testing
 async function downloadImage(imageUrl, clubSlug) {
