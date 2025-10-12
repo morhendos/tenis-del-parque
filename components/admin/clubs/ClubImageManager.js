@@ -7,6 +7,7 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [uploading, setUploading] = useState(false)
   const [showGallery, setShowGallery] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
   const fileInputRef = useRef(null)
 
   // Helper function to get Google Photo URL without exposing API key
@@ -281,6 +282,49 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
     }
   }
 
+  // Refresh Google Photos from Google Maps API
+  const refreshGooglePhotos = async () => {
+    if (!club?._id) {
+      alert('Club ID not found')
+      return
+    }
+
+    if (!club?.googlePlaceId) {
+      alert('This club was not imported from Google Maps and cannot refresh photos automatically.')
+      return
+    }
+
+    if (!confirm('Re-import photos from Google Maps? This will fetch the latest photos available on Google Maps for this club.')) {
+      return
+    }
+
+    setRefreshing(true)
+
+    try {
+      const response = await fetch('/api/admin/clubs/refresh-google-photos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clubId: club._id })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to refresh photos')
+      }
+
+      // Update club data with refreshed photos
+      onImagesUpdate(data.club)
+
+      alert(`✅ ${data.message}`)
+    } catch (error) {
+      console.error('Error refreshing Google Photos:', error)
+      alert(`❌ Error: ${error.message}`)
+    } finally {
+      setRefreshing(false)
+    }
+  }
+
   // Image preview component
   const ImagePreview = ({ image, size = 'md' }) => {
     const sizeClasses = {
@@ -508,16 +552,82 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
         </div>
       )}
 
+      {/* Re-import button for clubs without Google photos but with Google Place ID */}
+      {!readOnly && club?.googlePlaceId && (!club?.googleData?.photos || club.googleData.photos.length === 0) && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="text-sm font-medium text-blue-900 mb-1">
+                🗺️ Google Maps Photos Available
+              </h4>
+              <p className="text-xs text-blue-700">
+                This club was imported from Google Maps. You can import photos from Google Maps.
+              </p>
+            </div>
+            <button
+              onClick={refreshGooglePhotos}
+              disabled={refreshing}
+              className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+              title="Fetch photos from Google Maps"
+            >
+              {refreshing ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Importing...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Import from Google Maps
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Google Photos section */}
       {club?.googleData?.photos && club.googleData.photos.length > 0 && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center space-x-2 mb-2">
-            <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-            </svg>
-            <h4 className="text-sm font-medium text-blue-900">
-              Available Google Maps Photos ({club.googleData.photos.length})
-            </h4>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-2">
+              <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+              </svg>
+              <h4 className="text-sm font-medium text-blue-900">
+                Available Google Maps Photos ({club.googleData.photos.length})
+              </h4>
+            </div>
+            {!readOnly && club?.googlePlaceId && (
+              <button
+                onClick={refreshGooglePhotos}
+                disabled={refreshing}
+                className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1"
+                title="Fetch latest photos from Google Maps"
+              >
+                {refreshing ? (
+                  <>
+                    <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Refreshing...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Re-import from Google Maps
+                  </>
+                )}
+              </button>
+            )}
           </div>
           <p className="text-xs text-blue-700 mb-3">
             These photos were imported from Google Maps. You can set any as main image or remove them from this list.
