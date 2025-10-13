@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import Club from '@/lib/models/Club'
@@ -108,11 +109,28 @@ export async function POST(request) {
 
     console.log(`✅ Successfully refreshed ${newPhotos.length} Google Photos for ${club.name}`)
 
+    // Auto-revalidate the club page to clear cache
+    try {
+      const city = club.location?.city
+      const slug = club.slug
+      
+      if (city && slug) {
+        console.log(`🔄 Auto-revalidating club pages: ${city}/${slug}`)
+        revalidatePath(`/es/clubs/${city}/${slug}`)
+        revalidatePath(`/en/clubs/${city}/${slug}`)
+        console.log('✅ Club pages revalidated')
+      }
+    } catch (revalidateError) {
+      console.error('⚠️ Error revalidating club pages:', revalidateError)
+      // Don't fail if revalidation fails
+    }
+
     return NextResponse.json({
       success: true,
       club: club,
       photosCount: newPhotos.length,
-      message: `Successfully refreshed ${newPhotos.length} photos from Google Maps`
+      message: `Successfully refreshed ${newPhotos.length} photos from Google Maps`,
+      revalidated: true
     })
 
   } catch (error) {

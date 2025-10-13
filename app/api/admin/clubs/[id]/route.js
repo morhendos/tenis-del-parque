@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import Club from '@/lib/models/Club'
@@ -163,9 +164,26 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: 'Club not found' }, { status: 404 })
     }
 
+    // Auto-revalidate the club page to clear cache
+    try {
+      const city = club.location?.city
+      const slug = club.slug
+      
+      if (city && slug) {
+        console.log(`🔄 Auto-revalidating club pages: ${city}/${slug}`)
+        revalidatePath(`/es/clubs/${city}/${slug}`)
+        revalidatePath(`/en/clubs/${city}/${slug}`)
+        console.log('✅ Club pages revalidated')
+      }
+    } catch (revalidateError) {
+      console.error('⚠️ Error revalidating club pages:', revalidateError)
+      // Don't fail the update if revalidation fails
+    }
+
     return NextResponse.json({ 
       success: true, 
-      club: club.toObject() 
+      club: club.toObject(),
+      revalidated: true
     })
   } catch (error) {
     console.error('Error updating club:', error)
