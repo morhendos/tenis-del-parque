@@ -9,6 +9,7 @@ import ScheduleTab from '@/components/player/ScheduleTab'
 import ResultsTab from '@/components/player/ResultsTab'
 import PlayoffsTab from '@/components/player/PlayoffsTab'
 import PlayoffExplanation from '@/components/player/PlayoffExplanation'
+import LeagueTabs from '@/components/player/LeagueTabs'
 import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
 
 export default function PlayerLeague() {
@@ -211,30 +212,16 @@ export default function PlayerLeague() {
         </div>
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div className="border-b border-gray-200">
-          <nav className="flex">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 px-6 py-4 text-sm font-medium transition-colors duration-200 ${
-                  activeTab === tab.id
-                    ? 'text-parque-purple border-b-2 border-parque-purple bg-purple-50'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <div className="flex items-center justify-center space-x-2">
-                  <span className="text-lg">{tab.icon}</span>
-                  <span>{tab.label}</span>
-                </div>
-              </button>
-            ))}
-          </nav>
-        </div>
+      {/* Navigation Tabs - Modern Component */}
+      <LeagueTabs
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        language={language}
+      />
 
-        <div className="p-6">
+      {/* Tab Content */}
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden p-6">
           {activeTab === LEAGUE_TABS.STANDINGS && (
             <div>
               {standings && standings.unifiedStandings && standings.unifiedStandings.length > 0 ? (
@@ -291,7 +278,6 @@ export default function PlayerLeague() {
               />
             )
           )}
-        </div>
       </div>
     </div>
   )

@@ -158,6 +158,8 @@ root/
 │   │   │   │   │       └── route.js
 │   │   │   │   ├── google-photo
 │   │   │   │   │   └── route.js
+│   │   │   │   ├── refresh-google-photos
+│   │   │   │   │   └── route.js
 │   │   │   │   └── route.js
 │   │   │   ├── dashboard
 │   │   │   │   └── route.js
@@ -194,7 +196,11 @@ root/
 │   │   │   │   └── route.js
 │   │   │   ├── players
 │   │   │   │   ├── [id]
+│   │   │   │   │   ├── details
+│   │   │   │   │   │   └── route.js
 │   │   │   │   │   ├── recalculate-elo
+│   │   │   │   │   │   └── route.js
+│   │   │   │   │   ├── remove-from-league
 │   │   │   │   │   │   └── route.js
 │   │   │   │   │   └── route.js
 │   │   │   │   ├── export
@@ -274,6 +280,8 @@ root/
 │   │   ├── players
 │   │   │   └── register
 │   │   │       └── route.js
+│   │   ├── revalidate
+│   │   │   └── route.js
 │   │   ├── seasons
 │   │   │   └── [slug]
 │   │   │       └── route.js
@@ -354,6 +362,7 @@ root/
 │   │       ├── EloRecalculateModal.js
 │   │       ├── ImportCSVModal.js
 │   │       ├── InvitationResultModal.js
+│   │       ├── PlayerDetailsModal.js
 │   │       ├── PlayerFilters.js
 │   │       ├── PlayerTable.js
 │   │       └── PlayerTableRow.js
@@ -404,6 +413,7 @@ root/
 │   ├── player
 │   │   ├── DashboardHeader.js
 │   │   ├── LeagueCard.js
+│   │   ├── LeagueTabs.js
 │   │   ├── MatchActivity.js
 │   │   ├── MatchCard.js
 │   │   ├── MatchModals.js
@@ -430,6 +440,7 @@ root/
 │       ├── Toast.js
 │       └── WelcomeModal.js
 ├── docs
+│   ├── CACHE_MANAGEMENT_GUIDE.md
 │   ├── CITIES_MANAGEMENT_COMPLETE.md
 │   ├── CITIES_MANAGEMENT_SUMMARY.md
 │   ├── CITY_AUTOCOMPLETE_TESTING.md
@@ -441,6 +452,7 @@ root/
 │   ├── CITY_IMAGE_TESTING_CHECKLIST.md
 │   ├── CITY_PHOTO_REFRESH_FEATURE.md
 │   ├── CLUB_EDITOR_REFACTOR.md
+│   ├── CLUB_IMAGES_FIX_GUIDE.md
 │   ├── CLUB_IMAGE_MANAGEMENT.md
 │   ├── COMPLETE_ARCHITECTURE_FIX_SUMMARY.md
 │   ├── CURRENT_STATUS.md
@@ -454,19 +466,24 @@ root/
 │   ├── GOOGLE_MAPS_IMPORT_FEATURE.md
 │   ├── GOOGLE_MAPS_IMPORT_SPEC.md
 │   ├── GOOGLE_MAPS_SETUP.md
+│   ├── GOOGLE_PHOTOS_REFRESH_DEBUG.md
 │   ├── HOMEPAGE_LEAGUE_IMPLEMENTATION_PLAN.md
 │   ├── IMPLEMENTATION_GUIDE.md
+│   ├── MATCH_IMPORT_SEASON_FIX.md
+│   ├── MODERN_MOBILE_TABS.md
 │   ├── MULTI_SEASON_LEAGUE_SYSTEM.md
 │   ├── MULTI_SPORT_COURTS.md
 │   ├── NUMBER_OF_PLAYERS_IN_COSTA_DEL_SOL.md
 │   ├── PHASE_1_2_SUMMARY.md
 │   ├── PLAYER_MESSAGES_SYSTEM.md
+│   ├── PLAYER_STATISTICS_SYSTEM.md
 │   ├── PRODUCT_LED_GROWTH.md
 │   ├── PR_MULTILINGUAL_IMPLEMENTATION.md
 │   ├── README.md
 │   ├── REGISTRATION_ROUTES_REFACTORING.md
 │   ├── RESEND_EMAIL_SETUP.md
 │   ├── SCORING_SYSTEM_INTEGRATION.md
+│   ├── SCRIPT_CREATION_RULES.md
 │   ├── SEASON_SYSTEM_REFACTOR.md
 │   ├── SEO Strategy
 │   ├── SEO_ACTION_PLAN.md
@@ -533,10 +550,13 @@ root/
 │   │   ├── Season.js
 │   │   └── User.js
 │   ├── services
+│   │   ├── imageStorage.js
+│   │   ├── playerStatsService.js
 │   │   └── standingsService.js
 │   └── utils
 │       ├── apiHelpers.js
 │       ├── areaLoader.js
+│       ├── cacheUtils.js
 │       ├── clubAssignmentCache.js
 │       ├── duplicateDetection.js
 │       ├── geographicBoundaries.js
@@ -577,6 +597,7 @@ root/
 │   ├── marbella-01.jpg
 │   ├── marbella-02.webp
 │   ├── og-image.png
+│   ├── players-import-template.csv
 │   ├── robots.txt
 │   ├── sitemap.xml
 │   ├── sotogrande-01.jpg
@@ -591,6 +612,7 @@ root/
 ├── scripts
 │   ├── addWalkoverResult.js
 │   ├── checkAuth.mjs
+│   ├── checkGoogleImages.mjs
 │   ├── checkMatch.js
 │   ├── checkMatchSeasons.js
 │   ├── checkSeasonData.js
@@ -605,11 +627,13 @@ root/
 │   ├── directFix.js
 │   ├── findTomaszMatches.js
 │   ├── findTomaszSimple.js
+│   ├── fixBrokenImages.mjs
 │   ├── fixEloStructure.js
 │   ├── fixLeagueSeasonData.js
 │   ├── fixLeagueSeasonData.mjs
 │   ├── fixLeaguesToUseSeasonIds.js
 │   ├── fixMismatchedLinks.js
+│   ├── fixOneClub.mjs
 │   ├── fixSeenAnnouncements.js
 │   ├── fixUserPlayerReferences.js
 │   ├── generateSitemap.js
@@ -621,6 +645,7 @@ root/
 │   ├── migrateToNewPlayerModel.js
 │   ├── populateAssignments.js
 │   ├── populateClubAssignments.mjs
+│   ├── recalculateAllPlayerStats.js
 │   ├── restoreTomaszPlayer.js
 │   ├── seedCities.js
 │   ├── seedCitiesEnhanced.js
@@ -630,9 +655,11 @@ root/
 │   ├── setupWhatsAppGroups.js
 │   ├── test-city-photo-refresh.sh
 │   ├── testEmailSending.js
+│   ├── testImageDownload.mjs
 │   ├── testSeasonComparison.js
 │   ├── tree.js
-│   └── unlockAccounts.js
+│   ├── unlockAccounts.js
+│   └── updatePlayerEloStartingPoints.js
 ├── styles
 │   └── dashboard.js
 ├── tailwind.config.js
