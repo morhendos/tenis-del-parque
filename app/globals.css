@@ -910,3 +910,95 @@ body {
   font-size: 14px;
   animation: elastic-scale 0.3s ease-out;
 }
+
+/* Horizontal scroll bracket styling */
+.bracket-scroll-container {
+  scrollbar-width: thin;
+  scrollbar-color: #563380 #f1f1f1;
+  /* Momentum scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
+  /* Hide scrollbar but keep functionality */
+  scrollbar-width: thin;
+}
+
+/* Custom thin scrollbar for bracket */
+.bracket-scroll-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.bracket-scroll-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.bracket-scroll-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, #563380, #929e55);
+  border-radius: 10px;
+  border: 2px solid #f1f1f1;
+}
+
+.bracket-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, #452a66, #7a854a);
+}
+
+/* Mobile bracket scroll hint */
+@media (max-width: 1024px) {
+  .bracket-scroll-container {
+    /* Add subtle gradient to indicate scrollability */
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 20px,
+      black calc(100% - 20px),
+      transparent
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 20px,
+      black calc(100% - 20px),
+      transparent
+    );
+  }
+  
+  /* Show scrollbar on mobile for discoverability */
+  .bracket-scroll-container::-webkit-scrollbar {
+    height: 6px;
+  }
+}
+
+/* Scroll snap for better UX */
+.bracket-scroll-snap {
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0 16px;
+}
+
+.bracket-scroll-snap > * {
+  scroll-snap-align: start;
+}
+
+/* Fade edges effect for scrollable content */
+.scroll-fade-edges {
+  position: relative;
+}
+
+.scroll-fade-edges::before,
+.scroll-fade-edges::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 40px;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.scroll-fade-edges::before {
+  left: 0;
+  background: linear-gradient(to right, white, transparent);
+}
+
+.scroll-fade-edges::after {
+  right: 0;
+  background: linear-gradient(to left, white, transparent);
+}
