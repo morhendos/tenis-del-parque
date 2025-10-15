@@ -125,12 +125,16 @@ export async function GET(request, { params }) {
     }
     
     // Get all completed matches for the league and season
+    // IMPORTANT: Query by season.year and season.type to handle legacy matches with season.number
     const matches = await Match.find({
       league: league._id,
-      season: league.season, // Use league's Season ObjectId, not URL parameter
+      'season.year': league.season.year,
+      'season.type': league.season.type,
       status: 'completed',
       matchType: { $ne: 'playoff' } // Exclude playoff matches from regular standings
     }).lean()
+    
+    console.log(`API: Found ${matches.length} matches for league ${league.name} (${league.season.type} ${league.season.year})`)
     
     console.log(`📊 PUBLIC STANDINGS: ${players.length} players, ${matches.length} matches`)
     
@@ -176,7 +180,8 @@ export async function GET(request, { params }) {
     // Get current round info
     const latestRound = await Match.findOne({ 
       league: league._id, 
-      season: league.season 
+      'season.year': league.season.year,
+      'season.type': league.season.type
     }).sort({ round: -1 }).select('round')
     
     return NextResponse.json({
