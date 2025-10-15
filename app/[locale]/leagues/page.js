@@ -65,13 +65,29 @@ async function getLeaguesData() {
     const leagues = await League.find({})
       .populate('city', 'slug name images coordinates googleData province')
       .sort({ status: 1, 'location.city': 1, name: 1 })
-      .select('name slug status location currentSeason playerCount maxPlayers description registrationOpen city cityData')
+      .select('name slug status location currentSeason playerCount maxPlayers description registrationOpen city cityData season skillLevel seasons stats')
       .lean() // Convert to plain objects for serialization
     
     // Serialize data properly for client components (remove Mongoose ObjectIds)
     const serializedLeagues = leagues.map(league => ({
       ...league,
       _id: league._id.toString(),
+      season: league.season ? {
+        ...league.season,
+        _id: league.season._id?.toString()
+      } : null,
+      // Serialize seasons array if it exists
+      seasons: league.seasons ? league.seasons.map(s => ({
+        ...s,
+        _id: s._id?.toString(),
+        startDate: s.startDate?.toISOString ? s.startDate.toISOString() : s.startDate,
+        endDate: s.endDate?.toISOString ? s.endDate.toISOString() : s.endDate
+      })) : undefined,
+      // Serialize stats object if it exists
+      stats: league.stats ? {
+        ...league.stats,
+        _id: league.stats._id?.toString()
+      } : undefined,
       city: league.city ? {
         ...league.city,
         _id: league.city._id.toString(),

@@ -71,6 +71,11 @@ body {
   .language-selector-buttons button.lang-button {
     margin-bottom: 0 !important;
   }
+  
+  /* Override for league tabs - they handle their own spacing */
+  .league-tabs-container button {
+    margin-bottom: 0 !important;
+  }
 }
 
 /* Touch-friendly interactions */

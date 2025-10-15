@@ -103,7 +103,7 @@ export default function LeaguesPageSSG({ locale, leaguesData }) {
                   <h2 className="text-3xl font-bold text-center mb-8 text-green-600">
                     {locale === 'es' ? 'Ligas Activas' : 'Active Leagues'}
                   </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  <div className="flex flex-wrap justify-center gap-6 max-w-7xl mx-auto">
                     {activeLeagues.map((league) => (
                       <LeagueCard
                         key={league._id}
@@ -122,7 +122,7 @@ export default function LeaguesPageSSG({ locale, leaguesData }) {
                   <h2 className="text-3xl font-bold text-center mb-8 text-blue-600">
                     {locale === 'es' ? 'Inscripciones Abiertas' : 'Registration Open'}
                   </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  <div className="flex flex-wrap justify-center gap-6 max-w-7xl mx-auto">
                     {registrationOpenLeagues.map((league) => (
                       <LeagueCard
                         key={league._id}
@@ -141,7 +141,7 @@ export default function LeaguesPageSSG({ locale, leaguesData }) {
                   <h2 className="text-3xl font-bold text-center mb-8 text-orange-600">
                     {locale === 'es' ? 'Próximamente' : 'Coming Soon'}
                   </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  <div className="flex flex-wrap justify-center gap-6 max-w-7xl mx-auto">
                     {comingSoonLeagues.map((league) => (
                       <LeagueCard
                         key={league._id}

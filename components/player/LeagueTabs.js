@@ -1,8 +1,17 @@
 'use client'
+import { BarChart3, Trophy, Calendar, Award } from 'lucide-react'
+
+// Icon mapping for each tab type
+const iconMap = {
+  'standings': BarChart3,
+  'playoffs': Trophy,
+  'schedule': Calendar,
+  'results': Award
+}
 
 export default function LeagueTabs({ tabs, activeTab, onTabChange, language = 'es' }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+    <div className="bg-white rounded-xl shadow-sm overflow-hidden league-tabs-container">
       {/* Mobile: Horizontal Scroll with Pills */}
       <div className="md:hidden overflow-x-auto scrollbar-hide">
         <div className="flex gap-2 p-3 min-w-max">
@@ -13,15 +22,18 @@ export default function LeagueTabs({ tabs, activeTab, onTabChange, language = 'e
                 key={tab.id}
                 onClick={() => onTabChange(tab.id)}
                 className={`
-                  flex items-center gap-2 px-4 py-2.5 rounded-full font-medium text-sm whitespace-nowrap
-                  transition-all duration-300 ease-out
+                  flex items-center justify-center gap-2 px-4 py-2.5 rounded-full font-medium text-sm whitespace-nowrap
+                  transition-all duration-300 ease-out min-h-[40px]
                   ${isActive
                     ? 'bg-gradient-to-r from-parque-purple to-purple-600 text-white shadow-lg shadow-purple-500/30 scale-105'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900 active:scale-95'
                   }
                 `}
               >
-                <span className="text-lg">{tab.icon}</span>
+                {(() => {
+                  const Icon = iconMap[tab.id]
+                  return Icon ? <Icon className="w-4 h-4 flex-shrink-0" strokeWidth={2.5} /> : null
+                })()}
                 <span className="font-semibold">{tab.label}</span>
                 {isActive && (
                   <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
@@ -51,11 +63,17 @@ export default function LeagueTabs({ tabs, activeTab, onTabChange, language = 'e
                 `}
               >
                 <div className="flex items-center justify-center gap-2">
-                  <span className={`text-xl transition-transform duration-300 ${
-                    isActive ? 'scale-110' : 'group-hover:scale-105'
-                  }`}>
-                    {tab.icon}
-                  </span>
+                  {(() => {
+                    const Icon = iconMap[tab.id]
+                    return Icon ? (
+                      <Icon 
+                        className={`w-5 h-5 flex-shrink-0 transition-transform duration-300 ${
+                          isActive ? 'scale-110' : 'group-hover:scale-105'
+                        }`}
+                        strokeWidth={2.5}
+                      />
+                    ) : null
+                  })()}
                   <span>{tab.label}</span>
                 </div>
                 
