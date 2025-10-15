@@ -20,7 +20,6 @@ export async function GET() {
       displayOrder: 1,
       'season.year': -1,    // Latest year first
       'season.type': 1,     // Spring, Summer, Autumn, Winter
-      'season.number': 1,   // Season 1, Season 2, etc.
       skillLevel: 1,        // all, beginner, intermediate, advanced
       createdAt: 1 
     })
@@ -94,10 +93,9 @@ export async function GET() {
         season: league.season ? {
           year: league.season.year,
           type: league.season.type,
-          number: league.season.number,
           displayName: {
-            es: `${seasonTypeNames.es[league.season.type]} ${league.season.year}${league.season.number > 1 ? ` - T${league.season.number}` : ''}`,
-            en: `${seasonTypeNames.en[league.season.type]} ${league.season.year}${league.season.number > 1 ? ` - S${league.season.number}` : ''}`
+            es: `${seasonTypeNames.es[league.season.type]} ${league.season.year}`,
+            en: `${seasonTypeNames.en[league.season.type]} ${league.season.year}`
           }
         } : null,
         
@@ -116,15 +114,13 @@ export async function GET() {
             const cityName = cityData.name?.es || league.location?.city
             const skillName = league.skillLevel === 'all' ? '' : ` ${skillLevelNames.es[league.skillLevel]}`
             const seasonName = league.season ? ` ${seasonTypeNames.es[league.season.type]} ${league.season.year}` : ''
-            const seasonNumber = league.season?.number > 1 ? ` - T${league.season.number}` : ''
-            return `Liga ${cityName}${skillName}${seasonName}${seasonNumber}`
+            return `Liga ${cityName}${skillName}${seasonName}`
           })(),
           en: (() => {
             const cityName = cityData.name?.en || league.location?.city
             const skillName = league.skillLevel === 'all' ? '' : ` ${skillLevelNames.en[league.skillLevel]}`
             const seasonName = league.season ? ` ${seasonTypeNames.en[league.season.type]} ${league.season.year}` : ''
-            const seasonNumber = league.season?.number > 1 ? ` - S${league.season.number}` : ''
-            return `${cityName}${skillName} League${seasonName}${seasonNumber}`
+            return `${cityName}${skillName} League${seasonName}`
           })()
         },
         

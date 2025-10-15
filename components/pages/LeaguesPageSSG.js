@@ -31,7 +31,7 @@ export default function LeaguesPageSSG({ locale, leaguesData }) {
       />
       
       {/* Hero Section */}
-      <section className="py-20 px-4 text-center">
+      <section className="pt-32 pb-20 px-4 text-center">
         <div className="container mx-auto">
           <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
             {locale === 'es' ? 'Todas Nuestras Ligas' : 'All Our Leagues'}

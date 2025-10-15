@@ -109,11 +109,7 @@ export async function POST(request) {
         // Generate slug
         const skillLevel = row.skillLevel || 'all'
         const skillSlug = skillLevel === 'all' ? '' : `-${skillLevel}`
-        const seasonNumber = row.seasonNumber ? parseInt(row.seasonNumber) : 1
         let slug = `${row.citySlug}${skillSlug}-${row.seasonType}-${row.seasonYear}`
-        if (seasonNumber > 1) {
-          slug += `-${seasonNumber}`
-        }
         
         // Parse dates
         const startDate = row.startDate ? new Date(row.startDate) : new Date()

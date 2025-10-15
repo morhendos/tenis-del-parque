@@ -18,7 +18,6 @@ export async function GET() {
       'citySlug',
       'seasonYear',
       'seasonType',
-      'seasonNumber',
       'startDate',
       'endDate',
       'skillLevel',
