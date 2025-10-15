@@ -137,8 +137,7 @@ export async function POST(request) {
       skillLevel: data.skillLevel || 'all',
       season: {
         type: data.season.type,
-        year: data.season.year,
-        number: data.season.number || 1
+        year: data.season.year
       },
       city: cityId, // Required field
       status: data.status || 'coming_soon',

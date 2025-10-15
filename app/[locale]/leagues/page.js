@@ -68,46 +68,9 @@ async function getLeaguesData() {
       .select('name slug status location currentSeason playerCount maxPlayers description registrationOpen city cityData season skillLevel seasons stats')
       .lean() // Convert to plain objects for serialization
     
-    // Serialize data properly for client components (remove Mongoose ObjectIds)
-    const serializedLeagues = leagues.map(league => ({
-      ...league,
-      _id: league._id.toString(),
-      season: league.season ? {
-        ...league.season,
-        _id: league.season._id?.toString()
-      } : null,
-      // Serialize seasons array if it exists
-      seasons: league.seasons ? league.seasons.map(s => ({
-        ...s,
-        _id: s._id?.toString(),
-        startDate: s.startDate?.toISOString ? s.startDate.toISOString() : s.startDate,
-        endDate: s.endDate?.toISOString ? s.endDate.toISOString() : s.endDate
-      })) : undefined,
-      // Serialize stats object if it exists
-      stats: league.stats ? {
-        ...league.stats,
-        _id: league.stats._id?.toString()
-      } : undefined,
-      city: league.city ? {
-        ...league.city,
-        _id: league.city._id.toString(),
-        // Clean up googleData photos to remove ObjectId buffers
-        googleData: league.city.googleData ? {
-          ...league.city.googleData,
-          photos: league.city.googleData.photos?.map(photo => ({
-            photo_reference: photo.photo_reference,
-            width: photo.width,
-            height: photo.height,
-            html_attributions: photo.html_attributions
-            // Remove _id field that contains buffer
-          })) || []
-        } : undefined
-      } : null,
-      cityData: league.cityData ? {
-        ...league.cityData,
-        _id: league.cityData._id?.toString()
-      } : null
-    }))
+    // Serialize data properly for client components
+    // Use JSON.parse(JSON.stringify()) to ensure complete serialization and remove all methods/functions
+    const serializedLeagues = JSON.parse(JSON.stringify(leagues))
     
     // Get statistics
     const stats = {

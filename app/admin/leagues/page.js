@@ -277,7 +277,6 @@ export default function AdminLeaguesPage() {
                         {league.season && (
                           <div className="text-sm text-gray-500 mt-1">
                             {league.season.type} {league.season.year}
-                            {league.season.number > 1 && ` - T${league.season.number}`}
                           </div>
                         )}
                       </div>

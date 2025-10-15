@@ -26,8 +26,7 @@ export default function CreateSeasonPage() {
     skillLevel: 'all',
     season: {
       year: new Date().getFullYear(),
-      type: 'spring',
-      number: 1
+      type: 'spring'
     },
     seasonConfig: {
       startDate: '',
@@ -130,9 +129,8 @@ export default function CreateSeasonPage() {
       const cityName = city.name.es
       const skillName = skillLevel.value === 'all' ? '' : ` ${skillLevel.label.es}`
       const seasonName = `${seasonType.label.es} ${formData.season.year}`
-      const seasonNumber = formData.season.number > 1 ? ` - Temporada ${formData.season.number}` : ''
       
-      const generatedName = `Liga ${cityName}${skillName} ${seasonName}${seasonNumber}`
+      const generatedName = `Liga ${cityName}${skillName} ${seasonName}`
       setFormData(prev => ({ ...prev, name: generatedName }))
     }
   }
@@ -284,7 +282,7 @@ export default function CreateSeasonPage() {
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-xl font-semibold mb-4">Season Information</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium mb-2">Year</label>
               <input
@@ -317,21 +315,6 @@ export default function CreateSeasonPage() {
                   </option>
                 ))}
               </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Season Number</label>
-              <input
-                type="number"
-                value={formData.season.number}
-                onChange={(e) => setFormData(prev => ({ 
-                  ...prev, 
-                  season: { ...prev.season, number: parseInt(e.target.value) }
-                }))}
-                className="w-full p-3 border rounded-lg"
-                min="1"
-                max="10"
-              />
             </div>
           </div>
 

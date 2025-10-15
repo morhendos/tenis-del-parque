@@ -99,10 +99,19 @@ export default function LeaguesPageSSG({ locale, leaguesData }) {
             <>
               {/* Active Leagues */}
               {activeLeagues.length > 0 && (
-                <div className="mb-16">
-                  <h2 className="text-3xl font-bold text-center mb-8 text-green-600">
-                    {locale === 'es' ? 'Ligas Activas' : 'Active Leagues'}
-                  </h2>
+                <div className="mb-20">
+                  <div className="max-w-7xl mx-auto mb-8">
+                    <div className="flex items-center gap-4 mb-2">
+                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+                      <h2 className="text-2xl md:text-3xl font-bold text-gray-800 px-4">
+                        {locale === 'es' ? 'Ligas Activas' : 'Active Leagues'}
+                      </h2>
+                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+                    </div>
+                    <p className="text-center text-gray-600 text-sm">
+                      {locale === 'es' ? 'Ligas en curso con partidos programados' : 'Ongoing leagues with scheduled matches'}
+                    </p>
+                  </div>
                   <div className="flex flex-wrap justify-center gap-6 max-w-7xl mx-auto">
                     {activeLeagues.map((league) => (
                       <LeagueCard
@@ -118,10 +127,19 @@ export default function LeaguesPageSSG({ locale, leaguesData }) {
               
               {/* Registration Open Leagues */}
               {registrationOpenLeagues.length > 0 && (
-                <div className="mb-16">
-                  <h2 className="text-3xl font-bold text-center mb-8 text-blue-600">
-                    {locale === 'es' ? 'Inscripciones Abiertas' : 'Registration Open'}
-                  </h2>
+                <div className="mb-20">
+                  <div className="max-w-7xl mx-auto mb-8">
+                    <div className="flex items-center gap-4 mb-2">
+                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+                      <h2 className="text-2xl md:text-3xl font-bold text-gray-800 px-4">
+                        {locale === 'es' ? 'Inscripciones Abiertas' : 'Registration Open'}
+                      </h2>
+                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+                    </div>
+                    <p className="text-center text-gray-600 text-sm">
+                      {locale === 'es' ? 'Únete ahora y asegura tu lugar' : 'Join now and secure your spot'}
+                    </p>
+                  </div>
                   <div className="flex flex-wrap justify-center gap-6 max-w-7xl mx-auto">
                     {registrationOpenLeagues.map((league) => (
                       <LeagueCard
@@ -137,10 +155,19 @@ export default function LeaguesPageSSG({ locale, leaguesData }) {
               
               {/* Coming Soon Leagues */}
               {comingSoonLeagues.length > 0 && (
-                <div className="mb-16">
-                  <h2 className="text-3xl font-bold text-center mb-8 text-orange-600">
-                    {locale === 'es' ? 'Próximamente' : 'Coming Soon'}
-                  </h2>
+                <div className="mb-20">
+                  <div className="max-w-7xl mx-auto mb-8">
+                    <div className="flex items-center gap-4 mb-2">
+                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+                      <h2 className="text-2xl md:text-3xl font-bold text-gray-800 px-4">
+                        {locale === 'es' ? 'Próximamente' : 'Coming Soon'}
+                      </h2>
+                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+                    </div>
+                    <p className="text-center text-gray-600 text-sm">
+                      {locale === 'es' ? 'Nuevas ligas en preparación' : 'New leagues in preparation'}
+                    </p>
+                  </div>
                   <div className="flex flex-wrap justify-center gap-6 max-w-7xl mx-auto">
                     {comingSoonLeagues.map((league) => (
                       <LeagueCard
