@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import dbConnect from '../../../../../lib/db/mongoose'
 import League from '../../../../../lib/models/League'
 import Match from '../../../../../lib/models/Match'
+import Season from '../../../../../lib/models/Season'
 import mongoose from 'mongoose'
 
 // Force dynamic rendering for this route
@@ -64,11 +65,29 @@ export async function GET(request, { params }) {
     console.log('API: Found league:', league.name, 'with ID:', league._id)
     console.log('API: League season:', league.season)
     
-    // Use the league's season year and type for matching (to handle legacy matches with season.number)
+    // Find the Season ObjectId that matches the league's season
+    const seasonDoc = await Season.findOne({
+      year: league.season.year,
+      type: league.season.type
+    })
+    
+    if (!seasonDoc) {
+      console.error(`Season not found for year: ${league.season.year}, type: ${league.season.type}`)
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Season not found' 
+        },
+        { status: 404 }
+      )
+    }
+    
+    console.log('API: Found Season ObjectId:', seasonDoc._id)
+    
+    // Query matches by season ObjectId (matches store season as ObjectId reference)
     const matchQuery = { 
       league: league._id, 
-      'season.year': league.season.year,
-      'season.type': league.season.type
+      season: seasonDoc._id
     }
     if (status) matchQuery.status = status
     if (round) matchQuery.round = parseInt(round)
@@ -142,27 +161,23 @@ export async function GET(request, { params }) {
     // Get match statistics
     const totalMatches = await Match.countDocuments({ 
       league: league._id, 
-      'season.year': league.season.year,
-      'season.type': league.season.type
+      season: seasonDoc._id
     })
     const completedMatches = await Match.countDocuments({ 
       league: league._id, 
-      'season.year': league.season.year,
-      'season.type': league.season.type,
+      season: seasonDoc._id,
       status: 'completed' 
     })
     const scheduledMatches = await Match.countDocuments({ 
       league: league._id, 
-      'season.year': league.season.year,
-      'season.type': league.season.type,
+      season: seasonDoc._id,
       status: 'scheduled' 
     })
     
     // Get current round info
     const latestRound = await Match.findOne({ 
       league: league._id, 
-      'season.year': league.season.year,
-      'season.type': league.season.type
+      season: seasonDoc._id
     }).sort({ round: -1 }).select('round')
     
     return NextResponse.json({

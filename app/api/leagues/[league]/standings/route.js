@@ -3,6 +3,7 @@ import dbConnect from '../../../../../lib/db/mongoose'
 import League from '../../../../../lib/models/League'
 import Player from '../../../../../lib/models/Player'
 import Match from '../../../../../lib/models/Match'
+import Season from '../../../../../lib/models/Season'
 import mongoose from 'mongoose'
 
 // IMPORT THE SINGLE SOURCE OF TRUTH FOR STANDINGS
@@ -44,8 +45,25 @@ export async function GET(request, { params }) {
       )
     }
     
-    // Use the league's season ObjectId for matching (the correct approach)
+    // Find the Season ObjectId that matches the league's season
     console.log('API: League season:', league.season)
+    const seasonDoc = await Season.findOne({
+      year: league.season.year,
+      type: league.season.type
+    })
+    
+    if (!seasonDoc) {
+      console.error(`Season not found for year: ${league.season.year}, type: ${league.season.type}`)
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Season not found' 
+        },
+        { status: 404 }
+      )
+    }
+    
+    console.log('API: Found Season ObjectId:', seasonDoc._id)
     
     // Build query for players using new registrations structure
     const playerQuery = {
@@ -125,11 +143,10 @@ export async function GET(request, { params }) {
     }
     
     // Get all completed matches for the league and season
-    // IMPORTANT: Query by season.year and season.type to handle legacy matches with season.number
+    // IMPORTANT: Query by season ObjectId (matches store season as ObjectId reference)
     const matches = await Match.find({
       league: league._id,
-      'season.year': league.season.year,
-      'season.type': league.season.type,
+      season: seasonDoc._id,
       status: 'completed',
       matchType: { $ne: 'playoff' } // Exclude playoff matches from regular standings
     }).lean()

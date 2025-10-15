@@ -171,8 +171,8 @@ export async function POST(request) {
                 season = seasonDoc._id
                 console.log(`Found Season document for ${type} ${year}: ${season}`)
               } else {
-                // Use as nested object
-                season = { type, year, number: 1 }
+                // Use as nested object (without number field)
+                season = { type, year }
                 console.log(`Using parsed season as object: ${JSON.stringify(season)}`)
               }
             } else {
@@ -180,11 +180,10 @@ export async function POST(request) {
               season = rowData.season
             }
           } else {
-            // Default to summer 2025 as nested object
+            // Default to summer 2025 as nested object (without number field)
             season = {
               type: 'summer',
-              year: 2025,
-              number: 1
+              year: 2025
             }
             console.log(`Using default season: ${JSON.stringify(season)}`)
           }
