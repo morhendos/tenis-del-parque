@@ -140,8 +140,7 @@ export async function POST(request) {
             // League uses nested season object - use the same object for match
             season = {
               year: league.season.year,
-              type: league.season.type,
-              number: league.season.number || 1
+              type: league.season.type
             }
             console.log(`Using nested season object from league: ${JSON.stringify(season)}`)
           }

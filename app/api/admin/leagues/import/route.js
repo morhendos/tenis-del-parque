@@ -122,8 +122,7 @@ export async function POST(request) {
           skillLevel: skillLevel,
           season: {
             year: parseInt(row.seasonYear),
-            type: row.seasonType,
-            number: seasonNumber
+            type: row.seasonType
           },
           city: city._id,
           location: {

@@ -79,7 +79,6 @@ export default function ImportCSVModal({
                   <p className="font-semibold text-gray-700">Optional Fields:</p>
                   <ul className="text-gray-600 list-disc list-inside">
                     <li>skillLevel (all/beginner/intermediate/advanced)</li>
-                    <li>seasonNumber (default: 1)</li>
                     <li>descriptionEs</li>
                     <li>descriptionEn</li>
                     <li>registrationStart (YYYY-MM-DD)</li>

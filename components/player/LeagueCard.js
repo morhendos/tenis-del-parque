@@ -32,10 +32,9 @@ export default function LeagueCard({ player, language }) {
       const season = player.league.season
       const seasonType = season.type || 'summer'
       const seasonYear = season.year || 2025
-      const seasonNumber = season.number > 1 ? ` ${season.number}` : ''
       
       const localizedSeasonName = seasonNames[language || 'es'][seasonType] || seasonType
-      return `${localizedSeasonName} ${seasonYear}${seasonNumber}`
+      return `${localizedSeasonName} ${seasonYear}`
     }
     
     // Fallback: If we have a string that looks like a season name, use it
