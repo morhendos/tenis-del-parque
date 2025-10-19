@@ -316,6 +316,8 @@ export default withAuth(
                              pathWithoutLocale.startsWith('/registro/') ||
                              pathWithoutLocale.startsWith('/clubs/') ||
                              pathWithoutLocale.startsWith('/clubes/') ||
+                             pathWithoutLocale.startsWith('/leagues/') ||
+                             pathWithoutLocale.startsWith('/ligas/') ||
                              pathWithoutLocale.startsWith('/liga-de-sotogrande') ||
                              pathWithoutLocale.match(/^\/[^\/]+\/liga\/[^\/]+$/)
         
