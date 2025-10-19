@@ -32,6 +32,8 @@ root/
 │   │   │   └── page.js
 │   │   ├── layout.js
 │   │   ├── leagues
+│   │   │   ├── [city]
+│   │   │   │   └── page.js
 │   │   │   └── page.js
 │   │   ├── liga
 │   │   │   └── [league]
@@ -229,7 +231,9 @@ root/
 │   │   │       └── route.js
 │   │   ├── cities
 │   │   │   ├── [slug]
-│   │   │   │   └── league
+│   │   │   │   ├── league
+│   │   │   │   │   └── route.js
+│   │   │   │   └── leagues
 │   │   │   │       └── route.js
 │   │   │   ├── photo
 │   │   │   │   └── route.js
@@ -399,6 +403,12 @@ root/
 │   │   ├── PublicScheduleTab.js
 │   │   ├── ScoringSystem.js
 │   │   └── TournamentBracket.js
+│   ├── leagues
+│   │   ├── CityCard.js
+│   │   ├── CityLeagueHero.js
+│   │   ├── LeagueLevelCard.js
+│   │   ├── LeagueSeasonSection.js
+│   │   └── ModernRegistrationForm.js
 │   ├── pages
 │   │   ├── CityClubsPageSSG.js
 │   │   ├── CitySignupPageContent.js
@@ -450,6 +460,8 @@ root/
 │   ├── CITY_IMAGE_MANAGEMENT_FIXES.md
 │   ├── CITY_IMAGE_SYSTEM_COMPLETE.md
 │   ├── CITY_IMAGE_TESTING_CHECKLIST.md
+│   ├── CITY_LEAGUE_SYSTEM_COMPLETE.md
+│   ├── CITY_LEAGUE_SYSTEM_IMPLEMENTATION.md
 │   ├── CITY_PHOTO_REFRESH_FEATURE.md
 │   ├── CLUB_EDITOR_REFACTOR.md
 │   ├── CLUB_IMAGES_FIX_GUIDE.md
@@ -471,6 +483,7 @@ root/
 │   ├── IMPLEMENTATION_GUIDE.md
 │   ├── MATCH_IMPORT_SEASON_FIX.md
 │   ├── MODERN_MOBILE_TABS.md
+│   ├── MODERN_REGISTRATION_COMPLETE.md
 │   ├── MULTI_SEASON_LEAGUE_SYSTEM.md
 │   ├── MULTI_SPORT_COURTS.md
 │   ├── NUMBER_OF_PLAYERS_IN_COSTA_DEL_SOL.md
@@ -616,6 +629,7 @@ root/
 │   ├── checkMatch.js
 │   ├── checkMatchSeasons.js
 │   ├── checkSeasonData.js
+│   ├── checkSeasonObjectId.mjs
 │   ├── cleanup-clubes-duplicates.sh
 │   ├── cleanup-old-editors.sh
 │   ├── comparePointCalculations.js
@@ -643,6 +657,8 @@ root/
 │   ├── migrateActivationTokens.js
 │   ├── migrateCourtsData.mjs
 │   ├── migrateToNewPlayerModel.js
+│   ├── migrations
+│   │   └── removeNumberFromLeagueSeasons.mjs
 │   ├── populateAssignments.js
 │   ├── populateClubAssignments.mjs
 │   ├── recalculateAllPlayerStats.js
