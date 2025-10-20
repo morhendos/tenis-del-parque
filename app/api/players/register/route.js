@@ -21,7 +21,7 @@ export async function POST(request) {
       language = 'es',
       leagueId,
       leagueSlug,
-      season = '688f5d51c94f8e3b3cbfd87b' // Summer 2025 Season ObjectId
+      password
     } = body
 
     // Basic validation
@@ -80,18 +80,18 @@ export async function POST(request) {
     let user = null
     
     if (player) {
-      // EXISTING PLAYER - check if already registered for this league/season
+      // EXISTING PLAYER - check if already registered for this league
       isExistingUser = true
       
-      const existingRegistration = player.getLeagueRegistration(league._id, season)
+      const existingRegistration = player.getLeagueRegistration(league._id)
       
       if (existingRegistration) {
         return Response.json(
           { 
             success: false, 
             error: language === 'es'
-              ? 'Ya estás registrado en esta liga y temporada'
-              : 'You are already registered for this league and season'
+              ? 'Ya estás registrado en esta liga'
+              : 'You are already registered for this league'
           },
           { status: 409 }
         )
@@ -101,14 +101,14 @@ export async function POST(request) {
       try {
         await player.addLeagueRegistration(
           league._id, 
-          new mongoose.Types.ObjectId(season), 
           level, 
           league.status === 'coming_soon' ? 'waiting' : 'pending'
         )
         
-        console.log(`Existing player ${email} registered for new league: ${league.name} (${season})`)
+        console.log(`Existing player ${email} registered for new league: ${league.name}`)
         
       } catch (registrationError) {
+        console.error('Registration error:', registrationError)
         return Response.json(
           { 
             success: false, 
@@ -133,22 +133,15 @@ export async function POST(request) {
       // NEW PLAYER - create new player with first league registration
       isNewPlayer = true
       
-      const initialElo = getInitialEloByLevel(level)
-      
       player = new Player({
         name,
         email: email.toLowerCase(),
         whatsapp,
         registrations: [{
           league: league._id,
-          season: new mongoose.Types.ObjectId(season),
           level: level,
           status: league.status === 'coming_soon' ? 'waiting' : 'pending',
-          stats: {
-            eloRating: initialElo,
-            highestElo: initialElo,
-            lowestElo: initialElo
-          }
+          stats: {}
         }],
         preferences: {
           preferredLanguage: language
@@ -162,7 +155,7 @@ export async function POST(request) {
 
       // Save new player
       await player.save()
-      console.log(`New player ${email} registered for league: ${league.name} (${season})`)
+      console.log(`New player ${email} registered for league: ${league.name}`)
     }
 
     // Create or update user account if needed
@@ -176,27 +169,30 @@ export async function POST(request) {
         
         user = new User({
           email: email.toLowerCase(),
-          password: 'temporary_' + Math.random().toString(36).substring(2, 15), // Temporary password
+          password: password || 'temporary_' + Math.random().toString(36).substring(2, 15),
           role: 'player',
           playerId: player._id,
           isActive: true,
-          emailVerified: false
+          emailVerified: password ? true : false // If password provided, mark as verified
         })
         
-        // Generate activation token
-        const activationToken = await user.generateActivationToken()
+        // Generate activation token if no password provided
+        if (!password) {
+          const activationToken = await user.generateActivationToken()
+          
+          // Generate activation link
+          const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://tenisdp.es'
+          activationLink = `${baseUrl}/activate?token=${encodeURIComponent(activationToken)}`
+          
+          console.log(`Generated activation link for ${email}: ${activationLink}`)
+        }
+        
         await user.save()
         
         // Update player with userId
         player.userId = user._id
         player.status = 'confirmed' // Player has account now
         await player.save()
-        
-        // Generate activation link
-        const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://tenisdp.es'
-        activationLink = `${baseUrl}/activate?token=${encodeURIComponent(activationToken)}`
-        
-        console.log(`Generated activation link for ${email}: ${activationLink}`)
         
       } else if (!user.emailVerified) {
         // User exists but not verified - regenerate activation token
@@ -253,7 +249,7 @@ export async function POST(request) {
     }
 
     // Get the registration we just created
-    const registration = player.getLeagueRegistration(league._id, season)
+    const registration = player.getLeagueRegistration(league._id)
 
     // Send welcome email with activation link
     try {
@@ -419,7 +415,7 @@ export async function GET() {
     const stats = {}
     
     for (const league of leagues) {
-      // Count unique players registered for this league (using new aggregation)
+      // Count unique players registered for this league
       const playerCount = await Player.countDocuments({
         'registrations.league': league._id
       })
@@ -458,7 +454,7 @@ export async function GET() {
     
     return Response.json({
       success: true,
-      message: 'Player registration API with automatic account creation',
+      message: 'Player registration API - Simplified architecture: league reference only (no separate season field)',
       totalUniquePlayers,
       totalUsersWithAccounts,
       totalVerifiedAccounts,

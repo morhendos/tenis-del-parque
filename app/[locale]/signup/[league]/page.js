@@ -93,8 +93,7 @@ export default function LeagueRegistrationPage() {
             level: formData.level || league.skillLevel,
             language: validLocale,
             leagueId: league._id,
-            leagueSlug: league.slug,
-            season: league.season?.year + '-' + league.season?.type
+            leagueSlug: league.slug
           })
         })
         
@@ -130,8 +129,7 @@ export default function LeagueRegistrationPage() {
             password: formData.password,
             language: validLocale,
             leagueId: league._id,
-            leagueSlug: league.slug,
-            season: league.season?.year + '-' + league.season?.type
+            leagueSlug: league.slug
           })
         })
         

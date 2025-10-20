@@ -109,7 +109,7 @@ export async function POST(request) {
       )
     }
 
-    // Validate required fields including season data
+    // Validate required fields including season and city
     if (!data.season?.type || !data.season?.year) {
       return NextResponse.json(
         { error: 'Missing required season data (type and year)' },
@@ -117,17 +117,20 @@ export async function POST(request) {
       )
     }
 
-    // Validate city reference if provided
-    let cityId = null
-    if (data.cityId) {
-      const city = await City.findById(data.cityId)
-      if (!city) {
-        return NextResponse.json(
-          { error: 'Invalid city reference' },
-          { status: 400 }
-        )
-      }
-      cityId = data.cityId
+    if (!data.cityId) {
+      return NextResponse.json(
+        { error: 'City selection is required' },
+        { status: 400 }
+      )
+    }
+
+    // Validate city exists
+    const city = await City.findById(data.cityId)
+    if (!city) {
+      return NextResponse.json(
+        { error: 'Selected city not found' },
+        { status: 400 }
+      )
     }
 
     // Create new league
@@ -139,7 +142,7 @@ export async function POST(request) {
         type: data.season.type,
         year: data.season.year
       },
-      city: cityId, // Required field
+      city: data.cityId, // Required field - ObjectId reference
       status: data.status || 'coming_soon',
       location: {
         city: data.location.city,

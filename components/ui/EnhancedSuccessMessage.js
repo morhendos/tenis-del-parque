@@ -76,36 +76,24 @@ export default function EnhancedSuccessMessage({
     const shareText = t.shareText.replace('{league}', leagueName)
     const fullText = `${shareText}\n\n${shareUrl}`
     
-    if (navigator.share) {
-      navigator.share({
-        title: leagueName,
-        text: shareText,
-        url: shareUrl
-      }).catch(() => {
-        // Fallback to WhatsApp if native share fails
-        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(fullText)}`
-        window.open(whatsappUrl, '_blank')
-      })
-    } else {
-      // Fallback to WhatsApp share for desktop
-      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(fullText)}`
-      window.open(whatsappUrl, '_blank')
-    }
+    // Open WhatsApp directly - works on both mobile and desktop
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(fullText)}`
+    window.open(whatsappUrl, '_blank')
   }
 
   return (
     <div className="max-w-3xl mx-auto p-4">
       <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-        {/* Header with gradient - simplified */}
-        <div className="bg-gradient-to-br from-purple-600 to-purple-800 p-8 text-white">
+        {/* Header with gradient - emerald theme to match leagues pages */}
+        <div className="bg-gradient-to-br from-emerald-600 to-teal-700 p-8 text-white">
           <div className="flex items-center justify-between mb-6">
             <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ${
               isWaitingList 
                 ? 'bg-orange-500/20 text-orange-100 border border-orange-300/30' 
-                : 'bg-green-500/20 text-green-100 border border-green-300/30'
+                : 'bg-white/20 text-white border border-white/30'
             }`}>
               <div className={`w-2 h-2 rounded-full mr-2 ${
-                isWaitingList ? 'bg-orange-300' : 'bg-green-300'
+                isWaitingList ? 'bg-orange-300' : 'bg-white'
               }`}></div>
               {isWaitingList ? t.waitingList : t.confirmed}
             </div>
@@ -114,7 +102,7 @@ export default function EnhancedSuccessMessage({
           <h1 className="text-3xl md:text-4xl font-bold mb-3">
             {t.welcome} {playerName}!
           </h1>
-          <p className="text-purple-100 text-lg">
+          <p className="text-emerald-100 text-lg">
             {t.registeredFor} <span className="font-semibold text-white">{leagueName}</span>
           </p>
         </div>
@@ -125,8 +113,8 @@ export default function EnhancedSuccessMessage({
           <div className="grid md:grid-cols-2 gap-4 mb-8">
             <div className="bg-gray-50 rounded-xl p-4 flex items-start space-x-3">
               <div className="flex-shrink-0">
-                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                 </div>
@@ -161,8 +149,8 @@ export default function EnhancedSuccessMessage({
               
               <div className="space-y-6">
                 <div className="flex items-start">
-                  <div className="flex-shrink-0 w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center relative z-10">
-                    <div className="w-3 h-3 bg-purple-600 rounded-full"></div>
+                  <div className="flex-shrink-0 w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center relative z-10">
+                    <div className="w-3 h-3 bg-emerald-600 rounded-full"></div>
                   </div>
                   <div className="ml-4 flex-1">
                     <p className="font-medium text-gray-900">{t.waitingForStart}</p>
@@ -215,7 +203,7 @@ export default function EnhancedSuccessMessage({
             
             <button
               onClick={handleShare}
-              className="w-full flex items-center justify-center px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all duration-200 font-medium shadow-md hover:shadow-lg"
+              className="w-full flex items-center justify-center px-6 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all duration-200 font-medium shadow-md hover:shadow-lg"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m9.032 4.026a9.001 9.001 0 01-7.432 0m9.032-4.026A9.001 9.001 0 0112 3c-4.474 0-8.268 3.12-9.032 7.326m0 0A9.001 9.001 0 0012 21c4.474 0 8.268-3.12 9.032-7.326" />
@@ -225,11 +213,11 @@ export default function EnhancedSuccessMessage({
           </div>
 
           {/* Encouragement Card */}
-          <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl border border-purple-200">
-            <p className="text-purple-900 font-medium mb-1">
+          <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-200">
+            <p className="text-emerald-900 font-medium mb-1">
               {t.helpComplete}
             </p>
-            <p className="text-sm text-purple-700">
+            <p className="text-sm text-emerald-700">
               {language === 'es' 
                 ? 'Invita a más jugadores para formar grupos competitivos equilibrados.' 
                 : 'Invite more players to create balanced competitive groups.'
@@ -242,7 +230,7 @@ export default function EnhancedSuccessMessage({
         <div className="bg-gray-50 px-8 py-4 border-t border-gray-100">
           <Link 
             href="/"
-            className="text-gray-600 hover:text-purple-600 transition-colors text-sm font-medium inline-flex items-center"
+            className="text-gray-600 hover:text-emerald-600 transition-colors text-sm font-medium inline-flex items-center"
           >
             {t.backHome}
           </Link>
