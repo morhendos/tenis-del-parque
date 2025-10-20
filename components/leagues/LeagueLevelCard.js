@@ -82,7 +82,29 @@ export default function LeagueLevelCard({ league, locale, status }) {
           <div>
             <p className="text-gray-600">{locale === 'es' ? 'Jugadores' : 'Players'}</p>
             <p className="font-bold text-gray-900">
-              {league.stats?.registeredPlayers || 0} / {league.seasonConfig?.maxPlayers || 20}
+              {status === 'current' ? (
+                // Only show actual count for active leagues
+                `${league.stats?.registeredPlayers || 0} / ${league.seasonConfig?.maxPlayers || 32}`
+              ) : league.status === 'registration_open' ? (
+                // For registration open, NEVER show 0 - be encouraging!
+                league.stats?.registeredPlayers > 0 ? (
+                  <span className="text-emerald-600">
+                    {`${league.stats.registeredPlayers} / ${league.seasonConfig?.maxPlayers || 32}`}
+                  </span>
+                ) : (
+                  <span className="text-emerald-600 font-semibold">
+                    {locale === 'es' ? `${league.seasonConfig?.maxPlayers || 32} plazas` : `${league.seasonConfig?.maxPlayers || 32} spots`}
+                  </span>
+                )
+              ) : league.status === 'coming_soon' ? (
+                // For coming soon, show max capacity only
+                <span className="text-blue-600">
+                  {`${league.seasonConfig?.maxPlayers || 32} ${locale === 'es' ? 'plazas' : 'spots'}`}
+                </span>
+              ) : (
+                // Completed/inactive - show final count
+                `${league.stats?.registeredPlayers || 0} / ${league.seasonConfig?.maxPlayers || 32}`
+              )}
             </p>
           </div>
           <div>
@@ -90,7 +112,9 @@ export default function LeagueLevelCard({ league, locale, status }) {
             <p className="font-bold text-gray-900">
               {league.seasonConfig?.price?.isFree 
                 ? (locale === 'es' ? 'Gratis' : 'Free')
-                : `€${league.seasonConfig?.price?.amount || 0}`}
+                : league.seasonConfig?.price?.amount > 0
+                ? `${league.seasonConfig.price.amount}€`
+                : (locale === 'es' ? 'Gratis' : 'Free')}
             </p>
           </div>
         </div>

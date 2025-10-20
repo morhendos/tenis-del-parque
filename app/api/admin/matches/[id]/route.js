@@ -468,13 +468,25 @@ function getPlayerRegistration(player, leagueId, season) {
   }
   
   // Find registration for this league/season
-  let registration = player.registrations.find(reg => 
-    reg.league.toString() === leagueId.toString() && 
-    reg.season.toString() === season.toString()
-  )
+  let registration = null
+  
+  if (season) {
+    // If season is provided, find matching league AND season
+    registration = player.registrations.find(reg => 
+      reg.league.toString() === leagueId.toString() && 
+      reg.season?.toString() === season.toString()
+    )
+  }
   
   if (!registration) {
-    // Use first registration as fallback
+    // Fallback: find any registration for this league (ignore season)
+    registration = player.registrations.find(reg => 
+      reg.league.toString() === leagueId.toString()
+    )
+  }
+  
+  if (!registration) {
+    // Use first registration as last resort
     registration = player.registrations[0]
   }
   

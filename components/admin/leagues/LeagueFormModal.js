@@ -24,6 +24,19 @@ export default function LeagueFormModal({ show, league, onClose, onSubmit }) {
       en: ''
     },
     expectedLaunchDate: '',
+    seasonConfig: {
+      startDate: '',
+      endDate: '',
+      registrationStart: '',
+      registrationEnd: '',
+      maxPlayers: 20,
+      minPlayers: 8,
+      price: {
+        amount: 0,
+        currency: 'EUR',
+        isFree: false
+      }
+    },
     displayOrder: 0
   })
 
@@ -75,6 +88,23 @@ export default function LeagueFormModal({ show, league, onClose, onSubmit }) {
         },
         expectedLaunchDate: league.expectedLaunchDate ? 
           new Date(league.expectedLaunchDate).toISOString().split('T')[0] : '',
+        seasonConfig: {
+          startDate: league.seasonConfig?.startDate ? 
+            new Date(league.seasonConfig.startDate).toISOString().split('T')[0] : '',
+          endDate: league.seasonConfig?.endDate ? 
+            new Date(league.seasonConfig.endDate).toISOString().split('T')[0] : '',
+          registrationStart: league.seasonConfig?.registrationStart ? 
+            new Date(league.seasonConfig.registrationStart).toISOString().split('T')[0] : '',
+          registrationEnd: league.seasonConfig?.registrationEnd ? 
+            new Date(league.seasonConfig.registrationEnd).toISOString().split('T')[0] : '',
+          maxPlayers: league.seasonConfig?.maxPlayers || 20,
+          minPlayers: league.seasonConfig?.minPlayers || 8,
+          price: {
+            amount: league.seasonConfig?.price?.amount || 0,
+            currency: league.seasonConfig?.price?.currency || 'EUR',
+            isFree: league.seasonConfig?.price?.isFree || false
+          }
+        },
         displayOrder: league.displayOrder || 0
       })
     } else {
@@ -99,6 +129,19 @@ export default function LeagueFormModal({ show, league, onClose, onSubmit }) {
           en: ''
         },
         expectedLaunchDate: '',
+        seasonConfig: {
+          startDate: '',
+          endDate: '',
+          registrationStart: '',
+          registrationEnd: '',
+          maxPlayers: 20,
+          minPlayers: 8,
+          price: {
+            amount: 0,
+            currency: 'EUR',
+            isFree: false
+          }
+        },
         displayOrder: 0
       })
     }
@@ -143,13 +186,14 @@ export default function LeagueFormModal({ show, league, onClose, onSubmit }) {
     const { name, value } = e.target
     
     if (name.includes('.')) {
-      const [parent, child] = name.split('.')
+      const parts = name.split('.')
+      const [parent, child] = parts
       setFormData(prev => {
         const newData = {
           ...prev,
           [parent]: {
             ...prev[parent],
-            [child]: value
+            [child]: parts.length === 2 ? value : prev[parent][child]
           }
         }
         
@@ -214,6 +258,23 @@ export default function LeagueFormModal({ show, league, onClose, onSubmit }) {
     
     if (!formData.season.year) {
       newErrors['season.year'] = 'Season year is required'
+    }
+    
+    // Validate season dates if status is not coming_soon or inactive
+    if (formData.status !== 'coming_soon' && formData.status !== 'inactive') {
+      if (!formData.seasonConfig.startDate) {
+        newErrors['seasonConfig.startDate'] = 'Start date is required for active leagues'
+      }
+      if (!formData.seasonConfig.endDate) {
+        newErrors['seasonConfig.endDate'] = 'End date is required for active leagues'
+      }
+      
+      // Validate end date is after start date
+      if (formData.seasonConfig.startDate && formData.seasonConfig.endDate) {
+        if (new Date(formData.seasonConfig.endDate) <= new Date(formData.seasonConfig.startDate)) {
+          newErrors['seasonConfig.endDate'] = 'End date must be after start date'
+        }
+      }
     }
     
     setErrors(newErrors)
@@ -445,11 +506,224 @@ export default function LeagueFormModal({ show, league, onClose, onSubmit }) {
             </div>
           </div>
           
-          {/* Expected Launch Date (for coming soon) */}
-          {(formData.status === 'coming_soon' || formData.status === 'registration_open') && (
+          {/* Season Dates - Required for active/registration_open leagues */}
+          {formData.status !== 'coming_soon' && formData.status !== 'inactive' && (
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-5">
+              <h4 className="font-semibold text-blue-900 mb-4 flex items-center">
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Season Dates
+              </h4>
+              
+              {/* Registration Period */}
+              <div className="mb-6">
+                <h5 className="text-sm font-semibold text-blue-800 mb-3">📝 Registration Period (Optional)</h5>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Registration Opens
+                    </label>
+                    <input
+                      type="date"
+                      name="seasonConfig.registrationStart"
+                      value={formData.seasonConfig.registrationStart}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">When players can start registering</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Registration Closes
+                    </label>
+                    <input
+                      type="date"
+                      name="seasonConfig.registrationEnd"
+                      value={formData.seasonConfig.registrationEnd}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2.5 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Deadline for registration</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Season Period */}
+              <div className="mb-6">
+                <h5 className="text-sm font-semibold text-blue-800 mb-3">🎾 Season Period (Required)</h5>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Season Start Date <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      name="seasonConfig.startDate"
+                      value={formData.seasonConfig.startDate}
+                      onChange={handleChange}
+                      className={`w-full px-4 py-2.5 border-2 rounded-lg focus:ring-2 focus:ring-emerald-500 ${
+                        errors['seasonConfig.startDate'] ? 'border-red-500' : 'border-blue-200'
+                      }`}
+                    />
+                    {errors['seasonConfig.startDate'] && (
+                      <p className="text-red-500 text-sm mt-1">{errors['seasonConfig.startDate']}</p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">When matches begin</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Season End Date <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      name="seasonConfig.endDate"
+                      value={formData.seasonConfig.endDate}
+                      onChange={handleChange}
+                      className={`w-full px-4 py-2.5 border-2 rounded-lg focus:ring-2 focus:ring-emerald-500 ${
+                        errors['seasonConfig.endDate'] ? 'border-red-500' : 'border-blue-200'
+                      }`}
+                    />
+                    {errors['seasonConfig.endDate'] && (
+                      <p className="text-red-500 text-sm mt-1">{errors['seasonConfig.endDate']}</p>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">When season ends</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Player Limits */}
+              <div>
+                <h5 className="text-sm font-semibold text-blue-800 mb-3">👥 Player Limits</h5>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Max Players
+                    </label>
+                    <input
+                      type="number"
+                      name="seasonConfig.maxPlayers"
+                      value={formData.seasonConfig.maxPlayers}
+                      onChange={handleChange}
+                      min="1"
+                      max="100"
+                      className="w-full px-4 py-2.5 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Min Players
+                    </label>
+                    <input
+                      type="number"
+                      name="seasonConfig.minPlayers"
+                      value={formData.seasonConfig.minPlayers}
+                      onChange={handleChange}
+                      min="1"
+                      max="50"
+                      className="w-full px-4 py-2.5 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Price Configuration */}
+              <div className="pt-4 border-t border-blue-200">
+                <h5 className="text-sm font-semibold text-blue-800 mb-3">💰 Price Configuration</h5>
+                <div className="space-y-4">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="isFree"
+                      checked={formData.seasonConfig.price.isFree}
+                      onChange={(e) => {
+                        const isFree = e.target.checked
+                        setFormData(prev => ({
+                          ...prev,
+                          seasonConfig: {
+                            ...prev.seasonConfig,
+                            price: {
+                              ...prev.seasonConfig.price,
+                              isFree: isFree,
+                              amount: isFree ? 0 : prev.seasonConfig.price.amount
+                            }
+                          }
+                        }))
+                      }}
+                      className="w-4 h-4 text-emerald-600 border-blue-300 rounded focus:ring-emerald-500"
+                    />
+                    <label htmlFor="isFree" className="ml-2 text-sm font-medium text-gray-700">
+                      This league is free (no registration fee)
+                    </label>
+                  </div>
+                  
+                  {!formData.seasonConfig.price.isFree && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Price Amount
+                        </label>
+                        <input
+                          type="number"
+                          name="seasonConfig.price.amount"
+                          value={formData.seasonConfig.price.amount}
+                          onChange={(e) => {
+                            setFormData(prev => ({
+                              ...prev,
+                              seasonConfig: {
+                                ...prev.seasonConfig,
+                                price: {
+                                  ...prev.seasonConfig.price,
+                                  amount: parseFloat(e.target.value) || 0
+                                }
+                              }
+                            }))
+                          }}
+                          min="0"
+                          step="0.01"
+                          className="w-full px-4 py-2.5 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                          placeholder="0.00"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Registration fee per player</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Currency
+                        </label>
+                        <select
+                          name="seasonConfig.price.currency"
+                          value={formData.seasonConfig.price.currency}
+                          onChange={(e) => {
+                            setFormData(prev => ({
+                              ...prev,
+                              seasonConfig: {
+                                ...prev.seasonConfig,
+                                price: {
+                                  ...prev.seasonConfig.price,
+                                  currency: e.target.value
+                                }
+                              }
+                            }))
+                          }}
+                          className="w-full px-4 py-2.5 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                        >
+                          <option value="EUR">€ EUR</option>
+                          <option value="USD">$ USD</option>
+                          <option value="GBP">£ GBP</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Expected Launch Date (for coming soon only) */}
+          {formData.status === 'coming_soon' && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Expected Start Date
+                Expected Launch Date
               </label>
               <input
                 type="date"

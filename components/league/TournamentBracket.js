@@ -27,10 +27,17 @@ export default function TournamentBracket({
   // Helper to get match result
   const getMatchResult = (match) => {
     if (!match || match.status !== 'completed') return null
+    
+    const isWalkover = match.result?.score?.walkover
+    const isRetirement = match.result?.score?.retiredPlayer
+    
     return {
       winner: match.result?.winner,
       score: match.getScoreDisplay ? match.getScoreDisplay() : 
-             match.result?.score?.sets?.map(set => `${set.player1}-${set.player2}`).join(', ')
+             match.result?.score?.sets?.map(set => `${set.player1}-${set.player2}`).join(', '),
+      isWalkover,
+      isRetirement,
+      retiredPlayer: match.result?.score?.retiredPlayer
     }
   }
 
@@ -67,16 +74,39 @@ export default function TournamentBracket({
     const result = getMatchResult(match)
     const statusColor = getMatchStatusColor(match)
     
+    // Determine match style based on type
+    const isWalkover = result?.isWalkover
+    const isRetirement = result?.isRetirement
+    const matchStyle = isWalkover 
+      ? 'border-dashed border-gray-400' 
+      : isRetirement 
+      ? 'border-dashed border-amber-400'
+      : ''
+    
     return (
       <div 
-        className={`border rounded-lg p-3 cursor-pointer transition-all hover:shadow-md ${statusColor} w-full min-w-[180px] lg:min-w-0`}
+        className={`border rounded-lg p-3 cursor-pointer transition-all hover:shadow-md ${statusColor} ${matchStyle} w-full min-w-[180px] lg:min-w-0`}
         onClick={() => onMatchClick && onMatchClick(match)}
       >
-        <div className="text-xs text-gray-500 mb-1">
-          {stage === 'quarterfinal' && `${language === 'es' ? 'Cuartos' : 'QF'} ${matchNumber}`}
-          {stage === 'semifinal' && `${language === 'es' ? 'Semifinal' : 'SF'} ${matchNumber}`}
-          {stage === 'final' && (language === 'es' ? 'Final' : 'Final')}
-          {stage === 'third_place' && (language === 'es' ? '3er Puesto' : '3rd Place')}
+        <div className="flex items-center justify-between mb-1">
+          <div className="text-xs text-gray-500">
+            {stage === 'quarterfinal' && `${language === 'es' ? 'Cuartos' : 'QF'} ${matchNumber}`}
+            {stage === 'semifinal' && `${language === 'es' ? 'Semifinal' : 'SF'} ${matchNumber}`}
+            {stage === 'final' && (language === 'es' ? 'Final' : 'Final')}
+            {stage === 'third_place' && (language === 'es' ? '3er Puesto' : '3rd Place')}
+          </div>
+          
+          {/* Match type badge */}
+          {isWalkover && (
+            <span className="px-2 py-0.5 text-[10px] font-semibold bg-gray-200 text-gray-700 rounded uppercase tracking-wide">
+              W.O.
+            </span>
+          )}
+          {isRetirement && (
+            <span className="px-2 py-0.5 text-[10px] font-semibold bg-amber-100 text-amber-700 rounded uppercase tracking-wide">
+              RET
+            </span>
+          )}
         </div>
         
         <div className={`flex items-center justify-between py-1 ${isWinner(player1, match) ? 'font-bold' : ''}`}>
@@ -84,7 +114,7 @@ export default function TournamentBracket({
             <span className="text-sm truncate">{formatName(player1)}</span>
             {player1?.seed && <span className="text-xs text-gray-400 ml-2">({player1.seed})</span>}
           </div>
-          {result && (
+          {result && !isWalkover && (
             <span className="text-xs text-gray-600 font-mono ml-2">
               {result.score?.split(', ').map((set, index) => {
                 const [p1Score, p2Score] = set.split('-')
@@ -105,7 +135,7 @@ export default function TournamentBracket({
             <span className="text-sm truncate">{formatName(player2)}</span>
             {player2?.seed && <span className="text-xs text-gray-400 ml-2">({player2.seed})</span>}
           </div>
-          {result && (
+          {result && !isWalkover && (
             <span className="text-xs text-gray-600 font-mono ml-2">
               {result.score?.split(', ').map((set, index) => {
                 const [p1Score, p2Score] = set.split('-')

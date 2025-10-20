@@ -9,6 +9,9 @@ export async function GET() {
   try {
     await dbConnect()
     
+    // Import Player model for counting
+    const Player = (await import('../../../lib/models/Player')).default
+    
     console.log('🔍 Fetching leagues for public display...')
     
     // Get all public leagues with city data
@@ -27,8 +30,31 @@ export async function GET() {
 
     console.log(`📊 Found ${leagues.length} public leagues`)
 
+    // Calculate real-time player counts for each league
+    const leaguesWithRealCounts = await Promise.all(leagues.map(async (league) => {
+      // Count players with active statuses (pending, confirmed, active) in this league
+      const activePlayerCount = await Player.countDocuments({ 
+        'registrations': {
+          $elemMatch: {
+            'league': league._id,
+            'status': { $in: ['pending', 'confirmed', 'active'] }
+          }
+        }
+      })
+
+      // Update the league stats with real count
+      return {
+        ...league,
+        stats: {
+          ...league.stats,
+          registeredPlayers: activePlayerCount,
+          totalPlayers: activePlayerCount
+        }
+      }
+    }))
+
     // Transform leagues for frontend with enhanced data
-    const transformedLeagues = leagues.map(league => {
+    const transformedLeagues = leaguesWithRealCounts.map(league => {
       const cityData = league.city || {}
       
       // Get current season info

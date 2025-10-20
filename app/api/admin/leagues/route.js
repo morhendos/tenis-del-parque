@@ -162,6 +162,20 @@ export async function POST(request) {
         totalMatches: 0,
         registeredPlayers: 0
       },
+      // Add seasonConfig if provided
+      seasonConfig: data.seasonConfig ? {
+        startDate: data.seasonConfig.startDate || null,
+        endDate: data.seasonConfig.endDate || null,
+        registrationStart: data.seasonConfig.registrationStart || null,
+        registrationEnd: data.seasonConfig.registrationEnd || null,
+        maxPlayers: data.seasonConfig.maxPlayers || 20,
+        minPlayers: data.seasonConfig.minPlayers || 8,
+        price: data.seasonConfig.price || {
+          amount: 0,
+          currency: 'EUR',
+          isFree: false
+        }
+      } : undefined,
       config: {
         roundsPerSeason: data.config?.roundsPerSeason || 8,
         wildCardsPerPlayer: data.config?.wildCardsPerPlayer || 4,
