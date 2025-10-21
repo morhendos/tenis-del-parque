@@ -127,7 +127,12 @@ export default function LeagueLevelCard({ league, locale, status }) {
             href={`/${locale}/${citySlug}/liga/${league.slug}`}
             className="flex-1 text-center py-2 px-4 border border-emerald-600 text-emerald-600 rounded-lg hover:bg-emerald-50 transition-colors font-medium"
           >
-            {locale === 'es' ? 'Ver Detalles' : 'View Details'}
+            {status === 'current' 
+              ? (locale === 'es' ? 'Abrir Liga' : 'Open League')
+              : status === 'upcoming'
+              ? (locale === 'es' ? 'Ver Información' : 'View Info')
+              : (locale === 'es' ? 'Ver Liga' : 'View League')
+            }
           </Link>
           
           {isRegistrationOpen && !isFull && (

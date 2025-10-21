@@ -1,6 +1,7 @@
 import dbConnect from '@/lib/db/mongoose'
 import City from '@/lib/models/City'
 import League from '@/lib/models/League'
+import Player from '@/lib/models/Player'
 import { notFound } from 'next/navigation'
 import Navigation from '@/components/common/Navigation'
 import Footer from '@/components/common/Footer'
@@ -69,8 +70,32 @@ export default async function CityLeaguePage({ params }) {
   })
   .lean()
   
+  // Calculate actual player counts for each league
+  const leaguesWithPlayerCounts = await Promise.all(
+    leagues.map(async (league) => {
+      // Count players with active/confirmed status for this league
+      const playerCount = await Player.countDocuments({
+        'registrations': {
+          $elemMatch: {
+            league: league._id,
+            status: { $in: ['confirmed', 'active'] }
+          }
+        }
+      })
+      
+      // Update the stats object with actual player count
+      return {
+        ...league,
+        stats: {
+          ...league.stats,
+          registeredPlayers: playerCount
+        }
+      }
+    })
+  )
+  
   // Convert MongoDB objects to plain objects and handle dates
-  const plainLeagues = leagues.map(league => ({
+  const plainLeagues = leaguesWithPlayerCounts.map(league => ({
     ...league,
     _id: league._id.toString(),
     city: {

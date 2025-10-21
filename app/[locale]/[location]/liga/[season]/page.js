@@ -120,10 +120,19 @@ export default function LeagueSeasonPage() {
     try {
       setLoading(true)
       
-      // Fetch league data by location and season
-      const leagueRes = await fetch(`/api/leagues/location/${location}?season=${season}`)
-      if (!leagueRes.ok) throw new Error('League not found')
-      const leagueData = await leagueRes.json()
+      // First, try to fetch by slug (new method for specific leagues)
+      // The 'season' parameter might actually be a full league slug
+      let leagueRes = await fetch(`/api/leagues/${season}`)
+      let leagueData = null
+      
+      if (leagueRes.ok) {
+        leagueData = await leagueRes.json()
+      } else {
+        // Fallback: Try old method (location + season format like "summer2025")
+        leagueRes = await fetch(`/api/leagues/location/${location}?season=${season}`)
+        if (!leagueRes.ok) throw new Error('League not found')
+        leagueData = await leagueRes.json()
+      }
       
       setLeague(leagueData.league)
       
@@ -151,16 +160,20 @@ export default function LeagueSeasonPage() {
           leagueData.league.season.year) {
         setCurrentSeason({
           ...leagueData.league.season,
+          status: leagueData.league.status,
           dbKey: dbSeasonKey,
-          displayName: getSeasonDisplayName(leagueData.league.season, language)
+          displayName: getSeasonDisplayName(leagueData.league.season, language),
+          name: getSeasonDisplayName(leagueData.league.season, language)
         })
       } else {
         // Create fallback season for leagues with incomplete season data
         setCurrentSeason({
           type: 'summer',
           year: 2025,
+          status: leagueData.league.status,
           dbKey: dbSeasonKey,
-          displayName: language === 'es' ? 'Verano 2025' : 'Summer 2025'
+          displayName: language === 'es' ? 'Verano 2025' : 'Summer 2025',
+          name: language === 'es' ? 'Verano 2025' : 'Summer 2025'
         })
       }
       
@@ -368,7 +381,7 @@ export default function LeagueSeasonPage() {
                 </h2>
                 <div className="flex items-center gap-3">
                   <span className="text-sm md:text-base text-gray-600 font-medium">
-                    {currentSeason ? currentSeason.name : getSeasonDisplayName(season, language)}
+                    {currentSeason?.name || (language === 'es' ? 'Temporada' : 'Season')}
                   </span>
                   {currentSeason && (
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
@@ -395,7 +408,7 @@ export default function LeagueSeasonPage() {
                 </div>
               </div>
               
-              {standings && standings.unifiedStandings ? (
+              {standings && standings.unifiedStandings && standings.unifiedStandings.length > 0 ? (
                 <div>
                   {/* League Progress Summary */}
                   {/* {(matches.length > 0 || schedule.length > 0) && (
@@ -471,13 +484,99 @@ export default function LeagueSeasonPage() {
                   />
                 </div>
               ) : (
-                <div className="text-center py-8 md:py-12 text-gray-500">
-                  <span className="text-3xl md:text-4xl mb-3 md:mb-4 block">🏆</span>
-                  <p className="text-sm md:text-base">
-                    {language === 'es' 
-                      ? 'La clasificación se mostrará una vez que comiencen los partidos.'
-                      : 'Standings will be displayed once matches begin.'}
-                  </p>
+                <div className="text-center py-8 md:py-12">
+                  {league.status === 'coming_soon' || league.status === 'registration_open' ? (
+                    <div className="max-w-2xl mx-auto">
+                      <span className="text-5xl md:text-6xl mb-4 md:mb-6 block">🎾</span>
+                      <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">
+                        {language === 'es' 
+                          ? '¡Próximamente!'
+                          : 'Coming Soon!'}
+                      </h3>
+                      <p className="text-sm md:text-base text-gray-600 mb-4">
+                        {language === 'es' 
+                          ? 'Esta liga comenzará pronto. La clasificación se mostrará una vez que empiecen los partidos.'
+                          : 'This league will start soon. Standings will be displayed once matches begin.'}
+                      </p>
+                      
+                      {/* Show league details */}
+                      {league.seasonConfig && (
+                        <div className="mt-6 bg-gray-50 rounded-lg p-4 md:p-6">
+                          <h4 className="font-semibold text-gray-900 mb-3">
+                            {language === 'es' ? 'Detalles de la Liga' : 'League Details'}
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                            {league.seasonConfig.startDate && (
+                              <div>
+                                <p className="text-sm text-gray-600">
+                                  {language === 'es' ? 'Fecha de Inicio' : 'Start Date'}
+                                </p>
+                                <p className="font-semibold text-gray-900">
+                                  {new Date(league.seasonConfig.startDate).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                  })}
+                                </p>
+                              </div>
+                            )}
+                            {league.seasonConfig.endDate && (
+                              <div>
+                                <p className="text-sm text-gray-600">
+                                  {language === 'es' ? 'Fecha de Fin' : 'End Date'}
+                                </p>
+                                <p className="font-semibold text-gray-900">
+                                  {new Date(league.seasonConfig.endDate).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                  })}
+                                </p>
+                              </div>
+                            )}
+                            <div>
+                              <p className="text-sm text-gray-600">
+                                {language === 'es' ? 'Plazas Disponibles' : 'Available Spots'}
+                              </p>
+                              <p className="font-semibold text-gray-900">
+                                {league.seasonConfig.maxPlayers || 32}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-600">
+                                {language === 'es' ? 'Precio' : 'Price'}
+                              </p>
+                              <p className="font-semibold text-gray-900">
+                                {league.seasonConfig.price?.isFree || league.seasonConfig.price?.amount === 0
+                                  ? (language === 'es' ? 'Gratis' : 'Free')
+                                  : `${league.seasonConfig.price?.amount}€`}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          {league.status === 'registration_open' && (
+                            <div className="mt-6">
+                              <a
+                                href={`/${locale}/registro/${league.slug}`}
+                                className="inline-block w-full md:w-auto bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+                              >
+                                {language === 'es' ? '¡Inscríbete Ahora!' : 'Register Now!'}
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-gray-500">
+                      <span className="text-3xl md:text-4xl mb-3 md:mb-4 block">🏆</span>
+                      <p className="text-sm md:text-base">
+                        {language === 'es' 
+                          ? 'La clasificación se mostrará una vez que comiencen los partidos.'
+                          : 'Standings will be displayed once matches begin.'}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -493,7 +592,7 @@ export default function LeagueSeasonPage() {
                 </h2>
                 <div className="flex items-center gap-3">
                   <span className="text-sm md:text-base text-gray-600 font-medium">
-                    {currentSeason ? currentSeason.name : getSeasonDisplayName(season, language)}
+                    {currentSeason?.name || (language === 'es' ? 'Temporada' : 'Season')}
                   </span>
                   {currentSeason && (
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
@@ -539,7 +638,7 @@ export default function LeagueSeasonPage() {
                 </h2>
                 <div className="flex items-center gap-3">
                   <span className="text-sm md:text-base text-gray-600 font-medium">
-                    {currentSeason ? currentSeason.name : getSeasonDisplayName(season, language)}
+                    {currentSeason?.name || (language === 'es' ? 'Temporada' : 'Season')}
                   </span>
                   {currentSeason && (
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
@@ -579,7 +678,7 @@ export default function LeagueSeasonPage() {
                 </h2>
                 <div className="flex items-center gap-3">
                   <span className="text-sm md:text-base text-gray-600 font-medium">
-                    {currentSeason ? currentSeason.name : getSeasonDisplayName(season, language)}
+                    {currentSeason?.name || (language === 'es' ? 'Temporada' : 'Season')}
                   </span>
                   {playoffData?.currentPhase && playoffData.currentPhase !== 'regular_season' && (
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
@@ -621,7 +720,7 @@ export default function LeagueSeasonPage() {
                 </h2>
                 <div className="flex items-center gap-3">
                   <span className="text-sm md:text-base text-gray-600 font-medium">
-                    {currentSeason ? currentSeason.name : getSeasonDisplayName(season, language)}
+                    {currentSeason?.name || (language === 'es' ? 'Temporada' : 'Season')}
                   </span>
                   {currentSeason && (
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${

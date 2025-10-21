@@ -178,9 +178,12 @@ export default function LeagueRegistrationPage() {
       ? `${window.location.origin}/es/registro/${league.slug}`
       : `${window.location.origin}/en/signup/${league.slug}`
     
+    const cityName = league.cityData?.name?.[validLocale] || league.cityData?.name?.es || league.location?.city
+    
     setRegistrationData({
       playerName,
       leagueName: league.name,
+      cityName,
       leagueStatus: league.status,
       expectedStartDate: league.seasonConfig?.startDate,
       whatsappGroupLink: data.player?.league?.whatsappGroup?.inviteLink,
