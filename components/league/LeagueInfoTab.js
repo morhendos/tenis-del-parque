@@ -152,13 +152,23 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
 
   const content = t[language]
   
-  // Determine league level based on league name/slug
+  // Determine league level from the skillLevel field or fallback to name/slug detection
   const getLeagueLevel = () => {
+    // First, check if league has a skillLevel field
+    if (league.skillLevel) {
+      // Map 'all' to 'open' for display purposes
+      if (league.skillLevel === 'all') return 'open'
+      return league.skillLevel // 'beginner', 'intermediate', or 'advanced'
+    }
+    
+    // Fallback: try to detect from name/slug
     const name = league.name?.toLowerCase() || league.slug?.toLowerCase() || ''
     if (name.includes('beginner') || name.includes('principiante')) return 'beginner'
     if (name.includes('advanced') || name.includes('avanzado')) return 'advanced'
-    if (name.includes('open') || name.includes('abierta')) return 'open'
-    return 'intermediate' // default
+    if (name.includes('open') || name.includes('abierta') || name.includes('general')) return 'open'
+    
+    // Default to intermediate if we can't determine
+    return 'intermediate'
   }
 
   const leagueLevel = getLeagueLevel()

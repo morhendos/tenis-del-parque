@@ -27,7 +27,7 @@ export default function LeagueSeasonPage() {
   const [schedule, setSchedule] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [activeTab, setActiveTab] = useState('standings')
+  const [activeTab, setActiveTab] = useState('standings') // Will be updated based on league status
   const [totalRounds, setTotalRounds] = useState(8)
   const [showNavigation, setShowNavigation] = useState(false)
   const [isTabsSticky, setIsTabsSticky] = useState(false)
@@ -64,6 +64,15 @@ export default function LeagueSeasonPage() {
       setActiveTab('standings')
     }
   }, [activeTab, currentSeason])
+
+  // Set default tab to 'info' for upcoming leagues (if no URL param specified)
+  useEffect(() => {
+    const tabParam = searchParams.get('tab')
+    if (!tabParam && league && (league.status === 'registration_open' || league.status === 'coming_soon')) {
+      setActiveTab('info')
+      console.log('[League Page] Setting default tab to "info" for upcoming league')
+    }
+  }, [league, searchParams])
 
   // Calculate original position of tabs when component mounts
   useEffect(() => {
@@ -515,74 +524,15 @@ export default function LeagueSeasonPage() {
                           ? 'Esta liga comenzará pronto. La clasificación se mostrará una vez que empiecen los partidos.'
                           : 'This league will start soon. Standings will be displayed once matches begin.'}
                       </p>
-                      
-                      {/* Show league details */}
-                      {league.seasonConfig && (
-                        <div className="mt-6 bg-gray-50 rounded-lg p-4 md:p-6">
-                          <h4 className="font-semibold text-gray-900 mb-3">
-                            {language === 'es' ? 'Detalles de la Liga' : 'League Details'}
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
-                            {league.seasonConfig.startDate && (
-                              <div>
-                                <p className="text-sm text-gray-600">
-                                  {language === 'es' ? 'Fecha de Inicio' : 'Start Date'}
-                                </p>
-                                <p className="font-semibold text-gray-900">
-                                  {new Date(league.seasonConfig.startDate).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric'
-                                  })}
-                                </p>
-                              </div>
-                            )}
-                            {league.seasonConfig.endDate && (
-                              <div>
-                                <p className="text-sm text-gray-600">
-                                  {language === 'es' ? 'Fecha de Fin' : 'End Date'}
-                                </p>
-                                <p className="font-semibold text-gray-900">
-                                  {new Date(league.seasonConfig.endDate).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric'
-                                  })}
-                                </p>
-                              </div>
-                            )}
-                            <div>
-                              <p className="text-sm text-gray-600">
-                                {language === 'es' ? 'Plazas Disponibles' : 'Available Spots'}
-                              </p>
-                              <p className="font-semibold text-gray-900">
-                                {league.seasonConfig.maxPlayers || 32}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-600">
-                                {language === 'es' ? 'Precio' : 'Price'}
-                              </p>
-                              <p className="font-semibold text-gray-900">
-                                {league.seasonConfig.price?.isFree || league.seasonConfig.price?.amount === 0
-                                  ? (language === 'es' ? 'Gratis' : 'Free')
-                                  : `${league.seasonConfig.price?.amount}€`}
-                              </p>
-                            </div>
-                          </div>
-                          
-                          {league.status === 'registration_open' && (
-                            <div className="mt-6">
-                              <a
-                                href={`/${locale}/registro/${league.slug}`}
-                                className="inline-block w-full md:w-auto bg-emerald-600 text-white px-6 py-3 rounded-lg hover:bg-emerald-700 transition-colors font-medium"
-                              >
-                                {language === 'es' ? '¡Inscríbete Ahora!' : 'Register Now!'}
-                              </a>
-                            </div>
-                          )}
-                        </div>
-                      )}
+                      <button
+                        onClick={() => setActiveTab('info')}
+                        className="inline-flex items-center gap-2 text-parque-purple hover:text-parque-purple/80 font-medium transition-colors"
+                      >
+                        {language === 'es' ? 'Ver información de la liga' : 'View league information'}
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                      </button>
                     </div>
                   ) : (
                     <div className="text-gray-500">
