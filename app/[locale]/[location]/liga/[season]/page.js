@@ -10,6 +10,7 @@ import StandingsTable from '@/components/player/StandingsTable'
 import ResultsTab from '@/components/player/ResultsTab'
 import ScheduleTab from '@/components/player/ScheduleTab'
 import PlayoffsTab from '@/components/player/PlayoffsTab'
+import LeagueInfoTab from '@/components/league/LeagueInfoTab'
 import { getSeasonDisplayName } from '@/lib/utils/seasonUtils.client'
 import { TennisPreloaderFullScreen } from '@/components/ui/TennisPreloader'
 
@@ -333,6 +334,10 @@ export default function LeagueSeasonPage() {
           <nav className="flex justify-center">
             <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
               {[
+                // Show Info tab FIRST for upcoming leagues (registration_open or coming_soon)
+                ...(league?.status === 'registration_open' || league?.status === 'coming_soon' 
+                  ? [{ id: 'info', label: language === 'es' ? 'Información' : 'Info' }] 
+                  : []),
                 { id: 'standings', label: language === 'es' ? 'Clasificación' : 'Standings' },
                 { id: 'playoffs', label: language === 'es' ? 'Playoffs' : 'Playoffs' },
                 { id: 'schedule', label: language === 'es' ? 'Calendario' : 'Schedule' },
@@ -351,6 +356,7 @@ export default function LeagueSeasonPage() {
                   <span className="text-sm font-semibold">
                     {/* Mobile: Show abbreviated labels */}
                     <span className="sm:hidden">
+                      {tab.id === 'info' && 'Info'}
                       {tab.id === 'standings' && (language === 'es' ? 'Clas.' : 'Stand.')}
                       {tab.id === 'playoffs' && 'Playoffs'}
                       {tab.id === 'schedule' && (language === 'es' ? 'Cal.' : 'Sched.')}
