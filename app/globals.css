@@ -519,6 +519,7 @@ body {
 .animation-delay-800 { animation-delay: 800ms; }
 .animation-delay-900 { animation-delay: 900ms; }
 .animation-delay-1000 { animation-delay: 1000ms; }
+.animation-delay-2000 { animation-delay: 2000ms; }
 
 .delay-1000 { animation-delay: 1000ms; }
 .delay-2000 { animation-delay: 2000ms; }

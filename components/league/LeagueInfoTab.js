@@ -1,16 +1,16 @@
-import { Calendar, Users, CreditCard, TrendingUp, Award, Info } from 'lucide-react'
+import { Calendar, Users, CreditCard, TrendingUp, Award, Info, Trophy, Target, ChartLine, Shield, Sparkles, Heart, CheckCircle, Clock } from 'lucide-react'
 
 // Level descriptions for different league types
 const levelDescriptions = {
   es: {
     beginner: {
-      title: 'Nivel Principiante',
-      description: 'Perfecto para jugadores que están comenzando o tienen experiencia básica. Enfoque en aprender fundamentos y disfrutar del juego en un ambiente relajado.',
+      title: 'Liga Nivel Inicial',
+      description: 'Liga diseñada para disfrutar del tenis en su máxima expresión. Juega a tu ritmo, mejora tu técnica y forma parte de una comunidad apasionada por este deporte.',
       skills: [
-        'Jugadores nuevos o con experiencia limitada',
-        'Golpes básicos en desarrollo',
-        'Enfoque en aprender y divertirse',
-        'Ambiente amigable y sin presión'
+        'Partidos relajados y divertidos',
+        'Énfasis en el juego social y recreativo',
+        'Perfecto para retomar el tenis o jugar sin presión',
+        'Comunidad acogedora y ambiente amistoso'
       ]
     },
     intermediate: {
@@ -46,13 +46,13 @@ const levelDescriptions = {
   },
   en: {
     beginner: {
-      title: 'Beginner Level',
-      description: 'Perfect for players who are starting out or have basic experience. Focus on learning fundamentals and enjoying the game in a relaxed environment.',
+      title: 'Entry Level League',
+      description: 'A league designed to enjoy tennis at its finest. Play at your own pace, improve your technique, and be part of a passionate tennis community.',
       skills: [
-        'New players or limited experience',
-        'Basic strokes in development',
-        'Focus on learning and having fun',
-        'Friendly, no-pressure atmosphere'
+        'Relaxed and enjoyable matches',
+        'Focus on social and recreational play',
+        'Perfect for getting back into tennis or playing without pressure',
+        'Welcoming community and friendly atmosphere'
       ]
     },
     intermediate: {
@@ -93,6 +93,10 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
     es: {
       upcomingTitle: '¡Próximamente!',
       upcomingSubtitle: 'Esta liga comenzará pronto',
+      registrationOpenTitle: '¡Inscripciones Abiertas!',
+      registrationOpenSubtitle: 'Únete a la liga ahora',
+      registrationClosing: 'Las inscripciones cierran',
+      spotsRemaining: 'plazas disponibles',
       leagueDetails: 'Detalles de la Liga',
       startDate: 'Fecha de Inicio',
       endDate: 'Fecha de Fin',
@@ -122,6 +126,10 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
     en: {
       upcomingTitle: 'Coming Soon!',
       upcomingSubtitle: 'This league will start soon',
+      registrationOpenTitle: 'Registration Open!',
+      registrationOpenSubtitle: 'Join the league now',
+      registrationClosing: 'Registration closes',
+      spotsRemaining: 'spots remaining',
       leagueDetails: 'League Details',
       startDate: 'Start Date',
       endDate: 'End Date',
@@ -186,20 +194,82 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
   return (
     <div className="space-y-8">
       {/* Hero Section */}
-      <div className="text-center py-8 bg-gradient-to-br from-parque-purple/5 to-emerald-50 rounded-2xl">
-        <div className="text-7xl mb-4">🎾</div>
-        <h3 className="text-3xl md:text-4xl font-bold text-parque-purple mb-3">
-          {content.upcomingTitle}
-        </h3>
-        <p className="text-lg text-gray-600">
-          {content.upcomingSubtitle}
-        </p>
+      <div className={`relative text-center py-10 rounded-3xl overflow-hidden ${
+        league.status === 'registration_open' 
+          ? 'bg-gradient-to-br from-emerald-50 via-emerald-100/30 to-green-50' 
+          : 'bg-gradient-to-br from-parque-purple/10 via-emerald-50/50 to-purple-50'
+      }`}>
+        {/* Animated background elements */}
+        <div className="absolute inset-0 opacity-10">
+          <div className={`absolute top-10 left-10 w-32 h-32 rounded-full blur-3xl animate-pulse ${
+            league.status === 'registration_open' ? 'bg-emerald-600' : 'bg-parque-purple'
+          }`}></div>
+          <div className="absolute bottom-10 right-10 w-40 h-40 bg-emerald-500 rounded-full blur-3xl animate-pulse animation-delay-2000"></div>
+        </div>
+        
+        <div className="relative z-10">
+          <div className={`inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-6 shadow-xl transform rotate-3 hover:rotate-0 transition-transform duration-300 ${
+            league.status === 'registration_open'
+              ? 'bg-gradient-to-br from-emerald-600 to-emerald-700'
+              : 'bg-gradient-to-br from-parque-purple to-purple-600'
+          }`}>
+            {league.status === 'registration_open' ? (
+              <CheckCircle className="w-10 h-10 text-white" />
+            ) : (
+              <Trophy className="w-10 h-10 text-white" />
+            )}
+          </div>
+          
+          {league.status === 'registration_open' ? (
+            <>
+              <h3 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-500 bg-clip-text text-transparent mb-3">
+                {content.registrationOpenTitle}
+              </h3>
+              <p className="text-lg text-gray-700 font-medium mb-3">
+                {content.registrationOpenSubtitle}
+              </p>
+              {league.seasonConfig?.registrationDeadline && (
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6">
+                  <div className="bg-white/80 backdrop-blur-sm rounded-2xl px-6 py-3 shadow-lg border-2 border-emerald-200 flex items-center gap-3">
+                    <Clock className="w-6 h-6 text-emerald-600" />
+                    <div>
+                      <p className="text-sm text-gray-600">{content.registrationClosing}</p>
+                      <p className="text-lg font-bold text-emerald-700">
+                        {formatDate(league.seasonConfig.registrationDeadline)}
+                      </p>
+                    </div>
+                  </div>
+                  {league.seasonConfig?.maxPlayers && (
+                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl px-6 py-3 shadow-lg border-2 border-purple-200 flex items-center gap-3">
+                      <Users className="w-6 h-6 text-purple-600" />
+                      <div>
+                        <p className="text-2xl font-bold text-purple-700">
+                          {league.seasonConfig.maxPlayers - (league.seasonConfig.currentPlayers || 0)}
+                        </p>
+                        <p className="text-sm text-gray-600">{content.spotsRemaining}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <h3 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-parque-purple to-purple-600 bg-clip-text text-transparent mb-3">
+                {content.upcomingTitle}
+              </h3>
+              <p className="text-lg text-gray-600">
+                {content.upcomingSubtitle}
+              </p>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Key Details Cards */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* League Details Card */}
-        <div className="bg-white border-2 border-gray-100 rounded-2xl p-6 hover:border-parque-purple/20 transition-all duration-300 hover:shadow-lg">
+        <div className="bg-gray-50 border-2 border-gray-100 rounded-2xl p-6 hover:border-parque-purple/20 transition-all duration-300 hover:shadow-lg">
           <h4 className="font-bold text-xl text-gray-900 mb-6 flex items-center gap-2">
             <Info className="w-6 h-6 text-parque-purple" />
             {content.leagueDetails}
@@ -265,9 +335,15 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
             <div className="mt-6 pt-6 border-t border-gray-100">
               <a
                 href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${league.slug}`}
-                className="block w-full text-center bg-gradient-to-r from-emerald-600 to-emerald-500 text-white px-6 py-4 rounded-xl hover:from-emerald-700 hover:to-emerald-600 transition-all duration-300 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="relative block w-full text-center bg-gradient-to-r from-emerald-600 to-emerald-500 text-white px-6 py-4 rounded-xl hover:from-emerald-700 hover:to-emerald-600 transition-all duration-300 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 overflow-hidden group"
               >
-                {content.registerNow}
+                <span className="absolute inset-0 w-full h-full bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
+                <span className="relative flex items-center justify-center gap-2">
+                  {content.registerNow}
+                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </span>
               </a>
             </div>
           )}
@@ -306,14 +382,19 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
       </div>
 
       {/* About League Section */}
-      <div className="bg-white border-2 border-gray-100 rounded-2xl p-6 md:p-8">
-        <h4 className="font-bold text-2xl text-gray-900 mb-6">{content.aboutLeague}</h4>
+      <div className="bg-gradient-to-br from-gray-50 via-white/50 to-gray-50 border-2 border-gray-100 rounded-3xl p-6 md:p-8 transition-all duration-300 hover:scale-[1.01]">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 bg-gradient-to-br from-parque-purple to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+            <Sparkles className="w-5 h-5 text-white" />
+          </div>
+          <h4 className="font-bold text-2xl text-gray-900">{content.aboutLeague}</h4>
+        </div>
         
         <div className="grid md:grid-cols-3 gap-6">
           {/* Swiss Format */}
-          <div className="space-y-3">
-            <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-3">
-              <span className="text-2xl">🎯</span>
+          <div className="space-y-3 group hover:scale-105 transition-transform duration-300">
+            <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-xl flex items-center justify-center mb-3 shadow-md group-hover:shadow-lg transition-shadow duration-300">
+              <Target className="w-6 h-6 text-emerald-700" />
             </div>
             <h5 className="font-semibold text-lg text-gray-900">{content.swissFormat}</h5>
             <p className="text-gray-600 text-sm leading-relaxed">
@@ -327,9 +408,9 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
           </div>
 
           {/* Playoff System */}
-          <div className="space-y-3">
-            <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-3">
-              <span className="text-2xl">🏆</span>
+          <div className="space-y-3 group hover:scale-105 transition-transform duration-300">
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center mb-3 shadow-md group-hover:shadow-lg transition-shadow duration-300">
+              <Trophy className="w-6 h-6 text-purple-700" />
             </div>
             <h5 className="font-semibold text-lg text-gray-900">{content.playoffSystem}</h5>
             <p className="text-gray-600 text-sm leading-relaxed">
@@ -338,9 +419,9 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
           </div>
 
           {/* ELO Ranking */}
-          <div className="space-y-3">
-            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-3">
-              <span className="text-2xl">📊</span>
+          <div className="space-y-3 group hover:scale-105 transition-transform duration-300">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center mb-3 shadow-md group-hover:shadow-lg transition-shadow duration-300">
+              <ChartLine className="w-6 h-6 text-blue-700" />
             </div>
             <h5 className="font-semibold text-lg text-gray-900">{content.eloRanking}</h5>
             <p className="text-gray-600 text-sm leading-relaxed">
@@ -351,29 +432,47 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
       </div>
 
       {/* Why Join Section */}
-      <div className="bg-gradient-to-br from-parque-purple to-purple-600 text-white rounded-2xl p-6 md:p-8">
-        <h4 className="font-bold text-2xl mb-6">{content.whyJoin}</h4>
-        <div className="grid md:grid-cols-2 gap-4">
-          {content.benefits.map((benefit, index) => (
-            <div key={index} className="flex items-start gap-3">
-              <div className="mt-1 w-6 h-6 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-sm">✓</span>
-              </div>
-              <p className="text-white/90">{benefit}</p>
-            </div>
-          ))}
+      <div className="relative bg-gradient-to-br from-parque-purple via-purple-600 to-purple-700 text-white rounded-3xl p-6 md:p-8 shadow-2xl overflow-hidden">
+        {/* Animated background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute -top-20 -right-20 w-64 h-64 bg-white rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-purple-300 rounded-full blur-3xl"></div>
         </div>
         
-        {league.status === 'registration_open' && (
-          <div className="mt-6 pt-6 border-t border-white/20">
-            <a
-              href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${league.slug}`}
-              className="block w-full md:w-auto text-center bg-white text-parque-purple px-8 py-4 rounded-xl hover:bg-gray-50 transition-all duration-300 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-            >
-              {content.registerNow}
-            </a>
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+              <Heart className="w-5 h-5 text-white" />
+            </div>
+            <h4 className="font-bold text-2xl">{content.whyJoin}</h4>
           </div>
-        )}
+          <div className="grid md:grid-cols-2 gap-4">
+            {content.benefits.map((benefit, index) => (
+              <div key={index} className="flex items-start gap-3 group hover:translate-x-1 transition-transform duration-200">
+                <div className="mt-1 w-6 h-6 bg-gradient-to-br from-white/30 to-white/10 backdrop-blur-sm rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
+                  <Shield className="w-3 h-3 text-white" />
+                </div>
+                <p className="text-white/90 group-hover:text-white transition-colors duration-200">{benefit}</p>
+              </div>
+            ))}
+          </div>
+          
+          {league.status === 'registration_open' && (
+            <div className="mt-6 pt-6 border-t border-white/20">
+              <a
+                href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${league.slug}`}
+                className="inline-block bg-white text-parque-purple px-8 py-4 rounded-xl hover:bg-gray-50 transition-all duration-300 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 group"
+              >
+                <span className="flex items-center gap-2">
+                  {content.registerNow}
+                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </span>
+              </a>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

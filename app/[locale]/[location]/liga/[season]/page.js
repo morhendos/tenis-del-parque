@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
+import Image from 'next/image'
+import Link from 'next/link'
 import Navigation from '@/components/common/Navigation'
 import Footer from '@/components/common/Footer'
 import { homeContent } from '@/lib/content/homeContent'
@@ -30,6 +32,7 @@ export default function LeagueSeasonPage() {
   const [activeTab, setActiveTab] = useState('standings') // Will be updated based on league status
   const [totalRounds, setTotalRounds] = useState(8)
   const [showNavigation, setShowNavigation] = useState(false)
+  const [city, setCity] = useState(null)
   const [isTabsSticky, setIsTabsSticky] = useState(false)
   const [tabsRef, setTabsRef] = useState(null)
   const [tabsOriginalTop, setTabsOriginalTop] = useState(0)
@@ -142,6 +145,19 @@ export default function LeagueSeasonPage() {
         leagueRes = await fetch(`/api/leagues/location/${location}?season=${season}`)
         if (!leagueRes.ok) throw new Error('League not found')
         leagueData = await leagueRes.json()
+      }
+      
+      // Fetch city data if needed for hero
+      if (leagueData.league.city) {
+        try {
+          const cityRes = await fetch(`/api/cities/${leagueData.league.city}`)
+          if (cityRes.ok) {
+            const cityData = await cityRes.json()
+            setCity(cityData)
+          }
+        } catch (err) {
+          console.log('Error fetching city data:', err)
+        }
       }
       
       setLeague(leagueData.league)
@@ -295,50 +311,125 @@ export default function LeagueSeasonPage() {
     )
   }
 
+  // Determine if league is active or upcoming
+  const isLeagueActive = league?.status === 'active' || league?.status === 'completed'
+  const showHero = !isLeagueActive && city // Show hero for upcoming/registration leagues
+  const showTabs = isLeagueActive // Show tabs only for active leagues
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-parque-bg via-white to-white">
-      {/* Navigation - Only show when toggled */}
-      <div className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${showNavigation ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
-        <Navigation currentPage="league" />
-      </div>
-      
-      {/* Navigation Toggle Button */}
-      <button
-        onClick={() => setShowNavigation(!showNavigation)}
-        className={`fixed right-4 z-[60] bg-white/90 backdrop-blur-md p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-parque-purple/30 ${
-          isTabsSticky ? 'top-20' : 'top-4'
-        }`}
-        aria-label={showNavigation ? (language === 'es' ? 'Ocultar menú' : 'Hide menu') : (language === 'es' ? 'Mostrar menú' : 'Show menu')}
-      >
-        <div className="w-5 h-5 flex flex-col justify-center items-center space-y-1">
-          <span className={`block w-4 h-0.5 bg-parque-purple transition-all duration-300 ${showNavigation ? 'rotate-45 translate-y-1.5' : ''}`}></span>
-          <span className={`block w-4 h-0.5 bg-parque-purple transition-all duration-300 ${showNavigation ? 'opacity-0' : ''}`}></span>
-          <span className={`block w-4 h-0.5 bg-parque-purple transition-all duration-300 ${showNavigation ? '-rotate-45 -translate-y-1.5' : ''}`}></span>
+      {/* Navigation - Always visible for inactive leagues */}
+      {showHero ? (
+        <Navigation currentPage="league" language={language} showLanguageSwitcher={true} />
+      ) : (
+        <div className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${showNavigation ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
+          <Navigation currentPage="league" />
         </div>
-      </button>
+      )}
       
-      {/* Hero Section - Logo only, much more prominent */}
-      <section className={`relative transition-all duration-300 ${showNavigation ? 'pt-16 md:pt-20 lg:pt-24' : 'pt-8 md:pt-12 lg:pt-16'} pb-4 md:pb-6`}>
-        <div className="container mx-auto px-4">
-          <div className="text-center">
-            <img 
-              src="/logo.png" 
-              alt="Tenis del Parque - Sotogrande League" 
-              className="h-24 md:h-32 lg:h-40 xl:h-48 w-auto mx-auto"
-            />
+      {/* Navigation Toggle Button - Only for active leagues */}
+      {!showHero && (
+        <button
+          onClick={() => setShowNavigation(!showNavigation)}
+          className={`fixed right-4 z-[60] bg-white/90 backdrop-blur-md p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-parque-purple/30 ${
+            isTabsSticky ? 'top-20' : 'top-4'
+          }`}
+          aria-label={showNavigation ? (language === 'es' ? 'Ocultar menú' : 'Hide menu') : (language === 'es' ? 'Mostrar menú' : 'Show menu')}
+        >
+          <div className="w-5 h-5 flex flex-col justify-center items-center space-y-1">
+            <span className={`block w-4 h-0.5 bg-parque-purple transition-all duration-300 ${showNavigation ? 'rotate-45 translate-y-1.5' : ''}`}></span>
+            <span className={`block w-4 h-0.5 bg-parque-purple transition-all duration-300 ${showNavigation ? 'opacity-0' : ''}`}></span>
+            <span className={`block w-4 h-0.5 bg-parque-purple transition-all duration-300 ${showNavigation ? '-rotate-45 -translate-y-1.5' : ''}`}></span>
+          </div>
+        </button>
+      )}
+      
+      {/* Hero Section with City Image for Inactive Leagues */}
+      {showHero && city && (
+        <div className="relative h-[400px] bg-gradient-to-r from-emerald-600 to-teal-600">
+          {/* Background Image */}
+          {city.images?.main && (
+            <div className="absolute inset-0 opacity-40">
+              <Image
+                src={city.images.main}
+                alt={city.name?.[language] || city.name?.es || ''}
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
+          )}
+          
+          {/* Content */}
+          <div className="relative container mx-auto px-4 h-full flex flex-col justify-center pt-16">
+            {/* Breadcrumb */}
+            <nav className="mb-4 text-white/80">
+              <Link href={`/${locale}/leagues`} className="hover:text-white">
+                {language === 'es' ? 'Ciudades' : 'Cities'}
+              </Link>
+              <span className="mx-2">/</span>
+              <Link href={`/${locale}/leagues/${location}`} className="hover:text-white">
+                {city.name?.[language] || city.name?.es || location}
+              </Link>
+              <span className="mx-2">/</span>
+              <span className="text-white">{league?.name || 'Liga'}</span>
+            </nav>
+            
+            {/* Title */}
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              {league?.name}
+            </h1>
+            <p className="text-xl text-white/90 max-w-2xl">
+              {league?.status === 'registration_open' 
+                ? (language === 'es' ? '¡Inscripciones abiertas!' : 'Registration open!')
+                : (language === 'es' ? 'Próximamente' : 'Coming soon')
+              }
+            </p>
+            
+            {/* Registration Button if open */}
+            {league?.status === 'registration_open' && (
+              <div className="mt-6">
+                <a
+                  href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${league.slug}`}
+                  className="inline-flex items-center gap-2 bg-white text-emerald-700 px-8 py-3 rounded-full font-semibold text-lg hover:bg-gray-50 transition-all duration-300 shadow-lg"
+                >
+                  {language === 'es' ? 'Inscríbete Ahora' : 'Register Now'}
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </a>
+              </div>
+            )}
           </div>
         </div>
-      </section>
+      )}
+      
+      {/* Logo Section - Only for active leagues */}
+      {!showHero && (
+        <section className={`relative transition-all duration-300 ${showNavigation ? 'pt-16 md:pt-20 lg:pt-24' : 'pt-8 md:pt-12 lg:pt-16'} pb-4 md:pb-6`}>
+          <div className="container mx-auto px-4">
+            <div className="text-center">
+              <img 
+                src="/logo.png" 
+                alt="Tenis del Parque - Sotogrande League" 
+                className="h-24 md:h-32 lg:h-40 xl:h-48 w-auto mx-auto"
+              />
+            </div>
+          </div>
+        </section>
+      )}
 
-      {/* Navigation Tabs - Clean and Simple - FIXED ORDER: Playoffs is now second */}
-      <section 
-        ref={(el) => setTabsRef(el)}
-        className={`transition-all duration-300 ${
-          isTabsSticky 
-            ? 'fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-lg' 
-            : 'relative'
-        }`}
-      >
+      {/* Navigation Tabs - Only for active leagues */}
+      {showTabs && (
+        <>
+          <section 
+            ref={(el) => setTabsRef(el)}
+            className={`transition-all duration-300 ${
+              isTabsSticky 
+                ? 'fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-lg' 
+                : 'relative'
+            }`}
+          >
         <div className="container mx-auto px-4 py-3">
           <nav className="flex justify-center">
             <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
@@ -380,21 +471,44 @@ export default function LeagueSeasonPage() {
             </div>
           </nav>
         </div>
-      </section>
+          </section>
+          
+          {/* Spacer when tabs are sticky to prevent content jump */}
+          {isTabsSticky && <div className="h-16 md:h-20"></div>}
+        </>
+      )}
 
-      {/* Spacer when tabs are sticky to prevent content jump */}
-      {isTabsSticky && <div className="h-16 md:h-20"></div>}
-
-      {/* Content Sections - Adjusted padding for mobile and sticky tabs */}
-      <section className={`container mx-auto px-2 md:px-4 pb-4 md:pb-8 lg:pb-16 ${isTabsSticky ? 'pt-4' : ''}`}>
-        {activeTab === 'info' && (
+      {/* Content Sections */}
+      <section className={`container mx-auto px-2 md:px-4 pb-4 md:pb-8 lg:pb-16 ${
+        showTabs && isTabsSticky ? 'pt-4' : showHero ? 'pt-8 md:pt-12' : ''
+      }`}>
+        {/* For inactive leagues, always show info */}
+        {!showTabs && (
           <div className="max-w-[1400px] mx-auto">
-            <LeagueInfoTab 
-              league={league}
-              currentSeason={currentSeason}
-              language={language}
-              locale={locale}
-            />
+            <div className="bg-white rounded-lg md:rounded-xl shadow-md md:shadow-lg p-3 md:p-6 lg:p-8">
+              <LeagueInfoTab 
+                league={league}
+                currentSeason={currentSeason}
+                language={language}
+                locale={locale}
+              />
+            </div>
+          </div>
+        )}
+        
+        {/* For active leagues, show tabs content */}
+        {showTabs && (
+          <>
+            {activeTab === 'info' && (
+          <div className="max-w-[1400px] mx-auto">
+            <div className="bg-white rounded-lg md:rounded-xl shadow-md md:shadow-lg p-3 md:p-6 lg:p-8">
+              <LeagueInfoTab 
+                league={league}
+                currentSeason={currentSeason}
+                language={language}
+                locale={locale}
+              />
+            </div>
           </div>
         )}
 
@@ -551,7 +665,7 @@ export default function LeagueSeasonPage() {
         )}
 
         {activeTab === 'schedule' && (
-          <div className="max-w-[1200px] mx-auto">
+          <div className="max-w-[1400px] mx-auto">
             <div className="bg-white rounded-lg md:rounded-xl shadow-md md:shadow-lg p-3 md:p-6 lg:p-8">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6">
                 <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-parque-purple mb-2 sm:mb-0">
@@ -597,7 +711,7 @@ export default function LeagueSeasonPage() {
         )}
 
         {activeTab === 'matches' && (
-          <div className="max-w-[1200px] mx-auto">
+          <div className="max-w-[1400px] mx-auto">
             <div className="bg-white rounded-lg md:rounded-xl shadow-md md:shadow-lg p-3 md:p-6 lg:p-8">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6">
                 <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-parque-purple mb-2 sm:mb-0">
@@ -679,7 +793,7 @@ export default function LeagueSeasonPage() {
         )}
 
         {activeTab === 'register' && (
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-[1400px] mx-auto">
             <div className="bg-white rounded-lg md:rounded-xl shadow-md md:shadow-lg p-3 md:p-6 lg:p-8">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6">
                 <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-parque-purple mb-2 sm:mb-0">
@@ -741,6 +855,8 @@ export default function LeagueSeasonPage() {
               )}
             </div>
           </div>
+        )}
+          </>
         )}
       </section>
 
