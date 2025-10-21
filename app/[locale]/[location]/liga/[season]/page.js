@@ -378,6 +378,17 @@ export default function LeagueSeasonPage() {
 
       {/* Content Sections - Adjusted padding for mobile and sticky tabs */}
       <section className={`container mx-auto px-2 md:px-4 pb-4 md:pb-8 lg:pb-16 ${isTabsSticky ? 'pt-4' : ''}`}>
+        {activeTab === 'info' && (
+          <div className="max-w-[1400px] mx-auto">
+            <LeagueInfoTab 
+              league={league}
+              currentSeason={currentSeason}
+              language={language}
+              locale={locale}
+            />
+          </div>
+        )}
+
         {activeTab === 'standings' && (
           <div className="max-w-[1400px] mx-auto">
             <div className="bg-white rounded-lg md:rounded-xl shadow-md md:shadow-lg p-3 md:p-6 lg:p-8">
