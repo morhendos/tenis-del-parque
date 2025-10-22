@@ -3,8 +3,9 @@
 import { useLocale } from '@/lib/hooks/useLocale';
 import { useState, useRef, useEffect } from 'react';
 
-export default function LanguageSwitcher({ className = '' }) {
-  const { locale, switchLocale, t } = useLocale();
+export default function LanguageSwitcher({ className = '', locale: propLocale }) {
+  const { locale: hookLocale, switchLocale, t } = useLocale();
+  const locale = propLocale || hookLocale; // Use prop if provided, otherwise hook
   const [isOpen, setIsOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const dropdownRef = useRef(null);
@@ -48,11 +49,12 @@ export default function LanguageSwitcher({ className = '' }) {
   
   // Return non-interactive version until hydrated
   if (!isClient) {
+    const currentLanguage = languages.find(lang => lang.code === locale) || languages[0];
     return (
       <div className={`relative ${className}`}>
         <div className="flex items-center space-x-2 px-3 py-2 rounded-lg text-gray-700">
-          <span className="text-lg">🇪🇸</span>
-          <span className="text-sm font-medium">ES</span>
+          <span className="text-lg">{currentLanguage.flag}</span>
+          <span className="text-sm font-medium w-[2ch] text-center">{currentLanguage.code.toUpperCase()}</span>
           <svg
             className="w-4 h-4"
             fill="none"
@@ -76,7 +78,7 @@ export default function LanguageSwitcher({ className = '' }) {
         aria-haspopup="true"
       >
         <span className="text-lg">{currentLanguage?.flag}</span>
-        <span className="text-sm font-medium">{currentLanguage?.code.toUpperCase()}</span>
+        <span className="text-sm font-medium w-[2ch] text-center">{currentLanguage?.code.toUpperCase()}</span>
         <svg
           className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
@@ -125,8 +127,9 @@ export default function LanguageSwitcher({ className = '' }) {
 }
 
 // Compact version for mobile
-export function LanguageSwitcherCompact({ className = '' }) {
-  const { locale, switchLocale } = useLocale();
+export function LanguageSwitcherCompact({ className = '', locale: propLocale }) {
+  const { locale: hookLocale, switchLocale } = useLocale();
+  const locale = propLocale || hookLocale; // Use prop if provided, otherwise hook
   const [isClient, setIsClient] = useState(false);
   
   // Hydration guard
@@ -144,7 +147,7 @@ export function LanguageSwitcherCompact({ className = '' }) {
   if (!isClient) {
     return (
       <div className={`flex items-center justify-center w-10 h-10 rounded-lg ${className}`}>
-        <span className="text-lg">🇪🇸</span>
+        <span className="text-lg">{locale === 'es' ? '🇪🇸' : '🇬🇧'}</span>
       </div>
     );
   }

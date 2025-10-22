@@ -151,7 +151,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
               </div>
             </div>
             
-            <div className="hidden lg:flex items-center space-x-8">
+            <div className="hidden lg:flex items-center space-x-6">
               <div className="flex space-x-6 text-gray-700">
                 <span>{t.home}</span>
                 <span>{t.leagues}</span>
@@ -161,14 +161,24 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
                 <span>{t.elo}</span>
               </div>
               
-              <div className="ml-4">
+              <div className="ml-8">
                 <span className="bg-parque-purple text-white px-4 py-2 rounded-lg font-medium text-sm">
                   {t.login}
                 </span>
               </div>
+              
+              {/* Language Switcher - RESERVE SPACE during SSR */}
+              {showLanguageSwitcher && (
+                <LanguageSwitcher className="ml-2" locale={validLocale} />
+              )}
             </div>
 
             <div className="flex items-center space-x-3 lg:hidden">
+              {/* Mobile Language Switcher - RESERVE SPACE during SSR */}
+              {showLanguageSwitcher && (
+                <LanguageSwitcher className="" locale={validLocale} />
+              )}
+              
               <div className="flex flex-col justify-center items-center w-10 h-10 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-lg">
                 <span className="block w-5 h-0.5 bg-gray-600 -translate-y-1"></span>
                 <span className="block w-5 h-0.5 bg-gray-600"></span>
@@ -237,7 +247,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
               
               {/* Desktop Language Selector */}
               {showLanguageSwitcher && (
-                <LanguageSwitcher className="ml-2" />
+                <LanguageSwitcher className="ml-2" locale={validLocale} />
               )}
             </div>
 
@@ -245,7 +255,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
             <div className="flex items-center space-x-3 lg:hidden">
               {/* Mobile Language Selector */}
               {showLanguageSwitcher && (
-                <LanguageSwitcher className="" />
+                <LanguageSwitcher className="" locale={validLocale} />
               )}
 
               {/* Hamburger Menu Button */}
