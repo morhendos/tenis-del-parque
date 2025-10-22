@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 
-export default function CityLeagueHero({ city, locale }) {
+export default function CityLeagueHero({ city, locale, leagueName }) {
   const cityName = city.name[locale] || city.name.es
   
   return (
@@ -27,7 +27,17 @@ export default function CityLeagueHero({ city, locale }) {
             {locale === 'es' ? 'Ciudades' : 'Cities'}
           </Link>
           <span className="mx-2">/</span>
-          <span className="text-white">{cityName}</span>
+          {leagueName ? (
+            <>
+              <Link href={`/${locale}/leagues/${city.slug}`} className="hover:text-white">
+                {cityName}
+              </Link>
+              <span className="mx-2">/</span>
+              <span className="text-white">{leagueName}</span>
+            </>
+          ) : (
+            <span className="text-white">{cityName}</span>
+          )}
         </nav>
         
         {/* Title */}
