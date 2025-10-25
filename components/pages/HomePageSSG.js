@@ -114,25 +114,12 @@ export default function HomePageSSG({ locale, leaguesData }) {
             </div>
           ) : (
             <>
-              {/* Active Leagues - Centered */}
-              {activeLeagues.length > 0 && (
-                <div className="mb-12">
-                  <div className="flex flex-wrap justify-center gap-8">
-                    {activeLeagues.map((league) => (
-                      <LeagueCard
-                        key={league._id}
-                        league={league}
-                        content={content}
-                        locale={validLocale}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              {/* Registration Open Leagues - Centered */}
+              {/* PRIORITY 1: Registration Open Leagues - MOST IMPORTANT for new leads */}
               {registrationOpenLeagues.length > 0 && (
-                <div className="mb-12">
+                <div className="mb-16">
+                  <h3 className="text-3xl font-bold text-parque-purple mb-8 text-center">
+                    {validLocale === 'es' ? '🎾 ¡Únete Ahora!' : '🎾 Join Now!'}
+                  </h3>
                   <div className="flex flex-wrap justify-center gap-8">
                     {registrationOpenLeagues.map((league) => (
                       <LeagueCard
@@ -146,14 +133,34 @@ export default function HomePageSSG({ locale, leaguesData }) {
                 </div>
               )}
               
-              {/* Coming Soon Leagues - Centered */}
+              {/* PRIORITY 2: Coming Soon Leagues - Builds anticipation */}
               {comingSoonLeagues.length > 0 && (
-                <div>
+                <div className="mb-16">
                   <h3 className="text-2xl font-semibold text-gray-700 mb-6 text-center">
                     {content.cities.launching} {validLocale === 'es' ? 'Próximamente' : 'Soon'}
                   </h3>
                   <div className="flex flex-wrap justify-center gap-8">
                     {comingSoonLeagues.map((league) => (
+                      <LeagueCard
+                        key={league._id}
+                        league={league}
+                        content={content}
+                        locale={validLocale}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* PRIORITY 3: Active Leagues - Social proof but de-emphasized */}
+              {/* To hide completely: comment out or delete this entire block */}
+              {activeLeagues.length > 0 && (
+                <div className="mt-20 pt-8 border-t border-gray-200">
+                  <h3 className="text-xl font-medium text-gray-500 mb-6 text-center">
+                    {validLocale === 'es' ? 'Ligas en Curso' : 'Currently Running'}
+                  </h3>
+                  <div className="flex flex-wrap justify-center gap-8 opacity-75">
+                    {activeLeagues.map((league) => (
                       <LeagueCard
                         key={league._id}
                         league={league}

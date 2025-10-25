@@ -381,6 +381,22 @@ export default function LeagueManagementPage() {
                   </button>
 
                   <button
+                    onClick={() => router.push(`/admin/leagues/${leagueId}/discounts`)}
+                    className="flex items-center p-4 border border-emerald-200 rounded-lg hover:bg-emerald-50 transition-colors relative"
+                  >
+                    {league?.discountCodes && league.discountCodes.length > 0 && (
+                      <span className="absolute top-2 right-2 px-2 py-0.5 bg-emerald-600 text-white text-xs rounded-full">
+                        {league.discountCodes.filter(d => d.isActive).length}
+                      </span>
+                    )}
+                    <span className="text-2xl mr-3">💰</span>
+                    <div className="text-left">
+                      <p className="font-medium text-gray-900">Discount Codes</p>
+                      <p className="text-sm text-gray-600">Manage promo codes</p>
+                    </div>
+                  </button>
+
+                  <button
                     onClick={() => handleTabClick('settings')}
                     className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                   >
@@ -454,6 +470,47 @@ export default function LeagueManagementPage() {
                   )}
                 </div>
               </div>
+
+              {/* Discount Codes Summary */}
+              {league?.discountCodes && league.discountCodes.length > 0 && (
+                <div className="bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Active Promotions</h3>
+                    <button
+                      onClick={() => router.push(`/admin/leagues/${leagueId}/discounts`)}
+                      className="text-sm text-emerald-700 hover:text-emerald-800 font-medium"
+                    >
+                      View All →
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {league.discountCodes.filter(d => d.isActive).slice(0, 3).map((discount) => (
+                      <div key={discount.code} className="bg-white rounded-lg p-4 border border-emerald-100">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-mono font-bold text-sm text-gray-900">{discount.code}</span>
+                          <span className="px-2 py-0.5 bg-emerald-600 text-white text-xs rounded-full">
+                            {discount.discountPercentage}% OFF
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-600 mb-2">{discount.description}</p>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-500">
+                            Used: {discount.usedCount || 0}{discount.maxUses ? `/${discount.maxUses}` : ''}
+                          </span>
+                          <span className="text-gray-500">
+                            Until {new Date(discount.validUntil).toLocaleDateString('en', { month: 'short', day: 'numeric' })}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {league.discountCodes.filter(d => d.isActive).length > 3 && (
+                    <p className="text-xs text-gray-600 mt-3 text-center">
+                      + {league.discountCodes.filter(d => d.isActive).length - 3} more active codes
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

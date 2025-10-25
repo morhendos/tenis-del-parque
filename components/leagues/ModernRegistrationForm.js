@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
 const skillLevelNames = {
@@ -33,6 +33,65 @@ export default function ModernRegistrationForm({
     level: league.skillLevel !== 'all' ? league.skillLevel : '',
     password: ''
   })
+  
+  // Discount code state
+  const [discountCode, setDiscountCode] = useState('')
+  const [discountValidation, setDiscountValidation] = useState(null)
+  const [isValidatingDiscount, setIsValidatingDiscount] = useState(false)
+  const [showDiscountInput, setShowDiscountInput] = useState(false)
+
+  // Check URL parameters for discount code on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      const urlDiscount = urlParams.get('discount')
+      if (urlDiscount) {
+        setDiscountCode(urlDiscount.toUpperCase())
+        setShowDiscountInput(true)
+        validateDiscount(urlDiscount)
+      }
+    }
+  }, [])
+
+  // Validate discount code
+  const validateDiscount = async (code) => {
+    if (!code || code.trim() === '') {
+      setDiscountValidation(null)
+      return
+    }
+    
+    setIsValidatingDiscount(true)
+    try {
+      const res = await fetch(`/api/leagues/${league.slug}/discount/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: code.toUpperCase() })
+      })
+      const data = await res.json()
+      setDiscountValidation(data)
+    } catch (error) {
+      console.error('Error validating discount:', error)
+      setDiscountValidation({ 
+        valid: false, 
+        error: locale === 'es' ? 'Error al validar el código' : 'Failed to validate code' 
+      })
+    } finally {
+      setIsValidatingDiscount(false)
+    }
+  }
+
+  const handleDiscountCodeChange = (e) => {
+    const code = e.target.value.toUpperCase()
+    setDiscountCode(code)
+    // Clear validation when user changes the code
+    if (discountValidation) {
+      setDiscountValidation(null)
+    }
+  }
+
+  const handleApplyDiscount = () => {
+    validateDiscount(discountCode)
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -41,7 +100,12 @@ export default function ModernRegistrationForm({
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    onSubmit(formData, hasAccount)
+    // Include discount code in submission if validated
+    const submissionData = {
+      ...formData,
+      discountCode: discountValidation?.valid ? discountCode : null
+    }
+    onSubmit(submissionData, hasAccount)
   }
 
   // Determine if we need to ask for level
@@ -89,13 +153,46 @@ export default function ModernRegistrationForm({
           </div>
           <div>
             <p className="text-sm text-gray-600">{locale === 'es' ? 'Precio' : 'Price'}</p>
-            <p className="font-semibold text-gray-900">
-              {league.seasonConfig?.price?.isFree 
-                ? (locale === 'es' ? 'Gratis' : 'Free')
-                : `€${league.seasonConfig?.price?.amount}`}
-            </p>
+            {discountValidation?.valid ? (
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-gray-400 line-through text-sm">
+                  €{discountValidation.originalPrice}
+                </p>
+                <p className="font-bold text-emerald-600 text-lg">
+                  €{discountValidation.finalPrice}
+                </p>
+              </div>
+            ) : (
+              <p className="font-semibold text-gray-900">
+                {league.seasonConfig?.price?.isFree 
+                  ? (locale === 'es' ? 'Gratis' : 'Free')
+                  : `€${league.seasonConfig?.price?.amount}`}
+              </p>
+            )}
           </div>
         </div>
+        
+        {/* Discount Success Banner */}
+        {discountValidation?.valid && (
+          <div className="mt-4 p-3 bg-emerald-50 border-2 border-emerald-200 rounded-xl">
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-emerald-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-emerald-900">
+                  {discountValidation.description || (locale === 'es' ? 'Descuento aplicado' : 'Discount applied')}
+                </p>
+                <p className="text-xs text-emerald-700 mt-0.5">
+                  {locale === 'es' 
+                    ? `Ahorras €${discountValidation.discountAmount} (${discountValidation.discountPercentage}% descuento)`
+                    : `You save €${discountValidation.discountAmount} (${discountValidation.discountPercentage}% off)`
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Account Toggle */}
@@ -322,6 +419,99 @@ export default function ModernRegistrationForm({
                 </p>
                 {errors.password && (
                   <p className="mt-2 text-sm text-red-600">{errors.password}</p>
+                )}
+              </div>
+
+              {/* Discount Code Section */}
+              <div>
+                {!showDiscountInput ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowDiscountInput(true)}
+                    className="text-emerald-600 hover:text-emerald-700 font-medium text-sm flex items-center gap-1"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    {locale === 'es' ? '¿Tienes un código de descuento?' : 'Have a discount code?'}
+                  </button>
+                ) : (
+                  <div>
+                    <label htmlFor="discountCode" className="block text-sm font-medium text-gray-700 mb-2">
+                      {locale === 'es' ? 'Código de Descuento' : 'Discount Code'}
+                      <span className="text-gray-500 font-normal ml-1">
+                        ({locale === 'es' ? 'Opcional' : 'Optional'})
+                      </span>
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        id="discountCode"
+                        name="discountCode"
+                        value={discountCode}
+                        onChange={handleDiscountCodeChange}
+                        className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all uppercase"
+                        placeholder={locale === 'es' ? 'VERANO2025' : 'SUMMER2025'}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleApplyDiscount}
+                        disabled={!discountCode || isValidatingDiscount}
+                        className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isValidatingDiscount ? (
+                          <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                        ) : (
+                          locale === 'es' ? 'Aplicar' : 'Apply'
+                        )}
+                      </button>
+                    </div>
+                    
+                    {/* Discount Validation Messages */}
+                    {discountValidation && (
+                      <div className={`mt-3 p-3 rounded-xl border-2 ${
+                        discountValidation.valid 
+                          ? 'bg-emerald-50 border-emerald-200' 
+                          : 'bg-red-50 border-red-200'
+                      }`}>
+                        {discountValidation.valid ? (
+                          <div className="flex items-start gap-2">
+                            <svg className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                            <div className="flex-1">
+                              <p className="text-emerald-900 font-semibold text-sm">
+                                {discountValidation.description}
+                              </p>
+                              <div className="mt-2 flex items-baseline gap-2">
+                                <span className="text-gray-500 line-through text-sm">
+                                  €{discountValidation.originalPrice}
+                                </span>
+                                <span className="text-emerald-700 font-bold text-lg">
+                                  €{discountValidation.finalPrice}
+                                </span>
+                                <span className="text-emerald-600 text-sm">
+                                  ({discountValidation.discountPercentage}% {locale === 'es' ? 'descuento' : 'off'})
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-start gap-2">
+                            <svg className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                            </svg>
+                            <p className="text-red-700 text-sm flex-1">
+                              {discountValidation.error || (locale === 'es' ? 'Código inválido o expirado' : 'Invalid or expired code')}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

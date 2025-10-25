@@ -26,12 +26,12 @@ export default function EmotionalHeroSection({ content, locale }) {
         <div className="particle particle-3 absolute bottom-40 left-[30%] w-2 h-2 bg-parque-yellow/20 rounded-full"></div>
       </div>
       
-      <div className="container mx-auto px-4 relative z-10 py-8 sm:py-12">
+      <div className="container mx-auto px-4 relative z-10 py-4 sm:py-6">
         <div className="text-center max-w-5xl mx-auto">
-          {/* Logo - RESPONSIVE SIZING */}
-          <div className="mb-6 sm:mb-8 md:mb-10 flex justify-center animate-fadeInUp">
+          {/* Logo - BALANCED SIZING */}
+          <div className="mb-4 sm:mb-5 flex justify-center animate-fadeInUp">
             <div 
-              className="relative w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 lg:w-[28rem] lg:h-[28rem] xl:w-[32rem] xl:h-[32rem] group cursor-pointer"
+              className="relative w-56 h-56 sm:w-64 sm:h-64 md:w-80 md:h-80 lg:w-96 lg:h-96 xl:w-[28rem] xl:h-[28rem] group cursor-pointer"
               onClick={() => {
                 // Scroll to show the bottom of hero section
                 const heroSection = document.querySelector('section')
@@ -49,32 +49,22 @@ export default function EmotionalHeroSection({ content, locale }) {
               <div className="absolute inset-0 bg-gradient-to-br from-parque-purple/30 via-transparent to-parque-green/30 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-all duration-700 transform group-hover:scale-105"></div>
               <div className="relative w-full h-full transform transition-all duration-500 ease-out group-hover:scale-105">
                 <Image
-                  src="/logo-01.webp"
+                  src="/logo-liga-costa-del-sol-big.webp"
                   alt="Tenis del Parque"
                   fill
                   className="object-contain drop-shadow-2xl"
                   priority
-                  sizes="(max-width: 640px) 256px, (max-width: 768px) 320px, (max-width: 1024px) 384px, (max-width: 1280px) 448px, 475px"
+                  sizes="(max-width: 640px) 224px, (max-width: 768px) 256px, (max-width: 1024px) 320px, (max-width: 1280px) 384px, 448px"
                 />
               </div>
             </div>
           </div>
           
-          {/* Title - BETTER MOBILE SIZING */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light text-parque-purple mb-4 sm:mb-6 animate-fadeInUp animation-delay-400">
-            {content.hero.title}
-          </h1>
-          
-          {/* Tagline - BETTER MOBILE SIZING */}
-          <p className="text-base sm:text-lg md:text-xl text-gray-700 max-w-3xl mx-auto font-light leading-relaxed animate-fadeInUp animation-delay-600 mb-6 sm:mb-8 md:mb-10 px-2">
-            {content.hero.subtitle}
-          </p>
-          
-          {/* Enhanced CTA - MOBILE OPTIMIZED */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fadeInUp animation-delay-800">
+          {/* Primary CTA - Directly under logo - COMPACT */}
+          <div className="mb-8 sm:mb-10 md:mb-12 animate-fadeInUp animation-delay-400">
             <a
               href="#cities"
-              className="inline-flex items-center bg-gradient-to-r from-parque-purple to-parque-purple/90 text-white px-6 py-3 sm:px-8 sm:py-4 md:px-10 md:py-5 rounded-full text-base sm:text-lg font-medium hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group relative min-h-[48px] touch-manipulation overflow-hidden"
+              className="inline-flex items-center bg-gradient-to-r from-parque-purple to-parque-purple/90 text-white px-6 py-3 sm:px-8 sm:py-4 md:px-10 md:py-4 rounded-full text-base sm:text-lg md:text-xl font-medium hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group relative min-h-[48px] touch-manipulation overflow-hidden"
             >
               <span className="relative z-10">{content.hero.cta.primary}</span>
               <svg className="w-4 h-4 sm:w-5 sm:h-5 ml-2 group-hover:translate-x-2 transition-transform relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -87,25 +77,35 @@ export default function EmotionalHeroSection({ content, locale }) {
                 <div className="absolute inset-0 rounded-full shimmer"></div>
               </div>
             </a>
-            
+          </div>
+          
+          {/* Title - After CTA - SMALLER */}
+          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-light text-parque-purple mb-3 sm:mb-4 animate-fadeInUp animation-delay-600 leading-tight">
+            {content.hero.title}
+          </h1>
+          
+          {/* Tagline - COMPACT */}
+          <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-700 max-w-3xl mx-auto font-light leading-snug animate-fadeInUp animation-delay-800 mb-5 sm:mb-6 px-4">
+            {content.hero.subtitle}
+          </p>
+          
+          {/* Secondary CTA as subtle text link - COMPACT */}
+          <div className="animate-fadeInUp animation-delay-1000 mb-6 sm:mb-8">
             <button
               onClick={scrollToFeatures}
-              className="inline-flex items-center border-2 border-parque-purple text-parque-purple px-6 py-3 sm:px-8 sm:py-4 md:px-10 md:py-5 rounded-full text-base sm:text-lg font-medium hover:bg-parque-purple/10 transform hover:-translate-y-1 transition-all duration-300 group min-h-[48px] touch-manipulation"
+              className="text-parque-purple text-sm sm:text-base font-medium hover:text-parque-purple/80 transition-colors group"
             >
-              <span>{content.hero.cta.secondary}</span>
+              <span className="border-b-2 border-parque-purple/30 group-hover:border-parque-purple/60 transition-colors pb-1">
+                {content.hero.cta.secondary}
+              </span>
             </button>
           </div>
           
-          {/* Description text below CTAs */}
-          <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto mt-8 sm:mt-12 animate-fadeInUp animation-delay-1000 px-4">
-            {content.hero.description}
-          </p>
-          
-          {/* Enhanced scroll indicator - MOBILE SIZED */}
-          <div className="mt-8 sm:mt-12 md:mt-16 lg:mt-20 flex justify-center">
+          {/* Enhanced scroll indicator - COMPACT */}
+          <div className="mt-4 sm:mt-6 flex justify-center">
             <button onClick={scrollToFeatures} className="relative inline-block group touch-manipulation">
               <div className="absolute inset-0 bg-parque-purple/20 rounded-full blur-lg animate-pulse scale-150"></div>
-              <div className="relative bg-white/80 backdrop-blur-sm rounded-full p-2 sm:p-3 animate-bounce cursor-pointer hover:bg-white transition-colors flex items-center justify-center">
+              <div className="relative bg-white/80 backdrop-blur-sm rounded-full p-2 animate-bounce cursor-pointer hover:bg-white transition-colors flex items-center justify-center">
                 <svg className="w-5 h-5 sm:w-6 sm:h-6 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                 </svg>

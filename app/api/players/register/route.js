@@ -21,7 +21,8 @@ export async function POST(request) {
       language = 'es',
       leagueId,
       leagueSlug,
-      password
+      password,
+      discountCode // NEW: Discount code support
     } = body
 
     // Basic validation
@@ -44,7 +45,7 @@ export async function POST(request) {
     } else if (leagueSlug) {
       league = await League.findOne({ 
         slug: leagueSlug, 
-        status: { $in: ['active', 'coming_soon'] } 
+        status: { $in: ['active', 'coming_soon', 'registration_open'] } 
       })
     } else {
       // Default to Sotogrande if no league specified
@@ -61,6 +62,34 @@ export async function POST(request) {
         },
         { status: 400 }
       )
+    }
+
+    // NEW: Process discount code if provided
+    let discountApplied = 0
+    let finalPrice = league.seasonConfig?.price?.amount || 0
+    let originalPrice = finalPrice
+    let validatedDiscountCode = null
+    
+    if (discountCode && discountCode.trim() !== '') {
+      const discount = league.discountCodes?.find(d => {
+        return d.code === discountCode.toUpperCase() &&
+               d.isActive &&
+               new Date() >= new Date(d.validFrom) &&
+               new Date() <= new Date(d.validUntil) &&
+               (d.maxUses === null || d.usedCount < d.maxUses)
+      })
+      
+      if (discount) {
+        discountApplied = discount.discountPercentage
+        const discountAmount = (originalPrice * discount.discountPercentage) / 100
+        finalPrice = originalPrice - discountAmount
+        validatedDiscountCode = discount.code
+        
+        console.log(`Discount code ${discount.code} applied: ${discountApplied}% off, final price: €${finalPrice}`)
+      } else {
+        console.log(`Invalid or expired discount code: ${discountCode}`)
+        // Don't fail registration, just ignore invalid code
+      }
     }
 
     // Get additional metadata
@@ -97,13 +126,41 @@ export async function POST(request) {
         )
       }
       
-      // Add new league registration to existing player
+      // Add new league registration to existing player with discount info
       try {
-        await player.addLeagueRegistration(
-          league._id, 
-          level, 
-          league.status === 'coming_soon' ? 'waiting' : 'pending'
+        // Create registration object with discount tracking
+        const newRegistration = {
+          league: league._id,
+          level: level,
+          status: league.status === 'coming_soon' ? 'waiting' : 'pending',
+          stats: {},
+          // NEW: Discount tracking
+          discountCode: validatedDiscountCode,
+          discountApplied: discountApplied,
+          originalPrice: originalPrice,
+          finalPrice: finalPrice,
+          paymentStatus: finalPrice === 0 ? 'waived' : 'pending'
+        }
+        
+        // Check if already registered for this league (shouldn't happen, but double-check)
+        const existingReg = player.registrations.find(reg => 
+          reg.league.toString() === league._id.toString()
         )
+        
+        if (existingReg) {
+          return Response.json(
+            { 
+              success: false, 
+              error: language === 'es'
+                ? 'Ya estás registrado en esta liga'
+                : 'You are already registered for this league'
+            },
+            { status: 409 }
+          )
+        }
+        
+        player.registrations.push(newRegistration)
+        await player.save()
         
         console.log(`Existing player ${email} registered for new league: ${league.name}`)
         
@@ -141,7 +198,13 @@ export async function POST(request) {
           league: league._id,
           level: level,
           status: league.status === 'coming_soon' ? 'waiting' : 'pending',
-          stats: {}
+          stats: {},
+          // NEW: Discount tracking
+          discountCode: validatedDiscountCode,
+          discountApplied: discountApplied,
+          originalPrice: originalPrice,
+          finalPrice: finalPrice,
+          paymentStatus: finalPrice === 0 ? 'waived' : 'pending'
         }],
         preferences: {
           preferredLanguage: language
@@ -156,6 +219,26 @@ export async function POST(request) {
       // Save new player
       await player.save()
       console.log(`New player ${email} registered for league: ${league.name}`)
+    }
+
+    // NEW: Track discount code usage if it was applied
+    if (validatedDiscountCode) {
+      const discountIndex = league.discountCodes.findIndex(d => d.code === validatedDiscountCode)
+      
+      if (discountIndex !== -1) {
+        // Increment usage count
+        league.discountCodes[discountIndex].usedCount += 1
+        
+        // Add to usedBy array
+        league.discountCodes[discountIndex].usedBy.push({
+          playerId: player._id,
+          email: email.toLowerCase(),
+          usedAt: new Date()
+        })
+        
+        await league.save()
+        console.log(`Tracked discount code usage: ${validatedDiscountCode} now used ${league.discountCodes[discountIndex].usedCount} times`)
+      }
     }
 
     // Create or update user account if needed
@@ -244,7 +327,7 @@ export async function POST(request) {
       })
     } else {
       await League.findByIdAndUpdate(league._id, {
-        $inc: { 'stats.totalPlayers': 1 }
+        $inc: { 'stats.totalPlayers': 1, 'stats.registeredPlayers': 1 }
       })
     }
 
@@ -266,7 +349,12 @@ export async function POST(request) {
           language: language || 'es',
           hasUserAccount: hasUserAccount,
           activationLink: activationLink, // Will be null if user already has verified account
-          isExistingPlayer: !isNewPlayer
+          isExistingPlayer: !isNewPlayer,
+          // NEW: Include discount info in email
+          discountCode: validatedDiscountCode,
+          discountApplied: discountApplied,
+          originalPrice: originalPrice,
+          finalPrice: finalPrice
         },
         {
           leagueName: league.name,
@@ -320,7 +408,7 @@ export async function POST(request) {
         : 'Registration successful! Check your email to activate your account.'
     }
 
-    // Return success response with account info
+    // Return success response with account info and discount details
     const whatsappGroupInfo = league.getWhatsAppGroupInfo ? league.getWhatsAppGroupInfo() : null
     
     return Response.json(
@@ -331,6 +419,15 @@ export async function POST(request) {
         isExistingUser,
         hasUserAccount,
         hasActivationLink: !!activationLink,
+        // NEW: Include discount info in response
+        discount: validatedDiscountCode ? {
+          code: validatedDiscountCode,
+          percentage: discountApplied,
+          originalPrice: originalPrice,
+          discount: originalPrice - finalPrice,
+          finalPrice: finalPrice,
+          saved: originalPrice - finalPrice
+        } : null,
         player: {
           id: player._id,
           name: player.name,
@@ -339,7 +436,10 @@ export async function POST(request) {
           currentRegistration: {
             level: registration.level,
             status: registration.status,
-            registeredAt: registration.registeredAt
+            registeredAt: registration.registeredAt,
+            // NEW: Include payment info
+            paymentStatus: registration.paymentStatus,
+            finalPrice: registration.finalPrice
           },
           league: {
             id: league._id,
@@ -411,7 +511,7 @@ export async function GET() {
     await dbConnect()
     
     // Get stats for all leagues
-    const leagues = await League.find({ status: { $in: ['active', 'coming_soon'] } })
+    const leagues = await League.find({ status: { $in: ['active', 'coming_soon', 'registration_open'] } })
     const stats = {}
     
     for (const league of leagues) {
@@ -429,13 +529,22 @@ export async function GET() {
       // Get WhatsApp group info if available
       const whatsappGroupInfo = league.getWhatsAppGroupInfo ? league.getWhatsAppGroupInfo() : null
       
+      // NEW: Get discount code stats
+      const discountStats = league.discountCodes?.map(d => ({
+        code: d.code,
+        usedCount: d.usedCount || 0,
+        maxUses: d.maxUses,
+        isActive: d.isActive
+      })) || []
+      
       stats[league.slug] = {
         name: league.name,
         status: league.status,
         totalPlayers: league.status === 'active' ? playerCount : 0,
         waitingList: league.status === 'coming_soon' ? playerCount : 0,
         playersWithAccounts,
-        hasWhatsAppGroup: !!whatsappGroupInfo
+        hasWhatsAppGroup: !!whatsappGroupInfo,
+        discountCodes: discountStats
       }
     }
     
@@ -465,7 +574,7 @@ export async function GET() {
         contactEmail: 'info@tenisdp.es',
         contactPhone: '+34 652 714 328',
         website: 'tenisdp.es',
-        features: ['automatic_account_creation', 'instant_activation_links', 'welcome_emails']
+        features: ['automatic_account_creation', 'instant_activation_links', 'welcome_emails', 'discount_codes']
       }
     })
   } catch (error) {
