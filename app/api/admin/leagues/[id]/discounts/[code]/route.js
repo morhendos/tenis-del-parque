@@ -1,15 +1,13 @@
 import dbConnect from '@/lib/db/mongoose'
 import League from '@/lib/models/League'
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
+import { requireAdmin } from '@/lib/auth/apiAuth'
 
 export async function PATCH(request, { params }) {
   try {
     // Check admin authentication
-    const session = await getServerSession()
-    if (!session || session.user?.role !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { session, error } = await requireAdmin(request)
+    if (error) return error
 
     await dbConnect()
     
@@ -46,10 +44,8 @@ export async function PATCH(request, { params }) {
 export async function DELETE(request, { params }) {
   try {
     // Check admin authentication
-    const session = await getServerSession()
-    if (!session || session.user?.role !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { session, error } = await requireAdmin(request)
+    if (error) return error
 
     await dbConnect()
     
