@@ -358,7 +358,7 @@ export default function DiscountManagementPage() {
                         <span className={`px-3 py-1 text-xs font-medium rounded-full ${
                           discount.isActive 
                             ? 'bg-green-100 text-green-800' 
-                            : 'bg-gray-100 text-gray-800'
+                            : 'bg-red-100 text-red-800'
                         }`}>
                           {discount.isActive ? 'Active' : 'Inactive'}
                         </span>
@@ -416,8 +416,8 @@ export default function DiscountManagementPage() {
                         onClick={() => toggleDiscountStatus(discount.code)}
                         className={`px-3 py-1 text-sm rounded-lg transition-colors ${
                           discount.isActive 
-                            ? 'bg-red-100 text-red-700 hover:bg-red-200' 
-                            : 'bg-green-100 text-green-700 hover:bg-green-200'
+                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' 
+                            : 'bg-red-100 text-red-700 hover:bg-red-200'
                         }`}
                       >
                         {discount.isActive ? 'Deactivate' : 'Activate'}
