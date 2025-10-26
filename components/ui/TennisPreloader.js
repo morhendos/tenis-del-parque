@@ -82,15 +82,17 @@ export function TennisPreloaderFullScreen({ text, locale = 'en' }) {
   )
 }
 
-export function TennisPreloaderInline({ size = 'md', text, locale = 'en' }) {
+export function TennisPreloaderInline({ size = 'md', text, locale = 'en', className = '' }) {
   return (
-    <TennisPreloader 
-      size={size}
-      fullScreen={false}
-      text={text}
-      locale={locale}
-      className="py-8"
-    />
+    <div className="flex items-center justify-center" style={{ minHeight: 'calc(100vh - 250px)' }}>
+      <TennisPreloader 
+        size={size}
+        fullScreen={false}
+        text={text}
+        locale={locale}
+        className={className}
+      />
+    </div>
   )
 }
 

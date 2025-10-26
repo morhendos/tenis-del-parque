@@ -14,10 +14,9 @@ import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
 
 export default function PlayerLeague() {
   const [activeTab, setActiveTab] = useState(LEAGUE_TABS.STANDINGS)
-  console.log('Current active tab:', activeTab) // Debug log
   const [playoffData, setPlayoffData] = useState(null)
   const [loadingPlayoffs, setLoadingPlayoffs] = useState(false)
-  const { standings, matches, schedule, loading, error, player, refetch } = useLeagueData()
+  const { standings, matches, schedule, loading, error, player, currentLeague, allRegistrations, refetch } = useLeagueData()
   const router = useRouter()
   const params = useParams()
   const searchParams = useSearchParams()
@@ -30,7 +29,7 @@ export default function PlayerLeague() {
   // Function to get season display name
   const getSeasonDisplayName = () => {
     // If league has season information, use it to create a proper name
-    if (player?.league?.season) {
+    if (currentLeague?.season) {
       const seasonNames = {
         es: {
           spring: 'Primavera',
@@ -48,7 +47,7 @@ export default function PlayerLeague() {
         }
       }
       
-      const season = player.league.season
+      const season = currentLeague.season
       const seasonType = season.type || 'summer'
       const seasonYear = season.year || 2025
       
@@ -56,61 +55,31 @@ export default function PlayerLeague() {
       return `${localizedSeasonName} ${seasonYear}`
     }
     
-    // Fallback: If we have a string that looks like a season name, use it
-    if (player?.season && typeof player.season === 'string') {
-      // Check if it's an ObjectId (24 hex characters) or a proper season name
-      if (/^[0-9a-f]{24}$/i.test(player.season)) {
-        // It's an ObjectId, show a default season
-        return language === 'es' ? 'Verano 2025' : 'Summer 2025'
-      }
-      // It might be a proper season name, return it
-      return player.season
-    }
-    
     // Default fallback
-    return language === 'es' ? 'Temporada Actual' : 'Current Season'
+    return language === 'es' ? 'Temporada 2025' : 'Season 2025'
   }
 
   // Handle tab query parameter
   useEffect(() => {
     const tabParam = searchParams.get('tab')
-    console.log('Tab param from URL:', tabParam) // Debug log
-    console.log('Available tabs:', Object.values(LEAGUE_TABS)) // Debug log
-    console.log('Current URL:', window.location.href) // Debug log
-    
     if (tabParam && Object.values(LEAGUE_TABS).includes(tabParam)) {
-      console.log('Setting active tab to:', tabParam) // Debug log
       setActiveTab(tabParam)
-    } else if (tabParam) {
-      console.log('Invalid tab param:', tabParam) // Debug log
     }
   }, [searchParams])
 
-  // Also check on mount in case useSearchParams has issues
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search)
-    const tabParam = urlParams.get('tab')
-    console.log('Tab param from window.location:', tabParam) // Debug log
-    
-    if (tabParam && Object.values(LEAGUE_TABS).includes(tabParam)) {
-      console.log('Setting active tab from window.location to:', tabParam) // Debug log
-      setActiveTab(tabParam)
-    }
-  }, [])
-
   // Fetch playoff data when playoffs tab is selected
   useEffect(() => {
-    if (activeTab === LEAGUE_TABS.PLAYOFFS && player?.league?.slug && !playoffData) {
+    if (activeTab === LEAGUE_TABS.PLAYOFFS && currentLeague?.slug && !playoffData) {
       fetchPlayoffData()
     }
-  }, [activeTab, player?.league?.slug])
+  }, [activeTab, currentLeague?.slug])
 
   const fetchPlayoffData = async () => {
-    if (!player?.league?.slug) return
+    if (!currentLeague?.slug) return
     
     setLoadingPlayoffs(true)
     try {
-      const response = await fetch(`/api/leagues/${player.league.slug}/playoffs`)
+      const response = await fetch(`/api/leagues/${currentLeague.slug}/playoffs`)
       const data = await response.json()
       
       if (data.success) {
@@ -123,15 +92,24 @@ export default function PlayerLeague() {
     }
   }
 
+  // Handle league change
+  const handleLeagueChange = (leagueId) => {
+    // Update URL with new leagueId
+    const url = new URL(window.location.href)
+    url.searchParams.set('leagueId', leagueId)
+    if (searchParams.get('tab')) {
+      url.searchParams.set('tab', searchParams.get('tab'))
+    }
+    router.push(url.pathname + url.search)
+  }
+
   // Show loading until data is loaded
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <TennisPreloaderInline 
-          text={language === 'es' ? 'Cargando datos de la liga...' : 'Loading league data...'}
-          locale={language}
-        />
-      </div>
+      <TennisPreloaderInline 
+        text={language === 'es' ? 'Cargando datos de la liga...' : 'Loading league data...'}
+        locale={language}
+      />
     )
   }
 
@@ -164,7 +142,7 @@ export default function PlayerLeague() {
     )
   }
 
-  if (!player?.league) {
+  if (!currentLeague) {
     return (
       <div className="text-center py-12">
         <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
@@ -192,18 +170,72 @@ export default function PlayerLeague() {
 
   return (
     <div className="space-y-6">
+      {/* League Selector (if multiple leagues) */}
+      {allRegistrations && allRegistrations.length > 1 && (
+        <div className="bg-white rounded-xl shadow-md p-4">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm text-gray-600 font-medium flex items-center gap-2">
+              <svg className="w-4 h-4 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              {language === 'es' ? 'Seleccionar Liga:' : 'Select League:'}
+            </p>
+            <span className="text-xs text-gray-500">
+              {language === 'es' 
+                ? `${allRegistrations.length} ligas disponibles` 
+                : `${allRegistrations.length} leagues available`}
+            </span>
+          </div>
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 pt-1 px-1">
+            {allRegistrations.map((registration) => (
+              <button
+                key={registration._id}
+                onClick={() => handleLeagueChange(registration.league._id)}
+                className={`flex-shrink-0 px-4 py-2.5 rounded-xl font-medium text-sm transition-all ${
+                  currentLeague._id === registration.league._id
+                    ? 'bg-gradient-to-r from-parque-purple to-purple-700 text-white shadow-lg transform scale-105'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <div className="flex flex-col items-start">
+                  <span className="font-semibold">{registration.league.name}</span>
+                  {registration.league.location?.city && (
+                    <span className="text-xs opacity-75 mt-0.5 flex items-center gap-1">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      {registration.league.location.city}
+                    </span>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* League Header */}
       <div className="bg-gradient-to-r from-parque-purple via-purple-600 to-indigo-600 rounded-xl shadow-lg overflow-hidden">
         <div className="px-6 py-8 sm:px-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center space-x-4">
               <div>
-                <h1 className="text-3xl font-bold text-white">{player.league.name}</h1>
+                <h1 className="text-3xl font-bold text-white">{currentLeague.name}</h1>
+                {currentLeague.location?.city && (
+                  <p className="text-purple-200 text-sm mt-0.5 flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {currentLeague.location.city}
+                  </p>
+                )}
                 <p className="text-purple-100 mt-1">
                   {language === 'es' ? 'Temporada' : 'Season'}: {getSeasonDisplayName()}
                 </p>
                 <p className="text-purple-200 text-sm mt-1">
-                  {language === 'es' ? 'Tu ELO' : 'Your ELO'}: {player.eloRating || 1200}
+                  {language === 'es' ? 'Tu ELO' : 'Your ELO'}: {player?.eloRating || 1200}
                 </p>
               </div>
             </div>
@@ -263,12 +295,10 @@ export default function PlayerLeague() {
           
           {activeTab === LEAGUE_TABS.PLAYOFFS && (
             loadingPlayoffs ? (
-              <div className="flex items-center justify-center min-h-[400px]">
-                <TennisPreloaderInline 
-                  text={language === 'es' ? 'Cargando playoffs...' : 'Loading playoffs...'}
-                  locale={language}
-                />
-              </div>
+              <TennisPreloaderInline 
+                text={language === 'es' ? 'Cargando playoffs...' : 'Loading playoffs...'}
+                locale={language}
+              />
             ) : (
               <PlayoffsTab
                 playoffConfig={playoffData?.playoffConfig}

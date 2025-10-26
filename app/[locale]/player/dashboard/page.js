@@ -10,7 +10,7 @@ import AnnouncementModal from '@/components/ui/AnnouncementModal'
 import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
 import DashboardHeader from '@/components/player/DashboardHeader'
 import StatsCards from '@/components/player/StatsCards'
-import LeagueCard from '@/components/player/LeagueCard'
+import MultiLeagueCard from '@/components/player/MultiLeagueCard'
 import { RecentMatches, UpcomingMatches } from '@/components/player/MatchActivity'
 import QuickActions from '@/components/player/QuickActions'
 import { dashboardStyles } from '@/styles/dashboard'
@@ -38,7 +38,6 @@ export default function PlayerDashboard() {
       <TennisPreloaderInline 
         size="lg" 
         locale={language}
-        className="min-h-[400px]" 
       />
     )
   }
@@ -85,8 +84,8 @@ export default function PlayerDashboard() {
         {/* Stats Cards */}
         <StatsCards player={player} language={language} />
 
-        {/* League Card */}
-        <LeagueCard player={player} language={language} />
+        {/* League Cards - Now supports multiple leagues */}
+        <MultiLeagueCard player={player} language={language} />
 
         {/* Recent Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">

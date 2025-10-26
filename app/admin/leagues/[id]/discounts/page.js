@@ -24,11 +24,6 @@ export default function DiscountManagementPage() {
     isActive: true
   })
 
-  // Fetch league and discounts
-  useEffect(() => {
-    fetchLeagueData()
-  }, [id])
-
   const fetchLeagueData = async () => {
     try {
       setLoading(true)
@@ -48,6 +43,12 @@ export default function DiscountManagementPage() {
       setLoading(false)
     }
   }
+
+  // Fetch league and discounts
+  useEffect(() => {
+    fetchLeagueData()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
 
   const handleAddDiscount = async (e) => {
     e.preventDefault()
@@ -345,7 +346,7 @@ export default function DiscountManagementPage() {
             <div className="text-center py-12">
               <TrendingUp className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-500 text-lg">No discount codes created yet</p>
-              <p className="text-gray-400 text-sm mt-2">Click "Add Discount Code" to create your first promotional code</p>
+              <p className="text-gray-400 text-sm mt-2">Click &ldquo;Add Discount Code&rdquo; to create your first promotional code</p>
             </div>
           ) : (
             <div className="space-y-4">

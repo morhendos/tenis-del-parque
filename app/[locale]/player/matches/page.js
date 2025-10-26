@@ -26,6 +26,7 @@ export default function PlayerMatches() {
   const [showResultCard, setShowResultCard] = useState(false)
   const [submittedMatch, setSubmittedMatch] = useState(null)
   const [isWinner, setIsWinner] = useState(false)
+  const [selectedLeagueId, setSelectedLeagueId] = useState(null) // For multi-league filtering
   const router = useRouter()
 
   useEffect(() => {
@@ -217,8 +218,17 @@ export default function PlayerMatches() {
     }
   }
 
-  const upcomingMatches = matches.filter(m => m.status === 'scheduled' && !m.result?.winner)
-  const completedMatches = matches.filter(m => m.status === 'completed' || m.result?.winner)
+  // Detect if player has multiple leagues
+  const hasMultipleLeagues = player?.registrations?.length > 1
+  const playerLeagues = player?.registrations?.map(reg => reg.league) || []
+  
+  // Filter matches by selected league (only if multi-league)
+  const filteredMatches = hasMultipleLeagues && selectedLeagueId
+    ? matches.filter(m => m.league?._id === selectedLeagueId)
+    : matches
+  
+  const upcomingMatches = filteredMatches.filter(m => m.status === 'scheduled' && !m.result?.winner)
+  const completedMatches = filteredMatches.filter(m => m.status === 'completed' || m.result?.winner)
 
   const tabs = [
     { id: 'upcoming', label: locale === 'es' ? 'Próximos' : 'Upcoming', count: upcomingMatches.length },
@@ -227,12 +237,10 @@ export default function PlayerMatches() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <TennisPreloaderInline 
-          text={locale === 'es' ? 'Cargando partidos...' : 'Loading matches...'}
-          locale={locale}
-        />
-      </div>
+      <TennisPreloaderInline 
+        text={locale === 'es' ? 'Cargando partidos...' : 'Loading matches...'}
+        locale={locale}
+      />
     )
   }
 
@@ -302,6 +310,56 @@ export default function PlayerMatches() {
           </div>
         </div>
 
+        {/* League Selector - ONLY shown for multi-league players */}
+        {hasMultipleLeagues && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                <svg className="w-4 h-4 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                {locale === 'es' ? 'Filtrar por Liga:' : 'Filter by League:'}
+              </h3>
+              {selectedLeagueId && (
+                <button
+                  onClick={() => setSelectedLeagueId(null)}
+                  className="text-xs text-parque-purple hover:text-purple-700 font-medium"
+                >
+                  {locale === 'es' ? 'Ver todas' : 'Show all'}
+                </button>
+              )}
+            </div>
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 pt-1 px-1">
+              {playerLeagues.map((league) => (
+                <button
+                  key={league._id}
+                  onClick={() => setSelectedLeagueId(
+                    selectedLeagueId === league._id ? null : league._id
+                  )}
+                  className={`flex-shrink-0 px-4 py-2.5 rounded-xl font-medium text-sm transition-all ${
+                    selectedLeagueId === league._id
+                      ? 'bg-gradient-to-r from-parque-purple to-purple-700 text-white shadow-md transform scale-105'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <div className="flex flex-col items-start">
+                    <span className="font-semibold">{league.name}</span>
+                    {league.location?.city && (
+                      <span className="text-xs opacity-75 mt-0.5 flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        {league.location.city}
+                      </span>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Filter Tabs - Touch Optimized */}
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
           <nav className="flex">
@@ -348,6 +406,7 @@ export default function PlayerMatches() {
                   onWhatsApp={handleWhatsApp}
                   isUpcoming={true}
                   showActions={true}
+                  showLeagueBadge={hasMultipleLeagues} // Only show league badge if multiple leagues
                   className="animate-fade-in-up"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 />
@@ -379,6 +438,7 @@ export default function PlayerMatches() {
                   language={locale}
                   isUpcoming={false}
                   showActions={false}
+                  showLeagueBadge={hasMultipleLeagues} // Only show league badge if multiple leagues
                   className="animate-fade-in-up"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 />

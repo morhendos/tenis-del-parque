@@ -14,8 +14,9 @@ export async function GET(request) {
 
     await dbConnect()
 
-    // Get player details
+    // Get player details with registrations populated
     const player = await Player.findOne({ email: session.user.email })
+      .populate('registrations.league', 'name slug location')
     if (!player) {
       return NextResponse.json({ matches: [] })
     }
@@ -29,13 +30,15 @@ export async function GET(request) {
     })
     .populate('players.player1', 'name email whatsapp')
     .populate('players.player2', 'name email whatsapp')
+    .populate('league', 'name slug location') // Add league data with location object for multi-league support
     .sort('-createdAt')
 
     return NextResponse.json({ 
       matches: matches || [],
       player: {
         _id: player._id,
-        name: player.name
+        name: player.name,
+        registrations: player.registrations || [] // Include registrations for multi-league support
       }
     })
   } catch (error) {

@@ -1,6 +1,14 @@
 import Link from 'next/link'
+import { useParams } from 'next/navigation'
 
 export default function DashboardHeader({ player, language }) {
+  const params = useParams()
+  const locale = params?.locale || 'es'
+  
+  // Count leagues if player has registrations
+  const leagueCount = player?.registrations?.length || 0
+  const isMultiLeague = leagueCount > 1
+  
   return (
     <div className="relative overflow-hidden bg-gradient-to-br from-parque-purple via-purple-600 to-purple-700 rounded-2xl text-white p-6 sm:p-8 shadow-xl">
       {/* Background Pattern */}
@@ -23,25 +31,36 @@ export default function DashboardHeader({ player, language }) {
                 ? 'Tu centro de control personal de tenis'
                 : 'Your personal tennis command center'}
             </p>
+            {/* Multi-league badge */}
+            {isMultiLeague && (
+              <div className="mt-3 inline-flex items-center px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-full text-xs font-medium border border-white/30">
+                <span className="mr-1.5">🏆</span>
+                {language === 'es' 
+                  ? `${leagueCount} Ligas Activas` 
+                  : `${leagueCount} Active Leagues`}
+              </div>
+            )}
           </div>
           <div className="flex flex-col sm:flex-row gap-3 animate-slide-in-right">
             <Link
-              href="/player/matches"
+              href={`/${locale}/player/matches`}
               className="inline-flex items-center justify-center px-5 py-3 bg-white/20 backdrop-blur-sm border border-white/30 text-white rounded-xl hover:bg-white/30 transition-all transform hover:scale-105 active:scale-95 text-sm font-medium shadow-lg"
             >
               <span className="mr-2 text-lg">🎾</span>
               {language === 'es' ? 'Mis Partidos' : 'My Matches'}
             </Link>
             <Link
-              href="/player/league"
+              href={`/${locale}/player/league`}
               className="inline-flex items-center justify-center px-5 py-3 bg-white text-parque-purple rounded-xl hover:bg-purple-50 transition-all transform hover:scale-105 active:scale-95 text-sm font-medium shadow-lg"
             >
               <span className="mr-2 text-lg">🏆</span>
-              {language === 'es' ? 'Ver Liga' : 'View League'}
+              {isMultiLeague 
+                ? (language === 'es' ? 'Mis Ligas' : 'My Leagues')
+                : (language === 'es' ? 'Ver Liga' : 'View League')}
             </Link>
           </div>
         </div>
       </div>
     </div>
   )
-} 
+}

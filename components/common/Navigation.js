@@ -140,11 +140,11 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
             <div className="flex items-center">
               <div className="group flex items-center space-x-2">
                 <Image
-                  src="/horizontal-logo-002.webp"
+                  src="/horizontal-logo-006.webp"
                   alt="Tenis del Parque"
-                  height={48}
-                  width={200}
-                  className="h-12 w-auto"
+                  height={36}
+                  width={150}
+                  className="h-9 w-auto"
                   priority
                   quality={100}
                 />
@@ -212,9 +212,9 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
                 <Image
                   src="/horizontal-logo-006.webp"
                   alt="Tenis del Parque"
-                  height={48}
-                  width={200}
-                  className="h-12 w-auto"
+                  height={36}
+                  width={150}
+                  className="h-9 w-auto"
                   priority
                   quality={100}
                 />

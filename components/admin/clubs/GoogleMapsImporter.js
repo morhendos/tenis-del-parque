@@ -543,12 +543,11 @@ export default function GoogleMapsImporter({ onClose, onImportComplete }) {
 
   // 🎾 UPDATED: Render importing step with standardized tennis preloader
   const renderImportingStep = () => (
-    <div className="text-center py-8">
+    <div className="text-center">
       <TennisPreloaderInline 
         size="xl" 
         text="Importing clubs..."
         locale="en"
-        className="py-8"
       />
       <div className="w-full max-w-xs mx-auto bg-gray-200 rounded-full h-2.5 mt-6">
         <div 
