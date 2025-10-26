@@ -301,13 +301,13 @@ export default function PlayerLayout({ children }) {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0 lg:ml-72">
-        {/* Enhanced Top bar */}
-        <div className="sticky top-0 z-40 bg-white shadow-sm border-b border-gray-200">
-          <div className="flex items-center justify-between h-16 px-4 md:px-6">
+        {/* Mobile-only Top bar */}
+        <div className="sticky top-0 z-40 bg-white shadow-sm border-b border-gray-200 lg:hidden">
+          <div className="flex items-center justify-between h-16 px-4">
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="lg:hidden text-gray-600 hover:text-gray-900 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                className="text-gray-600 hover:text-gray-900 p-2 rounded-lg hover:bg-gray-100 transition-colors"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -315,7 +315,7 @@ export default function PlayerLayout({ children }) {
               </button>
               
               <div>
-                <h1 className="text-lg md:text-xl font-bold text-gray-900">
+                <h1 className="text-lg font-bold text-gray-900">
                   {pathname.includes('messages') ? 
                     (locale === 'es' ? 'Mensajes' : 'Messages') :
                    pathname.includes('matches') ? 
@@ -328,23 +328,21 @@ export default function PlayerLayout({ children }) {
                     (locale === 'es' ? 'Reglas' : 'Rules') :
                    'Dashboard'}
                 </h1>
-                <p className="text-xs md:text-sm text-gray-500 hidden sm:block">
+                <p className="text-xs text-gray-500">
                   {pathname.includes('messages') ? 
-                    (locale === 'es' ? 'Anuncios y comunicaciones importantes' : 'Important announcements and communications') :
+                    (locale === 'es' ? 'Anuncios importantes' : 'Important announcements') :
                    pathname.includes('matches') ? 
-                    (locale === 'es' ? 'Historial y calendario de partidos' : 'Match history and schedule') :
+                    (locale === 'es' ? 'Historial de partidos' : 'Match history') :
                    pathname.includes('profile') ? 
-                    (locale === 'es' ? 'Configuración de cuenta' : 'Account settings') :
+                    (locale === 'es' ? 'Configuración' : 'Settings') :
                    pathname.includes('league') ? 
-                    (locale === 'es' ? 'Clasificación y resultados' : 'Standings and results') :
+                    (locale === 'es' ? 'Clasificación' : 'Standings') :
                    pathname.includes('rules') ? 
                     (locale === 'es' ? 'Reglas de la liga' : 'League rules') :
-                    (locale === 'es' ? 'Vista general de tu actividad' : 'Overview of your activity')}
+                    (locale === 'es' ? 'Vista general' : 'Overview')}
                 </p>
               </div>
             </div>
-            
-
           </div>
         </div>
 

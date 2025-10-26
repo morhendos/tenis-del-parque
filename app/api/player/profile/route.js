@@ -50,12 +50,23 @@ export async function GET(request) {
         email: player.email,
         phone: player.whatsapp, // Map whatsapp field to phone for frontend
         whatsapp: player.whatsapp,
+        // Global ELO rating
+        eloRating: player.eloRating || 1200,
+        highestElo: player.highestElo || player.eloRating || 1200,
+        lowestElo: player.lowestElo || player.eloRating || 1200,
         // Use data from active registration for backward compatibility
         level: activeRegistration?.level || 'intermediate',
         league: activeRegistration?.league || null,
         season: activeRegistration?.season || null,
         status: activeRegistration?.status || 'active',
-        stats: activeRegistration?.stats || {},
+        stats: {
+          // Global ELO (not from registration)
+          eloRating: player.eloRating || 1200,
+          // These will be calculated from matches in the frontend
+          matchesPlayed: 0,
+          matchesWon: 0,
+          totalPoints: 0
+        },
         wildCards: activeRegistration?.wildCards || { total: 3, used: 0, history: [] },
         emergencyContact: player.emergencyContact,
         registeredAt: activeRegistration?.registeredAt || player.createdAt,
