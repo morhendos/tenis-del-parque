@@ -155,16 +155,16 @@ export default function MultiLeagueCard({ player, language }) {
 
       {/* League Selector Tabs (if multiple leagues) */}
       {registrations.length > 1 && (
-        <div className="border-b border-gray-200">
-          <div className="flex overflow-x-auto scrollbar-hide px-4 py-2 gap-2">
+        <div className="border-b border-gray-200 bg-gray-50">
+          <div className="flex overflow-x-auto scrollbar-hide px-6 gap-1">
             {registrations.map((reg, index) => (
               <button
                 key={reg._id || index}
                 onClick={() => setSelectedLeague(index)}
-                className={`flex-shrink-0 px-4 py-2 rounded-xl font-medium text-sm transition-all ${
+                className={`relative flex-shrink-0 px-4 py-3 font-medium text-sm transition-all ${
                   selectedLeague === index
-                    ? 'bg-gradient-to-r from-parque-purple to-purple-700 text-white shadow-md'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'text-emerald-700'
+                    : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
                 <div className="flex flex-col items-start">
@@ -179,6 +179,10 @@ export default function MultiLeagueCard({ player, language }) {
                     </span>
                   )}
                 </div>
+                {/* Active indicator bar */}
+                {selectedLeague === index && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-green-500 to-emerald-600 rounded-t-full" />
+                )}
               </button>
             ))}
           </div>
@@ -215,10 +219,10 @@ export default function MultiLeagueCard({ player, language }) {
               
               {/* Stats Pills */}
               <div className="flex flex-wrap gap-2 mt-2">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800">
                   ELO: {player.eloRating || 1200}
                 </span>
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-green-100 to-emerald-100 text-green-800">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800">
                   {language === 'es' ? 'Nivel' : 'Level'}: {getLevelDisplayName(currentRegistration.level)}
                 </span>
                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(currentRegistration.status).color}`}>
@@ -256,7 +260,7 @@ export default function MultiLeagueCard({ player, language }) {
             </Link>
             <Link
               href={`/${locale}/player/league?leagueId=${currentRegistration.league?._id}&tab=playoffs`}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-sm font-medium rounded-xl hover:from-purple-600 hover:to-indigo-700 transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-purple-500/25"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-3 bg-white border-2 border-emerald-500 text-emerald-700 text-sm font-medium rounded-xl hover:bg-emerald-50 transition-all transform hover:scale-105 active:scale-95 shadow-sm"
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -277,7 +281,7 @@ export default function MultiLeagueCard({ player, language }) {
                 <Link
                   key={reg._id || index}
                   href={`/${locale}/player/league?leagueId=${reg.league?._id}`}
-                  className="inline-flex items-center px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded-lg transition-colors"
+                  className="inline-flex items-center px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 hover:text-emerald-800 text-xs font-medium rounded-lg transition-colors border border-emerald-200"
                 >
                   {reg.league?.name}
                   <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
