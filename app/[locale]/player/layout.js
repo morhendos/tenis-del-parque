@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { usePathname, useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useSession, signOut } from 'next-auth/react'
 import { announcementContent } from '@/lib/content/announcementContent'
 import { ToastContainer } from '@/components/ui/Toast'
@@ -208,12 +209,14 @@ export default function PlayerLayout({ children }) {
             <div className="flex items-center justify-between">
               <Link href={`/${locale}/player/dashboard`} className="group" onClick={handleNavClick}>
                 <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center group-hover:bg-white/30 transition-colors">
-                    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 2 A10 10 0 0 1 12 22 M12 2 A10 10 0 0 0 12 22"/>
-                      <circle cx="12" cy="12" r="3" fill="currentColor"/>
-                    </svg>
+                  <div className="w-12 h-12 bg-white/40 rounded-xl flex items-center justify-center group-hover:bg-white/40 group-hover:scale-105 transition-all duration-200 p-2">
+                    <Image 
+                      src="/logo-big.png" 
+                      alt="Tenis del Parque" 
+                      width={40} 
+                      height={40}
+                      className="object-contain"
+                    />
                   </div>
                   <div>
                     <h1 className="text-xl font-bold text-white">Tenis del Parque</h1>

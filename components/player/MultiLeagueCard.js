@@ -78,7 +78,7 @@ export default function MultiLeagueCard({ player, language }) {
       return `${localizedSeasonName} ${seasonYear}`
     }
     
-    return language === 'es' ? 'Temporada 2025' : 'Season 2025'
+    return '2025'
   }
 
   // Get level display name
@@ -125,7 +125,19 @@ export default function MultiLeagueCard({ player, language }) {
     return statusConfig[status] || statusConfig.pending
   }
 
+  // Check if player is in playoffs
+  const isInPlayoffs = (registration) => {
+    // TODO: Add actual playoff check logic based on league structure
+    // For now, we can check if there's playoff data in the registration
+    return registration.playoffStats && (
+      registration.playoffStats.matchesPlayed > 0 || 
+      registration.league?.playoffStatus === 'active'
+    )
+  }
+
   const currentRegistration = registrations[selectedLeague]
+  const stats = currentRegistration.stats || {}
+  const playoffStats = currentRegistration.playoffStats || {}
 
   return (
     <div 
@@ -190,84 +202,110 @@ export default function MultiLeagueCard({ player, language }) {
       )}
 
       <div className="p-6">
-        <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-          {/* League Info */}
-          <div className="flex items-center space-x-4">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-parque-purple to-purple-700 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round"/>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 2 A10 10 0 0 1 12 22 M12 2 A10 10 0 0 0 12 22"/>
-                <circle cx="12" cy="12" r="3" fill="currentColor"/>
+        {/* League Header - No Icon */}
+        <div className="mb-4">
+          <h3 className="text-2xl font-bold text-gray-900 mb-1">
+            {currentRegistration.league?.name || 'Liga'}
+          </h3>
+          <div className="flex items-center gap-3 text-sm text-gray-600 flex-wrap">
+            <span className="flex items-center gap-1">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
+              {language === 'es' ? 'Temporada' : 'Season'}: {getSeasonDisplayName(currentRegistration)}
+            </span>
+            {currentRegistration.league?.location?.city && (
+              <span className="flex items-center gap-1">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                {currentRegistration.league.location.city}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Status Pills */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800">
+            ELO: {player.eloRating || 1200}
+          </span>
+          <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800">
+            {language === 'es' ? 'Nivel' : 'Level'}: {getLevelDisplayName(currentRegistration.level)}
+          </span>
+          <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${getStatusBadge(currentRegistration.status).color}`}>
+            {getStatusBadge(currentRegistration.status).label}
+          </span>
+        </div>
+
+        {/* Regular Season Stats */}
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-xl p-4 mb-4">
+          <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wider mb-3">
+            {language === 'es' ? 'Temporada Regular' : 'Regular Season'}
+          </h4>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-900">{stats.matchesPlayed || 0}</div>
+              <div className="text-xs text-gray-600 mt-1">{language === 'es' ? 'Partidos' : 'Matches'}</div>
             </div>
-            <div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900">
-                {currentRegistration.league?.name || 'Liga'}
-              </h3>
-              <p className="text-sm text-gray-600">
-                {language === 'es' ? 'Temporada' : 'Season'}: {getSeasonDisplayName(currentRegistration)}
-              </p>
-              {currentRegistration.league?.location?.city && (
-                <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  {currentRegistration.league.location.city}
-                </p>
-              )}
-              
-              {/* Stats Pills */}
-              <div className="flex flex-wrap gap-2 mt-2">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800">
-                  ELO: {player.eloRating || 1200}
-                </span>
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800">
-                  {language === 'es' ? 'Nivel' : 'Level'}: {getLevelDisplayName(currentRegistration.level)}
-                </span>
-                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(currentRegistration.status).color}`}>
-                  {getStatusBadge(currentRegistration.status).label}
-                </span>
+            <div className="text-center border-x border-gray-300">
+              <div className="text-2xl font-bold text-green-600">{stats.matchesWon || 0}</div>
+              <div className="text-xs text-gray-600 mt-1">{language === 'es' ? 'Ganados' : 'Won'}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-emerald-600">{stats.totalPoints || 0}</div>
+              <div className="text-xs text-gray-600 mt-1">{language === 'es' ? 'Puntos' : 'Points'}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Playoff Stats (if applicable) */}
+        {isInPlayoffs(currentRegistration) && (
+          <div className="bg-gradient-to-br from-amber-50 to-yellow-100/50 rounded-xl p-4 mb-4 border border-amber-200">
+            <h4 className="text-xs font-semibold text-amber-900 uppercase tracking-wider mb-3 flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+              </svg>
+              {language === 'es' ? 'Playoffs' : 'Playoffs'}
+            </h4>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-900">{playoffStats.matchesPlayed || 0}</div>
+                <div className="text-xs text-gray-600 mt-1">{language === 'es' ? 'Partidos' : 'Matches'}</div>
               </div>
-              
-              {/* League Stats */}
-              {currentRegistration.stats && (
-                <div className="flex gap-4 mt-2 text-xs text-gray-600">
-                  <span>
-                    {language === 'es' ? 'Partidos' : 'Matches'}: {currentRegistration.stats.matchesPlayed || 0}
-                  </span>
-                  <span>
-                    {language === 'es' ? 'Ganados' : 'Won'}: {currentRegistration.stats.matchesWon || 0}
-                  </span>
-                  <span>
-                    {language === 'es' ? 'Puntos' : 'Points'}: {currentRegistration.stats.totalPoints || 0}
-                  </span>
-                </div>
-              )}
+              <div className="text-center border-x border-amber-300">
+                <div className="text-2xl font-bold text-amber-700">{playoffStats.matchesWon || 0}</div>
+                <div className="text-xs text-gray-600 mt-1">{language === 'es' ? 'Ganados' : 'Won'}</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-amber-600">{playoffStats.totalPoints || 0}</div>
+                <div className="text-xs text-gray-600 mt-1">{language === 'es' ? 'Puntos' : 'Points'}</div>
+              </div>
             </div>
           </div>
-          
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-            <Link
-              href={`/${locale}/player/league?leagueId=${currentRegistration.league?._id}`}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm font-medium rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-green-500/25"
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              {language === 'es' ? 'Ver Clasificación' : 'View Standings'}
-            </Link>
-            <Link
-              href={`/${locale}/player/league?leagueId=${currentRegistration.league?._id}&tab=playoffs`}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-3 bg-white border-2 border-emerald-500 text-emerald-700 text-sm font-medium rounded-xl hover:bg-emerald-50 transition-all transform hover:scale-105 active:scale-95 shadow-sm"
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-              {language === 'es' ? 'Ver Playoffs' : 'View Playoffs'}
-            </Link>
-          </div>
+        )}
+        
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Link
+            href={`/${locale}/player/league?leagueId=${currentRegistration.league?._id}`}
+            className="flex-1 inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm font-medium rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-green-500/25"
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            {language === 'es' ? 'Ver Clasificación' : 'View Standings'}
+          </Link>
+          <Link
+            href={`/${locale}/player/league?leagueId=${currentRegistration.league?._id}&tab=playoffs`}
+            className="flex-1 inline-flex items-center justify-center px-4 py-3 bg-white border-2 border-emerald-500 text-emerald-700 text-sm font-medium rounded-xl hover:bg-emerald-50 transition-all transform hover:scale-105 active:scale-95 shadow-sm"
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            {language === 'es' ? 'Ver Playoffs' : 'View Playoffs'}
+          </Link>
         </div>
 
         {/* Quick Navigation for Multiple Leagues */}

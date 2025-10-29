@@ -8,6 +8,7 @@ import DeletePlayerModal from '../../../components/admin/players/DeletePlayerMod
 import InvitationResultModal from '../../../components/admin/players/InvitationResultModal'
 import ImportCSVModal from '../../../components/admin/players/ImportCSVModal'
 import EloRecalculateModal from '../../../components/admin/players/EloRecalculateModal'
+import StatsRecalculateModal from '../../../components/admin/players/StatsRecalculateModal'
 import PlayerDetailsModal from '../../../components/admin/players/PlayerDetailsModal'
 
 function AdminPlayersContent() {
@@ -16,6 +17,7 @@ function AdminPlayersContent() {
   const [importResult, setImportResult] = useState(null)
   const [eloRecalculateLoading, setEloRecalculateLoading] = useState({})
   const [eloRecalculateResult, setEloRecalculateResult] = useState(null)
+  const [statsRecalculateModal, setStatsRecalculateModal] = useState({ show: false })
   const [detailsModal, setDetailsModal] = useState({ show: false, player: null })
   
   const {
@@ -85,6 +87,12 @@ function AdminPlayersContent() {
     }
   }
 
+  // NEW: Open stats recalculation modal
+  const handleRecalculateAllPlayers = () => {
+    const isFiltered = filters.league || filters.search || filters.status || filters.level
+    setStatsRecalculateModal({ show: true, isFiltered })
+  }
+
   const handleEloModalClose = () => {
     setEloRecalculateResult(null)
     // Refresh the page to show updated ELO data
@@ -116,6 +124,16 @@ function AdminPlayersContent() {
           </p>
         </div>
         <div className="flex space-x-3">
+          <button
+            onClick={handleRecalculateAllPlayers}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center space-x-2"
+            title="Recalculate all player stats from match history"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>Recalculate All Stats</span>
+          </button>
           <button
             onClick={() => setImportModal({ show: true })}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -188,6 +206,14 @@ function AdminPlayersContent() {
         player={detailsModal.player}
         onClose={() => setDetailsModal({ show: false, player: null })}
       />
+
+      {statsRecalculateModal.show && (
+        <StatsRecalculateModal
+          players={filteredPlayers}
+          isFiltered={statsRecalculateModal.isFiltered}
+          onClose={() => setStatsRecalculateModal({ show: false })}
+        />
+      )}
     </div>
   )
 }
