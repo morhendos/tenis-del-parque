@@ -1,4 +1,7 @@
-import { Calendar, Users, CreditCard, TrendingUp, Award, Info, Trophy, Target, ChartLine, Shield, Sparkles, Heart, CheckCircle, Clock } from 'lucide-react'
+'use client'
+
+import { useState, useEffect } from 'react'
+import { Calendar, Users, CreditCard, TrendingUp, Award, Info, Trophy, Target, ChartLine, Shield, Sparkles, Heart, CheckCircle, Clock, Tag } from 'lucide-react'
 
 // Level descriptions for different league types
 const levelDescriptions = {
@@ -89,6 +92,11 @@ const levelDescriptions = {
 }
 
 export default function LeagueInfoTab({ league, currentSeason, language, locale }) {
+  const [discountCode, setDiscountCode] = useState('')
+  const [discountValid, setDiscountValid] = useState(false)
+  const [discountDetails, setDiscountDetails] = useState(null)
+  const [finalPrice, setFinalPrice] = useState(league.seasonConfig?.price?.amount || 0)
+
   const t = {
     es: {
       upcomingTitle: '¡Próximamente!',
@@ -121,7 +129,10 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
         'Mejora tu juego con partidos competitivos regulares',
         'Sistema de emparejamiento justo basado en habilidad',
         'Seguimiento detallado de tu progreso y estadísticas'
-      ]
+      ],
+      discountApplied: 'Código de descuento aplicado',
+      originalPrice: 'Precio original',
+      discount: 'Descuento'
     },
     en: {
       upcomingTitle: 'Coming Soon!',
@@ -154,11 +165,72 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
         'Improve your game with regular competitive matches',
         'Fair skill-based matchmaking system',
         'Detailed tracking of your progress and statistics'
-      ]
+      ],
+      discountApplied: 'Discount code applied',
+      originalPrice: 'Original price',
+      discount: 'Discount'
     }
   }
 
   const content = t[language]
+
+  // Check for discount code in URL on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      const urlDiscount = urlParams.get('discount')
+      
+      console.log('[LeagueInfo Discount Debug] URL:', window.location.href)
+      console.log('[LeagueInfo Discount Debug] Query params:', window.location.search)
+      console.log('[LeagueInfo Discount Debug] Discount param:', urlDiscount)
+      
+      if (urlDiscount) {
+        console.log('[LeagueInfo Discount Debug] Applying discount code:', urlDiscount)
+        setDiscountCode(urlDiscount.toUpperCase())
+        validateDiscount(urlDiscount)
+      }
+    }
+  }, [])
+
+  const validateDiscount = async (code) => {
+    if (!code || code.trim() === '') {
+      setDiscountValid(false)
+      setDiscountDetails(null)
+      setFinalPrice(league.seasonConfig?.price?.amount || 0)
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/leagues/${league.slug}/discount/validate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code: code.toUpperCase()
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.valid) {
+        setDiscountValid(true)
+        setDiscountDetails(data)
+        setFinalPrice(data.finalPrice)
+        console.log('[LeagueInfo Discount Debug] Valid discount applied. Final price:', data.finalPrice)
+      } else {
+        setDiscountValid(false)
+        setDiscountDetails(null)
+        setFinalPrice(league.seasonConfig?.price?.amount || 0)
+        console.log('[LeagueInfo Discount Debug] Invalid discount code')
+      }
+    } catch (error) {
+      console.error('[LeagueInfo Discount Debug] Error validating discount:', error)
+      setDiscountValid(false)
+      setDiscountDetails(null)
+      setFinalPrice(league.seasonConfig?.price?.amount || 0)
+    }
+  }
   
   // Determine league level from the skillLevel field or fallback to name/slug detection
   const getLeagueLevel = () => {
@@ -189,6 +261,15 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
       month: 'long',
       day: 'numeric'
     })
+  }
+
+  // Build registration URL with discount code if present
+  const buildRegistrationUrl = () => {
+    const baseUrl = `/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${league.slug}`
+    if (discountCode && discountValid) {
+      return `${baseUrl}?discount=${discountCode}`
+    }
+    return baseUrl
   }
 
   return (
@@ -316,17 +397,52 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
               </div>
             </div>
 
+            {/* Price with discount logic */}
             <div className="flex items-start gap-4">
               <div className="mt-1 p-2 bg-amber-50 rounded-lg">
                 <CreditCard className="w-5 h-5 text-amber-600" />
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-600 mb-1">{content.price}</p>
-                <p className="text-lg font-semibold text-gray-900">
-                  {league.seasonConfig?.price?.isFree || league.seasonConfig?.price?.amount === 0
-                    ? content.free
-                    : `${league.seasonConfig?.price?.amount}€`}
-                </p>
+                
+                {league.seasonConfig?.price?.isFree || league.seasonConfig?.price?.amount === 0 ? (
+                  <p className="text-lg font-semibold text-gray-900">
+                    {content.free}
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {discountValid && discountDetails ? (
+                      <>
+                        {/* Discount badge */}
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-lg">
+                          <Tag className="w-4 h-4 text-emerald-600" />
+                          <span className="text-sm font-medium text-emerald-700">
+                            {content.discountApplied}: {discountCode}
+                          </span>
+                        </div>
+                        
+                        {/* Original price struck through */}
+                        <div className="flex items-baseline gap-3">
+                          <p className="text-xl font-semibold text-gray-400 line-through">
+                            {discountDetails.originalPrice}€
+                          </p>
+                          <p className="text-3xl font-bold text-emerald-600">
+                            {discountDetails.finalPrice}€
+                          </p>
+                        </div>
+                        
+                        {/* Discount details */}
+                        <p className="text-xs text-gray-600">
+                          {content.discount}: {discountDetails.discountPercentage}%
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-lg font-semibold text-gray-900">
+                        {league.seasonConfig?.price?.amount}€
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -334,7 +450,7 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
           {league.status === 'registration_open' && (
             <div className="mt-6 pt-6 border-t border-gray-100">
               <a
-                href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${league.slug}`}
+                href={buildRegistrationUrl()}
                 className="relative block w-full text-center bg-gradient-to-r from-emerald-600 to-emerald-500 text-white px-6 py-4 rounded-xl hover:from-emerald-700 hover:to-emerald-600 transition-all duration-300 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 overflow-hidden group"
               >
                 <span className="absolute inset-0 w-full h-full bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
@@ -460,7 +576,7 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
           {league.status === 'registration_open' && (
             <div className="mt-6 pt-6 border-t border-white/20">
               <a
-                href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${league.slug}`}
+                href={buildRegistrationUrl()}
                 className="inline-block bg-white text-parque-purple px-8 py-4 rounded-xl hover:bg-gray-50 transition-all duration-300 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 group"
               >
                 <span className="flex items-center gap-2">

@@ -134,13 +134,19 @@ export default withAuth(
       if (locale === 'en' && route === 'registro') {
         // English users should see /signup not /registro
         const newPath = `/en/signup/${rest.join('/')}`;
-        return NextResponse.redirect(new URL(newPath, req.url));
+        const newUrl = new URL(newPath, req.url);
+        // CRITICAL: Preserve query parameters (including discount codes)
+        newUrl.search = req.nextUrl.search;
+        return NextResponse.redirect(newUrl);
       }
       
       if (locale === 'es' && route === 'signup') {
         // Spanish users should see /registro not /signup
         const newPath = `/es/registro/${rest.join('/')}`;
-        return NextResponse.redirect(new URL(newPath, req.url));
+        const newUrl = new URL(newPath, req.url);
+        // CRITICAL: Preserve query parameters (including discount codes)
+        newUrl.search = req.nextUrl.search;
+        return NextResponse.redirect(newUrl);
       }
     }
     
@@ -175,7 +181,12 @@ export default withAuth(
       // Check if it's a known route that needs mapping
       const mappedRoute = routeMapping[pathname];
       if (mappedRoute) {
-        const response = NextResponse.redirect(new URL(mappedRoute, req.url));
+        const newUrl = new URL(mappedRoute, req.url);
+        
+        // CRITICAL: Preserve query parameters (including discount codes)
+        newUrl.search = req.nextUrl.search;
+        
+        const response = NextResponse.redirect(newUrl);
         
         // Set locale cookie
         response.cookies.set('NEXT_LOCALE', locale, {
@@ -191,7 +202,12 @@ export default withAuth(
       if (pathname.startsWith('/signup/')) {
         const league = pathname.split('/')[2];
         const newPath = locale === 'es' ? `/es/registro/${league}` : `/en/signup/${league}`;
-        const response = NextResponse.redirect(new URL(newPath, req.url));
+        const newUrl = new URL(newPath, req.url);
+        
+        // CRITICAL: Preserve query parameters (including discount codes)
+        newUrl.search = req.nextUrl.search;
+        
+        const response = NextResponse.redirect(newUrl);
         
         // Set locale cookie
         response.cookies.set('NEXT_LOCALE', locale, {
@@ -208,7 +224,12 @@ export default withAuth(
       if (locationMatch) {
         const [, location, season] = locationMatch;
         const newPath = `/${locale}/${location}/liga/${season}`;
-        const response = NextResponse.redirect(new URL(newPath, req.url));
+        const newUrl = new URL(newPath, req.url);
+        
+        // CRITICAL: Preserve query parameters (including discount codes)
+        newUrl.search = req.nextUrl.search;
+        
+        const response = NextResponse.redirect(newUrl);
         
         // Set locale cookie
         response.cookies.set('NEXT_LOCALE', locale, {
