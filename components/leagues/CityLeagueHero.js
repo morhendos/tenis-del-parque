@@ -4,16 +4,30 @@ import Link from 'next/link'
 export default function CityLeagueHero({ city, locale, leagueName, league }) {
   const cityName = city.name[locale] || city.name.es
   
-  // Detect if this is a Gold league
-  const isGoldLeague = league && (
-    league.name?.toLowerCase().includes('gold') || 
-    league.slug?.toLowerCase().includes('gold')
-  )
+  // Detect league tier based on name/slug
+  const leagueTier = league ? (() => {
+    const nameOrSlug = (league.name?.toLowerCase() || '') + (league.slug?.toLowerCase() || '')
+    if (nameOrSlug.includes('gold') || nameOrSlug.includes('oro')) return 'gold'
+    if (nameOrSlug.includes('silver') || nameOrSlug.includes('plata')) return 'silver'
+    if (nameOrSlug.includes('bronze') || nameOrSlug.includes('bronce')) return 'bronze'
+    return 'default'
+  })() : 'default'
   
-  // Choose gradient colors based on league type (darker for better contrast)
-  const gradientClasses = isGoldLeague
-    ? 'from-amber-600 via-yellow-600 to-amber-700'
-    : 'from-emerald-600 to-teal-600'
+  // Choose gradient colors based on league tier
+  const gradientClasses = {
+    gold: 'from-amber-600 via-yellow-600 to-amber-700',
+    silver: 'from-slate-500 via-gray-400 to-slate-600',
+    bronze: 'from-orange-600 via-amber-700 to-orange-800',
+    default: 'from-emerald-600 to-teal-600'
+  }[leagueTier]
+  
+  // League name color
+  const leagueNameColor = {
+    gold: 'text-amber-50',
+    silver: 'text-slate-100',
+    bronze: 'text-orange-100',
+    default: 'text-emerald-100'
+  }[leagueTier]
   
   return (
     <div className={`relative h-[400px] bg-gradient-to-r ${gradientClasses}`}>
@@ -61,7 +75,7 @@ export default function CityLeagueHero({ city, locale, leagueName, league }) {
             {league && leagueName && (
               <>
                 <span className="mx-4 text-white/70">•</span>
-                <span className={isGoldLeague ? 'text-amber-50' : 'text-emerald-50'}>
+                <span className={leagueNameColor}>
                   {leagueName}
                 </span>
               </>
