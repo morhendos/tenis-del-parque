@@ -8,6 +8,7 @@ import Footer from '@/components/common/Footer'
 import CityLeagueHero from '@/components/leagues/CityLeagueHero'
 import LeagueSeasonSection from '@/components/leagues/LeagueSeasonSection'
 import { homeContent } from '@/lib/content/homeContent'
+import { serializeLeague } from '@/lib/utils/serializeLeague'
 
 export async function generateStaticParams() {
   await dbConnect()
@@ -95,14 +96,7 @@ export default async function CityLeaguePage({ params }) {
   )
   
   // Convert MongoDB objects to plain objects and handle dates
-  const plainLeagues = leaguesWithPlayerCounts.map(league => ({
-    ...league,
-    _id: league._id.toString(),
-    city: {
-      ...league.city,
-      _id: league.city._id.toString()
-    }
-  }))
+  const plainLeagues = leaguesWithPlayerCounts.map(league => serializeLeague(league))
   
   // Group by season status
   const now = new Date()

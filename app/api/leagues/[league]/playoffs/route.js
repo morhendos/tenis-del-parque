@@ -2,6 +2,24 @@ import { NextResponse } from 'next/server'
 import mongoose from 'mongoose'
 import dbConnect from '../../../../../lib/db/mongoose'
 
+// Helper to convert ObjectIDs and Dates to plain values
+function serialize(obj) {
+  if (obj == null) return obj
+  if (obj instanceof Date) return obj.toISOString()
+  if (obj._bsontype === 'ObjectId' || (obj.constructor && obj.constructor.name === 'ObjectId')) {
+    return obj.toString()
+  }
+  if (Array.isArray(obj)) return obj.map(serialize)
+  if (typeof obj === 'object') {
+    const result = {}
+    for (const [key, value] of Object.entries(obj)) {
+      result[key] = serialize(value)
+    }
+    return result
+  }
+  return obj
+}
+
 // Public GET endpoint for playoff data
 export async function GET(request, { params }) {
   try {
@@ -80,8 +98,8 @@ export async function GET(request, { params }) {
     return NextResponse.json({
       success: true,
       leagueName: league.name,
-      playoffConfig: populatedPlayoffConfig,
-      matches: populatedPlayoffMatches,
+      playoffConfig: serialize(populatedPlayoffConfig),
+      matches: serialize(populatedPlayoffMatches),
       currentPhase: league.playoffConfig.currentPhase
     })
     
