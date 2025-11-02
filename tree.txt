@@ -1,5 +1,7 @@
 root/
 ├── CLEANUP_INSTRUCTIONS.md
+├── ENHANCED_STATS_RECALCULATION.md
+├── LEAGUE-INFO-PAGE-IMPLEMENTATION.md
 ├── PHASE2_CLEANUP_INSTRUCTIONS.md
 ├── PHASE3_CLEANUP_INSTRUCTIONS.md
 ├── PROPER_SOLUTION_README.md
@@ -33,6 +35,9 @@ root/
 │   │   ├── layout.js
 │   │   ├── leagues
 │   │   │   ├── [city]
+│   │   │   │   ├── info
+│   │   │   │   │   └── [slug]
+│   │   │   │   │       └── page.js
 │   │   │   │   └── page.js
 │   │   │   └── page.js
 │   │   ├── liga
@@ -101,6 +106,8 @@ root/
 │   │   ├── layout.js
 │   │   ├── leagues
 │   │   │   ├── [id]
+│   │   │   │   ├── discounts
+│   │   │   │   │   └── page.js
 │   │   │   │   ├── page.js
 │   │   │   │   └── playoffs
 │   │   │   │       └── page.js
@@ -169,6 +176,10 @@ root/
 │   │   │   │   └── route.js
 │   │   │   ├── leagues
 │   │   │   │   ├── [id]
+│   │   │   │   │   ├── discounts
+│   │   │   │   │   │   ├── [code]
+│   │   │   │   │   │   │   └── route.js
+│   │   │   │   │   │   └── route.js
 │   │   │   │   │   ├── playoffs
 │   │   │   │   │   │   ├── notifications
 │   │   │   │   │   │   │   └── route.js
@@ -208,6 +219,8 @@ root/
 │   │   │   │   ├── export
 │   │   │   │   │   └── route.js
 │   │   │   │   ├── import
+│   │   │   │   │   └── route.js
+│   │   │   │   ├── recalculate
 │   │   │   │   │   └── route.js
 │   │   │   │   └── route.js
 │   │   │   └── users
@@ -255,6 +268,9 @@ root/
 │   │   │   ├── [league]
 │   │   │   │   ├── [slug]
 │   │   │   │   │   └── route.js
+│   │   │   │   ├── discount
+│   │   │   │   │   └── validate
+│   │   │   │   │       └── route.js
 │   │   │   │   ├── matches
 │   │   │   │   │   └── route.js
 │   │   │   │   ├── playoffs
@@ -369,7 +385,8 @@ root/
 │   │       ├── PlayerDetailsModal.js
 │   │       ├── PlayerFilters.js
 │   │       ├── PlayerTable.js
-│   │       └── PlayerTableRow.js
+│   │       ├── PlayerTableRow.js
+│   │       └── StatsRecalculateModal.js
 │   ├── analytics
 │   │   ├── GoogleAnalytics.js
 │   │   └── MicrosoftClarity.js
@@ -400,6 +417,7 @@ root/
 │   ├── layout
 │   ├── league
 │   │   ├── LeagueCard.js
+│   │   ├── LeagueInfoTab.js
 │   │   ├── PublicScheduleTab.js
 │   │   ├── ScoringSystem.js
 │   │   └── TournamentBracket.js
@@ -428,6 +446,7 @@ root/
 │   │   ├── MatchCard.js
 │   │   ├── MatchModals.js
 │   │   ├── MatchResultCard.js
+│   │   ├── MultiLeagueCard.js
 │   │   ├── PlayoffExplanation.js
 │   │   ├── PlayoffsTab.js
 │   │   ├── QuickActions.js
@@ -450,6 +469,7 @@ root/
 │       ├── Toast.js
 │       └── WelcomeModal.js
 ├── docs
+│   ├── ADMIN_LEAGUE_CREATION_UPDATE.md
 │   ├── CACHE_MANAGEMENT_GUIDE.md
 │   ├── CITIES_MANAGEMENT_COMPLETE.md
 │   ├── CITIES_MANAGEMENT_SUMMARY.md
@@ -468,6 +488,9 @@ root/
 │   ├── CLUB_IMAGE_MANAGEMENT.md
 │   ├── COMPLETE_ARCHITECTURE_FIX_SUMMARY.md
 │   ├── CURRENT_STATUS.md
+│   ├── DISCOUNT_QUICK_START.md
+│   ├── DISCOUNT_SYSTEM_IMPLEMENTATION.md
+│   ├── DISCOUNT_SYSTEM_STATUS.md
 │   ├── DYNAMIC_CITY_TESTING_GUIDE.md
 │   ├── ENHANCED_CITY_AUTOCOMPLETE.md
 │   ├── FEE_SYSTEM.md
@@ -481,6 +504,7 @@ root/
 │   ├── GOOGLE_PHOTOS_REFRESH_DEBUG.md
 │   ├── HOMEPAGE_LEAGUE_IMPLEMENTATION_PLAN.md
 │   ├── IMPLEMENTATION_GUIDE.md
+│   ├── LEAGUE_PAGE_IMPROVEMENTS.md
 │   ├── MATCH_IMPORT_SEASON_FIX.md
 │   ├── MODERN_MOBILE_TABS.md
 │   ├── MODERN_REGISTRATION_COMPLETE.md
@@ -488,6 +512,9 @@ root/
 │   ├── MULTI_SPORT_COURTS.md
 │   ├── NUMBER_OF_PLAYERS_IN_COSTA_DEL_SOL.md
 │   ├── PHASE_1_2_SUMMARY.md
+│   ├── PHASE_3_COMPLETION_SUMMARY.md
+│   ├── PHASE_3_HANDOFF.md
+│   ├── PHASE_4_COMPLETION_SUMMARY.md
 │   ├── PLAYER_MESSAGES_SYSTEM.md
 │   ├── PLAYER_STATISTICS_SYSTEM.md
 │   ├── PRODUCT_LED_GROWTH.md
@@ -497,6 +524,7 @@ root/
 │   ├── RESEND_EMAIL_SETUP.md
 │   ├── SCORING_SYSTEM_INTEGRATION.md
 │   ├── SCRIPT_CREATION_RULES.md
+│   ├── SEASON_FIELD_REMOVAL.md
 │   ├── SEASON_SYSTEM_REFACTOR.md
 │   ├── SEO Strategy
 │   ├── SEO_ACTION_PLAN.md
@@ -580,6 +608,7 @@ root/
 │       ├── rulesIcons.js
 │       ├── seasonUtils.client.js
 │       ├── seasonUtils.js
+│       ├── serializeLeague.js
 │       ├── spanishTextUtils.js
 │       ├── swissPairing.js
 │       └── whatsappUtils.js
@@ -595,13 +624,31 @@ root/
 │   ├── cities-import-template.csv
 │   ├── estepona-01.webp
 │   ├── favicon.ico
+│   ├── horizontal-01.png
+│   ├── horizontal-02.png
+│   ├── horizontal-03.png
+│   ├── horizontal-04.png
+│   ├── horizontal-04.webp
+│   ├── horizontal-04b.png
+│   ├── horizontal-04b.webp
+│   ├── horizontal-05.webp
+│   ├── horizontal-logo-001.png
+│   ├── horizontal-logo-001.webp
+│   ├── horizontal-logo-002.webp
+│   ├── horizontal-logo-003.webp
+│   ├── horizontal-logo-004.webp
+│   ├── horizontal-logo-005.webp
+│   ├── horizontal-logo-006.webp
 │   ├── leagues-import-template.csv
+│   ├── liga-costa-del-sol.png
+│   ├── liga-costa-del-sol.webp
 │   ├── logo-01.webp
 │   ├── logo-big.png
 │   ├── logo-horizontal-01.png
 │   ├── logo-horizontal-02.png
 │   ├── logo-horizontal-big.png
 │   ├── logo-horizontal-small.png
+│   ├── logo-liga-costa-del-sol-big.webp
 │   ├── logo-manifest.png
 │   ├── logo-old.png
 │   ├── logo.png
@@ -626,14 +673,17 @@ root/
 │   ├── addWalkoverResult.js
 │   ├── checkAuth.mjs
 │   ├── checkGoogleImages.mjs
+│   ├── checkLeagueSkillLevels.js
 │   ├── checkMatch.js
 │   ├── checkMatchSeasons.js
 │   ├── checkSeasonData.js
 │   ├── checkSeasonObjectId.mjs
+│   ├── checkSotograndePlayers.js
 │   ├── cleanup-clubes-duplicates.sh
 │   ├── cleanup-old-editors.sh
 │   ├── comparePointCalculations.js
 │   ├── createAdminUser.js
+│   ├── createDiscountCodes.js
 │   ├── createSeasons.js
 │   ├── createTestData.js
 │   ├── debugClubCourts.js
@@ -670,11 +720,13 @@ root/
 │   ├── seedSeasons.mjs
 │   ├── setupWhatsAppGroups.js
 │   ├── test-city-photo-refresh.sh
+│   ├── test-discount-system.sh
 │   ├── testEmailSending.js
 │   ├── testImageDownload.mjs
 │   ├── testSeasonComparison.js
 │   ├── tree.js
 │   ├── unlockAccounts.js
+│   ├── updateLeaguePlayerCounts.js
 │   └── updatePlayerEloStartingPoints.js
 ├── styles
 │   └── dashboard.js
