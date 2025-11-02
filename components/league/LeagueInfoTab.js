@@ -7,7 +7,7 @@ import { Calendar, Users, CreditCard, TrendingUp, Award, Info, Trophy, Target, C
 const levelDescriptions = {
   es: {
     beginner: {
-      title: 'Liga Nivel Inicial',
+      title: 'Inicial',
       description: 'Liga diseñada para disfrutar del tenis en su máxima expresión. Juega a tu ritmo, mejora tu técnica y forma parte de una comunidad apasionada por este deporte.',
       skills: [
         'Partidos relajados y divertidos',
@@ -17,7 +17,7 @@ const levelDescriptions = {
       ]
     },
     intermediate: {
-      title: 'Nivel Intermedio',
+      title: 'Intermedio',
       description: 'Ideal para jugadores con fundamentos sólidos que buscan mejorar su juego. Partidos competitivos pero amistosos con jugadores de nivel similar.',
       skills: [
         'Dominio de golpes básicos',
@@ -27,7 +27,7 @@ const levelDescriptions = {
       ]
     },
     advanced: {
-      title: 'Nivel Avanzado',
+      title: 'Avanzado',
       description: 'Para jugadores experimentados con técnica sólida y juego competitivo. Partidos intensos con alta calidad de juego.',
       skills: [
         'Técnica refinada en todos los golpes',
@@ -37,7 +37,7 @@ const levelDescriptions = {
       ]
     },
     open: {
-      title: 'Liga Abierta',
+      title: 'Abierta',
       description: 'Liga multi-nivel donde jugadores de diferentes habilidades compiten. El sistema ELO garantiza partidos equilibrados basados en tu nivel real.',
       skills: [
         'Todos los niveles bienvenidos',
@@ -49,7 +49,7 @@ const levelDescriptions = {
   },
   en: {
     beginner: {
-      title: 'Entry Level League',
+      title: 'Beginner',
       description: 'A league designed to enjoy tennis at its finest. Play at your own pace, improve your technique, and be part of a passionate tennis community.',
       skills: [
         'Relaxed and enjoyable matches',
@@ -59,7 +59,7 @@ const levelDescriptions = {
       ]
     },
     intermediate: {
-      title: 'Intermediate Level',
+      title: 'Intermediate',
       description: 'Ideal for players with solid fundamentals looking to improve their game. Competitive yet friendly matches with similarly skilled players.',
       skills: [
         'Command of basic strokes',
@@ -69,7 +69,7 @@ const levelDescriptions = {
       ]
     },
     advanced: {
-      title: 'Advanced Level',
+      title: 'Advanced',
       description: 'For experienced players with solid technique and competitive play. Intense matches with high-quality tennis.',
       skills: [
         'Refined technique on all strokes',
@@ -79,7 +79,7 @@ const levelDescriptions = {
       ]
     },
     open: {
-      title: 'Open League',
+      title: 'Open',
       description: 'Multi-level league where players of different abilities compete. The ELO system ensures balanced matches based on your actual level.',
       skills: [
         'All levels welcome',
@@ -419,6 +419,80 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
                   </li>
                 ))}
               </ul>
+            </div>
+
+            {/* Level Switcher */}
+            <div className="pt-4 border-t border-purple-200">
+              <p className="text-xs font-semibold text-gray-600 mb-3 uppercase tracking-wide">
+                {language === 'es' ? 'Otros Niveles' : 'Other Levels'}
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                {(() => {
+                  // Get city slug from league
+                  const citySlug = league.city?.slug || league.location?.city?.toLowerCase().replace(/\s+/g, '-') || 'sotogrande'
+                  const seasonType = league.season?.type || 'autumn'
+                  const seasonYear = league.season?.year || '2025'
+                  
+                  // Define levels with their slugs and colors (Gold, Silver, Bronze order)
+                  const levels = [
+                    { 
+                      key: 'advanced', 
+                      label: language === 'es' ? 'Oro' : 'Gold',
+                      slug: `gold-league-${citySlug}-${seasonType}-${seasonYear}`,
+                      color: 'from-yellow-500 to-yellow-600',
+                      bgColor: 'bg-yellow-50 border-yellow-300',
+                      textColor: 'text-yellow-700'
+                    },
+                    { 
+                      key: 'intermediate', 
+                      label: language === 'es' ? 'Plata' : 'Silver',
+                      slug: `silver-league-${citySlug}-${seasonType}-${seasonYear}`,
+                      color: 'from-gray-400 to-gray-500',
+                      bgColor: 'bg-gray-100 border-gray-300',
+                      textColor: 'text-gray-700'
+                    },
+                    { 
+                      key: 'beginner', 
+                      label: language === 'es' ? 'Bronce' : 'Bronze',
+                      slug: `bronze-league-${citySlug}-${seasonType}-${seasonYear}`,
+                      color: 'from-amber-600 to-orange-600',
+                      bgColor: 'bg-amber-50 border-amber-200',
+                      textColor: 'text-amber-700'
+                    }
+                  ]
+                  
+                  return levels.map((level) => {
+                    const isCurrentLevel = leagueLevel === level.key
+                    
+                    if (isCurrentLevel) {
+                      // Current level - show as active badge
+                      return (
+                        <div
+                          key={level.key}
+                          className={`px-4 py-2 rounded-lg border-2 ${level.bgColor} font-semibold ${level.textColor} flex items-center gap-2`}
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                          {level.label}
+                        </div>
+                      )
+                    }
+                    
+                    // Other levels - show as clickable links
+                    return (
+                      <a
+                        key={level.key}
+                        href={`/${locale}/leagues/${citySlug}/info/${level.slug}`}
+                        className="px-4 py-2 rounded-lg border-2 border-gray-200 bg-white hover:border-parque-purple/40 hover:bg-purple-50 transition-all duration-200 font-medium text-gray-700 hover:text-parque-purple flex items-center gap-2 group"
+                      >
+                        {level.label}
+                        <svg className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </a>
+                    )
+                  })
+                })()}
+              </div>
             </div>
           </div>
         </div>
