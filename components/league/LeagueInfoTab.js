@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Calendar, Users, CreditCard, TrendingUp, Award, Info, Trophy, Target, ChartLine, Shield, Sparkles, Heart, CheckCircle, Clock, Tag } from 'lucide-react'
+import { Calendar, Users, CreditCard, TrendingUp, Award, Info, Trophy, Target, ChartLine, Shield, Sparkles, Heart, CheckCircle, Clock, Tag, Medal } from 'lucide-react'
 
 // Level descriptions for different league types
 const levelDescriptions = {
@@ -254,6 +254,22 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
   const leagueLevel = getLeagueLevel()
   const levelInfo = levelDescriptions[language][leagueLevel]
 
+  // Get icon and color for each level
+  const getLevelIcon = () => {
+    switch (leagueLevel) {
+      case 'advanced':
+        return <Trophy className="w-8 h-8 text-yellow-500" />
+      case 'intermediate':
+        return <Medal className="w-8 h-8 text-gray-500" />
+      case 'beginner':
+        return <Award className="w-8 h-8 text-amber-600" />
+      case 'open':
+        return <Trophy className="w-8 h-8 text-parque-purple" />
+      default:
+        return <Award className="w-8 h-8 text-parque-purple" />
+    }
+  }
+
   const formatDate = (date) => {
     if (!date) return '-'
     return new Date(date).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
@@ -428,10 +444,10 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
               </p>
               <div className="flex gap-2 flex-wrap">
                 {(() => {
-                  // Get city slug from league
+                  // Get city slug and season info from current league (DYNAMIC)
                   const citySlug = league.city?.slug || league.location?.city?.toLowerCase().replace(/\s+/g, '-') || 'sotogrande'
-                  const seasonType = league.season?.type || 'autumn'
-                  const seasonYear = league.season?.year || '2025'
+                  const seasonType = league.season?.type || 'winter' // Dynamic from current league
+                  const seasonYear = league.season?.year || '2025' // Dynamic from current league
                   
                   // Define levels with their slugs and colors (Gold, Silver, Bronze order)
                   const levels = [
@@ -441,7 +457,8 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
                       slug: `gold-league-${citySlug}-${seasonType}-${seasonYear}`,
                       color: 'from-yellow-500 to-yellow-600',
                       bgColor: 'bg-yellow-50 border-yellow-300',
-                      textColor: 'text-yellow-700'
+                      textColor: 'text-yellow-700',
+                      icon: <Trophy className="w-4 h-4" />
                     },
                     { 
                       key: 'intermediate', 
@@ -449,7 +466,8 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
                       slug: `silver-league-${citySlug}-${seasonType}-${seasonYear}`,
                       color: 'from-gray-400 to-gray-500',
                       bgColor: 'bg-gray-100 border-gray-300',
-                      textColor: 'text-gray-700'
+                      textColor: 'text-gray-700',
+                      icon: <Medal className="w-4 h-4" />
                     },
                     { 
                       key: 'beginner', 
@@ -457,7 +475,8 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
                       slug: `bronze-league-${citySlug}-${seasonType}-${seasonYear}`,
                       color: 'from-amber-600 to-orange-600',
                       bgColor: 'bg-amber-50 border-amber-200',
-                      textColor: 'text-amber-700'
+                      textColor: 'text-amber-700',
+                      icon: <Award className="w-4 h-4" />
                     }
                   ]
                   
@@ -471,8 +490,9 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
                           key={level.key}
                           className={`px-4 py-2 rounded-lg border-2 ${level.bgColor} font-semibold ${level.textColor} flex items-center gap-2`}
                         >
-                          <CheckCircle className="w-4 h-4" />
+                          {level.icon}
                           {level.label}
+                          <CheckCircle className="w-4 h-4" />
                         </div>
                       )
                     }
@@ -484,6 +504,9 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
                         href={`/${locale}/leagues/${citySlug}/info/${level.slug}`}
                         className="px-4 py-2 rounded-lg border-2 border-gray-200 bg-white hover:border-parque-purple/40 hover:bg-purple-50 transition-all duration-200 font-medium text-gray-700 hover:text-parque-purple flex items-center gap-2 group"
                       >
+                        <span className="text-gray-400 group-hover:text-parque-purple transition-colors">
+                          {level.icon}
+                        </span>
                         {level.label}
                         <svg className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

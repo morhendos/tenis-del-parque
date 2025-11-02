@@ -74,8 +74,34 @@ export default function HomePageSSG({ locale, leaguesData }) {
       
       <SolutionSection content={content.solution} />
       
+      {/* How It Works Section */}
+      <section id="how-it-works" className="py-20 px-4 bg-gray-50">
+        <div className="container mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              {content.howItWorks.title}
+            </h2>
+            <p className="text-xl text-gray-600">
+              {content.howItWorks.subtitle}
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            {content.howItWorks.steps.map((step, index) => (
+              <div key={index} className="text-center">
+                <div className="w-20 h-20 bg-parque-purple text-white rounded-full flex items-center justify-center text-3xl font-bold mx-auto mb-4">
+                  {step.number}
+                </div>
+                <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
+                <p className="text-gray-600">{step.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      
       {/* Cities Section - Using pre-fetched SSG data */}
-      <section id="cities" className="py-20 px-4 bg-gray-50">
+      <section id="cities" className="py-20 px-4">
         <div className="container mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
@@ -117,8 +143,8 @@ export default function HomePageSSG({ locale, leaguesData }) {
               {/* PRIORITY 1: Registration Open Leagues - MOST IMPORTANT for new leads */}
               {registrationOpenLeagues.length > 0 && (
                 <div className="mb-16">
-                  <h3 className="text-3xl font-bold text-parque-purple mb-8 text-center">
-                    {validLocale === 'es' ? '🎾 ¡Únete Ahora!' : '🎾 Join Now!'}
+                  <h3 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+                    {validLocale === 'es' ? '¡Únete Ahora!' : 'Join Now!'}
                   </h3>
                   <div className="flex flex-wrap justify-center gap-8">
                     {registrationOpenLeagues.map((league) => (
@@ -159,7 +185,7 @@ export default function HomePageSSG({ locale, leaguesData }) {
                   <h3 className="text-xl font-medium text-gray-500 mb-6 text-center">
                     {validLocale === 'es' ? 'Ligas en Curso' : 'Currently Running'}
                   </h3>
-                  <div className="flex flex-wrap justify-center gap-8 opacity-75">
+                  <div className="flex flex-wrap justify-center gap-8">
                     {activeLeagues.map((league) => (
                       <LeagueCard
                         key={league._id}
@@ -191,32 +217,6 @@ export default function HomePageSSG({ locale, leaguesData }) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {content.features.items.map((feature, index) => (
               <FeatureCard key={index} feature={feature} />
-            ))}
-          </div>
-        </div>
-      </section>
-      
-      {/* How It Works Section */}
-      <section id="how-it-works" className="py-20 px-4 bg-gray-50">
-        <div className="container mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              {content.howItWorks.title}
-            </h2>
-            <p className="text-xl text-gray-600">
-              {content.howItWorks.subtitle}
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            {content.howItWorks.steps.map((step, index) => (
-              <div key={index} className="text-center">
-                <div className="w-20 h-20 bg-parque-purple text-white rounded-full flex items-center justify-center text-3xl font-bold mx-auto mb-4">
-                  {step.number}
-                </div>
-                <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
-                <p className="text-gray-600">{step.description}</p>
-              </div>
             ))}
           </div>
         </div>

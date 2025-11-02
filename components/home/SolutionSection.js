@@ -61,7 +61,9 @@ export default function SolutionSection({ content }) {
     'Progreso Visible': SolutionIcons.VisibleProgress,
     'Visible Progress': SolutionIcons.VisibleProgress,
     'Flexible y Sin Estrés': SolutionIcons.Flexible,
-    'Flexible and Stress-Free': SolutionIcons.Flexible
+    'Flexible and Stress-Free': SolutionIcons.Flexible,
+    'Estructura y Calendario Claros': SolutionIcons.Flexible,
+    'Clear Structure and Schedule': SolutionIcons.Flexible
   };
 
   return (

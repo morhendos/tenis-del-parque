@@ -1,23 +1,31 @@
 import Link from 'next/link'
+import { Trophy, Medal, Award } from 'lucide-react'
 
 const skillLevelColors = {
-  advanced: 'bg-amber-100 text-amber-800 border-amber-300',
-  intermediate: 'bg-gray-100 text-gray-800 border-gray-300',
-  beginner: 'bg-orange-100 text-orange-800 border-orange-300',
+  advanced: 'bg-yellow-50 text-yellow-700 border-yellow-300', // Gold
+  intermediate: 'bg-gray-100 text-gray-700 border-gray-300', // Silver
+  beginner: 'bg-amber-50 text-amber-700 border-amber-200', // Bronze
   all: 'bg-blue-100 text-blue-800 border-blue-300'
+}
+
+const skillLevelIcons = {
+  advanced: Trophy,
+  intermediate: Medal,
+  beginner: Award,
+  all: Trophy
 }
 
 const skillLevelNames = {
   es: {
-    advanced: 'Avanzado',
-    intermediate: 'Intermedio',
-    beginner: 'Principiantes',
+    advanced: 'Oro',
+    intermediate: 'Plata',
+    beginner: 'Bronce',
     all: 'Todos los niveles'
   },
   en: {
-    advanced: 'Advanced',
-    intermediate: 'Intermediate',
-    beginner: 'Beginners',
+    advanced: 'Gold',
+    intermediate: 'Silver',
+    beginner: 'Bronze',
     all: 'All Levels'
   }
 }
@@ -39,10 +47,27 @@ const seasonTypeNames = {
   }
 }
 
+const skillLevelDescriptions = {
+  es: {
+    beginner: 'Perfecta para competidores primerizos listos para la experiencia de liga organizada.',
+    intermediate: 'Para jugadores con experiencia competitiva listos para partidos desafiantes regulares.',
+    advanced: 'Para jugadores experimentados con técnica sólida y juego competitivo.',
+    all: 'Liga multi-nivel donde jugadores de diferentes habilidades compiten.'
+  },
+  en: {
+    beginner: 'Perfect for first-time competitors ready to experience organized league play.',
+    intermediate: 'For players with competitive experience ready for regular challenging matches.',
+    advanced: 'For experienced players with solid technique and competitive play.',
+    all: 'Multi-level league where players of different abilities compete.'
+  }
+}
+
 export default function LeagueLevelCard({ league, locale, status }) {
   const citySlug = league.city?.slug || 'unknown'
   const skillName = skillLevelNames[locale][league.skillLevel] || league.skillLevel
   const colorClass = skillLevelColors[league.skillLevel] || skillLevelColors.all
+  const LevelIcon = skillLevelIcons[league.skillLevel] || Trophy
+  const description = skillLevelDescriptions[locale][league.skillLevel] || ''
   
   // Build season name
   const seasonType = seasonTypeNames[locale][league.season?.type] || league.season?.type
@@ -57,7 +82,8 @@ export default function LeagueLevelCard({ league, locale, status }) {
       {/* Header with skill level */}
       <div className="p-6 border-b">
         <div className="flex items-center justify-between mb-2">
-          <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${colorClass}`}>
+          <span className={`px-3 py-1.5 rounded-full text-sm font-semibold border flex items-center gap-2 ${colorClass}`}>
+            <LevelIcon className="w-4 h-4" />
             {skillName}
           </span>
           {status === 'current' && (
@@ -73,6 +99,11 @@ export default function LeagueLevelCard({ league, locale, status }) {
         
         <p className="text-sm text-gray-600 mt-1 capitalize">
           {seasonName}
+        </p>
+        
+        {/* Description */}
+        <p className="text-sm text-gray-600 mt-3 leading-relaxed">
+          {description}
         </p>
       </div>
       
@@ -122,33 +153,17 @@ export default function LeagueLevelCard({ league, locale, status }) {
       
       {/* Actions */}
       <div className="p-6 pt-4">
-        <div className="flex gap-3">
-          <Link
-            href={
-              // Upcoming leagues (registration_open/coming_soon) go to new info page
-              league.status === 'registration_open' || league.status === 'coming_soon'
-                ? `/${locale}/leagues/${citySlug}/info/${league.slug}`
-                : `/${locale}/${citySlug}/liga/${league.slug}`
-            }
-            className="flex-1 text-center py-2 px-4 border border-emerald-600 text-emerald-600 rounded-lg hover:bg-emerald-50 transition-colors font-medium"
-          >
-            {status === 'current' 
-              ? (locale === 'es' ? 'Abrir Liga' : 'Open League')
-              : status === 'upcoming'
-              ? (locale === 'es' ? 'Ver Información' : 'View Info')
-              : (locale === 'es' ? 'Ver Liga' : 'View League')
-            }
-          </Link>
-          
-          {isRegistrationOpen && !isFull && (
-            <Link
-              href={`/${locale}/registro/${league.slug}`}
-              className="flex-1 text-center py-2 px-4 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
-            >
-              {locale === 'es' ? 'Inscribirse' : 'Register'}
-            </Link>
-          )}
-        </div>
+        <Link
+          href={`/${locale}/leagues/${citySlug}/info/${league.slug}`}
+          className="block w-full text-center py-3 px-4 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+        >
+          {isRegistrationOpen
+            ? (locale === 'es' ? 'Ver Info e Inscribirse' : 'View Info & Join')
+            : status === 'current' 
+            ? (locale === 'es' ? 'Abrir Liga' : 'Open League')
+            : (locale === 'es' ? 'Ver Información' : 'View Info')
+          }
+        </Link>
         
         {isFull && isRegistrationOpen && (
           <p className="text-sm text-center text-amber-600 mt-2 font-medium">

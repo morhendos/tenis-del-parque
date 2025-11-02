@@ -51,10 +51,11 @@ async function getLeaguesData() {
     await dbConnect()
     
     // Get all leagues with city data for images - FIXED: Added city population and image fields
+    // Sort by displayOrder first (admin control), then by status and other fields
     const leagues = await League.find({})
       .populate('city', 'slug name images coordinates googleData province')
-      .sort({ status: 1, 'location.city': 1, name: 1 })
-      .select('name slug status location currentSeason playerCount maxPlayers description city cityData')
+      .sort({ displayOrder: 1, status: 1, 'season.year': -1, name: 1 })
+      .select('name slug status location season currentSeason playerCount maxPlayers description city cityData skillLevel displayOrder')
       .lean() // Convert to plain objects for serialization
     
     // Serialize data properly for client components (remove Mongoose ObjectIds)

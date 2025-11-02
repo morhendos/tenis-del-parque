@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
-import { Calendar, Users, Trophy } from 'lucide-react';
+import { Calendar, Users, Trophy, Medal, Award } from 'lucide-react';
 
 // Helper function to generate consistent fallback images for leagues
 const getGenericLeagueFallback = (cityName) => {
@@ -24,6 +24,54 @@ const getGenericLeagueFallback = (cityName) => {
     : Buffer.from(svgContent, 'utf8').toString('base64')
     
   return 'data:image/svg+xml;base64,' + base64
+}
+
+// Level descriptions matching LeagueInfoTab (FULL VERSION for info page)
+const levelDescriptions = {
+  es: {
+    beginner: {
+      description: '¿Nuevo en el tenis competitivo? Esta liga de nivel inicial ofrece competición estructurada donde cada punto importa. Perfecta para competidores primerizos listos para la experiencia de liga organizada.'
+    },
+    intermediate: {
+      description: 'Para jugadores con experiencia competitiva listos para partidos desafiantes regulares. Un paso adelante del nivel inicial con juego más intenso contra oponentes de habilidad similar.'
+    },
+    advanced: {
+      description: 'Para jugadores experimentados con técnica sólida y juego competitivo. Partidos intensos con alta calidad de juego.'
+    },
+    open: {
+      description: 'Liga multi-nivel donde jugadores de diferentes habilidades compiten. El sistema ELO garantiza partidos equilibrados basados en tu nivel real.'
+    }
+  },
+  en: {
+    beginner: {
+      description: 'New to competitive tennis? This entry-level league offers structured competition where every point matters. Perfect for first-time competitors ready to experience organized league play.'
+    },
+    intermediate: {
+      description: 'For players with competitive experience ready for regular challenging matches. Step up from entry-level with more intense play against similarly skilled opponents.'
+    },
+    advanced: {
+      description: 'For experienced players with solid technique and competitive play. Intense matches with high-quality tennis.'
+    },
+    open: {
+      description: 'Multi-level league where players of different abilities compete. The ELO system ensures balanced matches based on your actual level.'
+    }
+  }
+}
+
+// SHORT descriptions for home page cards
+const shortLevelDescriptions = {
+  es: {
+    beginner: 'Liga de nivel inicial para competidores primerizos. Competición estructurada en ambiente amigable.',
+    intermediate: 'Para jugadores con experiencia competitiva. Partidos desafiantes contra oponentes similares.',
+    advanced: 'Para jugadores experimentados con técnica sólida. Partidos intensos de alta calidad.',
+    open: 'Liga multi-nivel con emparejamiento ELO para partidos equilibrados.'
+  },
+  en: {
+    beginner: 'Entry-level league for first-time competitors. Structured competition in a friendly atmosphere.',
+    intermediate: 'For players with competitive experience. Challenging matches against similar opponents.',
+    advanced: 'For experienced players with solid technique. Intense, high-quality matches.',
+    open: 'Multi-level league with ELO-based matchmaking for balanced play.'
+  }
 }
 
 export default function LeagueCard({ league, content, locale }) {
@@ -101,35 +149,155 @@ export default function LeagueCard({ league, content, locale }) {
       return `${seasonName} ${seasonYear}`
     }
     
-    return ''
-  }
-  
-  // Get skill level name
-  const getSkillLevelName = () => {
-    if (typeof league.getSkillLevelName === 'function') {
-      return league.getSkillLevelName(locale)
-    }
+    // Fallback: try to detect from slug
+    const slug = league.slug?.toLowerCase() || ''
+    const name = league.name?.toLowerCase() || ''
     
-    const skillLevelNames = {
+    const seasonNames = {
       es: {
-        all: 'Todos los Niveles',
-        beginner: 'Principiantes',
-        intermediate: 'Intermedio',
-        advanced: 'Avanzado'
+        spring: 'Primavera',
+        summer: 'Verano',
+        autumn: 'Otoño',
+        winter: 'Invierno',
+        annual: 'Anual'
       },
       en: {
-        all: 'All Levels',
-        beginner: 'Beginners',
-        intermediate: 'Intermediate', 
-        advanced: 'Advanced'
+        spring: 'Spring',
+        summer: 'Summer',
+        autumn: 'Autumn',
+        winter: 'Winter',
+        annual: 'Annual'
       }
     }
     
-    return skillLevelNames[locale]?.[league.skillLevel] || skillLevelNames['es'][league.skillLevel] || 'All Levels'
+    // Try to detect season from slug/name
+    if (slug.includes('winter') || slug.includes('invierno') || name.includes('winter') || name.includes('invierno')) {
+      const year = slug.match(/(20\d{2})/) ? slug.match(/(20\d{2})/)[1] : '2025'
+      return `${seasonNames[locale].winter} ${year}`
+    }
+    if (slug.includes('summer') || slug.includes('verano') || name.includes('summer') || name.includes('verano')) {
+      const year = slug.match(/(20\d{2})/) ? slug.match(/(20\d{2})/)[1] : '2025'
+      return `${seasonNames[locale].summer} ${year}`
+    }
+    if (slug.includes('spring') || slug.includes('primavera') || name.includes('spring') || name.includes('primavera')) {
+      const year = slug.match(/(20\d{2})/) ? slug.match(/(20\d{2})/)[1] : '2025'
+      return `${seasonNames[locale].spring} ${year}`
+    }
+    if (slug.includes('autumn') || slug.includes('otoño') || slug.includes('otono') || name.includes('autumn') || name.includes('otoño')) {
+      const year = slug.match(/(20\d{2})/) ? slug.match(/(20\d{2})/)[1] : '2025'
+      return `${seasonNames[locale].autumn} ${year}`
+    }
+    
+    return ''
+  }
+  
+  // Get skill level name, icon, and color
+  const getSkillLevelInfo = () => {
+    const skillLevelData = {
+      es: {
+        all: { name: 'Todos los Niveles', icon: Trophy, color: 'bg-blue-50 text-blue-700' },
+        beginner: { name: 'Nivel Inicial', icon: Award, color: 'bg-amber-50 text-amber-700' },
+        intermediate: { name: 'Intermedio', icon: Medal, color: 'bg-gray-100 text-gray-700' },
+        advanced: { name: 'Avanzado', icon: Trophy, color: 'bg-yellow-50 text-yellow-700' }
+      },
+      en: {
+        all: { name: 'All Levels', icon: Trophy, color: 'bg-blue-50 text-blue-700' },
+        beginner: { name: 'Entry-Level', icon: Award, color: 'bg-amber-50 text-amber-700' },
+        intermediate: { name: 'Intermediate', icon: Medal, color: 'bg-gray-100 text-gray-700' },
+        advanced: { name: 'Advanced', icon: Trophy, color: 'bg-yellow-50 text-yellow-700' }
+      }
+    }
+    
+    // Try to detect skill level from multiple sources
+    let detectedLevel = league.skillLevel || 'all'
+    
+    // Fallback: detect from name/slug if skillLevel not set
+    if (detectedLevel === 'all') {
+      const name = league.name?.toLowerCase() || ''
+      const slug = league.slug?.toLowerCase() || ''
+      
+      if (name.includes('gold') || name.includes('oro') || slug.includes('gold')) {
+        detectedLevel = 'advanced'
+      } else if (name.includes('silver') || name.includes('plata') || slug.includes('silver')) {
+        detectedLevel = 'intermediate'
+      } else if (name.includes('bronze') || name.includes('bronce') || slug.includes('bronze')) {
+        detectedLevel = 'beginner'
+      }
+    }
+    
+    return skillLevelData[locale]?.[detectedLevel] || skillLevelData['es'][detectedLevel] || skillLevelData['es']['all']
+  }
+  
+  // Get skill level description (SHORT version for cards)
+  const getSkillLevelDescription = () => {
+    // Try to detect skill level from multiple sources
+    let skillLevel = league.skillLevel || 'all'
+    
+    // Fallback: detect from name/slug if skillLevel not set
+    if (skillLevel === 'all') {
+      const name = league.name?.toLowerCase() || ''
+      const slug = league.slug?.toLowerCase() || ''
+      
+      if (name.includes('gold') || name.includes('oro') || slug.includes('gold')) {
+        skillLevel = 'advanced'
+      } else if (name.includes('silver') || name.includes('plata') || slug.includes('silver')) {
+        skillLevel = 'intermediate'
+      } else if (name.includes('bronze') || name.includes('bronce') || slug.includes('bronze')) {
+        skillLevel = 'beginner'
+      }
+    }
+    
+    // Map 'all' to 'open' for descriptions
+    const descKey = skillLevel === 'all' ? 'open' : skillLevel
+    return shortLevelDescriptions[locale]?.[descKey] || shortLevelDescriptions['es'][descKey] || ''
+  }
+  
+  // Get gradient overlay color based on skill level
+  const getGradientOverlay = () => {
+    const skillLevel = league.skillLevel || 'all'
+    const name = league.name?.toLowerCase() || ''
+    const slug = league.slug?.toLowerCase() || ''
+    
+    // Detect Gold league
+    if (skillLevel === 'advanced' || name.includes('gold') || name.includes('oro') || slug.includes('gold')) {
+      return 'bg-gradient-to-t from-yellow-900/90 via-yellow-700/50 to-transparent'
+    }
+    
+    // Detect Silver league
+    if (skillLevel === 'intermediate' || name.includes('silver') || name.includes('plata') || slug.includes('silver')) {
+      return 'bg-gradient-to-t from-gray-900/90 via-gray-600/50 to-transparent'
+    }
+    
+    // Detect Bronze league
+    if (skillLevel === 'beginner' || name.includes('bronze') || name.includes('bronce') || slug.includes('bronze')) {
+      return 'bg-gradient-to-t from-amber-900/90 via-orange-700/50 to-transparent'
+    }
+    
+    // Default gradient for open/all levels
+    return 'bg-gradient-to-t from-black/80 via-black/40 to-transparent'
+  }
+  
+  // Get localized league name
+  const getLeagueName = () => {
+    const name = league.name || ''
+    
+    if (locale === 'es') {
+      // Translate English league names to Spanish on the fly
+      return name
+        .replace(/Gold League/gi, 'Liga de Oro')
+        .replace(/Silver League/gi, 'Liga de Plata')
+        .replace(/Bronze League/gi, 'Liga de Bronce')
+        .replace(/League/gi, 'Liga')
+    }
+    
+    return name
   }
   
   const seasonName = getSeasonName()
-  const skillLevelName = getSkillLevelName()
+  const skillLevelInfo = getSkillLevelInfo()
+  const skillLevelDescription = getSkillLevelDescription()
+  const gradientOverlay = getGradientOverlay()
+  const SkillIcon = skillLevelInfo.icon
   
   // Get city image
   const getCityImage = () => {
@@ -171,40 +339,33 @@ export default function LeagueCard({ league, content, locale }) {
     setImageLoading(false)
   }
   
-  // Get the appropriate button config and link
+  // Get the appropriate button config and link - ALL link to info page
   const getButtonConfig = () => {
+    const infoUrl = `/${locale}/leagues/${citySlug}/info/${league.slug}`
+    
     if (isActive) {
-      const seasonSlug = (league.season?.type && league.season?.year) ? 
-        `${league.season.type}${league.season.year}` : 
-        'verano2025';
-      
       return {
         text: locale === 'es' ? 'Ver Liga' : 'View League',
-        href: `/${locale}/${citySlug}/liga/${seasonSlug}`,
+        href: infoUrl,
         className: 'bg-parque-purple text-white hover:bg-parque-purple/90'
       };
     } else if (isRegistrationOpen) {
-      const registrationUrl = locale === 'es' ? 'registro' : 'signup'
-      const safeSlug = league.slug || citySlug || 'unknown'
-      const href = `/${locale}/${registrationUrl}/${safeSlug}`
       return {
-        text: content?.cities?.joinLeague || (locale === 'es' ? 'Inscribirse' : 'Join League'),
-        href: href,
+        text: locale === 'es' ? 'Más Información' : 'Learn More',
+        href: infoUrl,
         className: 'bg-parque-green text-white hover:bg-parque-green/90'
       };
     } else if (isComingSoon) {
-      const registrationUrl = locale === 'es' ? 'registro' : 'signup'
-      const safeSlug = league.slug || citySlug || 'unknown'
       return {
-        text: content?.cities?.preRegister || (locale === 'es' ? 'Pre-registro' : 'Pre-register'),
-        href: `/${locale}/${registrationUrl}/${safeSlug}`,
-        className: 'bg-parque-green text-white hover:bg-parque-green/90'
+        text: locale === 'es' ? 'Próximamente' : 'Coming Soon',
+        href: infoUrl,
+        className: 'bg-blue-600 text-white hover:bg-blue-700'
       };
     } else {
       return {
-        text: locale === 'es' ? 'No disponible' : 'Not available',
-        href: null,
-        className: 'bg-gray-200 text-gray-500 cursor-not-allowed'
+        text: locale === 'es' ? 'Ver Detalles' : 'View Details',
+        href: infoUrl,
+        className: 'bg-gray-600 text-white hover:bg-gray-700'
       };
     }
   };
@@ -214,7 +375,22 @@ export default function LeagueCard({ league, content, locale }) {
   // Card content
   const cardContent = (
     <>
-      {/* Status Badge */}
+      {/* Skill Level Medal Badge - Top Left */}
+      <div className="absolute top-4 left-4 z-10">
+        <div className={`relative w-11 h-11 rounded-full flex items-center justify-center shadow-xl border-3 border-white/80 ${
+          skillLevelInfo.color === 'bg-yellow-50 text-yellow-700'
+            ? 'bg-yellow-500'
+            : skillLevelInfo.color === 'bg-gray-100 text-gray-700'
+            ? 'bg-gray-400'
+            : skillLevelInfo.color === 'bg-amber-50 text-amber-700'
+            ? 'bg-amber-600'
+            : 'bg-blue-500'
+        }`}>
+          <SkillIcon className="w-6 h-6 text-white" strokeWidth={2.5} />
+        </div>
+      </div>
+
+      {/* Status Badge - Top Right */}
       <div className="absolute top-4 right-4 z-10">
         <span className={`px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm ${
           isActive 
@@ -254,16 +430,16 @@ export default function LeagueCard({ league, content, locale }) {
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
 
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+        {/* Gradient overlay - color based on league level */}
+        <div className={`absolute inset-0 ${gradientOverlay}`}></div>
         
         <div className="absolute inset-0 flex items-center justify-center">
-          <h3 className="text-3xl font-bold text-white drop-shadow-lg text-center px-4">{league.name}</h3>
+          <h3 className="text-3xl font-bold text-white drop-shadow-lg text-center px-4">{getLeagueName()}</h3>
         </div>
       </div>
       
       {/* Content */}
-      <div className="p-6">
+      <div className="p-6 pb-5 flex flex-col">
         {/* Location */}
         <div className="flex items-center gap-2 mb-3 text-gray-600">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -275,50 +451,28 @@ export default function LeagueCard({ league, content, locale }) {
         
         {/* Season and Skill Level Badges */}
         <div className="flex flex-wrap gap-2 mb-4">
-          {/* Always show season - use fallback if not available */}
+          {/* Always show season - detect from league data or slug */}
           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-700 rounded-full text-sm font-medium">
             <Calendar className="w-4 h-4" />
-            <span>{seasonName || (locale === 'es' ? 'Verano 2025' : 'Summer 2025')}</span>
+            <span>{seasonName}</span>
           </div>
           {/* Always show skill level - use fallback if not available */}
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-sm font-medium">
-            <Trophy className="w-4 h-4" />
-            <span>{skillLevelName}</span>
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${skillLevelInfo.color}`}>
+            <SkillIcon className="w-4 h-4" />
+            <span>{skillLevelInfo.name}</span>
           </div>
         </div>
         
-        {/* Description - always show something */}
-        <p className="text-gray-600 mb-4 line-clamp-2">
-          {league.description?.[locale] || 
+        {/* Description - use level descriptions matching info page */}
+        <p className="text-gray-600 line-clamp-3">
+          {skillLevelDescription || 
+           league.description?.[locale] || 
            (locale === 'es' 
              ? `Liga de tenis en ${locationString}. Únete y compite con jugadores de tu nivel.`
              : `Tennis league in ${locationString}. Join and compete with players at your level.`
            )
           }
         </p>
-        
-        {/* Player count for active leagues */}
-        {(isActive || isRegistrationOpen) && (
-          <div className="flex items-center gap-2 mb-4 text-sm">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-full font-medium">
-              <Users className="w-4 h-4" />
-              <span className="font-semibold">{league.stats?.registeredPlayers || 0}</span>
-              <span>{locale === 'es' ? 'jugadores' : 'players'}</span>
-            </div>
-          </div>
-        )}
-        
-        {/* Action Button - Not clickable as whole card is clickable */}
-        <div
-          className={`block w-full text-center px-6 py-3 rounded-lg font-medium transition-colors ${buttonConfig.className}`}
-          onClick={(e) => {
-            if (!buttonConfig.href) {
-              e.preventDefault()
-            }
-          }}
-        >
-          {buttonConfig.text}
-        </div>
       </div>
     </>
   );

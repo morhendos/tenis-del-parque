@@ -141,6 +141,88 @@ export default function AdminLeaguesPage() {
     }
   }
 
+  // Archive a league (soft delete)
+  const handleArchiveLeague = async (league) => {
+    if (!confirm(`Archive "${league.name}"?\n\nThis will hide it from the main list. You can restore it later from the Archive tab.`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/admin/leagues/${league._id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'archived' })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to archive league')
+      }
+
+      toast.success('League archived successfully!')
+      await refreshLeagues()
+    } catch (error) {
+      console.error('Error archiving league:', error)
+      toast.error('Failed to archive league. Please try again.')
+    }
+  }
+
+  // Restore an archived league
+  const handleRestoreLeague = async (league) => {
+    if (!confirm(`Restore "${league.name}"?\n\nThis will bring it back to inactive status.`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/admin/leagues/${league._id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'inactive' })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to restore league')
+      }
+
+      toast.success('League restored successfully!')
+      await refreshLeagues()
+    } catch (error) {
+      console.error('Error restoring league:', error)
+      toast.error('Failed to restore league. Please try again.')
+    }
+  }
+
+  // Permanently delete a league (only from archive)
+  const handlePermanentDelete = async (league) => {
+    const confirmed = confirm(
+      `⚠️ PERMANENT DELETE WARNING ⚠️\n\nAre you absolutely sure you want to permanently delete "${league.name}"?\n\nThis will remove:\n- All player registrations\n- All match history\n- All statistics\n\nThis action CANNOT be undone!\n\nType the league name to confirm.`
+    )
+
+    if (!confirmed) return
+
+    // Double confirmation
+    const leagueName = prompt(`Type "${league.name}" to confirm permanent deletion:`)
+    if (leagueName !== league.name) {
+      toast.error('League name did not match. Deletion cancelled.')
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/admin/leagues/${league._id}`, {
+        method: 'DELETE'
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete league')
+      }
+
+      toast.success('League permanently deleted')
+      await refreshLeagues()
+    } catch (error) {
+      console.error('Error deleting league:', error)
+      toast.error('Failed to delete league. Please try again.')
+    }
+  }
+
   const getStatusBadgeColor = (status) => {
     switch (status) {
       case 'active':
@@ -151,6 +233,8 @@ export default function AdminLeaguesPage() {
         return 'bg-yellow-100 text-yellow-800'
       case 'completed':
         return 'bg-purple-100 text-purple-800'
+      case 'archived':
+        return 'bg-gray-100 text-gray-800'
       case 'inactive':
         return 'bg-gray-100 text-gray-800'
       default:
@@ -184,8 +268,11 @@ export default function AdminLeaguesPage() {
     return names[skillLevel] || skillLevel
   }
 
-  // Group leagues by city
-  const groupedLeagues = leagues.reduce((groups, league) => {
+  // Group leagues by city (exclude archived from main view)
+  const activeLeagues = leagues.filter(league => league.status !== 'archived')
+  const archivedLeagues = leagues.filter(league => league.status === 'archived')
+  
+  const groupedLeagues = activeLeagues.reduce((groups, league) => {
     const cityName = league.location?.city || 'Unknown City'
     if (!groups[cityName]) {
       groups[cityName] = []
@@ -413,6 +500,21 @@ export default function AdminLeaguesPage() {
             League Overview
           </button>
           <button
+            onClick={() => setActiveTab('archive')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'archive'
+                ? 'border-parque-purple text-parque-purple'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Archive
+            {archivedLeagues.length > 0 && (
+              <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                {archivedLeagues.length}
+              </span>
+            )}
+          </button>
+          <button
             onClick={() => setActiveTab('city-links')}
             className={`py-2 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'city-links'
@@ -435,8 +537,8 @@ export default function AdminLeaguesPage() {
           {/* Quick Stats */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
             <div className="bg-white p-4 rounded-lg shadow">
-              <div className="text-2xl font-bold text-gray-900">{leagues.length}</div>
-              <div className="text-sm text-gray-600">Total Leagues</div>
+              <div className="text-2xl font-bold text-gray-900">{activeLeagues.length}</div>
+              <div className="text-sm text-gray-600">Active Leagues</div>
             </div>
             <div className="bg-white p-4 rounded-lg shadow">
               <div className="text-2xl font-bold text-purple-600">{sortedCities.length}</div>
@@ -444,21 +546,19 @@ export default function AdminLeaguesPage() {
             </div>
             <div className="bg-white p-4 rounded-lg shadow">
               <div className="text-2xl font-bold text-green-600">
-                {leagues.filter(l => l.status === 'active').length}
+                {activeLeagues.filter(l => l.status === 'active').length}
               </div>
-              <div className="text-sm text-gray-600">Active</div>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <div className="text-2xl font-bold text-yellow-600">
-                {leagues.filter(l => l.status === 'coming_soon').length}
-              </div>
-              <div className="text-sm text-gray-600">Coming Soon</div>
+              <div className="text-sm text-gray-600">Running</div>
             </div>
             <div className="bg-white p-4 rounded-lg shadow">
               <div className="text-2xl font-bold text-blue-600">
-                {leagues.filter(l => l.status === 'registration_open').length}
+                {activeLeagues.filter(l => l.status === 'registration_open').length}
               </div>
               <div className="text-sm text-gray-600">Open for Registration</div>
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow">
+              <div className="text-2xl font-bold text-gray-600">{archivedLeagues.length}</div>
+              <div className="text-sm text-gray-600">Archived</div>
             </div>
           </div>
 
@@ -636,12 +736,12 @@ export default function AdminLeaguesPage() {
                         key={league._id} 
                         className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all relative overflow-hidden border-2 border-transparent hover:border-emerald-400"
                       >
-                        {/* Header Section with Better Layout */}
+                        {/* Header Section - TWO ROWS */}
                         <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-4 py-3 border-b border-emerald-100">
-                          <div className="flex items-center justify-between gap-3">
-                            {/* Left: Sort Arrows (only in custom mode) */}
+                          {/* ROW 1: Sort Arrows + Title */}
+                          <div className="flex items-start gap-2 mb-3">
                             {leagueSortBy === 'custom' && (
-                              <div className="flex flex-col space-y-1">
+                              <div className="flex flex-col space-y-1 flex-shrink-0">
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation()
@@ -679,8 +779,8 @@ export default function AdminLeaguesPage() {
                               </div>
                             )}
                             
-                            {/* Center: League Name & Season */}
-                            <div className="flex-1 min-w-0">
+                            {/* League Name - FULL WIDTH */}
+                            <div className="flex-1">
                               <h3 className="text-lg font-bold text-gray-900 leading-tight">
                                 {league.name}
                               </h3>
@@ -690,37 +790,52 @@ export default function AdminLeaguesPage() {
                                 </div>
                               )}
                             </div>
+                          </div>
+                          
+                          {/* ROW 2: All Badges & Buttons */}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {/* Status Badge */}
+                            <span className={`px-2.5 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${getStatusBadgeColor(league.status)}`}>
+                              {league.status === 'registration_open' ? 'REG OPEN' : 
+                               league.status === 'coming_soon' ? 'COMING' :
+                               league.status?.replace('_', ' ').toUpperCase()}
+                            </span>
                             
-                            {/* Right: Badges & Edit Button */}
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              {/* Status Badge */}
-                              <span className={`px-2.5 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${getStatusBadgeColor(league.status)}`}>
-                                {league.status === 'registration_open' ? 'REG OPEN' : 
-                                 league.status === 'coming_soon' ? 'COMING' :
-                                 league.status?.replace('_', ' ').toUpperCase()}
+                            {/* Skill Level Badge */}
+                            {league.skillLevel && league.skillLevel !== 'all' && (
+                              <span className={`px-2 py-1 text-xs font-medium rounded border whitespace-nowrap ${getSkillLevelBadgeColor(league.skillLevel)}`}>
+                                {getSkillLevelName(league.skillLevel)}
                               </span>
-                              
-                              {/* Skill Level Badge */}
-                              {league.skillLevel && league.skillLevel !== 'all' && (
-                                <span className={`px-2 py-1 text-xs font-medium rounded border whitespace-nowrap ${getSkillLevelBadgeColor(league.skillLevel)}`}>
-                                  {getSkillLevelName(league.skillLevel)}
-                                </span>
-                              )}
-                              
-                              {/* Edit button */}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleEditClick(e, league)
-                                }}
-                                className="p-2 bg-white/60 rounded-lg hover:bg-white transition-colors"
-                                title="Edit league settings"
-                              >
-                                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
-                              </button>
-                            </div>
+                            )}
+                            
+                            {/* Archive button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleArchiveLeague(league)
+                              }}
+                              className="px-3 py-2 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-1.5"
+                              title="Archive this league"
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                              </svg>
+                              Archive
+                            </button>
+                            
+                            {/* Edit button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleEditClick(e, league)
+                              }}
+                              className="p-2 bg-white/60 rounded-lg hover:bg-white transition-colors"
+                              title="Edit league settings"
+                            >
+                              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
                           </div>
                         </div>
 
@@ -839,6 +954,108 @@ export default function AdminLeaguesPage() {
       {/* City Links Tab */}
       {activeTab === 'city-links' && (
         <LeagueCityLinker />
+      )}
+
+      {/* Archive Tab */}
+      {activeTab === 'archive' && (
+        <div className="space-y-6">
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-700">
+                  <strong>Archived Leagues:</strong> These leagues are hidden from the main view. You can restore them or permanently delete them.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {archivedLeagues.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-lg shadow">
+              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+              </svg>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No archived leagues</h3>
+              <p className="mt-1 text-sm text-gray-500">Archived leagues will appear here.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {archivedLeagues.map((league) => (
+                <div 
+                  key={league._id}
+                  className="bg-white rounded-xl shadow-md border-2 border-gray-200 overflow-hidden"
+                >
+                  {/* Header */}
+                  <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-bold text-gray-900 leading-tight">
+                          {league.name}
+                        </h3>
+                        {league.season && (
+                          <div className="text-xs text-gray-600 mt-1 capitalize">
+                            {league.season.type} {league.season.year}
+                          </div>
+                        )}
+                      </div>
+                      <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-gray-200 text-gray-700">
+                        ARCHIVED
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-5">
+                    <div className="space-y-3 text-sm mb-5">
+                      <div className="flex items-center text-gray-600">
+                        <span className="text-base mr-2">📍</span>
+                        <span>{league.location?.city || 'Unknown'}</span>
+                      </div>
+                      
+                      {league.skillLevel && (
+                        <div className="flex items-center text-gray-600">
+                          <span className="text-base mr-2">🏆</span>
+                          <span>{getSkillLevelName(league.skillLevel)}</span>
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center text-gray-600">
+                        <span className="text-base mr-2">👥</span>
+                        <span>{league.stats?.registeredPlayers || 0} players</span>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="grid grid-cols-1 gap-2.5">
+                      <button
+                        onClick={() => handleRestoreLeague(league)}
+                        className="w-full px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Restore League
+                      </button>
+                      <button
+                        onClick={() => handlePermanentDelete(league)}
+                        className="w-full px-4 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Permanently Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       {/* Import Modal */}
