@@ -8,22 +8,22 @@ const levelDescriptions = {
   es: {
     beginner: {
       title: 'Inicial',
-      description: 'Liga diseñada para disfrutar del tenis en su máxima expresión. Juega a tu ritmo, mejora tu técnica y forma parte de una comunidad apasionada por este deporte.',
+      description: '¿Nuevo en el tenis competitivo? Esta liga de nivel inicial ofrece competición estructurada donde cada punto importa. Perfecta para competidores primerizos listos para la experiencia de liga organizada.',
       skills: [
-        'Partidos relajados y divertidos',
-        'Énfasis en el juego social y recreativo',
-        'Perfecto para retomar el tenis o jugar sin presión',
-        'Comunidad acogedora y ambiente amistoso'
+        'Perfecta para competidores menos experimentados',
+        'Partidos estructurados con organización clara',
+        'Ambiente amigable con menos presión',
+        'Desarrolla confianza en juego competitivo'
       ]
     },
     intermediate: {
       title: 'Intermedio',
-      description: 'Ideal para jugadores con fundamentos sólidos que buscan mejorar su juego. Partidos competitivos pero amistosos con jugadores de nivel similar.',
+      description: 'Para jugadores con experiencia competitiva listos para partidos desafiantes regulares. Un paso adelante del nivel inicial con juego más intenso contra oponentes de habilidad similar.',
       skills: [
-        'Dominio de golpes básicos',
-        'Capacidad de mantener rallies consistentes',
-        'Conocimiento de estrategia básica',
-        'Nivel competitivo moderado'
+        'Experiencia jugando partidos competitivos',
+        'Base técnica sólida en la mayoría de golpes',
+        'Preparado para oponentes equilibrados y desafiantes',
+        'Busca mejorar a través de competición regular'
       ]
     },
     advanced: {
@@ -50,22 +50,22 @@ const levelDescriptions = {
   en: {
     beginner: {
       title: 'Beginner',
-      description: 'A league designed to enjoy tennis at its finest. Play at your own pace, improve your technique, and be part of a passionate tennis community.',
+      description: 'New to competitive tennis? This entry-level league offers structured competition where every point matters. Perfect for first-time competitors ready to experience organized league play.',
       skills: [
-        'Relaxed and enjoyable matches',
-        'Focus on social and recreational play',
-        'Perfect for getting back into tennis or playing without pressure',
-        'Welcoming community and friendly atmosphere'
+        'Perfect for less experienced competitors',
+        'Structured matches with clear organization',
+        'Friendly atmosphere with less pressure',
+        'Build confidence in competitive play'
       ]
     },
     intermediate: {
       title: 'Intermediate',
-      description: 'Ideal for players with solid fundamentals looking to improve their game. Competitive yet friendly matches with similarly skilled players.',
+      description: 'For players with competitive experience ready for regular challenging matches. Step up from entry-level with more intense play against similarly skilled opponents.',
       skills: [
-        'Command of basic strokes',
-        'Ability to maintain consistent rallies',
-        'Basic strategy knowledge',
-        'Moderate competitive level'
+        'Experience playing competitive matches',
+        'Solid technical foundation across most strokes',
+        'Ready for balanced, challenging opponents',
+        'Looking to improve through regular competition'
       ]
     },
     advanced: {
