@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Calendar, Users, CreditCard, TrendingUp, Award, Info, Trophy, Target, ChartLine, Shield, Sparkles, Heart, CheckCircle, Clock, Tag, Medal } from 'lucide-react'
+import RegistrationCountdown from '@/components/ui/RegistrationCountdown'
 
 // Level descriptions for different league types
 const levelDescriptions = {
@@ -388,6 +389,16 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
                 )}
               </div>
             </div>
+
+            {/* Registration Countdown */}
+            {league.status === 'registration_open' && league.seasonConfig?.registrationEnd && (
+              <div className="pt-5 border-t border-gray-200">
+                <RegistrationCountdown 
+                  registrationEnd={league.seasonConfig.registrationEnd} 
+                  language={language}
+                />
+              </div>
+            )}
           </div>
 
           {league.status === 'registration_open' && (
@@ -409,36 +420,38 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
         </div>
 
         {/* League Level Card */}
-        <div className="bg-gradient-to-br from-parque-purple/5 to-purple-50 border-2 border-purple-100 rounded-2xl p-6 hover:border-parque-purple/30 transition-all duration-300 hover:shadow-lg">
+        <div className="bg-gradient-to-br from-parque-purple/5 to-purple-50 border-2 border-purple-100 rounded-2xl p-6 hover:border-parque-purple/30 transition-all duration-300 hover:shadow-lg flex flex-col">
           <h4 className="font-bold text-xl text-gray-900 mb-6 flex items-center gap-2">
             <Award className="w-6 h-6 text-parque-purple" />
             {content.leagueLevel}
           </h4>
           
-          <div className="space-y-4">
-            <div>
-              <h5 className="text-2xl font-bold text-parque-purple mb-2">
-                {levelInfo.title}
-              </h5>
-              <p className="text-gray-700 leading-relaxed">
-                {levelInfo.description}
-              </p>
-            </div>
+          <div className="flex-1 flex flex-col">
+            <div className="space-y-4">
+              <div>
+                <h5 className="text-2xl font-bold text-parque-purple mb-2">
+                  {levelInfo.title}
+                </h5>
+                <p className="text-gray-700 leading-relaxed">
+                  {levelInfo.description}
+                </p>
+              </div>
 
-            <div className="pt-4 border-t border-purple-200">
-              <p className="text-sm font-semibold text-gray-900 mb-3">{content.whatToExpect}</p>
-              <ul className="space-y-2">
-                {levelInfo.skills.map((skill, index) => (
-                  <li key={index} className="flex items-start gap-2 text-sm text-gray-700">
-                    <TrendingUp className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
-                    <span>{skill}</span>
-                  </li>
-                ))}
-              </ul>
+              <div className="pt-4 border-t border-purple-200">
+                <p className="text-sm font-semibold text-gray-900 mb-3">{content.whatToExpect}</p>
+                <ul className="space-y-2">
+                  {levelInfo.skills.map((skill, index) => (
+                    <li key={index} className="flex items-start gap-2 text-sm text-gray-700">
+                      <TrendingUp className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                      <span>{skill}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
 
             {/* Level Switcher */}
-            <div className="pt-4 border-t border-purple-200">
+            <div className="pt-4 border-t border-purple-200 mt-auto">
               <p className="text-xs font-semibold text-gray-600 mb-3 uppercase tracking-wide">
                 {language === 'es' ? 'Otros Niveles' : 'Other Levels'}
               </p>

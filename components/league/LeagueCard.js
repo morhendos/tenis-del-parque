@@ -339,14 +339,16 @@ export default function LeagueCard({ league, content, locale }) {
     setImageLoading(false)
   }
   
-  // Get the appropriate button config and link - ALL link to info page
+  // Get the appropriate button config and link
+  // Active leagues link to league page, others link to info page
   const getButtonConfig = () => {
     const infoUrl = `/${locale}/leagues/${citySlug}/info/${league.slug}`
+    const leagueUrl = `/${locale}/${citySlug}/liga/${league.slug}`
     
     if (isActive) {
       return {
         text: locale === 'es' ? 'Ver Liga' : 'View League',
-        href: infoUrl,
+        href: leagueUrl,
         className: 'bg-parque-purple text-white hover:bg-parque-purple/90'
       };
     } else if (isRegistrationOpen) {
