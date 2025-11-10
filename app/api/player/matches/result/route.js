@@ -44,6 +44,7 @@ function getPlayerRegistration(player, leagueId, season) {
 
 export async function POST(request) {
   let session = null
+  let match = null
   
   try {
     await dbConnect()
@@ -55,7 +56,7 @@ export async function POST(request) {
     const { matchId, sets, walkover, retiredPlayer } = await request.json()
 
     // Find the match
-    const match = await Match.findById(matchId)
+    match = await Match.findById(matchId)
     if (!match) {
       return NextResponse.json({ success: false, error: 'Match not found' }, { status: 404 })
     }
@@ -221,8 +222,15 @@ export async function POST(request) {
 
     // Start a database transaction to ensure all operations succeed or fail together
     session = await mongoose.startSession()
-    await session.startTransaction()
+    session.startTransaction({
+      readPreference: 'primary',
+      readConcern: { level: 'local' },
+      writeConcern: { w: 'majority' }
+      // Removed wtimeout to prevent transaction state mismatch errors
+      // MongoDB will use default timeout which is more appropriate
+    })
 
+    const txStart = Date.now()
     try {
       // Get both players for ELO calculation
       const [player1, player2] = await Promise.all([
@@ -310,15 +318,8 @@ export async function POST(request) {
 
       // Commit the transaction
       await session.commitTransaction()
-
-      // Populate match data for response (outside transaction)
-      await match.populate('players.player1 players.player2 league')
-
-      return NextResponse.json({ 
-        success: true, 
-        message: 'Match result submitted successfully',
-        match: match
-      })
+      const txDuration = Date.now() - txStart
+      console.log(`✅ Transaction completed in ${txDuration}ms`)
 
     } catch (transactionError) {
       // Rollback the transaction
@@ -353,6 +354,126 @@ export async function POST(request) {
     // Always end the session
     if (session) {
       await session.endSession()
+    }
+  }
+
+  // AUTO-CREATE NEXT ROUND MATCHES (OUTSIDE TRANSACTION - AFTER SUCCESS)
+  // This runs after the transaction commits successfully
+  if (match && match.matchType === 'playoff' && match.playoffInfo) {
+    try {
+      const League = mongoose.model('League')
+      const league = await League.findById(match.league)
+      
+      if (league && league.playoffConfig) {
+        const { group, stage } = match.playoffInfo
+        const bracket = group === 'A' ? league.playoffConfig.bracket.groupA : league.playoffConfig.bracket.groupB
+        
+        // Create next round matches without transaction
+        await autoCreateNextRoundMatchesNoTransaction(match, league, bracket, group, stage)
+      }
+    } catch (autoCreateError) {
+      // Don't fail the whole request if auto-creation fails
+      console.error('⚠️ Failed to auto-create next round matches:', autoCreateError.message)
+      console.log('💡 Matches can be created manually or by re-saving any playoff match')
+    }
+  }
+
+  // Populate match data for response
+  await match.populate('players.player1 players.player2 league')
+
+  return NextResponse.json({ 
+    success: true, 
+    message: 'Match result submitted successfully',
+    match: match
+  })
+}
+
+// Auto-create next round matches when both matches are complete (NO TRANSACTION)
+async function autoCreateNextRoundMatchesNoTransaction(completedMatch, league, bracket, group, stage) {
+  console.log(`🎾 [PLAYER] Checking if next round matches should be created for ${stage} in Group ${group}...`)
+  
+  const SEASON_ID = new mongoose.Types.ObjectId('688f5d51c94f8e3b3cbfd87b')
+  
+  if (stage === 'quarterfinal') {
+    const semifinals = bracket.semifinals
+    
+    for (let i = 0; i < semifinals.length; i++) {
+      const sf = semifinals[i]
+      
+      if (sf.matchId) {
+        console.log(`  SF${i + 1} already exists`)
+        continue
+      }
+      
+      const qf1 = bracket.quarterfinals[sf.fromMatch1]
+      const qf2 = bracket.quarterfinals[sf.fromMatch2]
+      
+      if (qf1.winner && qf2.winner) {
+        console.log(`  ✅ Creating SF${i + 1}`)
+        
+        const sfMatch = new Match({
+          league: league._id,
+          season: SEASON_ID,
+          round: 10,
+          matchType: 'playoff',
+          playoffInfo: { group, stage: 'semifinal', matchNumber: i + 1 },
+          players: { player1: qf1.winner, player2: qf2.winner },
+          status: 'scheduled'
+        })
+        
+        await sfMatch.save()
+        semifinals[i].matchId = sfMatch._id
+        await league.save({ validateModifiedOnly: true })
+        
+        console.log(`  🎉 Created semifinal: ${sfMatch._id}`)
+      }
+    }
+  } else if (stage === 'semifinal') {
+    const sf1 = bracket.semifinals[0]
+    const sf2 = bracket.semifinals[1]
+    
+    if (sf1.winner && sf2.winner && !bracket.final.matchId) {
+      const finalMatch = new Match({
+        league: league._id,
+        season: SEASON_ID,
+        round: 11,
+        matchType: 'playoff',
+        playoffInfo: { group, stage: 'final' },
+        players: { player1: sf1.winner, player2: sf2.winner },
+        status: 'scheduled'
+      })
+      
+      await finalMatch.save()
+      bracket.final.matchId = finalMatch._id
+      await league.save({ validateModifiedOnly: true })
+      console.log(`  🎉 Created final: ${finalMatch._id}`)
+    }
+    
+    if (sf1.winner && sf2.winner && !bracket.thirdPlace.matchId) {
+      const sf1Match = await Match.findById(sf1.matchId)
+      const sf2Match = await Match.findById(sf2.matchId)
+      
+      if (sf1Match && sf2Match) {
+        const sf1Loser = sf1Match.players.player1.toString() === sf1.winner.toString()
+          ? sf1Match.players.player2 : sf1Match.players.player1
+        const sf2Loser = sf2Match.players.player1.toString() === sf2.winner.toString()
+          ? sf2Match.players.player2 : sf2Match.players.player1
+        
+        const thirdPlaceMatch = new Match({
+          league: league._id,
+          season: SEASON_ID,
+          round: 11,
+          matchType: 'playoff',
+          playoffInfo: { group, stage: 'third_place' },
+          players: { player1: sf1Loser, player2: sf2Loser },
+          status: 'scheduled'
+        })
+        
+        await thirdPlaceMatch.save()
+        bracket.thirdPlace.matchId = thirdPlaceMatch._id
+        await league.save({ validateModifiedOnly: true })
+        console.log(`  🎉 Created 3rd place: ${thirdPlaceMatch._id}`)
+      }
     }
   }
 }
