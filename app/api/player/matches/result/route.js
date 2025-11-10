@@ -352,9 +352,22 @@ export async function POST(request) {
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     }, { status: 500 })
   } finally {
-    // Always end the session
+    // Always end the session and ensure it's cleaned up properly
     if (session) {
-      await session.endSession()
+      try {
+        // If transaction is still active, abort it
+        if (session.inTransaction()) {
+          await session.abortTransaction()
+        }
+      } catch (abortError) {
+        console.warn('Error aborting transaction in finally:', abortError.message)
+      }
+      
+      try {
+        await session.endSession()
+      } catch (endError) {
+        console.warn('Error ending session in finally:', endError.message)
+      }
     }
   }
 
