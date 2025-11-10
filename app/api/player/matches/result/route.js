@@ -222,6 +222,8 @@ export async function POST(request) {
 
     // Start a database transaction to ensure all operations succeed or fail together
     session = await mongoose.startSession()
+    
+    const txStart = Date.now()
     session.startTransaction({
       readPreference: 'primary',
       readConcern: { level: 'local' },
@@ -230,7 +232,6 @@ export async function POST(request) {
       // MongoDB will use default timeout which is more appropriate
     })
 
-    const txStart = Date.now()
     try {
       // Get both players for ELO calculation
       const [player1, player2] = await Promise.all([
