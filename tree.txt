@@ -463,6 +463,7 @@ root/
 │   └── ui
 │       ├── AnnouncementModal.js
 │       ├── EnhancedSuccessMessage.js
+│       ├── RegistrationCountdown.js
 │       ├── TennisDividers.js
 │       ├── TennisIcons.js
 │       ├── TennisPreloader.js
@@ -676,8 +677,11 @@ root/
 │   ├── checkLeagueSkillLevels.js
 │   ├── checkMatch.js
 │   ├── checkMatchSeasons.js
+│   ├── checkPlayoffMatchesForPlayer.js
 │   ├── checkSeasonData.js
 │   ├── checkSeasonObjectId.mjs
+│   ├── checkSemifinalMatches.js
+│   ├── checkSemifinalsCreated.js
 │   ├── checkSotograndePlayers.js
 │   ├── cleanup-clubes-duplicates.sh
 │   ├── cleanup-old-editors.sh
@@ -690,6 +694,7 @@ root/
 │   ├── diagnoseLinkIssues.js
 │   ├── directFix.js
 │   ├── findTomaszMatches.js
+│   ├── findTomaszPlayer.js
 │   ├── findTomaszSimple.js
 │   ├── fixBrokenImages.mjs
 │   ├── fixEloStructure.js

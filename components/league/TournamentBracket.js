@@ -61,6 +61,21 @@ export default function TournamentBracket({
     return null
   }
 
+  // Helper to get loser from a completed match
+  const getMatchLoser = (match) => {
+    if (!match || match.status !== 'completed' || !match.result?.winner) return null
+    
+    const winnerId = match.result.winner._id || match.result.winner
+    // Return the player who is NOT the winner
+    if (match.players.player1._id === winnerId || match.players.player1._id?.toString() === winnerId?.toString()) {
+      return match.players.player2
+    }
+    if (match.players.player2._id === winnerId || match.players.player2._id?.toString() === winnerId?.toString()) {
+      return match.players.player1
+    }
+    return null
+  }
+
   // Get match status color
   const getMatchStatusColor = (match) => {
     if (!match) return 'bg-gray-100'
@@ -326,11 +341,22 @@ export default function TournamentBracket({
                           m.playoffInfo?.stage === 'third_place'
                         )
                         
+                        // Get losers from semifinals
+                        const sf1Match = matches?.find(m => 
+                          m.playoffInfo?.stage === 'semifinal' && m.playoffInfo?.matchNumber === 1
+                        )
+                        const sf2Match = matches?.find(m => 
+                          m.playoffInfo?.stage === 'semifinal' && m.playoffInfo?.matchNumber === 2
+                        )
+                        
+                        const player1 = getMatchLoser(sf1Match)
+                        const player2 = getMatchLoser(sf2Match)
+                        
                         return (
                           <MatchBox
                             match={matchData}
-                            player1={null}
-                            player2={null}
+                            player1={player1}
+                            player2={player2}
                             stage="third_place"
                           />
                         )
@@ -537,11 +563,22 @@ export default function TournamentBracket({
                           m.playoffInfo?.stage === 'third_place'
                         )
                         
+                        // Get losers from semifinals
+                        const sf1Match = matches?.find(m => 
+                          m.playoffInfo?.stage === 'semifinal' && m.playoffInfo?.matchNumber === 1
+                        )
+                        const sf2Match = matches?.find(m => 
+                          m.playoffInfo?.stage === 'semifinal' && m.playoffInfo?.matchNumber === 2
+                        )
+                        
+                        const player1 = getMatchLoser(sf1Match)
+                        const player2 = getMatchLoser(sf2Match)
+                        
                         return (
                           <MatchBox
                             match={matchData}
-                            player1={null}
-                            player2={null}
+                            player1={player1}
+                            player2={player2}
                             stage="third_place"
                           />
                         )
