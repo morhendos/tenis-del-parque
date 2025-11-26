@@ -181,6 +181,8 @@ root/
 │   │   │   │   │   │   │   └── route.js
 │   │   │   │   │   │   └── route.js
 │   │   │   │   │   ├── playoffs
+│   │   │   │   │   │   ├── finalist-emails
+│   │   │   │   │   │   │   └── route.js
 │   │   │   │   │   │   ├── notifications
 │   │   │   │   │   │   │   └── route.js
 │   │   │   │   │   │   └── route.js
@@ -377,16 +379,25 @@ root/
 │   │   │   ├── MatchResultTab.js
 │   │   │   ├── MatchScheduleTab.js
 │   │   │   └── MatchesHeader.js
-│   │   └── players
-│   │       ├── DeletePlayerModal.js
-│   │       ├── EloRecalculateModal.js
-│   │       ├── ImportCSVModal.js
-│   │       ├── InvitationResultModal.js
-│   │       ├── PlayerDetailsModal.js
-│   │       ├── PlayerFilters.js
-│   │       ├── PlayerTable.js
-│   │       ├── PlayerTableRow.js
-│   │       └── StatsRecalculateModal.js
+│   │   ├── players
+│   │   │   ├── DeletePlayerModal.js
+│   │   │   ├── EloRecalculateModal.js
+│   │   │   ├── ImportCSVModal.js
+│   │   │   ├── InvitationResultModal.js
+│   │   │   ├── PlayerDetailsModal.js
+│   │   │   ├── PlayerFilters.js
+│   │   │   ├── PlayerTable.js
+│   │   │   ├── PlayerTableRow.js
+│   │   │   └── StatsRecalculateModal.js
+│   │   └── playoffs
+│   │       ├── FinalistEmailModal.js
+│   │       ├── NotificationModal.js
+│   │       ├── PlayoffBrackets.js
+│   │       ├── PlayoffConfiguration.js
+│   │       ├── PlayoffStandings.js
+│   │       ├── StandingsTable.js
+│   │       ├── usePlayoffActions.js
+│   │       └── usePlayoffData.js
 │   ├── analytics
 │   │   ├── GoogleAnalytics.js
 │   │   └── MicrosoftClarity.js
@@ -567,6 +578,7 @@ root/
 │   ├── email
 │   │   ├── resend.js
 │   │   └── templates
+│   │       ├── finalistEmail.js
 │   │       ├── playoffEmail.js
 │   │       └── welcomeEmail.js
 │   ├── hooks

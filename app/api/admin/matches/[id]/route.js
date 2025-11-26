@@ -305,6 +305,9 @@ export async function PATCH(request, { params }) {
         // Success! Break out of retry loop
         await session.endSession()
         session = null
+        
+        // Save the match (result updates happen inside transaction, but we still need to save)
+        await match.save()
         break
         
       } catch (transactionError) {
@@ -349,7 +352,11 @@ export async function PATCH(request, { params }) {
         throw new Error(`Failed to update match result: ${transactionError.message}`)
       }
     }
-      // Save the match for non-result updates
+    }
+
+    // Save the match for non-result updates (schedule, status, notes, etc.)
+    // This runs when NOT updating result (result updates save inside the transaction)
+    if (!body.result) {
       await match.save()
     }
 

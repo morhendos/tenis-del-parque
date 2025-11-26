@@ -84,10 +84,23 @@ export default function TournamentBracket({
     return 'bg-gray-50'
   }
 
+  // Helper to format schedule info
+  const formatSchedule = (match) => {
+    if (!match?.schedule?.confirmedDate) return null
+    const date = new Date(match.schedule.confirmedDate)
+    const dateStr = date.toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
+      day: 'numeric',
+      month: 'short'
+    })
+    const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    return { date: dateStr, time: timeStr, venue: match.schedule.club, court: match.schedule.court }
+  }
+
   // Render a match box
   const MatchBox = ({ match, player1, player2, stage, matchNumber }) => {
     const result = getMatchResult(match)
     const statusColor = getMatchStatusColor(match)
+    const scheduleInfo = formatSchedule(match)
     
     // Determine match style based on type
     const isWalkover = result?.isWalkover
@@ -123,6 +136,30 @@ export default function TournamentBracket({
             </span>
           )}
         </div>
+        
+        {/* Schedule info - only show if scheduled and not completed */}
+        {scheduleInfo && match?.status !== 'completed' && (
+          <div className="mb-2 pb-2 border-b border-gray-200">
+            <div className="flex items-center text-xs text-blue-600">
+              <svg className="w-3 h-3 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span className="font-medium">{scheduleInfo.date}</span>
+              <span className="mx-1">·</span>
+              <span>{scheduleInfo.time}</span>
+            </div>
+            {(scheduleInfo.venue || scheduleInfo.court) && (
+              <div className="flex items-center text-xs text-gray-500 mt-0.5">
+                <svg className="w-3 h-3 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                </svg>
+                <span className="truncate">
+                  {scheduleInfo.venue}{scheduleInfo.venue && scheduleInfo.court ? ' · ' : ''}{scheduleInfo.court}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
         
         <div className={`flex items-center justify-between py-1 ${isWinner(player1, match) ? 'font-bold' : ''}`}>
           <div className="flex items-center">

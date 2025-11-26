@@ -18,341 +18,59 @@
  * This prevents build errors in production!
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { useParams } from 'next/navigation'
-import TournamentBracket from '@/components/league/TournamentBracket'
+import { usePlayoffData } from '@/components/admin/playoffs/usePlayoffData'
+import { usePlayoffActions } from '@/components/admin/playoffs/usePlayoffActions'
+import PlayoffStandings from '@/components/admin/playoffs/PlayoffStandings'
+import PlayoffConfiguration from '@/components/admin/playoffs/PlayoffConfiguration'
+import PlayoffBrackets from '@/components/admin/playoffs/PlayoffBrackets'
+import NotificationModal from '@/components/admin/playoffs/NotificationModal'
+import FinalistEmailModal from '@/components/admin/playoffs/FinalistEmailModal'
 
 export default function LeaguePlayoffsAdmin() {
   const params = useParams()
   const leagueId = params.id
   
-  const [loading, setLoading] = useState(true)
-  const [league, setLeague] = useState(null)
-  const [playoffConfig, setPlayoffConfig] = useState(null)
-  const [playoffMatches, setPlayoffMatches] = useState([])
-  const [regularSeasonComplete, setRegularSeasonComplete] = useState(false)
-  const [numberOfGroups, setNumberOfGroups] = useState(1)
-  const [standings, setStandings] = useState([])
-  const [eligiblePlayerCount, setEligiblePlayerCount] = useState(0)
-  const [seasonIdentifier, setSeasonIdentifier] = useState('')
-  const [playoffsInitialized, setPlayoffsInitialized] = useState(false)
+  // Use custom hooks for data and actions
+  const playoffData = usePlayoffData(leagueId)
+  const playoffActions = usePlayoffActions(leagueId, playoffData)
   
-  // Notification states
+  // Modal states
   const [showNotificationModal, setShowNotificationModal] = useState(false)
   const [notificationGroup, setNotificationGroup] = useState('A')
-  const [notificationPreview, setNotificationPreview] = useState(null)
-  const [sendingNotifications, setSendingNotifications] = useState(false)
-  const [whatsappMessages, setWhatsappMessages] = useState([])
+  const [showFinalistEmailModal, setShowFinalistEmailModal] = useState(false)
+  const [finalistGroup, setFinalistGroup] = useState('A')
   
-  const fetchLeagueData = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/admin/leagues/${leagueId}`)
-      const data = await res.json()
-      if (data.success) {
-        setLeague(data.league)
-        setNumberOfGroups(data.league.playoffConfig?.numberOfGroups || 1)
-      } else {
-        console.warn('League endpoint failed, will use data from playoff endpoint')
-      }
-    } catch (error) {
-      console.warn('Error fetching league (will use playoff data):', error)
-    }
-  }, [leagueId])
+  const {
+    loading,
+    league,
+    playoffConfig,
+    playoffMatches,
+    standings,
+    eligiblePlayerCount,
+    seasonIdentifier,
+    playoffsInitialized,
+    numberOfGroups,
+    setNumberOfGroups
+  } = playoffData
   
-  const fetchPlayoffData = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/admin/leagues/${leagueId}/playoffs`)
-      const data = await res.json()
-      if (data.success) {
-        setPlayoffConfig(data.playoffConfig)
-        setPlayoffMatches(data.matches)
-        setStandings(data.standings || [])
-        setEligiblePlayerCount(data.eligiblePlayerCount || 0)
-        setSeasonIdentifier(data.seasonIdentifier || '')
-        setPlayoffsInitialized(data.playoffsInitialized || false)
-        
-        // If league data is not set (due to league endpoint failure), use data from playoff endpoint
-        if (!league && data.leagueSlug) {
-          setLeague({
-            name: data.leagueName || 'Liga de Sotogrande',
-            slug: data.leagueSlug,
-            playoffConfig: data.playoffConfig
-          })
-        }
-        
-        console.log('Playoff data:', data)
-        console.log('Eligible players:', data.eligiblePlayerCount)
-        console.log('Season identifier:', data.seasonIdentifier)
-        console.log('League slug:', data.leagueSlug)
-        console.log('Playoffs initialized:', data.playoffsInitialized)
-      }
-      return data // Return the data so we can use it
-    } catch (error) {
-      console.error('Error fetching playoff data:', error)
-      return null
-    } finally {
-      setLoading(false)
-    }
-  }, [leagueId, league])
+  const {
+    handleInitializePlayoffs,
+    handleResetPlayoffs,
+    handleUpdateConfig,
+    handleCreateNextRound,
+    handleMatchClick
+  } = playoffActions
   
-  useEffect(() => {
-    if (leagueId) {
-      fetchLeagueData()
-      fetchPlayoffData()
-    }
-  }, [leagueId, fetchLeagueData, fetchPlayoffData])
-  
-  const handleInitializePlayoffs = async (skipConfirm = false) => {
-    if (eligiblePlayerCount < 8) {
-      alert(`Cannot initialize playoffs: Only ${eligiblePlayerCount} eligible players found. Need at least 8.`)
-      return
-    }
-    
-    // Show confirmation with current standings
-    if (!skipConfirm) {
-      const confirmMessage = `Initialize playoffs with top ${numberOfGroups === 2 ? '16' : '8'} players?\n\nTop 8 players:\n${standings.slice(0, 8).map(s => `${s.position}. ${s.player.name} (${s.stats.totalPoints} pts)`).join('\n')}\n\n⚠️ IMPORTANT: These players will be LOCKED IN for the playoffs and cannot be changed!`
-      
-      if (!confirm(confirmMessage)) {
-        return
-      }
-    }
-    
-    try {
-      const res = await fetch(`/api/admin/leagues/${leagueId}/playoffs`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'initialize',
-          numberOfGroups
-        })
-      })
-      
-      const data = await res.json()
-      if (data.success) {
-        alert('Playoffs initialized successfully! Players are now locked in.')
-        await fetchPlayoffData()
-        await fetchLeagueData()
-      } else {
-        alert(`Error: ${data.error}`)
-      }
-    } catch (error) {
-      console.error('Error initializing playoffs:', error)
-      alert('Failed to initialize playoffs')
-    }
-  }
-  
-  const handleResetPlayoffs = async () => {
-    if (!confirm('⚠️ WARNING: This will RESET all playoff data and recalculate based on current standings.\n\nThis will:\n• Delete all playoff matches\n• Recalculate qualified players from current standings\n• Reset the playoff bracket\n• Lock in the NEW top players\n\nAre you sure?')) {
-      return
-    }
-    
-    try {
-      // Show loading indicator while resetting
-      alert('Resetting playoffs... Please wait.')
-      
-      // First, update the league to reset playoff phase
-      const resetRes = await fetch(`/api/admin/leagues/${leagueId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          playoffConfig: {
-            ...league.playoffConfig,
-            currentPhase: 'regular_season',
-            enabled: false,
-            qualifiedPlayers: { groupA: [], groupB: [] } // Clear qualified players
-          }
-        })
-      })
-      
-      if (resetRes.ok) {
-        // CRITICAL FIX: Refresh the playoff data BEFORE initializing
-        // This ensures we get fresh standings calculated by the service
-        alert('Playoffs reset. Fetching fresh standings...')
-        const freshData = await fetchPlayoffData()
-        
-        // Wait a bit to ensure state is updated
-        await new Promise(resolve => setTimeout(resolve, 100))
-        
-        if (freshData && freshData.success && freshData.standings && freshData.standings.length >= 8) {
-          // Now show confirmation with the FRESH standings
-          const freshStandings = freshData.standings
-          const confirmMessage = `Playoffs have been reset. Ready to initialize with the current top ${numberOfGroups === 2 ? '16' : '8'} players:\n\nTop 8 players:\n${freshStandings.slice(0, 8).map((s, idx) => `${idx + 1}. ${s.player.name} (${s.stats.totalPoints} pts)`).join('\n')}\n\n⚠️ These players will be LOCKED IN for the playoffs. Continue?`
-          
-          if (confirm(confirmMessage)) {
-            // Now initialize with fresh data
-            await handleInitializePlayoffs(true) // Skip the normal confirm since we just showed it
-          }
-        } else {
-          alert('Failed to get fresh standings after reset. Please refresh the page and try again.')
-        }
-      } else {
-        alert('Failed to reset playoffs')
-      }
-    } catch (error) {
-      console.error('Error resetting playoffs:', error)
-      alert('Failed to reset playoffs')
-    }
-  }
-  
-  const handleUpdateConfig = async () => {
-    try {
-      const res = await fetch(`/api/admin/leagues/${leagueId}/playoffs`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'updateConfig',
-          numberOfGroups
-        })
-      })
-      
-      const data = await res.json()
-      if (data.success) {
-        alert('Configuration updated!')
-        await fetchPlayoffData()
-      }
-    } catch (error) {
-      console.error('Error updating config:', error)
-    }
-  }
-  
-  const handleMatchClick = (match) => {
-    // Navigate to match detail/edit page
-    window.location.href = `/admin/matches/${match._id}`
-  }
-  
-  const handleCreateNextRound = async (group, stage) => {
-    try {
-      const res = await fetch(`/api/admin/leagues/${leagueId}/playoffs`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'createMatches',
-          group,
-          stage
-        })
-      })
-      
-      const data = await res.json()
-      if (data.success) {
-        alert(`${stage} matches created!`)
-        await fetchPlayoffData()
-      } else {
-        alert(`Error: ${data.error}`)
-      }
-    } catch (error) {
-      console.error('Error creating matches:', error)
-    }
-  }
-  
-  // New notification functions
-  const handleOpenNotifications = async (group) => {
+  const handleOpenNotifications = (group) => {
     setNotificationGroup(group)
     setShowNotificationModal(true)
-    setNotificationPreview(null)
-    setWhatsappMessages([])
-    
-    // Fetch preview
-    try {
-      const res = await fetch(`/api/admin/leagues/${leagueId}/playoffs/notifications`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'preview',
-          group
-        })
-      })
-      
-      const data = await res.json()
-      if (data.success) {
-        setNotificationPreview(data)
-      }
-    } catch (error) {
-      console.error('Error fetching preview:', error)
-    }
   }
   
-  const handleSendIndividualEmail = async (playerId) => {
-    if (!confirm('Send a test email to this player?')) {
-      return
-    }
-    
-    try {
-      const res = await fetch(`/api/admin/leagues/${leagueId}/playoffs/notifications`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'sendIndividualEmail',
-          group: notificationGroup,
-          playerId
-        })
-      })
-      
-      const data = await res.json()
-      if (data.success) {
-        alert(data.message)
-      } else {
-        alert('Error: ' + (data.error || 'Failed to send test email'))
-      }
-    } catch (error) {
-      console.error('Error sending test email:', error)
-      alert('Failed to send test email')
-    }
-  }
-  
-  const handleSendEmails = async () => {
-    if (!confirm('This will send congratulation emails to all qualified players in Group ' + notificationGroup + '. Continue?')) {
-      return
-    }
-    
-    setSendingNotifications(true)
-    try {
-      const res = await fetch(`/api/admin/leagues/${leagueId}/playoffs/notifications`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'sendEmails',
-          group: notificationGroup
-        })
-      })
-      
-      const data = await res.json()
-      if (data.success) {
-        alert(data.message + (data.errors ? '\n\nErrors:\n' + data.errors.join('\n') : ''))
-      } else {
-        alert('Error: ' + (data.error || 'Failed to send emails'))
-      }
-    } catch (error) {
-      console.error('Error sending emails:', error)
-      alert('Failed to send emails')
-    } finally {
-      setSendingNotifications(false)
-    }
-  }
-  
-  const handleGenerateWhatsApp = async () => {
-    setSendingNotifications(true)
-    try {
-      const res = await fetch(`/api/admin/leagues/${leagueId}/playoffs/notifications`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'generateWhatsApp',
-          group: notificationGroup
-        })
-      })
-      
-      const data = await res.json()
-      if (data.success) {
-        setWhatsappMessages(data.whatsappMessages)
-      } else {
-        alert('Error: ' + (data.error || 'Failed to generate WhatsApp messages'))
-      }
-    } catch (error) {
-      console.error('Error generating WhatsApp:', error)
-      alert('Failed to generate WhatsApp messages')
-    } finally {
-      setSendingNotifications(false)
-    }
+  const handleOpenFinalistEmails = (group) => {
+    setFinalistGroup(group)
+    setShowFinalistEmailModal(true)
   }
   
   const currentPhase = playoffConfig?.currentPhase || 'regular_season'
@@ -368,6 +86,7 @@ export default function LeaguePlayoffsAdmin() {
   
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Playoff Management</h1>
         <p className="mt-2 text-sm text-gray-600">
@@ -380,292 +99,37 @@ export default function LeaguePlayoffsAdmin() {
       
       {/* Eligible Players Display */}
       {currentPhase === 'regular_season' && (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">
-            {playoffsInitialized ? '🔒 Locked-in Playoff Players' : 'Current Standings'}
-          </h2>
-          
-          {playoffsInitialized && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-              <p className="text-yellow-800 font-semibold">
-                ⚠️ Playoffs have been initialized - these players are LOCKED IN
-              </p>
-              <p className="text-sm text-yellow-700 mt-1">
-                The standings shown below are the qualified players at the time playoffs were initialized.
-                To recalculate with current standings, use the &quot;Reset &amp; Recalculate Playoffs&quot; button.
-              </p>
-            </div>
-          )}
-          
-          {eligiblePlayerCount === 0 ? (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-red-800">
-                ⚠️ No eligible players found! This could mean:
-              </p>
-              <ul className="list-disc list-inside mt-2 text-sm text-red-700">
-                <li>Players are not properly registered for this league</li>
-                <li>The season identifier mismatch (check season ID above)</li>
-                <li>No matches have been played yet</li>
-                <li>Player registrations use a different season value than &quot;{seasonIdentifier}&quot;</li>
-              </ul>
-            </div>
-          ) : (
-            <div>
-              <p className="mb-4 text-green-700">
-                ✅ {playoffsInitialized ? 'Qualified' : 'Found'} {eligiblePlayerCount} eligible players {playoffsInitialized ? '(locked in)' : 'with completed matches'}
-              </p>
-              
-              {/* Show top 16 players */}
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {playoffsInitialized ? 'Qualification Position' : 'Position'}
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Player
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Points {playoffsInitialized && '(at qualification)'}
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Matches
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        {playoffsInitialized ? 'Playoff Seed' : 'Playoff Group'}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {standings.map((standing, index) => (
-                      <tr key={standing.player._id} className={index === 7 ? 'border-b-2 border-purple-500' : ''}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {standing.position}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {standing.player.name}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {standing.stats.totalPoints}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {standing.stats.matchesPlayed}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          {playoffsInitialized ? (
-                            standing.seed && (
-                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                standing.group === 'A' 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : 'bg-blue-100 text-blue-800'
-                              }`}>
-                                {standing.group === 'A' ? 'Group A' : 'Group B'} - Seed {standing.seed}
-                              </span>
-                            )
-                          ) : (
-                            <>
-                              {index < 8 && (
-                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                  Group A
-                                </span>
-                              )}
-                              {index >= 8 && index < 16 && numberOfGroups === 2 && (
-                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                  Group B
-                                </span>
-                              )}
-                            </>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </div>
+        <PlayoffStandings
+          eligiblePlayerCount={eligiblePlayerCount}
+          playoffsInitialized={playoffsInitialized}
+          standings={standings}
+          seasonIdentifier={seasonIdentifier}
+          numberOfGroups={numberOfGroups}
+        />
       )}
       
       {/* Configuration Section */}
       {currentPhase === 'regular_season' && !playoffsInitialized && (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">Playoff Configuration</h2>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Number of Playoff Groups
-              </label>
-              <select
-                value={numberOfGroups}
-                onChange={(e) => setNumberOfGroups(Number(e.target.value))}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm rounded-md"
-                disabled={eligiblePlayerCount < 16 && numberOfGroups === 2}
-              >
-                <option value={1}>1 Group (Group A only - Top 8)</option>
-                <option value={2} disabled={eligiblePlayerCount < 16}>
-                  2 Groups (Group A: Top 8, Group B: 9-16) {eligiblePlayerCount < 16 && '(Need 16+ players)'}
-                </option>
-              </select>
-            </div>
-            
-            <div className="flex space-x-4">
-              <button
-                onClick={handleUpdateConfig}
-                className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
-                disabled={eligiblePlayerCount < 8}
-              >
-                Save Configuration
-              </button>
-              
-              <button
-                onClick={() => handleInitializePlayoffs(false)}
-                className={`px-4 py-2 rounded text-white ${
-                  eligiblePlayerCount >= 8 
-                    ? 'bg-purple-600 hover:bg-purple-700' 
-                    : 'bg-gray-400 cursor-not-allowed'
-                }`}
-                disabled={eligiblePlayerCount < 8}
-              >
-                Initialize Playoffs {eligiblePlayerCount < 8 && `(Need ${8 - eligiblePlayerCount} more players)`}
-              </button>
-            </div>
-          </div>
-        </div>
+        <PlayoffConfiguration
+          numberOfGroups={numberOfGroups}
+          setNumberOfGroups={setNumberOfGroups}
+          eligiblePlayerCount={eligiblePlayerCount}
+          onUpdateConfig={handleUpdateConfig}
+          onInitializePlayoffs={handleInitializePlayoffs}
+        />
       )}
       
       {/* Playoff Bracket Display */}
       {isPlayoffsActive && (
-        <>
-          {/* Action Buttons */}
-          <div className="mb-4 flex justify-between">
-            <div className="space-x-2">
-              <button
-                onClick={() => handleOpenNotifications('A')}
-                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2 inline-flex"
-              >
-                <span>📧</span>
-                Send Group A Notifications
-              </button>
-              {playoffConfig?.numberOfGroups === 2 && (
-                <button
-                  onClick={() => handleOpenNotifications('B')}
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2 inline-flex"
-                >
-                  <span>📧</span>
-                  Send Group B Notifications
-                </button>
-              )}
-            </div>
-            <button
-              onClick={handleResetPlayoffs}
-              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 flex items-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Reset &amp; Recalculate Playoffs
-            </button>
-          </div>
-          
-          {/* Locked Players Notice */}
-          {playoffConfig?.qualifiedPlayers?.groupA?.length > 0 && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <h3 className="text-blue-800 font-semibold mb-2">🔒 Playoff Players Locked In</h3>
-              <p className="text-sm text-blue-700 mb-2">
-                The following players qualified for playoffs and are locked into the bracket:
-              </p>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="font-semibold text-blue-800">Group A:</p>
-                  <ol className="list-decimal list-inside text-blue-700">
-                    {playoffConfig.qualifiedPlayers.groupA.map((qp, idx) => (
-                      <li key={idx}>
-                        Seed {qp.seed}: {qp.player?.name || 'Loading...'}
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-                {playoffConfig.qualifiedPlayers.groupB?.length > 0 && (
-                  <div>
-                    <p className="font-semibold text-blue-800">Group B:</p>
-                    <ol className="list-decimal list-inside text-blue-700">
-                      {playoffConfig.qualifiedPlayers.groupB.map((qp, idx) => (
-                        <li key={idx}>
-                          Seed {qp.seed}: {qp.player?.name || 'Loading...'}
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-          
-          {/* Group A Bracket */}
-          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Group A Tournament</h2>
-              <div className="space-x-2">
-                <button
-                  onClick={() => handleCreateNextRound('A', 'semifinal')}
-                  className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
-                >
-                  Create Semifinals
-                </button>
-                <button
-                  onClick={() => handleCreateNextRound('A', 'final')}
-                  className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
-                >
-                  Create Finals
-                </button>
-              </div>
-            </div>
-            
-            <TournamentBracket
-              bracket={playoffConfig?.bracket?.groupA}
-              qualifiedPlayers={playoffConfig?.qualifiedPlayers?.groupA}
-              matches={playoffMatches.filter(m => m.playoffInfo?.group === 'A')}
-              group="A"
-              language="es"
-              onMatchClick={handleMatchClick}
-            />
-          </div>
-          
-          {/* Group B Bracket (if enabled) */}
-          {playoffConfig?.numberOfGroups === 2 && (
-            <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Group B Tournament</h2>
-                <div className="space-x-2">
-                  <button
-                    onClick={() => handleCreateNextRound('B', 'semifinal')}
-                    className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
-                  >
-                    Create Semifinals
-                  </button>
-                  <button
-                    onClick={() => handleCreateNextRound('B', 'final')}
-                    className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
-                  >
-                    Create Finals
-                  </button>
-                </div>
-              </div>
-              
-              <TournamentBracket
-                bracket={playoffConfig?.bracket?.groupB}
-                qualifiedPlayers={playoffConfig?.qualifiedPlayers?.groupB}
-                matches={playoffMatches.filter(m => m.playoffInfo?.group === 'B')}
-                group="B"
-                language="es"
-                onMatchClick={handleMatchClick}
-              />
-            </div>
-          )}
-        </>
+        <PlayoffBrackets
+          playoffConfig={playoffConfig}
+          playoffMatches={playoffMatches}
+          onCreateNextRound={handleCreateNextRound}
+          onMatchClick={handleMatchClick}
+          onResetPlayoffs={handleResetPlayoffs}
+          onOpenNotifications={handleOpenNotifications}
+          onOpenFinalistEmails={handleOpenFinalistEmails}
+        />
       )}
       
       {/* Completed Status */}
@@ -698,145 +162,20 @@ export default function LeaguePlayoffsAdmin() {
         </ul>
       </div>
       
-      {/* Notification Modal */}
-      {showNotificationModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <h2 className="text-2xl font-bold mb-4">
-                Send Playoff Notifications - Group {notificationGroup}
-              </h2>
-              
-              {notificationPreview ? (
-                <>
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold mb-2">Players to Notify</h3>
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <table className="min-w-full">
-                        <thead>
-                          <tr className="text-left text-sm text-gray-600">
-                            <th className="pb-2">Seed</th>
-                            <th className="pb-2">Player</th>
-                            <th className="pb-2">Opponent</th>
-                            <th className="pb-2">Email</th>
-                            <th className="pb-2">WhatsApp</th>
-                            <th className="pb-2">Action</th>
-                          </tr>
-                        </thead>
-                        <tbody className="text-sm">
-                          {notificationPreview.previews.map((p) => (
-                            <tr key={p.playerId} className="border-t border-gray-200">
-                              <td className="py-2">#{p.seed}</td>
-                              <td className="py-2">{p.player}</td>
-                              <td className="py-2">{p.opponent}</td>
-                              <td className="py-2">
-                                {p.hasEmail ? (
-                                  <span className="text-green-600">✓</span>
-                                ) : (
-                                  <span className="text-red-600">✗</span>
-                                )}
-                              </td>
-                              <td className="py-2">
-                                {p.hasWhatsApp ? (
-                                  <span className="text-green-600">✓</span>
-                                ) : (
-                                  <span className="text-red-600">✗</span>
-                                )}
-                              </td>
-                              <td className="py-2">
-                                {p.hasEmail && (
-                                  <button
-                                    onClick={() => handleSendIndividualEmail(p.playerId)}
-                                    className="text-purple-600 hover:text-purple-800 text-xs underline"
-                                  >
-                                    Test Email
-                                  </button>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-4 mb-6">
-                    <button
-                      onClick={handleSendEmails}
-                      disabled={sendingNotifications}
-                      className="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 disabled:bg-gray-400 flex items-center justify-center gap-2"
-                    >
-                      {sendingNotifications ? (
-                        <span>Sending...</span>
-                      ) : (
-                        <>
-                          <span>📧</span>
-                          <span>Send Emails</span>
-                        </>
-                      )}
-                    </button>
-                    
-                    <button
-                      onClick={handleGenerateWhatsApp}
-                      disabled={sendingNotifications}
-                      className="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 disabled:bg-gray-400 flex items-center justify-center gap-2"
-                    >
-                      {sendingNotifications ? (
-                        <span>Generating...</span>
-                      ) : (
-                        <>
-                          <span>💬</span>
-                          <span>Generate WhatsApp</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                  
-                  {whatsappMessages.length > 0 && (
-                    <div className="mb-6">
-                      <h3 className="text-lg font-semibold mb-2">WhatsApp Messages</h3>
-                      <div className="space-y-2 max-h-60 overflow-y-auto">
-                        {whatsappMessages.map((msg, idx) => (
-                          <div key={idx} className="bg-gray-50 p-3 rounded">
-                            <div className="flex justify-between items-start mb-2">
-                              <span className="font-medium">{msg.player} (Seed #{msg.seed})</span>
-                              <a
-                                href={msg.link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
-                              >
-                                Send WhatsApp
-                              </a>
-                            </div>
-                            <pre className="text-xs text-gray-600 whitespace-pre-wrap">{msg.message}</pre>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="flex justify-center items-center h-32">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-                </div>
-              )}
-              
-              <div className="flex justify-end">
-                <button
-                  onClick={() => {
-                    setShowNotificationModal(false)
-                    setWhatsappMessages([])
-                  }}
-                  className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modals */}
+      <NotificationModal
+        isOpen={showNotificationModal}
+        onClose={() => setShowNotificationModal(false)}
+        leagueId={leagueId}
+        group={notificationGroup}
+      />
+      
+      <FinalistEmailModal
+        isOpen={showFinalistEmailModal}
+        onClose={() => setShowFinalistEmailModal(false)}
+        leagueId={leagueId}
+        group={finalistGroup}
+      />
     </div>
   )
 }
