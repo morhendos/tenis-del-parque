@@ -13,6 +13,7 @@ import StatsCards from '@/components/player/StatsCards'
 import MultiLeagueCard from '@/components/player/MultiLeagueCard'
 import { RecentMatches, UpcomingMatches } from '@/components/player/MatchActivity'
 import QuickActions from '@/components/player/QuickActions'
+import OpenRankAchievement from '@/components/player/OpenRankAchievement'
 import { dashboardStyles } from '@/styles/dashboard'
 
 export default function PlayerDashboard() {
@@ -83,6 +84,9 @@ export default function PlayerDashboard() {
 
         {/* Stats Cards */}
         <StatsCards player={player} language={language} />
+
+        {/* OpenRank Achievement */}
+        <OpenRankAchievement player={player} language={language} locale={locale} />
 
         {/* League Cards - Now supports multiple leagues */}
         <MultiLeagueCard player={player} language={language} />

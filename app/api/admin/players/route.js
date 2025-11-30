@@ -100,6 +100,12 @@ export async function GET(request) {
         matchHistory: '$registrations.matchHistory',
         wildCards: '$registrations.wildCards',
         notes: '$registrations.notes',
+        // Payment and discount info
+        discountCode: '$registrations.discountCode',
+        discountApplied: '$registrations.discountApplied',
+        originalPrice: '$registrations.originalPrice',
+        finalPrice: '$registrations.finalPrice',
+        paymentStatus: '$registrations.paymentStatus',
         // League and user data
         league: { 
           _id: '$league._id',
@@ -153,6 +159,12 @@ export async function GET(request) {
           wildCards: firstRegistration.wildCards,
           notes: firstRegistration.notes,
           registeredAt: firstRegistration.registeredAt || player.createdAt,
+          // Payment and discount info
+          discountCode: firstRegistration.discountCode,
+          discountApplied: firstRegistration.discountApplied,
+          originalPrice: firstRegistration.originalPrice,
+          finalPrice: firstRegistration.finalPrice,
+          paymentStatus: firstRegistration.paymentStatus,
           league: null // Will need to be populated separately if needed
         }
       })

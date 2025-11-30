@@ -34,7 +34,9 @@ export default function EnhancedSuccessMessage({
       buildCommunity: 'Construyendo la comunidad',
       backHome: '← Volver al inicio',
       shareText: '¿Te animas a jugar conmigo en {league}?',
-      welcome: '¡Bienvenido'
+      welcome: '¡Bienvenido',
+      goToDashboard: 'Ir a Mi Panel de Jugador',
+      dashboardHint: 'Accede a tu perfil, estadísticas y partidos'
     },
     en: {
       confirmed: 'Registration Confirmed',
@@ -57,7 +59,9 @@ export default function EnhancedSuccessMessage({
       buildCommunity: 'Building the community',
       backHome: '← Back to home',
       shareText: 'Want to play with me at {league}?',
-      welcome: 'Welcome'
+      welcome: 'Welcome',
+      goToDashboard: 'Go to My Player Dashboard',
+      dashboardHint: 'Access your profile, stats and matches'
     }
   }
 
@@ -232,6 +236,22 @@ export default function EnhancedSuccessMessage({
                 ? 'Invita a más jugadores para formar grupos competitivos equilibrados.' 
                 : 'Invite more players to create balanced competitive groups.'
               }
+            </p>
+          </div>
+
+          {/* Dashboard CTA - Primary next step */}
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <Link
+              href={`/${language}/player/dashboard`}
+              className="w-full flex items-center justify-center px-6 py-4 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-xl hover:from-gray-900 hover:to-black transition-all duration-200 font-semibold shadow-lg hover:shadow-xl"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              {t.goToDashboard}
+            </Link>
+            <p className="text-center text-sm text-gray-500 mt-2">
+              {t.dashboardHint}
             </p>
           </div>
         </div>
