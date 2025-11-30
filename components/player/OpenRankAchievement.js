@@ -131,7 +131,7 @@ export default function OpenRankAchievement({ player, language, locale }) {
         {/* Action Button */}
         {isUnlocked ? (
           <Link
-            href={`/${locale}/elo`}
+            href={`/${locale}/player/openrank`}
             className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all duration-200 font-semibold shadow-md hover:shadow-lg"
           >
             <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">

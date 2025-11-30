@@ -11,7 +11,8 @@ export default function MatchCard({
   isUpcoming = true,
   showActions = true,
   isPublic = false,
-  showLeagueBadge = false, // Only show league badge for multi-league players
+  showLeagueBadge = false,
+  openRankData = {},
   className = ''
 }) {
   const [isExpanded, setIsExpanded] = useState(false)
@@ -152,10 +153,20 @@ export default function MatchCard({
                     <span className={isUpcoming ? 'text-parque-purple' : isWinner ? 'text-green-600' : 'text-red-600'}>
                       {player?.name || 'You'}
                     </span>
+                    {player?._id && openRankData[player._id] && (
+                      <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-gradient-to-br from-amber-400 to-orange-500 text-white">
+                        #{openRankData[player._id]}
+                      </span>
+                    )}
                     <span className="mx-2 text-gray-500">vs</span>
                     <span className={!isUpcoming && !isWinner ? 'text-green-600' : 'text-gray-900'}>
                       {opponent?.name ? formatOpponentName(opponent.name, language) : 'TBD'}
                     </span>
+                    {opponent?._id && openRankData[opponent._id] && (
+                      <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-gradient-to-br from-amber-400 to-orange-500 text-white">
+                        #{openRankData[opponent._id]}
+                      </span>
+                    )}
                   </>
                 )}
               </div>

@@ -27,11 +27,13 @@ export default function PlayerMatches() {
   const [submittedMatch, setSubmittedMatch] = useState(null)
   const [isWinner, setIsWinner] = useState(false)
   const [selectedLeagueId, setSelectedLeagueId] = useState(null) // For multi-league filtering
+  const [openRankData, setOpenRankData] = useState({}) // OpenRank positions by player ID
   const router = useRouter()
 
   useEffect(() => {
     fetchMatches()
     fetchPlayerData()
+    fetchOpenRankData()
   }, [])
 
   const fetchLeaguePlayers = useCallback(async () => {
@@ -71,6 +73,23 @@ export default function PlayerMatches() {
       }
     } catch (error) {
       console.error('Error fetching player data:', error)
+    }
+  }
+
+  const fetchOpenRankData = async () => {
+    try {
+      const response = await fetch('/api/openrank?all=true')
+      if (response.ok) {
+        const data = await response.json()
+        // Create a map of player ID to their OpenRank position
+        const rankMap = {}
+        data.rankings?.forEach(player => {
+          rankMap[player._id] = player.position
+        })
+        setOpenRankData(rankMap)
+      }
+    } catch (error) {
+      console.error('Error fetching OpenRank data:', error)
     }
   }
 
@@ -406,7 +425,8 @@ export default function PlayerMatches() {
                   onWhatsApp={handleWhatsApp}
                   isUpcoming={true}
                   showActions={true}
-                  showLeagueBadge={hasMultipleLeagues} // Only show league badge if multiple leagues
+                  showLeagueBadge={hasMultipleLeagues}
+                  openRankData={openRankData}
                   className="animate-fade-in-up"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 />
@@ -438,7 +458,8 @@ export default function PlayerMatches() {
                   language={locale}
                   isUpcoming={false}
                   showActions={false}
-                  showLeagueBadge={hasMultipleLeagues} // Only show league badge if multiple leagues
+                  showLeagueBadge={hasMultipleLeagues}
+                  openRankData={openRankData}
                   className="animate-fade-in-up"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 />
