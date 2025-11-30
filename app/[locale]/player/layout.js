@@ -41,7 +41,6 @@ export default function PlayerLayout({ children }) {
             
             // Check for new announcements
             const allAnnouncementIds = [
-              announcementContent.firstRoundDelay.id,
               announcementContent.firstRoundMatch.id
             ]
             

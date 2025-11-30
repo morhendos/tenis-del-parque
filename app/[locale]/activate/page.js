@@ -89,8 +89,9 @@ function ActivateContent() {
       const data = await response.json()
       
       if (response.ok && data.success) {
-        // Redirect to login page after successful activation
-        router.push(`/${locale}/login?activated=true`)
+        // Redirect to login page in user's preferred language after successful activation
+        const preferredLanguage = data.user?.preferredLanguage || locale
+        router.push(`/${preferredLanguage}/login?activated=true`)
       } else {
         setErrors({ submit: data.error || t.form.errors.generic })
         if (data.error?.includes('expired') || data.error?.includes('invalid')) {

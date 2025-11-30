@@ -17,7 +17,7 @@ export default function OpenRankAchievement({ player, language, locale }) {
       locked: 'Bloqueado',
       matchesPlayed: 'partidos jugados',
       matchesNeeded: `${matchesRemaining} partido${matchesRemaining !== 1 ? 's' : ''} más para desbloquear`,
-      description: 'Juega 8 partidos para obtener tu posición en el ranking global y compararte con jugadores de todas las ligas.',
+      description: 'Juega 8 partidos para obtener tu posición en el ranking global.',
       unlockedDescription: '¡Ya puedes ver tu posición en el ranking global!',
       viewRanking: 'Ver OpenRank',
       keepPlaying: '¡Sigue jugando!'
@@ -29,7 +29,7 @@ export default function OpenRankAchievement({ player, language, locale }) {
       locked: 'Locked',
       matchesPlayed: 'matches played',
       matchesNeeded: `${matchesRemaining} more match${matchesRemaining !== 1 ? 'es' : ''} to unlock`,
-      description: 'Play 8 matches to get your position in the global ranking and compare yourself with players from all leagues.',
+      description: 'Play 8 matches to get your position in the global ranking.',
       unlockedDescription: 'You can now see your position in the global ranking!',
       viewRanking: 'View OpenRank',
       keepPlaying: 'Keep playing!'

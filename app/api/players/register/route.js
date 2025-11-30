@@ -256,7 +256,16 @@ export async function POST(request) {
           role: 'player',
           playerId: player._id,
           isActive: true,
-          emailVerified: password ? true : false // If password provided, mark as verified
+          emailVerified: password ? true : false, // If password provided, mark as verified
+          preferences: {
+            language: language, // Set language from registration
+            hasSeenWelcomeModal: false,
+            notifications: {
+              email: true,
+              matchReminders: true,
+              resultReminders: true
+            }
+          }
         })
         
         // Generate activation token if no password provided
@@ -287,6 +296,18 @@ export async function POST(request) {
         if (!user.playerId) {
           user.playerId = player._id
         }
+        
+        // Update language preference from this registration
+        if (!user.preferences) {
+          user.preferences = {
+            language: language,
+            hasSeenWelcomeModal: false,
+            notifications: { email: true, matchReminders: true, resultReminders: true }
+          }
+        } else {
+          user.preferences.language = language
+        }
+        
         await user.save()
         
         // Update player with userId if not already set

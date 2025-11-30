@@ -72,7 +72,9 @@ export async function GET(request) {
         registeredAt: activeRegistration?.registeredAt || player.createdAt,
         createdAt: player.createdAt,
         // Include all registrations for multi-league support
-        registrations: player.registrations || []
+        registrations: player.registrations || [],
+        // Include player preferences (set during registration)
+        preferences: player.preferences || { preferredLanguage: 'es' }
       },
       user: {
         id: user._id,

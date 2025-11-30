@@ -79,19 +79,6 @@ export default function MessagesPage() {
       bgColor: 'from-parque-purple/10 to-green-100',
       isNew: false // Welcome message is never "new"
     })
-    
-    // First round delay announcement
-    messages.push({
-      id: announcementContent.firstRoundDelay.id,
-      type: 'announcement',
-      date: announcementContent.firstRoundDelay.date,
-      title: announcementContent.firstRoundDelay[locale].title,
-      subtitle: announcementContent.firstRoundDelay[locale].subtitle,
-      icon: '📢',
-      bgColor: 'from-yellow-100 to-orange-100',
-      isNew: !seenAnnouncements.includes(announcementContent.firstRoundDelay.id),
-      content: announcementContent.firstRoundDelay
-    })
 
     // Add first round match message if available
     if (firstRoundMatch && player) {

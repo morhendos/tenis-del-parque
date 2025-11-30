@@ -97,6 +97,7 @@ export async function POST(request) {
       message: 'Account activated successfully! You can now log in.',
       user: {
         email: user.email,
+        preferredLanguage: user.preferences?.language || 'es',
         player: user.playerId ? {
           name: user.playerId.name,
           league: user.playerId.league,
@@ -192,6 +193,7 @@ export async function GET(request) {
       success: true,
       user: {
         email: user.email,
+        preferredLanguage: user.preferences?.language || 'es',
         player: user.playerId ? {
           name: user.playerId.name,
           league: user.playerId.league,

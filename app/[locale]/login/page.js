@@ -156,11 +156,11 @@ function LoginForm() {
             <div className="mb-6 sm:mb-8">
               <a href={`/${locale}`}>
                 <Image 
-                  src="/logo.png" 
-                  alt="Liga del Parque"
-                  width={160}
-                  height={160}
-                  className="h-32 sm:h-40 w-auto mx-auto hover:scale-105 transition-transform duration-200 cursor-pointer"
+                  src="/logo-liga-costa-del-sol-big.webp" 
+                  alt="Liga de la Costa del Sol"
+                  width={200}
+                  height={200}
+                  className="h-40 sm:h-48 w-auto mx-auto hover:scale-105 transition-transform duration-200 cursor-pointer"
                   priority
                 />
               </a>
