@@ -328,7 +328,8 @@ export default withAuth(
           '/forgot-password',
           '/reset-password',
           '/liga-de-sotogrande',
-          '/liga-de-sotogrande/playoffs'
+          '/liga-de-sotogrande/playoffs',
+          '/openrank'
         ]
         
         // Check if it's a public route

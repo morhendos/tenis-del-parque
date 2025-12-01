@@ -54,6 +54,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
       rules: 'Reglamento',
       elo: 'ELO Puntos',
       swiss: 'Sistema Suizo',
+      openrank: 'OpenRank',
       login: 'Iniciar Sesión',
       about: 'Acerca de',
       contact: 'Contacto'
@@ -65,6 +66,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
       rules: 'Rules',
       elo: 'ELO Points',
       swiss: 'Swiss System',
+      openrank: 'OpenRank',
       login: 'Login',
       about: 'About',
       contact: 'Contact'
@@ -159,6 +161,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
                 <span>{t.rules}</span>
                 <span>{t.swiss}</span>
                 <span>{t.elo}</span>
+                <span>{t.openrank}</span>
               </div>
               
               <div className="ml-8">
@@ -229,6 +232,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
               <NavLink href={`/${validLocale === 'es' ? 'reglas' : 'rules'}`} buttonKey="rules">{t.rules}</NavLink>
               <NavLink href="/swiss" buttonKey="swiss">{t.swiss}</NavLink>
               <NavLink href="/elo" buttonKey="elo">{t.elo}</NavLink>
+              <NavLink href="/openrank" buttonKey="openrank">{t.openrank}</NavLink>
               
               {/* Login Button */}
               <div className="ml-8">
@@ -403,6 +407,23 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
                 }`}>
                   <span className="text-lg font-medium">{t.elo}</span>
                   {currentPage === 'elo' && (
+                    <div className="w-2 h-2 bg-parque-purple rounded-full"></div>
+                  )}
+                </div>
+              </NavLink>
+              
+              <NavLink 
+                href="/openrank" 
+                onClick={() => setIsMobileMenuOpen(false)}
+                buttonKey="mobile-openrank"
+              >
+                <div className={`flex items-center justify-between py-3 px-4 rounded-xl transition-all duration-200 ${
+                  currentPage === 'openrank' 
+                    ? 'bg-gradient-to-r from-parque-purple/10 to-transparent border-l-4 border-parque-purple' 
+                    : 'hover:bg-gray-50'
+                }`}>
+                  <span className="text-lg font-medium">{t.openrank}</span>
+                  {currentPage === 'openrank' && (
                     <div className="w-2 h-2 bg-parque-purple rounded-full"></div>
                   )}
                 </div>
