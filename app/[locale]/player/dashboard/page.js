@@ -14,6 +14,7 @@ import MultiLeagueCard from '@/components/player/MultiLeagueCard'
 import { RecentMatches, UpcomingMatches } from '@/components/player/MatchActivity'
 import QuickActions from '@/components/player/QuickActions'
 import OpenRankAchievement from '@/components/player/OpenRankAchievement'
+import TrophyRoom from '@/components/player/TrophyRoom'
 import { dashboardStyles } from '@/styles/dashboard'
 
 export default function PlayerDashboard() {
@@ -87,6 +88,9 @@ export default function PlayerDashboard() {
 
         {/* OpenRank Achievement */}
         <OpenRankAchievement player={player} language={language} locale={locale} />
+
+        {/* Trophy Room - Achievements & Trophies */}
+        <TrophyRoom language={language} locale={locale} compact />
 
         {/* League Cards - Now supports multiple leagues */}
         <MultiLeagueCard player={player} language={language} />

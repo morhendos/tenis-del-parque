@@ -160,6 +160,16 @@ export default function PlayerLayout({ children }) {
       description: locale === 'es' ? 'Ranking global ELO' : 'Global ELO ranking' 
     },
     { 
+      name: locale === 'es' ? 'Trofeos' : 'Trophies', 
+      href: `/${locale}/player/achievements`, 
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+        </svg>
+      ),
+      description: locale === 'es' ? 'Logros e insignias' : 'Achievements & badges' 
+    },
+    { 
       name: locale === 'es' ? 'Reglas' : 'Rules', 
       href: `/${locale}/player/rules`, 
       icon: (
@@ -330,6 +340,8 @@ export default function PlayerLayout({ children }) {
                 <h1 className="text-lg font-bold text-gray-900">
                   {pathname.includes('messages') ? 
                     (locale === 'es' ? 'Mensajes' : 'Messages') :
+                   pathname.includes('achievements') ? 
+                    (locale === 'es' ? 'Trofeos' : 'Trophies') :
                    pathname.includes('openrank') ? 
                     'OpenRank' :
                    pathname.includes('matches') ? 
@@ -345,6 +357,8 @@ export default function PlayerLayout({ children }) {
                 <p className="text-xs text-gray-500">
                   {pathname.includes('messages') ? 
                     (locale === 'es' ? 'Anuncios importantes' : 'Important announcements') :
+                   pathname.includes('achievements') ? 
+                    (locale === 'es' ? 'Logros e insignias' : 'Achievements & badges') :
                    pathname.includes('openrank') ? 
                     (locale === 'es' ? 'Ranking global ELO' : 'Global ELO ranking') :
                    pathname.includes('matches') ? 
