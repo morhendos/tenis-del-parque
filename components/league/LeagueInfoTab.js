@@ -586,7 +586,7 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
           <div className="mt-4 pt-4 border-t border-white/20">
             <a
               href={buildRegistrationUrl()}
-              className="inline-block bg-white text-parque-purple px-6 py-2.5 rounded-xl font-semibold text-sm shadow-md"
+              className="block sm:inline-block w-full sm:w-auto text-center bg-white text-parque-purple px-6 py-3 rounded-xl font-semibold shadow-md hover:bg-gray-50 transition-colors"
             >
               {content.registerNow} →
             </a>

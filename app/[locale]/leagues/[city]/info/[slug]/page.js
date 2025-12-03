@@ -52,7 +52,7 @@ export default async function LeagueInfoPage({ params }) {
   } : null
   
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white sm:bg-gray-50">
       <Navigation 
         currentPage="leagues" 
         language={language}
@@ -63,7 +63,7 @@ export default async function LeagueInfoPage({ params }) {
       <CityLeagueHero city={plainCity} locale={locale} leagueName={league.name} league={league} />
       
       {/* Content - just swap league cards for LeagueInfoTab */}
-      <div className="container mx-auto px-0 sm:px-4 py-4 sm:py-8 md:py-12">
+      <div className="container mx-auto px-0 sm:px-4 py-0 sm:py-8 md:py-12">
         <div className="max-w-5xl mx-auto">
           {/* Card wrapper only on sm+ screens */}
           <div className="sm:bg-white sm:rounded-2xl sm:shadow-md sm:p-6">
