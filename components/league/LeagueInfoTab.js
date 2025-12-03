@@ -290,25 +290,25 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
   }
 
   return (
-    <div className="space-y-5 sm:space-y-6 md:space-y-8">
+    <div className="space-y-4 sm:space-y-6 md:space-y-8">
       {/* Key Details Cards */}
       <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
         {/* League Details Card */}
-        <div className="bg-gray-50 border-2 border-gray-100 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:border-parque-purple/20 transition-all duration-300 hover:shadow-lg">
-          <h4 className="font-bold text-lg sm:text-xl text-gray-900 mb-4 sm:mb-6 flex items-center gap-2">
-            <Info className="w-5 h-5 sm:w-6 sm:h-6 text-parque-purple" />
+        <div className="bg-white sm:bg-gray-50 border-0 sm:border-2 sm:border-gray-100 rounded-none sm:rounded-xl px-4 sm:p-5 py-4 sm:hover:border-parque-purple/20 transition-all duration-300 sm:hover:shadow-lg">
+          <h4 className="font-bold text-lg text-gray-900 mb-4 flex items-center gap-2">
+            <Info className="w-5 h-5 text-parque-purple" />
             {content.leagueDetails}
           </h4>
           
-          <div className="space-y-3 sm:space-y-5">
+          <div className="space-y-3">
             {league.seasonConfig?.startDate && (
-              <div className="flex items-start gap-3 sm:gap-4">
-                <div className="p-1.5 sm:p-2 bg-emerald-50 rounded-lg">
-                  <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
+              <div className="flex items-center gap-3">
+                <div className="p-1.5 bg-emerald-50 rounded-lg flex-shrink-0">
+                  <Calendar className="w-4 h-4 text-emerald-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs sm:text-sm font-medium text-gray-600 mb-0.5 sm:mb-1">{content.startDate}</p>
-                  <p className="text-base sm:text-lg font-semibold text-gray-900">
+                  <p className="text-xs text-gray-500">{content.startDate}</p>
+                  <p className="text-sm font-semibold text-gray-900">
                     {formatDate(league.seasonConfig.startDate)}
                   </p>
                 </div>
@@ -316,72 +316,64 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
             )}
 
             {league.seasonConfig?.endDate && (
-              <div className="flex items-start gap-3 sm:gap-4">
-                <div className="p-1.5 sm:p-2 bg-blue-50 rounded-lg">
-                  <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+              <div className="flex items-center gap-3">
+                <div className="p-1.5 bg-blue-50 rounded-lg flex-shrink-0">
+                  <Calendar className="w-4 h-4 text-blue-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs sm:text-sm font-medium text-gray-600 mb-0.5 sm:mb-1">{content.endDate}</p>
-                  <p className="text-base sm:text-lg font-semibold text-gray-900">
+                  <p className="text-xs text-gray-500">{content.endDate}</p>
+                  <p className="text-sm font-semibold text-gray-900">
                     {formatDate(league.seasonConfig.endDate)}
                   </p>
                 </div>
               </div>
             )}
 
-            <div className="flex items-start gap-3 sm:gap-4">
-              <div className="p-1.5 sm:p-2 bg-purple-50 rounded-lg">
-                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
+            <div className="flex items-center gap-3">
+              <div className="p-1.5 bg-purple-50 rounded-lg flex-shrink-0">
+                <Users className="w-4 h-4 text-purple-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm font-medium text-gray-600 mb-0.5 sm:mb-1">{content.availableSpots}</p>
-                <p className="text-base sm:text-lg font-semibold text-gray-900">
+                <p className="text-xs text-gray-500">{content.availableSpots}</p>
+                <p className="text-sm font-semibold text-gray-900">
                   {league.seasonConfig?.maxPlayers || 32}
                 </p>
               </div>
             </div>
 
             {/* Price with discount logic */}
-            <div className="flex items-start gap-3 sm:gap-4">
-              <div className="p-1.5 sm:p-2 bg-amber-50 rounded-lg">
-                <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" />
+            <div className="flex items-center gap-3">
+              <div className="p-1.5 bg-amber-50 rounded-lg flex-shrink-0">
+                <CreditCard className="w-4 h-4 text-amber-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm font-medium text-gray-600 mb-0.5 sm:mb-1">{content.price}</p>
+                <p className="text-xs text-gray-500">{content.price}</p>
                 
                 {league.seasonConfig?.price?.isFree || league.seasonConfig?.price?.amount === 0 ? (
-                  <p className="text-base sm:text-lg font-semibold text-gray-900">
+                  <p className="text-sm font-semibold text-gray-900">
                     {content.free}
                   </p>
                 ) : (
-                  <div className="space-y-1.5 sm:space-y-2">
+                  <div className="space-y-1">
                     {discountValid && discountDetails ? (
                       <>
-                        {/* Discount badge */}
-                        <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-0.5 sm:py-1 bg-emerald-50 border border-emerald-200 rounded-lg">
-                          <Tag className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-600" />
-                          <span className="text-xs sm:text-sm font-medium text-emerald-700">
-                            {content.discountApplied}: {discountCode}
+                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 border border-emerald-200 rounded text-xs">
+                          <Tag className="w-3 h-3 text-emerald-600" />
+                          <span className="font-medium text-emerald-700">
+                            {discountCode} (-{discountDetails.discountPercentage}%)
                           </span>
                         </div>
-                        
-                        {/* Original price struck through */}
-                        <div className="flex items-baseline gap-2 sm:gap-3">
-                          <p className="text-lg sm:text-xl font-semibold text-gray-400 line-through">
+                        <div className="flex items-baseline gap-2">
+                          <p className="text-sm text-gray-400 line-through">
                             {discountDetails.originalPrice}€
                           </p>
-                          <p className="text-2xl sm:text-3xl font-bold text-emerald-600">
+                          <p className="text-lg font-bold text-emerald-600">
                             {discountDetails.finalPrice}€
                           </p>
                         </div>
-                        
-                        {/* Discount details */}
-                        <p className="text-xs text-gray-600">
-                          {content.discount}: {discountDetails.discountPercentage}%
-                        </p>
                       </>
                     ) : (
-                      <p className="text-base sm:text-lg font-semibold text-gray-900">
+                      <p className="text-sm font-semibold text-gray-900">
                         {league.seasonConfig?.price?.amount}€
                       </p>
                     )}
@@ -392,7 +384,7 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
 
             {/* Registration Countdown */}
             {league.status === 'registration_open' && league.seasonConfig?.registrationEnd && (
-              <div className="pt-3 sm:pt-5 border-t border-gray-200">
+              <div className="pt-3 mt-3 border-t border-gray-100">
                 <RegistrationCountdown 
                   registrationEnd={league.seasonConfig.registrationEnd} 
                   language={language}
@@ -403,47 +395,41 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
           </div>
 
           {league.status === 'registration_open' && (
-            <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-100">
+            <div className="mt-4 pt-4 border-t border-gray-100">
               <a
                 href={buildRegistrationUrl()}
-                className="relative block w-full text-center bg-gradient-to-r from-emerald-600 to-emerald-500 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl hover:from-emerald-700 hover:to-emerald-600 transition-all duration-300 font-semibold text-base sm:text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 overflow-hidden group"
+                className="block w-full text-center bg-emerald-600 text-white px-4 py-3 rounded-xl hover:bg-emerald-700 transition-colors font-semibold shadow-md"
               >
-                <span className="absolute inset-0 w-full h-full bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
-                <span className="relative flex items-center justify-center gap-2">
-                  {content.registerNow}
-                  <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </span>
+                {content.registerNow} →
               </a>
             </div>
           )}
         </div>
 
         {/* League Level Card */}
-        <div className="bg-gradient-to-br from-parque-purple/5 to-purple-50 border-2 border-purple-100 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:border-parque-purple/30 transition-all duration-300 hover:shadow-lg flex flex-col">
-          <h4 className="font-bold text-lg sm:text-xl text-gray-900 mb-4 sm:mb-6 flex items-center gap-2">
-            <Award className="w-5 h-5 sm:w-6 sm:h-6 text-parque-purple" />
+        <div className="bg-white sm:bg-gradient-to-br sm:from-parque-purple/5 sm:to-purple-50 border-0 sm:border-2 sm:border-purple-100 rounded-none sm:rounded-xl px-4 sm:p-5 py-4 sm:hover:border-parque-purple/30 transition-all duration-300 sm:hover:shadow-lg flex flex-col">
+          <h4 className="font-bold text-lg text-gray-900 mb-3 flex items-center gap-2">
+            <Award className="w-5 h-5 text-parque-purple" />
             {content.leagueLevel}
           </h4>
           
           <div className="flex-1 flex flex-col">
-            <div className="space-y-3 sm:space-y-4">
+            <div className="space-y-3">
               <div>
-                <h5 className="text-xl sm:text-2xl font-bold text-parque-purple mb-1.5 sm:mb-2">
+                <h5 className="text-xl font-bold text-parque-purple mb-1">
                   {levelInfo.title}
                 </h5>
-                <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
+                <p className="text-sm text-gray-600 leading-relaxed">
                   {levelInfo.description}
                 </p>
               </div>
 
-              <div className="pt-3 sm:pt-4 border-t border-purple-200">
-                <p className="text-xs sm:text-sm font-semibold text-gray-900 mb-2 sm:mb-3">{content.whatToExpect}</p>
-                <ul className="space-y-1.5 sm:space-y-2">
+              <div className="pt-3 border-t border-gray-100 sm:border-purple-200">
+                <p className="text-xs font-semibold text-gray-700 mb-2">{content.whatToExpect}</p>
+                <ul className="space-y-1.5">
                   {levelInfo.skills.map((skill, index) => (
-                    <li key={index} className="flex items-start gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-700">
-                      <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                    <li key={index} className="flex items-start gap-2 text-xs text-gray-600">
+                      <TrendingUp className="w-3.5 h-3.5 text-emerald-600 mt-0.5 flex-shrink-0" />
                       <span>{skill}</span>
                     </li>
                   ))}
@@ -452,11 +438,11 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
             </div>
 
             {/* Level Switcher */}
-            <div className="pt-3 sm:pt-4 border-t border-purple-200 mt-auto">
-              <p className="text-xs font-semibold text-gray-600 mb-2 sm:mb-3 uppercase tracking-wide">
+            <div className="pt-3 border-t border-gray-100 sm:border-purple-200 mt-3">
+              <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
                 {language === 'es' ? 'Otros Niveles' : 'Other Levels'}
               </p>
-              <div className="flex gap-1.5 sm:gap-2 flex-wrap">
+              <div className="flex gap-2 flex-wrap">
                 {(() => {
                   // Get city slug and season info from current league (DYNAMIC)
                   const citySlug = league.city?.slug || league.location?.city?.toLowerCase().replace(/\s+/g, '-') || 'sotogrande'
@@ -498,33 +484,26 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
                     const isCurrentLevel = leagueLevel === level.key
                     
                     if (isCurrentLevel) {
-                      // Current level - show as active badge
                       return (
                         <div
                           key={level.key}
-                          className={`px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg border-2 ${level.bgColor} font-semibold ${level.textColor} flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm`}
+                          className={`px-3 py-1.5 rounded-lg border ${level.bgColor} font-medium ${level.textColor} flex items-center gap-1.5 text-xs`}
                         >
                           {level.icon}
                           {level.label}
-                          <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                          <CheckCircle className="w-3.5 h-3.5" />
                         </div>
                       )
                     }
                     
-                    // Other levels - show as clickable links
                     return (
                       <a
                         key={level.key}
                         href={`/${locale}/leagues/${citySlug}/info/${level.slug}`}
-                        className="px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg border-2 border-gray-200 bg-white hover:border-parque-purple/40 hover:bg-purple-50 transition-all duration-200 font-medium text-gray-700 hover:text-parque-purple flex items-center gap-1.5 sm:gap-2 group text-xs sm:text-sm"
+                        className="px-3 py-1.5 rounded-lg border border-gray-200 bg-white hover:border-parque-purple/40 hover:bg-purple-50 transition-all font-medium text-gray-600 hover:text-parque-purple flex items-center gap-1.5 text-xs"
                       >
-                        <span className="text-gray-400 group-hover:text-parque-purple transition-colors">
-                          {level.icon}
-                        </span>
+                        {level.icon}
                         {level.label}
-                        <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
                       </a>
                     )
                   })
@@ -536,97 +515,83 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
       </div>
 
       {/* About League Section */}
-      <div className="bg-gradient-to-br from-gray-50 via-white/50 to-gray-50 border-2 border-gray-100 rounded-xl sm:rounded-3xl p-4 sm:p-6 md:p-8 transition-all duration-300 hover:scale-[1.01]">
-        <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-parque-purple to-purple-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg">
-            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+      <div className="bg-white sm:bg-gradient-to-br sm:from-gray-50 sm:via-white/50 sm:to-gray-50 border-0 sm:border-2 sm:border-gray-100 rounded-none sm:rounded-xl px-4 sm:p-5 py-4">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-8 h-8 bg-gradient-to-br from-parque-purple to-purple-600 rounded-lg flex items-center justify-center">
+            <Sparkles className="w-4 h-4 text-white" />
           </div>
-          <h4 className="font-bold text-xl sm:text-2xl text-gray-900">{content.aboutLeague}</h4>
+          <h4 className="font-bold text-lg text-gray-900">{content.aboutLeague}</h4>
         </div>
         
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {/* Swiss Format */}
-          <div className="space-y-2 sm:space-y-3 group hover:scale-105 transition-transform duration-300">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-3 shadow-md group-hover:shadow-lg transition-shadow duration-300">
-              <Target className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-700" />
+          <div className="flex sm:flex-col gap-3 sm:gap-0">
+            <div className="w-10 h-10 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Target className="w-5 h-5 text-emerald-700" />
             </div>
-            <h5 className="font-semibold text-base sm:text-lg text-gray-900">{content.swissFormat}</h5>
-            <p className="text-gray-600 text-xs sm:text-sm leading-relaxed">
-              {content.swissDescription}
-            </p>
-            {league.config?.roundsPerSeason && (
-              <p className="text-xs sm:text-sm font-medium text-emerald-600">
-                {league.config.roundsPerSeason} {content.rounds}
+            <div className="flex-1 sm:mt-2">
+              <h5 className="font-semibold text-sm text-gray-900">{content.swissFormat}</h5>
+              <p className="text-gray-500 text-xs leading-relaxed mt-0.5">
+                {content.swissDescription}
               </p>
-            )}
+            </div>
           </div>
 
           {/* Playoff System */}
-          <div className="space-y-2 sm:space-y-3 group hover:scale-105 transition-transform duration-300">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-3 shadow-md group-hover:shadow-lg transition-shadow duration-300">
-              <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-purple-700" />
+          <div className="flex sm:flex-col gap-3 sm:gap-0">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Trophy className="w-5 h-5 text-purple-700" />
             </div>
-            <h5 className="font-semibold text-base sm:text-lg text-gray-900">{content.playoffSystem}</h5>
-            <p className="text-gray-600 text-xs sm:text-sm leading-relaxed">
-              {content.playoffDescription}
-            </p>
+            <div className="flex-1 sm:mt-2">
+              <h5 className="font-semibold text-sm text-gray-900">{content.playoffSystem}</h5>
+              <p className="text-gray-500 text-xs leading-relaxed mt-0.5">
+                {content.playoffDescription}
+              </p>
+            </div>
           </div>
 
           {/* ELO Ranking */}
-          <div className="space-y-2 sm:space-y-3 group hover:scale-105 transition-transform duration-300 sm:col-span-2 md:col-span-1">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg sm:rounded-xl flex items-center justify-center mb-2 sm:mb-3 shadow-md group-hover:shadow-lg transition-shadow duration-300">
-              <ChartLine className="w-5 h-5 sm:w-6 sm:h-6 text-blue-700" />
+          <div className="flex sm:flex-col gap-3 sm:gap-0">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center flex-shrink-0">
+              <ChartLine className="w-5 h-5 text-blue-700" />
             </div>
-            <h5 className="font-semibold text-base sm:text-lg text-gray-900">{content.eloRanking}</h5>
-            <p className="text-gray-600 text-xs sm:text-sm leading-relaxed">
-              {content.eloDescription}
-            </p>
+            <div className="flex-1 sm:mt-2">
+              <h5 className="font-semibold text-sm text-gray-900">{content.eloRanking}</h5>
+              <p className="text-gray-500 text-xs leading-relaxed mt-0.5">
+                {content.eloDescription}
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Why Join Section */}
-      <div className="relative bg-gradient-to-br from-parque-purple via-purple-600 to-purple-700 text-white rounded-xl sm:rounded-3xl p-4 sm:p-6 md:p-8 shadow-2xl overflow-hidden">
-        {/* Animated background pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute -top-20 -right-20 w-48 sm:w-64 h-48 sm:h-64 bg-white rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-20 -left-20 w-48 sm:w-64 h-48 sm:h-64 bg-purple-300 rounded-full blur-3xl"></div>
+      <div className="bg-gradient-to-br from-parque-purple via-purple-600 to-purple-700 text-white rounded-none sm:rounded-xl mx-0 sm:mx-0 px-4 sm:p-5 py-5">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-7 h-7 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+            <Heart className="w-4 h-4 text-white" />
+          </div>
+          <h4 className="font-bold text-lg">{content.whyJoin}</h4>
+        </div>
+        <div className="space-y-2">
+          {content.benefits.map((benefit, index) => (
+            <div key={index} className="flex items-start gap-2">
+              <Shield className="w-4 h-4 text-white/70 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-white/90">{benefit}</p>
+            </div>
+          ))}
         </div>
         
-        <div className="relative z-10">
-          <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl flex items-center justify-center">
-              <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-            </div>
-            <h4 className="font-bold text-xl sm:text-2xl">{content.whyJoin}</h4>
+        {league.status === 'registration_open' && (
+          <div className="mt-4 pt-4 border-t border-white/20">
+            <a
+              href={buildRegistrationUrl()}
+              className="inline-block bg-white text-parque-purple px-6 py-2.5 rounded-xl font-semibold text-sm shadow-md"
+            >
+              {content.registerNow} →
+            </a>
           </div>
-          <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
-            {content.benefits.map((benefit, index) => (
-              <div key={index} className="flex items-start gap-2 sm:gap-3 group hover:translate-x-1 transition-transform duration-200">
-                <div className="mt-0.5 sm:mt-1 w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-white/30 to-white/10 backdrop-blur-sm rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
-                  <Shield className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
-                </div>
-                <p className="text-sm sm:text-base text-white/90 group-hover:text-white transition-colors duration-200">{benefit}</p>
-              </div>
-            ))}
-          </div>
-          
-          {league.status === 'registration_open' && (
-            <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-white/20">
-              <a
-                href={buildRegistrationUrl()}
-                className="inline-block bg-white text-parque-purple px-6 sm:px-8 py-3 sm:py-4 rounded-xl hover:bg-gray-50 transition-all duration-300 font-semibold text-base sm:text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 group"
-              >
-                <span className="flex items-center gap-2">
-                  {content.registerNow}
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </span>
-              </a>
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   )
