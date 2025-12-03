@@ -294,21 +294,21 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
       {/* Key Details Cards */}
       <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
         {/* League Details Card */}
-        <div className="bg-white sm:bg-gray-50 border-0 sm:border-2 sm:border-gray-100 rounded-none sm:rounded-xl px-4 sm:p-5 py-4 sm:hover:border-parque-purple/20 transition-all duration-300 sm:hover:shadow-lg">
-          <h4 className="font-bold text-lg text-gray-900 mb-4 flex items-center gap-2">
-            <Info className="w-5 h-5 text-parque-purple" />
+        <div className="bg-white sm:bg-gray-50 border-0 sm:border-2 sm:border-gray-100 rounded-none sm:rounded-xl md:rounded-2xl px-4 sm:p-5 md:p-6 py-4 sm:hover:border-parque-purple/20 transition-all duration-300 sm:hover:shadow-lg">
+          <h4 className="font-bold text-lg md:text-xl text-gray-900 mb-4 md:mb-6 flex items-center gap-2">
+            <Info className="w-5 h-5 md:w-6 md:h-6 text-parque-purple" />
             {content.leagueDetails}
           </h4>
           
-          <div className="space-y-3">
+          <div className="space-y-3 md:space-y-5">
             {league.seasonConfig?.startDate && (
-              <div className="flex items-center gap-3">
-                <div className="p-1.5 bg-emerald-50 rounded-lg flex-shrink-0">
-                  <Calendar className="w-4 h-4 text-emerald-600" />
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="p-1.5 md:p-2 bg-emerald-50 rounded-lg flex-shrink-0">
+                  <Calendar className="w-4 h-4 md:w-5 md:h-5 text-emerald-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-gray-500">{content.startDate}</p>
-                  <p className="text-sm font-semibold text-gray-900">
+                  <p className="text-xs md:text-sm font-medium text-gray-500 md:text-gray-600 md:mb-1">{content.startDate}</p>
+                  <p className="text-sm md:text-lg font-semibold text-gray-900">
                     {formatDate(league.seasonConfig.startDate)}
                   </p>
                 </div>
@@ -316,64 +316,64 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
             )}
 
             {league.seasonConfig?.endDate && (
-              <div className="flex items-center gap-3">
-                <div className="p-1.5 bg-blue-50 rounded-lg flex-shrink-0">
-                  <Calendar className="w-4 h-4 text-blue-600" />
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="p-1.5 md:p-2 bg-blue-50 rounded-lg flex-shrink-0">
+                  <Calendar className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-gray-500">{content.endDate}</p>
-                  <p className="text-sm font-semibold text-gray-900">
+                  <p className="text-xs md:text-sm font-medium text-gray-500 md:text-gray-600 md:mb-1">{content.endDate}</p>
+                  <p className="text-sm md:text-lg font-semibold text-gray-900">
                     {formatDate(league.seasonConfig.endDate)}
                   </p>
                 </div>
               </div>
             )}
 
-            <div className="flex items-center gap-3">
-              <div className="p-1.5 bg-purple-50 rounded-lg flex-shrink-0">
-                <Users className="w-4 h-4 text-purple-600" />
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="p-1.5 md:p-2 bg-purple-50 rounded-lg flex-shrink-0">
+                <Users className="w-4 h-4 md:w-5 md:h-5 text-purple-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-500">{content.availableSpots}</p>
-                <p className="text-sm font-semibold text-gray-900">
+                <p className="text-xs md:text-sm font-medium text-gray-500 md:text-gray-600 md:mb-1">{content.availableSpots}</p>
+                <p className="text-sm md:text-lg font-semibold text-gray-900">
                   {league.seasonConfig?.maxPlayers || 32}
                 </p>
               </div>
             </div>
 
             {/* Price with discount logic */}
-            <div className="flex items-center gap-3">
-              <div className="p-1.5 bg-amber-50 rounded-lg flex-shrink-0">
-                <CreditCard className="w-4 h-4 text-amber-600" />
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="p-1.5 md:p-2 bg-amber-50 rounded-lg flex-shrink-0">
+                <CreditCard className="w-4 h-4 md:w-5 md:h-5 text-amber-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-500">{content.price}</p>
+                <p className="text-xs md:text-sm font-medium text-gray-500 md:text-gray-600 md:mb-1">{content.price}</p>
                 
                 {league.seasonConfig?.price?.isFree || league.seasonConfig?.price?.amount === 0 ? (
-                  <p className="text-sm font-semibold text-gray-900">
+                  <p className="text-sm md:text-lg font-semibold text-gray-900">
                     {content.free}
                   </p>
                 ) : (
-                  <div className="space-y-1">
+                  <div className="space-y-1 md:space-y-2">
                     {discountValid && discountDetails ? (
                       <>
-                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 border border-emerald-200 rounded text-xs">
-                          <Tag className="w-3 h-3 text-emerald-600" />
+                        <div className="inline-flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-0.5 md:py-1 bg-emerald-50 border border-emerald-200 rounded md:rounded-lg text-xs md:text-sm">
+                          <Tag className="w-3 h-3 md:w-4 md:h-4 text-emerald-600" />
                           <span className="font-medium text-emerald-700">
                             {discountCode} (-{discountDetails.discountPercentage}%)
                           </span>
                         </div>
-                        <div className="flex items-baseline gap-2">
-                          <p className="text-sm text-gray-400 line-through">
+                        <div className="flex items-baseline gap-2 md:gap-3">
+                          <p className="text-sm md:text-xl font-semibold text-gray-400 line-through">
                             {discountDetails.originalPrice}€
                           </p>
-                          <p className="text-lg font-bold text-emerald-600">
+                          <p className="text-lg md:text-3xl font-bold text-emerald-600">
                             {discountDetails.finalPrice}€
                           </p>
                         </div>
                       </>
                     ) : (
-                      <p className="text-sm font-semibold text-gray-900">
+                      <p className="text-sm md:text-lg font-semibold text-gray-900">
                         {league.seasonConfig?.price?.amount}€
                       </p>
                     )}
