@@ -182,10 +182,10 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
                 <LanguageSwitcher className="" locale={validLocale} />
               )}
               
-              <div className="flex flex-col justify-center items-center w-10 h-10 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-lg">
-                <span className="block w-5 h-0.5 bg-gray-600 -translate-y-1"></span>
-                <span className="block w-5 h-0.5 bg-gray-600"></span>
-                <span className="block w-5 h-0.5 bg-gray-600 translate-y-1"></span>
+              <div className="flex flex-col justify-center items-center w-10 h-10 bg-white border border-gray-300 rounded-lg shadow-sm">
+                <span className="block w-5 h-0.5 bg-gray-700 -translate-y-1"></span>
+                <span className="block w-5 h-0.5 bg-gray-700"></span>
+                <span className="block w-5 h-0.5 bg-gray-700 translate-y-1"></span>
               </div>
             </div>
           </div>
@@ -197,7 +197,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
   return (
     <>
       <nav className={`fixed top-0 w-full backdrop-blur-md z-[100] transition-all duration-300 ${
-        scrolled ? 'bg-white/95 shadow-lg' : 'bg-white/70'
+        scrolled ? 'bg-white/95 shadow-lg' : 'bg-white/90 md:bg-white/70'
       }`}>
         <div className="container mx-auto px-2 md:px-4">
           <div className="flex items-center justify-between h-16">
@@ -267,15 +267,15 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
                 onClick={handleMobileMenuToggle}
                 onMouseEnter={() => setHoveredButton('hamburger')}
                 onMouseLeave={() => setHoveredButton(null)}
-                className="flex flex-col justify-center items-center w-10 h-10 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-lg transition-all duration-300 group"
+                className="flex flex-col justify-center items-center w-10 h-10 bg-white border border-gray-300 rounded-lg shadow-sm transition-all duration-300 group active:scale-95"
                 style={{
                   borderColor: hoveredButton === 'hamburger' ? '#563380' : '#d1d5db'
                 }}
                 aria-label="Toggle mobile menu"
               >
-                <span className={`block w-5 h-0.5 bg-gray-600 transition-all duration-300 ${isMobileMenuOpen ? 'rotate-45 translate-y-1' : '-translate-y-1'}`}></span>
-                <span className={`block w-5 h-0.5 bg-gray-600 transition-all duration-300 ${isMobileMenuOpen ? 'opacity-0' : 'opacity-100'}`}></span>
-                <span className={`block w-5 h-0.5 bg-gray-600 transition-all duration-300 ${isMobileMenuOpen ? '-rotate-45 -translate-y-1' : 'translate-y-1'}`}></span>
+                <span className={`block w-5 h-0.5 bg-gray-700 transition-all duration-300 ${isMobileMenuOpen ? 'rotate-45 translate-y-1' : '-translate-y-1'}`}></span>
+                <span className={`block w-5 h-0.5 bg-gray-700 transition-all duration-300 ${isMobileMenuOpen ? 'opacity-0' : 'opacity-100'}`}></span>
+                <span className={`block w-5 h-0.5 bg-gray-700 transition-all duration-300 ${isMobileMenuOpen ? '-rotate-45 -translate-y-1' : 'translate-y-1'}`}></span>
               </button>
             </div>
           </div>
