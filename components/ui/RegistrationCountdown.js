@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Clock } from 'lucide-react'
 
-export default function RegistrationCountdown({ registrationEnd, language = 'es' }) {
+export default function RegistrationCountdown({ registrationEnd, language = 'es', compact = false }) {
   const [timeLeft, setTimeLeft] = useState(null)
   const [isExpired, setIsExpired] = useState(false)
 
@@ -87,6 +87,64 @@ export default function RegistrationCountdown({ registrationEnd, language = 'es'
     iconColor = 'text-orange-600'
   }
 
+  // Compact version for mobile
+  if (compact) {
+    return (
+      <div className={`flex items-center gap-2 sm:gap-3 ${bgColor} border ${borderColor} rounded-lg p-2 sm:p-3`}>
+        <Clock className={`w-4 h-4 ${iconColor} flex-shrink-0`} />
+        <div className="flex-1 min-w-0">
+          <p className={`text-[10px] sm:text-xs font-semibold ${textColor} uppercase tracking-wide`}>
+            {content.registrationClosesIn}
+          </p>
+          <div className="flex items-center gap-1 sm:gap-2 mt-0.5">
+            {timeLeft.days > 0 && (
+              <div className="text-center">
+                <span className={`text-sm sm:text-lg font-bold ${textColor} tabular-nums`}>
+                  {timeLeft.days}
+                </span>
+                <span className={`text-[10px] sm:text-xs ${textColor} ml-0.5`}>
+                  {content.days}
+                </span>
+              </div>
+            )}
+            
+            <div className="text-center">
+              <span className={`text-sm sm:text-lg font-bold ${textColor} tabular-nums`}>
+                {String(timeLeft.hours).padStart(2, '0')}
+              </span>
+              <span className={`text-[10px] sm:text-xs ${textColor} ml-0.5`}>
+                {content.hours}
+              </span>
+            </div>
+            
+            <span className={`${textColor} font-bold text-sm sm:text-base`}>:</span>
+            
+            <div className="text-center">
+              <span className={`text-sm sm:text-lg font-bold ${textColor} tabular-nums`}>
+                {String(timeLeft.minutes).padStart(2, '0')}
+              </span>
+              <span className={`text-[10px] sm:text-xs ${textColor} ml-0.5`}>
+                {content.minutes}
+              </span>
+            </div>
+            
+            <span className={`${textColor} font-bold text-sm sm:text-base`}>:</span>
+            
+            <div className="text-center">
+              <span className={`text-sm sm:text-lg font-bold ${textColor} tabular-nums`}>
+                {String(timeLeft.seconds).padStart(2, '0')}
+              </span>
+              <span className={`text-[10px] sm:text-xs ${textColor} ml-0.5`}>
+                {content.seconds}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Full version
   return (
     <div className={`flex items-start gap-3 ${bgColor} border ${borderColor} rounded-lg p-3`}>
       <div className="mt-0.5">

@@ -63,10 +63,10 @@ export default async function LeagueInfoPage({ params }) {
       <CityLeagueHero city={plainCity} locale={locale} leagueName={league.name} league={league} />
       
       {/* Content - just swap league cards for LeagueInfoTab */}
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 md:py-12">
         <div className="max-w-5xl mx-auto">
           {/* League Info Tab */}
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-6">
             <LeagueInfoTab 
               league={league}
               currentSeason={currentSeason}
