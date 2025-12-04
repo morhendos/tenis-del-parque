@@ -29,12 +29,12 @@ const levelDescriptions = {
     },
     advanced: {
       title: 'Avanzado',
-      description: 'Para jugadores experimentados con técnica sólida y juego competitivo. Partidos intensos con alta calidad de juego.',
+      description: 'Para jugadores con años de experiencia competitiva y técnica refinada. Partidos de alta intensidad donde la estrategia y la consistencia son esenciales para competir.',
       skills: [
+        'Años de experiencia en competición',
         'Técnica refinada en todos los golpes',
         'Juego estratégico avanzado',
-        'Experiencia en competición',
-        'Alta intensidad y competitividad'
+        'Alta intensidad física y mental'
       ]
     },
     open: {
@@ -71,12 +71,12 @@ const levelDescriptions = {
     },
     advanced: {
       title: 'Advanced',
-      description: 'For experienced players with solid technique and competitive play. Intense matches with high-quality tennis.',
+      description: 'For players with years of competitive experience and refined technique. High-intensity matches where strategy and consistency are essential to compete.',
       skills: [
+        'Years of competition experience',
         'Refined technique on all strokes',
         'Advanced strategic play',
-        'Competition experience',
-        'High intensity and competitiveness'
+        'High physical and mental intensity'
       ]
     },
     open: {
@@ -452,8 +452,26 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
                 {(() => {
                   // Get city slug and season info from current league (DYNAMIC)
                   const citySlug = league.city?.slug || league.location?.city?.toLowerCase().replace(/\s+/g, '-') || 'sotogrande'
-                  const seasonType = league.season?.type || 'winter' // Dynamic from current league
-                  const seasonYear = league.season?.year || '2025' // Dynamic from current league
+                  
+                  // ALWAYS extract season info from slug - it's the source of truth for URLs
+                  // Slug format: {level}-league-{city}-{season}-{year}
+                  let seasonType = null
+                  let seasonYear = null
+                  
+                  // Find year (4-digit number at the end)
+                  const yearMatch = league.slug?.match(/-(\d{4})$/)
+                  if (yearMatch) {
+                    seasonYear = yearMatch[1]
+                  }
+                  // Find season type (word before year)
+                  const seasonMatch = league.slug?.match(/-(winter|summer|spring|fall|autumn)-(\d{4})$/i)
+                  if (seasonMatch) {
+                    seasonType = seasonMatch[1].toLowerCase()
+                  }
+                  
+                  // Fallback to league.season only if slug parsing failed
+                  if (!seasonType) seasonType = league.season?.type || 'winter'
+                  if (!seasonYear) seasonYear = league.season?.year || '2025'
                   
                   // Define levels with their slugs and colors (Gold, Silver, Bronze order)
                   const levels = [

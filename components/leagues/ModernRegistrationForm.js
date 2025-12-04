@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { MapPin, Calendar, Tag, ChevronRight, Eye, EyeOff } from 'lucide-react'
 
 const skillLevelNames = {
   es: {
@@ -18,6 +19,13 @@ const skillLevelNames = {
   }
 }
 
+const skillLevelColors = {
+  advanced: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  intermediate: 'bg-gray-100 text-gray-700 border-gray-200',
+  beginner: 'bg-amber-100 text-amber-800 border-amber-200',
+  all: 'bg-emerald-100 text-emerald-800 border-emerald-200'
+}
+
 export default function ModernRegistrationForm({ 
   league, 
   locale, 
@@ -26,6 +34,7 @@ export default function ModernRegistrationForm({
   errors = {} 
 }) {
   const [hasAccount, setHasAccount] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -45,11 +54,7 @@ export default function ModernRegistrationForm({
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search)
       const urlDiscount = urlParams.get('discount')
-      console.log('[Discount Debug] URL:', window.location.href)
-      console.log('[Discount Debug] Query params:', window.location.search)
-      console.log('[Discount Debug] Discount param:', urlDiscount)
       if (urlDiscount) {
-        console.log('[Discount Debug] Applying discount code:', urlDiscount)
         setDiscountCode(urlDiscount.toUpperCase())
         setShowDiscountInput(true)
         validateDiscount(urlDiscount)
@@ -87,7 +92,6 @@ export default function ModernRegistrationForm({
   const handleDiscountCodeChange = (e) => {
     const code = e.target.value.toUpperCase()
     setDiscountCode(code)
-    // Clear validation when user changes the code
     if (discountValidation) {
       setDiscountValidation(null)
     }
@@ -104,7 +108,6 @@ export default function ModernRegistrationForm({
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    // Include discount code in submission if validated
     const submissionData = {
       ...formData,
       discountCode: discountValidation?.valid ? discountCode : null
@@ -115,59 +118,83 @@ export default function ModernRegistrationForm({
   // Determine if we need to ask for level
   const needsLevelSelection = league.skillLevel === 'all'
   const leagueSkillName = skillLevelNames[locale][league.skillLevel] || league.skillLevel
+  const skillLevelColor = skillLevelColors[league.skillLevel] || skillLevelColors.all
+
+  // Format season nicely
+  const formatSeason = () => {
+    const type = league.season?.type
+    const year = league.season?.year
+    if (!type || !year) return null
+    
+    const seasonNames = {
+      es: { winter: 'Invierno', summer: 'Verano', spring: 'Primavera', autumn: 'Otoño' },
+      en: { winter: 'Winter', summer: 'Summer', spring: 'Spring', autumn: 'Autumn' }
+    }
+    return `${seasonNames[locale]?.[type] || type} ${year}`
+  }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      {/* League Info Card */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">{league.name}</h2>
-            <div className="flex items-center gap-2 mt-1">
-              {league.cityData?.name && (
-                <>
-                  <span className="inline-flex items-center text-sm text-gray-600">
-                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    {league.cityData.name[locale] || league.cityData.name.es}
-                  </span>
-                  <span className="text-gray-300">•</span>
-                </>
-              )}
-              <span className="text-sm text-gray-600">
-                {league.season?.type} {league.season?.year}
+    <div className="max-w-lg mx-auto">
+      {/* League Info Card - Compact and Clean */}
+      <div className="bg-white rounded-none sm:rounded-2xl shadow-sm sm:shadow-lg mx-0 sm:mx-0 mb-3 sm:mb-6 overflow-hidden">
+        {/* Header with league name and badge */}
+        <div className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4">
+          <div className="flex items-start justify-between gap-3">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
+              {league.name}
+            </h2>
+            {!needsLevelSelection && (
+              <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border whitespace-nowrap ${skillLevelColor}`}>
+                {leagueSkillName}
               </span>
-            </div>
+            )}
           </div>
-          {!needsLevelSelection && (
-            <div className="px-4 py-2 bg-emerald-100 text-emerald-800 rounded-full text-sm font-semibold">
-              {leagueSkillName}
-            </div>
-          )}
+          
+          {/* Location and Season - Single line, clean */}
+          <div className="flex items-center gap-3 mt-2 text-sm text-gray-500">
+            {league.cityData?.name && (
+              <span className="inline-flex items-center">
+                <MapPin className="w-3.5 h-3.5 mr-1 text-gray-400" />
+                {league.cityData.name[locale] || league.cityData.name.es}
+              </span>
+            )}
+            {formatSeason() && (
+              <>
+                <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                <span className="inline-flex items-center">
+                  <Calendar className="w-3.5 h-3.5 mr-1 text-gray-400" />
+                  {formatSeason()}
+                </span>
+              </>
+            )}
+          </div>
         </div>
         
-        <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-          <div>
-            <p className="text-sm text-gray-600">{locale === 'es' ? 'Inicio' : 'Start'}</p>
-            <p className="font-semibold text-gray-900">
-              {new Date(league.seasonConfig?.startDate).toLocaleDateString(locale)}
+        {/* Stats row */}
+        <div className="grid grid-cols-2 border-t border-gray-100">
+          <div className="px-4 sm:px-6 py-3 sm:py-4">
+            <p className="text-xs text-gray-500 mb-0.5">{locale === 'es' ? 'Inicio' : 'Start'}</p>
+            <p className="font-semibold text-gray-900 text-sm sm:text-base">
+              {new Date(league.seasonConfig?.startDate).toLocaleDateString(locale, {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+              })}
             </p>
           </div>
-          <div>
-            <p className="text-sm text-gray-600">{locale === 'es' ? 'Precio' : 'Price'}</p>
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-l border-gray-100">
+            <p className="text-xs text-gray-500 mb-0.5">{locale === 'es' ? 'Precio' : 'Price'}</p>
             {discountValidation?.valid ? (
-              <div className="flex items-center gap-2">
-                <p className="font-semibold text-gray-400 line-through text-sm">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-gray-400 line-through text-xs sm:text-sm">
                   €{discountValidation.originalPrice}
-                </p>
-                <p className="font-bold text-emerald-600 text-lg">
+                </span>
+                <span className="font-bold text-emerald-600 text-base sm:text-lg">
                   €{discountValidation.finalPrice}
-                </p>
+                </span>
               </div>
             ) : (
-              <p className="font-semibold text-gray-900">
+              <p className="font-semibold text-gray-900 text-sm sm:text-base">
                 {league.seasonConfig?.price?.isFree 
                   ? (locale === 'es' ? 'Gratis' : 'Free')
                   : `€${league.seasonConfig?.price?.amount}`}
@@ -176,22 +203,21 @@ export default function ModernRegistrationForm({
           </div>
         </div>
         
-        {/* Discount Success Banner */}
+        {/* Discount Success Banner - Compact */}
         {discountValidation?.valid && (
-          <div className="mt-4 p-3 bg-emerald-50 border-2 border-emerald-200 rounded-xl">
+          <div className="mx-3 sm:mx-4 mb-3 sm:mb-4 p-2.5 sm:p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
             <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-emerald-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-emerald-900">
+              <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                <svg className="w-3 h-3 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs sm:text-sm font-medium text-emerald-800 truncate">
                   {discountValidation.description || (locale === 'es' ? 'Descuento aplicado' : 'Discount applied')}
                 </p>
-                <p className="text-xs text-emerald-700 mt-0.5">
-                  {locale === 'es' 
-                    ? `Ahorras €${discountValidation.discountAmount} (${discountValidation.discountPercentage}% descuento)`
-                    : `You save €${discountValidation.discountAmount} (${discountValidation.discountPercentage}% off)`
-                  }
+                <p className="text-xs text-emerald-600">
+                  -{discountValidation.discountPercentage}%
                 </p>
               </div>
             </div>
@@ -199,29 +225,36 @@ export default function ModernRegistrationForm({
         )}
       </div>
 
-      {/* Account Toggle */}
-      <div className="bg-white/80 backdrop-blur-sm border-2 border-emerald-100 rounded-2xl p-6 mb-8 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="font-semibold text-gray-900 mb-1">
-              {locale === 'es' ? '¿Ya tienes una cuenta?' : 'Already have an account?'}
-            </p>
-            <p className="text-sm text-gray-600">
+      {/* Account Toggle - Refined and smaller */}
+      <div className="bg-white/90 backdrop-blur-sm rounded-none sm:rounded-xl mx-0 px-4 sm:px-5 py-3.5 sm:py-4 mb-3 sm:mb-6 border-y sm:border border-gray-100">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-gray-900 text-sm sm:text-base">
               {hasAccount 
-                ? (locale === 'es' ? 'Inicia sesión para registrarte más rápido' : 'Sign in to register faster')
-                : (locale === 'es' ? 'Crearemos una cuenta para ti' : 'We\'ll create an account for you')}
+                ? (locale === 'es' ? '¿Ya tienes cuenta?' : 'Already have an account?')
+                : (locale === 'es' ? '¿Nuevo aquí?' : 'New here?')}
+            </p>
+            <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+              {hasAccount 
+                ? (locale === 'es' ? 'Inicia sesión para continuar' : 'Sign in to continue')
+                : (locale === 'es' ? 'Te crearemos una cuenta' : "We'll create an account for you")}
             </p>
           </div>
+          {/* Toggle switch - fixed size */}
           <button
             type="button"
             onClick={() => setHasAccount(!hasAccount)}
-            className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
-              hasAccount ? 'bg-emerald-600' : 'bg-gray-300'
+            style={{ width: '44px', height: '24px', minWidth: '44px', minHeight: '24px' }}
+            className={`relative inline-flex flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+              hasAccount ? 'bg-emerald-500' : 'bg-gray-200'
             }`}
+            role="switch"
+            aria-checked={hasAccount}
           >
             <span
-              className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
-                hasAccount ? 'translate-x-7' : 'translate-x-1'
+              style={{ width: '20px', height: '20px' }}
+              className={`pointer-events-none inline-block transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                hasAccount ? 'translate-x-5' : 'translate-x-0'
               }`}
             />
           </button>
@@ -229,189 +262,19 @@ export default function ModernRegistrationForm({
       </div>
 
       {/* Registration Form */}
-      <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-8">
-        <h3 className="text-2xl font-bold text-gray-900 mb-6">
-          {hasAccount 
-            ? (locale === 'es' ? 'Iniciar Sesión' : 'Sign In')
-            : (locale === 'es' ? 'Crear Cuenta' : 'Create Account')}
-        </h3>
+      <form onSubmit={handleSubmit} className="bg-white rounded-none sm:rounded-2xl shadow-none sm:shadow-lg">
+        <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 sm:pb-6">
+          <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-5">
+            {hasAccount 
+              ? (locale === 'es' ? 'Iniciar Sesión' : 'Sign In')
+              : (locale === 'es' ? 'Crear Cuenta' : 'Create Account')}
+          </h3>
 
-        {hasAccount ? (
-          // Login Form - Just email and password
-          <>
-            <div className="space-y-6">
+          {hasAccount ? (
+            // Login Form
+            <div className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  {locale === 'es' ? 'Email' : 'Email'}
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className={`w-full px-4 py-3 border-2 ${
-                    errors.email ? 'border-red-500' : 'border-gray-200'
-                  } rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all`}
-                  placeholder={locale === 'es' ? 'tu@email.com' : 'your@email.com'}
-                />
-                {errors.email && (
-                  <p className="mt-2 text-sm text-red-600">{errors.email}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                  {locale === 'es' ? 'Contraseña' : 'Password'}
-                </label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  className={`w-full px-4 py-3 border-2 ${
-                    errors.password ? 'border-red-500' : 'border-gray-200'
-                  } rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all`}
-                  placeholder="••••••••"
-                />
-                {errors.password && (
-                  <p className="mt-2 text-sm text-red-600">{errors.password}</p>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between text-sm">
-                <Link 
-                  href={`/${locale}/forgot-password`}
-                  className="text-emerald-600 hover:text-emerald-700 font-medium"
-                >
-                  {locale === 'es' ? '¿Olvidaste tu contraseña?' : 'Forgot password?'}
-                </Link>
-              </div>
-
-              {/* Discount Code Section - Also for existing users */}
-              <div>
-                {!showDiscountInput ? (
-                  <button
-                    type="button"
-                    onClick={() => setShowDiscountInput(true)}
-                    className="text-emerald-600 hover:text-emerald-700 font-medium text-sm flex items-center gap-1"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    {locale === 'es' ? '¿Tienes un código de descuento?' : 'Have a discount code?'}
-                  </button>
-                ) : (
-                  <div>
-                    <label htmlFor="discountCode" className="block text-sm font-medium text-gray-700 mb-2">
-                      {locale === 'es' ? 'Código de Descuento' : 'Discount Code'}
-                      <span className="text-gray-500 font-normal ml-1">
-                        ({locale === 'es' ? 'Opcional' : 'Optional'})
-                      </span>
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        id="discountCode"
-                        name="discountCode"
-                        value={discountCode}
-                        onChange={handleDiscountCodeChange}
-                        className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all uppercase"
-                        placeholder={locale === 'es' ? 'VERANO2025' : 'SUMMER2025'}
-                      />
-                      <button
-                        type="button"
-                        onClick={handleApplyDiscount}
-                        disabled={!discountCode || isValidatingDiscount}
-                        className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isValidatingDiscount ? (
-                          <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                        ) : (
-                          locale === 'es' ? 'Aplicar' : 'Apply'
-                        )}
-                      </button>
-                    </div>
-                    
-                    {/* Discount Validation Messages */}
-                    {discountValidation && (
-                      <div className={`mt-3 p-3 rounded-xl border-2 ${
-                        discountValidation.valid 
-                          ? 'bg-emerald-50 border-emerald-200' 
-                          : 'bg-red-50 border-red-200'
-                      }`}>
-                        {discountValidation.valid ? (
-                          <div className="flex items-start gap-2">
-                            <svg className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                            <div className="flex-1">
-                              <p className="text-emerald-900 font-semibold text-sm">
-                                {discountValidation.description}
-                              </p>
-                              <div className="mt-2 flex items-baseline gap-2">
-                                <span className="text-gray-500 line-through text-sm">
-                                  €{discountValidation.originalPrice}
-                                </span>
-                                <span className="text-emerald-700 font-bold text-lg">
-                                  €{discountValidation.finalPrice}
-                                </span>
-                                <span className="text-emerald-600 text-sm">
-                                  ({discountValidation.discountPercentage}% {locale === 'es' ? 'descuento' : 'off'})
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-start gap-2">
-                            <svg className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                            </svg>
-                            <p className="text-red-700 text-sm flex-1">
-                              {discountValidation.error || (locale === 'es' ? 'Código inválido o expirado' : 'Invalid or expired code')}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </>
-        ) : (
-          // New User Form - Full registration
-          <>
-            <div className="space-y-6">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                  {locale === 'es' ? 'Nombre Completo' : 'Full Name'}
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  className={`w-full px-4 py-3 border-2 ${
-                    errors.name ? 'border-red-500' : 'border-gray-200'
-                  } rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all`}
-                  placeholder={locale === 'es' ? 'Juan García' : 'John Smith'}
-                />
-                {errors.name && (
-                  <p className="mt-2 text-sm text-red-600">{errors.name}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
                   Email
                 </label>
                 <input
@@ -421,18 +284,103 @@ export default function ModernRegistrationForm({
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className={`w-full px-4 py-3 border-2 ${
-                    errors.email ? 'border-red-500' : 'border-gray-200'
-                  } rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all`}
+                  className={`w-full px-3.5 py-2.5 sm:py-3 border ${
+                    errors.email ? 'border-red-400 bg-red-50' : 'border-gray-200'
+                  } rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-base`}
                   placeholder={locale === 'es' ? 'tu@email.com' : 'your@email.com'}
                 />
                 {errors.email && (
-                  <p className="mt-2 text-sm text-red-600">{errors.email}</p>
+                  <p className="mt-1.5 text-xs text-red-600">{errors.email}</p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="whatsapp" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  {locale === 'es' ? 'Contraseña' : 'Password'}
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    className={`w-full px-3.5 py-2.5 sm:py-3 pr-10 border ${
+                      errors.password ? 'border-red-400 bg-red-50' : 'border-gray-200'
+                    } rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-base`}
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="mt-1.5 text-xs text-red-600">{errors.password}</p>
+                )}
+              </div>
+
+              <Link 
+                href={`/${locale}/forgot-password`}
+                className="inline-block text-emerald-600 hover:text-emerald-700 font-medium text-sm"
+              >
+                {locale === 'es' ? '¿Olvidaste tu contraseña?' : 'Forgot password?'}
+              </Link>
+
+              {/* Discount Code - Compact */}
+              {renderDiscountSection()}
+            </div>
+          ) : (
+            // New User Form
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  {locale === 'es' ? 'Nombre Completo' : 'Full Name'}
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  className={`w-full px-3.5 py-2.5 sm:py-3 border ${
+                    errors.name ? 'border-red-400 bg-red-50' : 'border-gray-200'
+                  } rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-base`}
+                  placeholder={locale === 'es' ? 'Juan García' : 'John Smith'}
+                />
+                {errors.name && (
+                  <p className="mt-1.5 text-xs text-red-600">{errors.name}</p>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className={`w-full px-3.5 py-2.5 sm:py-3 border ${
+                    errors.email ? 'border-red-400 bg-red-50' : 'border-gray-200'
+                  } rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-base`}
+                  placeholder={locale === 'es' ? 'tu@email.com' : 'your@email.com'}
+                />
+                {errors.email && (
+                  <p className="mt-1.5 text-xs text-red-600">{errors.email}</p>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="whatsapp" className="block text-sm font-medium text-gray-700 mb-1.5">
                   WhatsApp
                 </label>
                 <input
@@ -442,35 +390,35 @@ export default function ModernRegistrationForm({
                   value={formData.whatsapp}
                   onChange={handleChange}
                   required
-                  className={`w-full px-4 py-3 border-2 ${
-                    errors.whatsapp ? 'border-red-500' : 'border-gray-200'
-                  } rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all`}
+                  className={`w-full px-3.5 py-2.5 sm:py-3 border ${
+                    errors.whatsapp ? 'border-red-400 bg-red-50' : 'border-gray-200'
+                  } rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-base`}
                   placeholder="+34 600 000 000"
                 />
-                <p className="mt-2 text-sm text-gray-500">
+                <p className="mt-1 text-xs text-gray-500">
                   {locale === 'es' 
-                    ? 'Te enviaremos notificaciones importantes de la liga'
-                    : 'We\'ll send you important league notifications'}
+                    ? 'Para notificaciones de la liga'
+                    : 'For league notifications'}
                 </p>
                 {errors.whatsapp && (
-                  <p className="mt-2 text-sm text-red-600">{errors.whatsapp}</p>
+                  <p className="mt-1 text-xs text-red-600">{errors.whatsapp}</p>
                 )}
               </div>
 
-              {/* Only show level selection if league is "all" */}
+              {/* Level Selection - Compact pills on mobile */}
               {needsLevelSelection && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    {locale === 'es' ? '¿Cuál es tu nivel?' : 'What\'s your level?'}
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {locale === 'es' ? '¿Cuál es tu nivel?' : 'What&apos;s your level?'}
                   </label>
-                  <div className="space-y-3">
+                  <div className="flex flex-wrap gap-2">
                     {['beginner', 'intermediate', 'advanced'].map((level) => (
                       <label
                         key={level}
-                        className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all hover:bg-emerald-50 ${
+                        className={`flex-1 min-w-[80px] text-center px-3 py-2.5 border-2 rounded-xl cursor-pointer transition-all text-sm font-medium ${
                           formData.level === level
-                            ? 'border-emerald-600 bg-emerald-50'
-                            : 'border-gray-200'
+                            ? 'border-emerald-600 bg-emerald-50 text-emerald-700'
+                            : 'border-gray-200 text-gray-600 hover:border-gray-300'
                         }`}
                       >
                         <input
@@ -479,225 +427,195 @@ export default function ModernRegistrationForm({
                           value={level}
                           checked={formData.level === level}
                           onChange={handleChange}
-                          className="w-5 h-5 text-emerald-600"
+                          className="sr-only"
                           required
                         />
-                        <span className="ml-3 text-base font-medium text-gray-900">
-                          {skillLevelNames[locale][level]}
-                        </span>
+                        {skillLevelNames[locale][level]}
                       </label>
                     ))}
                   </div>
                   {errors.level && (
-                    <p className="mt-2 text-sm text-red-600">{errors.level}</p>
+                    <p className="mt-1.5 text-xs text-red-600">{errors.level}</p>
                   )}
                 </div>
               )}
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
                   {locale === 'es' ? 'Contraseña' : 'Password'}
                 </label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  minLength={6}
-                  className={`w-full px-4 py-3 border-2 ${
-                    errors.password ? 'border-red-500' : 'border-gray-200'
-                  } rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all`}
-                  placeholder="••••••••"
-                />
-                <p className="mt-2 text-sm text-gray-500">
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    minLength={6}
+                    className={`w-full px-3.5 py-2.5 sm:py-3 pr-10 border ${
+                      errors.password ? 'border-red-400 bg-red-50' : 'border-gray-200'
+                    } rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-base`}
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <p className="mt-1 text-xs text-gray-500">
                   {locale === 'es' ? 'Mínimo 6 caracteres' : 'Minimum 6 characters'}
                 </p>
                 {errors.password && (
-                  <p className="mt-2 text-sm text-red-600">{errors.password}</p>
+                  <p className="mt-1 text-xs text-red-600">{errors.password}</p>
                 )}
               </div>
 
-              {/* Discount Code Section */}
-              <div>
-                {!showDiscountInput ? (
-                  <button
-                    type="button"
-                    onClick={() => setShowDiscountInput(true)}
-                    className="text-emerald-600 hover:text-emerald-700 font-medium text-sm flex items-center gap-1"
+              {/* Discount Code */}
+              {renderDiscountSection()}
+            </div>
+          )}
+
+          {/* Error Messages */}
+          {errors.submit && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+              <p className="text-red-600 text-sm">{errors.submit}</p>
+            </div>
+          )}
+          
+          {errors.info && (
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+              <div className="flex items-start gap-2">
+                <svg className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+                <div className="flex-1">
+                  <p className="text-blue-700 text-sm">{errors.info}</p>
+                  <a 
+                    href={`/${locale}/player/dashboard`}
+                    className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-700 mt-1"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    {locale === 'es' ? '¿Tienes un código de descuento?' : 'Have a discount code?'}
-                  </button>
-                ) : (
-                  <div>
-                    <label htmlFor="discountCode" className="block text-sm font-medium text-gray-700 mb-2">
-                      {locale === 'es' ? 'Código de Descuento' : 'Discount Code'}
-                      <span className="text-gray-500 font-normal ml-1">
-                        ({locale === 'es' ? 'Opcional' : 'Optional'})
-                      </span>
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        id="discountCode"
-                        name="discountCode"
-                        value={discountCode}
-                        onChange={handleDiscountCodeChange}
-                        className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all uppercase"
-                        placeholder={locale === 'es' ? 'VERANO2025' : 'SUMMER2025'}
-                      />
-                      <button
-                        type="button"
-                        onClick={handleApplyDiscount}
-                        disabled={!discountCode || isValidatingDiscount}
-                        className="px-6 py-3 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isValidatingDiscount ? (
-                          <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                        ) : (
-                          locale === 'es' ? 'Aplicar' : 'Apply'
-                        )}
-                      </button>
-                    </div>
-                    
-                    {/* Discount Validation Messages */}
-                    {discountValidation && (
-                      <div className={`mt-3 p-3 rounded-xl border-2 ${
-                        discountValidation.valid 
-                          ? 'bg-emerald-50 border-emerald-200' 
-                          : 'bg-red-50 border-red-200'
-                      }`}>
-                        {discountValidation.valid ? (
-                          <div className="flex items-start gap-2">
-                            <svg className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                            <div className="flex-1">
-                              <p className="text-emerald-900 font-semibold text-sm">
-                                {discountValidation.description}
-                              </p>
-                              <div className="mt-2 flex items-baseline gap-2">
-                                <span className="text-gray-500 line-through text-sm">
-                                  €{discountValidation.originalPrice}
-                                </span>
-                                <span className="text-emerald-700 font-bold text-lg">
-                                  €{discountValidation.finalPrice}
-                                </span>
-                                <span className="text-emerald-600 text-sm">
-                                  ({discountValidation.discountPercentage}% {locale === 'es' ? 'descuento' : 'off'})
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-start gap-2">
-                            <svg className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                            </svg>
-                            <p className="text-red-700 text-sm flex-1">
-                              {discountValidation.error || (locale === 'es' ? 'Código inválido o expirado' : 'Invalid or expired code')}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
+                    {locale === 'es' ? 'Ir al panel' : 'Go to dashboard'}
+                    <ChevronRight className="w-4 h-4 ml-0.5" />
+                  </a>
+                </div>
               </div>
             </div>
-          </>
-        )}
+          )}
+        </div>
 
-        {/* Error Message */}
-        {errors.submit && (
-          <div className="mt-6 p-4 bg-red-50 border-2 border-red-200 rounded-xl">
-            <p className="text-red-600 text-sm">{errors.submit}</p>
-          </div>
-        )}
-        
-        {/* Info Message (for already registered, etc.) */}
-        {errors.info && (
-          <div className="mt-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
-            <div className="flex items-start gap-3">
-              <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-              </svg>
-              <div className="flex-1">
-                <p className="text-blue-700 text-sm mb-2">{errors.info}</p>
-                <a 
-                  href={`/${locale}/player/dashboard`}
-                  className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-700"
+        {/* Submit Button - Fixed at bottom on mobile */}
+        <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-3.5 sm:py-4 rounded-xl font-semibold text-base hover:shadow-lg active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? (
+              <span className="flex items-center justify-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {locale === 'es' ? 'Procesando...' : 'Processing...'}
+              </span>
+            ) : (
+              <span className="flex items-center justify-center">
+                {hasAccount 
+                  ? (locale === 'es' ? 'Entrar y Registrarme' : 'Sign In & Register')
+                  : (locale === 'es' ? 'Crear Cuenta' : 'Create Account')}
+                <ChevronRight className="w-5 h-5 ml-1" />
+              </span>
+            )}
+          </button>
+
+          {/* Toggle hint */}
+          <p className="mt-4 text-center text-sm text-gray-500">
+            {hasAccount ? (
+              <>
+                {locale === 'es' ? '¿Sin cuenta?' : 'No account?'}{' '}
+                <button
+                  type="button"
+                  onClick={() => setHasAccount(false)}
+                  className="text-emerald-600 hover:text-emerald-700 font-medium"
                 >
-                  {locale === 'es' ? 'Ir al panel de jugador' : 'Go to player dashboard'}
-                  <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </a>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Submit Button */}
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full mt-8 bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-4 rounded-xl font-semibold text-lg hover:shadow-lg transform hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isSubmitting ? (
-            <span className="flex items-center justify-center">
-              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              {locale === 'es' ? 'Procesando...' : 'Processing...'}
-            </span>
-          ) : (
-            <span className="flex items-center justify-center">
-              {hasAccount 
-                ? (locale === 'es' ? 'Iniciar Sesión y Registrarme' : 'Sign In & Register')
-                : (locale === 'es' ? 'Crear Cuenta y Registrarme' : 'Create Account & Register')}
-              <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </span>
-          )}
-        </button>
-
-        {/* Help Text */}
-        <p className="mt-6 text-center text-sm text-gray-500">
-          {hasAccount ? (
-            <>
-              {locale === 'es' ? '¿No tienes cuenta?' : 'Don\'t have an account?'}{' '}
-              <button
-                type="button"
-                onClick={() => setHasAccount(false)}
-                className="text-emerald-600 hover:text-emerald-700 font-medium"
-              >
-                {locale === 'es' ? 'Créala aquí' : 'Create one'}
-              </button>
-            </>
-          ) : (
-            <>
-              {locale === 'es' ? '¿Ya tienes cuenta?' : 'Already have an account?'}{' '}
-              <button
-                type="button"
-                onClick={() => setHasAccount(true)}
-                className="text-emerald-600 hover:text-emerald-700 font-medium"
-              >
-                {locale === 'es' ? 'Inicia sesión' : 'Sign in'}
-              </button>
-            </>
-          )}
-        </p>
+                  {locale === 'es' ? 'Crear una' : 'Create one'}
+                </button>
+              </>
+            ) : (
+              <>
+                {locale === 'es' ? '¿Ya tienes cuenta?' : 'Have an account?'}{' '}
+                <button
+                  type="button"
+                  onClick={() => setHasAccount(true)}
+                  className="text-emerald-600 hover:text-emerald-700 font-medium"
+                >
+                  {locale === 'es' ? 'Entrar' : 'Sign in'}
+                </button>
+              </>
+            )}
+          </p>
+        </div>
       </form>
     </div>
   )
+
+  // Helper function for discount section
+  function renderDiscountSection() {
+    return (
+      <div className="pt-2">
+        {!showDiscountInput ? (
+          <button
+            type="button"
+            onClick={() => setShowDiscountInput(true)}
+            className="text-emerald-600 hover:text-emerald-700 font-medium text-sm flex items-center gap-1"
+          >
+            <Tag className="w-3.5 h-3.5" />
+            {locale === 'es' ? '¿Código de descuento?' : 'Discount code?'}
+          </button>
+        ) : (
+          <div>
+            <label htmlFor="discountCode" className="block text-sm font-medium text-gray-700 mb-1.5">
+              {locale === 'es' ? 'Código de Descuento' : 'Discount Code'}
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                id="discountCode"
+                name="discountCode"
+                value={discountCode}
+                onChange={handleDiscountCodeChange}
+                className="flex-1 px-3.5 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all uppercase text-sm"
+                placeholder="CODIGO"
+              />
+              <button
+                type="button"
+                onClick={handleApplyDiscount}
+                disabled={!discountCode || isValidatingDiscount}
+                className="px-4 py-2.5 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                {isValidatingDiscount ? (
+                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                ) : (
+                  locale === 'es' ? 'Aplicar' : 'Apply'
+                )}
+              </button>
+            </div>
+            
+            {discountValidation && !discountValidation.valid && (
+              <p className="mt-1.5 text-xs text-red-600">
+                {discountValidation.error || (locale === 'es' ? 'Código inválido' : 'Invalid code')}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    )
+  }
 }
