@@ -137,35 +137,35 @@ export default async function LeaguesPage({ params }) {
           showLanguageSwitcher={true}
         />
         
-        {/* Hero Section */}
-        <section className="pt-32 pb-16 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white">
+        {/* Hero Section - Compact on mobile */}
+        <section className="pt-20 sm:pt-24 md:pt-32 pb-6 sm:pb-10 md:pb-16 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white">
           <div className="container mx-auto text-center">
-            <h1 className="text-5xl md:text-6xl font-bold mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 md:mb-6">
               {locale === 'es' ? 'Elige Tu Ciudad' : 'Choose Your City'}
             </h1>
-            <p className="text-xl opacity-90 max-w-3xl mx-auto mb-8">
+            <p className="text-base sm:text-lg md:text-xl opacity-90 max-w-3xl mx-auto mb-4 sm:mb-6 md:mb-8">
               {locale === 'es' 
-                ? 'Selecciona una ciudad para ver las ligas de tenis disponibles. Encuentra la liga perfecta para tu nivel.'
-                : 'Select a city to view available tennis leagues. Find the perfect league for your level.'}
+                ? 'Selecciona una ciudad para ver las ligas disponibles.'
+                : 'Select a city to view available leagues.'}
             </p>
             
-            {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto mt-12">
-              <div className="bg-white/10 backdrop-blur-sm p-4 rounded-lg">
-                <div className="text-3xl font-bold">{citiesData.stats.totalCities}</div>
-                <div className="text-sm opacity-90">
+            {/* Stats - Always horizontal, compact on mobile */}
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 max-w-xs sm:max-w-md md:max-w-2xl mx-auto mt-4 sm:mt-6 md:mt-8">
+              <div className="bg-white/10 backdrop-blur-sm py-2 sm:py-3 md:py-4 px-2 sm:px-4 rounded-lg">
+                <div className="text-xl sm:text-2xl md:text-3xl font-bold">{citiesData.stats.totalCities}</div>
+                <div className="text-xs sm:text-sm opacity-90">
                   {locale === 'es' ? 'Ciudades' : 'Cities'}
                 </div>
               </div>
-              <div className="bg-white/10 backdrop-blur-sm p-4 rounded-lg">
-                <div className="text-3xl font-bold">{citiesData.stats.totalLeagues}</div>
-                <div className="text-sm opacity-90">
+              <div className="bg-white/10 backdrop-blur-sm py-2 sm:py-3 md:py-4 px-2 sm:px-4 rounded-lg">
+                <div className="text-xl sm:text-2xl md:text-3xl font-bold">{citiesData.stats.totalLeagues}</div>
+                <div className="text-xs sm:text-sm opacity-90">
                   {locale === 'es' ? 'Ligas' : 'Leagues'}
                 </div>
               </div>
-              <div className="bg-white/10 backdrop-blur-sm p-4 rounded-lg">
-                <div className="text-3xl font-bold">{citiesData.stats.activeLeagues}</div>
-                <div className="text-sm opacity-90">
+              <div className="bg-white/10 backdrop-blur-sm py-2 sm:py-3 md:py-4 px-2 sm:px-4 rounded-lg">
+                <div className="text-xl sm:text-2xl md:text-3xl font-bold">{citiesData.stats.activeLeagues}</div>
+                <div className="text-xs sm:text-sm opacity-90">
                   {locale === 'es' ? 'Activas' : 'Active'}
                 </div>
               </div>
@@ -174,23 +174,31 @@ export default async function LeaguesPage({ params }) {
         </section>
         
         {/* Cities Grid */}
-        <section className="py-16 px-4">
+        <section className="py-8 sm:py-12 md:py-16 px-4">
           <div className="container mx-auto">
             {citiesData.error ? (
-              <div className="text-center py-12 max-w-2xl mx-auto">
-                <div className="text-6xl mb-6">⚠️</div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">
+              <div className="text-center py-8 sm:py-12 max-w-2xl mx-auto">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 sm:mb-6 text-amber-500">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">
                   {locale === 'es' ? 'Error cargando ciudades' : 'Error loading cities'}
                 </h3>
-                <p className="text-gray-600">{citiesData.error}</p>
+                <p className="text-gray-600 text-sm sm:text-base">{citiesData.error}</p>
               </div>
             ) : citiesData.cities.length === 0 ? (
-              <div className="text-center py-12 max-w-2xl mx-auto">
-                <div className="text-6xl mb-6">🏙️</div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">
+              <div className="text-center py-8 sm:py-12 max-w-2xl mx-auto">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 sm:mb-6 text-gray-400">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">
                   {locale === 'es' ? 'No hay ciudades disponibles' : 'No cities available'}
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-gray-600 text-sm sm:text-base">
                   {locale === 'es' 
                     ? 'Estamos trabajando para agregar más ciudades pronto.'
                     : 'We are working to add more cities soon.'}
@@ -198,18 +206,18 @@ export default async function LeaguesPage({ params }) {
               </div>
             ) : (
               <>
-                <div className="text-center mb-12">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                <div className="text-center mb-6 sm:mb-8 md:mb-12">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 sm:mb-4">
                     {locale === 'es' ? 'Nuestras Ciudades' : 'Our Cities'}
                   </h2>
-                  <p className="text-gray-600 max-w-2xl mx-auto">
+                  <p className="text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
                     {locale === 'es'
-                      ? 'Ofrecemos ligas de tenis en las principales ciudades de la Costa del Sol. Haz clic en una ciudad para ver todas las ligas disponibles.'
-                      : 'We offer tennis leagues in the main cities of Costa del Sol. Click on a city to see all available leagues.'}
+                      ? 'Haz clic en una ciudad para ver las ligas disponibles.'
+                      : 'Click on a city to see available leagues.'}
                   </p>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8 max-w-7xl mx-auto">
                   {citiesData.cities.map(city => (
                     <CityCard 
                       key={city._id}
@@ -224,13 +232,13 @@ export default async function LeaguesPage({ params }) {
           </div>
         </section>
         
-        {/* CTA Section */}
-        <section className="py-20 px-4 bg-gradient-to-br from-emerald-600 to-teal-600 text-white">
+        {/* CTA Section - Compact on mobile */}
+        <section className="py-10 sm:py-14 md:py-20 px-4 bg-gradient-to-br from-emerald-600 to-teal-600 text-white">
           <div className="container mx-auto text-center">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-2 sm:mb-4">
               {locale === 'es' ? '¿Listo para jugar?' : 'Ready to play?'}
             </h2>
-            <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
+            <p className="text-base sm:text-lg md:text-xl mb-4 sm:mb-6 md:mb-8 max-w-2xl mx-auto opacity-90">
               {locale === 'es'
                 ? 'Únete a la comunidad de tenis amateur más activa de la Costa del Sol'
                 : 'Join the most active amateur tennis community in Costa del Sol'}

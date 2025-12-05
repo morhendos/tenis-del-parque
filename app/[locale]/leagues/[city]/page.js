@@ -141,7 +141,8 @@ export default async function CityLeaguePage({ params }) {
       
       <CityLeagueHero city={plainCity} locale={locale} />
       
-      <div className="container mx-auto px-4 py-12">
+      {/* Content container - compact padding on mobile */}
+      <div className="container mx-auto px-4 py-6 sm:py-8 md:py-12">
         {grouped.current.length > 0 && (
           <LeagueSeasonSection
             title={locale === 'es' ? 'Temporada Actual' : 'Current Season'}
@@ -171,8 +172,8 @@ export default async function CityLeaguePage({ params }) {
         )}
         
         {plainLeagues.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-600 text-lg">
+          <div className="text-center py-8 sm:py-12">
+            <p className="text-gray-600 text-base sm:text-lg">
               {locale === 'es' 
                 ? 'No hay ligas disponibles en esta ciudad aún.' 
                 : 'No leagues available in this city yet.'}

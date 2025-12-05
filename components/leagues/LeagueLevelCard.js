@@ -49,16 +49,16 @@ const seasonTypeNames = {
 
 const skillLevelDescriptions = {
   es: {
-    beginner: 'Perfecta para competidores primerizos listos para la experiencia de liga organizada.',
-    intermediate: 'Para jugadores con experiencia competitiva listos para partidos desafiantes regulares.',
-    advanced: 'Para jugadores experimentados con técnica sólida y juego competitivo.',
-    all: 'Liga multi-nivel donde jugadores de diferentes habilidades compiten.'
+    beginner: 'Para competidores primerizos listos para la experiencia de liga.',
+    intermediate: 'Para jugadores con experiencia competitiva.',
+    advanced: 'Para jugadores experimentados con técnica sólida.',
+    all: 'Liga multi-nivel para todas las habilidades.'
   },
   en: {
-    beginner: 'Perfect for first-time competitors ready to experience organized league play.',
-    intermediate: 'For players with competitive experience ready for regular challenging matches.',
-    advanced: 'For experienced players with solid technique and competitive play.',
-    all: 'Multi-level league where players of different abilities compete.'
+    beginner: 'For first-time competitors ready for league play.',
+    intermediate: 'For players with competitive experience.',
+    advanced: 'For experienced players with solid technique.',
+    all: 'Multi-level league for all abilities.'
   }
 }
 
@@ -78,41 +78,41 @@ export default function LeagueLevelCard({ league, locale, status }) {
   const isFull = league.stats?.registeredPlayers >= league.seasonConfig?.maxPlayers
   
   return (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden">
+    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden active:scale-[0.99]">
       {/* Header with skill level */}
-      <div className="p-6 border-b">
+      <div className="p-4 sm:p-5 md:p-6 border-b">
         <div className="flex items-center justify-between mb-2">
-          <span className={`px-3 py-1.5 rounded-full text-sm font-semibold border flex items-center gap-2 ${colorClass}`}>
-            <LevelIcon className="w-4 h-4" />
+          <span className={`px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold border flex items-center gap-1.5 sm:gap-2 ${colorClass}`}>
+            <LevelIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             {skillName}
           </span>
           {status === 'current' && (
-            <span className="text-xs font-medium text-emerald-600">
+            <span className="text-[10px] sm:text-xs font-medium text-emerald-600">
               {locale === 'es' ? 'En Curso' : 'Active'}
             </span>
           )}
         </div>
         
-        <h3 className="text-xl font-bold text-gray-900 mt-3">
+        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mt-2 sm:mt-3">
           {league.name}
         </h3>
         
-        <p className="text-sm text-gray-600 mt-1 capitalize">
+        <p className="text-xs sm:text-sm text-gray-600 mt-0.5 sm:mt-1 capitalize">
           {seasonName}
         </p>
         
-        {/* Description */}
-        <p className="text-sm text-gray-600 mt-3 leading-relaxed">
+        {/* Description - shorter on mobile */}
+        <p className="text-xs sm:text-sm text-gray-600 mt-2 sm:mt-3 leading-relaxed line-clamp-2">
           {description}
         </p>
       </div>
       
-      {/* Stats */}
-      <div className="p-6 bg-gray-50">
-        <div className="grid grid-cols-2 gap-4 text-sm">
+      {/* Stats - more compact */}
+      <div className="p-4 sm:p-5 md:p-6 bg-gray-50">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
           <div>
-            <p className="text-gray-600">{locale === 'es' ? 'Jugadores' : 'Players'}</p>
-            <p className="font-bold text-gray-900">
+            <p className="text-gray-500">{locale === 'es' ? 'Jugadores' : 'Players'}</p>
+            <p className="font-bold text-gray-900 mt-0.5">
               {status === 'current' ? (
                 // Only show actual count for active leagues
                 `${league.stats?.registeredPlayers || 0} / ${league.seasonConfig?.maxPlayers || 32}`
@@ -139,8 +139,8 @@ export default function LeagueLevelCard({ league, locale, status }) {
             </p>
           </div>
           <div>
-            <p className="text-gray-600">{locale === 'es' ? 'Precio' : 'Price'}</p>
-            <p className="font-bold text-gray-900">
+            <p className="text-gray-500">{locale === 'es' ? 'Precio' : 'Price'}</p>
+            <p className="font-bold text-gray-900 mt-0.5">
               {league.seasonConfig?.price?.isFree 
                 ? (locale === 'es' ? 'Gratis' : 'Free')
                 : league.seasonConfig?.price?.amount > 0
@@ -151,11 +151,11 @@ export default function LeagueLevelCard({ league, locale, status }) {
         </div>
       </div>
       
-      {/* Actions */}
-      <div className="p-6 pt-4">
+      {/* Actions - compact button */}
+      <div className="p-4 sm:p-5 md:p-6 pt-3 sm:pt-4">
         <Link
           href={`/${locale}/leagues/${citySlug}/info/${league.slug}`}
-          className="block w-full text-center py-3 px-4 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium"
+          className="block w-full text-center py-2.5 sm:py-3 px-4 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 active:bg-emerald-800 transition-colors font-medium text-sm sm:text-base"
         >
           {isRegistrationOpen
             ? (locale === 'es' ? 'Ver Info e Inscribirse' : 'View Info & Join')
@@ -166,7 +166,7 @@ export default function LeagueLevelCard({ league, locale, status }) {
         </Link>
         
         {isFull && isRegistrationOpen && (
-          <p className="text-sm text-center text-amber-600 mt-2 font-medium">
+          <p className="text-xs sm:text-sm text-center text-amber-600 mt-1.5 sm:mt-2 font-medium">
             {locale === 'es' ? 'Liga Completa' : 'League Full'}
           </p>
         )}

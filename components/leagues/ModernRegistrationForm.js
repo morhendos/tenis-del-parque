@@ -33,7 +33,7 @@ export default function ModernRegistrationForm({
   isSubmitting,
   errors = {} 
 }) {
-  const [hasAccount, setHasAccount] = useState(false)
+  const [hasAccount, setHasAccount] = useState(true)
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
@@ -225,39 +225,33 @@ export default function ModernRegistrationForm({
         )}
       </div>
 
-      {/* Account Toggle - Refined and smaller */}
-      <div className="bg-white/90 backdrop-blur-sm rounded-none sm:rounded-xl mx-0 px-4 sm:px-5 py-3.5 sm:py-4 mb-3 sm:mb-6 border-y sm:border border-gray-100">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-gray-900 text-sm sm:text-base">
-              {hasAccount 
-                ? (locale === 'es' ? '¿Ya tienes cuenta?' : 'Already have an account?')
-                : (locale === 'es' ? '¿Nuevo aquí?' : 'New here?')}
-            </p>
-            <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
-              {hasAccount 
-                ? (locale === 'es' ? 'Inicia sesión para continuar' : 'Sign in to continue')
-                : (locale === 'es' ? 'Te crearemos una cuenta' : "We'll create an account for you")}
-            </p>
-          </div>
-          {/* Toggle switch - fixed size */}
-          <button
-            type="button"
-            onClick={() => setHasAccount(!hasAccount)}
-            style={{ width: '44px', height: '24px', minWidth: '44px', minHeight: '24px' }}
-            className={`relative inline-flex flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-              hasAccount ? 'bg-emerald-500' : 'bg-gray-200'
-            }`}
-            role="switch"
-            aria-checked={hasAccount}
-          >
-            <span
-              style={{ width: '20px', height: '20px' }}
-              className={`pointer-events-none inline-block transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                hasAccount ? 'translate-x-5' : 'translate-x-0'
+      {/* Account Type Tabs */}
+      <div className="bg-white rounded-none sm:rounded-2xl shadow-sm sm:shadow-lg mx-0 sm:mx-0 mb-3 sm:mb-6 overflow-hidden">
+        <div className="account-type-tabs p-1.5 sm:p-2 bg-gray-100">
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={() => setHasAccount(false)}
+              className={`flex-1 py-2.5 sm:py-3 px-4 rounded-lg sm:rounded-xl text-sm sm:text-base font-medium transition-all duration-200 ${
+                !hasAccount 
+                  ? 'bg-white text-gray-900 shadow-sm' 
+                  : 'text-gray-500 hover:text-gray-700'
               }`}
-            />
-          </button>
+            >
+              {locale === 'es' ? 'Crear Cuenta' : 'Create Account'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setHasAccount(true)}
+              className={`flex-1 py-2.5 sm:py-3 px-4 rounded-lg sm:rounded-xl text-sm sm:text-base font-medium transition-all duration-200 ${
+                hasAccount 
+                  ? 'bg-white text-gray-900 shadow-sm' 
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {locale === 'es' ? 'Ya tengo cuenta' : 'Sign In'}
+            </button>
+          </div>
         </div>
       </div>
 

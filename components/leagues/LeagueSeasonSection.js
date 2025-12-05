@@ -14,19 +14,19 @@ export default function LeagueSeasonSection({
   if (leagues.length === 0) return null
   
   return (
-    <section className="mb-12">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-3xl font-bold text-gray-900">{title}</h2>
+    <section className="mb-6 sm:mb-8 md:mb-12">
+      <div className="flex items-center justify-between mb-4 sm:mb-5 md:mb-6">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">{title}</h2>
         {collapsible && (
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="text-emerald-600 hover:text-emerald-700 font-semibold flex items-center gap-2"
+            className="text-emerald-600 hover:text-emerald-700 font-semibold flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base"
           >
             {isExpanded 
               ? (locale === 'es' ? 'Ocultar' : 'Hide')
               : (locale === 'es' ? 'Mostrar' : 'Show')}
             <svg 
-              className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+              className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24"
@@ -38,7 +38,7 @@ export default function LeagueSeasonSection({
       </div>
       
       {isExpanded && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
           {leagues.map(league => (
             <LeagueLevelCard 
               key={league._id} 

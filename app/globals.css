@@ -76,6 +76,11 @@ body {
   .league-tabs-container button {
     margin-bottom: 0 !important;
   }
+  
+  /* Override for account type tabs */
+  .account-type-tabs button {
+    margin-bottom: 0 !important;
+  }
 }
 
 /* Touch-friendly interactions */
