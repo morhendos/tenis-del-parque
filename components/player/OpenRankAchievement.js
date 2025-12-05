@@ -43,7 +43,7 @@ export default function OpenRankAchievement({ player, language, locale }) {
       isUnlocked 
         ? 'bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 border-amber-200' 
         : 'bg-gradient-to-br from-gray-50 via-slate-50 to-gray-100 border-gray-200'
-    } p-5 sm:p-6 shadow-sm hover:shadow-lg transition-all duration-300`}>
+    } p-5 sm:p-6 shadow-sm`}>
       
       {/* Background decoration */}
       <div className="absolute top-0 right-0 w-32 h-32 opacity-10">
@@ -103,7 +103,7 @@ export default function OpenRankAchievement({ player, language, locale }) {
           
           <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
             <div 
-              className={`h-full rounded-full transition-all duration-500 ${
+              className={`h-full rounded-full ${
                 isUnlocked 
                   ? 'bg-gradient-to-r from-amber-400 to-orange-500' 
                   : 'bg-gradient-to-r from-gray-400 to-gray-500'
@@ -132,7 +132,7 @@ export default function OpenRankAchievement({ player, language, locale }) {
         {isUnlocked ? (
           <Link
             href={`/${locale}/player/openrank`}
-            className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all duration-200 font-semibold shadow-md hover:shadow-lg"
+            className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 font-semibold shadow-md"
           >
             <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />

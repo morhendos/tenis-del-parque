@@ -45,8 +45,13 @@ root/
 │   │   ├── login
 │   │   │   └── page.js
 │   │   ├── not-found.js
+│   │   ├── openrank
+│   │   │   ├── OpenRankPageClient.js
+│   │   │   └── page.js
 │   │   ├── page.js
 │   │   ├── player
+│   │   │   ├── achievements
+│   │   │   │   └── page.js
 │   │   │   ├── dashboard
 │   │   │   │   └── page.js
 │   │   │   ├── layout.js
@@ -55,6 +60,8 @@ root/
 │   │   │   ├── matches
 │   │   │   │   └── page.js
 │   │   │   ├── messages
+│   │   │   │   └── page.js
+│   │   │   ├── openrank
 │   │   │   │   └── page.js
 │   │   │   ├── page.js
 │   │   │   ├── profile
@@ -284,7 +291,13 @@ root/
 │   │   │   │   └── [location]
 │   │   │   │       └── route.js
 │   │   │   └── route.js
+│   │   ├── openrank
+│   │   │   └── route.js
 │   │   ├── player
+│   │   │   ├── achievements
+│   │   │   │   └── route.js
+│   │   │   ├── elo-history
+│   │   │   │   └── route.js
 │   │   │   ├── matches
 │   │   │   │   ├── result
 │   │   │   │   │   └── route.js
@@ -450,7 +463,9 @@ root/
 │   │   ├── LeaguesPageSSG.js
 │   │   └── RulesPageContent.js
 │   ├── player
+│   │   ├── BadgeCard.js
 │   │   ├── DashboardHeader.js
+│   │   ├── EloProgressionChart.js
 │   │   ├── LeagueCard.js
 │   │   ├── LeagueTabs.js
 │   │   ├── MatchActivity.js
@@ -458,14 +473,18 @@ root/
 │   │   ├── MatchModals.js
 │   │   ├── MatchResultCard.js
 │   │   ├── MultiLeagueCard.js
+│   │   ├── OpenRankAchievement.js
 │   │   ├── PlayoffExplanation.js
 │   │   ├── PlayoffsTab.js
 │   │   ├── QuickActions.js
 │   │   ├── QuickMatchActions.js
 │   │   ├── ResultsTab.js
 │   │   ├── ScheduleTab.js
+│   │   ├── SeasonPlacementCard.js
 │   │   ├── StandingsTable.js
-│   │   └── StatsCards.js
+│   │   ├── StatsCards.js
+│   │   ├── TrophyCard.js
+│   │   └── TrophyRoom.js
 │   ├── rules
 │   │   ├── RulesCTASection.js
 │   │   ├── RulesHeroSection.js
@@ -546,6 +565,7 @@ root/
 │   ├── SEO_LAUNCH_CHECKLIST.md
 │   ├── SIMPLIFIED_USER_ACQUISITION_PLAN.md
 │   ├── STRATEGY_TO_GET_75_FIRST_USERS.md
+│   ├── TROPHY_ROOM_IMPLEMENTATION.md
 │   ├── UX_IMPROVEMENTS_SUMMARY.md
 │   ├── VERCEL_BLOB_STORAGE_SETUP.md
 │   ├── WAITING_LIST_SYSTEM.md
@@ -589,6 +609,7 @@ root/
 │   │   ├── useLeaguesData.js
 │   │   ├── useLocale.js
 │   │   ├── useMatchDetail.js
+│   │   ├── usePlayerAchievements.js
 │   │   ├── usePlayerDashboard.js
 │   │   ├── usePlayersData.js
 │   │   └── useWelcomeModal.js
@@ -604,6 +625,8 @@ root/
 │   │   ├── Season.js
 │   │   └── User.js
 │   ├── services
+│   │   ├── _achievementsService_old
+│   │   ├── achievementsService.js
 │   │   ├── imageStorage.js
 │   │   ├── playerStatsService.js
 │   │   └── standingsService.js
@@ -703,12 +726,14 @@ root/
 │   ├── createSeasons.js
 │   ├── createTestData.js
 │   ├── debugClubCourts.js
+│   ├── debugPlayerPoints.js
 │   ├── diagnoseLinkIssues.js
 │   ├── directFix.js
 │   ├── findTomaszMatches.js
 │   ├── findTomaszPlayer.js
 │   ├── findTomaszSimple.js
 │   ├── fixBrokenImages.mjs
+│   ├── fixDiscountPaymentStatus.js
 │   ├── fixEloStructure.js
 │   ├── fixLeagueSeasonData.js
 │   ├── fixLeagueSeasonData.mjs
@@ -728,6 +753,7 @@ root/
 │   │   └── removeNumberFromLeagueSeasons.mjs
 │   ├── populateAssignments.js
 │   ├── populateClubAssignments.mjs
+│   ├── rebuildPlayerMatchHistory.js
 │   ├── recalculateAllPlayerStats.js
 │   ├── restoreTomaszPlayer.js
 │   ├── seedCities.js
