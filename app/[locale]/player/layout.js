@@ -223,23 +223,23 @@ export default function PlayerLayout({ children }) {
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       } transition-transform duration-300 ease-in-out lg:translate-x-0`}>
         <div className="relative h-full">
-          {/* Simplified Header - Remove tiny logo on mobile */}
-          <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-parque-purple via-purple-600 to-indigo-600 px-6 py-6">
+          {/* Compact Header */}
+          <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-parque-purple via-purple-600 to-indigo-600 px-4 py-4">
             <div className="flex items-center justify-between">
               <Link href={`/${locale}/player/dashboard`} className="group" onClick={handleNavClick}>
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-white/40 rounded-xl flex items-center justify-center group-hover:bg-white/40 group-hover:scale-105 transition-all duration-200 p-2">
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-10 h-10 bg-white/30 rounded-lg flex items-center justify-center group-hover:bg-white/40 group-hover:scale-105 transition-all duration-200 p-1.5">
                     <Image 
                       src="/logo-big.png" 
                       alt="Tenis del Parque" 
-                      width={40} 
-                      height={40}
+                      width={32} 
+                      height={32}
                       className="object-contain"
                     />
                   </div>
                   <div>
-                    <h1 className="text-xl font-bold text-white">Tenis del Parque</h1>
-                    <p className="text-sm text-purple-200">
+                    <h1 className="text-base font-bold text-white leading-tight">Tenis del Parque</h1>
+                    <p className="text-xs text-purple-200">
                       {locale === 'es' ? 'Hub de Jugadores' : 'Player Hub'}
                     </p>
                   </div>
@@ -247,7 +247,7 @@ export default function PlayerLayout({ children }) {
               </Link>
               <button
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="lg:hidden text-white hover:text-purple-200 transition-colors p-2"
+                className="lg:hidden text-white hover:text-purple-200 transition-colors p-1.5 -mr-1"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -257,19 +257,19 @@ export default function PlayerLayout({ children }) {
           </div>
 
           {/* Navigation - Scrollable area between header and footer */}
-          <nav className="absolute top-28 bottom-20 left-0 right-0 px-4 py-4 space-y-2 overflow-y-auto">
+          <nav className="absolute top-[76px] bottom-20 left-0 right-0 px-4 pt-4 pb-4 space-y-1.5 overflow-y-auto">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
                 onClick={handleNavClick}
-                className={`group flex items-center px-4 py-4 text-sm font-medium rounded-xl transition-all duration-200 ${
+                className={`group flex items-center px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
                   isActive(item.href)
-                    ? 'bg-gradient-to-r from-parque-purple to-purple-600 text-white shadow-lg transform scale-105'
+                    ? 'bg-gradient-to-r from-parque-purple to-purple-600 text-white shadow-lg'
                     : 'text-gray-700 hover:bg-purple-50 hover:text-parque-purple'
                 }`}
               >
-                <div className="flex-shrink-0 mr-4">{item.icon}</div>
+                <div className="flex-shrink-0 mr-3">{item.icon}</div>
                 <div className="flex-1">
                   <div className="font-semibold flex items-center space-x-2">
                     <span>{item.name}</span>

@@ -4,6 +4,13 @@ import Link from 'next/link'
 export default function CityLeagueHero({ city, locale, leagueName, league }) {
   const cityName = city.name[locale] || city.name.es
   
+  // Build the page title based on context
+  const pageTitle = league && leagueName 
+    ? cityName  // On league info page, show just city name (league name shown separately)
+    : locale === 'es' 
+      ? `Ligas de ${cityName}` 
+      : `${cityName} Leagues`
+  
   // Detect league tier based on name/slug
   const leagueTier = league ? (() => {
     const nameOrSlug = (league.name?.toLowerCase() || '') + (league.slug?.toLowerCase() || '')
@@ -73,7 +80,7 @@ export default function CityLeagueHero({ city, locale, leagueName, league }) {
           {/* Mobile layout: stacked */}
           <div className="md:hidden">
             <h1 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-lg leading-tight">
-              {cityName}
+              {pageTitle}
             </h1>
             {league && leagueName && (
               <h2 className={`text-xl sm:text-2xl font-bold ${leagueNameColor} drop-shadow-lg mt-0.5`}>
@@ -84,7 +91,7 @@ export default function CityLeagueHero({ city, locale, leagueName, league }) {
           
           {/* Desktop layout: inline with bullet */}
           <h1 className="hidden md:block text-4xl lg:text-5xl xl:text-6xl font-bold text-white drop-shadow-lg">
-            {cityName}
+            {pageTitle}
             {league && leagueName && (
               <>
                 <span className="mx-3 lg:mx-4 text-white/70">•</span>

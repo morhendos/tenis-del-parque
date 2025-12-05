@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import EloProgressionChart from '@/components/player/EloProgressionChart'
 
 export default function OpenRankPage() {
   const params = useParams()
@@ -16,6 +17,8 @@ export default function OpenRankPage() {
   const [stats, setStats] = useState({ qualifiedCount: 0, matchesRequired: 8 })
   const [currentPlayer, setCurrentPlayer] = useState(null)
   const [showAlmostQualified, setShowAlmostQualified] = useState(false)
+  const [eloHistory, setEloHistory] = useState({ chartData: [], stats: null })
+  const [eloLoading, setEloLoading] = useState(true)
 
   const content = {
     es: {
@@ -73,7 +76,22 @@ export default function OpenRankPage() {
   useEffect(() => {
     fetchOpenRank()
     fetchCurrentPlayer()
+    fetchEloHistory()
   }, [])
+
+  const fetchEloHistory = async () => {
+    try {
+      const response = await fetch('/api/player/elo-history')
+      if (response.ok) {
+        const data = await response.json()
+        setEloHistory(data)
+      }
+    } catch (error) {
+      console.error('Error fetching ELO history:', error)
+    } finally {
+      setEloLoading(false)
+    }
+  }
 
   const fetchOpenRank = async () => {
     try {
@@ -163,6 +181,15 @@ export default function OpenRankPage() {
         </div>
         <p className="text-gray-600">{t.description}</p>
       </div>
+
+      {/* ELO Progression Chart */}
+      {!eloLoading && (
+        <EloProgressionChart 
+          chartData={eloHistory.chartData} 
+          stats={eloHistory.stats} 
+          locale={locale} 
+        />
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
