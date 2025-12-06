@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import dbConnect from '../../../lib/db/mongoose'
 import Player from '../../../lib/models/Player'
-import Match from '../../../lib/models/Match'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -16,52 +15,19 @@ export async function GET(request) {
     const limit = parseInt(searchParams.get('limit')) || 100
     const includeAll = searchParams.get('all') === 'true' // Include players below threshold
     
-    // Get all players
+    // Get all players with their cached registration stats
     const allPlayers = await Player.find({}).lean()
     
-    // Get match counts for each player from actual completed matches
-    const matchCounts = await Match.aggregate([
-      { $match: { status: 'completed' } },
-      {
-        $group: {
-          _id: null,
-          players: {
-            $push: {
-              $concatArrays: [
-                [{ id: '$players.player1', isWinner: { $eq: ['$winner', 'player1'] } }],
-                [{ id: '$players.player2', isWinner: { $eq: ['$winner', 'player2'] } }]
-              ]
-            }
-          }
-        }
-      },
-      { $unwind: '$players' },
-      { $unwind: '$players' },
-      {
-        $group: {
-          _id: '$players.id',
-          matchesPlayed: { $sum: 1 },
-          matchesWon: { $sum: { $cond: ['$players.isWinner', 1, 0] } }
-        }
-      }
-    ])
-    
-    // Create a map of player match stats
-    const matchStatsMap = {}
-    matchCounts.forEach(stat => {
-      if (stat._id) {
-        matchStatsMap[stat._id.toString()] = {
-          matchesPlayed: stat.matchesPlayed,
-          matchesWon: stat.matchesWon
-        }
-      }
-    })
-    
-    // Build player rankings with match data
+    // Build player rankings using CACHED stats from registrations
     const playersWithStats = allPlayers.map(player => {
-      const stats = matchStatsMap[player._id.toString()] || { matchesPlayed: 0, matchesWon: 0 }
-      const matchesPlayed = stats.matchesPlayed
-      const matchesWon = stats.matchesWon
+      // Sum stats across all league registrations
+      const matchesPlayed = (player.registrations || []).reduce(
+        (sum, reg) => sum + (reg.stats?.matchesPlayed || 0), 0
+      )
+      const matchesWon = (player.registrations || []).reduce(
+        (sum, reg) => sum + (reg.stats?.matchesWon || 0), 0
+      )
+      
       const isQualified = matchesPlayed >= MATCHES_REQUIRED
       
       return {
