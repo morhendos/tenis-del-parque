@@ -38,7 +38,7 @@ export default function PlayerDashboard() {
   if (loading) {
     return (
       <TennisPreloaderInline 
-        size="lg" 
+        text={language === 'es' ? 'Cargando dashboard...' : 'Loading dashboard...'}
         locale={language}
       />
     )

@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { useSession, signOut } from 'next-auth/react'
 import { announcementContent } from '@/lib/content/announcementContent'
 import { ToastContainer } from '@/components/ui/Toast'
+import { TennisPreloaderFullScreen } from '@/components/ui/TennisPreloader'
 
 export default function PlayerLayout({ children }) {
   const pathname = usePathname()
@@ -206,14 +207,7 @@ export default function PlayerLayout({ children }) {
   }, [isSidebarOpen])
 
   if (loading || status === 'loading') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-parque-purple mx-auto"></div>
-          <p className="mt-4 text-gray-600">{urlLocale === 'es' ? 'Cargando...' : 'Loading...'}</p>
-        </div>
-      </div>
-    )
+    return <TennisPreloaderFullScreen locale={urlLocale} />
   }
 
   return (

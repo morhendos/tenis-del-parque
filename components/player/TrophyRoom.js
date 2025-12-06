@@ -6,6 +6,7 @@ import TrophyCard from './TrophyCard'
 import SeasonPlacementCard from './SeasonPlacementCard'
 import BadgeCard from './BadgeCard'
 import { usePlayerAchievements } from '@/lib/hooks/usePlayerAchievements'
+import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
 
 /**
  * Trophy Room Component
@@ -45,6 +46,17 @@ export default function TrophyRoom({ language = 'es', locale = 'es', compact = f
 
   // Loading state
   if (loading) {
+    // Full page view uses bouncing ball, compact view uses skeleton
+    if (!compact) {
+      return (
+        <TennisPreloaderInline 
+          text={language === 'es' ? 'Cargando trofeos...' : 'Loading trophies...'}
+          locale={language}
+        />
+      )
+    }
+    
+    // Compact skeleton for dashboard widget
     return (
       <div className="rounded-2xl border border-gray-200 bg-gradient-to-br from-gray-50 to-slate-50 p-6 animate-pulse">
         <div className="flex items-center space-x-3 mb-4">

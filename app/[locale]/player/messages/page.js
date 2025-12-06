@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import WelcomeModal from '@/components/ui/WelcomeModal'
 import AnnouncementModal from '@/components/ui/AnnouncementModal'
+import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
 import { welcomeContent } from '@/lib/content/welcomeContent'
 import { announcementContent } from '@/lib/content/announcementContent'
 
@@ -170,17 +171,10 @@ export default function MessagesPage() {
 
   if (loading || status === 'loading') {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-gray-200 rounded-full"></div>
-            <div className="absolute top-0 left-0 w-16 h-16 border-4 border-parque-purple rounded-full animate-spin border-t-transparent"></div>
-          </div>
-          <p className="mt-4 text-gray-600 animate-pulse">
-            {locale === 'es' ? 'Cargando mensajes...' : 'Loading messages...'}
-          </p>
-        </div>
-      </div>
+      <TennisPreloaderInline 
+        text={locale === 'es' ? 'Cargando mensajes...' : 'Loading messages...'}
+        locale={locale}
+      />
     )
   }
 

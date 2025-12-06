@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams, usePathname } from 'next/navigation'
+import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
 
 export default function PlayerProfile() {
   const [player, setPlayer] = useState(null)
@@ -191,14 +192,10 @@ export default function PlayerProfile() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-parque-purple mx-auto"></div>
-          <p className="mt-6 text-lg text-gray-600">
-            {language === 'es' ? 'Cargando tu perfil...' : 'Loading your profile...'}
-          </p>
-        </div>
-      </div>
+      <TennisPreloaderInline 
+        text={language === 'es' ? 'Cargando tu perfil...' : 'Loading your profile...'}
+        locale={language}
+      />
     )
   }
 

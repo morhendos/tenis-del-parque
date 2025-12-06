@@ -1,13 +1,31 @@
 import React from 'react'
 
 /**
- * Standardized Tennis-themed Preloader Component
+ * ============================================================================
+ * 🎾 STANDARDIZED TENNIS PRELOADER - THE ONLY LOADING COMPONENT TO USE!
+ * ============================================================================
+ * 
+ * ⚠️ IMPORTANT: This is THE standard preloader for the entire application.
+ * DO NOT create custom spinners or loading animations elsewhere!
+ * 
+ * See documentation: /docs/PRELOADER_GUIDE.md
+ * 
+ * Available exports:
+ * - TennisPreloader (default) - Base component with all props
+ * - TennisPreloaderFullScreen - For full-page loading states
+ * - TennisPreloaderInline - For page-level loading in player hub
+ * - TennisPreloaderSmall - For small inline loading indicators
  * 
  * Props:
  * - size: 'sm' | 'md' | 'lg' | 'xl' (default: 'md')
  * - fullScreen: boolean - when true, takes full viewport height
  * - text: string - custom loading text (optional)
  * - locale: 'es' | 'en' - for default loading text localization
+ * 
+ * Example usage:
+ * import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
+ * if (loading) return <TennisPreloaderInline locale={locale} />
+ * ============================================================================
  */
 
 const SIZES = {
