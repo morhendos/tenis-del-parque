@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { useLeagueData } from '@/lib/hooks/useLeagueData'
 import { getLeagueTabs, LEAGUE_TABS, DEFAULT_TOTAL_ROUNDS } from '@/lib/constants/leagueConstants'
@@ -11,6 +11,203 @@ import PlayoffsTab from '@/components/player/PlayoffsTab'
 import PlayoffExplanation from '@/components/player/PlayoffExplanation'
 import LeagueTabs from '@/components/player/LeagueTabs'
 import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
+
+// Helper to categorize registrations
+function categorizeRegistrations(registrations) {
+  const categories = {
+    active: [],
+    upcoming: [],
+    past: []
+  }
+  
+  registrations.forEach(reg => {
+    const league = reg.league
+    if (!league) return
+    
+    const status = league.status
+    const playoffPhase = league.playoffConfig?.currentPhase
+    
+    // Active: status is 'active' OR currently in playoffs (not completed)
+    if (status === 'active' || 
+        (playoffPhase && playoffPhase !== 'regular_season' && playoffPhase !== 'completed')) {
+      categories.active.push(reg)
+    }
+    // Upcoming: registration open or coming soon
+    else if (status === 'registration_open' || status === 'coming_soon') {
+      categories.upcoming.push(reg)
+    }
+    // Past: completed or archived
+    else if (status === 'completed' || status === 'archived') {
+      categories.past.push(reg)
+    }
+    // Default to active if status is unclear but has matches
+    else if (reg.stats?.matchesPlayed > 0) {
+      categories.active.push(reg)
+    }
+    // Otherwise treat as upcoming
+    else {
+      categories.upcoming.push(reg)
+    }
+  })
+  
+  return categories
+}
+
+// League Selector Component with Categories - Mobile-optimized collapsible
+function CategorizedLeagueSelector({ 
+  registrations, 
+  currentLeagueId, 
+  onLeagueChange, 
+  language,
+  currentLeague 
+}) {
+  const [isExpanded, setIsExpanded] = useState(false)
+  const categories = useMemo(() => categorizeRegistrations(registrations), [registrations])
+  
+  const getStatusBadge = (league) => {
+    const status = league?.status
+    const playoffPhase = league?.playoffConfig?.currentPhase
+    
+    if (playoffPhase && playoffPhase !== 'regular_season' && playoffPhase !== 'completed') {
+      return { text: 'Playoffs', color: 'bg-amber-100 text-amber-700', dotColor: 'bg-amber-500' }
+    }
+    if (status === 'active') {
+      return { text: language === 'es' ? 'Activa' : 'Active', color: 'bg-green-100 text-green-700', dotColor: 'bg-green-500' }
+    }
+    if (status === 'registration_open') {
+      return { text: language === 'es' ? 'Inscripción' : 'Registration', color: 'bg-purple-100 text-purple-700', dotColor: 'bg-purple-500' }
+    }
+    if (status === 'coming_soon') {
+      return { text: language === 'es' ? 'Próximamente' : 'Soon', color: 'bg-blue-100 text-blue-700', dotColor: 'bg-blue-500' }
+    }
+    if (status === 'completed') {
+      return { text: language === 'es' ? 'Completada' : 'Completed', color: 'bg-gray-100 text-gray-600', dotColor: 'bg-gray-400' }
+    }
+    return { text: '', color: '', dotColor: 'bg-gray-400' }
+  }
+
+  const handleLeagueSelect = (leagueId) => {
+    onLeagueChange(leagueId)
+    setIsExpanded(false) // Collapse after selection on mobile
+  }
+
+  const renderCompactLeagueButton = (registration, isInActiveCategory) => {
+    const isSelected = currentLeagueId === registration.league?._id
+    const badge = getStatusBadge(registration.league)
+    
+    return (
+      <button
+        key={registration._id}
+        onClick={() => handleLeagueSelect(registration.league._id)}
+        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
+          isSelected
+            ? 'bg-parque-purple text-white shadow-md'
+            : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+        }`}
+      >
+        {!isSelected && (
+          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${badge.dotColor}`} />
+        )}
+        <span className="font-medium truncate">{registration.league?.name || 'Liga'}</span>
+        {!isSelected && badge.text && (
+          <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded ${badge.color} flex-shrink-0`}>
+            {badge.text}
+          </span>
+        )}
+      </button>
+    )
+  }
+
+  const currentBadge = getStatusBadge(currentLeague)
+
+  return (
+    <div className="bg-white rounded-xl shadow-md overflow-hidden">
+      {/* Collapsed Header - Always visible */}
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${currentBadge.dotColor}`} />
+          <div className="min-w-0">
+            <span className="font-semibold text-gray-900 truncate block">
+              {currentLeague?.name || 'Liga'}
+            </span>
+            {currentLeague?.location?.city && (
+              <span className="text-xs text-gray-500">
+                {currentLeague.location.city}
+              </span>
+            )}
+          </div>
+          {currentBadge.text && (
+            <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${currentBadge.color} flex-shrink-0 hidden sm:inline`}>
+              {currentBadge.text}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <span className="text-xs text-gray-400 hidden sm:inline">
+            {registrations.length} {language === 'es' ? 'ligas' : 'leagues'}
+          </span>
+          <svg 
+            className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </button>
+      
+      {/* Expanded Content */}
+      <div className={`transition-all duration-200 ease-in-out overflow-hidden ${
+        isExpanded ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'
+      }`}>
+        <div className="px-4 pb-4 space-y-3 border-t border-gray-100 pt-3">
+          {/* Active Leagues */}
+          {categories.active.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-green-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                {language === 'es' ? 'Activas' : 'Active'}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {categories.active.map(reg => renderCompactLeagueButton(reg, true))}
+              </div>
+            </div>
+          )}
+          
+          {/* Upcoming Leagues */}
+          {categories.upcoming.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-purple-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                {language === 'es' ? 'Próximas' : 'Upcoming'}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {categories.upcoming.map(reg => renderCompactLeagueButton(reg, false))}
+              </div>
+            </div>
+          )}
+          
+          {/* Past Leagues */}
+          {categories.past.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+                {language === 'es' ? 'Pasadas' : 'Past'}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {categories.past.map(reg => renderCompactLeagueButton(reg, false))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function PlayerLeague() {
   const [activeTab, setActiveTab] = useState(LEAGUE_TABS.STANDINGS)
@@ -28,7 +225,6 @@ export default function PlayerLeague() {
 
   // Function to get season display name
   const getSeasonDisplayName = () => {
-    // If league has season information, use it to create a proper name
     if (currentLeague?.season) {
       const seasonNames = {
         es: {
@@ -55,9 +251,13 @@ export default function PlayerLeague() {
       return `${localizedSeasonName} ${seasonYear}`
     }
     
-    // Default fallback
     return language === 'es' ? 'Temporada 2025' : 'Season 2025'
   }
+
+  // Clear playoff data when league changes
+  useEffect(() => {
+    setPlayoffData(null)
+  }, [currentLeague?._id])
 
   // Handle tab query parameter
   useEffect(() => {
@@ -69,17 +269,18 @@ export default function PlayerLeague() {
 
   // Fetch playoff data when playoffs tab is selected
   useEffect(() => {
-    if (activeTab === LEAGUE_TABS.PLAYOFFS && currentLeague?.slug && !playoffData) {
+    if (activeTab === LEAGUE_TABS.PLAYOFFS && currentLeague?._id && !playoffData) {
       fetchPlayoffData()
     }
-  }, [activeTab, currentLeague?.slug])
+  }, [activeTab, currentLeague?._id, playoffData])
 
   const fetchPlayoffData = async () => {
-    if (!currentLeague?.slug) return
+    if (!currentLeague?._id) return
     
     setLoadingPlayoffs(true)
     try {
-      const response = await fetch(`/api/leagues/${currentLeague.slug}/playoffs`)
+      // Use league ID instead of slug for more reliable fetching
+      const response = await fetch(`/api/leagues/${currentLeague._id}/playoffs`)
       const data = await response.json()
       
       if (data.success) {
@@ -94,12 +295,19 @@ export default function PlayerLeague() {
 
   // Handle league change
   const handleLeagueChange = (leagueId) => {
+    // Clear current data to show loading state
+    setPlayoffData(null)
+    
     // Update URL with new leagueId
     const url = new URL(window.location.href)
     url.searchParams.set('leagueId', leagueId)
-    if (searchParams.get('tab')) {
-      url.searchParams.set('tab', searchParams.get('tab'))
+    
+    // Keep current tab
+    const currentTab = searchParams.get('tab')
+    if (currentTab) {
+      url.searchParams.set('tab', currentTab)
     }
+    
     router.push(url.pathname + url.search)
   }
 
@@ -168,62 +376,74 @@ export default function PlayerLeague() {
     )
   }
 
+  // Get header color based on league status
+  const getHeaderGradient = () => {
+    const status = currentLeague?.status
+    const playoffPhase = currentLeague?.playoffConfig?.currentPhase
+    
+    if (playoffPhase && playoffPhase !== 'regular_season' && playoffPhase !== 'completed') {
+      return 'from-amber-500 via-orange-500 to-red-500' // Playoffs
+    }
+    if (status === 'active') {
+      return 'from-green-500 via-emerald-500 to-teal-500' // Active
+    }
+    if (status === 'completed' || status === 'archived') {
+      return 'from-gray-500 via-gray-600 to-gray-700' // Past
+    }
+    return 'from-parque-purple via-purple-600 to-indigo-600' // Default/Upcoming
+  }
+
+  // Get status badge for header
+  const getLeagueStatusBadge = () => {
+    const status = currentLeague?.status
+    const playoffPhase = currentLeague?.playoffConfig?.currentPhase
+    
+    if (playoffPhase && playoffPhase !== 'regular_season' && playoffPhase !== 'completed') {
+      return { text: '🏆 Playoffs', show: true }
+    }
+    if (status === 'registration_open') {
+      return { text: language === 'es' ? '📝 Inscripción Abierta' : '📝 Registration Open', show: true }
+    }
+    if (status === 'coming_soon') {
+      return { text: language === 'es' ? '🔜 Próximamente' : '🔜 Coming Soon', show: true }
+    }
+    if (status === 'completed') {
+      return { text: language === 'es' ? '✓ Completada' : '✓ Completed', show: true }
+    }
+    return { show: false }
+  }
+
+  const statusBadge = getLeagueStatusBadge()
+
   return (
     <div className="space-y-6">
-      {/* League Selector (if multiple leagues) */}
+      {/* Categorized League Selector (if multiple leagues) */}
       {allRegistrations && allRegistrations.length > 1 && (
-        <div className="bg-white rounded-xl shadow-md p-4">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm text-gray-600 font-medium flex items-center gap-2">
-              <svg className="w-4 h-4 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-              {language === 'es' ? 'Seleccionar Liga:' : 'Select League:'}
-            </p>
-            <span className="text-xs text-gray-500">
-              {language === 'es' 
-                ? `${allRegistrations.length} ligas disponibles` 
-                : `${allRegistrations.length} leagues available`}
-            </span>
-          </div>
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 pt-1 px-1">
-            {allRegistrations.map((registration) => (
-              <button
-                key={registration._id}
-                onClick={() => handleLeagueChange(registration.league._id)}
-                className={`flex-shrink-0 px-4 py-2.5 rounded-xl font-medium text-sm transition-all ${
-                  currentLeague._id === registration.league._id
-                    ? 'bg-gradient-to-r from-parque-purple to-purple-700 text-white shadow-lg transform scale-105'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                <div className="flex flex-col items-start">
-                  <span className="font-semibold">{registration.league.name}</span>
-                  {registration.league.location?.city && (
-                    <span className="text-xs opacity-75 mt-0.5 flex items-center gap-1">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      {registration.league.location.city}
-                    </span>
-                  )}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
+        <CategorizedLeagueSelector
+          registrations={allRegistrations}
+          currentLeagueId={currentLeague._id}
+          currentLeague={currentLeague}
+          onLeagueChange={handleLeagueChange}
+          language={language}
+        />
       )}
 
-      {/* League Header */}
-      <div className="bg-gradient-to-r from-parque-purple via-purple-600 to-indigo-600 rounded-xl shadow-lg overflow-hidden">
+      {/* League Header - Dynamic color based on status */}
+      <div className={`bg-gradient-to-r ${getHeaderGradient()} rounded-xl shadow-lg overflow-hidden`}>
         <div className="px-6 py-8 sm:px-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center space-x-4">
               <div>
-                <h1 className="text-3xl font-bold text-white">{currentLeague.name}</h1>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h1 className="text-3xl font-bold text-white">{currentLeague.name}</h1>
+                  {statusBadge.show && (
+                    <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm font-medium text-white">
+                      {statusBadge.text}
+                    </span>
+                  )}
+                </div>
                 {currentLeague.location?.city && (
-                  <p className="text-purple-200 text-sm mt-0.5 flex items-center gap-1">
+                  <p className="text-white/80 text-sm mt-1 flex items-center gap-1">
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -231,10 +451,10 @@ export default function PlayerLeague() {
                     {currentLeague.location.city}
                   </p>
                 )}
-                <p className="text-purple-100 mt-1">
+                <p className="text-white/90 mt-1">
                   {language === 'es' ? 'Temporada' : 'Season'}: {getSeasonDisplayName()}
                 </p>
-                <p className="text-purple-200 text-sm mt-1">
+                <p className="text-white/70 text-sm mt-1">
                   {language === 'es' ? 'Tu ELO' : 'Your ELO'}: {player?.eloRating || 1200}
                 </p>
               </div>
@@ -266,10 +486,24 @@ export default function PlayerLeague() {
                 </>
               ) : (
                 <div className="text-center py-12">
-                  <p className="text-gray-500">
-                    {language === 'es' 
-                      ? 'No hay datos de clasificación disponibles' 
-                      : 'No standings data available'}
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    {currentLeague?.status === 'registration_open' || currentLeague?.status === 'coming_soon'
+                      ? (language === 'es' ? 'Liga aún no iniciada' : 'League not started yet')
+                      : (language === 'es' ? 'Sin clasificación' : 'No standings')}
+                  </h3>
+                  <p className="text-gray-500 text-sm">
+                    {currentLeague?.status === 'registration_open' || currentLeague?.status === 'coming_soon'
+                      ? (language === 'es' 
+                          ? 'La clasificación se mostrará cuando comience la temporada' 
+                          : 'Standings will appear when the season starts')
+                      : (language === 'es' 
+                          ? 'No hay datos de clasificación disponibles' 
+                          : 'No standings data available')}
                   </p>
                 </div>
               )}

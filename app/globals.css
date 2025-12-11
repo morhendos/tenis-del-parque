@@ -62,25 +62,14 @@ body {
     min-width: 44px;
   }
   
-  /* Better button spacing */
-  button:not(:last-child) {
-    margin-bottom: 8px;
-  }
-  
-  /* Override for language selector buttons */
-  .language-selector-buttons button.lang-button {
-    margin-bottom: 0 !important;
-  }
-  
-  /* Override for league tabs - they handle their own spacing */
-  .league-tabs-container button {
-    margin-bottom: 0 !important;
-  }
-  
-  /* Override for account type tabs */
-  .account-type-tabs button {
-    margin-bottom: 0 !important;
-  }
+  /* 
+   * REMOVED: Global button margin rule that was causing layout issues
+   * button:not(:last-child) { margin-bottom: 8px; }
+   * 
+   * This was breaking horizontal button groups everywhere.
+   * If you need vertical button spacing, use Tailwind's space-y-* utilities
+   * or flex with flex-col and gap-* on the parent container.
+   */
 }
 
 /* Touch-friendly interactions */

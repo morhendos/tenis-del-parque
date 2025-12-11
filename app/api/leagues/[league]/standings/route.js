@@ -22,14 +22,16 @@ export async function GET(request, { params }) {
     const level = searchParams.get('level')
     
     // Build query to support both ID and slug
-    let query = { status: 'active' }
+    let query = {}
     
     // Check if identifier is a valid MongoDB ObjectId
     if (mongoose.Types.ObjectId.isValid(identifier)) {
+      // When fetching by ID, allow any status (player might be viewing their own league)
       query._id = identifier
     } else {
-      // Otherwise, treat it as a slug
+      // When fetching by slug (public), only show active leagues
       query.slug = identifier
+      query.status = { $in: ['active', 'registration_open', 'coming_soon', 'completed'] }
     }
     
     // Find league by ID or slug
