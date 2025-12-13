@@ -8,6 +8,7 @@ import { useSession, signOut } from 'next-auth/react'
 import { announcementContent } from '@/lib/content/announcementContent'
 import { ToastContainer } from '@/components/ui/Toast'
 import { TennisPreloaderFullScreen } from '@/components/ui/TennisPreloader'
+import { BottomNavigation } from '@/components/player/navigation'
 
 export default function PlayerLayout({ children }) {
   const pathname = usePathname()
@@ -15,8 +16,7 @@ export default function PlayerLayout({ children }) {
   const params = useParams()
   const { data: session, status } = useSession()
   const urlLocale = params.locale || 'es'
-  const [locale, setLocale] = useState(urlLocale) // Use state for locale instead of const
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [locale, setLocale] = useState(urlLocale)
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [hasNewAnnouncement, setHasNewAnnouncement] = useState(false)
@@ -76,7 +76,6 @@ export default function PlayerLayout({ children }) {
           }
         } catch (error) {
           console.error('Error fetching user data:', error)
-          // Don't fall back to session data since it doesn't contain seenAnnouncements anymore
           setHasNewAnnouncement(false)
         }
       }
@@ -189,38 +188,19 @@ export default function PlayerLayout({ children }) {
     router.push(`/${locale}/login`)
   }
 
-  // Close mobile menu when clicking navigation items
-  const handleNavClick = () => {
-    setIsSidebarOpen(false)
-  }
-
-  // Prevent body scroll when mobile sidebar is open
-  useEffect(() => {
-    if (isSidebarOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = 'unset'
-    }
-    return () => {
-      document.body.style.overflow = 'unset'
-    }
-  }, [isSidebarOpen])
-
   if (loading || status === 'loading') {
     return <TennisPreloaderFullScreen locale={urlLocale} />
   }
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-xl transform ${
-        isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } transition-transform duration-300 ease-in-out lg:translate-x-0`}>
+      {/* Desktop Sidebar - Hidden on mobile */}
+      <div className="fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-xl hidden lg:block">
         <div className="relative h-full">
           {/* Compact Header */}
           <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-parque-purple via-purple-600 to-indigo-600 px-4 py-4">
             <div className="flex items-center justify-between">
-              <Link href={`/${locale}/player/dashboard`} className="group" onClick={handleNavClick}>
+              <Link href={`/${locale}/player/dashboard`} className="group">
                 <div className="flex items-center space-x-2.5">
                   <div className="w-10 h-10 bg-white/30 rounded-lg flex items-center justify-center group-hover:bg-white/40 group-hover:scale-105 transition-all duration-200 p-1.5">
                     <Image 
@@ -239,14 +219,6 @@ export default function PlayerLayout({ children }) {
                   </div>
                 </div>
               </Link>
-              <button
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="lg:hidden text-white hover:text-purple-200 transition-colors p-1.5 -mr-1"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
             </div>
           </div>
 
@@ -256,7 +228,6 @@ export default function PlayerLayout({ children }) {
               <Link
                 key={item.name}
                 href={item.href}
-                onClick={handleNavClick}
                 className={`group flex items-center px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
                   isActive(item.href)
                     ? 'bg-gradient-to-r from-parque-purple to-purple-600 text-white shadow-lg'
@@ -317,74 +288,21 @@ export default function PlayerLayout({ children }) {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0 lg:ml-72">
-        {/* Mobile-only Top bar */}
-        <div className="sticky top-0 z-40 bg-white shadow-sm border-b border-gray-200 lg:hidden">
-          <div className="flex items-center justify-between h-16 px-4">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="text-gray-600 hover:text-gray-900 p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-              
-              <div>
-                <h1 className="text-lg font-bold text-gray-900">
-                  {pathname.includes('messages') ? 
-                    (locale === 'es' ? 'Mensajes' : 'Messages') :
-                   pathname.includes('achievements') ? 
-                    (locale === 'es' ? 'Trofeos' : 'Trophies') :
-                   pathname.includes('openrank') ? 
-                    'OpenRank' :
-                   pathname.includes('matches') ? 
-                    (locale === 'es' ? 'Mis Partidos' : 'My Matches') :
-                   pathname.includes('profile') ? 
-                    (locale === 'es' ? 'Mi Perfil' : 'My Profile') :
-                   pathname.includes('league') ? 
-                    (locale === 'es' ? 'Mi Liga' : 'My League') :
-                   pathname.includes('rules') ? 
-                    (locale === 'es' ? 'Reglas' : 'Rules') :
-                   'Dashboard'}
-                </h1>
-                <p className="text-xs text-gray-500">
-                  {pathname.includes('messages') ? 
-                    (locale === 'es' ? 'Anuncios importantes' : 'Important announcements') :
-                   pathname.includes('achievements') ? 
-                    (locale === 'es' ? 'Logros e insignias' : 'Achievements & badges') :
-                   pathname.includes('openrank') ? 
-                    (locale === 'es' ? 'Ranking global ELO' : 'Global ELO ranking') :
-                   pathname.includes('matches') ? 
-                    (locale === 'es' ? 'Historial de partidos' : 'Match history') :
-                   pathname.includes('profile') ? 
-                    (locale === 'es' ? 'Configuración' : 'Settings') :
-                   pathname.includes('league') ? 
-                    (locale === 'es' ? 'Clasificación' : 'Standings') :
-                   pathname.includes('rules') ? 
-                    (locale === 'es' ? 'Reglas de la liga' : 'League rules') :
-                    (locale === 'es' ? 'Vista general' : 'Overview')}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Page content */}
+        {/* Page content - Add bottom padding on mobile for bottom nav */}
         <main className="flex-1 overflow-y-auto bg-gray-50">
-          <div className="container mx-auto px-2 md:px-6 py-4 md:py-8 max-w-[1400px]">
+          <div className="container mx-auto px-2 md:px-6 py-4 md:py-8 pb-24 lg:pb-8 max-w-[1400px]">
             {children}
           </div>
         </main>
       </div>
 
-      {/* Mobile sidebar backdrop */}
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
+      {/* Mobile Bottom Navigation */}
+      <BottomNavigation
+        locale={locale}
+        user={user}
+        playerData={playerData}
+        onLogout={handleLogout}
+      />
       
       {/* Toast Container */}
       <ToastContainer />

@@ -1030,3 +1030,19 @@ body {
   transform-origin: 70% 70%;
   display: inline-block;
 }
+
+/* Safe area insets for iOS devices with home indicator */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Bottom navigation specific - ensures content doesn't get hidden */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-area-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  }
+}
