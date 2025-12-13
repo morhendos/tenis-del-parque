@@ -421,7 +421,8 @@ root/
 │   ├── common
 │   │   ├── Footer.js
 │   │   ├── LanguageSwitcher.js
-│   │   └── Navigation.js
+│   │   ├── Navigation.js
+│   │   └── ServiceWorkerRegistration.js
 │   ├── elo
 │   │   ├── EloCTASection.js
 │   │   ├── EloContentRenderer.js
@@ -468,23 +469,21 @@ root/
 │   │   ├── EloProgressionChart.js
 │   │   ├── LeagueCard.js
 │   │   ├── LeagueTabs.js
-│   │   ├── MatchActivity.js
 │   │   ├── MatchCard.js
 │   │   ├── MatchModals.js
 │   │   ├── MatchResultCard.js
-│   │   ├── MultiLeagueCard.js
+│   │   ├── MiniStandings.js
+│   │   ├── NextMatchCard.js
 │   │   ├── OpenRankAchievement.js
 │   │   ├── PlayoffExplanation.js
 │   │   ├── PlayoffsTab.js
-│   │   ├── QuickActions.js
 │   │   ├── QuickMatchActions.js
+│   │   ├── RecentResults.js
 │   │   ├── ResultsTab.js
 │   │   ├── ScheduleTab.js
 │   │   ├── SeasonPlacementCard.js
 │   │   ├── StandingsTable.js
-│   │   ├── StatsCards.js
-│   │   ├── TrophyCard.js
-│   │   └── TrophyRoom.js
+│   │   └── TrophyCard.js
 │   ├── rules
 │   │   ├── RulesCTASection.js
 │   │   ├── RulesHeroSection.js
@@ -501,6 +500,7 @@ root/
 │       └── WelcomeModal.js
 ├── docs
 │   ├── ADMIN_LEAGUE_CREATION_UPDATE.md
+│   ├── BUSINESS_PLAN_AND_FINANCIALS.md
 │   ├── CACHE_MANAGEMENT_GUIDE.md
 │   ├── CITIES_MANAGEMENT_COMPLETE.md
 │   ├── CITIES_MANAGEMENT_SUMMARY.md
@@ -552,6 +552,7 @@ root/
 │   ├── PRELOADER_GUIDE.md
 │   ├── PRODUCT_LED_GROWTH.md
 │   ├── PR_MULTILINGUAL_IMPLEMENTATION.md
+│   ├── PWA_SCREENSHOTS_PLAN.md
 │   ├── README.md
 │   ├── REGISTRATION_ROUTES_REFACTORING.md
 │   ├── RESEND_EMAIL_SETUP.md
@@ -699,6 +700,7 @@ root/
 │   ├── robots.txt
 │   ├── sitemap.xml
 │   ├── sotogrande-01.jpg
+│   ├── sw.js
 │   ├── twitter-image.png
 │   ├── uploads
 │   │   ├── README.md
@@ -712,9 +714,11 @@ root/
 │   ├── checkAuth.mjs
 │   ├── checkGoogleImages.mjs
 │   ├── checkLeagueSkillLevels.js
+│   ├── checkLeagueStatus.js
 │   ├── checkMatch.js
 │   ├── checkMatchSeasons.js
 │   ├── checkPlayoffMatchesForPlayer.js
+│   ├── checkPlayoffPlayers.js
 │   ├── checkSeasonData.js
 │   ├── checkSeasonObjectId.mjs
 │   ├── checkSemifinalMatches.js
@@ -743,6 +747,7 @@ root/
 │   ├── fixMismatchedLinks.js
 │   ├── fixOneClub.mjs
 │   ├── fixSeenAnnouncements.js
+│   ├── fixUpcomingLeaguesPlayoffs.js
 │   ├── fixUserPlayerReferences.js
 │   ├── generateSitemap.js
 │   ├── linkPlayersToUsers.js
@@ -761,6 +766,7 @@ root/
 │   ├── seedCities.js
 │   ├── seedCitiesEnhanced.js
 │   ├── seedCitiesProduction.js
+│   ├── seedDemoData.js
 │   ├── seedLeagues.js
 │   ├── seedSeasons.mjs
 │   ├── setupWhatsAppGroups.js

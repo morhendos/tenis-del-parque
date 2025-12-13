@@ -1,7 +1,8 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { useLanguage } from '@/lib/hooks/useLanguage'
 import { useWelcomeModal } from '@/lib/hooks/useWelcomeModal'
 import { usePlayerDashboard } from '@/lib/hooks/usePlayerDashboard'
@@ -9,19 +10,17 @@ import WelcomeModal from '@/components/ui/WelcomeModal'
 import AnnouncementModal from '@/components/ui/AnnouncementModal'
 import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
 import DashboardHeader from '@/components/player/DashboardHeader'
-import StatsCards from '@/components/player/StatsCards'
-import MultiLeagueCard from '@/components/player/MultiLeagueCard'
-import { RecentMatches, UpcomingMatches } from '@/components/player/MatchActivity'
-import QuickActions from '@/components/player/QuickActions'
 import OpenRankAchievement from '@/components/player/OpenRankAchievement'
-import TrophyRoom from '@/components/player/TrophyRoom'
+import NextMatchCard from '@/components/player/NextMatchCard'
+import MiniStandings from '@/components/player/MiniStandings'
+import RecentResults from '@/components/player/RecentResults'
 import { dashboardStyles } from '@/styles/dashboard'
 
 export default function PlayerDashboard() {
   const params = useParams()
+  const router = useRouter()
   const locale = params.locale || 'es'
   const language = locale
-  const isLanguageLoaded = true
   
   const { showWelcome, playerName, closeWelcome } = useWelcomeModal()
   const {
@@ -29,10 +28,24 @@ export default function PlayerDashboard() {
     loading,
     recentMatches,
     upcomingMatches,
+    standings,
     showFirstRoundAnnouncement,
     handleCloseFirstRoundAnnouncement,
     getDynamicFirstRoundAnnouncement
   } = usePlayerDashboard()
+
+  // Get the next upcoming match (first one)
+  const nextMatch = upcomingMatches?.[0] || null
+
+  // Handle result button click - navigate to matches page
+  const handleResultClick = () => {
+    router.push(`/${locale}/player/matches`)
+  }
+
+  // Handle schedule button click - navigate to matches page
+  const handleScheduleClick = () => {
+    router.push(`/${locale}/player/matches`)
+  }
 
   // Show loading with standardized tennis preloader
   if (loading) {
@@ -79,30 +92,35 @@ export default function PlayerDashboard() {
     <>
       <style jsx global>{dashboardStyles}</style>
       
-      <div className="space-y-6 sm:space-y-8 animate-fade-in-up">
-        {/* Welcome Header */}
+      <div className="space-y-4 sm:space-y-5 animate-fade-in-up">
+        {/* Welcome Header with Quick Links */}
         <DashboardHeader player={player} language={language} />
 
-        {/* Stats Cards */}
-        <StatsCards player={player} language={language} />
-
-        {/* OpenRank Achievement */}
+        {/* OpenRank Progress - Gamification element */}
         <OpenRankAchievement player={player} language={language} locale={locale} />
 
-        {/* Trophy Room - Achievements & Trophies */}
-        <TrophyRoom language={language} locale={locale} compact />
+        {/* Next Match - Hero section */}
+        <NextMatchCard 
+          match={nextMatch} 
+          language={language} 
+          onResultClick={handleResultClick}
+          onScheduleClick={handleScheduleClick}
+        />
 
-        {/* League Cards - Now supports multiple leagues */}
-        <MultiLeagueCard player={player} language={language} />
+        {/* Mini Standings Table */}
+        <MiniStandings 
+          standings={standings}
+          playerId={player?._id}
+          language={language}
+          locale={locale}
+        />
 
-        {/* Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-          <RecentMatches matches={recentMatches} language={language} />
-          <UpcomingMatches matches={upcomingMatches} language={language} />
-        </div>
-
-        {/* Quick Actions */}
-        <QuickActions language={language} locale={locale} />
+        {/* Recent Results */}
+        <RecentResults 
+          matches={recentMatches} 
+          language={language}
+          maxResults={3}
+        />
 
         {/* Welcome Modal */}
         <WelcomeModal
