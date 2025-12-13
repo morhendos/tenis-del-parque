@@ -92,7 +92,6 @@ export default function EloProgressionChart({ chartData, stats, locale = 'es' })
       current: 'Actual',
       peak: 'Máximo',
       overall: 'Total',
-      lastMatch: 'Último',
       record: 'Record',
       matches: 'partidos',
       showHistory: 'Ver historial',
@@ -110,7 +109,6 @@ export default function EloProgressionChart({ chartData, stats, locale = 'es' })
       current: 'Current',
       peak: 'Peak',
       overall: 'Overall',
-      lastMatch: 'Last',
       record: 'Record',
       matches: 'matches',
       showHistory: 'Show history',
@@ -160,8 +158,6 @@ export default function EloProgressionChart({ chartData, stats, locale = 'es' })
 
   const changeColor = stats.totalChange >= 0 ? 'text-emerald-600' : 'text-red-600'
   const changePrefix = stats.totalChange >= 0 ? '+' : ''
-  const lastChangeColor = stats.lastMatchChange >= 0 ? 'text-emerald-600' : 'text-red-600'
-  const lastChangePrefix = stats.lastMatchChange >= 0 ? '+' : ''
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-8">
@@ -236,34 +232,27 @@ export default function EloProgressionChart({ chartData, stats, locale = 'es' })
         </ResponsiveContainer>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 sm:gap-4">
-        <div className="bg-gray-50 rounded-xl p-3 text-center">
-          <p className="text-xs text-gray-500 mb-1">{t.starting}</p>
-          <p className="text-lg font-bold text-gray-700">{stats.startingElo}</p>
+      {/* Stats Grid - 4 items in a row */}
+      <div className="grid grid-cols-4 gap-2 sm:gap-3">
+        <div className="bg-gray-50 rounded-xl p-2 sm:p-3 text-center">
+          <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5">{t.starting}</p>
+          <p className="text-base sm:text-lg font-bold text-gray-700">{stats.startingElo}</p>
         </div>
         
-        <div className="bg-purple-50 rounded-xl p-3 text-center">
-          <p className="text-xs text-purple-600 mb-1">{t.current}</p>
-          <p className="text-lg font-bold text-purple-700">{stats.currentElo}</p>
+        <div className="bg-purple-50 rounded-xl p-2 sm:p-3 text-center">
+          <p className="text-[10px] sm:text-xs text-purple-600 mb-0.5">{t.current}</p>
+          <p className="text-base sm:text-lg font-bold text-purple-700">{stats.currentElo}</p>
         </div>
         
-        <div className="bg-amber-50 rounded-xl p-3 text-center">
-          <p className="text-xs text-amber-600 mb-1">{t.peak}</p>
-          <p className="text-lg font-bold text-amber-700">{stats.peakElo}</p>
+        <div className="bg-amber-50 rounded-xl p-2 sm:p-3 text-center">
+          <p className="text-[10px] sm:text-xs text-amber-600 mb-0.5">{t.peak}</p>
+          <p className="text-base sm:text-lg font-bold text-amber-700">{stats.peakElo}</p>
         </div>
         
-        <div className={`rounded-xl p-3 text-center ${stats.totalChange >= 0 ? 'bg-emerald-50' : 'bg-red-50'}`}>
-          <p className={`text-xs mb-1 ${stats.totalChange >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>{t.overall}</p>
-          <p className={`text-lg font-bold ${changeColor}`}>
+        <div className={`rounded-xl p-2 sm:p-3 text-center ${stats.totalChange >= 0 ? 'bg-emerald-50' : 'bg-red-50'}`}>
+          <p className={`text-[10px] sm:text-xs mb-0.5 ${stats.totalChange >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>{t.overall}</p>
+          <p className={`text-base sm:text-lg font-bold ${changeColor}`}>
             {changePrefix}{stats.totalChange}
-          </p>
-        </div>
-        
-        <div className={`rounded-xl p-3 text-center hidden sm:block ${stats.lastMatchChange >= 0 ? 'bg-emerald-50' : 'bg-red-50'}`}>
-          <p className={`text-xs mb-1 ${stats.lastMatchChange >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>{t.lastMatch}</p>
-          <p className={`text-lg font-bold ${lastChangeColor}`}>
-            {lastChangePrefix}{stats.lastMatchChange}
           </p>
         </div>
       </div>

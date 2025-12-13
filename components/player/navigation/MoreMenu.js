@@ -26,16 +26,6 @@ export default function MoreMenu({ isOpen, onClose, locale, user, playerData, on
       description: locale === 'es' ? 'Configuración de cuenta' : 'Account settings',
     },
     {
-      name: 'OpenRank',
-      href: `/${locale}/player/openrank`,
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-        </svg>
-      ),
-      description: locale === 'es' ? 'Ranking global ELO' : 'Global ELO ranking',
-    },
-    {
       name: locale === 'es' ? 'Trofeos' : 'Trophies',
       href: `/${locale}/player/achievements`,
       icon: (
@@ -145,7 +135,7 @@ export default function MoreMenu({ isOpen, onClose, locale, user, playerData, on
       {/* Bottom Sheet */}
       <div 
         ref={sheetRef}
-        className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl transition-transform duration-300 ease-out ${
+        className={`absolute bottom-0 left-0 right-0 bg-gradient-to-b from-white to-purple-50 rounded-t-3xl transition-transform duration-300 ease-out overflow-hidden ${
           isAnimating ? 'translate-y-0' : 'translate-y-full'
         }`}
         style={{ 
@@ -153,7 +143,8 @@ export default function MoreMenu({ isOpen, onClose, locale, user, playerData, on
           transform: isAnimating 
             ? `translateY(${dragY}px)` 
             : 'translateY(100%)',
-          transition: isDragging ? 'none' : 'transform 300ms ease-out'
+          transition: isDragging ? 'none' : 'transform 300ms ease-out',
+          boxShadow: '0 -10px 40px -5px rgba(124, 58, 237, 0.3)'
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -161,22 +152,22 @@ export default function MoreMenu({ isOpen, onClose, locale, user, playerData, on
       >
         {/* Drag Handle */}
         <div className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing">
-          <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+          <div className="w-12 h-1.5 bg-purple-300 rounded-full" />
         </div>
 
-        {/* User Info Header */}
-        <div className="px-5 pb-4 border-b border-gray-100">
+        {/* User Info Header - Purple themed */}
+        <div className="mx-4 mb-4 p-4 bg-gradient-to-r from-parque-purple via-purple-600 to-indigo-600 rounded-2xl shadow-lg shadow-purple-500/20">
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-r from-parque-purple to-purple-600 rounded-full flex items-center justify-center">
+            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30">
               <span className="text-white font-bold text-lg">
                 {user?.email?.charAt(0)?.toUpperCase() || '?'}
               </span>
             </div>
-            <div>
-              <p className="font-semibold text-gray-900">
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-white truncate">
                 {playerData?.player?.name || user?.name || user?.email?.split('@')[0] || (locale === 'es' ? 'Jugador' : 'Player')}
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-purple-200 truncate">
                 {user?.email}
               </p>
             </div>
@@ -184,7 +175,7 @@ export default function MoreMenu({ isOpen, onClose, locale, user, playerData, on
         </div>
 
         {/* Menu Items */}
-        <div className="px-3 py-3 overflow-y-auto" style={{ maxHeight: 'calc(85vh - 180px)' }}>
+        <div className="px-3 pb-3 overflow-y-auto" style={{ maxHeight: 'calc(85vh - 200px)' }}>
           {menuItems.map((item) => {
             const active = isActive(item.href)
             return (
@@ -192,24 +183,24 @@ export default function MoreMenu({ isOpen, onClose, locale, user, playerData, on
                 key={item.name}
                 href={item.href}
                 onClick={onClose}
-                className={`flex items-center px-4 py-3.5 rounded-xl mb-1 transition-colors ${
+                className={`flex items-center px-4 py-3.5 rounded-xl mb-1.5 transition-all duration-200 ${
                   active
-                    ? 'bg-purple-50 text-parque-purple'
-                    : 'text-gray-700 hover:bg-gray-50 active:bg-gray-100'
+                    ? 'bg-gradient-to-r from-parque-purple to-purple-600 text-white shadow-md shadow-purple-500/20'
+                    : 'text-gray-700 hover:bg-purple-100 active:bg-purple-200'
                 }`}
               >
-                <div className={`flex-shrink-0 ${active ? 'text-parque-purple' : 'text-gray-500'}`}>
+                <div className={`flex-shrink-0 ${active ? 'text-white' : 'text-purple-500'}`}>
                   {item.icon}
                 </div>
                 <div className="ml-4 flex-1">
-                  <p className={`font-medium ${active ? 'text-parque-purple' : 'text-gray-900'}`}>
+                  <p className={`font-medium ${active ? 'text-white' : 'text-gray-900'}`}>
                     {item.name}
                   </p>
-                  <p className={`text-sm ${active ? 'text-purple-600' : 'text-gray-500'}`}>
+                  <p className={`text-sm ${active ? 'text-purple-200' : 'text-gray-500'}`}>
                     {item.description}
                   </p>
                 </div>
-                <svg className={`w-5 h-5 ${active ? 'text-parque-purple' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className={`w-5 h-5 ${active ? 'text-purple-200' : 'text-purple-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </Link>
@@ -218,7 +209,7 @@ export default function MoreMenu({ isOpen, onClose, locale, user, playerData, on
         </div>
 
         {/* Logout Button */}
-        <div className="px-3 pb-6 pt-2 border-t border-gray-100 safe-area-bottom">
+        <div className="px-3 pb-6 pt-2 border-t border-purple-100 safe-area-bottom">
           <button
             onClick={() => {
               onClose()
