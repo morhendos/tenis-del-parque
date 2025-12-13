@@ -39,6 +39,17 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: 'League not found' }, { status: 404 })
     }
     
+    // SAFEGUARD: Leagues that haven't started cannot have playoffs
+    // This prevents showing stale data if playoffConfig was incorrectly copied
+    if (league.status === 'registration_open' || league.status === 'coming_soon') {
+      return NextResponse.json({
+        success: false,
+        message: 'League has not started yet',
+        currentPhase: 'regular_season',
+        leagueStatus: league.status
+      })
+    }
+    
     // Check if playoffs are enabled and active
     if (!league.playoffConfig?.enabled || league.playoffConfig?.currentPhase === 'regular_season') {
       return NextResponse.json({

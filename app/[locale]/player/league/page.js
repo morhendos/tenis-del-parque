@@ -257,7 +257,7 @@ export default function PlayerLeague() {
   // Clear playoff data when league changes
   useEffect(() => {
     setPlayoffData(null)
-  }, [currentLeague?._id])
+  }, [currentLeague?.slug])
 
   // Handle tab query parameter
   useEffect(() => {
@@ -268,26 +268,43 @@ export default function PlayerLeague() {
   }, [searchParams])
 
   // Fetch playoff data when playoffs tab is selected
+  // BUT only for leagues that are active or completed (not upcoming)
   useEffect(() => {
-    if (activeTab === LEAGUE_TABS.PLAYOFFS && currentLeague?._id && !playoffData) {
-      fetchPlayoffData()
+    const status = currentLeague?.status
+    const slug = currentLeague?.slug
+    
+    // Skip fetching for leagues that haven't started
+    if (status === 'registration_open' || status === 'coming_soon') {
+      return
     }
-  }, [activeTab, currentLeague?._id, playoffData])
+    
+    // Fetch if: on playoffs tab AND (no data OR data is for different league)
+    if (activeTab === LEAGUE_TABS.PLAYOFFS && slug && (!playoffData || playoffData._forLeague !== slug)) {
+      fetchPlayoffData(slug)
+    }
+  }, [activeTab, currentLeague?.slug, currentLeague?.status, playoffData?._forLeague])
 
-  const fetchPlayoffData = async () => {
-    if (!currentLeague?._id) return
+  const fetchPlayoffData = async (leagueSlug) => {
+    if (!leagueSlug) return
     
     setLoadingPlayoffs(true)
     try {
-      // Use league ID instead of slug for more reliable fetching
-      const response = await fetch(`/api/leagues/${currentLeague._id}/playoffs`)
+      const response = await fetch(`/api/leagues/${leagueSlug}/playoffs`)
       const data = await response.json()
       
+      // IMPORTANT: Store which league this data is for
       if (data.success) {
-        setPlayoffData(data)
+        setPlayoffData({ ...data, _forLeague: leagueSlug })
+      } else {
+        setPlayoffData({ 
+          success: false, 
+          noPlayoffs: true,
+          _forLeague: leagueSlug
+        })
       }
     } catch (error) {
       console.error('Error fetching playoff data:', error)
+      setPlayoffData({ success: false, error: true, _forLeague: leagueSlug })
     } finally {
       setLoadingPlayoffs(false)
     }
@@ -295,8 +312,8 @@ export default function PlayerLeague() {
 
   // Handle league change
   const handleLeagueChange = (leagueId) => {
-    // Clear current data to show loading state
-    setPlayoffData(null)
+    // Don't clear playoffData here - let the useEffect handle it
+    // when currentLeague actually changes. This prevents race conditions.
     
     // Update URL with new leagueId
     const url = new URL(window.location.href)
@@ -528,15 +545,49 @@ export default function PlayerLeague() {
           )}
           
           {activeTab === LEAGUE_TABS.PLAYOFFS && (
-            loadingPlayoffs ? (
+            // For leagues that haven't started, show empty state immediately
+            (currentLeague?.status === 'registration_open' || currentLeague?.status === 'coming_soon') ? (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {language === 'es' ? 'Playoffs no disponibles' : 'Playoffs not available'}
+                </h3>
+                <p className="text-gray-500 text-sm">
+                  {language === 'es' 
+                    ? 'Los playoffs comenzarán cuando finalice la temporada regular' 
+                    : 'Playoffs will begin after the regular season ends'}
+                </p>
+              </div>
+            ) : loadingPlayoffs || !playoffData || playoffData._forLeague !== currentLeague?.slug ? (
+              // Loading, no data, or data is for wrong league
               <TennisPreloaderInline 
                 text={language === 'es' ? 'Cargando playoffs...' : 'Loading playoffs...'}
                 locale={language}
               />
+            ) : playoffData.noPlayoffs || !playoffData.success ? (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {language === 'es' ? 'Playoffs no activos' : 'Playoffs not active'}
+                </h3>
+                <p className="text-gray-500 text-sm">
+                  {language === 'es' 
+                    ? 'Esta liga aún no tiene playoffs activos' 
+                    : 'This league does not have active playoffs yet'}
+                </p>
+              </div>
             ) : (
               <PlayoffsTab
-                playoffConfig={playoffData?.playoffConfig}
-                matches={playoffData?.matches || []}
+                playoffConfig={playoffData.playoffConfig}
+                matches={playoffData.matches || []}
                 language={language}
               />
             )
