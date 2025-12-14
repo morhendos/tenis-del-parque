@@ -4,42 +4,89 @@ import React from 'react'
  * ============================================================================
  * 🎾 STANDARDIZED TENNIS PRELOADER - THE ONLY LOADING COMPONENT TO USE!
  * ============================================================================
- * 
- * ⚠️ IMPORTANT: This is THE standard preloader for the entire application.
- * DO NOT create custom spinners or loading animations elsewhere!
- * 
- * See documentation: /docs/PRELOADER_GUIDE.md
- * 
- * Available exports:
- * - TennisPreloader (default) - Base component with all props
- * - TennisPreloaderFullScreen - For full-page loading states
- * - TennisPreloaderInline - For page-level loading in player hub
- * - TennisPreloaderSmall - For small inline loading indicators
- * 
- * Props:
- * - size: 'sm' | 'md' | 'lg' | 'xl' (default: 'md')
- * - fullScreen: boolean - when true, takes full viewport height
- * - text: string - custom loading text (optional)
- * - locale: 'es' | 'en' - for default loading text localization
- * 
- * Example usage:
- * import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
- * if (loading) return <TennisPreloaderInline locale={locale} />
- * ============================================================================
  */
 
 const SIZES = {
-  sm: 'w-8 h-8',
-  md: 'w-16 h-16', 
-  lg: 'w-24 h-24',
-  xl: 'w-32 h-32'
+  sm: { width: 24, height: 24 },
+  md: { width: 40, height: 40 }, 
+  lg: { width: 56, height: 56 },
+  xl: { width: 80, height: 80 }
 }
 
 const TEXT_SIZES = {
   sm: 'text-sm',
-  md: 'text-lg',
-  lg: 'text-xl', 
-  xl: 'text-2xl'
+  md: 'text-base',
+  lg: 'text-lg', 
+  xl: 'text-xl'
+}
+
+// Tennis Ball SVG Component
+function TennisBall({ size = 'md' }) {
+  const { width, height } = SIZES[size]
+  
+  return (
+    <svg 
+      width={width} 
+      height={height} 
+      viewBox="0 0 56 56" 
+      className="tennis-ball-svg"
+    >
+      <defs>
+        {/* Tennis ball gradient */}
+        <radialGradient id="ballGradient" cx="35%" cy="35%" r="65%">
+          <stop offset="0%" stopColor="#E4FF1A" />
+          <stop offset="60%" stopColor="#C6E600" />
+          <stop offset="100%" stopColor="#9EBF00" />
+        </radialGradient>
+        
+        {/* Subtle shadow gradient */}
+        <radialGradient id="shadowGradient" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#7C3AED" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#7C3AED" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      
+      {/* Tennis ball */}
+      <circle 
+        cx="28" 
+        cy="28" 
+        r="26" 
+        fill="url(#ballGradient)"
+        stroke="#9EBF00"
+        strokeWidth="1"
+      />
+      
+      {/* Tennis ball seam - left curve */}
+      <path 
+        d="M8 18 Q18 28 8 38"
+        fill="none"
+        stroke="#fff"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        opacity="0.85"
+      />
+      
+      {/* Tennis ball seam - right curve */}
+      <path 
+        d="M48 18 Q38 28 48 38"
+        fill="none"
+        stroke="#fff"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        opacity="0.85"
+      />
+      
+      {/* Highlight */}
+      <ellipse 
+        cx="20" 
+        cy="18" 
+        rx="8" 
+        ry="5"
+        fill="#fff"
+        opacity="0.4"
+      />
+    </svg>
+  )
 }
 
 export default function TennisPreloader({ 
@@ -51,39 +98,76 @@ export default function TennisPreloader({
 }) {
   const defaultText = locale === 'es' ? 'Cargando...' : 'Loading...'
   const displayText = text || defaultText
-  
+
   const containerClasses = fullScreen 
-    ? 'min-h-screen bg-gradient-to-b from-parque-bg via-white to-white flex items-center justify-center'
+    ? 'min-h-screen bg-gradient-to-b from-purple-50 via-white to-white flex items-center justify-center'
     : 'flex items-center justify-center'
 
   return (
     <div className={`${containerClasses} ${className}`} role="status" aria-label={displayText}>
       <div className="text-center">
-        {/* Tennis Ball with Enhanced Animation */}
-        <div className="relative mx-auto mb-4">
-          {/* Tennis Ball */}
-          <div className={`${SIZES[size]} tennis-ball mx-auto animate-bounce`}>
-            {/* Additional glow effect for premium feel */}
-            <div className={`absolute inset-0 ${SIZES[size]} tennis-ball opacity-50 animate-ping`}></div>
+        {/* Bouncing Tennis Ball */}
+        <div className="relative mx-auto mb-4 flex flex-col items-center">
+          <div className="animate-tennis-bounce">
+            <TennisBall size={size} />
           </div>
           
-          {/* Subtle shadow */}
-          <div className={`${SIZES[size]} bg-black/10 rounded-full blur-sm mx-auto -mt-2 animate-pulse`} 
-               style={{height: '8px', transform: 'scaleX(0.8)'}}></div>
+          {/* Shadow that scales with bounce */}
+          <div 
+            className="-mt-1 bg-purple-900/50 rounded-full blur-sm animate-tennis-shadow"
+            style={{ 
+              width: SIZES[size].width * 0.6,
+              height: 5,
+            }}
+          />
         </div>
 
         {/* Loading Text */}
-        <div className={`text-parque-purple/70 ${TEXT_SIZES[size]} font-light animate-pulse`}>
+        <div className={`text-transparent bg-clip-text bg-gradient-to-r from-parque-purple to-purple-600 ${TEXT_SIZES[size]} font-medium`}>
           {displayText}
         </div>
 
-        {/* Optional: Tennis-themed loading dots */}
-        <div className="flex justify-center mt-3 space-x-1">
-          <div className="w-2 h-2 bg-parque-green/60 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-          <div className="w-2 h-2 bg-parque-green/60 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-          <div className="w-2 h-2 bg-parque-green/60 rounded-full animate-bounce"></div>
+        {/* Animated dots */}
+        <div className="flex justify-center mt-3 space-x-1.5">
+          <div className="w-2 h-2 bg-gradient-to-r from-parque-purple to-purple-500 rounded-full animate-bounce [animation-delay:-0.2s]"></div>
+          <div className="w-2 h-2 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full animate-bounce [animation-delay:-0.1s]"></div>
+          <div className="w-2 h-2 bg-gradient-to-r from-indigo-500 to-parque-purple rounded-full animate-bounce"></div>
         </div>
       </div>
+      
+      <style jsx>{`
+        @keyframes tennis-bounce {
+          0%, 100% {
+            transform: translateY(0);
+            animation-timing-function: cubic-bezier(0, 0, 0.5, 1);
+          }
+          50% {
+            transform: translateY(-20px);
+            animation-timing-function: cubic-bezier(0.5, 0, 1, 1);
+          }
+        }
+        
+        @keyframes tennis-shadow {
+          0%, 100% {
+            transform: scaleX(1);
+            opacity: 0.5;
+            animation-timing-function: cubic-bezier(0, 0, 0.5, 1);
+          }
+          50% {
+            transform: scaleX(0.5);
+            opacity: 0.2;
+            animation-timing-function: cubic-bezier(0.5, 0, 1, 1);
+          }
+        }
+        
+        .animate-tennis-bounce {
+          animation: tennis-bounce 0.5s infinite;
+        }
+        
+        .animate-tennis-shadow {
+          animation: tennis-shadow 0.5s infinite;
+        }
+      `}</style>
     </div>
   )
 }
