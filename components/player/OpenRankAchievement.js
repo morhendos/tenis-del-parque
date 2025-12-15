@@ -41,13 +41,13 @@ export default function OpenRankAchievement({ player, language, locale }) {
   return (
     <div className={`relative overflow-hidden rounded-2xl border ${
       isUnlocked 
-        ? 'bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 border-amber-200' 
+        ? 'bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-100 border-yellow-300' 
         : 'bg-gradient-to-br from-gray-50 via-slate-50 to-gray-100 border-gray-200'
     } p-5 sm:p-6 shadow-sm`}>
       
       {/* Background decoration */}
       <div className="absolute top-0 right-0 w-32 h-32 opacity-10">
-        <svg viewBox="0 0 100 100" fill="currentColor" className={isUnlocked ? 'text-amber-500' : 'text-gray-400'}>
+        <svg viewBox="0 0 100 100" fill="currentColor" className={isUnlocked ? 'text-yellow-500' : 'text-gray-400'}>
           <path d="M50 5 L61 39 L97 39 L68 61 L79 95 L50 73 L21 95 L32 61 L3 39 L39 39 Z" />
         </svg>
       </div>
@@ -59,7 +59,7 @@ export default function OpenRankAchievement({ player, language, locale }) {
             {/* Trophy/Lock Icon */}
             <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg ${
               isUnlocked 
-                ? 'bg-gradient-to-br from-amber-400 to-orange-500 shadow-amber-500/30' 
+                ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 shadow-yellow-500/30' 
                 : 'bg-gradient-to-br from-gray-400 to-gray-500 shadow-gray-500/20'
             }`}>
               {isUnlocked ? (
@@ -82,7 +82,7 @@ export default function OpenRankAchievement({ player, language, locale }) {
           {/* Status Badge */}
           <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
             isUnlocked 
-              ? 'bg-amber-100 text-amber-700 border border-amber-200' 
+              ? 'bg-yellow-100 text-yellow-700 border border-yellow-300' 
               : 'bg-gray-100 text-gray-600 border border-gray-200'
           }`}>
             {isUnlocked ? t.unlocked : t.locked}
@@ -96,7 +96,7 @@ export default function OpenRankAchievement({ player, language, locale }) {
             <span className="text-gray-600 font-medium">
               {matchesPlayed} / {MATCHES_REQUIRED} {t.matchesPlayed}
             </span>
-            <span className={`font-semibold ${isUnlocked ? 'text-amber-600' : 'text-gray-500'}`}>
+            <span className={`font-semibold ${isUnlocked ? 'text-yellow-600' : 'text-gray-500'}`}>
               {Math.round(progress)}%
             </span>
           </div>
@@ -105,7 +105,7 @@ export default function OpenRankAchievement({ player, language, locale }) {
             <div 
               className={`h-full rounded-full ${
                 isUnlocked 
-                  ? 'bg-gradient-to-r from-amber-400 to-orange-500' 
+                  ? 'bg-gradient-to-r from-yellow-400 to-yellow-500' 
                   : 'bg-gradient-to-r from-gray-400 to-gray-500'
               }`}
               style={{ width: `${progress}%` }}
@@ -132,7 +132,7 @@ export default function OpenRankAchievement({ player, language, locale }) {
         {isUnlocked ? (
           <Link
             href={`/${locale}/player/openrank`}
-            className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 font-semibold shadow-md"
+            className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 rounded-xl hover:from-yellow-500 hover:to-yellow-600 font-semibold shadow-md hover:shadow-lg transition-all"
           >
             <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />

@@ -6,7 +6,7 @@
   "start_url": "/player/dashboard",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#d3d8c4",
+  "background_color": "#eef1e6",
   "theme_color": "#7c3aed",
   "orientation": "portrait-primary",
   "icons": [
