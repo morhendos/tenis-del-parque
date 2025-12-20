@@ -3,8 +3,9 @@ import Link from 'next/link'
 export default function OpenRankAchievement({ player, language, locale }) {
   const MATCHES_REQUIRED = 8
   
-  // Get matches played from player stats
+  // Get matches played from player stats, cap at required amount for display
   const matchesPlayed = player?.stats?.matchesPlayed || 0
+  const matchesDisplayed = Math.min(matchesPlayed, MATCHES_REQUIRED)
   const isUnlocked = matchesPlayed >= MATCHES_REQUIRED
   const progress = Math.min((matchesPlayed / MATCHES_REQUIRED) * 100, 100)
   const matchesRemaining = Math.max(MATCHES_REQUIRED - matchesPlayed, 0)
@@ -94,7 +95,7 @@ export default function OpenRankAchievement({ player, language, locale }) {
           {/* Progress Bar */}
           <div className="flex items-center justify-between text-sm mb-2">
             <span className="text-gray-600 font-medium">
-              {matchesPlayed} / {MATCHES_REQUIRED} {t.matchesPlayed}
+              {matchesDisplayed} / {MATCHES_REQUIRED} {t.matchesPlayed}
             </span>
             <span className={`font-semibold ${isUnlocked ? 'text-yellow-600' : 'text-gray-500'}`}>
               {Math.round(progress)}%

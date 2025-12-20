@@ -9,6 +9,7 @@ import { announcementContent } from '@/lib/content/announcementContent'
 import { ToastContainer } from '@/components/ui/Toast'
 import { TennisPreloaderFullScreen } from '@/components/ui/TennisPreloader'
 import { BottomNavigation } from '@/components/player/navigation'
+import { getMaskedName, isDemoModeActive } from '@/lib/utils/demoMode'
 
 export default function PlayerLayout({ children }) {
   const pathname = usePathname()
@@ -21,6 +22,11 @@ export default function PlayerLayout({ children }) {
   const [loading, setLoading] = useState(true)
   const [hasNewAnnouncement, setHasNewAnnouncement] = useState(false)
   const [playerData, setPlayerData] = useState(null)
+  const [isDemoMode, setIsDemoMode] = useState(false)
+
+  useEffect(() => {
+    setIsDemoMode(isDemoModeActive())
+  }, [])
 
   const checkAuth = useCallback(async () => {
     try {
@@ -265,7 +271,9 @@ export default function PlayerLayout({ children }) {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-gray-900">
-                    {playerData?.player?.name || user?.name || user?.email?.split('@')[0] || (locale === 'es' ? 'Jugador' : 'Player')}
+                    {isDemoMode 
+                      ? getMaskedName(playerData?.player?.name || user?.name || 'Player')
+                      : (playerData?.player?.name || user?.name || user?.email?.split('@')[0] || (locale === 'es' ? 'Jugador' : 'Player'))}
                   </p>
                   <p className="text-xs text-gray-500">
                     {locale === 'es' ? 'Miembro activo' : 'Active member'}

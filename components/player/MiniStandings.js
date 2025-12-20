@@ -1,8 +1,16 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { getMaskedName, isDemoModeActive } from '@/lib/utils/demoMode'
 
 export default function MiniStandings({ standings, playerId, language, locale }) {
+  const [isDemoMode, setIsDemoMode] = useState(false)
+  
+  useEffect(() => {
+    setIsDemoMode(isDemoModeActive())
+  }, [])
+
   const content = {
     es: {
       title: 'Tu Posición',
@@ -35,29 +43,29 @@ export default function MiniStandings({ standings, playerId, language, locale })
   const playerIndex = allStandings.findIndex(s => String(s.player._id) === String(playerId))
   const playerPosition = playerIndex >= 0 ? playerIndex + 1 : null
 
-  // Get rows to display (2 above, player, 2 below - or adjust at edges)
+  // Get rows to display (1 above, player, 1 below - or adjust at edges)
   const getDisplayRows = () => {
     if (allStandings.length === 0 || playerIndex < 0) return []
     
     const total = allStandings.length
     let start, end
     
-    if (total <= 5) {
-      // Show all if 5 or fewer
+    if (total <= 3) {
+      // Show all if 3 or fewer
       start = 0
       end = total
-    } else if (playerIndex <= 2) {
-      // Player near top
+    } else if (playerIndex === 0) {
+      // Player at top - show player + 2 below
       start = 0
-      end = 5
-    } else if (playerIndex >= total - 2) {
-      // Player near bottom
-      start = total - 5
+      end = 3
+    } else if (playerIndex >= total - 1) {
+      // Player at bottom - show 2 above + player
+      start = total - 3
       end = total
     } else {
-      // Player in middle - show 2 above and 2 below
-      start = playerIndex - 2
-      end = playerIndex + 3
+      // Player in middle - show 1 above, player, 1 below
+      start = playerIndex - 1
+      end = playerIndex + 2
     }
     
     return allStandings.slice(start, end).map((s, idx) => ({
@@ -133,7 +141,7 @@ export default function MiniStandings({ standings, playerId, language, locale })
             <div className={`col-span-7 text-sm truncate ${
               row.isCurrentPlayer ? 'text-parque-purple' : 'text-gray-900'
             }`}>
-              {row.isCurrentPlayer && '→ '}{row.player.name}
+              {row.isCurrentPlayer && '→ '}{isDemoMode ? getMaskedName(row.player.name) : row.player.name}
             </div>
             <div className={`col-span-2 text-center text-sm ${
               row.isCurrentPlayer ? 'text-parque-purple' : 'text-gray-600'

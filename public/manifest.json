@@ -29,6 +29,43 @@
       "purpose": "maskable"
     }
   ],
+  "screenshots": [
+    {
+      "src": "/screenshots/dashboard-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Dashboard - Tu centro de control"
+    },
+    {
+      "src": "/screenshots/openrank-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "OpenRank - Ranking global ELO"
+    },
+    {
+      "src": "/screenshots/victory-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Registra tus victorias"
+    },
+    {
+      "src": "/screenshots/dashboard-desktop.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Dashboard en escritorio"
+    },
+    {
+      "src": "/screenshots/openrank-desktop.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "OpenRank en escritorio"
+    }
+  ],
   "categories": ["sports", "games", "social"],
   "lang": "es",
   "dir": "ltr"

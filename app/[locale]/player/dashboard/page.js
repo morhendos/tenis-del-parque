@@ -1,8 +1,7 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { useLanguage } from '@/lib/hooks/useLanguage'
 import { useWelcomeModal } from '@/lib/hooks/useWelcomeModal'
 import { usePlayerDashboard } from '@/lib/hooks/usePlayerDashboard'
@@ -18,7 +17,6 @@ import { dashboardStyles } from '@/styles/dashboard'
 
 export default function PlayerDashboard() {
   const params = useParams()
-  const router = useRouter()
   const locale = params.locale || 'es'
   const language = locale
   
@@ -36,16 +34,6 @@ export default function PlayerDashboard() {
 
   // Get the next upcoming match (first one)
   const nextMatch = upcomingMatches?.[0] || null
-
-  // Handle result button click - navigate to matches page
-  const handleResultClick = () => {
-    router.push(`/${locale}/player/matches`)
-  }
-
-  // Handle schedule button click - navigate to matches page
-  const handleScheduleClick = () => {
-    router.push(`/${locale}/player/matches`)
-  }
 
   // Show loading with standardized tennis preloader
   if (loading) {
@@ -96,16 +84,8 @@ export default function PlayerDashboard() {
         {/* Welcome Header with Quick Links */}
         <DashboardHeader player={player} language={language} />
 
-        {/* OpenRank Progress - Gamification element */}
-        <OpenRankAchievement player={player} language={language} locale={locale} />
-
         {/* Next Match - Hero section */}
-        <NextMatchCard 
-          match={nextMatch} 
-          language={language} 
-          onResultClick={handleResultClick}
-          onScheduleClick={handleScheduleClick}
-        />
+        <NextMatchCard match={nextMatch} language={language} />
 
         {/* Mini Standings Table */}
         <MiniStandings 
@@ -114,6 +94,9 @@ export default function PlayerDashboard() {
           language={language}
           locale={locale}
         />
+
+        {/* OpenRank Progress - Gamification element */}
+        <OpenRankAchievement player={player} language={language} locale={locale} />
 
         {/* Recent Results */}
         <RecentResults 

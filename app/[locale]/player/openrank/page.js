@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react'
 import { Star, TrendingUp, Users, Target, ChevronDown, ChevronUp } from 'lucide-react'
 import EloProgressionChart from '@/components/player/EloProgressionChart'
 import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
+import { getMaskedName, isDemoModeActive } from '@/lib/utils/demoMode'
 
 export default function OpenRankPage() {
   const params = useParams()
@@ -20,6 +21,7 @@ export default function OpenRankPage() {
   const [showAlmostQualified, setShowAlmostQualified] = useState(false)
   const [eloHistory, setEloHistory] = useState({ chartData: [], stats: null })
   const [eloLoading, setEloLoading] = useState(true)
+  const [isDemoMode, setIsDemoMode] = useState(false)
 
   const content = {
     es: {
@@ -77,6 +79,10 @@ export default function OpenRankPage() {
   }
   
   const t = content[locale] || content.es
+
+  useEffect(() => {
+    setIsDemoMode(isDemoModeActive())
+  }, [])
 
   useEffect(() => {
     fetchOpenRank()
@@ -262,11 +268,11 @@ export default function OpenRankPage() {
                           ? 'bg-gradient-to-br from-purple-500 to-indigo-600 text-white' 
                           : 'bg-purple-100 text-purple-700'
                       }`}>
-                        {player.name.charAt(0).toUpperCase()}
+                        {(isDemoMode ? getMaskedName(player.name) : player.name).charAt(0).toUpperCase()}
                       </div>
                       <div className="ml-2 min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-gray-900 truncate">{player.name}</span>
+                          <span className="font-medium text-gray-900 truncate">{isDemoMode ? getMaskedName(player.name) : player.name}</span>
                           {isCurrentPlayer && (
                             <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full font-medium flex-shrink-0">
                               {t.you}
@@ -337,10 +343,10 @@ export default function OpenRankPage() {
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-3">
                           <div className="w-9 h-9 bg-gray-200 rounded-full flex items-center justify-center text-sm font-bold text-gray-600">
-                            {player.name.charAt(0).toUpperCase()}
+                            {(isDemoMode ? getMaskedName(player.name) : player.name).charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <span className="font-medium text-gray-900">{player.name}</span>
+                            <span className="font-medium text-gray-900">{isDemoMode ? getMaskedName(player.name) : player.name}</span>
                             {isCurrentPlayer && (
                               <span className="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium">
                                 {t.you}
