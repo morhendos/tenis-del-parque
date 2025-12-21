@@ -36,8 +36,22 @@ export default function CityLeagueHero({ city, locale, leagueName, league }) {
     default: 'text-emerald-100'
   }[leagueTier]
   
+  // Description based on context
+  const getDescription = () => {
+    if (league) {
+      // On league info page
+      return league.status === 'registration_open' 
+        ? (locale === 'es' ? 'Únete a la liga ahora y comienza a jugar' : 'Join the league now and start playing')
+        : (locale === 'es' ? 'Información de la liga y detalles de inscripción' : 'League information and registration details')
+    }
+    // On city leagues page - emphasize level selection
+    return locale === 'es' 
+      ? 'Elige el nivel de competición que mejor se adapte a ti' 
+      : 'Choose the level of competition that suits you best'
+  }
+  
   return (
-    <div className={`relative h-[200px] sm:h-[260px] md:h-[320px] lg:h-[380px] bg-gradient-to-r ${gradientClasses}`}>
+    <div className={`relative h-[160px] sm:h-[220px] md:h-[280px] lg:h-[340px] bg-gradient-to-r ${gradientClasses}`}>
       {/* Background Image */}
       {city.images?.main && (
         <div className="absolute inset-0 opacity-30">
@@ -51,13 +65,13 @@ export default function CityLeagueHero({ city, locale, leagueName, league }) {
         </div>
       )}
       
-      {/* Dark semi-transparent backdrop for better text readability - FULL WIDTH */}
+      {/* Dark semi-transparent backdrop for better text readability */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-transparent"></div>
       
       {/* Content */}
       <div className="relative container mx-auto px-4 h-full flex flex-col justify-center pt-14 sm:pt-16 z-10">
         {/* Breadcrumb - hidden on mobile, visible on sm+ */}
-        <nav className="hidden sm:block mb-3 md:mb-4 text-sm md:text-base text-white/90">
+        <nav className="hidden sm:block mb-2 md:mb-3 text-sm md:text-base text-white/90">
           <Link href={`/${locale}/leagues`} className="hover:text-white transition-colors">
             {locale === 'es' ? 'Ciudades' : 'Cities'}
           </Link>
@@ -75,22 +89,22 @@ export default function CityLeagueHero({ city, locale, leagueName, league }) {
           )}
         </nav>
         
-        {/* Title - stacked on mobile, inline on desktop */}
-        <div className="mb-2 sm:mb-3 md:mb-4">
+        {/* Title */}
+        <div className="mb-1 sm:mb-2 md:mb-3">
           {/* Mobile layout: stacked */}
           <div className="md:hidden">
             <h1 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-lg leading-tight">
               {pageTitle}
             </h1>
             {league && leagueName && (
-              <h2 className={`text-xl sm:text-2xl font-bold ${leagueNameColor} drop-shadow-lg mt-0.5`}>
+              <h2 className={`text-lg sm:text-xl font-bold ${leagueNameColor} drop-shadow-lg mt-0.5`}>
                 {leagueName}
               </h2>
             )}
           </div>
           
           {/* Desktop layout: inline with bullet */}
-          <h1 className="hidden md:block text-4xl lg:text-5xl xl:text-6xl font-bold text-white drop-shadow-lg">
+          <h1 className="hidden md:block text-3xl lg:text-4xl xl:text-5xl font-bold text-white drop-shadow-lg">
             {pageTitle}
             {league && leagueName && (
               <>
@@ -103,41 +117,25 @@ export default function CityLeagueHero({ city, locale, leagueName, league }) {
           </h1>
         </div>
         
-        {/* Status Badge - compact on mobile */}
+        {/* Status Badge - only on league page */}
         {league && (
-          <div className="mb-2 sm:mb-3 md:mb-4">
+          <div className="mb-1 sm:mb-2 md:mb-3">
             {league.status === 'registration_open' && (
-              <span className="inline-flex items-center px-2.5 py-1 sm:px-3 sm:py-1.5 md:px-4 md:py-2 rounded-full text-xs sm:text-sm md:text-base font-semibold bg-white/30 backdrop-blur-md text-white border border-white/50 sm:border-2 shadow-lg">
+              <span className="inline-flex items-center px-2.5 py-1 sm:px-3 sm:py-1.5 md:px-4 md:py-2 rounded-full text-xs sm:text-sm font-semibold bg-white/30 backdrop-blur-md text-white border border-white/50 shadow-lg">
                 {locale === 'es' ? 'Inscripciones Abiertas' : 'Registration Open'}
               </span>
             )}
             {league.status === 'coming_soon' && (
-              <span className="inline-flex items-center px-2.5 py-1 sm:px-3 sm:py-1.5 md:px-4 md:py-2 rounded-full text-xs sm:text-sm md:text-base font-semibold bg-white/30 backdrop-blur-md text-white border border-white/50 sm:border-2 shadow-lg">
+              <span className="inline-flex items-center px-2.5 py-1 sm:px-3 sm:py-1.5 md:px-4 md:py-2 rounded-full text-xs sm:text-sm font-semibold bg-white/30 backdrop-blur-md text-white border border-white/50 shadow-lg">
                 {locale === 'es' ? 'Próximamente' : 'Coming Soon'}
               </span>
             )}
           </div>
         )}
         
-        {/* Description - hidden on very small screens, smaller on mobile */}
-        <p className="hidden sm:block text-sm sm:text-base md:text-lg lg:text-xl text-white/90 drop-shadow-md max-w-2xl leading-relaxed">
-          {league ? (
-            // Show league-specific description if on league page
-            league.status === 'registration_open' ? (
-              locale === 'es' 
-                ? 'Únete a la liga ahora y comienza a jugar' 
-                : 'Join the league now and start playing'
-            ) : (
-              locale === 'es' 
-                ? 'Información de la liga y detalles de inscripción' 
-                : 'League information and registration details'
-            )
-          ) : (
-            // Show city description if on city leagues page
-            locale === 'es' 
-              ? 'Descubre nuestras ligas de tenis disponibles' 
-              : 'Discover our available tennis leagues'
-          )}
+        {/* Description - hidden on very small screens */}
+        <p className="hidden sm:block text-sm md:text-base lg:text-lg text-white/90 drop-shadow-md max-w-xl leading-relaxed">
+          {getDescription()}
         </p>
       </div>
     </div>

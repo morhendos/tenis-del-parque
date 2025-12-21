@@ -39,8 +39,8 @@ export async function generateMetadata({ params }) {
   return {
     title: `${cityName} ${locale === 'es' ? 'Ligas de Tenis' : 'Tennis Leagues'} | Tenis del Parque`,
     description: locale === 'es' 
-      ? `Únete a las ligas de tenis en ${cityName}. Múltiples niveles disponibles.`
-      : `Join tennis leagues in ${cityName}. Multiple skill levels available.`
+      ? `Únete a las ligas de tenis en ${cityName}. Múltiples niveles disponibles: Oro, Plata y Bronce.`
+      : `Join tennis leagues in ${cityName}. Multiple skill levels available: Gold, Silver and Bronze.`
   }
 }
 
@@ -98,23 +98,33 @@ export default async function CityLeaguePage({ params }) {
   // Convert MongoDB objects to plain objects and handle dates
   const plainLeagues = leaguesWithPlayerCounts.map(league => serializeLeague(league))
   
-  // Group by season status
+  // Group by season status AND registration status
   const now = new Date()
   const grouped = {
-    current: [],
-    upcoming: [],
-    past: []
+    registrationOpen: [], // Leagues with open registration - TOP PRIORITY
+    current: [],          // Active/in-progress leagues
+    upcoming: [],         // Coming soon (not yet open)
+    past: []              // Completed seasons
   }
   
   plainLeagues.forEach(league => {
     const start = league.seasonConfig?.startDate ? new Date(league.seasonConfig.startDate) : null
     const end = league.seasonConfig?.endDate ? new Date(league.seasonConfig.endDate) : null
     
+    // First check: is registration open?
+    if (league.status === 'registration_open') {
+      grouped.registrationOpen.push(league)
+      return
+    }
+    
+    // Then check time-based status
     if (!start || !end) {
       if (league.status === 'coming_soon') {
         grouped.upcoming.push(league)
-      } else {
+      } else if (league.status === 'active') {
         grouped.current.push(league)
+      } else {
+        grouped.past.push(league)
       }
     } else if (now >= start && now <= end) {
       grouped.current.push(league)
@@ -131,6 +141,22 @@ export default async function CityLeaguePage({ params }) {
     _id: city._id.toString()
   }
   
+  // Determine section titles based on what's available
+  const getSectionTitle = (type) => {
+    switch(type) {
+      case 'registrationOpen':
+        return locale === 'es' ? '¡Inscríbete Ahora!' : 'Join Now!'
+      case 'current':
+        return locale === 'es' ? 'Temporada en Curso' : 'Current Season'
+      case 'upcoming':
+        return locale === 'es' ? 'Próximamente' : 'Coming Soon'
+      case 'past':
+        return locale === 'es' ? 'Temporadas Anteriores' : 'Past Seasons'
+      default:
+        return ''
+    }
+  }
+  
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation 
@@ -141,29 +167,42 @@ export default async function CityLeaguePage({ params }) {
       
       <CityLeagueHero city={plainCity} locale={locale} />
       
-      {/* Content container - compact padding on mobile */}
-      <div className="container mx-auto px-4 py-6 sm:py-8 md:py-12">
+      {/* Content container */}
+      <div className="container mx-auto px-4 py-6 sm:py-8 md:py-12 max-w-4xl">
+        {/* Registration Open - TOP PRIORITY */}
+        {grouped.registrationOpen.length > 0 && (
+          <LeagueSeasonSection
+            title={getSectionTitle('registrationOpen')}
+            leagues={grouped.registrationOpen}
+            locale={locale}
+            status="upcoming"
+          />
+        )}
+        
+        {/* Current/Active Season */}
         {grouped.current.length > 0 && (
           <LeagueSeasonSection
-            title={locale === 'es' ? 'Temporada Actual' : 'Current Season'}
+            title={getSectionTitle('current')}
             leagues={grouped.current}
             locale={locale}
             status="current"
           />
         )}
         
+        {/* Coming Soon */}
         {grouped.upcoming.length > 0 && (
           <LeagueSeasonSection
-            title={locale === 'es' ? 'Próxima Temporada' : 'Upcoming Season'}
+            title={getSectionTitle('upcoming')}
             leagues={grouped.upcoming}
             locale={locale}
             status="upcoming"
           />
         )}
         
+        {/* Past Seasons - Collapsible */}
         {grouped.past.length > 0 && (
           <LeagueSeasonSection
-            title={locale === 'es' ? 'Temporadas Anteriores' : 'Past Seasons'}
+            title={getSectionTitle('past')}
             leagues={grouped.past}
             locale={locale}
             status="past"
@@ -171,12 +210,22 @@ export default async function CityLeaguePage({ params }) {
           />
         )}
         
+        {/* Empty State */}
         {plainLeagues.length === 0 && (
-          <div className="text-center py-8 sm:py-12">
-            <p className="text-gray-600 text-base sm:text-lg">
+          <div className="text-center py-12 sm:py-16">
+            <div className="w-16 h-16 mx-auto mb-4 text-gray-300">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M8 12h8M12 8v8" strokeLinecap="round" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              {locale === 'es' ? 'Próximamente' : 'Coming Soon'}
+            </h3>
+            <p className="text-gray-600">
               {locale === 'es' 
-                ? 'No hay ligas disponibles en esta ciudad aún.' 
-                : 'No leagues available in this city yet.'}
+                ? 'Estamos preparando ligas para esta ciudad. ¡Vuelve pronto!' 
+                : 'We are preparing leagues for this city. Check back soon!'}
             </p>
           </div>
         )}

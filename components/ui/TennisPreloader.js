@@ -4,6 +4,9 @@ import React from 'react'
  * ============================================================================
  * 🎾 STANDARDIZED TENNIS PRELOADER - THE ONLY LOADING COMPONENT TO USE!
  * ============================================================================
+ * 
+ * This is a Server Component - no "use client" needed!
+ * Animations are defined in tailwind.config.js
  */
 
 const SIZES = {
@@ -134,40 +137,6 @@ export default function TennisPreloader({
           <div className="w-2 h-2 bg-gradient-to-r from-indigo-500 to-parque-purple rounded-full animate-bounce"></div>
         </div>
       </div>
-      
-      <style jsx>{`
-        @keyframes tennis-bounce {
-          0%, 100% {
-            transform: translateY(0);
-            animation-timing-function: cubic-bezier(0, 0, 0.5, 1);
-          }
-          50% {
-            transform: translateY(-20px);
-            animation-timing-function: cubic-bezier(0.5, 0, 1, 1);
-          }
-        }
-        
-        @keyframes tennis-shadow {
-          0%, 100% {
-            transform: scaleX(1);
-            opacity: 0.5;
-            animation-timing-function: cubic-bezier(0, 0, 0.5, 1);
-          }
-          50% {
-            transform: scaleX(0.5);
-            opacity: 0.2;
-            animation-timing-function: cubic-bezier(0.5, 0, 1, 1);
-          }
-        }
-        
-        .animate-tennis-bounce {
-          animation: tennis-bounce 0.5s infinite;
-        }
-        
-        .animate-tennis-shadow {
-          animation: tennis-shadow 0.5s infinite;
-        }
-      `}</style>
     </div>
   )
 }
