@@ -433,7 +433,9 @@ root/
 │   │   ├── FeaturesSection.js
 │   │   ├── HeroSection.js
 │   │   ├── HowItWorksSection.js
+│   │   ├── HowItWorksShowcase.js
 │   │   ├── LevelsSection.js
+│   │   ├── MobileAppSection.js
 │   │   ├── PlatformPreviewSection.js
 │   │   ├── ProblemSection.js
 │   │   ├── SignupSection.js
@@ -451,7 +453,8 @@ root/
 │   │   ├── CityLeagueHero.js
 │   │   ├── LeagueLevelCard.js
 │   │   ├── LeagueSeasonSection.js
-│   │   └── ModernRegistrationForm.js
+│   │   ├── ModernRegistrationForm.js
+│   │   └── SeasonLevelSelector.js
 │   ├── pages
 │   │   ├── CityClubsPageSSG.js
 │   │   ├── CitySignupPageContent.js
@@ -483,7 +486,13 @@ root/
 │   │   ├── ScheduleTab.js
 │   │   ├── SeasonPlacementCard.js
 │   │   ├── StandingsTable.js
-│   │   └── TrophyCard.js
+│   │   ├── TrophyCard.js
+│   │   ├── TrophyRoom.js
+│   │   └── navigation
+│   │       ├── BottomNavigation.js
+│   │       ├── MobileHeader.js
+│   │       ├── MoreMenu.js
+│   │       └── index.js
 │   ├── rules
 │   │   ├── RulesCTASection.js
 │   │   ├── RulesHeroSection.js
@@ -638,6 +647,7 @@ root/
 │       ├── areaLoader.js
 │       ├── cacheUtils.js
 │       ├── clubAssignmentCache.js
+│       ├── demoMode.js
 │       ├── duplicateDetection.js
 │       ├── geographicBoundaries.js
 │       ├── matchResultUtils.js
@@ -698,6 +708,12 @@ root/
 │   ├── og-image.png
 │   ├── players-import-template.csv
 │   ├── robots.txt
+│   ├── screenshots
+│   │   ├── dashboard-desktop.png
+│   │   ├── dashboard-mobile.png
+│   │   ├── openrank-desktop.png
+│   │   ├── openrank-mobile.png
+│   │   └── victory-mobile.png
 │   ├── sitemap.xml
 │   ├── sotogrande-01.jpg
 │   ├── sw.js

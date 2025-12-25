@@ -60,7 +60,7 @@ export default function HeroSection({ content }) {
                   fill
                   className="object-contain drop-shadow-2xl"
                   priority
-                  sizes="(max-width: 640px) 256px, (max-width: 768px) 320px, (max-width: 1024px) 384px, (max-width: 1280px) 448px, 512px"
+                  sizes="(max-width: 640px) 512px, (max-width: 768px) 640px, (max-width: 1024px) 768px, (max-width: 1280px) 896px, 1024px"
                 />
               </div>
             </div>
