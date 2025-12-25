@@ -589,22 +589,22 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
         @media (max-height: 739px) {
           .mobile-container { padding-top: 0.5rem; padding-bottom: 0.75rem; }
           .mobile-hero { padding-top: 3rem; }
-          .mobile-logo-wrap { margin-bottom: 0; }
-          .mobile-logo { width: 15rem; height: 15rem; }
+          .mobile-logo-wrap { margin-bottom: -0.5rem; }
+          .mobile-logo { width: 14rem; height: 14rem; }
           .mobile-headline { font-size: 0.875rem; margin-bottom: 0.0625rem; }
-          .mobile-value-props { font-size: 0.625rem; margin-bottom: 0.125rem; }
-          .mobile-carousel-container { width: 210px; }
-          .mobile-carousel { height: 155px; }
-          .mobile-phone { width: 60px; }
-          .mobile-phone-frame { border-radius: 0.5rem; }
-          .mobile-phone-screen { border-radius: 0.375rem; }
-          .mobile-notch { width: 0.75rem; height: 0.125rem; }
-          .mobile-home-bar { width: 0.5rem; height: 1px; }
-          .mobile-glow { width: 110px; height: 110px; }
-          .mobile-feature-label { font-size: 0.4375rem; margin-top: -0.25rem; margin-bottom: 0.75rem; }
-          .mobile-cta-container { gap: 0.3rem; } /* slightly bigger gap */
-          .mobile-cta { min-height: 32px !important; font-size: 0.625rem !important; }
-          .mobile-footer { margin-top: 0.125rem; gap: 0; }
+          .mobile-value-props { font-size: 0.625rem; margin-bottom: 0.25rem; }
+          .mobile-carousel-container { width: 260px; }
+          .mobile-carousel { height: 195px; }
+          .mobile-phone { width: 76px; }
+          .mobile-phone-frame { border-radius: 0.625rem; }
+          .mobile-phone-screen { border-radius: 0.5rem; }
+          .mobile-notch { width: 1rem; height: 0.1875rem; }
+          .mobile-home-bar { width: 0.75rem; height: 1px; }
+          .mobile-glow { width: 140px; height: 140px; }
+          .mobile-feature-label { font-size: 0.6875rem; margin-top: -0.5rem; margin-bottom: 0.75rem; }
+          .mobile-cta-container { gap: 0.375rem; }
+          .mobile-cta { min-height: 44px !important; font-size: 0.8125rem !important; }
+          .mobile-footer { margin-top: 0.25rem; gap: 0.125rem; }
         }
       `}</style>
     </section>
