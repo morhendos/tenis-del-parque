@@ -5,8 +5,7 @@ import Link from 'next/link';
 import Navigation from '@/components/common/Navigation';
 import Footer from '@/components/common/Footer';
 import EmotionalHeroSection from '@/components/home/EmotionalHeroSection';
-import ProblemSection from '@/components/home/ProblemSection';
-import SolutionSection from '@/components/home/SolutionSection';
+import HowItWorksShowcase from '@/components/home/HowItWorksShowcase';
 import SeasonLevelSelector from '@/components/leagues/SeasonLevelSelector';
 import LeagueCard from '@/components/league/LeagueCard';
 import { i18n } from '@/lib/i18n/config';
@@ -100,44 +99,14 @@ export default function HomePageSSG({ locale, leaguesData }) {
       
       <EmotionalHeroSection content={content} locale={validLocale} />
       
-      <ProblemSection content={content.problem} />
-      
-      <SolutionSection content={content.solution} />
-      
-      {/* How It Works Section */}
-      <section id="how-it-works" className="py-20 px-4 bg-gray-50">
-        <div className="container mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              {content.howItWorks.title}
-            </h2>
-            <p className="text-xl text-gray-600">
-              {content.howItWorks.subtitle}
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            {content.howItWorks.steps.map((step, index) => (
-              <div key={index} className="text-center">
-                <div className="w-20 h-20 bg-parque-purple text-white rounded-full flex items-center justify-center text-3xl font-bold mx-auto mb-4">
-                  {step.number}
-                </div>
-                <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
-                <p className="text-gray-600">{step.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-      
-      {/* Find Your League Section - Using SeasonLevelSelector */}
-      <section id="cities" className="py-16 sm:py-20 px-4">
+      {/* Find Your League Section - FIRST after hero for immediate action */}
+      <section id="cities" className="scroll-mt-16 py-12 sm:py-16 px-4 bg-gradient-to-b from-gray-50 to-white">
         <div className="container mx-auto max-w-2xl">
-          <div className="text-center mb-10 sm:mb-12">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2">
               {content.cities.title}
             </h2>
-            <p className="text-lg sm:text-xl text-gray-600 max-w-xl mx-auto">
+            <p className="text-base sm:text-lg text-gray-500">
               {content.cities.subtitle}
             </p>
           </div>
@@ -170,11 +139,11 @@ export default function HomePageSSG({ locale, leaguesData }) {
                   {registrationOpenGroups.map((group, index) => {
                     const cityName = group.leagues[0]?.city?.name?.[validLocale] || group.leagues[0]?.city?.name?.es || ''
                     return (
-                      <div key={`reg-${index}`} className="mb-8 last:mb-0">
-                        <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 text-center">
+                      <div key={`reg-${index}`} className="mb-6 last:mb-0">
+                        <h3 className="text-lg sm:text-xl font-semibold text-gray-700 mb-4 text-center">
                           {validLocale === 'es' 
-                            ? `¡Únete a la Liga de ${cityName}!` 
-                            : `Join the ${cityName} League!`
+                            ? `Liga de ${cityName}` 
+                            : `${cityName} League`
                           }
                         </h3>
                         {group.leagues.length > 1 ? (
@@ -234,28 +203,11 @@ export default function HomePageSSG({ locale, leaguesData }) {
         </div>
       </section>
       
-      {/* Features Section */}
-      <section className="py-20 px-4 bg-gray-50">
-        <div className="container mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              {content.features.title}
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              {content.features.subtitle}
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {content.features.items.map((feature, index) => (
-              <FeatureCard key={index} feature={feature} />
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* How It Works Showcase - Now AFTER finding your league */}
+      <HowItWorksShowcase locale={validLocale} />
       
       {/* Testimonials Section */}
-      <section className="py-20 px-4">
+      <section className="py-20 px-4 bg-white">
         <div className="container mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
@@ -268,7 +220,7 @@ export default function HomePageSSG({ locale, leaguesData }) {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {content.testimonials.items.map((testimonial, index) => (
-              <div key={index} className="bg-white p-6 rounded-xl shadow-lg">
+              <div key={index} className="bg-gray-50 p-6 rounded-xl shadow-lg border border-gray-100">
                 <div className="flex mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
                     <svg key={i} className="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 24 24">

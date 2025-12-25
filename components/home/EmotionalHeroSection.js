@@ -2,11 +2,19 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 export default function EmotionalHeroSection({ content, locale }) {
-  const scrollToFeatures = (e) => {
+  const scrollToHowItWorks = (e) => {
     e.preventDefault()
-    const problemSection = document.getElementById('problem')
-    if (problemSection) {
-      problemSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    const howItWorksSection = document.getElementById('how-it-works')
+    if (howItWorksSection) {
+      howItWorksSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
+  const scrollToLeagues = (e) => {
+    e.preventDefault()
+    const leaguesSection = document.getElementById('cities')
+    if (leaguesSection) {
+      leaguesSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }
 
@@ -92,7 +100,7 @@ export default function EmotionalHeroSection({ content, locale }) {
           {/* Secondary CTA as subtle text link - COMPACT */}
           <div className="animate-fadeInUp animation-delay-1000 mb-6 sm:mb-8">
             <button
-              onClick={scrollToFeatures}
+              onClick={scrollToHowItWorks}
               className="text-parque-purple text-sm sm:text-base font-medium hover:text-parque-purple/80 transition-colors group"
             >
               <span className="border-b-2 border-parque-purple/30 group-hover:border-parque-purple/60 transition-colors pb-1">
@@ -103,7 +111,7 @@ export default function EmotionalHeroSection({ content, locale }) {
           
           {/* Enhanced scroll indicator - COMPACT */}
           <div className="mt-4 sm:mt-6 flex justify-center">
-            <button onClick={scrollToFeatures} className="relative inline-block group touch-manipulation">
+            <button onClick={scrollToLeagues} className="relative inline-block group touch-manipulation">
               <div className="absolute inset-0 bg-parque-purple/20 rounded-full blur-lg animate-pulse scale-150"></div>
               <div className="relative bg-white/80 backdrop-blur-sm rounded-full p-2 animate-bounce cursor-pointer hover:bg-white transition-colors flex items-center justify-center">
                 <svg className="w-5 h-5 sm:w-6 sm:h-6 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
