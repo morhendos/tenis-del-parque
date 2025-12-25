@@ -243,6 +243,28 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
           
           {/* CTAs */}
           <div className="mobile-cta-container px-6 animate-fadeInUp animation-delay-800">
+            {!isInstalled && (
+              <div className="relative">
+                {showIOSHint && (
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded-lg shadow-xl z-10 whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                      <Icons.Share className="w-3 h-3" />
+                      <span>{t.iosInstructions}</span>
+                    </div>
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-2 h-2 bg-gray-900 rotate-45" />
+                  </div>
+                )}
+                
+                <button
+                  onClick={handleInstallClick}
+                  className="flex items-center justify-center gap-2 w-full mobile-cta rounded-xl font-semibold transition-all bg-gray-900 text-white shadow-lg shadow-gray-900/20 active:scale-[0.98]"
+                >
+                  <Icons.Download className="w-4 h-4" />
+                  {t.ctaSecondary}
+                </button>
+              </div>
+            )}
+            
             <a
               href="#cities"
               onClick={scrollToLeagues}
@@ -251,40 +273,6 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
               {t.ctaPrimary}
               <Icons.ArrowRight className="w-4 h-4" />
             </a>
-            
-            <div className="relative">
-              {showIOSHint && (
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 text-white text-xs rounded-lg shadow-xl z-10 whitespace-nowrap">
-                  <div className="flex items-center gap-2">
-                    <Icons.Share className="w-3 h-3" />
-                    <span>{t.iosInstructions}</span>
-                  </div>
-                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-2 h-2 bg-gray-900 rotate-45" />
-                </div>
-              )}
-              
-              <button
-                onClick={handleInstallClick}
-                disabled={isInstalled}
-                className={`flex items-center justify-center gap-2 w-full mobile-cta rounded-xl font-semibold transition-all ${
-                  isInstalled
-                    ? 'bg-parque-green text-white'
-                    : 'bg-white text-gray-900 border-2 border-gray-200 shadow-sm active:scale-[0.98]'
-                }`}
-              >
-                {isInstalled ? (
-                  <>
-                    <Icons.Check className="w-4 h-4" />
-                    {t.installedButton}
-                  </>
-                ) : (
-                  <>
-                    <Icons.Download className="w-4 h-4" />
-                    {t.ctaSecondary}
-                  </>
-                )}
-              </button>
-            </div>
           </div>
           
           {/* Learn more + Scroll */}
@@ -332,6 +320,27 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
             
             {/* CTAs - centered */}
             <div className="flex flex-wrap gap-3 2xl:gap-4 justify-center animate-fadeInUp animation-delay-600">
+              {!isInstalled && (
+                <div className="relative">
+                  {showIOSHint && (
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-4 py-2 bg-gray-900 text-white text-sm rounded-xl shadow-xl z-10">
+                      <div className="flex items-center gap-2">
+                        <Icons.Share className="w-4 h-4" />
+                        <span>{t.iosInstructions}</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <button
+                    onClick={handleInstallClick}
+                    className="inline-flex items-center gap-2 bg-gray-900 text-white px-5 py-2.5 2xl:px-7 2xl:py-3.5 rounded-xl font-semibold text-sm 2xl:text-base shadow-lg shadow-gray-900/20 hover:shadow-xl hover:scale-[1.02] transition-all"
+                  >
+                    <Icons.Download className="w-4 h-4 2xl:w-5 2xl:h-5" />
+                    {t.ctaSecondary}
+                  </button>
+                </div>
+              )}
+              
               <a
                 href="#cities"
                 onClick={scrollToLeagues}
@@ -340,39 +349,6 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
                 {t.ctaPrimary}
                 <Icons.ArrowRight className="w-4 h-4 2xl:w-5 2xl:h-5" />
               </a>
-              
-              <div className="relative">
-                {showIOSHint && (
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-4 py-2 bg-gray-900 text-white text-sm rounded-xl shadow-xl z-10">
-                    <div className="flex items-center gap-2">
-                      <Icons.Share className="w-4 h-4" />
-                      <span>{t.iosInstructions}</span>
-                    </div>
-                  </div>
-                )}
-                
-                <button
-                  onClick={handleInstallClick}
-                  disabled={isInstalled}
-                  className={`inline-flex items-center gap-2 px-5 py-2.5 2xl:px-7 2xl:py-3.5 rounded-xl font-semibold text-sm 2xl:text-base transition-all ${
-                    isInstalled
-                      ? 'bg-parque-green text-white'
-                      : 'bg-white text-gray-900 border-2 border-gray-200 shadow-md hover:shadow-lg hover:border-gray-300'
-                  }`}
-                >
-                  {isInstalled ? (
-                    <>
-                      <Icons.Check className="w-4 h-4 2xl:w-5 2xl:h-5" />
-                      {t.installedButton}
-                    </>
-                  ) : (
-                    <>
-                      <Icons.Download className="w-4 h-4 2xl:w-5 2xl:h-5" />
-                      {t.ctaSecondary}
-                    </>
-                  )}
-                </button>
-              </div>
             </div>
             
             {/* Learn more */}
@@ -498,33 +474,83 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
         /* Priority: 1) Top padding (ALWAYS navbar height) 2) Logo stays BIG 3) Shrink carousel/CTAs */
         /* CTAs: min-height controls size, font scales proportionally with button */
         
-        /* Default (tall screens 920px+) */
-        .mobile-container { padding-top: 2rem; padding-bottom: 3rem; }
-        .mobile-hero { padding-top: 4rem; }
-        .mobile-logo-wrap { margin-bottom: 0; }
-        .mobile-logo { width: 19rem; height: 19rem; }
-        .mobile-headline { font-size: 1.25rem; margin-bottom: 0.375rem; }
-        .mobile-value-props { font-size: 0.875rem; margin-bottom: 0.75rem; }
-        .mobile-carousel-container { width: 320px; }
-        .mobile-carousel { height: 260px; }
-        .mobile-phone { width: 105px; }
-        .mobile-phone-frame { border-radius: 1rem; }
-        .mobile-phone-screen { border-radius: 0.875rem; }
-        .mobile-notch { width: 2rem; height: 0.5rem; }
-        .mobile-home-bar { width: 1.5rem; height: 1.5px; }
-        .mobile-glow { width: 200px; height: 200px; }
-        .mobile-feature-label { font-size: 0.75rem; margin-top: -1rem; margin-bottom: 1.75rem; }
-        .mobile-cta-container { display: flex; flex-direction: column; gap: 0.5rem; }
-        .mobile-cta { min-height: 48px !important; font-size: 0.875rem !important; }
-        .mobile-footer { margin-top: 1rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; width: 100%; }
+        /* ===== MOBILE BREAKPOINTS - scales UP from smallest ===== */
+        
+        /* Base styles for all mobile */
+        .mobile-cta-container { display: flex; flex-direction: column; }
+        .mobile-footer { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; }
         .mobile-footer button { display: flex; align-items: center; justify-content: center; margin: 0 auto; }
         
+        /* Very short screens (<740px) - BASELINE */
+        .mobile-container { padding-top: 0.5rem; padding-bottom: 0.75rem; }
+        .mobile-hero { padding-top: 3rem; }
+        .mobile-logo-wrap { margin-bottom: -0.5rem; }
+        .mobile-logo { width: 14rem; height: 14rem; }
+        .mobile-headline { font-size: 0.875rem; margin-bottom: 0.0625rem; }
+        .mobile-value-props { font-size: 0.625rem; margin-bottom: 0.25rem; }
+        .mobile-carousel-container { width: 260px; }
+        .mobile-carousel { height: 195px; }
+        .mobile-phone { width: 76px; }
+        .mobile-phone-frame { border-radius: 0.625rem; }
+        .mobile-phone-screen { border-radius: 0.5rem; }
+        .mobile-notch { width: 1rem; height: 0.1875rem; }
+        .mobile-home-bar { width: 0.75rem; height: 1px; }
+        .mobile-glow { width: 140px; height: 140px; }
+        .mobile-feature-label { font-size: 0.6875rem; margin-top: -1.25rem; margin-bottom: 0.75rem; }
+        .mobile-cta-container { gap: 0.375rem; }
+        .mobile-cta { min-height: 44px !important; font-size: 0.8125rem !important; }
+        .mobile-footer { margin-top: 0.25rem; gap: 0.125rem; }
+        
+        /* Short screens (740-819px) */
+        @media (min-height: 740px) {
+          .mobile-container { padding-top: 0.75rem; padding-bottom: 1rem; }
+          .mobile-hero { padding-top: 3.5rem; }
+          .mobile-logo-wrap { margin-bottom: -0.25rem; }
+          .mobile-logo { width: 15rem; height: 15rem; }
+          .mobile-headline { font-size: 0.9375rem; margin-bottom: 0.125rem; }
+          .mobile-value-props { font-size: 0.6875rem; margin-bottom: 0.25rem; }
+          .mobile-carousel-container { width: 270px; }
+          .mobile-carousel { height: 205px; }
+          .mobile-phone { width: 80px; }
+          .mobile-phone-frame { border-radius: 0.625rem; }
+          .mobile-phone-screen { border-radius: 0.5rem; }
+          .mobile-notch { width: 1.125rem; height: 0.1875rem; }
+          .mobile-home-bar { width: 0.875rem; height: 1px; }
+          .mobile-glow { width: 150px; height: 150px; }
+          .mobile-feature-label { font-size: 0.6875rem; margin-top: -1.5rem; margin-bottom: 1rem; }
+          .mobile-cta-container { gap: 0.375rem; }
+          .mobile-cta { min-height: 44px !important; font-size: 0.8125rem !important; }
+          .mobile-footer { margin-top: 0.375rem; gap: 0.125rem; }
+        }
+        
+        /* Medium screens (820-899px) */
+        @media (min-height: 820px) {
+          .mobile-container { padding-top: 1rem; padding-bottom: 1.5rem; }
+          .mobile-hero { padding-top: 4rem; }
+          .mobile-logo-wrap { margin-bottom: 0; }
+          .mobile-logo { width: 16rem; height: 16rem; }
+          .mobile-headline { font-size: 1rem; margin-bottom: 0.125rem; }
+          .mobile-value-props { font-size: 0.75rem; margin-bottom: 0.375rem; }
+          .mobile-carousel-container { width: 285px; }
+          .mobile-carousel { height: 215px; }
+          .mobile-phone { width: 84px; }
+          .mobile-phone-frame { border-radius: 0.75rem; }
+          .mobile-phone-screen { border-radius: 0.625rem; }
+          .mobile-notch { width: 1.25rem; height: 0.25rem; }
+          .mobile-home-bar { width: 1rem; height: 1px; }
+          .mobile-glow { width: 160px; height: 160px; }
+          .mobile-feature-label { font-size: 0.75rem; margin-top: -1.75rem; margin-bottom: 1.25rem; }
+          .mobile-cta-container { gap: 0.375rem; }
+          .mobile-cta { min-height: 46px !important; font-size: 0.8125rem !important; }
+          .mobile-footer { margin-top: 0.5rem; gap: 0.25rem; }
+        }
+        
         /* Medium-tall screens (900-999px) */
-        @media (max-height: 999px) {
+        @media (min-height: 900px) {
           .mobile-container { padding-top: 1.5rem; padding-bottom: 2rem; }
           .mobile-hero { padding-top: 4rem; }
           .mobile-logo-wrap { margin-bottom: 0; }
-          .mobile-logo { width: 19rem; height: 19rem; }
+          .mobile-logo { width: 17rem; height: 17rem; }
           .mobile-headline { font-size: 1.125rem; margin-bottom: 0.25rem; }
           .mobile-value-props { font-size: 0.8125rem; margin-bottom: 0.5rem; }
           .mobile-carousel-container { width: 300px; }
@@ -535,76 +561,32 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
           .mobile-notch { width: 1.5rem; height: 0.375rem; }
           .mobile-home-bar { width: 1.25rem; height: 1.5px; }
           .mobile-glow { width: 170px; height: 170px; }
-          .mobile-feature-label { font-size: 0.625rem; margin-top: -0.625rem; margin-bottom: 1.5rem; }
-          .mobile-cta-container { gap: 0.375rem; }
-          .mobile-cta { min-height: 44px !important; font-size: 0.8125rem !important; }
-          .mobile-footer { margin-top: 0.5rem; gap: 0.25rem; }
+          .mobile-feature-label { font-size: 0.75rem; margin-top: -2rem; margin-bottom: 1.5rem; }
+          .mobile-cta-container { gap: 0.5rem; }
+          .mobile-cta { min-height: 48px !important; font-size: 0.875rem !important; }
+          .mobile-footer { margin-top: 0.75rem; gap: 0.25rem; }
         }
         
-        /* Medium screens (820-899px) */
-        @media (max-height: 899px) {
-          .mobile-container { padding-top: 1rem; padding-bottom: 1.5rem; }
+        /* Tall screens (1000px+) */
+        @media (min-height: 1000px) {
+          .mobile-container { padding-top: 2rem; padding-bottom: 3rem; }
           .mobile-hero { padding-top: 4rem; }
           .mobile-logo-wrap { margin-bottom: 0; }
-          .mobile-logo { width: 18rem; height: 18rem; }
-          .mobile-headline { font-size: 1rem; margin-bottom: 0.125rem; }
-          .mobile-value-props { font-size: 0.75rem; margin-bottom: 0.375rem; }
-          .mobile-carousel-container { width: 270px; }
-          .mobile-carousel { height: 200px; }
-          .mobile-phone { width: 78px; }
-          .mobile-phone-frame { border-radius: 0.75rem; }
-          .mobile-phone-screen { border-radius: 0.625rem; }
-          .mobile-notch { width: 1.25rem; height: 0.25rem; }
-          .mobile-home-bar { width: 1rem; height: 1px; }
-          .mobile-glow { width: 150px; height: 150px; }
-          .mobile-feature-label { font-size: 0.5625rem; margin-top: -0.5rem; margin-bottom: 1.25rem; }
-          .mobile-cta-container { gap: 0.3rem; }
-          .mobile-cta { min-height: 40px !important; font-size: 0.75rem !important; }
-          .mobile-footer { margin-top: 0.375rem; gap: 0.125rem; }
-        }
-        
-        /* Short screens (740-819px) - iPhone SE territory */
-        @media (max-height: 819px) {
-          .mobile-container { padding-top: 0.75rem; padding-bottom: 1rem; }
-          .mobile-hero { padding-top: 3.5rem; }
-          .mobile-logo-wrap { margin-bottom: 0; }
-          .mobile-logo { width: 16rem; height: 16rem; }
-          .mobile-headline { font-size: 0.9375rem; margin-bottom: 0.125rem; }
-          .mobile-value-props { font-size: 0.6875rem; margin-bottom: 0.25rem; }
-          .mobile-carousel-container { width: 240px; }
-          .mobile-carousel { height: 180px; }
-          .mobile-phone { width: 70px; }
-          .mobile-phone-frame { border-radius: 0.625rem; }
-          .mobile-phone-screen { border-radius: 0.5rem; }
-          .mobile-notch { width: 1rem; height: 0.1875rem; }
-          .mobile-home-bar { width: 0.75rem; height: 1px; }
-          .mobile-glow { width: 130px; height: 130px; }
-          .mobile-feature-label { font-size: 0.5rem; margin-top: -0.375rem; margin-bottom: 1rem; }
-          .mobile-cta-container { gap: 0.25rem; }
-          .mobile-cta { min-height: 36px !important; font-size: 0.6875rem !important; }
-          .mobile-footer { margin-top: 0.25rem; gap: 0; }
-        }
-        
-        /* Very short screens (<740px) */
-        @media (max-height: 739px) {
-          .mobile-container { padding-top: 0.5rem; padding-bottom: 0.75rem; }
-          .mobile-hero { padding-top: 3rem; }
-          .mobile-logo-wrap { margin-bottom: -0.5rem; }
-          .mobile-logo { width: 14rem; height: 14rem; }
-          .mobile-headline { font-size: 0.875rem; margin-bottom: 0.0625rem; }
-          .mobile-value-props { font-size: 0.625rem; margin-bottom: 0.25rem; }
-          .mobile-carousel-container { width: 260px; }
-          .mobile-carousel { height: 195px; }
-          .mobile-phone { width: 76px; }
-          .mobile-phone-frame { border-radius: 0.625rem; }
-          .mobile-phone-screen { border-radius: 0.5rem; }
-          .mobile-notch { width: 1rem; height: 0.1875rem; }
-          .mobile-home-bar { width: 0.75rem; height: 1px; }
-          .mobile-glow { width: 140px; height: 140px; }
-          .mobile-feature-label { font-size: 0.6875rem; margin-top: -0.5rem; margin-bottom: 0.75rem; }
-          .mobile-cta-container { gap: 0.375rem; }
-          .mobile-cta { min-height: 44px !important; font-size: 0.8125rem !important; }
-          .mobile-footer { margin-top: 0.25rem; gap: 0.125rem; }
+          .mobile-logo { width: 19rem; height: 19rem; }
+          .mobile-headline { font-size: 1.25rem; margin-bottom: 0.375rem; }
+          .mobile-value-props { font-size: 0.875rem; margin-bottom: 0.75rem; }
+          .mobile-carousel-container { width: 320px; }
+          .mobile-carousel { height: 260px; }
+          .mobile-phone { width: 105px; }
+          .mobile-phone-frame { border-radius: 1rem; }
+          .mobile-phone-screen { border-radius: 0.875rem; }
+          .mobile-notch { width: 2rem; height: 0.5rem; }
+          .mobile-home-bar { width: 1.5rem; height: 1.5px; }
+          .mobile-glow { width: 200px; height: 200px; }
+          .mobile-feature-label { font-size: 0.75rem; margin-top: -2.25rem; margin-bottom: 1.75rem; }
+          .mobile-cta-container { gap: 0.5rem; }
+          .mobile-cta { min-height: 48px !important; font-size: 0.875rem !important; }
+          .mobile-footer { margin-top: 1rem; gap: 0.5rem; }
         }
       `}</style>
     </section>
