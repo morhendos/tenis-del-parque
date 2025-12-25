@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import MobileAppSection from './MobileAppSection';
 
 // Custom SVG Icons
 const Icons = {
@@ -714,9 +713,6 @@ export default function HowItWorksShowcase({ locale = 'es' }) {
           </div>
         </div>
       </section>
-      
-      {/* ===== MOBILE APP SECTION ===== */}
-      <MobileAppSection locale={locale} />
     </div>
   );
 }

@@ -97,9 +97,10 @@ export default function HomePageSSG({ locale, leaguesData }) {
         showLanguageSwitcher={true}
       />
       
-      <EmotionalHeroSection content={content} locale={validLocale} />
+      {/* 1. Hero (now includes app showcase) */}
+      <EmotionalHeroSection locale={validLocale} />
       
-      {/* Find Your League Section - FIRST after hero for immediate action */}
+      {/* 2. Find Your League Section */}
       <section id="cities" className="scroll-mt-16 py-12 sm:py-16 px-4 bg-gradient-to-b from-gray-50 to-white">
         <div className="container mx-auto max-w-2xl">
           <div className="text-center mb-8">
@@ -203,10 +204,10 @@ export default function HomePageSSG({ locale, leaguesData }) {
         </div>
       </section>
       
-      {/* How It Works Showcase - Now AFTER finding your league */}
+      {/* 3. How It Works */}
       <HowItWorksShowcase locale={validLocale} />
       
-      {/* Testimonials Section */}
+      {/* 4. Testimonials Section */}
       <section className="py-20 px-4 bg-white">
         <div className="container mx-auto">
           <div className="text-center mb-16">
@@ -242,7 +243,7 @@ export default function HomePageSSG({ locale, leaguesData }) {
         </div>
       </section>
       
-      {/* CTA Section */}
+      {/* 5. CTA Section */}
       <section className="py-20 px-4 bg-gradient-to-br from-parque-purple to-parque-green text-white">
         <div className="container mx-auto text-center">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
@@ -266,7 +267,7 @@ export default function HomePageSSG({ locale, leaguesData }) {
         </div>
       </section>
       
-      {/* FAQ Section */}
+      {/* 6. FAQ Section */}
       <section className="py-20 px-4">
         <div className="container mx-auto max-w-3xl">
           <h2 className="text-4xl font-bold text-center mb-12">
