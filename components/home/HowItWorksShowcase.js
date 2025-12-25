@@ -685,31 +685,117 @@ export default function HowItWorksShowcase({ locale = 'es' }) {
       </section>
       
       {/* ===== OPENRANK SECTION ===== */}
-      <section className="py-16 sm:py-20 px-4 bg-gray-50">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-parque-purple/10 text-parque-purple rounded-full text-sm font-medium mb-4">
-              <Icons.Globe className="w-4 h-4" />
-              {locale === 'es' ? 'Nuevo' : 'New'}
+      <section className="relative py-20 sm:py-28 px-4 overflow-hidden">
+        {/* Background - Dark with subtle texture */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900" />
+        
+        {/* Animated gradient orbs */}
+        <div className="absolute top-1/4 -left-20 w-80 h-80 bg-parque-purple/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-parque-green/15 rounded-full blur-3xl animate-pulse delay-1000" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-parque-purple/10 to-parque-green/10 rounded-full blur-3xl" />
+        
+        {/* Grid pattern overlay */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='1' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E")`
+        }} />
+        
+        <div className="container mx-auto max-w-6xl relative z-10">
+          {/* Header */}
+          <div className="text-center mb-12 sm:mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm text-white rounded-full text-sm font-medium mb-6 border border-white/10">
+              <Icons.Globe className="w-4 h-4 text-parque-green" />
+              <span className="bg-gradient-to-r from-parque-green to-emerald-400 bg-clip-text text-transparent font-semibold">
+                {locale === 'es' ? 'Ranking Global' : 'Global Ranking'}
+              </span>
             </div>
-            <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            
+            <h3 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
               {t.openrankSection.title}
             </h3>
-            <p className="text-gray-600 max-w-2xl mx-auto">{t.openrankSection.description}</p>
+            <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+              {t.openrankSection.description}
+            </p>
           </div>
           
-          <div className="grid sm:grid-cols-3 gap-6">
+          {/* Features Grid */}
+          <div className="grid sm:grid-cols-3 gap-4 sm:gap-6 mb-12">
             {t.openrankSection.features.map((feature, idx) => (
-              <div key={idx} className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow text-center">
-                <div className="w-14 h-14 mx-auto bg-gradient-to-br from-parque-purple/10 to-parque-green/10 rounded-xl flex items-center justify-center mb-4">
-                  {idx === 0 && <Icons.Award className="w-7 h-7 text-parque-purple" />}
-                  {idx === 1 && <Icons.Globe className="w-7 h-7 text-parque-purple" />}
-                  {idx === 2 && <Icons.ChartUp className="w-7 h-7 text-parque-purple" />}
+              <div 
+                key={idx} 
+                className="group relative bg-white/5 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all duration-300"
+              >
+                {/* Glow on hover */}
+                <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${idx === 0 ? 'bg-gradient-to-br from-parque-purple/20 to-transparent' : idx === 1 ? 'bg-gradient-to-br from-parque-green/20 to-transparent' : 'bg-gradient-to-br from-blue-500/20 to-transparent'}`} />
+                
+                <div className="relative">
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-5 ${idx === 0 ? 'bg-gradient-to-br from-parque-purple to-violet-600' : idx === 1 ? 'bg-gradient-to-br from-parque-green to-emerald-600' : 'bg-gradient-to-br from-blue-500 to-cyan-500'} shadow-lg`}>
+                    {idx === 0 && <Icons.Award className="w-7 h-7 text-white" />}
+                    {idx === 1 && <Icons.Globe className="w-7 h-7 text-white" />}
+                    {idx === 2 && <Icons.ChartUp className="w-7 h-7 text-white" />}
+                  </div>
+                  
+                  <h4 className="text-xl font-bold text-white mb-2">{feature.title}</h4>
+                  <p className="text-gray-400">{feature.description}</p>
                 </div>
-                <h4 className="text-lg font-bold text-gray-900 mb-2">{feature.title}</h4>
-                <p className="text-gray-600 text-sm">{feature.description}</p>
               </div>
             ))}
+          </div>
+          
+          {/* Live Ranking Preview */}
+          <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden">
+            <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-parque-green animate-pulse" />
+                <span className="text-white font-semibold">
+                  {locale === 'es' ? 'OpenRank en Vivo' : 'Live OpenRank'}
+                </span>
+              </div>
+              <span className="text-xs text-gray-500">
+                {locale === 'es' ? 'Top jugadores' : 'Top players'}
+              </span>
+            </div>
+            
+            {/* Mock ranking rows */}
+            <div className="divide-y divide-white/5">
+              {[
+                { rank: 1, name: 'Carlos M.', elo: 1487, city: 'Marbella', change: '+12' },
+                { rank: 2, name: 'Roberto G.', elo: 1465, city: 'Sotogrande', change: '+8' },
+                { rank: 3, name: 'Ana S.', elo: 1442, city: 'Estepona', change: '+15' },
+              ].map((player, idx) => (
+                <div key={idx} className="px-6 py-4 flex items-center gap-4 hover:bg-white/5 transition-colors">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                    idx === 0 ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-gray-900' :
+                    idx === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-900' :
+                    'bg-gradient-to-br from-orange-400 to-amber-600 text-white'
+                  }`}>
+                    {player.rank}
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="text-white font-medium truncate">{player.name}</div>
+                    <div className="text-xs text-gray-500">{player.city}</div>
+                  </div>
+                  
+                  <div className="text-right">
+                    <div className="text-white font-bold tabular-nums">{player.elo}</div>
+                    <div className="text-xs text-parque-green font-medium">{player.change}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* View all link */}
+            <div className="px-6 py-4 border-t border-white/10">
+              <Link 
+                href={`/${locale}/openrank`}
+                className="flex items-center justify-center gap-2 text-parque-green font-medium hover:text-parque-green/80 transition-colors group"
+              >
+                {locale === 'es' ? 'Ver ranking completo' : 'View full ranking'}
+                <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
+            </div>
           </div>
         </div>
       </section>

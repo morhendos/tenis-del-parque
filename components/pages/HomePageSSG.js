@@ -6,6 +6,7 @@ import Navigation from '@/components/common/Navigation';
 import Footer from '@/components/common/Footer';
 import EmotionalHeroSection from '@/components/home/EmotionalHeroSection';
 import HowItWorksShowcase from '@/components/home/HowItWorksShowcase';
+import FAQSection from '@/components/home/FAQSection';
 import SeasonLevelSelector from '@/components/leagues/SeasonLevelSelector';
 import LeagueCard from '@/components/league/LeagueCard';
 import { i18n } from '@/lib/i18n/config';
@@ -244,46 +245,70 @@ export default function HomePageSSG({ locale, leaguesData }) {
       </section>
       
       {/* 5. CTA Section */}
-      <section className="py-20 px-4 bg-gradient-to-br from-parque-purple to-parque-green text-white">
-        <div className="container mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">
+      <section className="relative py-20 sm:py-28 px-4 overflow-hidden">
+        {/* Background */}
+        <div className="absolute inset-0 bg-gray-900" />
+        
+        {/* Gradient overlays */}
+        <div className="absolute inset-0 bg-gradient-to-br from-parque-purple/20 via-transparent to-parque-green/20" />
+        
+        {/* Animated orbs */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-parque-purple/30 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-parque-green/20 rounded-full blur-3xl animate-pulse delay-1000" />
+        
+        {/* Grid pattern overlay */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+        }} />
+        
+        {/* Content */}
+        <div className="container mx-auto text-center relative z-10">
+          {/* Tennis ball accent */}
+          <div className="inline-flex items-center justify-center w-16 h-16 mb-6 rounded-full bg-gradient-to-br from-parque-green to-parque-green/80 shadow-lg shadow-parque-green/25">
+            <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10" />
+              <path d="M12 2a15.3 15.3 0 0 0-4 10 15.3 15.3 0 0 0 4 10" />
+            </svg>
+          </div>
+          
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6">
             {content.cta.title}
           </h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto">
+          
+          <p className="text-lg sm:text-xl text-gray-300 mb-8 sm:mb-10 max-w-2xl mx-auto">
             {content.cta.subtitle}
           </p>
+          
           <a
             href="#cities"
-            className="inline-block px-8 py-4 bg-white text-parque-purple rounded-lg font-medium text-lg hover:bg-gray-100 transition-colors mb-4"
+            className="group inline-flex items-center gap-2 px-8 py-4 bg-white text-gray-900 rounded-full font-semibold text-lg shadow-xl shadow-black/20 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300"
           >
             {content.cta.button}
+            <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
           </a>
-          <p className="text-sm opacity-90 mb-2">
-            {content.cta.guarantee}
-          </p>
-          <p className="text-sm opacity-75">
-            {content.cta.urgency}
-          </p>
+          
+          <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-sm text-gray-400">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-parque-green" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              <span>{content.cta.guarantee}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-parque-yellow" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+              </svg>
+              <span>{content.cta.urgency}</span>
+            </div>
+          </div>
         </div>
       </section>
       
       {/* 6. FAQ Section */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto max-w-3xl">
-          <h2 className="text-4xl font-bold text-center mb-12">
-            {content.faq.title}
-          </h2>
-          
-          <div className="space-y-6">
-            {content.faq.items.map((item, index) => (
-              <div key={index} className="bg-white p-6 rounded-lg shadow-md">
-                <h3 className="text-lg font-semibold mb-2">{item.question}</h3>
-                <p className="text-gray-600">{item.answer}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <FAQSection content={content.faq} />
       
       <Footer content={footerContent} />
     </main>
