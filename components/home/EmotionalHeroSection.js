@@ -85,6 +85,7 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
+    // Check if running as installed PWA (launched from home screen)
     if (window.matchMedia('(display-mode: standalone)').matches) {
       setIsInstalled(true);
     }
@@ -177,7 +178,7 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
                 fill
                 className="object-contain drop-shadow-xl"
                 priority
-                sizes="(max-width: 640px) 160px, 224px"
+                sizes="(max-width: 640px) 672px, (max-width: 768px) 720px, (max-width: 1024px) 816px, 912px"
               />
             </div>
           </div>
@@ -303,7 +304,7 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
                   fill
                   className="object-contain drop-shadow-xl"
                   priority
-                  sizes="480px"
+                  sizes="(max-width: 1280px) 576px, (max-width: 1536px) 768px, 960px"
                 />
               </div>
             </div>
