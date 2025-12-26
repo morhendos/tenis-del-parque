@@ -68,7 +68,7 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
   const [showIOSHint, setShowIOSHint] = useState(false);
   
   const screenshots = [
-    '/screenshots/dashboard-mobile.png',
+    '/screenshots/dashboard-mobile-05.png',
     '/screenshots/openrank-mobile.png',
     '/screenshots/victory-mobile.png'
   ];
@@ -141,7 +141,9 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
     e.preventDefault();
     const leaguesSection = document.getElementById('cities');
     if (leaguesSection) {
-      leaguesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const elementTop = leaguesSection.getBoundingClientRect().top + window.pageYOffset;
+      // Scroll past the gap since nav hides
+      window.scrollTo({ top: elementTop, behavior: 'smooth' });
     }
   };
   
@@ -149,7 +151,8 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
     e.preventDefault();
     const section = document.getElementById('how-it-works');
     if (section) {
-      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const elementTop = section.getBoundingClientRect().top + window.pageYOffset;
+      window.scrollTo({ top: elementTop, behavior: 'smooth' });
     }
   };
   

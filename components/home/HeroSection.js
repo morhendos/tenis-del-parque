@@ -6,7 +6,9 @@ export default function HeroSection({ content }) {
     e.preventDefault()
     const featuresSection = document.getElementById('features')
     if (featuresSection) {
-      featuresSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      const elementTop = featuresSection.getBoundingClientRect().top + window.pageYOffset
+      // Scroll past the gap since nav hides
+      window.scrollTo({ top: elementTop, behavior: 'smooth' })
     }
   }
 

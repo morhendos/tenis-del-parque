@@ -1,7 +1,12 @@
+'use client'
+
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { ChevronLeft } from 'lucide-react'
 
 export default function CityLeagueHero({ city, locale, leagueName, league }) {
+  const router = useRouter()
   const cityName = city.name[locale] || city.name.es
   
   // Build the page title based on context
@@ -49,9 +54,28 @@ export default function CityLeagueHero({ city, locale, leagueName, league }) {
       ? 'Elige el nivel de competición que mejor se adapte a ti' 
       : 'Choose the level of competition that suits you best'
   }
+
+  // Determine where the back button should navigate
+  const getBackDestination = () => {
+    if (league && leagueName) {
+      // On league info page -> go back to city leagues
+      return `/${locale}/leagues/${city.slug}`
+    }
+    // On city leagues page -> go back to all cities
+    return `/${locale}/leagues`
+  }
+
+  const handleBack = () => {
+    // Try to go back in history first, fallback to the logical parent
+    if (window.history.length > 1) {
+      router.back()
+    } else {
+      router.push(getBackDestination())
+    }
+  }
   
   return (
-    <div className={`relative h-[160px] sm:h-[220px] md:h-[280px] lg:h-[340px] bg-gradient-to-r ${gradientClasses}`}>
+    <div className={`relative bg-gradient-to-r ${gradientClasses}`}>
       {/* Background Image */}
       {city.images?.main && (
         <div className="absolute inset-0 opacity-30">
@@ -68,8 +92,19 @@ export default function CityLeagueHero({ city, locale, leagueName, league }) {
       {/* Dark semi-transparent backdrop for better text readability */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-transparent"></div>
       
-      {/* Content */}
-      <div className="relative container mx-auto px-4 h-full flex flex-col justify-center pt-14 sm:pt-16 z-10">
+      {/* Content - with proper padding for fixed navigation */}
+      <div className="relative container mx-auto px-4 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-5 sm:pb-8 md:pb-10 lg:pb-12 z-10">
+        
+        {/* Mobile Back Button - pill style, always visible on mobile */}
+        <button
+          onClick={handleBack}
+          className="sm:hidden flex items-center gap-1 mb-3 px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-md text-white text-sm font-medium border border-white/30 active:scale-95 transition-transform"
+          aria-label={locale === 'es' ? 'Volver' : 'Go back'}
+        >
+          <ChevronLeft className="w-4 h-4" />
+          <span>{locale === 'es' ? 'Volver' : 'Back'}</span>
+        </button>
+        
         {/* Breadcrumb - hidden on mobile, visible on sm+ */}
         <nav className="hidden sm:block mb-2 md:mb-3 text-sm md:text-base text-white/90">
           <Link href={`/${locale}/leagues`} className="hover:text-white transition-colors">
