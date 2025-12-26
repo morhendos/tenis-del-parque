@@ -18,16 +18,16 @@ import { Trophy, Medal, Award, MapPin, Calendar, Users, ChevronRight, HelpCircle
 // Color schemes for different variants
 const colorSchemes = {
   default: {
-    // Emerald/Teal - light mode
-    heroBg: 'bg-gradient-to-br from-emerald-600 to-teal-600',
-    imageOverlay: 'bg-gradient-to-t from-black/60 to-transparent',
-    badgeOpen: 'bg-emerald-500 text-white',
+    // Purple theme - matches brand
+    heroBg: 'bg-gray-800',
+    imageOverlay: 'bg-gradient-to-t from-black/70 via-black/30 to-transparent',
+    badgeOpen: 'bg-parque-purple text-white',
     badgeCurrent: 'bg-blue-500',
     badgeComingSoon: 'bg-gray-500',
-    helpButton: 'text-emerald-600 hover:text-emerald-700',
-    checkColor: 'text-emerald-500',
-    tipBg: 'bg-emerald-50 border-emerald-200 text-emerald-800',
-    spotsColor: 'text-emerald-600',
+    helpButton: 'text-parque-purple hover:text-purple-700',
+    checkColor: 'text-parque-purple',
+    tipBg: 'bg-purple-50 border-purple-200 text-purple-800',
+    spotsColor: 'text-parque-purple',
     textColor: 'text-white',
     textMuted: 'text-white/80',
     // Card styling
@@ -552,7 +552,7 @@ export default function SeasonLevelSelector({
               src={cityImage}
               alt={cityName}
               fill
-              className={`object-cover ${variant === 'home' ? 'opacity-80' : 'opacity-40'}`}
+              className="object-cover"
             />
           )}
           <div className={`absolute inset-0 ${colors.imageOverlay}`} />

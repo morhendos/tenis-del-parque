@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { useParams, usePathname, useRouter } from 'next/navigation'
-import LanguageSwitcher from './LanguageSwitcher'
+import LanguageSwitcher, { LanguageSwitcherToggle } from './LanguageSwitcher'
 import TennisPreloader from '../ui/TennisPreloader'
 
 export default function Navigation({ currentPage = 'home', language, onLanguageChange, showLanguageSwitcher = true }) {
@@ -232,7 +232,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
           <div className="flex items-center justify-between h-14 lg:h-16">
             <div className="flex items-center">
               <Image
-                src="/horizontal-logo-006.webp"
+                src="/horizontal-logo-007.webp"
                 alt="Tenis del Parque"
                 height={32}
                 width={133}
@@ -297,7 +297,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
               style={{ transform: hoveredButton === 'logo' ? 'scale(1.05)' : 'scale(1)' }}
             >
               <Image
-                src="/horizontal-logo-006.webp"
+                src="/horizontal-logo-007.webp"
                 alt="Tenis del Parque"
                 height={32}
                 width={133}
@@ -404,12 +404,11 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
                 </a>
               </div>
               
-              {/* Language Switcher - moved inside menu */}
+              {/* Language Switcher - segmented toggle for mobile */}
               {showLanguageSwitcher && (
                 <div className="pt-3 mt-2 border-t border-gray-200">
-                  <div className="flex items-center justify-between px-3 py-2">
-                    <span className="text-sm text-gray-500 font-medium">{t.language}</span>
-                    <LanguageSwitcher locale={validLocale} />
+                  <div className="flex items-center justify-center px-3 py-2">
+                    <LanguageSwitcherToggle locale={validLocale} />
                   </div>
                 </div>
               )}

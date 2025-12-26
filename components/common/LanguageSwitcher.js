@@ -126,13 +126,12 @@ export default function LanguageSwitcher({ className = '', locale: propLocale })
   );
 }
 
-// Compact version for mobile
+// Compact version for mobile (simple toggle)
 export function LanguageSwitcherCompact({ className = '', locale: propLocale }) {
   const { locale: hookLocale, switchLocale } = useLocale();
-  const locale = propLocale || hookLocale; // Use prop if provided, otherwise hook
+  const locale = propLocale || hookLocale;
   const [isClient, setIsClient] = useState(false);
   
-  // Hydration guard
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -143,7 +142,6 @@ export function LanguageSwitcherCompact({ className = '', locale: propLocale }) 
     switchLocale(newLocale);
   };
   
-  // Return non-interactive version until hydrated
   if (!isClient) {
     return (
       <div className={`flex items-center justify-center w-10 h-10 rounded-lg ${className}`}>
@@ -160,5 +158,60 @@ export function LanguageSwitcherCompact({ className = '', locale: propLocale }) 
     >
       <span className="text-lg">{locale === 'es' ? '🇪🇸' : '🇬🇧'}</span>
     </button>
+  );
+}
+
+// Segmented toggle for mobile menu - shows both options, one tap to switch
+export function LanguageSwitcherToggle({ className = '', locale: propLocale }) {
+  const { locale: hookLocale, switchLocale } = useLocale();
+  const locale = propLocale || hookLocale;
+  const [isClient, setIsClient] = useState(false);
+  const [tapped, setTapped] = useState(null);
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  
+  const handleSwitch = (langCode) => {
+    if (!isClient || langCode === locale) return;
+    setTapped(langCode);
+    
+    // Small delay for visual feedback
+    setTimeout(() => {
+      switchLocale(langCode);
+      setTapped(null);
+    }, 150);
+  };
+  
+  const languages = [
+    { code: 'es', flag: '🇪🇸', label: 'ES' },
+    { code: 'en', flag: '🇬🇧', label: 'EN' }
+  ];
+  
+  return (
+    <div className={`inline-flex rounded-xl bg-gray-100 p-1 ${className}`}>
+      {languages.map((lang) => {
+        const isActive = locale === lang.code;
+        const isTapped = tapped === lang.code;
+        
+        return (
+          <button
+            key={lang.code}
+            onClick={() => handleSwitch(lang.code)}
+            disabled={!isClient}
+            className={`relative flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              isActive
+                ? 'bg-white text-parque-purple shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            } ${isTapped ? 'scale-95' : ''}`}
+            aria-label={`Switch to ${lang.label}`}
+            aria-pressed={isActive}
+          >
+            <span className="text-base">{lang.flag}</span>
+            <span>{lang.label}</span>
+          </button>
+        );
+      })}
+    </div>
   );
 }
