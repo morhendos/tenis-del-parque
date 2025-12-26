@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Trophy, Medal, Award, MapPin, Calendar, Users, ChevronRight, HelpCircle, X, Check } from 'lucide-react'
@@ -18,7 +18,7 @@ import { Trophy, Medal, Award, MapPin, Calendar, Users, ChevronRight, HelpCircle
 // Color schemes for different variants
 const colorSchemes = {
   default: {
-    // Emerald/Teal - for city league pages
+    // Emerald/Teal - light mode
     heroBg: 'bg-gradient-to-br from-emerald-600 to-teal-600',
     imageOverlay: 'bg-gradient-to-t from-black/60 to-transparent',
     badgeOpen: 'bg-emerald-500 text-white',
@@ -30,9 +30,19 @@ const colorSchemes = {
     spotsColor: 'text-emerald-600',
     textColor: 'text-white',
     textMuted: 'text-white/80',
+    // Card styling
+    cardBg: 'bg-white',
+    cardBorder: '',
+    cardShadow: 'shadow-lg',
+    sectionBg: '',
+    headerText: 'text-gray-900',
+    footerBorder: 'border-gray-100',
+    footerText: 'text-gray-600',
+    priceText: 'text-gray-900',
+    isDark: false,
   },
-  home: {
-    // Clean dark theme for home page - minimal purple, let the photo shine
+  dark: {
+    // Dark glassmorphism theme
     heroBg: 'bg-gradient-to-br from-gray-800 via-gray-900 to-slate-900',
     imageOverlay: 'bg-gradient-to-t from-black/50 via-black/20 to-transparent',
     badgeOpen: 'bg-parque-yellow text-parque-purple',
@@ -44,6 +54,16 @@ const colorSchemes = {
     spotsColor: 'text-parque-purple',
     textColor: 'text-white',
     textMuted: 'text-white/80',
+    // Card styling - Dark glassmorphism
+    cardBg: 'bg-white/10 backdrop-blur-md',
+    cardBorder: 'border border-white/20',
+    cardShadow: 'shadow-2xl',
+    sectionBg: 'bg-white/5',
+    headerText: 'text-white',
+    footerBorder: 'border-white/10',
+    footerText: 'text-gray-400',
+    priceText: 'text-white',
+    isDark: true,
   }
 }
 
@@ -75,10 +95,10 @@ const skillLevelConfig = {
     name: { es: 'Bronce', en: 'Bronze' },
     subtitle: { es: 'Principiante', en: 'Entry-Level' },
     gradient: 'from-amber-600 to-amber-700',
-    bgLight: 'bg-amber-50',
-    border: 'border-amber-600',
-    text: 'text-amber-700',
-    ring: 'ring-amber-600',
+    bgLight: 'bg-orange-100',
+    border: 'border-orange-400',
+    text: 'text-orange-700',
+    ring: 'ring-orange-400',
     order: 3
   }
 }
@@ -111,9 +131,23 @@ function formatDateRange(startDate, endDate, locale) {
   return `${locale === 'es' ? 'Hasta' : 'Until'} ${end}`
 }
 
-// Level Helper Modal
+// Level Helper Bottom Sheet
 function LevelHelperModal({ isOpen, onClose, locale, colors, leagues }) {
-  if (!isOpen) return null
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragY, setDragY] = useState(0)
+  const [isClosing, setIsClosing] = useState(false)
+  const [isAnimatingIn, setIsAnimatingIn] = useState(true)
+  const [isMobile, setIsMobile] = useState(true) // Default to mobile for SSR
+  const sheetRef = useRef(null)
+  const startYRef = useRef(0)
+  
+  // Detect mobile vs desktop
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
   
   // Create a map of skillLevel to league for easy lookup
   const leaguesByLevel = {}
@@ -188,29 +222,134 @@ function LevelHelperModal({ isOpen, onClose, locale, colors, leagues }) {
   
   const c = content[locale]
   
+  // Handle touch/mouse drag
+  const handleDragStart = (e) => {
+    if (isClosing) return
+    setIsDragging(true)
+    const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY
+    startYRef.current = clientY - dragY
+  }
+  
+  const handleDragMove = (e) => {
+    if (!isDragging || isClosing) return
+    const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY
+    const newDragY = Math.max(0, clientY - startYRef.current)
+    setDragY(newDragY)
+  }
+  
+  // Animate close - slide down and fade out
+  const closeWithAnimation = () => {
+    setIsClosing(true)
+    // Wait for animation to complete before calling onClose
+    setTimeout(() => {
+      setIsClosing(false)
+      setDragY(0)
+      onClose()
+    }, 300)
+  }
+  
+  const handleDragEnd = () => {
+    setIsDragging(false)
+    // If dragged more than 100px, close with animation
+    if (dragY > 100) {
+      closeWithAnimation()
+    } else {
+      setDragY(0)
+    }
+  }
+  
+  // Handle backdrop click
+  const handleBackdropClick = () => {
+    closeWithAnimation()
+  }
+  
+  // Handle X button click
+  const handleCloseClick = () => {
+    closeWithAnimation()
+  }
+  
+  // Reset drag when closing & prevent body scroll
+  useEffect(() => {
+    if (!isOpen) {
+      setDragY(0)
+      setIsAnimatingIn(true) // Reset for next open
+    } else {
+      // Trigger opening animation
+      requestAnimationFrame(() => {
+        setIsAnimatingIn(false)
+      })
+    }
+    
+    // Prevent body scroll when modal is open
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+      document.body.style.touchAction = 'none'
+    } else {
+      document.body.style.overflow = ''
+      document.body.style.touchAction = ''
+    }
+    
+    return () => {
+      document.body.style.overflow = ''
+      document.body.style.touchAction = ''
+    }
+  }, [isOpen])
+  
+  if (!isOpen) return null
+  
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center md:p-4">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
+        className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ease-out ${
+          isClosing || isAnimatingIn ? 'opacity-0' : 'opacity-100'
+        }`}
+        onClick={handleBackdropClick}
       />
       
-      {/* Modal */}
-      <div className="relative bg-white w-full max-w-md rounded-2xl max-h-[85vh] overflow-hidden shadow-xl animate-slide-up">
+      {/* Bottom Sheet (mobile) / Modal (desktop) */}
+      <div 
+        ref={sheetRef}
+        className={`relative bg-white w-full max-w-lg max-h-[85vh] overflow-hidden shadow-2xl
+          ${isMobile ? 'rounded-t-3xl' : 'rounded-2xl'}
+          ${!isMobile && 'transition-all duration-300 ease-out'}
+          ${!isMobile && (isClosing || isAnimatingIn) ? 'opacity-0 scale-95' : ''}
+          ${!isMobile && !(isClosing || isAnimatingIn) ? 'opacity-100 scale-100' : ''}
+        `}
+        style={isMobile ? { 
+          transform: `translateY(${isClosing || isAnimatingIn ? '100%' : `${dragY}px`})`,
+          transition: isDragging ? 'none' : 'transform 0.3s ease-out'
+        } : undefined}
+        onMouseMove={isMobile ? handleDragMove : undefined}
+        onMouseUp={isMobile ? handleDragEnd : undefined}
+        onMouseLeave={isMobile ? handleDragEnd : undefined}
+        onTouchMove={handleDragMove}
+        onTouchEnd={handleDragEnd}
+      >
+        {/* Drag Handle - mobile only */}
+        {isMobile && (
+          <div 
+            className="sticky top-0 bg-white pt-3 pb-2 cursor-grab active:cursor-grabbing z-10"
+            onMouseDown={handleDragStart}
+            onTouchStart={handleDragStart}
+          >
+            <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto" />
+          </div>
+        )}
+        
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b px-4 py-3 flex items-center justify-between">
+        <div className={`px-5 pb-3 flex items-center justify-between border-b border-gray-100 ${!isMobile ? 'pt-5' : ''}`}>
           <h3 className="text-lg font-bold text-gray-900">{c.title}</h3>
           <button 
-            onClick={onClose}
-            className="p-2 -mr-2 text-gray-400 hover:text-gray-600 transition-colors"
+            onClick={handleCloseClick}
+            className="p-2 -mr-2 text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-gray-100"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
         
         {/* Content */}
-        <div className="p-4 space-y-4 overflow-y-auto max-h-[calc(85vh-60px)]">
+        <div className="p-5 space-y-4 overflow-y-auto max-h-[calc(85vh-80px)]">
           <p className="text-gray-600 text-sm">{c.intro}</p>
           
           {/* Level descriptions */}
@@ -221,7 +360,7 @@ function LevelHelperModal({ isOpen, onClose, locale, colors, leagues }) {
             const citySlug = league?.city?.slug || 'unknown'
             const leagueSlug = league?.slug
             
-            const content = (
+            const cardContent = (
               <>
                 <div className="flex items-center gap-2 mb-2">
                   <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${config.gradient} flex items-center justify-center`}>
@@ -251,10 +390,10 @@ function LevelHelperModal({ isOpen, onClose, locale, colors, leagues }) {
                 <Link
                   key={level}
                   href={`/${locale}/leagues/${citySlug}/info/${leagueSlug}`}
-                  onClick={onClose}
+                  onClick={handleCloseClick}
                   className={`${config.bgLight} rounded-xl p-4 border ${config.border} block hover:shadow-md active:scale-[0.99] transition-all`}
                 >
-                  {content}
+                  {cardContent}
                 </Link>
               )
             }
@@ -262,16 +401,19 @@ function LevelHelperModal({ isOpen, onClose, locale, colors, leagues }) {
             // Otherwise just render as a div
             return (
               <div key={level} className={`${config.bgLight} rounded-xl p-4 border ${config.border}`}>
-                {content}
+                {cardContent}
               </div>
             )
           })}
           
           {/* Tip */}
-          <div className={`${colors.tipBg} border rounded-xl p-4 text-sm`}>
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-600">
             {c.tip}
           </div>
         </div>
+        
+        {/* Safe area padding for iOS - mobile only */}
+        {isMobile && <div className="h-safe-area-inset-bottom bg-white" />}
       </div>
     </div>
   )
@@ -290,6 +432,9 @@ function LevelOption({ league, locale, isRegistrationOpen, showSpots = false, co
   const spotsLeft = maxPlayers - playerCount
   const isFull = spotsLeft <= 0
   
+  // Dark mode specific styles
+  const isDark = colors.isDark
+  
   return (
     <Link
       href={`/${locale}/leagues/${citySlug}/info/${league.slug}`}
@@ -297,8 +442,12 @@ function LevelOption({ league, locale, isRegistrationOpen, showSpots = false, co
         relative flex flex-col items-center p-3 sm:p-4 rounded-xl border-2 
         transition-all duration-200 
         ${isFull 
-          ? 'bg-gray-50 border-gray-200 opacity-60' 
-          : `${config.bgLight} ${config.border} hover:shadow-md active:scale-[0.98]`
+          ? isDark 
+            ? 'bg-white/5 border-white/10 opacity-60' 
+            : 'bg-gray-50 border-gray-200 opacity-60'
+          : isDark
+            ? `bg-white/10 border-white/20 hover:bg-white/20 hover:border-white/30 active:scale-[0.98]`
+            : `${config.bgLight} ${config.border} hover:shadow-md active:scale-[0.98]`
         }
       `}
     >
@@ -312,12 +461,12 @@ function LevelOption({ league, locale, isRegistrationOpen, showSpots = false, co
       </div>
       
       {/* Level Name */}
-      <span className={`font-bold text-base sm:text-lg ${config.text}`}>
+      <span className={`font-bold text-base sm:text-lg ${isDark ? 'text-white' : config.text}`}>
         {levelName}
       </span>
       
       {/* Subtitle */}
-      <span className="text-xs text-gray-500 mt-0.5">
+      <span className={`text-xs mt-0.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
         {levelSubtitle}
       </span>
       
@@ -325,15 +474,15 @@ function LevelOption({ league, locale, isRegistrationOpen, showSpots = false, co
       {showSpots && isRegistrationOpen && (
         <div className="mt-2 text-xs">
           {isFull ? (
-            <span className="text-red-600 font-medium">
+            <span className="text-red-400 font-medium">
               {locale === 'es' ? 'Completo' : 'Full'}
             </span>
           ) : playerCount > 0 ? (
-            <span className={`${colors.spotsColor} font-medium`}>
+            <span className={`${isDark ? 'text-parque-green' : colors.spotsColor} font-medium`}>
               {spotsLeft} {locale === 'es' ? 'plazas' : 'spots'}
             </span>
           ) : (
-            <span className={`${colors.spotsColor} font-medium`}>
+            <span className={`${isDark ? 'text-parque-green' : colors.spotsColor} font-medium`}>
               {maxPlayers} {locale === 'es' ? 'plazas' : 'spots'}
             </span>
           )}
@@ -341,7 +490,7 @@ function LevelOption({ league, locale, isRegistrationOpen, showSpots = false, co
       )}
       
       {/* Arrow indicator - hidden on mobile */}
-      <ChevronRight className={`absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 ${config.text} opacity-50 hidden sm:block`} />
+      <ChevronRight className={`absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 opacity-50 hidden sm:block ${isDark ? 'text-white' : config.text}`} />
     </Link>
   )
 }
@@ -395,7 +544,7 @@ export default function SeasonLevelSelector({
   
   return (
     <>
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div className={`${colors.cardBg} ${colors.cardBorder} ${colors.cardShadow} rounded-2xl overflow-hidden`}>
         {/* Hero Image with Season Info */}
         <div className={`relative h-32 sm:h-40 ${colors.heroBg}`}>
           {cityImage && (
@@ -440,21 +589,18 @@ export default function SeasonLevelSelector({
         </div>
         
         {/* Level Selection Area */}
-        <div className="p-4 sm:p-5">
+        <div className={`p-4 sm:p-5 ${colors.sectionBg}`}>
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
-            <h4 className="font-semibold text-gray-900">
+            <h4 className={`font-semibold ${colors.headerText}`}>
               {locale === 'es' ? 'Elige tu nivel' : 'Choose your level'}
             </h4>
             <button
               onClick={() => setShowHelper(true)}
-              className={`flex items-center gap-1 text-sm ${colors.helpButton} transition-colors`}
+              className={`flex items-center gap-1 text-sm ${colors.isDark ? 'text-gray-400 hover:text-white' : colors.helpButton} transition-colors`}
             >
               <HelpCircle className="w-4 h-4" />
-              <span className="sm:hidden text-xs">
-                {locale === 'es' ? '¿Cuál?' : 'Which?'}
-              </span>
-              <span className="hidden sm:inline">
+              <span>
                 {locale === 'es' ? '¿Cuál elegir?' : 'Which one?'}
               </span>
             </button>
@@ -476,8 +622,8 @@ export default function SeasonLevelSelector({
           
           {/* Footer info - dates, spots, price */}
           {(dateRange || showSpots || showPrice) && (
-            <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between text-sm">
-              <div className="flex items-center gap-4 text-gray-600">
+            <div className={`mt-4 pt-4 border-t ${colors.footerBorder} flex items-center justify-between text-sm`}>
+              <div className={`flex items-center gap-4 ${colors.footerText}`}>
                 {dateRange && (
                   <div className="flex items-center gap-1.5">
                     <Calendar className="w-4 h-4" />
@@ -497,7 +643,7 @@ export default function SeasonLevelSelector({
                 )}
               </div>
               {showPrice && (
-                <div className="font-semibold text-gray-900">
+                <div className={`font-semibold ${colors.priceText}`}>
                   {isFree 
                     ? (locale === 'es' ? 'Gratis' : 'Free')
                     : `${price}€`

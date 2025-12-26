@@ -102,106 +102,143 @@ export default function HomePageSSG({ locale, leaguesData }) {
       <EmotionalHeroSection locale={validLocale} />
       
       {/* 2. Find Your League Section */}
-      <section id="cities" className="scroll-mt-16 py-12 sm:py-16 px-4 bg-gradient-to-b from-gray-50 to-white">
-        <div className="container mx-auto max-w-2xl">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+      <section id="cities" className="relative scroll-mt-16 py-16 sm:py-24 px-4 overflow-hidden">
+        {/* Background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-gray-50 via-white to-gray-50" />
+        
+        {/* Decorative gradient orbs */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-parque-purple/5 to-transparent rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-parque-green/5 to-transparent rounded-full blur-3xl" />
+        
+        {/* Subtle grid pattern */}
+        <div className="absolute inset-0 opacity-[0.015]" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+        }} />
+        
+        <div className="container mx-auto max-w-3xl relative z-10">
+          {/* Header */}
+          <div className="text-center mb-10 sm:mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-parque-purple/10 rounded-full text-sm font-medium mb-5">
+              <svg className="w-4 h-4 text-parque-purple" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              <span className="text-parque-purple">
+                {validLocale === 'es' ? 'Costa del Sol, España' : 'Costa del Sol, Spain'}
+              </span>
+            </div>
+            
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
               {content.cities.title}
             </h2>
-            <p className="text-base sm:text-lg text-gray-500">
+            <p className="text-[0.9rem] sm:text-lg text-gray-500 max-w-md mx-auto">
               {content.cities.subtitle}
             </p>
           </div>
           
-          {error ? (
-            <div className="text-center py-12 max-w-2xl mx-auto">
-              <div className="text-6xl mb-6">⚠️</div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                {validLocale === 'es' ? 'Error cargando ligas' : 'Error loading leagues'}
-              </h3>
-              <p className="text-gray-600 mb-6">{error}</p>
-            </div>
-          ) : leagues.length === 0 ? (
-            <div className="text-center py-12 max-w-2xl mx-auto">
-              <div className="text-6xl mb-6">🎾</div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                {validLocale === 'es' ? 'No hay ligas disponibles' : 'No leagues available'}
-              </h3>
-              <p className="text-gray-600 mb-6">
-                {validLocale === 'es' 
-                  ? 'Actualmente no hay ligas en la base de datos. Estamos trabajando para agregar más.'
-                  : 'There are currently no leagues in the database. We are working to add more.'}
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-8">
-              {/* PRIORITY 1: Registration Open Leagues */}
-              {registrationOpenGroups.length > 0 && (
-                <div>
-                  {registrationOpenGroups.map((group, index) => {
-                    const cityName = group.leagues[0]?.city?.name?.[validLocale] || group.leagues[0]?.city?.name?.es || ''
-                    return (
-                      <div key={`reg-${index}`} className="mb-6 last:mb-0">
-                        <h3 className="text-lg sm:text-xl font-semibold text-gray-700 mb-4 text-center">
-                          {validLocale === 'es' 
-                            ? `Liga de ${cityName}` 
-                            : `${cityName} League`
-                          }
-                        </h3>
-                        {group.leagues.length > 1 ? (
+          {/* League content */}
+          <div className="relative">
+            {error ? (
+              <div className="text-center py-12 max-w-2xl mx-auto">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-100 flex items-center justify-center">
+                  <svg className="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                  {validLocale === 'es' ? 'Error cargando ligas' : 'Error loading leagues'}
+                </h3>
+                <p className="text-gray-600 mb-6">{error}</p>
+              </div>
+            ) : leagues.length === 0 ? (
+              <div className="text-center py-12 max-w-2xl mx-auto">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-parque-purple/10 flex items-center justify-center">
+                  <svg className="w-10 h-10 text-parque-purple" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10" />
+                    <path d="M12 2a15.3 15.3 0 0 0-4 10 15.3 15.3 0 0 0 4 10" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                  {validLocale === 'es' ? 'No hay ligas disponibles' : 'No leagues available'}
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  {validLocale === 'es' 
+                    ? 'Actualmente no hay ligas en la base de datos. Estamos trabajando para agregar más.'
+                    : 'There are currently no leagues in the database. We are working to add more.'}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-8">
+                {/* PRIORITY 1: Registration Open Leagues */}
+                {registrationOpenGroups.length > 0 && (
+                  <div>
+                    {registrationOpenGroups.map((group, index) => {
+                      const cityName = group.leagues[0]?.city?.name?.[validLocale] || group.leagues[0]?.city?.name?.es || ''
+                      return (
+                        <div key={`reg-${index}`} className="mb-6 last:mb-0">
+                          <h3 className="text-[0.9rem] sm:text-lg font-medium text-gray-600 mb-4 text-center flex items-center justify-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-parque-green animate-pulse" />
+                            {cityName}
+                          </h3>
+                          {group.leagues.length > 1 ? (
+                            <SeasonLevelSelector
+                              leagues={group.leagues}
+                              locale={validLocale}
+                              status="upcoming"
+                              variant="default"
+                            />
+                          ) : (
+                            <div className="flex justify-center">
+                              <LeagueCard
+                                league={group.leagues[0]}
+                                content={content}
+                                locale={validLocale}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+                
+                {/* PRIORITY 2: Coming Soon Leagues */}
+                {comingSoonGroups.length > 0 && (
+                  <div className="pt-6">
+                    <div className="flex items-center justify-center gap-3 mb-4">
+                      <div className="h-px flex-1 max-w-[80px] bg-gradient-to-r from-transparent to-gray-200" />
+                      <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">
+                        {validLocale === 'es' ? 'Próximamente' : 'Coming Soon'}
+                      </h3>
+                      <div className="h-px flex-1 max-w-[80px] bg-gradient-to-l from-transparent to-gray-200" />
+                    </div>
+                    <div className="space-y-6">
+                      {comingSoonGroups.map((group, index) => (
+                        group.leagues.length > 1 ? (
                           <SeasonLevelSelector
+                            key={`soon-${index}`}
                             leagues={group.leagues}
                             locale={validLocale}
                             status="upcoming"
-                            variant="home"
+                            variant="default"
                           />
                         ) : (
-                          <div className="flex justify-center">
+                          <div key={`soon-${index}`} className="flex justify-center">
                             <LeagueCard
                               league={group.leagues[0]}
                               content={content}
                               locale={validLocale}
                             />
                           </div>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-              
-              {/* PRIORITY 2: Coming Soon Leagues */}
-              {comingSoonGroups.length > 0 && (
-                <div className="pt-6">
-                  <h3 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-6 text-center">
-                    {validLocale === 'es' ? 'Próximamente' : 'Coming Soon'}
-                  </h3>
-                  <div className="space-y-6">
-                    {comingSoonGroups.map((group, index) => (
-                      group.leagues.length > 1 ? (
-                        <SeasonLevelSelector
-                          key={`soon-${index}`}
-                          leagues={group.leagues}
-                          locale={validLocale}
-                          status="upcoming"
-                          variant="home"
-                        />
-                      ) : (
-                        <div key={`soon-${index}`} className="flex justify-center">
-                          <LeagueCard
-                            league={group.leagues[0]}
-                            content={content}
-                            locale={validLocale}
-                          />
-                        </div>
-                      )
-                    ))}
+                        )
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-
-            </div>
-          )}
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </section>
       
