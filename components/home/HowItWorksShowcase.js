@@ -2,51 +2,30 @@
 
 import Link from 'next/link';
 
-// Custom SVG Icons
+// Minimal Icons
 const Icons = {
   Calendar: ({ className }) => (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <rect x="3" y="4" width="18" height="18" rx="2" />
       <path d="M16 2v4M8 2v4M3 10h18" />
-      <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" strokeLinecap="round" />
     </svg>
   ),
   Trophy: ({ className }) => (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-      <path d="M4 22h16" />
-      <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-      <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-      <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0 0 12 0V2Z" />
     </svg>
   ),
   ChartUp: ({ className }) => (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M3 3v18h18" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M18 9l-5 5-4-4-6 6" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M18 9h-4v4" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  ),
-  Globe: ({ className }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="10" />
-      <path d="M2 12h20" />
-      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-    </svg>
-  ),
-  Smartphone: ({ className }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="5" y="2" width="14" height="20" rx="2" />
-      <path d="M12 18h.01" strokeLinecap="round" />
     </svg>
   ),
   Users: ({ className }) => (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
       <circle cx="9" cy="7" r="4" />
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
     </svg>
   ),
   Shuffle: ({ className }) => (
@@ -65,15 +44,21 @@ const Icons = {
       <circle cx="12" cy="12" r="2" />
     </svg>
   ),
-  Award: ({ className }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="8" r="6" />
-      <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
+  Check: ({ className }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+      <polyline points="20 6 9 17 4 12" />
     </svg>
   ),
-  Zap: ({ className }) => (
+  ArrowRight: ({ className }) => (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+      <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  Snowflake: ({ className }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <line x1="2" y1="12" x2="22" y2="12" />
+      <line x1="12" y1="2" x2="12" y2="22" />
+      <path d="m20 16-4-4 4-4M4 8l4 4-4 4M16 4l-4 4-4-4M8 20l4-4 4 4" />
     </svg>
   ),
   Sun: ({ className }) => (
@@ -88,717 +73,677 @@ const Icons = {
       <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
     </svg>
   ),
-  Snowflake: ({ className }) => (
+  Wind: ({ className }) => (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <line x1="2" y1="12" x2="22" y2="12" />
-      <line x1="12" y1="2" x2="12" y2="22" />
-      <path d="m20 16-4-4 4-4" />
-      <path d="m4 8 4 4-4 4" />
-      <path d="m16 4-4 4-4-4" />
-      <path d="m8 20 4-4 4 4" />
+      <path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2" />
+      <path d="M9.6 4.6A2 2 0 1 1 11 8H2" />
+      <path d="M12.6 19.4A2 2 0 1 0 14 16H2" />
     </svg>
   ),
-  Check: ({ className }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-      <polyline points="20 6 9 17 4 12" />
+  Zap: ({ className }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
     </svg>
   ),
-  Play: ({ className }) => (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <polygon points="5 3 19 12 5 21 5 3" />
-    </svg>
-  ),
-  TennisBall: ({ className }) => (
+  Globe: ({ className }) => (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <circle cx="12" cy="12" r="10" />
-      <path d="M18.09 6.24C16.5 9.15 16.5 14.85 18.09 17.76" />
-      <path d="M5.91 6.24C7.5 9.15 7.5 14.85 5.91 17.76" />
+      <path d="M2 12h20" />
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
     </svg>
   )
 };
 
-// Season data
-const seasons = [
-  { id: 'winter', name: { es: 'Invierno', en: 'Winter' }, months: { es: 'Ene - Mar', en: 'Jan - Mar' }, icon: Icons.Snowflake, color: 'from-blue-400 to-cyan-300' },
-  { id: 'spring', name: { es: 'Primavera', en: 'Spring' }, months: { es: 'Abr - Jun', en: 'Apr - Jun' }, icon: Icons.Leaf, color: 'from-green-400 to-emerald-300' },
-  { id: 'summer', name: { es: 'Verano', en: 'Summer' }, months: { es: 'Jul - Sep', en: 'Jul - Sep' }, icon: Icons.Sun, color: 'from-yellow-400 to-orange-300' },
-  { id: 'autumn', name: { es: 'Otoño', en: 'Autumn' }, months: { es: 'Oct - Dic', en: 'Oct - Dec' }, icon: Icons.Leaf, color: 'from-orange-400 to-red-300' }
-];
-
-// Skill levels data
-const skillLevels = [
-  { 
-    id: 'gold', 
-    name: { es: 'Oro', en: 'Gold' }, 
-    description: { es: 'Jugadores avanzados', en: 'Advanced players' },
-    elo: '1400+',
-    color: 'from-yellow-300 via-yellow-400 to-amber-500',
-    bgColor: 'bg-gradient-to-br from-yellow-50 to-amber-50',
-    borderColor: 'border-yellow-300',
-    textColor: 'text-yellow-700',
-    icon: '🥇'
-  },
-  { 
-    id: 'silver', 
-    name: { es: 'Plata', en: 'Silver' }, 
-    description: { es: 'Jugadores intermedios', en: 'Intermediate players' },
-    elo: '1200-1400',
-    color: 'from-gray-300 via-gray-400 to-slate-500',
-    bgColor: 'bg-gradient-to-br from-gray-50 to-slate-100',
-    borderColor: 'border-gray-300',
-    textColor: 'text-gray-700',
-    icon: '🥈'
-  },
-  { 
-    id: 'bronze', 
-    name: { es: 'Bronce', en: 'Bronze' }, 
-    description: { es: 'Jugadores principiantes', en: 'Beginner players' },
-    elo: '1000-1200',
-    color: 'from-orange-300 via-orange-400 to-amber-600',
-    bgColor: 'bg-gradient-to-br from-orange-50 to-amber-50',
-    borderColor: 'border-orange-300',
-    textColor: 'text-orange-700',
-    icon: '🥉'
-  }
-];
-
-// Content translations
 const content = {
   es: {
-    mainTitle: 'Así Funciona la Liga',
-    mainSubtitle: 'Todo lo que necesitas saber para empezar a jugar',
+    badge: 'Cómo Funciona',
+    title: 'La Liga en un Vistazo',
+    subtitle: 'Todo lo que necesitas saber en 30 segundos',
     
-    seasonSection: {
-      title: '4 Temporadas al Año',
-      subtitle: 'Siempre hay una temporada a punto de empezar',
-      matchesLabel: '8 partidos',
-      playoffsLabel: '+ Playoffs',
-      joinAnytime: 'Únete en cualquier momento'
-    },
-    
-    structureSection: {
-      title: 'Estructura de Temporada',
-      regularSeason: {
-        title: '8 Partidos de Liga',
-        description: '1 partido por semana durante 2 meses',
-        features: ['Rivales de tu nivel', 'Horarios flexibles', 'Sistema de puntos']
+    // Flow steps
+    flow: {
+      season: {
+        label: 'Elige Temporada',
+        description: '4 temporadas al año'
+      },
+      level: {
+        label: 'Tu Nivel',
+        description: 'Oro · Plata · Bronce'
+      },
+      matches: {
+        label: '8 Partidos',
+        description: '1 por semana'
       },
       playoffs: {
-        title: 'Playoffs Finales',
-        description: 'Los mejores compiten por el título',
-        features: ['Semifinales', 'Final épica', '¡Trofeo al campeón!']
+        label: 'Playoffs',
+        description: 'Top 8 jugadores'
       }
     },
     
-    levelsSection: {
-      title: '3 Niveles de Juego',
-      subtitle: 'Compite con jugadores de tu nivel exacto',
-      findYourLevel: 'Encuentra tu nivel'
+    // Seasons
+    seasons: [
+      { id: 'winter', name: 'Invierno', months: 'Ene-Mar' },
+      { id: 'spring', name: 'Primavera', months: 'Abr-Jun' },
+      { id: 'summer', name: 'Verano', months: 'Jul-Sep' },
+      { id: 'autumn', name: 'Otoño', months: 'Oct-Dic' }
+    ],
+    
+    // Levels
+    levels: [
+      { id: 'gold', name: 'Oro', elo: '1400+' },
+      { id: 'silver', name: 'Plata', elo: '1200-1400' },
+      { id: 'bronze', name: 'Bronce', elo: '1000-1200' }
+    ],
+    
+    // Playoffs
+    playoffRounds: {
+      quarter: 'Cuartos',
+      semi: 'Semi',
+      final: 'Final'
     },
     
-    eloSection: {
+    // ELO + Swiss Section
+    eloSwiss: {
       title: 'Sistema ELO + Swiss',
       subtitle: 'Emparejamiento inteligente para partidos justos',
       eloTitle: 'Puntos ELO',
-      eloDescription: 'Sistema matemático que mide tu nivel real. Cuantos más partidos juegas, más preciso se vuelve. Vencer a rivales fuertes te da más puntos.',
-      eloLink: 'Más sobre ELO',
+      eloDescription: 'Sistema matemático que mide tu nivel real. Vencer a rivales fuertes te da más puntos.',
       swissTitle: 'Sistema Swiss',
-      swissDescription: 'Formato sin eliminación: juegas las 8 rondas. Cada semana te emparejamos con alguien de puntuación similar para partidos equilibrados.',
-      swissLink: 'Más sobre Swiss',
+      swissDescription: 'Sin eliminación: juegas las 8 rondas. Cada semana te emparejamos con alguien de puntuación similar.',
+      resultTitle: 'El Resultado',
       benefits: [
         'Partidos siempre equilibrados',
-        'Progreso medible semana a semana',
+        'Progreso medible cada semana',
         'Sin 6-0 aburridos'
-      ]
-    },
-    
-    openrankSection: {
-      title: 'OpenRank Global',
-      subtitle: 'Tu ranking trasciende tu liga local',
-      description: 'Tu ELO cuenta para el ranking global OpenRank. Compara tu nivel con jugadores de todas las ciudades y sube en el ranking mundial.',
-      features: [
-        { title: 'Ranking Unificado', description: 'Un solo número que define tu nivel' },
-        { title: 'Múltiples Ciudades', description: 'Compara tu nivel con toda España' },
-        { title: 'Historial Completo', description: 'Mira tu progreso a lo largo del tiempo' }
-      ]
-    },
-    
-    appSection: {
-      title: 'Todo en Tu Móvil',
-      subtitle: 'Gestiona tu liga desde cualquier lugar',
-      features: [
-        'Tu centro de mando personal',
-        'Ranking global en tiempo real',
-        'Registra resultados al instante'
       ],
-      installPrompt: 'Instala la app gratis'
+      yourElo: 'Tu ELO',
+      opponent: 'Rival',
+      balancedMatch: 'Partido equilibrado'
+    },
+    
+    learnMore: 'Más detalles',
+    eloLink: 'Sistema ELO',
+    swissLink: 'Sistema Swiss',
+    
+    // OpenRank Section
+    openrank: {
+      badge: 'Ranking Global',
+      title: 'OpenRank',
+      subtitle: 'Tu ELO cuenta para el ranking global. Compara tu nivel con jugadores de todas las ciudades.',
+      features: [
+        { title: 'Ranking Unificado', desc: 'Un número que define tu nivel' },
+        { title: 'Múltiples Ciudades', desc: 'Compite en toda España' },
+        { title: 'Historial Completo', desc: 'Tu progreso en el tiempo' }
+      ],
+      liveRanking: 'Top Jugadores',
+      viewAll: 'Ver ranking completo'
     }
   },
   en: {
-    mainTitle: 'How the League Works',
-    mainSubtitle: 'Everything you need to know to start playing',
+    badge: 'How It Works',
+    title: 'The League at a Glance',
+    subtitle: 'Everything you need to know in 30 seconds',
     
-    seasonSection: {
-      title: '4 Seasons Per Year',
-      subtitle: 'There\'s always a season about to start',
-      matchesLabel: '8 matches',
-      playoffsLabel: '+ Playoffs',
-      joinAnytime: 'Join anytime'
-    },
-    
-    structureSection: {
-      title: 'Season Structure',
-      regularSeason: {
-        title: '8 League Matches',
-        description: '1 match per week for 2 months',
-        features: ['Opponents at your level', 'Flexible scheduling', 'Points system']
+    flow: {
+      season: {
+        label: 'Pick Season',
+        description: '4 seasons per year'
+      },
+      level: {
+        label: 'Your Level',
+        description: 'Gold · Silver · Bronze'
+      },
+      matches: {
+        label: '8 Matches',
+        description: '1 per week'
       },
       playoffs: {
-        title: 'Final Playoffs',
-        description: 'Top players compete for the title',
-        features: ['Semifinals', 'Epic final', 'Trophy for the champion!']
+        label: 'Playoffs',
+        description: 'Top 8 players'
       }
     },
     
-    levelsSection: {
-      title: '3 Skill Levels',
-      subtitle: 'Compete with players at your exact level',
-      findYourLevel: 'Find your level'
+    seasons: [
+      { id: 'winter', name: 'Winter', months: 'Jan-Mar' },
+      { id: 'spring', name: 'Spring', months: 'Apr-Jun' },
+      { id: 'summer', name: 'Summer', months: 'Jul-Sep' },
+      { id: 'autumn', name: 'Autumn', months: 'Oct-Dec' }
+    ],
+    
+    levels: [
+      { id: 'gold', name: 'Gold', elo: '1400+' },
+      { id: 'silver', name: 'Silver', elo: '1200-1400' },
+      { id: 'bronze', name: 'Bronze', elo: '1000-1200' }
+    ],
+    
+    playoffRounds: {
+      quarter: 'Quarter',
+      semi: 'Semi',
+      final: 'Final'
     },
     
-    eloSection: {
+    eloSwiss: {
       title: 'ELO + Swiss System',
       subtitle: 'Smart matching for fair games',
       eloTitle: 'ELO Points',
-      eloDescription: 'Mathematical system that measures your real level. The more matches you play, the more accurate it becomes. Beating stronger opponents earns you more points.',
-      eloLink: 'Learn more about ELO',
+      eloDescription: 'Mathematical system measuring your real level. Beating stronger opponents earns more points.',
       swissTitle: 'Swiss System',
-      swissDescription: 'No-elimination format: you play all 8 rounds. Each week we pair you with someone of similar score for balanced matches.',
-      swissLink: 'Learn more about Swiss',
+      swissDescription: 'No elimination: play all 8 rounds. Each week paired with someone of similar score.',
+      resultTitle: 'The Result',
       benefits: [
         'Always balanced matches',
-        'Measurable progress week by week',
+        'Measurable weekly progress',
         'No boring 6-0 games'
-      ]
-    },
-    
-    openrankSection: {
-      title: 'Global OpenRank',
-      subtitle: 'Your ranking transcends your local league',
-      description: 'Your ELO counts towards the global OpenRank ranking. Compare your level with players from all cities and climb the worldwide rankings.',
-      features: [
-        { title: 'Unified Ranking', description: 'One number that defines your level' },
-        { title: 'Multiple Cities', description: 'Compare your level across all of Spain' },
-        { title: 'Complete History', description: 'Track your progress over time' }
-      ]
-    },
-    
-    appSection: {
-      title: 'Everything on Your Phone',
-      subtitle: 'Manage your league from anywhere',
-      features: [
-        'Your personal command center',
-        'Global rankings in real-time',
-        'Record results instantly'
       ],
-      installPrompt: 'Install the free app'
+      yourElo: 'Your ELO',
+      opponent: 'Opponent',
+      balancedMatch: 'Balanced match'
+    },
+    
+    learnMore: 'Learn more',
+    eloLink: 'ELO System',
+    swissLink: 'Swiss System',
+    
+    // OpenRank Section
+    openrank: {
+      badge: 'Global Ranking',
+      title: 'OpenRank',
+      subtitle: 'Your ELO counts towards global ranking. Compare your level with players from all cities.',
+      features: [
+        { title: 'Unified Ranking', desc: 'One number defining your level' },
+        { title: 'Multiple Cities', desc: 'Compete across Spain' },
+        { title: 'Complete History', desc: 'Track progress over time' }
+      ],
+      liveRanking: 'Top Players',
+      viewAll: 'View full ranking'
     }
   }
+};
+
+const seasonIcons = {
+  winter: Icons.Snowflake,
+  spring: Icons.Leaf,
+  summer: Icons.Sun,
+  autumn: Icons.Wind
+};
+
+const seasonColors = {
+  winter: { bg: 'from-blue-400 to-cyan-400', text: 'text-blue-900' },
+  spring: { bg: 'from-green-400 to-emerald-400', text: 'text-green-900' },
+  summer: { bg: 'from-yellow-400 to-orange-400', text: 'text-yellow-900' },
+  autumn: { bg: 'from-orange-400 to-red-400', text: 'text-orange-900' }
+};
+
+const levelStyles = {
+  gold: { bg: 'bg-gradient-to-r from-yellow-300 to-amber-400', text: 'text-yellow-900' },
+  silver: { bg: 'bg-gradient-to-r from-gray-200 to-slate-300', text: 'text-gray-800' },
+  bronze: { bg: 'bg-gradient-to-r from-orange-300 to-amber-500', text: 'text-orange-900' }
 };
 
 export default function HowItWorksShowcase({ locale = 'es' }) {
   const t = content[locale] || content.es;
 
   return (
-    <div id="how-it-works" className="relative overflow-hidden scroll-mt-16">
-      {/* Main Section Header */}
-      <section className="pt-6 sm:pt-8 pb-16 sm:pb-20 px-4 bg-gradient-to-b from-white to-gray-50">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              {t.mainTitle}
-            </h2>
-            <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
-              {t.mainSubtitle}
-            </p>
+    <section id="how-it-works" className="relative py-16 sm:py-24 overflow-hidden scroll-mt-16">
+      {/* Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-gray-900 to-slate-800" />
+      
+      {/* Subtle gradient orbs */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-parque-purple/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-parque-green/10 rounded-full blur-3xl" />
+      
+      {/* Grid pattern */}
+      <div className="absolute inset-0 opacity-[0.02]" style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+      }} />
+
+      <div className="container mx-auto px-4 max-w-6xl relative z-10">
+        
+        {/* Header */}
+        <div className="text-center mb-12 sm:mb-16">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full text-sm font-medium text-white/80 mb-4 border border-white/10">
+            <span className="w-1.5 h-1.5 rounded-full bg-parque-green animate-pulse" />
+            {t.badge}
           </div>
-          
-          {/* ===== SEASONS SECTION ===== */}
-          <div className="mb-20">
-            <div className="text-center mb-8">
-              <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-                {t.seasonSection.title}
-              </h3>
-              <p className="text-gray-600">{t.seasonSection.subtitle}</p>
-            </div>
-            
-            {/* Seasons - Mobile: horizontal scroll */}
-            <div className="sm:hidden -mx-4 px-4">
-              <div className="flex gap-3 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
-                {seasons.map((season) => {
-                  const SeasonIcon = season.icon;
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-3">
+            {t.title}
+          </h2>
+          <p className="text-gray-400 text-base sm:text-lg max-w-xl mx-auto">
+            {t.subtitle}
+          </p>
+        </div>
+
+        {/* === VISUAL FLOW === */}
+        <div className="mb-16 sm:mb-20">
+          {/* Desktop: Horizontal flow */}
+          <div className="hidden md:flex items-stretch justify-between gap-3 lg:gap-4">
+            {/* Step 1: Season */}
+            <div className="flex-1 bg-white/5 backdrop-blur-sm rounded-2xl p-5 border border-white/10 hover:bg-white/10 transition-all">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-parque-purple to-violet-600 flex items-center justify-center">
+                  <Icons.Calendar className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <div className="text-white font-semibold">{t.flow.season.label}</div>
+                  <div className="text-xs text-gray-500">{t.flow.season.description}</div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                {t.seasons.map((season) => {
+                  const Icon = seasonIcons[season.id];
+                  const colors = seasonColors[season.id];
                   return (
-                    <div 
-                      key={season.id}
-                      className="flex-shrink-0 w-[140px] snap-center bg-white rounded-xl p-4 shadow-md border border-gray-100 text-center"
-                    >
-                      <div className={`w-12 h-12 mx-auto rounded-lg bg-gradient-to-br ${season.color} flex items-center justify-center mb-3 shadow-sm`}>
-                        <SeasonIcon className="w-6 h-6 text-white" />
-                      </div>
-                      <h4 className="text-base font-bold text-gray-900 mb-0.5">{season.name[locale]}</h4>
-                      <p className="text-xs text-gray-500 mb-2">{season.months[locale]}</p>
-                      <div className="flex flex-col gap-1">
-                        <span className="px-2 py-0.5 bg-parque-purple/10 text-parque-purple text-xs font-medium rounded-full">
-                          {t.seasonSection.matchesLabel}
-                        </span>
-                        <span className="px-2 py-0.5 bg-parque-green/10 text-parque-green text-xs font-medium rounded-full">
-                          {t.seasonSection.playoffsLabel}
-                        </span>
-                      </div>
+                    <div key={season.id} className={`bg-gradient-to-br ${colors.bg} rounded-lg p-2 text-center`}>
+                      <Icon className={`w-4 h-4 mx-auto ${colors.text} mb-0.5`} />
+                      <div className={`text-[10px] font-semibold ${colors.text} truncate`}>{season.name}</div>
                     </div>
                   );
                 })}
               </div>
             </div>
-            
-            {/* Seasons grid - Desktop */}
-            <div className="hidden sm:grid sm:grid-cols-4 gap-4 lg:gap-6">
-              {seasons.map((season) => {
-                const SeasonIcon = season.icon;
-                return (
-                  <div 
-                    key={season.id}
-                    className="group relative bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 text-center"
-                  >
-                    <div className={`w-16 h-16 mx-auto rounded-xl bg-gradient-to-br ${season.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-md`}>
-                      <SeasonIcon className="w-8 h-8 text-white" />
-                    </div>
-                    <h4 className="text-lg font-bold text-gray-900 mb-1">{season.name[locale]}</h4>
-                    <p className="text-sm text-gray-500 mb-3">{season.months[locale]}</p>
-                    <div className="flex flex-col gap-1.5">
-                      <span className="px-3 py-1 bg-parque-purple/10 text-parque-purple text-xs font-medium rounded-full">
-                        {t.seasonSection.matchesLabel}
-                      </span>
-                      <span className="px-3 py-1 bg-parque-green/10 text-parque-green text-xs font-medium rounded-full">
-                        {t.seasonSection.playoffsLabel}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          
-          {/* ===== SEASON STRUCTURE SECTION ===== */}
-          <div className="mb-20">
-            <div className="text-center mb-6 sm:mb-8">
-              <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-                {t.structureSection.title}
-              </h3>
-            </div>
-            
-            {/* Mobile: compact side-by-side */}
-            <div className="grid grid-cols-2 gap-3 sm:hidden">
-              {/* Regular Season - Compact */}
-              <div className="bg-white rounded-xl p-4 shadow-md border border-gray-100">
-                <div className="w-10 h-10 bg-gradient-to-br from-parque-purple to-parque-purple/80 rounded-lg flex items-center justify-center mb-3 shadow-sm">
-                  <Icons.Calendar className="w-5 h-5 text-white" />
+
+            <Icons.ArrowRight className="w-5 h-5 text-white/30 flex-shrink-0 self-center" />
+
+            {/* Step 2: Level */}
+            <div className="flex-1 bg-white/5 backdrop-blur-sm rounded-2xl p-5 border border-white/10 hover:bg-white/10 transition-all">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center">
+                  <Icons.Target className="w-5 h-5 text-white" />
                 </div>
-                <h4 className="text-sm font-bold text-gray-900 mb-1">
-                  {t.structureSection.regularSeason.title}
-                </h4>
-                <p className="text-xs text-gray-500 mb-2">
-                  {t.structureSection.regularSeason.description}
-                </p>
-                <ul className="space-y-1">
-                  {t.structureSection.regularSeason.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-center gap-1.5 text-xs text-gray-600">
-                      <Icons.Check className="w-3 h-3 text-parque-purple flex-shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
+                <div>
+                  <div className="text-white font-semibold">{t.flow.level.label}</div>
+                  <div className="text-xs text-gray-500">{t.flow.level.description}</div>
+                </div>
               </div>
-              
-              {/* Playoffs - Compact */}
-              <div className="bg-white rounded-xl p-4 shadow-md border border-gray-100">
-                <div className="w-10 h-10 bg-gradient-to-br from-parque-green to-emerald-600 rounded-lg flex items-center justify-center mb-3 shadow-sm">
+              <div className="space-y-1.5">
+                {t.levels.map((level) => (
+                  <div key={level.id} className={`${levelStyles[level.id].bg} rounded-lg px-3 py-1.5 flex items-center justify-between`}>
+                    <span className={`text-xs font-bold ${levelStyles[level.id].text}`}>{level.name}</span>
+                    <span className={`text-[10px] font-medium ${levelStyles[level.id].text} opacity-80`}>ELO {level.elo}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Icons.ArrowRight className="w-5 h-5 text-white/30 flex-shrink-0 self-center" />
+
+            {/* Step 3: Matches */}
+            <div className="flex-1 bg-white/5 backdrop-blur-sm rounded-2xl p-5 border border-white/10 hover:bg-white/10 transition-all">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-parque-green to-emerald-600 flex items-center justify-center">
+                  <Icons.Users className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <div className="text-white font-semibold">{t.flow.matches.label}</div>
+                  <div className="text-xs text-gray-500">{t.flow.matches.description}</div>
+                </div>
+              </div>
+              <div className="grid grid-cols-4 gap-1.5">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="aspect-square rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-xs font-medium text-white/60">
+                    {i + 1}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Icons.ArrowRight className="w-5 h-5 text-white/30 flex-shrink-0 self-center" />
+
+            {/* Step 4: Playoffs - Quarterfinals, Semifinals, Final - 2 brackets */}
+            <div className="flex-1 bg-white/5 backdrop-blur-sm rounded-2xl p-5 border border-white/10 hover:bg-white/10 transition-all">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-parque-purple to-pink-600 flex items-center justify-center">
                   <Icons.Trophy className="w-5 h-5 text-white" />
                 </div>
-                <h4 className="text-sm font-bold text-gray-900 mb-1">
-                  {t.structureSection.playoffs.title}
-                </h4>
-                <p className="text-xs text-gray-500 mb-2">
-                  {t.structureSection.playoffs.description}
-                </p>
-                <ul className="space-y-1">
-                  {t.structureSection.playoffs.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-center gap-1.5 text-xs text-gray-600">
-                      <Icons.Check className="w-3 h-3 text-parque-green flex-shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            
-            {/* Desktop: original layout */}
-            <div className="hidden sm:grid sm:grid-cols-2 gap-6 lg:gap-8">
-              {/* Regular Season */}
-              <div className="relative bg-white rounded-2xl p-6 sm:p-8 shadow-lg border border-gray-100 overflow-hidden group">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-parque-purple/10 to-transparent rounded-full blur-2xl" />
-                
-                <div className="relative">
-                  <div className="w-14 h-14 bg-gradient-to-br from-parque-purple to-parque-purple/80 rounded-xl flex items-center justify-center mb-4 shadow-md">
-                    <Icons.Calendar className="w-7 h-7 text-white" />
-                  </div>
-                  
-                  <h4 className="text-xl font-bold text-gray-900 mb-2">
-                    {t.structureSection.regularSeason.title}
-                  </h4>
-                  <p className="text-gray-600 mb-4">
-                    {t.structureSection.regularSeason.description}
-                  </p>
-                  
-                  <ul className="space-y-2">
-                    {t.structureSection.regularSeason.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-center gap-2 text-gray-700">
-                        <div className="w-5 h-5 rounded-full bg-parque-purple/10 flex items-center justify-center flex-shrink-0">
-                          <Icons.Check className="w-3 h-3 text-parque-purple" />
-                        </div>
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
+                <div>
+                  <div className="text-white font-semibold">{t.flow.playoffs.label}</div>
+                  <div className="text-xs text-gray-500">{t.flow.playoffs.description}</div>
                 </div>
               </div>
-              
-              {/* Playoffs - Desktop */}
-              <div className="relative bg-white rounded-2xl p-6 sm:p-8 shadow-lg border border-gray-100 overflow-hidden group">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-parque-green/10 to-transparent rounded-full blur-2xl" />
-                
-                <div className="relative">
-                  <div className="w-14 h-14 bg-gradient-to-br from-parque-green to-emerald-600 rounded-xl flex items-center justify-center mb-4 shadow-md">
-                    <Icons.Trophy className="w-7 h-7 text-white" />
-                  </div>
-                  
-                  <h4 className="text-xl font-bold text-gray-900 mb-2">
-                    {t.structureSection.playoffs.title}
-                  </h4>
-                  <p className="text-gray-600 mb-4">
-                    {t.structureSection.playoffs.description}
-                  </p>
-                  
-                  <ul className="space-y-2">
-                    {t.structureSection.playoffs.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-center gap-2 text-gray-700">
-                        <div className="w-5 h-5 rounded-full bg-parque-green/10 flex items-center justify-center flex-shrink-0">
-                          <Icons.Check className="w-3 h-3 text-parque-green" />
-                        </div>
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-              
-            </div>
-          </div>
-          
-          {/* ===== SKILL LEVELS SECTION ===== */}
-          <div className="mb-20">
-            <div className="text-center mb-6 sm:mb-8">
-              <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-                {t.levelsSection.title}
-              </h3>
-              <p className="text-gray-600">{t.levelsSection.subtitle}</p>
-            </div>
-            
-            {/* Mobile: horizontal scroll */}
-            <div className="sm:hidden -mx-4 px-4">
-              <div className="flex gap-3 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
-                {skillLevels.map((level) => (
-                  <div 
-                    key={level.id}
-                    className={`flex-shrink-0 w-[140px] snap-center ${level.bgColor} rounded-xl p-4 border-2 ${level.borderColor} text-center`}
-                  >
-                    <div className="text-4xl mb-2">{level.icon}</div>
-                    <h4 className={`text-base font-bold ${level.textColor} mb-0.5`}>
-                      {level.name[locale]}
-                    </h4>
-                    <p className="text-xs text-gray-500 mb-2">{level.description[locale]}</p>
-                    <div className={`inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r ${level.color} text-white text-xs font-bold shadow-sm`}>
-                      ELO {level.elo}
+              {/* Two bracket rows */}
+              <div className="space-y-3">
+                {['A', 'B'].map((bracket, idx) => (
+                  <div key={bracket} className="flex items-center gap-3">
+                    <span className="text-xs font-bold text-gray-500 w-3">{bracket}</span>
+                    {/* Quarterfinals - 2x2 grid */}
+                    <div className="grid grid-cols-2 gap-1">
+                      {[...Array(4)].map((_, i) => (
+                        <div key={i} className="w-5 h-5 rounded bg-white/10 border border-white/20" />
+                      ))}
+                    </div>
+                    <Icons.ArrowRight className="w-4 h-4 text-white/20" />
+                    {/* Semifinals - 2x1 */}
+                    <div className="grid grid-cols-1 gap-1">
+                      <div className="w-5 h-5 rounded bg-white/15 border border-white/25" />
+                      <div className="w-5 h-5 rounded bg-white/15 border border-white/25" />
+                    </div>
+                    <Icons.ArrowRight className="w-4 h-4 text-white/20" />
+                    {/* Final - different colors for A and B */}
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center shadow-lg ${
+                      idx === 0 
+                        ? 'bg-gradient-to-br from-yellow-300 to-amber-400' 
+                        : 'bg-gradient-to-br from-parque-purple to-violet-500'
+                    }`}>
+                      <Icons.Trophy className={`w-4 h-4 ${idx === 0 ? 'text-yellow-900' : 'text-white'}`} />
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-            
-            {/* Desktop: grid */}
-            <div className="hidden sm:grid sm:grid-cols-3 gap-4 lg:gap-6">
-              {skillLevels.map((level) => (
-                <div 
-                  key={level.id}
-                  className={`relative ${level.bgColor} rounded-2xl p-6 border-2 ${level.borderColor} hover:shadow-xl transition-all duration-300 group overflow-hidden`}
-                >
-                  {/* Shimmer effect */}
-                  <div className={`absolute inset-0 bg-gradient-to-r ${level.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
-                  
-                  <div className="relative text-center">
-                    {/* Medal icon */}
-                    <div className="text-5xl mb-3 transform group-hover:scale-110 transition-transform">
-                      {level.icon}
+          </div>
+
+          {/* Mobile: Vertical compact flow */}
+          <div className="md:hidden space-y-3">
+            {/* Row 1: Season + Level */}
+            <div className="flex items-stretch gap-2">
+              {/* Season */}
+              <div className="flex-1 bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-parque-purple to-violet-600 flex items-center justify-center">
+                    <Icons.Calendar className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="text-sm text-white font-semibold">{t.flow.season.label}</div>
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {t.seasons.map((season) => {
+                    const Icon = seasonIcons[season.id];
+                    const colors = seasonColors[season.id];
+                    return (
+                      <div key={season.id} className={`bg-gradient-to-br ${colors.bg} rounded-lg p-2 text-center`}>
+                        <Icon className={`w-4 h-4 mx-auto ${colors.text}`} />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Arrow */}
+              <div className="flex items-center">
+                <Icons.ArrowRight className="w-4 h-4 text-white/30" />
+              </div>
+
+              {/* Level */}
+              <div className="flex-1 bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center">
+                    <Icons.Target className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="text-sm text-white font-semibold">{t.flow.level.label}</div>
+                </div>
+                <div className="space-y-1">
+                  {t.levels.map((level) => (
+                    <div key={level.id} className={`${levelStyles[level.id].bg} rounded px-2 py-1 flex items-center justify-between`}>
+                      <span className={`text-[10px] font-bold ${levelStyles[level.id].text}`}>{level.name}</span>
+                      <span className={`text-[9px] font-medium ${levelStyles[level.id].text} opacity-80`}>{level.elo}</span>
                     </div>
-                    
-                    <h4 className={`text-xl font-bold ${level.textColor} mb-1`}>
-                      {level.name[locale]}
-                    </h4>
-                    <p className="text-gray-600 text-sm mb-3">{level.description[locale]}</p>
-                    
-                    {/* ELO Badge */}
-                    <div className={`inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r ${level.color} text-white text-sm font-bold shadow-md`}>
-                      ELO {level.elo}
-                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Row 2: Matches + Playoffs */}
+            <div className="flex items-stretch gap-2">
+              {/* Matches */}
+              <div className="flex-1 bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-parque-green to-emerald-600 flex items-center justify-center">
+                    <Icons.Users className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <div className="text-sm text-white font-semibold">{t.flow.matches.label}</div>
+                    <div className="text-[10px] text-gray-500">{t.flow.matches.description}</div>
                   </div>
                 </div>
-              ))}
+                <div className="grid grid-cols-4 gap-1">
+                  {[...Array(8)].map((_, i) => (
+                    <div key={i} className="aspect-square rounded bg-white/10 border border-white/20 flex items-center justify-center text-[9px] text-white/50">
+                      {i + 1}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Arrow */}
+              <div className="flex items-center">
+                <Icons.ArrowRight className="w-4 h-4 text-white/30" />
+              </div>
+
+              {/* Playoffs */}
+              <div className="flex-1 bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-parque-purple to-pink-600 flex items-center justify-center">
+                    <Icons.Trophy className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <div className="text-sm text-white font-semibold">{t.flow.playoffs.label}</div>
+                    <div className="text-[10px] text-gray-500">{t.flow.playoffs.description}</div>
+                  </div>
+                </div>
+                {/* Two mini brackets */}
+                <div className="space-y-2">
+                  {['A', 'B'].map((bracket, idx) => (
+                    <div key={bracket} className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold text-gray-500 w-3">{bracket}</span>
+                      {/* Quarterfinals - 2x2 grid */}
+                      <div className="grid grid-cols-2 gap-0.5">
+                        {[...Array(4)].map((_, i) => (
+                          <div key={i} className="w-4 h-4 rounded bg-white/10 border border-white/20" />
+                        ))}
+                      </div>
+                      <Icons.ArrowRight className="w-3 h-3 text-white/20" />
+                      {/* Semifinals */}
+                      <div className="grid grid-cols-1 gap-0.5">
+                        <div className="w-4 h-4 rounded bg-white/15 border border-white/25" />
+                        <div className="w-4 h-4 rounded bg-white/15 border border-white/25" />
+                      </div>
+                      <Icons.ArrowRight className="w-3 h-3 text-white/20" />
+                      {/* Final */}
+                      <div className={`w-5 h-5 rounded-lg flex items-center justify-center ${
+                        idx === 0 
+                          ? 'bg-gradient-to-br from-yellow-300 to-amber-400' 
+                          : 'bg-gradient-to-br from-parque-purple to-violet-500'
+                      }`}>
+                        <Icons.Trophy className={`w-3 h-3 ${idx === 0 ? 'text-yellow-900' : 'text-white'}`} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </section>
-      
-      {/* ===== ELO + SWISS SECTION ===== */}
-      <section className="py-16 sm:py-20 px-4 bg-gradient-to-br from-parque-purple/5 via-white to-parque-green/5">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-12">
-            <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-              {t.eloSection.title}
+
+        {/* === ELO + SWISS SECTION === */}
+        <div className="mb-12 sm:mb-16">
+          <div className="text-center mb-8">
+            <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+              {t.eloSwiss.title}
             </h3>
-            <p className="text-gray-600">{t.eloSection.subtitle}</p>
+            <p className="text-gray-400">{t.eloSwiss.subtitle}</p>
           </div>
           
-          <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-center">
-            {/* ELO explanation */}
-            <div className="space-y-6">
-              <Link href={`/${locale}/elo`} className="block bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl hover:border-parque-purple/30 transition-all group">
+          <div className="grid md:grid-cols-2 gap-6 lg:gap-8 items-stretch">
+            {/* ELO + Swiss Cards */}
+            <div className="space-y-4">
+              {/* ELO Card */}
+              <Link href={`/${locale}/elo`} className="block bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/10 hover:bg-white/10 hover:border-parque-purple/30 transition-all group">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-parque-purple to-violet-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Icons.ChartUp className="w-6 h-6 text-white" />
+                  <div className="w-11 h-11 bg-gradient-to-br from-parque-purple to-violet-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Icons.ChartUp className="w-5 h-5 text-white" />
                   </div>
-                  <div className="flex-1">
-                    <h4 className="text-lg font-bold text-gray-900 mb-2">{t.eloSection.eloTitle}</h4>
-                    <p className="text-gray-600 mb-3">{t.eloSection.eloDescription}</p>
-                    <span className="inline-flex items-center gap-1 text-parque-purple font-medium text-sm group-hover:gap-2 transition-all">
-                      {t.eloSection.eloLink}
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-white font-bold mb-1">{t.eloSwiss.eloTitle}</h4>
+                    <p className="text-sm text-gray-400 mb-2">{t.eloSwiss.eloDescription}</p>
+                    <span className="inline-flex items-center gap-1 text-purple-400 text-sm font-medium group-hover:gap-2 transition-all">
+                      {t.eloLink}
+                      <Icons.ArrowRight className="w-3.5 h-3.5" />
                     </span>
                   </div>
                 </div>
               </Link>
               
-              <Link href={`/${locale}/swiss`} className="block bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl hover:border-parque-green/30 transition-all group">
+              {/* Swiss Card */}
+              <Link href={`/${locale}/swiss`} className="block bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/10 hover:bg-white/10 hover:border-parque-green/30 transition-all group">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-parque-green to-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Icons.Shuffle className="w-6 h-6 text-white" />
+                  <div className="w-11 h-11 bg-gradient-to-br from-parque-green to-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Icons.Shuffle className="w-5 h-5 text-white" />
                   </div>
-                  <div className="flex-1">
-                    <h4 className="text-lg font-bold text-gray-900 mb-2">{t.eloSection.swissTitle}</h4>
-                    <p className="text-gray-600 mb-3">{t.eloSection.swissDescription}</p>
-                    <span className="inline-flex items-center gap-1 text-parque-green font-medium text-sm group-hover:gap-2 transition-all">
-                      {t.eloSection.swissLink}
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-white font-bold mb-1">{t.eloSwiss.swissTitle}</h4>
+                    <p className="text-sm text-gray-400 mb-2">{t.eloSwiss.swissDescription}</p>
+                    <span className="inline-flex items-center gap-1 text-emerald-400 text-sm font-medium group-hover:gap-2 transition-all">
+                      {t.swissLink}
+                      <Icons.ArrowRight className="w-3.5 h-3.5" />
                     </span>
                   </div>
                 </div>
               </Link>
             </div>
             
-            {/* Benefits */}
-            <div className="bg-gradient-to-br from-parque-purple to-violet-700 rounded-2xl p-8 text-white shadow-xl">
-              <h4 className="text-xl font-bold mb-6 flex items-center gap-2">
-                <Icons.Zap className="w-6 h-6" />
-                {locale === 'es' ? 'El Resultado' : 'The Result'}
+            {/* Benefits + Visual Demo - Compact */}
+            <div className="bg-gradient-to-br from-parque-purple to-violet-700 rounded-2xl p-5 text-white flex flex-col">
+              <h4 className="text-base font-bold mb-3 flex items-center gap-2">
+                <Icons.Zap className="w-4 h-4" />
+                {t.eloSwiss.resultTitle}
               </h4>
               
-              <ul className="space-y-4">
-                {t.eloSection.benefits.map((benefit, idx) => (
-                  <li key={idx} className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Icons.Check className="w-4 h-4" />
+              <ul className="space-y-1.5 mb-4">
+                {t.eloSwiss.benefits.map((benefit, idx) => (
+                  <li key={idx} className="flex items-center gap-2">
+                    <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Icons.Check className="w-3 h-3" />
                     </div>
-                    <span className="text-lg">{benefit}</span>
+                    <span className="text-sm">{benefit}</span>
                   </li>
                 ))}
               </ul>
               
-              {/* Visual ELO pairing demo */}
-              <div className="mt-8 space-y-3">
-                {/* Your ELO */}
-                <div className="bg-white/10 rounded-xl p-3">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-sm opacity-80">{locale === 'es' ? 'Tu ELO' : 'Your ELO'}</span>
-                    <span className="font-bold">1,285</span>
+              {/* Visual ELO matching demo - Compact */}
+              <div className="bg-white/10 rounded-xl p-3 mt-auto">
+                <div className="flex items-center gap-3">
+                  {/* Your ELO */}
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] opacity-70">{t.eloSwiss.yourElo}</span>
+                      <span className="text-xs font-bold">1,285</span>
+                    </div>
+                    <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
+                      <div className="h-full w-[57%] bg-gradient-to-r from-yellow-400 to-parque-green rounded-full" />
+                    </div>
                   </div>
-                  <div className="h-2.5 bg-white/20 rounded-full overflow-hidden">
-                    <div className="h-full w-[57%] bg-gradient-to-r from-yellow-400 to-parque-green rounded-full" />
-                  </div>
-                </div>
-                
-                {/* VS indicator */}
-                <div className="flex items-center justify-center gap-3">
-                  <div className="h-px flex-1 bg-white/20" />
-                  <span className="text-xs font-bold bg-white/20 px-3 py-1 rounded-full">
-                    VS
-                  </span>
-                  <div className="h-px flex-1 bg-white/20" />
-                </div>
-                
-                {/* Opponent ELO */}
-                <div className="bg-white/10 rounded-xl p-3">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-sm opacity-80">{locale === 'es' ? 'Rival' : 'Opponent'}</span>
-                    <span className="font-bold">1,262</span>
-                  </div>
-                  <div className="h-2.5 bg-white/20 rounded-full overflow-hidden">
-                    <div className="h-full w-[52%] bg-gradient-to-r from-yellow-400 to-parque-green rounded-full" />
+                  
+                  {/* VS */}
+                  <span className="text-[9px] font-bold bg-white/20 px-1.5 py-0.5 rounded">VS</span>
+                  
+                  {/* Opponent ELO */}
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] opacity-70">{t.eloSwiss.opponent}</span>
+                      <span className="text-xs font-bold">1,262</span>
+                    </div>
+                    <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
+                      <div className="h-full w-[52%] bg-gradient-to-r from-yellow-400 to-parque-green rounded-full" />
+                    </div>
                   </div>
                 </div>
                 
-                {/* Match quality indicator */}
-                <div className="text-center pt-2">
-                  <span className="inline-flex items-center gap-1.5 text-xs bg-white/20 px-3 py-1.5 rounded-full">
-                    <svg className="w-3.5 h-3.5 text-parque-green" fill="currentColor" viewBox="0 0 20 20">
+                {/* Match quality */}
+                <div className="text-center mt-2">
+                  <span className="inline-flex items-center gap-1 text-[9px] bg-white/20 px-2 py-0.5 rounded-full">
+                    <svg className="w-2.5 h-2.5 text-parque-green" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
-                    {locale === 'es' ? 'Partido equilibrado' : 'Balanced match'}
+                    {t.eloSwiss.balancedMatch}
                   </span>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </section>
-      
-      {/* ===== OPENRANK SECTION ===== */}
-      <section className="relative py-20 sm:py-28 px-4 overflow-hidden">
-        {/* Background - Dark with subtle texture */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-gray-900 to-slate-900" />
-        
-        {/* Animated gradient orbs */}
-        <div className="absolute top-1/4 -left-20 w-80 h-80 bg-parque-purple/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-parque-green/15 rounded-full blur-3xl animate-pulse delay-1000" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-parque-purple/10 to-parque-green/10 rounded-full blur-3xl" />
-        
-        {/* Grid pattern overlay */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='1' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E")`
-        }} />
-        
-        <div className="container mx-auto max-w-6xl relative z-10">
-          {/* Header */}
-          <div className="text-center mb-12 sm:mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm text-white rounded-full text-sm font-medium mb-6 border border-white/10">
-              <Icons.Globe className="w-4 h-4 text-parque-green" />
-              <span className="bg-gradient-to-r from-parque-green to-emerald-400 bg-clip-text text-transparent font-semibold">
-                {locale === 'es' ? 'Ranking Global' : 'Global Ranking'}
-              </span>
+        {/* === OPENRANK SECTION === */}
+        <div className="mt-16 sm:mt-20">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-parque-green/20 rounded-full text-sm font-medium text-parque-green mb-3">
+              <Icons.Globe className="w-3.5 h-3.5" />
+              {t.openrank.badge}
             </div>
-            
-            <h3 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
-              {t.openrankSection.title}
+            <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+              {t.openrank.title}
             </h3>
-            <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-              {t.openrankSection.description}
-            </p>
+            <p className="text-gray-400 max-w-lg mx-auto">{t.openrank.subtitle}</p>
           </div>
           
-          {/* Features Grid */}
-          <div className="grid sm:grid-cols-3 gap-4 sm:gap-6 mb-12">
-            {t.openrankSection.features.map((feature, idx) => (
-              <div 
-                key={idx} 
-                className="group relative bg-white/5 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all duration-300"
-              >
-                {/* Glow on hover */}
-                <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${idx === 0 ? 'bg-gradient-to-br from-parque-purple/20 to-transparent' : idx === 1 ? 'bg-gradient-to-br from-parque-green/20 to-transparent' : 'bg-gradient-to-br from-blue-500/20 to-transparent'}`} />
-                
-                <div className="relative">
-                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-5 ${idx === 0 ? 'bg-gradient-to-br from-parque-purple to-violet-600' : idx === 1 ? 'bg-gradient-to-br from-parque-green to-emerald-600' : 'bg-gradient-to-br from-blue-500 to-cyan-500'} shadow-lg`}>
-                    {idx === 0 && <Icons.Award className="w-7 h-7 text-white" />}
-                    {idx === 1 && <Icons.Globe className="w-7 h-7 text-white" />}
-                    {idx === 2 && <Icons.ChartUp className="w-7 h-7 text-white" />}
-                  </div>
-                  
-                  <h4 className="text-xl font-bold text-white mb-2">{feature.title}</h4>
-                  <p className="text-gray-400">{feature.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          
-          {/* Live Ranking Preview */}
-          <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden">
-            <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-parque-green animate-pulse" />
-                <span className="text-white font-semibold">
-                  {locale === 'es' ? 'OpenRank en Vivo' : 'Live OpenRank'}
-                </span>
-              </div>
-              <span className="text-xs text-gray-500">
-                {locale === 'es' ? 'Top jugadores' : 'Top players'}
-              </span>
-            </div>
-            
-            {/* Mock ranking rows */}
-            <div className="divide-y divide-white/5">
-              {[
-                { rank: 1, name: 'Carlos M.', elo: 1487, city: 'Marbella', change: '+12' },
-                { rank: 2, name: 'Roberto G.', elo: 1465, city: 'Sotogrande', change: '+8' },
-                { rank: 3, name: 'Ana S.', elo: 1442, city: 'Estepona', change: '+15' },
-              ].map((player, idx) => (
-                <div key={idx} className="px-6 py-4 flex items-center gap-4 hover:bg-white/5 transition-colors">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                    idx === 0 ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-gray-900' :
-                    idx === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-900' :
-                    'bg-gradient-to-br from-orange-400 to-amber-600 text-white'
+          <div className="grid md:grid-cols-2 gap-6 items-stretch">
+            {/* Features */}
+            <div className="grid gap-3">
+              {t.openrank.features.map((feature, idx) => (
+                <div key={idx} className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                    idx === 0 ? 'bg-gradient-to-br from-parque-purple to-violet-600' :
+                    idx === 1 ? 'bg-gradient-to-br from-parque-green to-emerald-600' :
+                    'bg-gradient-to-br from-blue-500 to-cyan-500'
                   }`}>
-                    {player.rank}
+                    {idx === 0 && <Icons.Trophy className="w-5 h-5 text-white" />}
+                    {idx === 1 && <Icons.Globe className="w-5 h-5 text-white" />}
+                    {idx === 2 && <Icons.ChartUp className="w-5 h-5 text-white" />}
                   </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="text-white font-medium truncate">{player.name}</div>
-                    <div className="text-xs text-gray-500">{player.city}</div>
-                  </div>
-                  
-                  <div className="text-right">
-                    <div className="text-white font-bold tabular-nums">{player.elo}</div>
-                    <div className="text-xs text-parque-green font-medium">{player.change}</div>
+                  <div>
+                    <h4 className="text-white font-semibold text-sm">{feature.title}</h4>
+                    <p className="text-xs text-gray-400">{feature.desc}</p>
                   </div>
                 </div>
               ))}
             </div>
             
-            {/* View all link */}
-            <div className="px-6 py-4 border-t border-white/10">
-              <Link 
-                href={`/${locale}/openrank`}
-                className="flex items-center justify-center gap-2 text-parque-green font-medium hover:text-parque-green/80 transition-colors group"
-              >
-                {locale === 'es' ? 'Ver ranking completo' : 'View full ranking'}
-                <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </Link>
+            {/* Live Ranking Preview */}
+            <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
+              <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-parque-green animate-pulse" />
+                  <span className="text-white font-semibold text-sm">OpenRank Live</span>
+                </div>
+                <span className="text-[10px] text-gray-500">{t.openrank.liveRanking}</span>
+              </div>
+              
+              <div className="divide-y divide-white/5">
+                {[
+                  { rank: 1, name: 'Carlos M.', elo: 1487, city: 'Marbella', change: '+12' },
+                  { rank: 2, name: 'Roberto G.', elo: 1465, city: 'Sotogrande', change: '+8' },
+                  { rank: 3, name: 'Ana S.', elo: 1442, city: 'Estepona', change: '+15' },
+                ].map((player, idx) => (
+                  <div key={idx} className="px-4 py-2.5 flex items-center gap-3">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                      idx === 0 ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-yellow-900' :
+                      idx === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800' :
+                      'bg-gradient-to-br from-orange-400 to-amber-600 text-orange-900'
+                    }`}>
+                      {player.rank}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-white text-sm font-medium truncate">{player.name}</div>
+                      <div className="text-[10px] text-gray-500">{player.city}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-white text-sm font-bold tabular-nums">{player.elo}</div>
+                      <div className="text-[10px] text-parque-green font-medium">{player.change}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="px-4 py-3 border-t border-white/10">
+                <Link 
+                  href={`/${locale}/openrank`}
+                  className="flex items-center justify-center gap-2 text-parque-green text-sm font-medium hover:text-parque-green/80 transition-colors group"
+                >
+                  {t.openrank.viewAll}
+                  <Icons.ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                </Link>
+              </div>
             </div>
           </div>
         </div>
-      </section>
-    </div>
+      </div>
+    </section>
   );
 }

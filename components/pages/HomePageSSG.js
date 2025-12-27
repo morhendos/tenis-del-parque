@@ -245,38 +245,84 @@ export default function HomePageSSG({ locale, leaguesData }) {
       {/* 3. How It Works */}
       <HowItWorksShowcase locale={validLocale} />
       
-      {/* 4. Testimonials Section */}
-      <section className="py-20 px-4 bg-white">
-        <div className="container mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+      {/* 4. Testimonials Section - Light */}
+      <section className="relative py-16 sm:py-20 px-4 overflow-hidden bg-white">
+        {/* Subtle gradient orbs */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-parque-purple/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-parque-green/5 rounded-full blur-3xl" />
+        
+        <div className="container mx-auto max-w-6xl relative z-10">
+          {/* Header */}
+          <div className="text-center mb-10 sm:mb-12">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-parque-purple/10 rounded-full text-sm font-medium text-parque-purple mb-4">
+              <svg className="w-4 h-4 text-parque-purple" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+              <span>{validLocale === 'es' ? 'Testimonios' : 'Testimonials'}</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2">
               {content.testimonials.title}
             </h2>
-            <p className="text-xl text-gray-600">
+            <p className="text-base sm:text-lg text-gray-500 max-w-xl mx-auto">
               {content.testimonials.subtitle}
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {content.testimonials.items.map((testimonial, index) => (
-              <div key={index} className="bg-gray-50 p-6 rounded-xl shadow-lg border border-gray-100">
-                <div className="flex mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <svg key={i} className="w-5 h-5 text-yellow-400 fill-current" viewBox="0 0 24 24">
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+          {/* Testimonial Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+            {content.testimonials.items.map((testimonial, index) => {
+              const colors = [
+                { bg: 'from-parque-purple to-violet-600', text: 'text-white' },
+                { bg: 'from-parque-green to-emerald-600', text: 'text-white' },
+                { bg: 'from-parque-yellow to-amber-500', text: 'text-gray-900' }
+              ][index % 3];
+              
+              return (
+                <div 
+                  key={index} 
+                  className="bg-gray-50 rounded-2xl p-5 sm:p-6 border border-gray-200 shadow-lg"
+                >
+                  {/* Quote icon */}
+                  <div className="mb-4">
+                    <svg className="w-8 h-8 text-gray-200" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
                     </svg>
-                  ))}
-                </div>
-                <p className="text-gray-700 mb-4">&ldquo;{testimonial.text}&rdquo;</p>
-                {testimonial.highlight && (
-                  <p className="text-sm font-semibold text-parque-purple mb-2">
-                    &ldquo;{testimonial.highlight}&rdquo;
+                  </div>
+                  
+                  {/* Stars */}
+                  <div className="flex gap-0.5 mb-3">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <svg key={i} className="w-4 h-4 text-parque-yellow" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                      </svg>
+                    ))}
+                  </div>
+                  
+                  {/* Quote text */}
+                  <p className="text-gray-600 text-sm sm:text-base leading-relaxed mb-4">
+                    &ldquo;{testimonial.text}&rdquo;
                   </p>
-                )}
-                <div className="font-semibold">{testimonial.name}</div>
-                <div className="text-sm text-gray-500">{testimonial.location}</div>
-              </div>
-            ))}
+                  
+                  {/* Highlight */}
+                  {testimonial.highlight && (
+                    <p className="text-sm font-semibold text-parque-purple mb-4">
+                      &ldquo;{testimonial.highlight}&rdquo;
+                    </p>
+                  )}
+                  
+                  {/* Author */}
+                  <div className="flex items-center gap-3 pt-4 border-t border-gray-200">
+                    <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${colors.bg} flex items-center justify-center ${colors.text} font-bold text-sm`}>
+                      {testimonial.name.split(' ').map(n => n[0]).join('')}
+                    </div>
+                    <div>
+                      <div className="text-gray-900 font-semibold text-sm">{testimonial.name}</div>
+                      <div className="text-gray-500 text-xs">{testimonial.location}</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -301,25 +347,25 @@ export default function HomePageSSG({ locale, leaguesData }) {
         {/* Content */}
         <div className="container mx-auto text-center relative z-10">
           {/* Tennis ball accent */}
-          <div className="inline-flex items-center justify-center w-16 h-16 mb-6 rounded-full bg-gradient-to-br from-parque-green to-parque-green/80 shadow-lg shadow-parque-green/25">
-            <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10" />
-              <path d="M12 2a15.3 15.3 0 0 0-4 10 15.3 15.3 0 0 0 4 10" />
+          <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 mb-5 sm:mb-6 rounded-full bg-gradient-to-br from-parque-green to-parque-green/80 shadow-lg shadow-parque-green/25">
+            <svg className="w-7 h-7 sm:w-9 sm:h-9 text-white" viewBox="0 0 472.615 472.615" fill="currentColor">
+              <path d="M236.308,0C177.21,0,123.225,21.744,81.79,57.603c38.847,38.956,94.88,61.345,154.515,61.345c59.623,0,115.662-22.388,154.52-61.346C349.39,21.744,295.404,0,236.308,0z"/>
+              <path d="M236.372,353.665c-59.649,0-115.697,22.4-154.545,61.379c41.43,35.84,95.401,57.571,154.481,57.571c59.113,0,113.111-21.755,154.55-57.631C352.01,376.042,295.978,353.665,236.372,353.665z"/>
+              <path d="M405.246,71.146c-42.54,42.904-103.899,67.494-168.941,67.494c-65.055,0-126.407-24.587-168.944-67.486C25.707,113.76,0,172.018,0,236.308c0,64.307,25.721,122.581,67.395,165.188c42.539-42.923,103.904-67.523,168.977-67.523c65.021,0,126.371,24.576,168.91,67.459c41.636-42.601,67.334-100.849,67.334-165.124C472.615,172.014,446.904,113.752,405.246,71.146z"/>
             </svg>
           </div>
           
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-3 sm:mb-4">
             {content.cta.title}
           </h2>
           
-          <p className="text-lg sm:text-xl text-gray-300 mb-8 sm:mb-10 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto">
             {content.cta.subtitle}
           </p>
           
           <a
             href="#cities"
-            className="group inline-flex items-center gap-2 px-8 py-4 bg-white text-gray-900 rounded-full font-semibold text-lg shadow-xl shadow-black/20 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300"
+            className="group inline-flex items-center gap-2 px-6 py-3 sm:px-8 sm:py-4 bg-white text-gray-900 rounded-full font-semibold text-base sm:text-lg shadow-xl shadow-black/20 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300"
           >
             {content.cta.button}
             <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -327,15 +373,15 @@ export default function HomePageSSG({ locale, leaguesData }) {
             </svg>
           </a>
           
-          <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-sm text-gray-400">
-            <div className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-parque-green" fill="currentColor" viewBox="0 0 20 20">
+          <div className="mt-6 sm:mt-8 flex flex-col items-center justify-center gap-4 sm:gap-8 text-sm text-gray-400">
+            <div className="flex items-start gap-2 text-center">
+              <svg className="w-4 h-4 text-parque-green flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
               </svg>
               <span>{content.cta.guarantee}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-parque-yellow" fill="currentColor" viewBox="0 0 20 20">
+            <div className="flex items-start gap-2 text-center">
+              <svg className="w-4 h-4 text-parque-yellow flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
               </svg>
               <span>{content.cta.urgency}</span>
