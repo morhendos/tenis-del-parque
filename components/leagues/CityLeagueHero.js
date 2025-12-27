@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Trophy, Medal, Award } from 'lucide-react'
 
 export default function CityLeagueHero({ city, locale, leagueName, league }) {
   const router = useRouter()
@@ -11,7 +11,7 @@ export default function CityLeagueHero({ city, locale, leagueName, league }) {
   
   // Build the page title based on context
   const pageTitle = league && leagueName 
-    ? cityName  // On league info page, show just city name (league name shown separately)
+    ? cityName
     : locale === 'es' 
       ? `Ligas de ${cityName}` 
       : `${cityName} Leagues`
@@ -25,48 +25,45 @@ export default function CityLeagueHero({ city, locale, leagueName, league }) {
     return 'default'
   })() : 'default'
   
-  // Choose gradient colors based on league tier
-  const gradientClasses = {
-    gold: 'from-amber-600 via-yellow-600 to-amber-700',
-    silver: 'from-slate-500 via-gray-400 to-slate-600',
-    bronze: 'from-orange-600 via-amber-700 to-orange-800',
-    default: 'from-emerald-600 to-teal-600'
-  }[leagueTier]
-  
-  // League name color
-  const leagueNameColor = {
-    gold: 'text-amber-50',
-    silver: 'text-slate-100',
-    bronze: 'text-orange-100',
-    default: 'text-emerald-100'
-  }[leagueTier]
-  
-  // Description based on context
-  const getDescription = () => {
-    if (league) {
-      // On league info page
-      return league.status === 'registration_open' 
-        ? (locale === 'es' ? 'Únete a la liga ahora y comienza a jugar' : 'Join the league now and start playing')
-        : (locale === 'es' ? 'Información de la liga y detalles de inscripción' : 'League information and registration details')
+  // Tier badge styling
+  const tierBadge = {
+    gold: { 
+      bg: 'bg-gradient-to-r from-yellow-400 to-amber-500', 
+      text: 'text-yellow-900',
+      icon: Trophy,
+      label: locale === 'es' ? 'Liga Oro' : 'Gold League'
+    },
+    silver: { 
+      bg: 'bg-gradient-to-r from-gray-300 to-slate-400', 
+      text: 'text-slate-800',
+      icon: Medal,
+      label: locale === 'es' ? 'Liga Plata' : 'Silver League'
+    },
+    bronze: { 
+      bg: 'bg-gradient-to-r from-amber-500 to-orange-600', 
+      text: 'text-orange-900',
+      icon: Award,
+      label: locale === 'es' ? 'Liga Bronce' : 'Bronze League'
+    },
+    default: { 
+      bg: 'bg-gradient-to-r from-parque-purple to-violet-600', 
+      text: 'text-white',
+      icon: Trophy,
+      label: ''
     }
-    // On city leagues page - emphasize level selection
-    return locale === 'es' 
-      ? 'Elige el nivel de competición que mejor se adapte a ti' 
-      : 'Choose the level of competition that suits you best'
-  }
+  }[leagueTier]
+  
+  const TierIcon = tierBadge.icon
 
   // Determine where the back button should navigate
   const getBackDestination = () => {
     if (league && leagueName) {
-      // On league info page -> go back to city leagues
       return `/${locale}/leagues/${city.slug}`
     }
-    // On city leagues page -> go back to all cities
     return `/${locale}/leagues`
   }
 
   const handleBack = () => {
-    // Try to go back in history first, fallback to the logical parent
     if (window.history.length > 1) {
       router.back()
     } else {
@@ -75,10 +72,10 @@ export default function CityLeagueHero({ city, locale, leagueName, league }) {
   }
   
   return (
-    <div className={`relative bg-gradient-to-r ${gradientClasses}`}>
-      {/* Background Image */}
+    <div className="relative min-h-[280px] sm:min-h-[320px] md:min-h-[360px]">
+      {/* Background Image - full visibility */}
       {city.images?.main && (
-        <div className="absolute inset-0 opacity-30">
+        <div className="absolute inset-0">
           <Image
             src={city.images.main}
             alt={cityName}
@@ -89,89 +86,85 @@ export default function CityLeagueHero({ city, locale, leagueName, league }) {
         </div>
       )}
       
-      {/* Dark semi-transparent backdrop for better text readability */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-transparent"></div>
+      {/* Minimal vignette for depth */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20" />
       
-      {/* Content - with proper padding for fixed navigation */}
-      <div className="relative container mx-auto px-4 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-5 sm:pb-8 md:pb-10 lg:pb-12 z-10">
+      {/* Content */}
+      <div className="relative h-full container mx-auto px-4 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-6 sm:pb-8 z-10 flex flex-col justify-end">
         
-        {/* Mobile Back Button - pill style, always visible on mobile */}
+        {/* Mobile Back Button - glassmorphic */}
         <button
           onClick={handleBack}
-          className="sm:hidden flex items-center gap-1 mb-3 px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-md text-white text-sm font-medium border border-white/30 active:scale-95 transition-transform"
+          className="sm:hidden absolute top-20 left-4 flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-md text-white text-sm font-medium border border-white/30 active:scale-95 transition-transform shadow-lg"
           aria-label={locale === 'es' ? 'Volver' : 'Go back'}
         >
           <ChevronLeft className="w-4 h-4" />
           <span>{locale === 'es' ? 'Volver' : 'Back'}</span>
         </button>
         
-        {/* Breadcrumb - hidden on mobile, visible on sm+ */}
-        <nav className="hidden sm:block mb-2 md:mb-3 text-sm md:text-base text-white/90">
-          <Link href={`/${locale}/leagues`} className="hover:text-white transition-colors">
-            {locale === 'es' ? 'Ciudades' : 'Cities'}
-          </Link>
-          <span className="mx-2">/</span>
-          {leagueName ? (
-            <>
-              <Link href={`/${locale}/leagues/${city.slug}`} className="hover:text-white transition-colors">
-                {cityName}
-              </Link>
-              <span className="mx-2">/</span>
-              <span className="text-white font-medium">{leagueName}</span>
-            </>
-          ) : (
-            <span className="text-white font-medium">{cityName}</span>
-          )}
-        </nav>
-        
-        {/* Title */}
-        <div className="mb-1 sm:mb-2 md:mb-3">
-          {/* Mobile layout: stacked */}
-          <div className="md:hidden">
-            <h1 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-lg leading-tight">
-              {pageTitle}
-            </h1>
-            {league && leagueName && (
-              <h2 className={`text-lg sm:text-xl font-bold ${leagueNameColor} drop-shadow-lg mt-0.5`}>
-                {leagueName}
-              </h2>
-            )}
-          </div>
+        {/* Glassmorphic content card */}
+        <div className="bg-white/10 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-white/20 p-4 sm:p-6 shadow-2xl">
           
-          {/* Desktop layout: inline with bullet */}
-          <h1 className="hidden md:block text-3xl lg:text-4xl xl:text-5xl font-bold text-white drop-shadow-lg">
-            {pageTitle}
-            {league && leagueName && (
+          {/* Breadcrumb - hidden on mobile */}
+          <nav className="hidden sm:block mb-2 text-sm text-white/80">
+            <Link href={`/${locale}/leagues`} className="hover:text-white transition-colors">
+              {locale === 'es' ? 'Ciudades' : 'Cities'}
+            </Link>
+            <span className="mx-2 text-white/50">/</span>
+            {leagueName ? (
               <>
-                <span className="mx-3 lg:mx-4 text-white/70">•</span>
-                <span className={leagueNameColor}>
-                  {leagueName}
-                </span>
+                <Link href={`/${locale}/leagues/${city.slug}`} className="hover:text-white transition-colors">
+                  {cityName}
+                </Link>
+                <span className="mx-2 text-white/50">/</span>
+                <span className="text-white font-medium">{leagueName}</span>
               </>
+            ) : (
+              <span className="text-white font-medium">{cityName}</span>
             )}
-          </h1>
-        </div>
-        
-        {/* Status Badge - only on league page */}
-        {league && (
-          <div className="mb-1 sm:mb-2 md:mb-3">
-            {league.status === 'registration_open' && (
-              <span className="inline-flex items-center px-2.5 py-1 sm:px-3 sm:py-1.5 md:px-4 md:py-2 rounded-full text-xs sm:text-sm font-semibold bg-white/30 backdrop-blur-md text-white border border-white/50 shadow-lg">
-                {locale === 'es' ? 'Inscripciones Abiertas' : 'Registration Open'}
-              </span>
-            )}
-            {league.status === 'coming_soon' && (
-              <span className="inline-flex items-center px-2.5 py-1 sm:px-3 sm:py-1.5 md:px-4 md:py-2 rounded-full text-xs sm:text-sm font-semibold bg-white/30 backdrop-blur-md text-white border border-white/50 shadow-lg">
-                {locale === 'es' ? 'Próximamente' : 'Coming Soon'}
-              </span>
+          </nav>
+          
+          {/* Title row */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">
+                {pageTitle}
+              </h1>
+              
+              {/* Description - City page only */}
+              {!league && (
+                <p className="text-sm sm:text-base text-white/70 mt-1">
+                  {locale === 'es' 
+                    ? 'Elige el nivel de competición que mejor se adapte a ti' 
+                    : 'Choose the level of competition that suits you best'}
+                </p>
+              )}
+            </div>
+            
+            {/* Badges */}
+            {league && leagueName && (
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                {/* Tier badge */}
+                <div className={`inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full ${tierBadge.bg} ${tierBadge.text} font-bold text-sm shadow-lg`}>
+                  <TierIcon className="w-4 h-4" />
+                  {tierBadge.label}
+                </div>
+                
+                {/* Status badge */}
+                {league.status === 'registration_open' && (
+                  <span className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-sm font-semibold bg-parque-green text-white shadow-lg">
+                    {locale === 'es' ? 'Inscripciones Abiertas' : 'Registration Open'}
+                  </span>
+                )}
+                {league.status === 'coming_soon' && (
+                  <span className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-sm font-semibold bg-white/30 backdrop-blur-sm text-white border border-white/40 shadow-lg">
+                    {locale === 'es' ? 'Próximamente' : 'Coming Soon'}
+                  </span>
+                )}
+              </div>
             )}
           </div>
-        )}
-        
-        {/* Description - hidden on very small screens */}
-        <p className="hidden sm:block text-sm md:text-base lg:text-lg text-white/90 drop-shadow-md max-w-xl leading-relaxed">
-          {getDescription()}
-        </p>
+        </div>
       </div>
     </div>
   )
