@@ -303,98 +303,117 @@ export default function PlayerMatches() {
         }
       `}</style>
       
-      <div className="space-y-6 animate-fade-in-up">
-        {/* Page Header - Mobile Optimized */}
-        <div className="bg-gradient-to-r from-parque-purple to-purple-700 rounded-2xl p-6 text-white shadow-lg">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
-                🎾 {locale === 'es' ? 'Mis Partidos' : 'My Matches'}
-              </h1>
-              <p className="mt-2 text-purple-100 text-sm sm:text-base">
-                {locale === 'es' 
-                  ? 'Seguimiento de tu trayectoria y historial'
-                  : 'Track your tennis journey and history'}
-              </p>
+      <div className="space-y-4 animate-fade-in-up">
+        {/* Hero Header - Like OpenRank */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-parque-purple via-purple-600 to-indigo-600 rounded-xl sm:rounded-2xl text-white p-4 sm:p-6">
+          {/* Background decoration */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute -top-20 -right-20 w-64 h-64 bg-white rounded-full"></div>
+            <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-white rounded-full"></div>
+          </div>
+          
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M4.93 4.93c4.08 4.08 10.06 4.08 14.14 0" />
+                  <path d="M4.93 19.07c4.08-4.08 10.06-4.08 14.14 0" />
+                </svg>
+                <h1 className="text-xl sm:text-2xl font-bold">
+                  {locale === 'es' ? 'Mis Partidos' : 'My Matches'}
+                </h1>
+              </div>
+              <button
+                onClick={() => router.push(`/${locale}/player/dashboard`)}
+                className="p-2 bg-white/20 backdrop-blur-sm rounded-lg hover:bg-white/30 transition-all"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+              </button>
             </div>
-            <button
-              onClick={() => router.push(`/${locale}/player/dashboard`)}
-              className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg text-sm font-medium text-white hover:bg-white/30 transition-all transform hover:scale-105 active:scale-95"
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              {locale === 'es' ? 'Volver' : 'Back'}
-            </button>
+            
+            {/* Summary Stats - Compact grid */}
+            <div className="grid grid-cols-4 gap-2">
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2 text-center">
+                <div className="text-lg sm:text-xl font-bold">{matches.length}</div>
+                <div className="text-[10px] sm:text-xs text-purple-200">{locale === 'es' ? 'Total' : 'Total'}</div>
+              </div>
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2 text-center">
+                <div className="text-lg sm:text-xl font-bold">
+                  {matches.filter(m => m.result?.winner === player?._id).length}
+                </div>
+                <div className="text-[10px] sm:text-xs text-purple-200">{locale === 'es' ? 'Victorias' : 'Wins'}</div>
+              </div>
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2 text-center">
+                <div className="text-lg sm:text-xl font-bold">
+                  {matches.filter(m => m.result?.winner && m.result.winner !== player?._id).length}
+                </div>
+                <div className="text-[10px] sm:text-xs text-purple-200">{locale === 'es' ? 'Derrotas' : 'Losses'}</div>
+              </div>
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2 text-center">
+                <div className="text-lg sm:text-xl font-bold">
+                  {upcomingMatches.length}
+                </div>
+                <div className="text-[10px] sm:text-xs text-purple-200">{locale === 'es' ? 'Próximos' : 'Upcoming'}</div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* League Selector - ONLY shown for multi-league players */}
+        {/* League Selector - Compact for multi-league */}
         {hasMultipleLeagues && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <svg className="w-4 h-4 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-                {locale === 'es' ? 'Filtrar por Liga:' : 'Filter by League:'}
-              </h3>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium text-gray-500">
+                {locale === 'es' ? 'Filtrar:' : 'Filter:'}
+              </span>
               {selectedLeagueId && (
                 <button
                   onClick={() => setSelectedLeagueId(null)}
                   className="text-xs text-parque-purple hover:text-purple-700 font-medium"
                 >
-                  {locale === 'es' ? 'Ver todas' : 'Show all'}
+                  {locale === 'es' ? 'Todas' : 'All'}
                 </button>
               )}
             </div>
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 pt-1 px-1">
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide">
               {playerLeagues.map((league) => (
                 <button
                   key={league._id}
                   onClick={() => setSelectedLeagueId(
                     selectedLeagueId === league._id ? null : league._id
                   )}
-                  className={`flex-shrink-0 px-4 py-2.5 rounded-xl font-medium text-sm transition-all ${
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-lg font-medium text-xs transition-all ${
                     selectedLeagueId === league._id
-                      ? 'bg-gradient-to-r from-parque-purple to-purple-700 text-white shadow-md transform scale-105'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-parque-purple text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
-                  <div className="flex flex-col items-start">
-                    <span className="font-semibold">{league.name}</span>
-                    {league.location?.city && (
-                      <span className="text-xs opacity-75 mt-0.5 flex items-center gap-1">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        {league.location.city}
-                      </span>
-                    )}
-                  </div>
+                  {league.name}
                 </button>
               ))}
             </div>
           </div>
         )}
 
-        {/* Filter Tabs - Touch Optimized */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        {/* Filter Tabs - Compact */}
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           <nav className="flex">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 py-4 px-4 font-medium text-sm transition-all relative ${
+                className={`flex-1 py-2 px-2 font-medium text-xs transition-all relative ${
                   activeTab === tab.id
                     ? 'text-parque-purple bg-purple-50'
                     : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <span className="flex items-center justify-center gap-2">
+                <span className="flex items-center justify-center gap-1">
                   {tab.label}
-                  <span className={`inline-flex items-center justify-center px-2 py-1 text-xs rounded-full ${
+                  <span className={`inline-flex items-center justify-center w-4 h-4 text-[10px] rounded-full ${
                     activeTab === tab.id
                       ? 'bg-parque-purple text-white'
                       : 'bg-gray-200 text-gray-600'
@@ -403,16 +422,16 @@ export default function PlayerMatches() {
                   </span>
                 </span>
                 {activeTab === tab.id && (
-                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-parque-purple"></div>
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-parque-purple"></div>
                 )}
               </button>
             ))}
           </nav>
         </div>
 
-        {/* Matches List - Mobile Optimized Cards */}
+        {/* Matches List */}
         {activeTab === 'upcoming' && (
-          <div className="space-y-4">
+          <div className="space-y-2">
             {upcomingMatches.length > 0 ? (
               upcomingMatches.map((match, index) => (
                 <MatchCard
@@ -432,12 +451,12 @@ export default function PlayerMatches() {
                 />
               ))
             ) : (
-              <div className="text-center py-16 bg-gray-50 rounded-2xl">
-                <div className="text-6xl mb-4 animate-bounce">🎾</div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <div className="text-center py-10 bg-gray-50 rounded-xl">
+                <div className="text-4xl mb-3">🎾</div>
+                <h3 className="text-base font-medium text-gray-900 mb-1">
                   {locale === 'es' ? 'No hay partidos programados' : 'No scheduled matches'}
                 </h3>
-                <p className="text-gray-500 text-sm">
+                <p className="text-gray-500 text-xs">
                   {locale === 'es' 
                     ? 'Los nuevos emparejamientos se crean cada domingo'
                     : 'New pairings are created every Sunday'}
@@ -448,7 +467,7 @@ export default function PlayerMatches() {
         )}
 
         {activeTab === 'completed' && (
-          <div className="space-y-4">
+          <div className="space-y-2">
             {completedMatches.length > 0 ? (
               completedMatches.map((match, index) => (
                 <MatchCard
@@ -465,12 +484,12 @@ export default function PlayerMatches() {
                 />
               ))
             ) : (
-              <div className="text-center py-16 bg-gray-50 rounded-2xl">
-                <div className="text-6xl mb-4">🏆</div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <div className="text-center py-10 bg-gray-50 rounded-xl">
+                <div className="text-4xl mb-3">🏆</div>
+                <h3 className="text-base font-medium text-gray-900 mb-1">
                   {locale === 'es' ? 'No hay partidos completados' : 'No completed matches'}
                 </h3>
-                <p className="text-gray-500 text-sm">
+                <p className="text-gray-500 text-xs">
                   {locale === 'es' 
                     ? 'Los partidos completados aparecerán aquí'
                     : 'Completed matches will appear here'}
@@ -480,24 +499,24 @@ export default function PlayerMatches() {
           </div>
         )}
 
-        {/* League Players - Improved Mobile Layout */}
+        {/* League Players - Compact */}
         {leaguePlayers.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <button
               onClick={() => setShowPlayers(!showPlayers)}
-              className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+              className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
             >
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-sm font-semibold text-gray-900">
                 {locale === 'es' ? 'Jugadores de la Liga' : 'League Players'}
               </h3>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-parque-purple font-medium">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-parque-purple font-medium">
                   {showPlayers 
                     ? (locale === 'es' ? 'Ocultar' : 'Hide') 
                     : (locale === 'es' ? 'Mostrar' : 'Show')} ({leaguePlayers.length})
                 </span>
                 <svg 
-                  className={`w-5 h-5 text-gray-400 transition-transform ${showPlayers ? 'rotate-180' : ''}`} 
+                  className={`w-4 h-4 text-gray-400 transition-transform ${showPlayers ? 'rotate-180' : ''}`} 
                   fill="none" 
                   stroke="currentColor" 
                   viewBox="0 0 24 24"
@@ -507,23 +526,18 @@ export default function PlayerMatches() {
               </div>
             </button>
             {showPlayers && (
-              <div className="p-6 pt-0">
-                <p className="text-sm text-gray-600 mb-4">
-                  {locale === 'es' 
-                    ? 'Contacta a otros jugadores para partidos de práctica o para programar tus partidos de liga'
-                    : 'Contact other players for practice matches or to schedule your league games'}
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="px-4 pb-3">
+                <div className="divide-y divide-gray-100">
                   {leaguePlayers.map((opponent) => (
-                    <div key={opponent._id} className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
-                      <div className="flex items-center space-x-3 mb-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-parque-purple to-purple-700 rounded-full flex items-center justify-center shadow-sm">
-                          <span className="text-sm font-medium text-white">
+                    <div key={opponent._id} className="flex items-center justify-between py-2.5 first:pt-0 last:pb-0">
+                      <div className="flex items-center space-x-3 min-w-0 flex-1">
+                        <div className="w-8 h-8 bg-gradient-to-br from-parque-purple to-purple-700 rounded-full flex items-center justify-center shadow-sm flex-shrink-0">
+                          <span className="text-xs font-medium text-white">
                             {opponent.name ? opponent.name.charAt(0).toUpperCase() : '?'}
                           </span>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-semibold text-gray-900 truncate">
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-sm font-medium text-gray-900">
                             {opponent.name}
                           </h4>
                           <p className="text-xs text-gray-500">
@@ -534,7 +548,6 @@ export default function PlayerMatches() {
                       {opponent.whatsapp && (
                         <a
                           href={`https://wa.me/${(() => {
-                            // Normalize phone number for WhatsApp
                             let cleaned = opponent.whatsapp.replace(/[^0-9]/g, '')
                             if (cleaned.startsWith('00')) {
                               cleaned = cleaned.substring(2)
@@ -542,17 +555,16 @@ export default function PlayerMatches() {
                             return cleaned
                           })()}?text=${encodeURIComponent(
                             locale === 'es' 
-                              ? `Hola ${opponent.name}! ¿Cómo estás? Nos toca jugar nuestro partido de liga. ¿Cuándo y dónde te vendría bien?`
-                              : `Hi ${opponent.name}! Hope you're doing well. We're scheduled to play our league match. When and where would work best for you?`
+                              ? `Hola ${opponent.name}! ¿Cómo estás?`
+                              : `Hi ${opponent.name}! How are you?`
                           )}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-full inline-flex items-center justify-center px-3 py-2 text-xs font-medium text-white bg-green-500 rounded-lg hover:bg-green-600 transition-all transform hover:scale-105 active:scale-95"
+                          className="w-9 h-9 flex items-center justify-center text-white bg-green-500 rounded-full hover:bg-green-600 transition-all flex-shrink-0 ml-2"
                         >
-                          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.487"/>
                           </svg>
-                          WhatsApp
                         </a>
                       )}
                     </div>
@@ -563,46 +575,6 @@ export default function PlayerMatches() {
           </div>
         )}
 
-        {/* Summary Stats - Enhanced Mobile Cards */}
-        {matches.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              📊 {locale === 'es' ? 'Estadísticas de Partidos' : 'Match Statistics'}
-            </h3>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-gray-50 rounded-xl p-4 text-center transition-all hover:bg-gray-100">
-                <div className="text-3xl font-bold text-gray-900">{matches.length}</div>
-                <div className="text-sm text-gray-500 mt-1">
-                  {locale === 'es' ? 'Total' : 'Total'}
-                </div>
-              </div>
-              <div className="bg-green-50 rounded-xl p-4 text-center transition-all hover:bg-green-100">
-                <div className="text-3xl font-bold text-green-600">
-                  {matches.filter(m => m.result?.winner === player?._id).length}
-                </div>
-                <div className="text-sm text-gray-500 mt-1">
-                  {locale === 'es' ? 'Victorias' : 'Wins'}
-                </div>
-              </div>
-              <div className="bg-red-50 rounded-xl p-4 text-center transition-all hover:bg-red-100">
-                <div className="text-3xl font-bold text-red-600">
-                  {matches.filter(m => m.result?.winner && m.result.winner !== player?._id).length}
-                </div>
-                <div className="text-sm text-gray-500 mt-1">
-                  {locale === 'es' ? 'Derrotas' : 'Losses'}
-                </div>
-              </div>
-              <div className="bg-blue-50 rounded-xl p-4 text-center transition-all hover:bg-blue-100">
-                <div className="text-3xl font-bold text-blue-600">
-                  {matches.filter(m => m.status === 'scheduled' && !m.result?.winner).length}
-                </div>
-                <div className="text-sm text-gray-500 mt-1">
-                  {locale === 'es' ? 'Próximos' : 'Upcoming'}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Match Modals */}
         <MatchModals

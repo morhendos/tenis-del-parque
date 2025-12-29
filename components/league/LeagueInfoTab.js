@@ -14,6 +14,8 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
     es: {
       registerNow: '¡Inscríbete Ahora!',
       free: 'Gratis',
+      seasonRegistration: 'Inscripción temporada',
+      promoCode: 'Código promo',
       regularSeason: 'Fase Regular',
       playoffsLabel: 'Playoffs',
       included: 'Todo Incluido',
@@ -36,6 +38,33 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
         intermediate: 'Nivel intermedio',
         beginner: 'Para empezar a competir'
       },
+      levelDetails: {
+        advanced: {
+          title: 'Liga Oro',
+          points: [
+            'Dominas a nivel recreativo',
+            'Múltiples temporadas competitivas',
+            'Buscas partidos de alto nivel'
+          ]
+        },
+        intermediate: {
+          title: 'Liga Plata',
+          points: [
+            'Has jugado en ligas o torneos',
+            'Juegas regularmente',
+            'Tienes saques y golpes consistentes'
+          ]
+        },
+        beginner: {
+          title: 'Liga Bronce',
+          points: [
+            'Primera vez en una liga de tenis',
+            'Juegas de forma recreativa',
+            'Quieres mejorar y divertirte'
+          ]
+        }
+      },
+      thisLevelIsFor: 'Este nivel es para ti si...',
       whyJoin: '¿Por Qué Unirse?',
       benefits: [
         'Partidos justos con rivales de tu nivel',
@@ -47,6 +76,8 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
     en: {
       registerNow: 'Register Now!',
       free: 'Free',
+      seasonRegistration: 'Season registration',
+      promoCode: 'Promo code',
       regularSeason: 'Regular Season',
       playoffsLabel: 'Playoffs',
       included: 'Everything Included',
@@ -69,6 +100,33 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
         intermediate: 'Intermediate level',
         beginner: 'Start competing'
       },
+      levelDetails: {
+        advanced: {
+          title: 'Gold League',
+          points: [
+            'You dominate at recreational level',
+            'Multiple competitive seasons',
+            'Looking for high-level matches'
+          ]
+        },
+        intermediate: {
+          title: 'Silver League',
+          points: [
+            'You\'ve played in leagues or tournaments',
+            'You play regularly',
+            'You have consistent serves and groundstrokes'
+          ]
+        },
+        beginner: {
+          title: 'Bronze League',
+          points: [
+            'First time in a tennis league',
+            'You play recreationally',
+            'Looking to improve and have fun'
+          ]
+        }
+      },
+      thisLevelIsFor: 'This level is for you if...',
       whyJoin: 'Why Join?',
       benefits: [
         'Fair matches with opponents at your level',
@@ -212,25 +270,44 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         {/* Price + Dates row */}
         <div className="p-4 sm:p-6">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              {league.seasonConfig?.price?.isFree || finalPrice === 0 ? (
+          <div className="mb-4">
+            {/* Price label */}
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+              {content.seasonRegistration}
+            </p>
+            
+            {/* Price display */}
+            <div className="flex items-baseline gap-3">
+              {league.seasonConfig?.price?.isFree ? (
+                // League is inherently free (no discount needed)
                 <span className="text-3xl sm:text-4xl font-bold text-parque-green">{content.free}</span>
               ) : discountValid && discountDetails ? (
-                <div className="flex items-baseline gap-2">
-                  <span className="text-xl text-gray-400 line-through">{discountDetails.originalPrice}€</span>
-                  <span className="text-3xl sm:text-4xl font-bold text-parque-green">{discountDetails.finalPrice}€</span>
-                </div>
+                // Discount applied
+                <>
+                  <span className="text-xl sm:text-2xl text-gray-400 line-through">
+                    {discountDetails.originalPrice}€
+                  </span>
+                  <span className="text-3xl sm:text-4xl font-bold text-parque-green">
+                    {discountDetails.finalPrice}€
+                  </span>
+                </>
               ) : (
-                <span className="text-3xl sm:text-4xl font-bold text-gray-900">{league.seasonConfig?.price?.amount}€</span>
-              )}
-              {discountValid && (
-                <div className="flex items-center gap-1 mt-1 text-parque-green text-sm">
-                  <Tag className="w-3 h-3" />
-                  <span className="font-medium">{discountCode}</span>
-                </div>
+                // Regular price
+                <span className="text-3xl sm:text-4xl font-bold text-gray-900">
+                  {league.seasonConfig?.price?.amount}€
+                </span>
               )}
             </div>
+            
+            {/* Promo code badge */}
+            {discountValid && (
+              <div className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 bg-parque-green/10 rounded-full">
+                <Tag className="w-3.5 h-3.5 text-parque-green" />
+                <span className="text-sm font-medium text-parque-green">
+                  {content.promoCode}: <span className="uppercase">{discountCode}</span>
+                </span>
+              </div>
+            )}
           </div>
           
           {/* Season phases */}
@@ -363,6 +440,21 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
             )
           })}
         </div>
+        
+        {/* Current level details */}
+        {content.levelDetails[leagueLevel] && (
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <p className="text-sm font-medium text-gray-500 mb-2">{content.thisLevelIsFor}</p>
+            <ul className="space-y-1.5">
+              {content.levelDetails[leagueLevel].points.map((point, idx) => (
+                <li key={idx} className="flex items-start gap-2 text-sm text-gray-700">
+                  <CheckCircle className="w-4 h-4 text-parque-green flex-shrink-0 mt-0.5" />
+                  <span>{point}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       {/* What's Included - Grid version */}

@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Trophy, Medal, Award, MapPin, Calendar, Users, ChevronRight, HelpCircle, X, Check } from 'lucide-react'
@@ -297,8 +298,11 @@ function LevelHelperModal({ isOpen, onClose, locale, colors, leagues }) {
   
   if (!isOpen) return null
   
-  return (
-    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center md:p-4">
+  // Use portal to render at document.body level to avoid z-index stacking issues
+  if (typeof document === 'undefined') return null
+  
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-end md:items-center justify-center md:p-4">
       {/* Backdrop */}
       <div 
         className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ease-out ${
@@ -415,7 +419,8 @@ function LevelHelperModal({ isOpen, onClose, locale, colors, leagues }) {
         {/* Safe area padding for iOS - mobile only */}
         {isMobile && <div className="h-safe-area-inset-bottom bg-white" />}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

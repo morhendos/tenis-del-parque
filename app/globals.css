@@ -52,23 +52,11 @@ body {
     background-color: rgba(86, 51, 128, 0.2);
   }
   
-  /* Optimize tap targets */
-  button, 
-  a, 
-  input, 
-  select, 
-  textarea {
-    min-height: 44px;
-    min-width: 44px;
-  }
-  
   /* 
-   * REMOVED: Global button margin rule that was causing layout issues
-   * button:not(:last-child) { margin-bottom: 8px; }
-   * 
-   * This was breaking horizontal button groups everywhere.
-   * If you need vertical button spacing, use Tailwind's space-y-* utilities
-   * or flex with flex-col and gap-* on the parent container.
+   * REMOVED: Blanket 44px min-height/min-width rule
+   * This was causing ALL buttons/links to be oversized.
+   * Touch targets should be sized appropriately per-component using Tailwind.
+   * Apple recommends 44px for primary actions, but not every element.
    */
 }
 

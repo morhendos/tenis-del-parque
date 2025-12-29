@@ -14,17 +14,17 @@ export default function RecentResults({ matches, language, maxResults = 3 }) {
     es: {
       title: 'Actividad Reciente',
       noMatches: 'Sin partidos completados',
-      round: 'Ronda',
-      win: 'Victoria',
-      loss: 'Derrota',
+      round: 'R',
+      win: 'V',
+      loss: 'D',
       viewAll: 'Ver todos'
     },
     en: {
       title: 'Recent Activity',
       noMatches: 'No completed matches',
-      round: 'Round',
-      win: 'Win',
-      loss: 'Loss',
+      round: 'R',
+      win: 'W',
+      loss: 'L',
       viewAll: 'View all'
     }
   }
@@ -45,36 +45,30 @@ export default function RecentResults({ matches, language, maxResults = 3 }) {
 
   if (!displayMatches || displayMatches.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
-            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <span className="text-lg font-semibold text-gray-400">{t.title}</span>
+      <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+        <div className="flex items-center gap-2 mb-3">
+          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span className="text-sm font-semibold text-gray-400">{t.title}</span>
         </div>
-        <p className="text-gray-400 text-sm">{t.noMatches}</p>
+        <p className="text-gray-400 text-xs">{t.noMatches}</p>
       </div>
     )
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+    <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
-            <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <span className="text-lg font-semibold text-gray-900">{t.title}</span>
-        </div>
+      <div className="flex items-center gap-2 mb-3">
+        <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span className="text-sm font-semibold text-gray-700">{t.title}</span>
       </div>
 
-      {/* Match List */}
-      <div className="space-y-3">
+      {/* Match List - Compact */}
+      <div className="space-y-2">
         {displayMatches.map((match, index) => {
           const isWin = match.result === 'won'
           const scoreStr = formatScore(match.score)
@@ -84,47 +78,40 @@ export default function RecentResults({ matches, language, maxResults = 3 }) {
           return (
             <div 
               key={match._id || index}
-              className={`rounded-xl p-4 ${isWin ? 'bg-green-50' : 'bg-red-50'}`}
+              className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0"
             >
-              <div className="flex items-center gap-4">
-                {/* Position Circle */}
-                <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  isWin ? 'bg-green-500' : 'bg-red-500'
-                }`}>
-                  <span className="text-white text-base font-bold">
-                    {position ? `#${position}` : '—'}
-                  </span>
-                </div>
-                
-                {/* Player Info */}
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-900 truncate">
+              {/* Win/Loss indicator */}
+              <div className={`w-1 h-8 rounded-full flex-shrink-0 ${
+                isWin ? 'bg-green-500' : 'bg-red-400'
+              }`} />
+              
+              {/* Player Info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-gray-900 text-sm truncate">
                     {isDemoMode ? getMaskedName(match.opponent) : match.opponent}
                   </p>
-                  <p className="text-sm text-gray-500">
-                    {t.round} {match.round}
-                  </p>
+                  {position && (
+                    <span className="text-xs text-gray-400">#{position}</span>
+                  )}
                 </div>
-                
-                {/* Result + ELO */}
-                <div className="text-right flex-shrink-0">
-                  <p className={`font-semibold ${isWin ? 'text-green-600' : 'text-red-600'}`}>
-                    {isWin ? t.win : t.loss}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    ELO {eloChange >= 0 ? '+' : ''}{eloChange}
-                  </p>
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <span>{t.round}{match.round}</span>
+                  {scoreStr && (
+                    <>
+                      <span className="text-gray-300">•</span>
+                      <span className="font-mono">{scoreStr}</span>
+                    </>
+                  )}
                 </div>
               </div>
               
-              {/* Score row */}
-              {scoreStr && (
-                <div className="mt-2 pt-2 border-t border-gray-200/50">
-                  <p className="text-sm text-gray-600 font-mono text-center">
-                    {scoreStr}
-                  </p>
-                </div>
-              )}
+              {/* ELO Change */}
+              <div className={`text-sm font-medium ${
+                eloChange >= 0 ? 'text-green-600' : 'text-red-500'
+              }`}>
+                {eloChange >= 0 ? '+' : ''}{eloChange}
+              </div>
             </div>
           )
         })}

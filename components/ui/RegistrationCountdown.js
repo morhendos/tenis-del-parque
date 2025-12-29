@@ -151,22 +151,11 @@ export default function RegistrationCountdown({ registrationEnd, language = 'es'
     )
   }
 
-  // Purple theme (brand color)
+  // Purple theme (brand color) - always purple, no urgency colors
   if (purple) {
-    let textColor = 'text-parque-purple'
-    let labelColor = 'text-parque-purple/70'
-    let iconColor = 'text-parque-purple'
-
-    // Still show urgency
-    if (totalHours <= 24) {
-      textColor = 'text-red-600'
-      labelColor = 'text-red-600/70'
-      iconColor = 'text-red-600'
-    } else if (totalHours <= 72) {
-      textColor = 'text-orange-600'
-      labelColor = 'text-orange-600/70'
-      iconColor = 'text-orange-600'
-    }
+    const textColor = 'text-parque-purple'
+    const labelColor = 'text-parque-purple/70'
+    const iconColor = 'text-parque-purple'
 
     return (
       <div className="flex items-center gap-2 sm:gap-3">
