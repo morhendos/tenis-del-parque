@@ -8,25 +8,36 @@ export default function ClubCard({ club, locale }) {
   const [imageLoading, setImageLoading] = useState(true)
   const [googlePhotoError, setGooglePhotoError] = useState(false)
   
+  // Helper function to check if URL is a Google Photos proxy URL
+  const isGooglePhotoUrl = (url) => {
+    if (!url) return false
+    return String(url).includes('/api/clubs/photo') || String(url).includes('photo_reference=')
+  }
+
   // Get the best available image
+  // NOTE: We skip Google Photos proxy URLs because:
+  // 1. Google Places photo_references expire after a few days/weeks
+  // 2. Next.js Image optimization doesn't work well with dynamic API routes
+  // 3. This causes 400 errors and blocking loops in the console
   const getClubImage = () => {
-    // Priority: main image > first gallery image > Google photo > fallback
-    if (club.images?.main && !imageError) {
+    // Priority: main image > first gallery image > fallback
+    // NOTE: Google Photos are skipped due to Next.js Image optimization issues
+    
+    // Check main image (skip if it's a Google Photo URL)
+    if (club.images?.main && !imageError && !isGooglePhotoUrl(club.images.main)) {
       return club.images.main
     }
     
+    // Check gallery images (skip Google Photo URLs)
     if (club.images?.gallery?.length > 0 && !imageError) {
-      return club.images.gallery[0]
+      const validGalleryImage = club.images.gallery.find(img => !isGooglePhotoUrl(img))
+      if (validGalleryImage) {
+        return validGalleryImage
+      }
     }
     
-    if (club.images?.googlePhotoReference && !imageError && !googlePhotoError) {
-      const googlePhotoUrl = `/api/clubs/photo?photo_reference=${club.images.googlePhotoReference}`
-      // Add debug info in development
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[ClubCard] Using Google Photo for ${club.name}: ${club.images.googlePhotoReference.substring(0, 20)}...`)
-      }
-      return googlePhotoUrl
-    }
+    // NOTE: Skipping Google Photos - they cause Next.js Image optimization issues
+    // and photo_references expire. Clubs should use uploaded images instead.
     
     // Return null to trigger fallback
     return null

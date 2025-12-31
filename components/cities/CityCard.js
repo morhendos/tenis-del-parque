@@ -37,38 +37,48 @@ export default function CityCard({ city, leagueCount = 0, className = '' }) {
   const [imageLoading, setImageLoading] = useState(true)
   const { locale } = useLocale()
 
+  // Helper function to check if URL is a Google Photos proxy URL
+  const isGooglePhotoUrl = (url) => {
+    if (!url) return false
+    return String(url).includes('/api/cities/photo') || 
+           String(url).includes('/api/clubs/photo') || 
+           String(url).includes('photo_reference=')
+  }
+
   // Get the main city image with proper fallback handling
+  // NOTE: We skip Google Photos proxy URLs because:
+  // 1. Google Places photo_references expire after a few days/weeks
+  // 2. Next.js Image optimization doesn't work well with dynamic API routes
+  // 3. This causes 400 errors and blocking loops in the console
   const getCityImage = () => {
-    // If there's an error or no images, return a professional fallback
-    if (imageError || (!city.images?.main && !city.images?.googlePhotoReference && !city.googleData?.photos?.length)) {
+    // If there's an error or no valid images, return a professional fallback
+    // NOTE: We now skip Google Photos due to Next.js Image optimization issues
+    if (imageError) {
       return getGenericCityFallback(city.name?.es || city.displayName || 'Ciudad')
     }
 
-    // Check for main image - handle both Google photos and Vercel Blob URLs
+    // Check for main image - handle Vercel Blob URLs and relative URLs
+    // Skip Google photo references as they cause issues with Next.js Image optimization
     if (city.images?.main) {
-      // If it's a Google photo reference, use the public proxy
-      if (city.images?.googlePhotoReference) {
-        return `/api/cities/photo?photo_reference=${city.images.googlePhotoReference}&maxwidth=800`
-      }
-      // Check if it's a Vercel Blob URL
-      if (city.images.main.includes('blob.vercel-storage.com')) {
+      // Check if it's a Google photo reference URL - skip it
+      if (isGooglePhotoUrl(city.images.main)) {
+        // Skip Google Photos - fall through to next option or fallback
+      } else {
+        // Check if it's a Vercel Blob URL
+        if (city.images.main.includes('blob.vercel-storage.com')) {
+          return city.images.main
+        }
+        // Check if it's a relative URL (from old local uploads)
+        if (city.images.main.startsWith('/') && !isGooglePhotoUrl(city.images.main)) {
+          return city.images.main
+        }
+        // Otherwise use the URL as-is (if not a Google Photo URL)
         return city.images.main
       }
-      // Check if it's a relative URL (from old local uploads)
-      if (city.images.main.startsWith('/')) {
-        return city.images.main
-      }
-      // Otherwise use the URL as-is
-      return city.images.main
     }
     
-    // Check if there are Google photos available
-    if (city.googleData?.photos && city.googleData.photos.length > 0) {
-      const firstPhoto = city.googleData.photos[0]
-      if (firstPhoto.photo_reference) {
-        return `/api/cities/photo?photo_reference=${firstPhoto.photo_reference}&maxwidth=800`
-      }
-    }
+    // NOTE: Skipping Google Photos - they cause Next.js Image optimization issues
+    // and photo_references expire. Cities should use uploaded images instead.
     
     // Professional fallback
     return getGenericCityFallback(city.name?.es || city.displayName || 'Ciudad')

@@ -174,6 +174,12 @@ export default function ClubDetailPageSSG({ locale, city, slug, clubData }) {
     loadGoogleMaps()
   }, [club, mapLoaded, locale])
 
+  // Helper function to check if URL is a Google Photos proxy URL
+  const isGooglePhotoUrl = (url) => {
+    if (!url) return false
+    return String(url).includes('/api/clubs/photo') || String(url).includes('photo_reference=')
+  }
+
   // Helper function to normalize URLs for better duplicate detection
   const normalizeImageUrl = (url) => {
     if (!url) return null
@@ -197,6 +203,10 @@ export default function ClubDetailPageSSG({ locale, city, slug, clubData }) {
   }
 
   // Collect all images with enhanced deduplication
+  // NOTE: We skip Google Photos proxy URLs because:
+  // 1. Google Places photo_references expire after a few days/weeks
+  // 2. Next.js Image optimization doesn't work well with dynamic API routes
+  // 3. This causes 400 errors and blocking loops in the console
   const allImages = useMemo(() => {
     if (!club) return []
     
@@ -205,6 +215,13 @@ export default function ClubDetailPageSSG({ locale, city, slug, clubData }) {
     
     const addImage = (url, source = 'unknown') => {
       if (!url) return
+      
+      // Skip Google Photos proxy URLs - they cause issues with Next.js Image optimization
+      // and the photo_references expire frequently
+      if (isGooglePhotoUrl(url)) {
+        console.log(`[ClubDetailPage] Skipping Google Photo URL from ${source}`)
+        return
+      }
       
       const normalizedUrl = normalizeImageUrl(url)
       if (!normalizedUrl) return
@@ -231,19 +248,9 @@ export default function ClubDetailPageSSG({ locale, city, slug, clubData }) {
       })
     }
     
-    // Add Google photos (skip duplicates)
-    if (club.googleData?.photos && Array.isArray(club.googleData.photos)) {
-      club.googleData.photos.forEach((photo, idx) => {
-        const googlePhotoUrl = `/api/clubs/photo?photo_reference=${photo.photo_reference}`
-        addImage(googlePhotoUrl, `google[${idx}]`)
-      })
-    }
-    
-    // Add legacy Google photo reference if it exists
-    if (club.images?.googlePhotoReference) {
-      const legacyGoogleUrl = `/api/clubs/photo?photo_reference=${club.images.googlePhotoReference}`
-      addImage(legacyGoogleUrl, 'legacy_google')
-    }
+    // NOTE: Skipping Google Photos - they cause Next.js Image optimization issues
+    // and photo_references expire. Clubs should use uploaded images instead.
+    // If you need Google Photos, consider downloading and storing them permanently.
     
     return images
   }, [club])
