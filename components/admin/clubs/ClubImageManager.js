@@ -9,6 +9,7 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
   const [uploading, setUploading] = useState(false)
   const [showGallery, setShowGallery] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+  const [importing, setImporting] = useState(false)
   const fileInputRef = useRef(null)
 
   // Helper function to get Google Photo URL without exposing API key
@@ -270,7 +271,45 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
     }
   }
 
-  // Refresh Google Photos from Google Maps API
+  // Import Google Photos to Vercel Blob (permanent storage)
+  const importGooglePhotosToBlob = async () => {
+    if (!club?._id) {
+      toast.error('Club ID not found')
+      return
+    }
+
+    if (!club?.googlePlaceId) {
+      toast.error('This club was not imported from Google Maps')
+      return
+    }
+
+    setImporting(true)
+
+    try {
+      const response = await fetch('/api/admin/clubs/import-google-photos-to-blob', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clubId: club._id, maxPhotos: 5 })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to import photos')
+      }
+
+      // Reload the page to get fresh data
+      toast.success(`${data.message}. Reloading...`)
+      setTimeout(() => window.location.reload(), 1500)
+    } catch (error) {
+      console.error('Error importing Google Photos:', error)
+      toast.error(error.message || 'Failed to import Google Photos')
+    } finally {
+      setImporting(false)
+    }
+  }
+
+  // Legacy refresh (only updates photo references - NOT recommended)
   const refreshGooglePhotos = async () => {
     if (!club?._id) {
       toast.error('Club ID not found')
@@ -536,25 +575,25 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
         </div>
       )}
 
-      {/* Re-import button for clubs without Google photos but with Google Place ID */}
-      {!readOnly && club?.googlePlaceId && (!club?.googleData?.photos || club.googleData.photos.length === 0) && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      {/* Import button for clubs with Google Place ID */}
+      {!readOnly && club?.googlePlaceId && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="text-sm font-medium text-blue-900 mb-1">
-                🗺️ Google Maps Photos Available
+              <h4 className="text-sm font-medium text-green-900 mb-1">
+                📸 Import Photos from Google Maps
               </h4>
-              <p className="text-xs text-blue-700">
-                This club was imported from Google Maps. You can import photos from Google Maps.
+              <p className="text-xs text-green-700">
+                Downloads photos and saves them permanently to Vercel Blob storage. These images will never expire.
               </p>
             </div>
             <button
-              onClick={refreshGooglePhotos}
-              disabled={refreshing}
-              className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
-              title="Fetch photos from Google Maps"
+              onClick={importGooglePhotosToBlob}
+              disabled={importing}
+              className="px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
+              title="Import photos permanently to Vercel Blob"
             >
-              {refreshing ? (
+              {importing ? (
                 <>
                   <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -567,7 +606,7 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
-                  Import from Google Maps
+                  Import to Blob Storage
                 </>
               )}
             </button>
@@ -589,25 +628,25 @@ export default function ClubImageManager({ club, onImagesUpdate, readOnly = fals
             </div>
             {!readOnly && club?.googlePlaceId && (
               <button
-                onClick={refreshGooglePhotos}
-                disabled={refreshing}
-                className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1"
-                title="Fetch latest photos from Google Maps"
+                onClick={importGooglePhotosToBlob}
+                disabled={importing}
+                className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 disabled:opacity-50 flex items-center gap-1"
+                title="Re-import photos to Vercel Blob (permanent)"
               >
-                {refreshing ? (
+                {importing ? (
                   <>
                     <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Refreshing...
+                    Importing...
                   </>
                 ) : (
                   <>
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
-                    Re-import from Google Maps
+                    Re-import to Blob
                   </>
                 )}
               </button>
