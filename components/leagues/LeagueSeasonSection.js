@@ -1,18 +1,12 @@
 'use client'
 import { useState } from 'react'
+import Link from 'next/link'
 import SeasonLevelSelector from './SeasonLevelSelector'
-import LeagueLevelCard from './LeagueLevelCard'
 
 /**
  * =============================================================================
  * LEAGUE SEASON SECTION - Groups leagues by season for better UX
  * =============================================================================
- * 
- * This component groups leagues by season (e.g., "Winter 2026") and displays
- * them using SeasonLevelSelector for a unified experience.
- * 
- * If a season has multiple skill levels (Gold, Silver, Bronze), they're shown
- * as ONE card with level options instead of 3 separate cards.
  */
 
 // Helper to generate a unique season key
@@ -37,6 +31,41 @@ function groupLeaguesBySeason(leagues) {
   })
   
   return Object.values(groups)
+}
+
+const seasonTypeNames = {
+  es: { spring: 'Primavera', summer: 'Verano', autumn: 'Otoño', winter: 'Invierno', annual: 'Anual' },
+  en: { spring: 'Spring', summer: 'Summer', autumn: 'Autumn', winter: 'Winter', annual: 'Annual' }
+}
+
+// Simple card for single league - ALWAYS goes to league page
+function SimpleLeagueCard({ league, locale, status }) {
+  const citySlug = league.city?.slug || 'unknown'
+  const seasonType = seasonTypeNames[locale]?.[league.season?.type] || league.season?.type
+  const seasonName = `${seasonType} ${league.season?.year || ''}`
+  
+  // ALWAYS go to league page
+  const href = `/${locale}/${citySlug}/liga/${league.slug}`
+  
+  const buttonText = status === 'past'
+    ? (locale === 'es' ? 'Ver Resultados' : 'View Results')
+    : (locale === 'es' ? 'Abrir Liga' : 'Open League')
+
+  return (
+    <div className="bg-white rounded-lg shadow-md p-4 sm:p-5 max-w-md">
+      <h3 className="text-lg font-bold text-gray-900">{league.name}</h3>
+      <p className="text-sm text-gray-600 mt-1">{seasonName}</p>
+      <p className="text-sm text-gray-500 mt-2">
+        {league.stats?.registeredPlayers || 0} / {league.seasonConfig?.maxPlayers || 32} {locale === 'es' ? 'jugadores' : 'players'}
+      </p>
+      <Link
+        href={href}
+        className="mt-4 block w-full text-center py-2.5 px-4 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium text-sm"
+      >
+        {buttonText}
+      </Link>
+    </div>
+  )
 }
 
 export default function LeagueSeasonSection({ 
@@ -100,19 +129,14 @@ export default function LeagueSeasonSection({
               )
             }
             
-            // Single league - show as individual card (for special cases)
-            // But wrap it in a container for consistent spacing
+            // Single league - show as simple card
             return (
-              <div 
+              <SimpleLeagueCard
                 key={`${group.seasonType}-${group.seasonYear}-${index}`}
-                className="max-w-md"
-              >
-                <LeagueLevelCard 
-                  league={group.leagues[0]} 
-                  locale={locale}
-                  status={status}
-                />
-              </div>
+                league={group.leagues[0]}
+                locale={locale}
+                status={status}
+              />
             )
           })}
         </div>

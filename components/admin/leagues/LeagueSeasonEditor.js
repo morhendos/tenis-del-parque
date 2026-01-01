@@ -194,7 +194,25 @@ export default function LeagueSeasonEditor({ leagueId, onClose, onUpdate }) {
                   <input
                     type="date"
                     value={seasonConfig.startDate}
-                    onChange={(e) => setSeasonConfig(prev => ({ ...prev, startDate: e.target.value }))}
+                    onChange={(e) => {
+                      const newStartDate = e.target.value
+                      setSeasonConfig(prev => {
+                        // Auto-update registrationEnd to day before start date
+                        const startDateObj = new Date(newStartDate)
+                        const regEndDate = new Date(startDateObj)
+                        regEndDate.setDate(regEndDate.getDate() - 1)
+                        const regEndStr = regEndDate.toISOString().split('T')[0]
+                        
+                        return {
+                          ...prev,
+                          startDate: newStartDate,
+                          // Only auto-update if registrationEnd is empty or before the new start date
+                          registrationEnd: (!prev.registrationEnd || new Date(prev.registrationEnd) < startDateObj) 
+                            ? regEndStr 
+                            : prev.registrationEnd
+                        }
+                      })
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     required
                   />
@@ -233,8 +251,25 @@ export default function LeagueSeasonEditor({ leagueId, onClose, onUpdate }) {
                     type="date"
                     value={seasonConfig.registrationEnd}
                     onChange={(e) => setSeasonConfig(prev => ({ ...prev, registrationEnd: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className={`w-full px-3 py-2 border rounded-md ${
+                      seasonConfig.registrationEnd && new Date(seasonConfig.registrationEnd) < new Date()
+                        ? 'border-red-500 bg-red-50'
+                        : 'border-gray-300'
+                    }`}
                   />
+                  {seasonConfig.registrationEnd && new Date(seasonConfig.registrationEnd) < new Date() && (
+                    <p className="mt-1 text-sm text-red-600">
+                      ⚠️ This date is in the past! Registration will show as closed.
+                    </p>
+                  )}
+                  {seasonConfig.startDate && seasonConfig.registrationEnd && new Date(seasonConfig.registrationEnd) > new Date(seasonConfig.startDate) && (
+                    <p className="mt-1 text-sm text-orange-600">
+                      ⚠️ Registration end is after start date - usually it should be before.
+                    </p>
+                  )}
+                  <p className="mt-1 text-xs text-gray-500">
+                    Auto-updates when you change Start Date
+                  </p>
                 </div>
                 
                 <div>

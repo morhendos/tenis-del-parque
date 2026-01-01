@@ -133,7 +133,7 @@ function formatDateRange(startDate, endDate, locale) {
 }
 
 // Level Helper Bottom Sheet
-function LevelHelperModal({ isOpen, onClose, locale, colors, leagues }) {
+function LevelHelperModal({ isOpen, onClose, locale, colors, leagues, status }) {
   const [isDragging, setIsDragging] = useState(false)
   const [dragY, setDragY] = useState(0)
   const [isClosing, setIsClosing] = useState(false)
@@ -141,6 +141,9 @@ function LevelHelperModal({ isOpen, onClose, locale, colors, leagues }) {
   const [isMobile, setIsMobile] = useState(true) // Default to mobile for SSR
   const sheetRef = useRef(null)
   const startYRef = useRef(0)
+  
+  // Check if this is a past season
+  const isPastSeason = status === 'past'
   
   // Detect mobile vs desktop
   useEffect(() => {
@@ -390,10 +393,15 @@ function LevelHelperModal({ isOpen, onClose, locale, colors, leagues }) {
             
             // If we have a league, make it clickable
             if (league && leagueSlug) {
+              // Determine link based on status
+              const linkHref = isPastSeason
+                ? `/${locale}/${citySlug}/liga/${leagueSlug}`
+                : `/${locale}/leagues/${citySlug}/info/${leagueSlug}`
+              
               return (
                 <Link
                   key={level}
-                  href={`/${locale}/leagues/${citySlug}/info/${leagueSlug}`}
+                  href={linkHref}
                   onClick={handleCloseClick}
                   className={`${config.bgLight} rounded-xl p-4 border ${config.border} block hover:shadow-md active:scale-[0.99] transition-all`}
                 >
@@ -425,7 +433,7 @@ function LevelHelperModal({ isOpen, onClose, locale, colors, leagues }) {
 }
 
 // Individual Level Option (clickable)
-function LevelOption({ league, locale, isRegistrationOpen, showSpots = false, colors }) {
+function LevelOption({ league, locale, isRegistrationOpen, showSpots = false, colors, status }) {
   const config = skillLevelConfig[league.skillLevel] || skillLevelConfig.intermediate
   const LevelIcon = config.icon
   const levelName = config.name[locale]
@@ -440,9 +448,16 @@ function LevelOption({ league, locale, isRegistrationOpen, showSpots = false, co
   // Dark mode specific styles
   const isDark = colors.isDark
   
+  // Determine the correct link based on status
+  // Past/completed leagues go to public league page
+  const isPastOrCompleted = status === 'past' || league.status === 'completed'
+  const linkHref = isPastOrCompleted
+    ? `/${locale}/${citySlug}/liga/${league.slug}`
+    : `/${locale}/leagues/${citySlug}/info/${league.slug}`
+  
   return (
     <Link
-      href={`/${locale}/leagues/${citySlug}/info/${league.slug}`}
+      href={linkHref}
       className={`
         relative flex flex-col items-center p-3 sm:p-4 rounded-xl border-2 
         transition-all duration-200 
@@ -573,6 +588,10 @@ export default function SeasonLevelSelector({
               <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 ${colors.badgeCurrent} text-white text-xs sm:text-sm font-semibold rounded-full shadow-lg`}>
                 {locale === 'es' ? 'En Curso' : 'In Progress'}
               </span>
+            ) : status === 'past' ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-600 text-white text-xs sm:text-sm font-semibold rounded-full shadow-lg">
+                {locale === 'es' ? 'Temporada Pasada' : 'Past Season'}
+              </span>
             ) : (
               <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 ${colors.badgeComingSoon} text-white text-xs sm:text-sm font-semibold rounded-full shadow-lg`}>
                 {locale === 'es' ? 'Próximamente' : 'Coming Soon'}
@@ -621,6 +640,7 @@ export default function SeasonLevelSelector({
                 isRegistrationOpen={isRegistrationOpen}
                 showSpots={showSpots}
                 colors={colors}
+                status={status}
               />
             ))}
           </div>
@@ -667,6 +687,7 @@ export default function SeasonLevelSelector({
         locale={locale}
         colors={colors}
         leagues={sortedLeagues}
+        status={status}
       />
     </>
   )
