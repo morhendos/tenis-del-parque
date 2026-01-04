@@ -195,9 +195,9 @@ export default function LeagueRegistrationPage() {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+          <div className="w-12 h-12 border-3 border-parque-purple border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
           <div className="text-gray-600 text-sm">{validLocale === 'es' ? 'Cargando...' : 'Loading...'}</div>
         </div>
       </div>
@@ -207,23 +207,25 @@ export default function LeagueRegistrationPage() {
   // Error state
   if (error || !league) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-blue-50">
+      <div className="min-h-screen flex flex-col bg-white">
         <Navigation locale={validLocale} />
-        <div className="container mx-auto px-4 py-32 text-center">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-            {validLocale === 'es' ? 'Liga no encontrada' : 'League not found'}
-          </h1>
-          <p className="text-gray-600 mb-8">
-            {validLocale === 'es' 
-              ? 'La liga que buscas no existe o no está activa.'
-              : 'The league you are looking for does not exist or is not active.'}
-          </p>
-          <a 
-            href={`/${validLocale}/leagues`}
-            className="inline-block bg-emerald-600 text-white px-6 py-3 rounded-xl hover:bg-emerald-700 transition-colors font-medium"
-          >
-            {validLocale === 'es' ? 'Ver todas las ligas' : 'View all leagues'}
-          </a>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="container mx-auto px-4 py-16 text-center">
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+              {validLocale === 'es' ? 'Liga no encontrada' : 'League not found'}
+            </h1>
+            <p className="text-gray-600 mb-8">
+              {validLocale === 'es' 
+                ? 'La liga que buscas no existe o no está activa.'
+                : 'The league you are looking for does not exist or is not active.'}
+            </p>
+            <a 
+              href={`/${validLocale}/leagues`}
+              className="inline-block bg-parque-purple text-white px-6 py-3 rounded-xl hover:bg-parque-purple/90 transition-colors font-medium"
+            >
+              {validLocale === 'es' ? 'Ver todas las ligas' : 'View all leagues'}
+            </a>
+          </div>
         </div>
         <Footer content={t.footer} />
       </div>
@@ -233,29 +235,33 @@ export default function LeagueRegistrationPage() {
   // Success state
   if (isSubmitted && registrationData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-blue-50">
+      <div className="min-h-screen flex flex-col bg-white">
         <Navigation locale={validLocale} />
         
-        <div className="container mx-auto px-4 py-8 pt-24 relative z-10">
-          <EnhancedSuccessMessage 
-            playerName={registrationData.playerName}
-            leagueName={registrationData.leagueName}
-            leagueStatus={registrationData.leagueStatus}
-            expectedStartDate={registrationData.expectedStartDate}
-            whatsappGroupLink={registrationData.whatsappGroupLink}
-            shareUrl={registrationData.shareUrl}
-            language={validLocale}
-          />
+        <div className="flex-1">
+          <div className="container mx-auto px-4 py-8 pt-24 relative z-10">
+            <EnhancedSuccessMessage 
+              playerName={registrationData.playerName}
+              leagueName={registrationData.leagueName}
+              leagueStatus={registrationData.leagueStatus}
+              expectedStartDate={registrationData.expectedStartDate}
+              whatsappGroupLink={registrationData.whatsappGroupLink}
+              shareUrl={registrationData.shareUrl}
+              language={validLocale}
+            />
+          </div>
         </div>
         
-        <Footer content={t.footer} />
+        <div className="mt-auto">
+          <Footer content={t.footer} />
+        </div>
       </div>
     )
   }
 
   // Registration form
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-blue-50 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
       {/* Subtle decorative background - only on larger screens */}
       <div className="hidden sm:block absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 right-10 w-72 h-72 bg-emerald-300/15 rounded-full blur-3xl"></div>
@@ -265,7 +271,7 @@ export default function LeagueRegistrationPage() {
       <Navigation locale={validLocale} />
       
       {/* Mobile-optimized container */}
-      <div className="sm:container sm:mx-auto px-0 sm:px-4 py-4 sm:py-8 pt-20 sm:pt-24 relative z-10">
+      <div className="flex-1 sm:container sm:mx-auto px-0 sm:px-4 pt-20 sm:pt-24 sm:pb-8 relative z-10">
         {/* Header - Clean and centered */}
         <div className="text-center mb-4 sm:mb-6 px-4 sm:px-0">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
@@ -287,10 +293,8 @@ export default function LeagueRegistrationPage() {
         />
       </div>
       
-      {/* Footer with proper spacing on mobile */}
-      <div className="mt-8 sm:mt-12">
-        <Footer content={t.footer} />
-      </div>
+      {/* Footer */}
+      <Footer content={t.footer} />
     </div>
   )
 }

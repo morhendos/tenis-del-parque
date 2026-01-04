@@ -1,14 +1,21 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Calendar, Users, Trophy, Target, ChartLine, CheckCircle, Tag, Medal, Award, ArrowRight, Star } from 'lucide-react'
+import { Calendar, Users, Trophy, Target, ChartLine, CheckCircle, Tag, Medal, Award, ArrowRight } from 'lucide-react'
 import RegistrationCountdown from '@/components/ui/RegistrationCountdown'
+import { extractSeasonInfo, getSkillLevel } from '@/lib/utils/leagueSiblings'
+import { getRandomQuote } from '@/lib/content/tennisQuotes'
 
-export default function LeagueInfoTab({ league, currentSeason, language, locale }) {
+export default function LeagueInfoTab({ league, currentSeason, language, locale, citySlug }) {
   const [discountCode, setDiscountCode] = useState('')
   const [discountValid, setDiscountValid] = useState(false)
   const [discountDetails, setDiscountDetails] = useState(null)
   const [finalPrice, setFinalPrice] = useState(league.seasonConfig?.price?.amount || 0)
+  const [siblingLeagues, setSiblingLeagues] = useState([])
+  const [motivationQuote, setMotivationQuote] = useState(null)
+  
+  // Use citySlug prop or fallback to league.city.slug
+  const effectiveCitySlug = citySlug || league.city?.slug || 'sotogrande'
 
   const t = {
     es: {
@@ -147,8 +154,33 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
         setDiscountCode(urlDiscount.toUpperCase())
         validateDiscount(urlDiscount)
       }
+      // Set motivation quote on mount
+      setMotivationQuote(getRandomQuote(language, 'motivation'))
     }
   }, [])
+
+  // Fetch sibling leagues (same city, same season, different levels)
+  useEffect(() => {
+    const fetchSiblings = async () => {
+      const seasonInfo = extractSeasonInfo(league)
+      
+      if (!effectiveCitySlug || !seasonInfo) return
+      
+      try {
+        const response = await fetch(
+          `/api/leagues/siblings?city=${effectiveCitySlug}&season=${seasonInfo.seasonType}&year=${seasonInfo.seasonYear}`
+        )
+        if (response.ok) {
+          const data = await response.json()
+          setSiblingLeagues(data.leagues || [])
+        }
+      } catch (error) {
+        console.error('Error fetching sibling leagues:', error)
+      }
+    }
+    
+    fetchSiblings()
+  }, [effectiveCitySlug, league.season?.type, league.season?.year, league.slug])
 
   const validateDiscount = async (code) => {
     if (!code || code.trim() === '') {
@@ -181,18 +213,7 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
     }
   }
 
-  const getLeagueLevel = () => {
-    if (league.skillLevel) {
-      if (league.skillLevel === 'all') return 'open'
-      return league.skillLevel
-    }
-    const name = league.name?.toLowerCase() || league.slug?.toLowerCase() || ''
-    if (name.includes('gold') || name.includes('advanced') || name.includes('oro')) return 'advanced'
-    if (name.includes('bronze') || name.includes('beginner') || name.includes('bronce')) return 'beginner'
-    return 'intermediate'
-  }
-
-  const leagueLevel = getLeagueLevel()
+  const leagueLevel = getSkillLevel(league)
 
   const formatDateShort = (date) => {
     if (!date) return '-'
@@ -239,16 +260,17 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
     return baseUrl
   }
 
-  const buildLevelUrl = (levelSlug) => {
-    const citySlug = league.city?.slug || league.location?.city?.toLowerCase().replace(/\s+/g, '-') || 'sotogrande'
-    let seasonType = 'winter'
-    let seasonYear = '2026'
-    const seasonMatch = league.slug?.match(/-(winter|summer|spring|fall|autumn)-(\d{4})$/i)
-    if (seasonMatch) {
-      seasonType = seasonMatch[1].toLowerCase()
-      seasonYear = seasonMatch[2]
+  // Get the URL for a sibling league by skill level
+  const getSiblingLeagueUrl = (targetSkillLevel) => {
+    const sibling = siblingLeagues.find(l => l.skillLevel === targetSkillLevel)
+    
+    if (sibling) {
+      // Use actual slug from database
+      return `/${locale}/leagues/${effectiveCitySlug}/info/${sibling.slug}`
     }
-    return `/${locale}/leagues/${citySlug}/info/${levelSlug}-league-${citySlug}-${seasonType}-${seasonYear}`
+    
+    // Fallback: return null if no sibling found (button will be disabled)
+    return null
   }
 
   const levels = [
@@ -406,6 +428,7 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
           {levels.map((level) => {
             const isCurrentLevel = leagueLevel === level.key
             const LevelIcon = level.icon
+            const siblingUrl = getSiblingLeagueUrl(level.key)
             
             return isCurrentLevel ? (
               <div
@@ -423,10 +446,10 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
                   <p className="text-[10px] text-gray-500 mt-1 hidden sm:block">{content.levelDescriptions[level.key]}</p>
                 </div>
               </div>
-            ) : (
+            ) : siblingUrl ? (
               <a
                 key={level.key}
-                href={buildLevelUrl(level.slug)}
+                href={siblingUrl}
                 className="p-3 sm:p-4 rounded-xl border-2 border-gray-200 hover:border-parque-purple/40 transition-all group"
               >
                 <div className="flex flex-col items-center text-center">
@@ -437,6 +460,20 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
                   <p className="text-[10px] text-gray-500 mt-1 hidden sm:block">{content.levelDescriptions[level.key]}</p>
                 </div>
               </a>
+            ) : (
+              // No sibling league exists for this level - show disabled state
+              <div
+                key={level.key}
+                className="p-3 sm:p-4 rounded-xl border-2 border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed"
+              >
+                <div className="flex flex-col items-center text-center">
+                  <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${level.color} flex items-center justify-center text-white mb-2 opacity-40`}>
+                    <LevelIcon className="w-5 h-5" />
+                  </div>
+                  <span className="font-bold text-gray-400">{level.label}</span>
+                  <p className="text-[10px] text-gray-400 mt-1 hidden sm:block">{content.levelDescriptions[level.key]}</p>
+                </div>
+              </div>
             )
           })}
         </div>
@@ -482,22 +519,30 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale 
         </div>
       </div>
 
-      {/* Why Join - Purple gradient version */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-parque-purple via-violet-600 to-purple-700 rounded-2xl p-5 sm:p-6 text-white">
+      {/* Why Join - Clean version with quote */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-parque-purple via-violet-600 to-purple-700 rounded-2xl mx-2 sm:mx-0 p-5 sm:p-6 text-white">
         {/* Decorative orbs */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-parque-green/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
         
         <div className="relative z-10">
-          <h3 className="text-lg sm:text-xl font-bold mb-4 flex items-center gap-2">
-            <Star className="w-5 h-5 text-parque-yellow" />
-            {content.whyJoin}
-          </h3>
+          {/* Motivational Quote - centered */}
+          {motivationQuote && (
+            <div className="mb-5 pb-5 border-b border-white/20 text-center">
+              <p className="text-lg sm:text-xl italic text-white/95 leading-relaxed">
+                &ldquo;{motivationQuote.text}&rdquo;
+              </p>
+              <p className="text-sm text-white/60 mt-2">
+                — {motivationQuote.author}
+              </p>
+            </div>
+          )}
           
+          {/* Benefits list with white icons */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
             {content.benefits.map((benefit, index) => (
               <div key={index} className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-parque-green flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-4 h-4 text-white/70 flex-shrink-0 mt-0.5" />
                 <span className="text-white/90 text-sm">{benefit}</span>
               </div>
             ))}

@@ -207,27 +207,47 @@ export default function TournamentBracket({
   // Get winners for podium
   const getChampion = () => {
     if (!bracket?.final?.winner) return null
-    return qualifiedPlayers?.find(p => p.player._id === bracket.final.winner)?.player
+    // Extract winner ID properly - winner can be an object or just an ID
+    const winnerId = bracket.final.winner._id || bracket.final.winner
+    return qualifiedPlayers?.find(p => 
+      p.player._id === winnerId || 
+      p.player._id?.toString() === winnerId?.toString()
+    )?.player
   }
 
   const getRunnerUp = () => {
     const finalMatch = matches?.find(m => m.playoffInfo?.stage === 'final')
     if (!finalMatch || !finalMatch.result?.winner) return null
     const champion = getChampion()
+    if (!champion) return null
+    
     const player1 = finalMatch.players?.player1
     const player2 = finalMatch.players?.player2
-    if (player1?._id === champion?._id) return player2
-    if (player2?._id === champion?._id) return player1
+    
+    // Compare using toString() to handle ObjectId vs string comparison
+    const championId = champion._id?.toString()
+    if (player1?._id?.toString() === championId) return player2
+    if (player2?._id?.toString() === championId) return player1
     return null
   }
 
   const getThirdPlace = () => {
     const thirdPlaceMatch = matches?.find(m => m.playoffInfo?.stage === 'third_place')
     if (!thirdPlaceMatch || !thirdPlaceMatch.result?.winner) return null
-    const winnerId = thirdPlaceMatch.result.winner
-    return thirdPlaceMatch.players?.player1?._id === winnerId 
-      ? thirdPlaceMatch.players.player1 
-      : thirdPlaceMatch.players.player2
+    
+    // Extract winner ID properly - winner can be an object or just an ID
+    const winnerId = thirdPlaceMatch.result.winner._id || thirdPlaceMatch.result.winner
+    
+    // Compare using toString() to handle ObjectId vs string comparison
+    if (thirdPlaceMatch.players?.player1?._id === winnerId || 
+        thirdPlaceMatch.players?.player1?._id?.toString() === winnerId?.toString()) {
+      return thirdPlaceMatch.players.player1
+    }
+    if (thirdPlaceMatch.players?.player2?._id === winnerId || 
+        thirdPlaceMatch.players?.player2?._id?.toString() === winnerId?.toString()) {
+      return thirdPlaceMatch.players.player2
+    }
+    return null
   }
 
   return (

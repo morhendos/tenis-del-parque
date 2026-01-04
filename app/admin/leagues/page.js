@@ -20,6 +20,7 @@ export default function AdminLeaguesPage() {
   const [customOrder, setCustomOrder] = useState([])
   const [leagueSortBy, setLeagueSortBy] = useState('name') // name, players, status, custom
   const [customLeagueOrder, setCustomLeagueOrder] = useState({}) // { cityName: [leagueId1, leagueId2, ...] }
+  const [savingOrder, setSavingOrder] = useState(false)
   
   const {
     leagues,
@@ -348,6 +349,56 @@ export default function AdminLeaguesPage() {
     }
   }
 
+  // Save display order to database (for home page)
+  const handleSaveDisplayOrder = async () => {
+    setSavingOrder(true)
+    try {
+      // Build the orders array based on current custom order
+      const orders = []
+      let displayOrder = 0
+
+      // Use custom city order if available, otherwise alphabetical
+      const citiesToProcess = sortBy === 'custom' && customOrder.length > 0 
+        ? customOrder 
+        : sortedCities
+
+      citiesToProcess.forEach(cityName => {
+        const cityLeagues = groupedLeagues[cityName] || []
+        
+        // Use custom league order if available, otherwise current sort
+        const leaguesToProcess = leagueSortBy === 'custom' && customLeagueOrder[cityName]
+          ? customLeagueOrder[cityName].map(id => cityLeagues.find(l => l._id === id)).filter(Boolean)
+          : getSortedLeagues(cityName)
+
+        leaguesToProcess.forEach(league => {
+          orders.push({
+            leagueId: league._id,
+            displayOrder: displayOrder++
+          })
+        })
+      })
+
+      const response = await fetch('/api/admin/leagues/display-order', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orders })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to save order')
+      }
+
+      toast.success(`Display order saved! ${data.updatedCount} leagues updated. Home page will refresh shortly.`)
+    } catch (error) {
+      console.error('Error saving display order:', error)
+      toast.error('Failed to save display order: ' + error.message)
+    } finally {
+      setSavingOrder(false)
+    }
+  }
+
   // Sort leagues within a city
   const getSortedLeagues = (cityName) => {
     const cityLeagues = groupedLeagues[cityName] || []
@@ -383,17 +434,6 @@ export default function AdminLeaguesPage() {
     })
   }
 
-  // Initialize custom league order for a city
-  const initializeCustomLeagueOrder = (cityName) => {
-    if (!customLeagueOrder[cityName]) {
-      const cityLeagues = groupedLeagues[cityName] || []
-      const leagueIds = cityLeagues.map(l => l._id)
-      const newOrder = { ...customLeagueOrder, [cityName]: leagueIds }
-      setCustomLeagueOrder(newOrder)
-      localStorage.setItem('customLeagueOrder', JSON.stringify(newOrder))
-    }
-  }
-
   // Move league up within city
   const moveLeagueUp = (cityName, leagueId) => {
     const cityOrder = customLeagueOrder[cityName] || []
@@ -425,13 +465,30 @@ export default function AdminLeaguesPage() {
   }
 
   // Initialize custom league order when switching to custom mode
+  // IMPORTANT: Must initialize ALL cities in a single state update to avoid React batching issues
   useEffect(() => {
-    if (leagueSortBy === 'custom') {
-      Object.keys(groupedLeagues).forEach(cityName => {
-        initializeCustomLeagueOrder(cityName)
+    if (leagueSortBy === 'custom' && Object.keys(groupedLeagues).length > 0) {
+      setCustomLeagueOrder(prevOrder => {
+        const newOrder = { ...prevOrder }
+        let hasChanges = false
+        
+        Object.keys(groupedLeagues).forEach(cityName => {
+          // Only initialize if this city doesn't have an order yet
+          if (!newOrder[cityName]) {
+            const cityLeagues = groupedLeagues[cityName] || []
+            newOrder[cityName] = cityLeagues.map(l => l._id)
+            hasChanges = true
+          }
+        })
+        
+        if (hasChanges) {
+          localStorage.setItem('customLeagueOrder', JSON.stringify(newOrder))
+        }
+        
+        return hasChanges ? newOrder : prevOrder
       })
     }
-  }, [leagueSortBy])
+  }, [leagueSortBy, leagues.length]) // Re-run when leagues load
 
   if (loading) {
     return (
@@ -668,6 +725,43 @@ export default function AdminLeaguesPage() {
                     ✨ Custom
                   </button>
                 </div>
+              </div>
+
+              {/* Save Order Button */}
+              <div className="flex items-center justify-between border-t pt-4">
+                <div className="flex items-center space-x-2">
+                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="text-sm font-medium text-gray-700">Publish Order to Website:</span>
+                  <span className="text-xs text-gray-500">(saves current order to home page)</span>
+                </div>
+                <button
+                  onClick={handleSaveDisplayOrder}
+                  disabled={savingOrder}
+                  className={`px-6 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2 ${
+                    savingOrder
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 shadow-md hover:shadow-lg'
+                  }`}
+                >
+                  {savingOrder ? (
+                    <>
+                      <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      Save Order to Site
+                    </>
+                  )}
+                </button>
               </div>
             </div>
 

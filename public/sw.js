@@ -1,5 +1,5 @@
 // Tenis del Parque - Service Worker
-const CACHE_NAME = 'tenisdp-v1';
+const CACHE_NAME = 'tenisdp-v2';
 
 // Assets to cache immediately on install
 const PRECACHE_ASSETS = [
@@ -50,10 +50,11 @@ self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (request.method !== 'GET') return;
 
-  // Skip API calls and auth routes - always go to network
+  // Skip API calls, auth routes, and test pages - always go to network
   if (url.pathname.startsWith('/api/') || 
       url.pathname.includes('/login') ||
-      url.pathname.includes('/admin')) {
+      url.pathname.includes('/admin') ||
+      url.pathname.includes('/test-')) {
     return;
   }
 

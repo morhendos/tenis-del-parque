@@ -203,24 +203,72 @@ export default function ModernRegistrationForm({
           </div>
         </div>
         
-        {/* Discount Success Banner - Compact */}
-        {discountValidation?.valid && (
-          <div className="mx-3 sm:mx-4 mb-3 sm:mb-4 p-2.5 sm:p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                <svg className="w-3 h-3 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
+        {/* Discount Code Section - Right below price */}
+        {!league.seasonConfig?.price?.isFree && (
+          <div className="px-4 sm:px-6 py-3 border-t border-gray-100">
+            {discountValidation?.valid ? (
+              // Success state
+              <div className="p-2.5 sm:p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-3 h-3 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-emerald-800 truncate">
+                      {discountValidation.description || (locale === 'es' ? 'Descuento aplicado' : 'Discount applied')}
+                    </p>
+                    <p className="text-xs text-emerald-600">
+                      -{discountValidation.discountPercentage}%
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs sm:text-sm font-medium text-emerald-800 truncate">
-                  {discountValidation.description || (locale === 'es' ? 'Descuento aplicado' : 'Discount applied')}
-                </p>
-                <p className="text-xs text-emerald-600">
-                  -{discountValidation.discountPercentage}%
-                </p>
+            ) : !showDiscountInput ? (
+              // Toggle button
+              <button
+                type="button"
+                onClick={() => setShowDiscountInput(true)}
+                className="text-emerald-600 hover:text-emerald-700 font-medium text-sm flex items-center gap-1"
+              >
+                <Tag className="w-3.5 h-3.5" />
+                {locale === 'es' ? '¿Tienes un código de descuento?' : 'Have a discount code?'}
+              </button>
+            ) : (
+              // Input field
+              <div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={discountCode}
+                    onChange={handleDiscountCodeChange}
+                    className="flex-1 px-3.5 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all uppercase text-sm"
+                    placeholder={locale === 'es' ? 'CÓDIGO' : 'CODE'}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleApplyDiscount}
+                    disabled={!discountCode || isValidatingDiscount}
+                    className="px-4 py-2.5 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  >
+                    {isValidatingDiscount ? (
+                      <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    ) : (
+                      locale === 'es' ? 'Aplicar' : 'Apply'
+                    )}
+                  </button>
+                </div>
+                {discountValidation && !discountValidation.valid && (
+                  <p className="mt-1.5 text-xs text-red-600">
+                    {discountValidation.error || (locale === 'es' ? 'Código inválido' : 'Invalid code')}
+                  </p>
+                )}
               </div>
-            </div>
+            )}
           </div>
         )}
       </div>
@@ -324,9 +372,6 @@ export default function ModernRegistrationForm({
               >
                 {locale === 'es' ? '¿Olvidaste tu contraseña?' : 'Forgot password?'}
               </Link>
-
-              {/* Discount Code - Compact */}
-              {renderDiscountSection()}
             </div>
           ) : (
             // New User Form
@@ -467,9 +512,6 @@ export default function ModernRegistrationForm({
                   <p className="mt-1 text-xs text-red-600">{errors.password}</p>
                 )}
               </div>
-
-              {/* Discount Code */}
-              {renderDiscountSection()}
             </div>
           )}
 
@@ -556,60 +598,4 @@ export default function ModernRegistrationForm({
       </form>
     </div>
   )
-
-  // Helper function for discount section
-  function renderDiscountSection() {
-    return (
-      <div className="pt-2">
-        {!showDiscountInput ? (
-          <button
-            type="button"
-            onClick={() => setShowDiscountInput(true)}
-            className="text-emerald-600 hover:text-emerald-700 font-medium text-sm flex items-center gap-1"
-          >
-            <Tag className="w-3.5 h-3.5" />
-            {locale === 'es' ? '¿Código de descuento?' : 'Discount code?'}
-          </button>
-        ) : (
-          <div>
-            <label htmlFor="discountCode" className="block text-sm font-medium text-gray-700 mb-1.5">
-              {locale === 'es' ? 'Código de Descuento' : 'Discount Code'}
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                id="discountCode"
-                name="discountCode"
-                value={discountCode}
-                onChange={handleDiscountCodeChange}
-                className="flex-1 px-3.5 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all uppercase text-sm"
-                placeholder="CODIGO"
-              />
-              <button
-                type="button"
-                onClick={handleApplyDiscount}
-                disabled={!discountCode || isValidatingDiscount}
-                className="px-4 py-2.5 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-              >
-                {isValidatingDiscount ? (
-                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                ) : (
-                  locale === 'es' ? 'Aplicar' : 'Apply'
-                )}
-              </button>
-            </div>
-            
-            {discountValidation && !discountValidation.valid && (
-              <p className="mt-1.5 text-xs text-red-600">
-                {discountValidation.error || (locale === 'es' ? 'Código inválido' : 'Invalid code')}
-              </p>
-            )}
-          </div>
-        )}
-      </div>
-    )
-  }
 }

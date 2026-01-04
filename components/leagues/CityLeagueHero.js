@@ -29,19 +29,19 @@ export default function CityLeagueHero({ city, locale, leagueName, league }) {
   const tierBadge = {
     gold: { 
       bg: 'bg-gradient-to-r from-yellow-400 to-amber-500', 
-      text: 'text-yellow-900',
+      text: 'text-white',
       icon: Trophy,
       label: locale === 'es' ? 'Liga Oro' : 'Gold League'
     },
     silver: { 
       bg: 'bg-gradient-to-r from-gray-300 to-slate-400', 
-      text: 'text-slate-800',
+      text: 'text-white',
       icon: Medal,
       label: locale === 'es' ? 'Liga Plata' : 'Silver League'
     },
     bronze: { 
       bg: 'bg-gradient-to-r from-amber-500 to-orange-600', 
-      text: 'text-orange-900',
+      text: 'text-white',
       icon: Award,
       label: locale === 'es' ? 'Liga Bronce' : 'Bronze League'
     },
