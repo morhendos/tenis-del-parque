@@ -286,10 +286,10 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale,
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <div className="space-y-6 sm:space-y-8 pt-4 sm:pt-0">
       
       {/* Price + CTA Card */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mx-2 sm:mx-0">
         {/* Price + Dates row */}
         <div className="p-4 sm:p-6">
           <div className="mb-4">
@@ -384,10 +384,10 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale,
       </div>
 
       {/* Season Journey - Nice visual version */}
-      <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-100 p-5 sm:p-6">
+      <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-100 p-5 sm:p-6 mx-2 sm:mx-0">
         <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-5 flex items-center gap-2">
-          <div className="w-8 h-8 bg-parque-green/10 rounded-lg flex items-center justify-center">
-            <Target className="w-5 h-5 text-parque-green" />
+          <div className="w-8 h-8 bg-parque-purple/10 rounded-lg flex items-center justify-center">
+            <Target className="w-5 h-5 text-parque-purple" />
           </div>
           {content.seasonJourney}
         </h3>
@@ -416,10 +416,10 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale,
       </div>
 
       {/* Level Selector - Cards version */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 shadow-sm">
+      <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 shadow-sm mx-2 sm:mx-0">
         <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <div className="w-8 h-8 bg-parque-yellow/10 rounded-lg flex items-center justify-center">
-            <Award className="w-5 h-5 text-amber-600" />
+          <div className="w-8 h-8 bg-parque-purple/10 rounded-lg flex items-center justify-center">
+            <Award className="w-5 h-5 text-parque-purple" />
           </div>
           {content.chooseLevel}
         </h3>
@@ -494,13 +494,17 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale,
         )}
       </div>
 
-      {/* What's Included - Grid version */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 shadow-sm">
+      {/* What's Included - Links to How It Works */}
+      <a 
+        href={`/${locale}/#how-it-works`}
+        className="block bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 shadow-sm hover:shadow-md hover:border-parque-purple/30 transition-all group mx-2 sm:mx-0"
+      >
         <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
           <div className="w-8 h-8 bg-parque-purple/10 rounded-lg flex items-center justify-center">
             <CheckCircle className="w-5 h-5 text-parque-purple" />
           </div>
           {content.included}
+          <ArrowRight className="w-4 h-4 text-gray-400 ml-auto group-hover:text-parque-purple group-hover:translate-x-1 transition-all" />
         </h3>
         
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
@@ -517,7 +521,7 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale,
             </div>
           ))}
         </div>
-      </div>
+      </a>
 
       {/* Why Join - Clean version with quote */}
       <div className="relative overflow-hidden bg-gradient-to-br from-parque-purple via-violet-600 to-purple-700 rounded-2xl mx-2 sm:mx-0 p-5 sm:p-6 text-white">

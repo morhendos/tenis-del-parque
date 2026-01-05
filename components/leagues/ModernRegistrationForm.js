@@ -316,16 +316,17 @@ export default function ModernRegistrationForm({
             // Login Form
             <div className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 mb-1.5">
                   Email
                 </label>
                 <input
                   type="email"
-                  id="email"
+                  id="login-email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
                   required
+                  autoComplete="email"
                   className={`w-full px-3.5 py-2.5 sm:py-3 border ${
                     errors.email ? 'border-red-400 bg-red-50' : 'border-gray-200'
                   } rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-base`}
@@ -337,17 +338,18 @@ export default function ModernRegistrationForm({
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label htmlFor="login-password" className="block text-sm font-medium text-gray-700 mb-1.5">
                   {locale === 'es' ? 'Contraseña' : 'Password'}
                 </label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
-                    id="password"
+                    id="login-password"
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
                     required
+                    autoComplete="current-password"
                     className={`w-full px-3.5 py-2.5 sm:py-3 pr-10 border ${
                       errors.password ? 'border-red-400 bg-red-50' : 'border-gray-200'
                     } rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-base`}
@@ -387,6 +389,7 @@ export default function ModernRegistrationForm({
                   value={formData.name}
                   onChange={handleChange}
                   required
+                  autoComplete="name"
                   className={`w-full px-3.5 py-2.5 sm:py-3 border ${
                     errors.name ? 'border-red-400 bg-red-50' : 'border-gray-200'
                   } rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-base`}
@@ -398,16 +401,17 @@ export default function ModernRegistrationForm({
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label htmlFor="signup-email" className="block text-sm font-medium text-gray-700 mb-1.5">
                   Email
                 </label>
                 <input
                   type="email"
-                  id="email"
+                  id="signup-email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
                   required
+                  autoComplete="email"
                   className={`w-full px-3.5 py-2.5 sm:py-3 border ${
                     errors.email ? 'border-red-400 bg-red-50' : 'border-gray-200'
                   } rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-base`}
@@ -429,6 +433,7 @@ export default function ModernRegistrationForm({
                   value={formData.whatsapp}
                   onChange={handleChange}
                   required
+                  autoComplete="tel"
                   className={`w-full px-3.5 py-2.5 sm:py-3 border ${
                     errors.whatsapp ? 'border-red-400 bg-red-50' : 'border-gray-200'
                   } rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-base`}
@@ -480,18 +485,19 @@ export default function ModernRegistrationForm({
               )}
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label htmlFor="signup-password" className="block text-sm font-medium text-gray-700 mb-1.5">
                   {locale === 'es' ? 'Contraseña' : 'Password'}
                 </label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
-                    id="password"
+                    id="signup-password"
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
                     required
                     minLength={6}
+                    autoComplete="new-password"
                     className={`w-full px-3.5 py-2.5 sm:py-3 pr-10 border ${
                       errors.password ? 'border-red-400 bg-red-50' : 'border-gray-200'
                     } rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-base`}

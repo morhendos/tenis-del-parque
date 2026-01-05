@@ -137,7 +137,7 @@ export default function EnhancedSuccessMessage({
           {mounted && excitementTagline && (
             <div className="mt-5 sm:mt-6 pt-4 sm:pt-5 border-t border-white/20">
               <p className="text-sm sm:text-base italic text-emerald-100 text-center">
-                "{excitementTagline}"
+                {excitementTagline}
               </p>
             </div>
           )}

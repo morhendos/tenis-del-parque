@@ -150,14 +150,14 @@ export default function CityLeagueHero({ city, locale, leagueName, league }) {
                   {tierBadge.label}
                 </div>
                 
-                {/* Status badge */}
+                {/* Status badge - neutral */}
                 {league.status === 'registration_open' && (
-                  <span className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-sm font-semibold bg-parque-green text-white shadow-lg">
+                  <span className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-sm font-semibold bg-white/20 backdrop-blur-sm text-white border border-white/30 shadow-lg">
                     {locale === 'es' ? 'Inscripciones Abiertas' : 'Registration Open'}
                   </span>
                 )}
                 {league.status === 'coming_soon' && (
-                  <span className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-sm font-semibold bg-white/30 backdrop-blur-sm text-white border border-white/40 shadow-lg">
+                  <span className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-sm font-semibold bg-white/20 backdrop-blur-sm text-white border border-white/30 shadow-lg">
                     {locale === 'es' ? 'Próximamente' : 'Coming Soon'}
                   </span>
                 )}
