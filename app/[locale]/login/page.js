@@ -158,10 +158,11 @@ function LoginForm() {
                 <Image 
                   src="/logo-liga-costa-del-sol-big.webp" 
                   alt="Liga de la Costa del Sol"
-                  width={200}
-                  height={200}
+                  width={400}
+                  height={400}
                   className="h-40 sm:h-48 w-auto mx-auto hover:scale-105 transition-transform duration-200 cursor-pointer"
                   priority
+                  quality={90}
                 />
               </a>
             </div>
