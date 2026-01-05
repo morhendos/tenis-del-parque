@@ -219,7 +219,7 @@ export default function EnhancedSuccessMessage({
           {mounted && quote && (
             <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-100 text-center">
               <p className="text-gray-600 italic text-sm sm:text-base">
-                "{quote.text}"
+                &ldquo;{quote.text}&rdquo;
               </p>
               <p className="text-xs sm:text-sm text-gray-400 mt-1.5 sm:mt-2">
                 — {quote.author}
