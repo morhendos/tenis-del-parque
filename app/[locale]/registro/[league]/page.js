@@ -205,7 +205,7 @@ export default function LeagueRegistrationPage() {
   if (error || !league) {
     return (
       <div className="min-h-screen flex flex-col bg-white">
-        <Navigation locale={validLocale} />
+        <Navigation locale={validLocale} showBackButton={true} />
         <div className="flex-1 flex items-center justify-center">
           <div className="container mx-auto px-4 py-16 text-center">
             <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
@@ -233,7 +233,7 @@ export default function LeagueRegistrationPage() {
   if (isSubmitted && registrationData) {
     return (
       <div className="min-h-screen flex flex-col bg-white">
-        <Navigation locale={validLocale} />
+        <Navigation locale={validLocale} showBackButton={true} />
         
         <div className="flex-1">
           <div className="container mx-auto px-4 py-8 pt-24 relative z-10">
@@ -265,7 +265,7 @@ export default function LeagueRegistrationPage() {
         <div className="absolute bottom-20 left-10 w-64 h-64 bg-teal-300/15 rounded-full blur-3xl"></div>
       </div>
       
-      <Navigation locale={validLocale} />
+      <Navigation locale={validLocale} showBackButton={true} />
       
       {/* Mobile-optimized container */}
       <div className="flex-1 sm:container sm:mx-auto px-0 sm:px-4 pt-20 sm:pt-24 sm:pb-8 relative z-10">

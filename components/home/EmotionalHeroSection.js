@@ -171,10 +171,10 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
       <div className="container mx-auto px-4 relative z-10 mobile-container">
         
         {/* ===== MOBILE LAYOUT ===== */}
-        <div className="lg:hidden text-center mobile-hero">
-          {/* Logo */}
-          <div className="mobile-logo-wrap flex justify-center animate-fadeInUp">
-            <div className="relative mobile-logo">
+        <div className="lg:hidden text-center mobile-hero" style={{ paddingTop: '3rem' }}>
+          {/* Logo - inline min dimensions to prevent collapse before CSS loads */}
+          <div className="mobile-logo-wrap flex justify-center" style={{ minHeight: '14rem', marginBottom: '-0.5rem' }}>
+            <div className="relative mobile-logo" style={{ width: '14rem', height: '14rem' }}>
               <Image
                 src="/logo-liga-costa-del-sol-big.webp"
                 alt="Tenis del Parque"
@@ -187,24 +187,25 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
           </div>
           
           {/* Headline */}
-          <h1 className="mobile-headline font-bold text-gray-900 animate-fadeInUp animation-delay-200">
+          <h1 className="mobile-headline font-bold text-gray-900" style={{ fontSize: '0.875rem', marginBottom: '0.0625rem' }}>
             {t.headline}
           </h1>
           
           {/* Value props */}
-          <p className="text-gray-500 mobile-value-props px-2 animate-fadeInUp animation-delay-400">
+          <p className="text-gray-500 mobile-value-props px-2" style={{ fontSize: '0.625rem', marginBottom: '0.25rem' }}>
             {t.valueProps}
           </p>
           
-          {/* Phone Carousel + Label */}
-          <div className="relative mx-auto mobile-carousel-container animate-fadeInUp animation-delay-600">
+          {/* Phone Carousel + Label - inline min dimensions to prevent collapse */}
+          <div className="relative mx-auto mobile-carousel-container" style={{ width: '260px', minHeight: '220px' }}>
             {/* Glow behind phones */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[55%] mobile-glow bg-parque-purple/15 rounded-full blur-3xl" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[55%] mobile-glow bg-parque-purple/15 rounded-full blur-3xl" style={{ width: '140px', height: '140px' }} />
             
             {/* Carousel container */}
             <div 
               className="relative mobile-carousel cursor-pointer"
               onClick={() => setActiveIndex((prev) => (prev + 1) % 3)}
+              style={{ height: '195px' }}
             >
               {screenshots.map((src, idx) => {
                 const position = getPosition(idx);
@@ -219,10 +220,10 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
                           : '-translate-x-[15%] translate-y-2 rotate-12 scale-[0.8] z-10 opacity-50'
                       }`}
                   >
-                    <div className="relative mobile-phone">
-                      <div className="relative bg-gray-900 mobile-phone-frame p-[2px] shadow-xl">
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 mobile-notch bg-gray-900 rounded-b-md z-10" />
-                        <div className="relative bg-white mobile-phone-screen overflow-hidden aspect-[9/19.5]">
+                    <div className="relative mobile-phone" style={{ width: '76px' }}>
+                      <div className="relative bg-gray-900 mobile-phone-frame p-[2px] shadow-xl" style={{ borderRadius: '0.625rem' }}>
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 mobile-notch bg-gray-900 rounded-b-md z-10" style={{ width: '1rem', height: '0.1875rem' }} />
+                        <div className="relative bg-white mobile-phone-screen overflow-hidden aspect-[9/19.5]" style={{ borderRadius: '0.5rem' }}>
                           <Image
                             src={src}
                             alt={t.features[idx]}
@@ -231,7 +232,7 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
                             sizes="90px"
                           />
                         </div>
-                        <div className="absolute bottom-[1px] left-1/2 -translate-x-1/2 mobile-home-bar bg-gray-600 rounded-full" />
+                        <div className="absolute bottom-[1px] left-1/2 -translate-x-1/2 mobile-home-bar bg-gray-600 rounded-full" style={{ width: '0.75rem', height: '1px' }} />
                       </div>
                     </div>
                   </div>
@@ -240,13 +241,13 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
             </div>
             
             {/* Feature label */}
-            <p className="mobile-feature-label font-semibold text-parque-purple">
+            <p className="mobile-feature-label font-semibold text-parque-purple" style={{ fontSize: '0.6875rem', marginTop: '-1.25rem', marginBottom: '0.75rem' }}>
               {t.features[activeIndex]}
             </p>
           </div>
           
           {/* CTAs */}
-          <div className="mobile-cta-container px-6 animate-fadeInUp animation-delay-800">
+          <div className="mobile-cta-container px-6" style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
             {!isInstalled && (
               <div className="relative">
                 {showIOSHint && (
@@ -262,6 +263,7 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
                 <button
                   onClick={handleInstallClick}
                   className="flex items-center justify-center gap-2 w-full mobile-cta rounded-xl font-semibold transition-all bg-gray-900 text-white shadow-lg shadow-gray-900/20 active:scale-[0.98]"
+                  style={{ minHeight: '44px', fontSize: '0.8125rem' }}
                 >
                   <Icons.Download className="w-4 h-4" />
                   {t.ctaSecondary}
@@ -273,6 +275,7 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
               href="#cities"
               onClick={scrollToLeagues}
               className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-parque-purple to-parque-purple/90 text-white mobile-cta rounded-xl font-semibold shadow-lg shadow-parque-purple/25 active:scale-[0.98] transition-transform"
+              style={{ minHeight: '44px', fontSize: '0.8125rem' }}
             >
               {t.ctaPrimary}
               <Icons.ArrowRight className="w-4 h-4" />
@@ -280,7 +283,7 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
           </div>
           
           {/* Learn more */}
-          <div className="mobile-footer animate-fadeInUp animation-delay-1000">
+          <div className="mobile-footer" style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
             <button
               onClick={scrollToHowItWorks}
               className="text-xs text-parque-purple font-medium"
@@ -603,7 +606,7 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
       `}</style>
       
       {/* Scroll arrow - fixed at bottom of hero, hidden on short screens */}
-      <div className="scroll-arrow absolute left-0 right-0 flex justify-center z-20">
+      <div className="scroll-arrow absolute left-0 right-0 flex justify-center z-20" style={{ bottom: 0 }}>
         <button 
           onClick={scrollToLeagues} 
           className="p-2 animate-bounce"

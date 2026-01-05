@@ -6,7 +6,7 @@ import { useParams, usePathname, useRouter } from 'next/navigation'
 import LanguageSwitcher, { LanguageSwitcherToggle } from './LanguageSwitcher'
 import TennisPreloader from '../ui/TennisPreloader'
 
-export default function Navigation({ currentPage = 'home', language, onLanguageChange, showLanguageSwitcher = true }) {
+export default function Navigation({ currentPage = 'home', language, onLanguageChange, showLanguageSwitcher = true, showBackButton = false, backUrl = null }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [isClient, setIsClient] = useState(false)
@@ -78,6 +78,15 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
       document.body.style.overflow = ''
     }
   }, [isMobileMenuOpen])
+
+  // Handle back button
+  const handleBack = () => {
+    if (backUrl) {
+      router.push(backUrl)
+    } else {
+      router.back()
+    }
+  }
 
   const navContent = {
     es: {
@@ -229,18 +238,43 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
     return (
       <nav className="fixed top-0 w-full backdrop-blur-md z-[100] bg-white/95">
         <div className="container mx-auto px-3 md:px-4">
-          <div className="flex items-center justify-between h-14 lg:h-16">
+          <div className="flex items-center justify-between h-14 lg:h-16 relative">
+            {/* Mobile: Back button + centered logo OR just left logo */}
             <div className="flex items-center">
-              <Image
-                src="/horizontal-logo-007.webp"
-                alt="Tenis del Parque"
-                height={32}
-                width={133}
-                className="h-8 lg:h-9 w-auto"
-                priority
-                quality={100}
-              />
+              {showBackButton && (
+                <div className="lg:hidden p-2 -ml-2 mr-2 text-gray-700">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </div>
+              )}
+              <div className={`flex items-center ${showBackButton ? 'hidden lg:flex' : ''}`}>
+                <Image
+                  src="/horizontal-logo-007.webp"
+                  alt="Tenis del Parque"
+                  height={32}
+                  width={133}
+                  className="h-8 lg:h-9 w-auto"
+                  priority
+                  quality={100}
+                />
+              </div>
             </div>
+            
+            {/* Mobile: Centered logo when back button is shown */}
+            {showBackButton && (
+              <div className="lg:hidden absolute left-1/2 -translate-x-1/2 flex items-center">
+                <Image
+                  src="/horizontal-logo-007.webp"
+                  alt="Tenis del Parque"
+                  height={32}
+                  width={133}
+                  className="h-8 w-auto"
+                  priority
+                  quality={100}
+                />
+              </div>
+            )}
             
             <div className="hidden lg:flex items-center space-x-6">
               <div className="flex space-x-6 text-gray-700">
@@ -266,10 +300,12 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
 
             {/* Mobile - just hamburger, no language switcher */}
             <div className="flex items-center lg:hidden">
-              <div className="p-2">
-                <span className="block w-5 h-0.5 bg-gray-700 mb-1"></span>
-                <span className="block w-5 h-0.5 bg-gray-700 mb-1"></span>
-                <span className="block w-5 h-0.5 bg-gray-700"></span>
+              <div className="p-2 -mr-2">
+                <div className="w-6 h-5 flex flex-col justify-between">
+                  <span className="block w-full h-0.5 bg-gray-700 rounded-full"></span>
+                  <span className="block w-full h-0.5 bg-gray-700 rounded-full"></span>
+                  <span className="block w-full h-0.5 bg-gray-700 rounded-full"></span>
+                </div>
               </div>
             </div>
           </div>
@@ -287,25 +323,59 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
       } ${navVisible ? 'translate-y-0' : '-translate-y-full'}`}>
         <div className="container mx-auto px-3 md:px-4">
           {/* Compact height on mobile (h-14 = 56px), normal on desktop (h-16 = 64px) */}
-          <div className="flex items-center justify-between h-14 lg:h-16">
-            {/* Logo */}
-            <a 
-              href={`/${validLocale}`} 
-              className="flex items-center transition-transform"
-              onMouseEnter={() => setHoveredButton('logo')}
-              onMouseLeave={() => setHoveredButton(null)}
-              style={{ transform: hoveredButton === 'logo' ? 'scale(1.05)' : 'scale(1)' }}
-            >
-              <Image
-                src="/horizontal-logo-007.webp"
-                alt="Tenis del Parque"
-                height={32}
-                width={133}
-                className="h-8 lg:h-9 w-auto"
-                priority
-                quality={100}
-              />
-            </a>
+          <div className="flex items-center justify-between h-14 lg:h-16 relative">
+            {/* Mobile: Back button (when enabled) OR Logo | Desktop: Always Logo */}
+            <div className="flex items-center">
+              {/* Back button - mobile only when enabled */}
+              {showBackButton && (
+                <button
+                  onClick={handleBack}
+                  className="lg:hidden p-2 -ml-2 mr-2 active:scale-95 transition-transform text-gray-700 hover:text-parque-purple"
+                  aria-label="Go back"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+              )}
+              
+              {/* Logo - hidden on mobile when back button shown (will be centered instead) */}
+              <a 
+                href={`/${validLocale}`} 
+                className={`flex items-center transition-transform ${showBackButton ? 'hidden lg:flex' : ''}`}
+                onMouseEnter={() => setHoveredButton('logo')}
+                onMouseLeave={() => setHoveredButton(null)}
+                style={{ transform: hoveredButton === 'logo' ? 'scale(1.05)' : 'scale(1)' }}
+              >
+                <Image
+                  src="/horizontal-logo-007.webp"
+                  alt="Tenis del Parque"
+                  height={32}
+                  width={133}
+                  className="h-8 lg:h-9 w-auto"
+                  priority
+                  quality={100}
+                />
+              </a>
+            </div>
+            
+            {/* Mobile: Centered logo when back button is shown */}
+            {showBackButton && (
+              <a 
+                href={`/${validLocale}`} 
+                className="lg:hidden absolute left-1/2 -translate-x-1/2 flex items-center"
+              >
+                <Image
+                  src="/horizontal-logo-007.webp"
+                  alt="Tenis del Parque"
+                  height={32}
+                  width={133}
+                  className="h-8 w-auto"
+                  priority
+                  quality={100}
+                />
+              </a>
+            )}
             
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center space-x-6">
