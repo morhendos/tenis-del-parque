@@ -187,37 +187,15 @@ export async function PUT(request) {
       user.save()
     ])
 
-    // Return updated data - populate registrations.league for new schema
-    await player.populate('registrations.league', 'name slug location season')
-    
-    // Get active registration for backward compatibility
-    const activeRegistration = player.registrations && player.registrations.length > 0 
-      ? player.registrations[0]
-      : null
-
+    // Return only updated fields - no need to populate league for profile updates
     return NextResponse.json({
+      success: true,
       player: {
         _id: player._id,
         name: player.name,
         email: player.email,
         phone: player.whatsapp,
-        whatsapp: player.whatsapp,
-        eloRating: player.eloRating || 1200,
-        level: activeRegistration?.level || 'intermediate',
-        league: activeRegistration?.league || null,
-        season: activeRegistration?.season || null,
-        status: activeRegistration?.status || 'active',
-        stats: {
-          eloRating: player.eloRating || 1200,
-          matchesPlayed: 0,
-          matchesWon: 0,
-          totalPoints: 0
-        },
-        wildCards: activeRegistration?.wildCards || { total: 3, used: 0, history: [] },
-        emergencyContact: player.emergencyContact,
-        registeredAt: activeRegistration?.registeredAt || player.createdAt,
-        createdAt: player.createdAt,
-        registrations: player.registrations || []
+        whatsapp: player.whatsapp
       },
       user: {
         id: user._id,

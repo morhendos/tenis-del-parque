@@ -146,8 +146,20 @@ export default function PlayerProfile() {
       }
 
       const data = await response.json()
-      setPlayer(data.player)
-      setUser(data.user)
+      
+      // Update only the fields that could have changed (keep existing player/user data)
+      setPlayer(prev => ({
+        ...prev,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        whatsapp: formData.phone
+      }))
+      setUser(prev => ({
+        ...prev,
+        email: formData.email,
+        preferences: formData.preferences
+      }))
       setOriginalData(formData)
       setHasChanges(false)
       

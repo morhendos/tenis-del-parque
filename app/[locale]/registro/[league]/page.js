@@ -164,6 +164,21 @@ export default function LeagueRegistrationPage() {
           password: formData.password
         })
         
+        // Trigger browser password manager to save credentials
+        if (window.PasswordCredential) {
+          try {
+            const cred = new window.PasswordCredential({
+              id: formData.email,
+              password: formData.password,
+              name: formData.name
+            })
+            await navigator.credentials.store(cred)
+          } catch (credError) {
+            // Silently fail - password manager is optional
+            console.log('Credential storage not available')
+          }
+        }
+        
         prepareSuccessData(data, formData.name)
       }
       
