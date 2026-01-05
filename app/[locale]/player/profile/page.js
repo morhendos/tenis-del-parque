@@ -11,11 +11,14 @@ export default function PlayerProfile() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [isEditing, setIsEditing] = useState(false)
+  const [hasChanges, setHasChanges] = useState(false)
   const params = useParams()
   const pathname = usePathname()
   const locale = params.locale || 'es'
   const language = locale
+  
+  // Original data for comparison
+  const [originalData, setOriginalData] = useState(null)
   
   // Form data
   const [formData, setFormData] = useState({
@@ -47,8 +50,7 @@ export default function PlayerProfile() {
       setPlayer(data.player)
       setUser(data.user)
       
-      // Populate form data
-      setFormData({
+      const initialFormData = {
         name: data.player.name || '',
         email: data.user.email || '',
         phone: data.player.phone || '',
@@ -60,7 +62,10 @@ export default function PlayerProfile() {
             resultReminders: data.user.preferences?.notifications?.resultReminders ?? true
           }
         }
-      })
+      }
+      
+      setFormData(initialFormData)
+      setOriginalData(initialFormData)
       
     } catch (error) {
       console.error('Error fetching profile:', error)
@@ -73,6 +78,14 @@ export default function PlayerProfile() {
   useEffect(() => {
     fetchProfile()
   }, [fetchProfile])
+
+  // Check for changes whenever formData updates
+  useEffect(() => {
+    if (originalData) {
+      const changed = JSON.stringify(formData) !== JSON.stringify(originalData)
+      setHasChanges(changed)
+    }
+  }, [formData, originalData])
 
   const handleInputChange = (field, value) => {
     setFormData(prev => {
@@ -135,7 +148,8 @@ export default function PlayerProfile() {
       const data = await response.json()
       setPlayer(data.player)
       setUser(data.user)
-      setIsEditing(false)
+      setOriginalData(formData)
+      setHasChanges(false)
       
       // If language changed, redirect to the new locale
       if (isLanguageChanging) {
@@ -166,28 +180,6 @@ export default function PlayerProfile() {
     } finally {
       setSaving(false)
     }
-  }
-
-  const handleCancel = () => {
-    // Reset form data to original values
-    if (player && user) {
-      setFormData({
-        name: player.name || '',
-        email: user.email || '',
-        phone: player.phone || '',
-        preferences: {
-          language: user.preferences?.language || 'es',
-          notifications: {
-            email: user.preferences?.notifications?.email ?? true,
-            matchReminders: user.preferences?.notifications?.matchReminders ?? true,
-            resultReminders: user.preferences?.notifications?.resultReminders ?? true
-          }
-        }
-      })
-    }
-    setIsEditing(false)
-    setError('')
-    setSuccess('')
   }
 
   if (loading) {
@@ -234,7 +226,7 @@ export default function PlayerProfile() {
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>
         
         <div className="relative z-10 p-4 sm:p-6 text-white">
-          {/* Top row: Avatar, Name, Edit button */}
+          {/* Top row: Avatar, Name */}
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-3">
               <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm flex-shrink-0">
@@ -251,45 +243,6 @@ export default function PlayerProfile() {
                 </p>
               </div>
             </div>
-            
-            {/* Edit/Save buttons */}
-            {!isEditing ? (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-all"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-              </button>
-            ) : (
-              <div className="flex gap-2">
-                <button
-                  onClick={handleCancel}
-                  className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-all"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="p-2 bg-green-500 rounded-lg hover:bg-green-600 transition-all disabled:opacity-50"
-                >
-                  {saving ? (
-                    <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                  ) : (
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                </button>
-              </div>
-            )}
           </div>
           
           {/* Stats row */}
@@ -333,7 +286,7 @@ export default function PlayerProfile() {
         </div>
       )}
 
-      {/* Personal Information - Compact */}
+      {/* Personal Information - Always Editable */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
           <svg className="w-5 h-5 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -350,18 +303,13 @@ export default function PlayerProfile() {
             <label className="block text-xs font-medium text-gray-500 mb-1">
               {language === 'es' ? 'Nombre completo' : 'Full Name'}
             </label>
-            {isEditing ? (
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple focus:border-transparent"
-              />
-            ) : (
-              <p className="text-sm font-medium text-gray-900">
-                {player?.name || (language === 'es' ? 'No proporcionado' : 'Not provided')}
-              </p>
-            )}
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => handleInputChange('name', e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple focus:border-transparent"
+              placeholder={language === 'es' ? 'Tu nombre' : 'Your name'}
+            />
           </div>
 
           {/* Email */}
@@ -369,37 +317,27 @@ export default function PlayerProfile() {
             <label className="block text-xs font-medium text-gray-500 mb-1">
               {language === 'es' ? 'Correo electrónico' : 'Email'}
             </label>
-            {isEditing ? (
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple focus:border-transparent"
-              />
-            ) : (
-              <p className="text-sm font-medium text-gray-900">
-                {user?.email || (language === 'es' ? 'No proporcionado' : 'Not provided')}
-              </p>
-            )}
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => handleInputChange('email', e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple focus:border-transparent"
+              placeholder={language === 'es' ? 'tu@email.com' : 'your@email.com'}
+            />
           </div>
 
           {/* Phone */}
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">
-              {language === 'es' ? 'Teléfono' : 'Phone'}
+              {language === 'es' ? 'Teléfono / WhatsApp' : 'Phone / WhatsApp'}
             </label>
-            {isEditing ? (
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => handleInputChange('phone', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple focus:border-transparent"
-              />
-            ) : (
-              <p className="text-sm font-medium text-gray-900">
-                {player?.phone || (language === 'es' ? 'No proporcionado' : 'Not provided')}
-              </p>
-            )}
+            <input
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => handleInputChange('phone', e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple focus:border-transparent"
+              placeholder="+34 600 000 000"
+            />
           </div>
 
           {/* Language */}
@@ -407,25 +345,19 @@ export default function PlayerProfile() {
             <label className="block text-xs font-medium text-gray-500 mb-1">
               {language === 'es' ? 'Idioma' : 'Language'}
             </label>
-            {isEditing ? (
-              <select
-                value={formData.preferences.language}
-                onChange={(e) => handleInputChange('preferences.language', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple focus:border-transparent"
-              >
-                <option value="es">Español</option>
-                <option value="en">English</option>
-              </select>
-            ) : (
-              <p className="text-sm font-medium text-gray-900">
-                {user?.preferences?.language === 'es' ? 'Español' : 'English'}
-              </p>
-            )}
+            <select
+              value={formData.preferences.language}
+              onChange={(e) => handleInputChange('preferences.language', e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple focus:border-transparent"
+            >
+              <option value="es">Español</option>
+              <option value="en">English</option>
+            </select>
           </div>
         </div>
       </div>
 
-      {/* Notifications - Compact */}
+      {/* Notifications - Always Editable */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
           <svg className="w-5 h-5 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -442,21 +374,15 @@ export default function PlayerProfile() {
             <span className="text-sm text-gray-700">
               {language === 'es' ? 'Generales' : 'General'}
             </span>
-            {isEditing ? (
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.preferences.notifications.email}
-                  onChange={(e) => handleInputChange('notifications.email', e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-parque-purple rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-parque-purple"></div>
-              </label>
-            ) : (
-              <span className={`text-xs font-medium px-2 py-0.5 rounded ${user?.preferences?.notifications?.email ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                {user?.preferences?.notifications?.email ? (language === 'es' ? 'Activado' : 'On') : (language === 'es' ? 'Desactivado' : 'Off')}
-              </span>
-            )}
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.preferences.notifications.email}
+                onChange={(e) => handleInputChange('notifications.email', e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-parque-purple rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-parque-purple"></div>
+            </label>
           </div>
           
           {/* Match reminders */}
@@ -464,21 +390,15 @@ export default function PlayerProfile() {
             <span className="text-sm text-gray-700">
               {language === 'es' ? 'Recordatorios de partidos' : 'Match reminders'}
             </span>
-            {isEditing ? (
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.preferences.notifications.matchReminders}
-                  onChange={(e) => handleInputChange('notifications.matchReminders', e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-parque-purple rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-parque-purple"></div>
-              </label>
-            ) : (
-              <span className={`text-xs font-medium px-2 py-0.5 rounded ${user?.preferences?.notifications?.matchReminders ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                {user?.preferences?.notifications?.matchReminders ? (language === 'es' ? 'Activado' : 'On') : (language === 'es' ? 'Desactivado' : 'Off')}
-              </span>
-            )}
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.preferences.notifications.matchReminders}
+                onChange={(e) => handleInputChange('notifications.matchReminders', e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-parque-purple rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-parque-purple"></div>
+            </label>
           </div>
           
           {/* Result reminders */}
@@ -486,21 +406,15 @@ export default function PlayerProfile() {
             <span className="text-sm text-gray-700">
               {language === 'es' ? 'Recordatorios de resultados' : 'Result reminders'}
             </span>
-            {isEditing ? (
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.preferences.notifications.resultReminders}
-                  onChange={(e) => handleInputChange('notifications.resultReminders', e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-parque-purple rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-parque-purple"></div>
-              </label>
-            ) : (
-              <span className={`text-xs font-medium px-2 py-0.5 rounded ${user?.preferences?.notifications?.resultReminders ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                {user?.preferences?.notifications?.resultReminders ? (language === 'es' ? 'Activado' : 'On') : (language === 'es' ? 'Desactivado' : 'Off')}
-              </span>
-            )}
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.preferences.notifications.resultReminders}
+                onChange={(e) => handleInputChange('notifications.resultReminders', e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-parque-purple rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-parque-purple"></div>
+            </label>
           </div>
         </div>
       </div>
@@ -551,6 +465,34 @@ export default function PlayerProfile() {
           </div>
         </div>
       </div>
+
+      {/* Save Button - Sticky at bottom when changes exist */}
+      {hasChanges && (
+        <div className="sticky bottom-4 z-10">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="w-full bg-parque-purple text-white py-3 px-4 rounded-xl font-semibold shadow-lg hover:bg-parque-purple/90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {saving ? (
+              <>
+                <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {language === 'es' ? 'Guardando...' : 'Saving...'}
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                </svg>
+                {language === 'es' ? 'Guardar Cambios' : 'Save Changes'}
+              </>
+            )}
+          </button>
+        </div>
+      )}
     </div>
   )
 }
