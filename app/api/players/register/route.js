@@ -268,8 +268,12 @@ export async function POST(request) {
           }
         })
         
-        // Generate activation token if no password provided
-        if (!password) {
+        // If password provided, user already has an account
+        if (password) {
+          hasUserAccount = true
+          console.log(`User ${email} created with password - account is active`)
+        } else {
+          // Generate activation token if no password provided
           const activationToken = await user.generateActivationToken()
           
           // Generate activation link
