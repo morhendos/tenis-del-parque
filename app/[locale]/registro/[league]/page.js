@@ -157,6 +157,13 @@ export default function LeagueRegistrationPage() {
           return
         }
         
+        // Auto-login after successful registration
+        await signIn('credentials', {
+          redirect: false,
+          email: formData.email,
+          password: formData.password
+        })
+        
         prepareSuccessData(data, formData.name)
       }
       

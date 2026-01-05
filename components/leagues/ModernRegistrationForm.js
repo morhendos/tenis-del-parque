@@ -304,7 +304,12 @@ export default function ModernRegistrationForm({
       </div>
 
       {/* Registration Form */}
-      <form onSubmit={handleSubmit} className="bg-white rounded-none sm:rounded-2xl shadow-none sm:shadow-lg">
+      <form 
+        onSubmit={handleSubmit} 
+        className="bg-white rounded-none sm:rounded-2xl shadow-none sm:shadow-lg"
+        autoComplete="on"
+        name={hasAccount ? 'login' : 'signup'}
+      >
         <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 sm:pb-6">
           <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-5">
             {hasAccount 
@@ -315,6 +320,13 @@ export default function ModernRegistrationForm({
           {hasAccount ? (
             // Login Form
             <div className="space-y-4">
+              {/* Hidden username field for password managers */}
+              <input 
+                type="hidden" 
+                name="username" 
+                value={formData.email}
+                autoComplete="username"
+              />
               <div>
                 <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 mb-1.5">
                   Email
@@ -326,7 +338,7 @@ export default function ModernRegistrationForm({
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  autoComplete="email"
+                  autoComplete="username email"
                   className={`w-full px-3.5 py-2.5 sm:py-3 border ${
                     errors.email ? 'border-red-400 bg-red-50' : 'border-gray-200'
                   } rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-base`}
@@ -378,6 +390,13 @@ export default function ModernRegistrationForm({
           ) : (
             // New User Form
             <div className="space-y-4">
+              {/* Hidden username field for password managers */}
+              <input 
+                type="hidden" 
+                name="username" 
+                value={formData.email}
+                autoComplete="username"
+              />
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1.5">
                   {locale === 'es' ? 'Nombre Completo' : 'Full Name'}
@@ -411,7 +430,7 @@ export default function ModernRegistrationForm({
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  autoComplete="email"
+                  autoComplete="username email"
                   className={`w-full px-3.5 py-2.5 sm:py-3 border ${
                     errors.email ? 'border-red-400 bg-red-50' : 'border-gray-200'
                   } rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-base`}
