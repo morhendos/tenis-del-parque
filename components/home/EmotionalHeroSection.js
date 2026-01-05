@@ -279,17 +279,13 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
             </a>
           </div>
           
-          {/* Learn more + Scroll */}
+          {/* Learn more */}
           <div className="mobile-footer animate-fadeInUp animation-delay-1000">
             <button
               onClick={scrollToHowItWorks}
               className="text-xs text-parque-purple font-medium"
             >
               <span className="border-b border-parque-purple/30">{t.learnMore}</span>
-            </button>
-            
-            <button onClick={scrollToLeagues} className="p-1 animate-bounce">
-              <Icons.ChevronDown className="w-4 h-4 text-parque-purple/50" />
             </button>
           </div>
         </div>
@@ -503,7 +499,7 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
         .mobile-feature-label { font-size: 0.6875rem; margin-top: -1.25rem; margin-bottom: 0.75rem; }
         .mobile-cta-container { gap: 0.375rem; }
         .mobile-cta { min-height: 44px !important; font-size: 0.8125rem !important; }
-        .mobile-footer { margin-top: 0.25rem; gap: 0.125rem; }
+        .mobile-footer { margin-top: 1rem; gap: 0.5rem; }
         
         /* Short screens (740-819px) */
         @media (min-height: 740px) {
@@ -524,7 +520,7 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
           .mobile-feature-label { font-size: 0.6875rem; margin-top: -1.5rem; margin-bottom: 1rem; }
           .mobile-cta-container { gap: 0.375rem; }
           .mobile-cta { min-height: 44px !important; font-size: 0.8125rem !important; }
-          .mobile-footer { margin-top: 0.375rem; gap: 0.125rem; }
+          .mobile-footer { margin-top: 1.25rem; gap: 0.5rem; }
         }
         
         /* Medium screens (820-899px) */
@@ -546,7 +542,7 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
           .mobile-feature-label { font-size: 0.75rem; margin-top: -1.75rem; margin-bottom: 1.25rem; }
           .mobile-cta-container { gap: 0.375rem; }
           .mobile-cta { min-height: 46px !important; font-size: 0.8125rem !important; }
-          .mobile-footer { margin-top: 0.5rem; gap: 0.25rem; }
+          .mobile-footer { margin-top: 1.5rem; gap: 0.5rem; }
         }
         
         /* Medium-tall screens (900-999px) */
@@ -568,7 +564,7 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
           .mobile-feature-label { font-size: 0.75rem; margin-top: -2rem; margin-bottom: 1.5rem; }
           .mobile-cta-container { gap: 0.5rem; }
           .mobile-cta { min-height: 48px !important; font-size: 0.875rem !important; }
-          .mobile-footer { margin-top: 0.75rem; gap: 0.25rem; }
+          .mobile-footer { margin-top: 1.75rem; gap: 0.5rem; }
         }
         
         /* Tall screens (1000px+) */
@@ -590,9 +586,32 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
           .mobile-feature-label { font-size: 0.75rem; margin-top: -2.25rem; margin-bottom: 1.75rem; }
           .mobile-cta-container { gap: 0.5rem; }
           .mobile-cta { min-height: 48px !important; font-size: 0.875rem !important; }
-          .mobile-footer { margin-top: 1rem; gap: 0.5rem; }
+          .mobile-footer { margin-top: 2rem; gap: 0.75rem; }
+        }
+        
+        /* Scroll arrow - responsive positioning based on screen height */
+        .scroll-arrow { display: none; bottom: 0; }
+        
+        @media (min-height: 765px) {
+          .scroll-arrow { display: flex; }
+        }
+        
+        /* Desktop - always show */
+        @media (min-width: 1024px) {
+          .scroll-arrow { display: flex; }
         }
       `}</style>
+      
+      {/* Scroll arrow - fixed at bottom of hero, hidden on short screens */}
+      <div className="scroll-arrow absolute left-0 right-0 flex justify-center z-20">
+        <button 
+          onClick={scrollToLeagues} 
+          className="p-2 animate-bounce"
+          aria-label="Scroll to leagues"
+        >
+          <Icons.ChevronDown className="w-6 h-6 text-parque-purple/60" />
+        </button>
+      </div>
     </section>
   );
 }
