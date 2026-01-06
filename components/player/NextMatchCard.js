@@ -1,12 +1,25 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { WhatsAppUtils } from '@/lib/utils/whatsappUtils'
 import { getMaskedName, isDemoModeActive } from '@/lib/utils/demoMode'
+import { tennisQuotes } from '@/lib/content/tennisQuotes'
 
 export default function NextMatchCard({ match, language, leagueInfo }) {
   const [isDemoMode, setIsDemoMode] = useState(false)
   const [countdown, setCountdown] = useState(null)
+  
+  // Get a stable random quote based on the day (changes daily, not on every render)
+  const quote = useMemo(() => {
+    const today = new Date().toDateString()
+    const seed = today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+    const index = seed % tennisQuotes.length
+    const q = tennisQuotes[index]
+    return {
+      text: q.text[language] || q.text.en,
+      author: q.author
+    }
+  }, [language])
   
   useEffect(() => {
     setIsDemoMode(isDemoModeActive())
@@ -35,7 +48,7 @@ export default function NextMatchCard({ match, language, leagueInfo }) {
     }
     
     updateCountdown()
-    const interval = setInterval(updateCountdown, 60000) // Update every minute
+    const interval = setInterval(updateCountdown, 60000)
     
     return () => clearInterval(interval)
   }, [leagueInfo?.startDate])
@@ -46,22 +59,18 @@ export default function NextMatchCard({ match, language, leagueInfo }) {
       noMatches: 'No tienes partidos programados',
       round: 'Ronda',
       leagueStarts: 'La liga comienza pronto',
-      startsOn: 'Inicio',
       days: 'días',
       hours: 'horas',
-      minutes: 'minutos',
-      getReady: 'Prepárate para competir'
+      minutes: 'min'
     },
     en: {
       title: 'Next Match',
       noMatches: 'No matches scheduled',
       round: 'Round',
       leagueStarts: 'League starts soon',
-      startsOn: 'Starts',
       days: 'days',
       hours: 'hours',
-      minutes: 'minutes',
-      getReady: 'Get ready to compete'
+      minutes: 'min'
     }
   }
 
@@ -74,55 +83,75 @@ export default function NextMatchCard({ match, language, leagueInfo }) {
     
     if (isNotStarted && startDate) {
       return (
-        <div className="bg-gradient-to-br from-parque-purple/5 to-purple-100/50 rounded-2xl border border-parque-purple/20 p-5 shadow-sm h-full flex flex-col">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-parque-purple/10 flex items-center justify-center">
-              <svg className="w-5 h-5 text-parque-purple" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+        <div className="relative overflow-hidden bg-gradient-to-br from-parque-purple via-purple-600 to-indigo-700 rounded-2xl p-5 shadow-lg h-full flex flex-col">
+          {/* Decorative elements */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+          
+          {/* Header */}
+          <div className="relative z-10 flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-white font-semibold text-lg">{t.leagueStarts}</h3>
+              <p className="text-white/70 text-sm">
+                {leagueInfo.name}
+                {leagueInfo.location && ` · ${leagueInfo.location}`}
+              </p>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-            </div>
-            <div>
-              <span className="text-lg font-semibold text-gray-900">{t.leagueStarts}</span>
-              <p className="text-xs text-gray-500">
-                {leagueInfo.name}
-                {leagueInfo.location && (
-                  <span className="text-gray-400"> · {leagueInfo.location}</span>
-                )}
-              </p>
             </div>
           </div>
           
           {/* Countdown */}
           {countdown && (
-            <div className="flex gap-3 mb-4">
-              <div className="bg-white rounded-xl px-4 py-3 text-center border border-parque-purple/10 shadow-sm min-w-[72px]">
-                <div className="text-2xl font-bold text-parque-purple">{countdown.days}</div>
-                <div className="text-xs text-gray-500">{t.days}</div>
+            <div className="relative z-10 flex justify-center gap-3 my-4">
+              <div className="bg-white/15 backdrop-blur-sm rounded-xl px-4 py-3 text-center min-w-[70px] border border-white/20">
+                <div className="text-3xl font-bold text-white">{countdown.days}</div>
+                <div className="text-xs text-white/70 font-medium">{t.days}</div>
               </div>
-              <div className="bg-white rounded-xl px-4 py-3 text-center border border-parque-purple/10 shadow-sm min-w-[72px]">
-                <div className="text-2xl font-bold text-parque-purple">{countdown.hours}</div>
-                <div className="text-xs text-gray-500">{t.hours}</div>
+              <div className="flex items-center text-white/50 text-2xl font-light">:</div>
+              <div className="bg-white/15 backdrop-blur-sm rounded-xl px-4 py-3 text-center min-w-[70px] border border-white/20">
+                <div className="text-3xl font-bold text-white">{countdown.hours}</div>
+                <div className="text-xs text-white/70 font-medium">{t.hours}</div>
               </div>
-              <div className="bg-white rounded-xl px-4 py-3 text-center border border-parque-purple/10 shadow-sm min-w-[72px]">
-                <div className="text-2xl font-bold text-parque-purple">{countdown.minutes}</div>
-                <div className="text-xs text-gray-500">{t.minutes}</div>
+              <div className="flex items-center text-white/50 text-2xl font-light">:</div>
+              <div className="bg-white/15 backdrop-blur-sm rounded-xl px-4 py-3 text-center min-w-[70px] border border-white/20">
+                <div className="text-3xl font-bold text-white">{countdown.minutes}</div>
+                <div className="text-xs text-white/70 font-medium">{t.minutes}</div>
               </div>
             </div>
           )}
           
-          {/* Start date */}
-          <div className="flex items-center justify-between bg-white rounded-xl p-3 border border-parque-purple/10 max-w-sm">
-            <span className="text-sm text-gray-600">{t.startsOn}</span>
-            <span className="text-sm font-semibold text-parque-purple">
-              {startDate.toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
-                weekday: 'long',
-                month: 'long',
-                day: 'numeric'
-              })}
-            </span>
+          {/* Start date pill */}
+          <div className="relative z-10 flex justify-center mb-4">
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20">
+              <svg className="w-4 h-4 text-white/70" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span className="text-sm text-white font-medium">
+                {startDate.toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
+                  weekday: 'long',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </span>
+            </div>
           </div>
           
-          <p className="text-sm text-gray-500 mt-auto pt-3">{t.getReady}</p>
+          {/* Motivational Quote */}
+          <div className="relative z-10 mt-auto pt-4 border-t border-white/10">
+            <div className="flex gap-3">
+              <svg className="w-5 h-5 text-white/40 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
+              </svg>
+              <div>
+                <p className="text-white/90 text-sm italic leading-relaxed">{quote.text}</p>
+                <p className="text-white/50 text-xs mt-1.5 font-medium">— {quote.author}</p>
+              </div>
+            </div>
+          </div>
         </div>
       )
     }
