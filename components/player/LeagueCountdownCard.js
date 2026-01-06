@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 
 export default function LeagueCountdownCard({ league, language }) {
   const [countdown, setCountdown] = useState(null)
   
-  const startDate = league?.seasonConfig?.startDate ? new Date(league.seasonConfig.startDate) : null
+  const startDateStr = league?.seasonConfig?.startDate
+  const startDate = useMemo(() => startDateStr ? new Date(startDateStr) : null, [startDateStr])
   const isUpcoming = league?.status === 'registration_open' || league?.status === 'coming_soon'
   
   // Calculate countdown
