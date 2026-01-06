@@ -47,9 +47,9 @@ export default function NextMatchCard({ match, language, leagueInfo }) {
       round: 'Ronda',
       leagueStarts: 'La liga comienza pronto',
       startsOn: 'Inicio',
-      days: 'd',
-      hours: 'h',
-      minutes: 'm',
+      days: 'días',
+      hours: 'horas',
+      minutes: 'minutos',
       getReady: 'Prepárate para competir'
     },
     en: {
@@ -58,9 +58,9 @@ export default function NextMatchCard({ match, language, leagueInfo }) {
       round: 'Round',
       leagueStarts: 'League starts soon',
       startsOn: 'Starts',
-      days: 'd',
-      hours: 'h',
-      minutes: 'm',
+      days: 'days',
+      hours: 'hours',
+      minutes: 'minutes',
       getReady: 'Get ready to compete'
     }
   }
@@ -94,18 +94,18 @@ export default function NextMatchCard({ match, language, leagueInfo }) {
           
           {/* Countdown */}
           {countdown && (
-            <div className="flex gap-2 mb-4 max-w-xs">
-              <div className="flex-1 bg-white rounded-xl p-3 text-center border border-parque-purple/10">
+            <div className="flex gap-3 mb-4">
+              <div className="bg-white rounded-xl px-4 py-3 text-center border border-parque-purple/10 shadow-sm min-w-[72px]">
                 <div className="text-2xl font-bold text-parque-purple">{countdown.days}</div>
-                <div className="text-xs text-gray-500 uppercase">{t.days}</div>
+                <div className="text-xs text-gray-500">{t.days}</div>
               </div>
-              <div className="flex-1 bg-white rounded-xl p-3 text-center border border-parque-purple/10">
+              <div className="bg-white rounded-xl px-4 py-3 text-center border border-parque-purple/10 shadow-sm min-w-[72px]">
                 <div className="text-2xl font-bold text-parque-purple">{countdown.hours}</div>
-                <div className="text-xs text-gray-500 uppercase">{t.hours}</div>
+                <div className="text-xs text-gray-500">{t.hours}</div>
               </div>
-              <div className="flex-1 bg-white rounded-xl p-3 text-center border border-parque-purple/10">
+              <div className="bg-white rounded-xl px-4 py-3 text-center border border-parque-purple/10 shadow-sm min-w-[72px]">
                 <div className="text-2xl font-bold text-parque-purple">{countdown.minutes}</div>
-                <div className="text-xs text-gray-500 uppercase">{t.minutes}</div>
+                <div className="text-xs text-gray-500">{t.minutes}</div>
               </div>
             </div>
           )}

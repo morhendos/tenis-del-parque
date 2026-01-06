@@ -46,7 +46,7 @@ export default function LeagueCountdownCard({ league, language }) {
       startsOn: 'Fecha de inicio',
       days: 'días',
       hours: 'horas',
-      minutes: 'min',
+      minutes: 'minutos',
       getReady: 'Prepárate para competir. Pronto recibirás tu primer emparejamiento.',
       registeredPlayers: 'jugadores inscritos'
     },
@@ -55,7 +55,7 @@ export default function LeagueCountdownCard({ league, language }) {
       startsOn: 'Start date',
       days: 'days',
       hours: 'hours',
-      minutes: 'min',
+      minutes: 'minutes',
       getReady: 'Get ready to compete. You\'ll receive your first match pairing soon.',
       registeredPlayers: 'registered players'
     }
@@ -76,18 +76,18 @@ export default function LeagueCountdownCard({ league, language }) {
       
       {/* Countdown boxes */}
       {countdown && (
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          <div className="bg-white rounded-xl p-3 text-center border border-parque-purple/10 shadow-sm">
-            <div className="text-3xl font-bold text-parque-purple">{countdown.days}</div>
-            <div className="text-xs text-gray-500 uppercase tracking-wide">{t.days}</div>
+        <div className="flex gap-3 mb-4">
+          <div className="bg-white rounded-xl px-4 py-3 text-center border border-parque-purple/10 shadow-sm min-w-[72px]">
+            <div className="text-2xl font-bold text-parque-purple">{countdown.days}</div>
+            <div className="text-xs text-gray-500">{t.days}</div>
           </div>
-          <div className="bg-white rounded-xl p-3 text-center border border-parque-purple/10 shadow-sm">
-            <div className="text-3xl font-bold text-parque-purple">{countdown.hours}</div>
-            <div className="text-xs text-gray-500 uppercase tracking-wide">{t.hours}</div>
+          <div className="bg-white rounded-xl px-4 py-3 text-center border border-parque-purple/10 shadow-sm min-w-[72px]">
+            <div className="text-2xl font-bold text-parque-purple">{countdown.hours}</div>
+            <div className="text-xs text-gray-500">{t.hours}</div>
           </div>
-          <div className="bg-white rounded-xl p-3 text-center border border-parque-purple/10 shadow-sm">
-            <div className="text-3xl font-bold text-parque-purple">{countdown.minutes}</div>
-            <div className="text-xs text-gray-500 uppercase tracking-wide">{t.minutes}</div>
+          <div className="bg-white rounded-xl px-4 py-3 text-center border border-parque-purple/10 shadow-sm min-w-[72px]">
+            <div className="text-2xl font-bold text-parque-purple">{countdown.minutes}</div>
+            <div className="text-xs text-gray-500">{t.minutes}</div>
           </div>
         </div>
       )}
