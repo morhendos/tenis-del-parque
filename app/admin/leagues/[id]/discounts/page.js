@@ -179,6 +179,14 @@ export default function DiscountManagementPage() {
 
   return (
     <div className="max-w-6xl mx-auto p-6">
+      {/* Toast Notification - Fixed position */}
+      {successMessage && (
+        <div className="fixed top-4 right-4 z-50 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-lg flex items-center">
+          <Check className="w-5 h-5 mr-2 flex-shrink-0" />
+          {successMessage}
+        </div>
+      )}
+      
       {/* Header */}
       <div className="mb-8">
         <button
@@ -205,14 +213,7 @@ export default function DiscountManagementPage() {
         </div>
       </div>
 
-      {/* Success/Error Messages */}
-      {successMessage && (
-        <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center">
-          <Check className="w-5 h-5 mr-2" />
-          {successMessage}
-        </div>
-      )}
-      
+      {/* Error Message - Keep inline since errors need attention */}
       {error && (
         <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center">
           <X className="w-5 h-5 mr-2" />
