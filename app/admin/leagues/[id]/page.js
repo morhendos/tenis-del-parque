@@ -18,6 +18,10 @@ export default function LeagueManagementPage() {
   const [playoffEditing, setPlayoffEditing] = useState(false)
   const [tempPlayoffConfig, setTempPlayoffConfig] = useState({})
   
+  // Status editing states
+  const [statusEditing, setStatusEditing] = useState(false)
+  const [tempStatus, setTempStatus] = useState('')
+  
   const params = useParams()
   const router = useRouter()
   const leagueId = params.id
@@ -157,6 +161,55 @@ export default function LeagueManagementPage() {
       console.error('Error updating playoff configuration:', error)
       alert('Error updating playoff configuration: ' + error.message)
     }
+  }
+
+  // Status editing functions
+  const handleStatusEdit = () => {
+    setTempStatus(league.status || 'active')
+    setStatusEditing(true)
+  }
+
+  const handleStatusCancel = () => {
+    setStatusEditing(false)
+    setTempStatus('')
+  }
+
+  const handleStatusSave = async () => {
+    try {
+      const response = await fetch(`/api/admin/leagues/${leagueId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: tempStatus })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update status')
+      }
+
+      const result = await response.json()
+      setLeague(result.league)
+      setStatusEditing(false)
+      setTempStatus('')
+      
+      alert('League status updated successfully!')
+      
+    } catch (error) {
+      console.error('Error updating status:', error)
+      alert('Error updating status: ' + error.message)
+    }
+  }
+
+  // Helper function for status display
+  const getStatusInfo = (status) => {
+    const statuses = {
+      'active': { name: 'Active', color: 'bg-green-50 text-green-700 border-green-200', description: 'League is currently running' },
+      'registration_open': { name: 'Registration Open', color: 'bg-purple-50 text-purple-700 border-purple-200', description: 'Accepting new player registrations' },
+      'coming_soon': { name: 'Coming Soon', color: 'bg-blue-50 text-blue-700 border-blue-200', description: 'League announced but not yet open' },
+      'completed': { name: 'Completed', color: 'bg-gray-50 text-gray-700 border-gray-200', description: 'Season has ended' },
+      'archived': { name: 'Archived', color: 'bg-gray-50 text-gray-500 border-gray-200', description: 'Historical league, hidden from public' },
+      'inactive': { name: 'Inactive', color: 'bg-red-50 text-red-700 border-red-200', description: 'League is paused or disabled' }
+    }
+    return statuses[status] || { name: status, color: 'bg-gray-50 text-gray-700 border-gray-200', description: '' }
   }
 
   // Helper functions for skill level display
@@ -516,6 +569,80 @@ export default function LeagueManagementPage() {
 
           {activeTab === 'settings' && (
             <div className="space-y-6">
+              {/* League Status Management */}
+              <div className="bg-white border rounded-lg">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900">League Status</h3>
+                  <p className="text-sm text-gray-600">Control the current status of this league</p>
+                </div>
+                <div className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-900 mb-2">Current Status</h4>
+                      {!statusEditing ? (
+                        <div className="flex items-center gap-3">
+                          <span className={`inline-block px-3 py-1 text-sm font-medium rounded border ${getStatusInfo(league.status).color}`}>
+                            {getStatusInfo(league.status).name}
+                          </span>
+                          <p className="text-sm text-gray-600">
+                            {getStatusInfo(league.status).description}
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <select
+                            value={tempStatus}
+                            onChange={(e) => setTempStatus(e.target.value)}
+                            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-parque-purple"
+                          >
+                            <option value="coming_soon">Coming Soon</option>
+                            <option value="registration_open">Registration Open</option>
+                            <option value="active">Active</option>
+                            <option value="completed">Completed</option>
+                            <option value="archived">Archived</option>
+                            <option value="inactive">Inactive</option>
+                          </select>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={handleStatusSave}
+                              className="px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-parque-purple/90 transition-colors text-sm"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={handleStatusCancel}
+                              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {!statusEditing && (
+                      <button
+                        onClick={handleStatusEdit}
+                        className="ml-4 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                      >
+                        Change Status
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                    <h5 className="font-medium text-amber-900 mb-2">Status Guide</h5>
+                    <div className="text-sm text-amber-800 space-y-1">
+                      <p><strong>Coming Soon:</strong> League announced, not accepting registrations yet</p>
+                      <p><strong>Registration Open:</strong> Accepting new player registrations</p>
+                      <p><strong>Active:</strong> Season is in progress with matches being played</p>
+                      <p><strong>Completed:</strong> Season has ended - use this to mark a finished league</p>
+                      <p><strong>Archived:</strong> Historical record, hidden from public listings</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Season Management */}
               <div className="bg-white border rounded-lg">
                 <div className="px-6 py-4 border-b border-gray-200">
