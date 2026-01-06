@@ -4,27 +4,124 @@ import { useState, useEffect } from 'react'
 import { WhatsAppUtils } from '@/lib/utils/whatsappUtils'
 import { getMaskedName, isDemoModeActive } from '@/lib/utils/demoMode'
 
-export default function NextMatchCard({ match, language }) {
+export default function NextMatchCard({ match, language, leagueInfo }) {
   const [isDemoMode, setIsDemoMode] = useState(false)
+  const [countdown, setCountdown] = useState(null)
   
   useEffect(() => {
     setIsDemoMode(isDemoModeActive())
   }, [])
 
+  // Calculate countdown to league start
+  useEffect(() => {
+    if (!leagueInfo?.startDate) return
+    
+    const startDate = new Date(leagueInfo.startDate)
+    
+    const updateCountdown = () => {
+      const now = new Date()
+      const diff = startDate - now
+      
+      if (diff <= 0) {
+        setCountdown(null)
+        return
+      }
+      
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+      
+      setCountdown({ days, hours, minutes })
+    }
+    
+    updateCountdown()
+    const interval = setInterval(updateCountdown, 60000) // Update every minute
+    
+    return () => clearInterval(interval)
+  }, [leagueInfo?.startDate])
+
   const content = {
     es: {
       title: 'Próximo Partido',
       noMatches: 'No tienes partidos programados',
-      round: 'Ronda'
+      round: 'Ronda',
+      leagueStarts: 'La liga comienza pronto',
+      startsOn: 'Inicio',
+      days: 'd',
+      hours: 'h',
+      minutes: 'm',
+      getReady: '¡Prepárate para competir!'
     },
     en: {
       title: 'Next Match',
       noMatches: 'No matches scheduled',
-      round: 'Round'
+      round: 'Round',
+      leagueStarts: 'League starts soon',
+      startsOn: 'Starts',
+      days: 'd',
+      hours: 'h',
+      minutes: 'm',
+      getReady: 'Get ready to compete!'
     }
   }
 
   const t = content[language] || content.es
+
+  // No match but we have league info - show "League Starting Soon"
+  if (!match && leagueInfo) {
+    const startDate = leagueInfo.startDate ? new Date(leagueInfo.startDate) : null
+    const isNotStarted = leagueInfo.status === 'registration_open' || leagueInfo.status === 'coming_soon' || (startDate && startDate > new Date())
+    
+    if (isNotStarted && startDate) {
+      return (
+        <div className="bg-gradient-to-br from-parque-purple/5 to-purple-100/50 rounded-2xl border border-parque-purple/20 p-5 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-parque-purple/10 flex items-center justify-center">
+              <svg className="w-5 h-5 text-parque-purple" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <span className="text-lg font-semibold text-gray-900">{t.leagueStarts}</span>
+              <p className="text-xs text-gray-500">{leagueInfo.name}</p>
+            </div>
+          </div>
+          
+          {/* Countdown */}
+          {countdown && (
+            <div className="flex gap-2 mb-4">
+              <div className="flex-1 bg-white rounded-xl p-3 text-center border border-parque-purple/10">
+                <div className="text-2xl font-bold text-parque-purple">{countdown.days}</div>
+                <div className="text-xs text-gray-500 uppercase">{t.days}</div>
+              </div>
+              <div className="flex-1 bg-white rounded-xl p-3 text-center border border-parque-purple/10">
+                <div className="text-2xl font-bold text-parque-purple">{countdown.hours}</div>
+                <div className="text-xs text-gray-500 uppercase">{t.hours}</div>
+              </div>
+              <div className="flex-1 bg-white rounded-xl p-3 text-center border border-parque-purple/10">
+                <div className="text-2xl font-bold text-parque-purple">{countdown.minutes}</div>
+                <div className="text-xs text-gray-500 uppercase">{t.minutes}</div>
+              </div>
+            </div>
+          )}
+          
+          {/* Start date */}
+          <div className="flex items-center justify-between bg-white rounded-xl p-3 border border-parque-purple/10">
+            <span className="text-sm text-gray-600">{t.startsOn}</span>
+            <span className="text-sm font-semibold text-parque-purple">
+              {startDate.toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </span>
+          </div>
+          
+          <p className="text-center text-sm text-gray-500 mt-3">🎾 {t.getReady}</p>
+        </div>
+      )
+    }
+  }
 
   if (!match) {
     return (

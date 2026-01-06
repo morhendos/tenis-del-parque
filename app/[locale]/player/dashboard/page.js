@@ -27,6 +27,7 @@ export default function PlayerDashboard() {
     recentMatches,
     upcomingMatches,
     standings,
+    leagueInfo,
     showFirstRoundAnnouncement,
     handleCloseFirstRoundAnnouncement,
     getDynamicFirstRoundAnnouncement
@@ -85,7 +86,7 @@ export default function PlayerDashboard() {
         <DashboardHeader player={player} language={language} />
 
         {/* Next Match - Hero section */}
-        <NextMatchCard match={nextMatch} language={language} />
+        <NextMatchCard match={nextMatch} language={language} leagueInfo={leagueInfo} />
 
         {/* Mini Standings Table */}
         <MiniStandings 

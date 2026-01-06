@@ -10,6 +10,7 @@ import ResultsTab from '@/components/player/ResultsTab'
 import PlayoffsTab from '@/components/player/PlayoffsTab'
 import PlayoffExplanation from '@/components/player/PlayoffExplanation'
 import LeagueTabs from '@/components/player/LeagueTabs'
+import LeagueCountdownCard from '@/components/player/LeagueCountdownCard'
 import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
 
 // Helper to categorize registrations
@@ -479,6 +480,9 @@ export default function PlayerLeague() {
           </div>
         </div>
       </div>
+
+      {/* Countdown Card for upcoming leagues */}
+      <LeagueCountdownCard league={currentLeague} language={language} />
 
       {/* Navigation Tabs - Modern Component */}
       <LeagueTabs
