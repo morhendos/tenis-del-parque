@@ -6,6 +6,8 @@ import RegistrationCountdown from '@/components/ui/RegistrationCountdown'
 import { extractSeasonInfo, getSkillLevel } from '@/lib/utils/leagueSiblings'
 import { getRandomQuote } from '@/lib/content/tennisQuotes'
 
+import { getDiscountCode } from '@/lib/utils/discountCode'
+
 export default function LeagueInfoTab({ league, currentSeason, language, locale, citySlug }) {
   const [discountCode, setDiscountCode] = useState('')
   const [discountValid, setDiscountValid] = useState(false)
@@ -149,10 +151,11 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale,
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search)
-      const urlDiscount = urlParams.get('discount')
-      if (urlDiscount) {
-        setDiscountCode(urlDiscount.toUpperCase())
-        validateDiscount(urlDiscount)
+      // getDiscountCode checks URL first, then sessionStorage
+      const discount = getDiscountCode(urlParams, league.slug)
+      if (discount) {
+        setDiscountCode(discount)
+        validateDiscount(discount)
       }
       // Set motivation quote on mount
       setMotivationQuote(getRandomQuote(language, 'motivation'))
