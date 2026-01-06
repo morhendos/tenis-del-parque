@@ -70,7 +70,7 @@ export default function EmotionalHeroSection({ locale = 'es' }) {
   const screenshots = [
     '/screenshots/dashboard-mobile-05.png',
     '/screenshots/openrank-mobile.png',
-    '/screenshots/victory-mobile.png'
+    '/screenshots/victory-mobile-2.png'
   ];
   
   // Get position for each phone

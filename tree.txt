@@ -724,7 +724,7 @@ root/
 │   │   ├── openrank-mobile-02.png
 │   │   ├── openrank-mobile-03.png
 │   │   ├── openrank-mobile.png
-│   │   └── victory-mobile.png
+│   │   └── victory-mobile-2.png
 │   ├── sitemap.xml
 │   ├── sotogrande-01.jpg
 │   ├── sw.js
