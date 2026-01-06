@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import Navigation from '@/components/common/Navigation';
 import Footer from '@/components/common/Footer';
+import DiscountCapture from '@/components/common/DiscountCapture';
 import EmotionalHeroSection from '@/components/home/EmotionalHeroSection';
 import HowItWorksShowcase from '@/components/home/HowItWorksShowcase';
 import FAQSection from '@/components/home/FAQSection';
@@ -91,6 +92,11 @@ export default function HomePageSSG({ locale, leaguesData }) {
   
   return (
     <main className="min-h-screen bg-gradient-to-b from-parque-bg to-white">
+      {/* Capture discount codes from URL */}
+      <Suspense fallback={null}>
+        <DiscountCapture />
+      </Suspense>
+      
       <Navigation 
         currentPage="home" 
         language={language} 

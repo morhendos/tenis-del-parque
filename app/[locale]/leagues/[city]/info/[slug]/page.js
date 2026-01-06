@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import dbConnect from '@/lib/db/mongoose'
 import City from '@/lib/models/City'
 import League from '@/lib/models/League'
@@ -6,6 +7,7 @@ import Navigation from '@/components/common/Navigation'
 import Footer from '@/components/common/Footer'
 import CityLeagueHero from '@/components/leagues/CityLeagueHero'
 import LeagueInfoTab from '@/components/league/LeagueInfoTab'
+import DiscountCapture from '@/components/common/DiscountCapture'
 import { homeContent } from '@/lib/content/homeContent'
 import { serializeLeague } from '@/lib/utils/serializeLeague'
 
@@ -53,6 +55,11 @@ export default async function LeagueInfoPage({ params }) {
   
   return (
     <div className="min-h-screen bg-white sm:bg-gray-50">
+      {/* Capture discount codes from URL */}
+      <Suspense fallback={null}>
+        <DiscountCapture leagueSlug={slug} />
+      </Suspense>
+      
       <Navigation 
         currentPage="leagues" 
         language={language}

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { MapPin, Calendar, Tag, ChevronRight, Eye, EyeOff } from 'lucide-react'
+import { getDiscountCode, storeDiscountCode } from '@/lib/utils/discountCode'
 
 const skillLevelNames = {
   es: {
@@ -49,15 +50,16 @@ export default function ModernRegistrationForm({
   const [isValidatingDiscount, setIsValidatingDiscount] = useState(false)
   const [showDiscountInput, setShowDiscountInput] = useState(false)
 
-  // Check URL parameters for discount code on mount
+  // Check URL parameters and sessionStorage for discount code on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search)
-      const urlDiscount = urlParams.get('discount')
-      if (urlDiscount) {
-        setDiscountCode(urlDiscount.toUpperCase())
+      // getDiscountCode checks URL first, then sessionStorage
+      const discount = getDiscountCode(urlParams, league.slug)
+      if (discount) {
+        setDiscountCode(discount)
         setShowDiscountInput(true)
-        validateDiscount(urlDiscount)
+        validateDiscount(discount)
       }
     }
   }, [])

@@ -148,14 +148,19 @@ export default function DiscountManagementPage() {
     }
   }
 
-  const getShareableLink = (code) => {
+  const getShareableLinks = (code) => {
     const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://tenisdp.es'
-    return `${baseUrl}/signup/${league?.slug}?discount=${code}`
+    const citySlug = league?.cityData?.slug || league?.city?.slug || 'sotogrande'
+    return {
+      home: `${baseUrl}/es?discount=${code}`,
+      leagueInfo: `${baseUrl}/es/leagues/${citySlug}/info/${league?.slug}?discount=${code}`,
+      registration: `${baseUrl}/signup/${league?.slug}?discount=${code}`
+    }
   }
 
-  const copyToClipboard = (text) => {
+  const copyToClipboard = (text, label = 'Link') => {
     navigator.clipboard.writeText(text)
-    setSuccessMessage('Link copied to clipboard!')
+    setSuccessMessage(`${label} copied to clipboard!`)
     setTimeout(() => setSuccessMessage(null), 2000)
   }
 
@@ -434,24 +439,70 @@ export default function DiscountManagementPage() {
                     </div>
                   </div>
                   
-                  {/* Shareable Link */}
-                  <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <p className="text-sm font-medium text-gray-700 mb-2">Shareable Registration Link:</p>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="text"
-                        value={getShareableLink(discount.code)}
-                        readOnly
-                        className="flex-1 p-2 bg-white border border-gray-300 rounded text-sm font-mono"
-                      />
-                      <button
-                        onClick={() => copyToClipboard(getShareableLink(discount.code))}
-                        className="px-3 py-2 bg-emerald-600 text-white text-sm rounded hover:bg-emerald-700 transition-colors flex items-center gap-1"
-                      >
-                        <Copy className="w-4 h-4" />
-                        Copy
-                      </button>
+                  {/* Shareable Links */}
+                  <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <p className="text-sm font-medium text-gray-700 mb-3">Shareable Links with Discount:</p>
+                    <div className="space-y-3">
+                      {/* Home Page Link */}
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">🏠 Home Page (see all features first)</p>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="text"
+                            value={getShareableLinks(discount.code).home}
+                            readOnly
+                            className="flex-1 p-2 bg-white border border-gray-300 rounded text-xs font-mono"
+                          />
+                          <button
+                            onClick={() => copyToClipboard(getShareableLinks(discount.code).home, 'Home link')}
+                            className="px-3 py-2 bg-gray-600 text-white text-xs rounded hover:bg-gray-700 transition-colors flex items-center gap-1"
+                          >
+                            <Copy className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {/* League Info Link */}
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">📋 League Info (detailed league page)</p>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="text"
+                            value={getShareableLinks(discount.code).leagueInfo}
+                            readOnly
+                            className="flex-1 p-2 bg-white border border-gray-300 rounded text-xs font-mono"
+                          />
+                          <button
+                            onClick={() => copyToClipboard(getShareableLinks(discount.code).leagueInfo, 'League info link')}
+                            className="px-3 py-2 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors flex items-center gap-1"
+                          >
+                            <Copy className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {/* Direct Registration Link */}
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">✍️ Direct Registration (skip to signup)</p>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="text"
+                            value={getShareableLinks(discount.code).registration}
+                            readOnly
+                            className="flex-1 p-2 bg-white border border-gray-300 rounded text-xs font-mono"
+                          />
+                          <button
+                            onClick={() => copyToClipboard(getShareableLinks(discount.code).registration, 'Registration link')}
+                            className="px-3 py-2 bg-emerald-600 text-white text-xs rounded hover:bg-emerald-700 transition-colors flex items-center gap-1"
+                          >
+                            <Copy className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
                     </div>
+                    <p className="text-xs text-gray-400 mt-3 italic">
+                      💡 Discount persists as user navigates between pages
+                    </p>
                   </div>
                   
                   {/* Usage Details - Show if code has been used */}
