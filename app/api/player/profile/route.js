@@ -29,7 +29,7 @@ export async function GET(request) {
 
     // Get player details by email using new structure
     const player = await Player.findOne({ email: user.email })
-      .populate('registrations.league', 'name slug location season')
+      .populate('registrations.league', 'name slug location season status seasonConfig currentRound')
 
     if (!player) {
       return NextResponse.json(
