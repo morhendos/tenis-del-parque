@@ -417,16 +417,48 @@ export default function PlayerLeague() {
     const playoffPhase = currentLeague?.playoffConfig?.currentPhase
     
     if (playoffPhase && playoffPhase !== 'regular_season' && playoffPhase !== 'completed') {
-      return { text: '🏆 Playoffs', show: true }
+      return { 
+        text: 'Playoffs', 
+        show: true,
+        icon: (
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 15c-1.95 0-3.74-.77-5.07-2.03A6.972 6.972 0 015 8V4h14v4c0 1.87-.74 3.57-1.93 4.97A7.024 7.024 0 0112 15zm-5-9v2c0 2.76 2.24 5 5 5s5-2.24 5-5V6H7zm5 11c.34 0 .68-.02 1-.07v2.07h3v2H8v-2h3v-2.07c.32.05.66.07 1 .07z"/>
+          </svg>
+        )
+      }
     }
     if (status === 'registration_open') {
-      return { text: language === 'es' ? '📝 Inscripción Abierta' : '📝 Registration Open', show: true }
+      return { 
+        text: language === 'es' ? 'Inscripción Abierta' : 'Registration Open', 
+        show: true,
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        )
+      }
     }
     if (status === 'coming_soon') {
-      return { text: language === 'es' ? '🔜 Próximamente' : '🔜 Coming Soon', show: true }
+      return { 
+        text: language === 'es' ? 'Próximamente' : 'Coming Soon', 
+        show: true,
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        )
+      }
     }
     if (status === 'completed') {
-      return { text: language === 'es' ? '✓ Completada' : '✓ Completed', show: true }
+      return { 
+        text: language === 'es' ? 'Completada' : 'Completed', 
+        show: true,
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        )
+      }
     }
     return { show: false }
   }
@@ -455,7 +487,8 @@ export default function PlayerLeague() {
                 <div className="flex items-center gap-3 flex-wrap">
                   <h1 className="text-3xl font-bold text-white">{currentLeague.name}</h1>
                   {statusBadge.show && (
-                    <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm font-medium text-white">
+                    <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm font-medium text-white flex items-center gap-1.5">
+                      {statusBadge.icon}
                       {statusBadge.text}
                     </span>
                   )}
