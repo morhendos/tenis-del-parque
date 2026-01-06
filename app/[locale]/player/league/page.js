@@ -10,7 +10,7 @@ import ResultsTab from '@/components/player/ResultsTab'
 import PlayoffsTab from '@/components/player/PlayoffsTab'
 import PlayoffExplanation from '@/components/player/PlayoffExplanation'
 import LeagueTabs from '@/components/player/LeagueTabs'
-import LeagueCountdownCard from '@/components/player/LeagueCountdownCard'
+import CountdownCard from '@/components/player/CountdownCard'
 import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
 
 // Helper to categorize registrations
@@ -515,7 +515,15 @@ export default function PlayerLeague() {
       </div>
 
       {/* Countdown Card for upcoming leagues */}
-      <LeagueCountdownCard league={currentLeague} language={language} />
+      <CountdownCard 
+        leagueName={currentLeague.name}
+        location={currentLeague.location?.city}
+        startDate={currentLeague.seasonConfig?.startDate}
+        status={currentLeague.status}
+        playerCount={currentLeague.playerCount}
+        language={language}
+        showQuote={true}
+      />
 
       {/* Navigation Tabs - Modern Component */}
       <LeagueTabs
