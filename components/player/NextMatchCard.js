@@ -74,7 +74,7 @@ export default function NextMatchCard({ match, language, leagueInfo }) {
     
     if (isNotStarted && startDate) {
       return (
-        <div className="bg-gradient-to-br from-parque-purple/5 to-purple-100/50 rounded-2xl border border-parque-purple/20 p-5 shadow-sm">
+        <div className="bg-gradient-to-br from-parque-purple/5 to-purple-100/50 rounded-2xl border border-parque-purple/20 p-5 shadow-sm h-full flex flex-col">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-xl bg-parque-purple/10 flex items-center justify-center">
               <svg className="w-5 h-5 text-parque-purple" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -83,7 +83,12 @@ export default function NextMatchCard({ match, language, leagueInfo }) {
             </div>
             <div>
               <span className="text-lg font-semibold text-gray-900">{t.leagueStarts}</span>
-              <p className="text-xs text-gray-500">{leagueInfo.name}</p>
+              <p className="text-xs text-gray-500">
+                {leagueInfo.name}
+                {leagueInfo.location && (
+                  <span className="text-gray-400"> · {leagueInfo.location}</span>
+                )}
+              </p>
             </div>
           </div>
           
@@ -117,7 +122,7 @@ export default function NextMatchCard({ match, language, leagueInfo }) {
             </span>
           </div>
           
-          <p className="text-sm text-gray-500 mt-3">{t.getReady}</p>
+          <p className="text-sm text-gray-500 mt-auto pt-3">{t.getReady}</p>
         </div>
       )
     }
@@ -125,7 +130,7 @@ export default function NextMatchCard({ match, language, leagueInfo }) {
 
   if (!match) {
     return (
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+      <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm h-full">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -140,7 +145,7 @@ export default function NextMatchCard({ match, language, leagueInfo }) {
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+    <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm h-full">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">

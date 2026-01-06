@@ -85,16 +85,19 @@ export default function PlayerDashboard() {
         {/* Welcome Header with Quick Links */}
         <DashboardHeader player={player} language={language} />
 
-        {/* Next Match - Hero section */}
-        <NextMatchCard match={nextMatch} language={language} leagueInfo={leagueInfo} />
+        {/* Next Match + Mini Standings - Side by side on desktop */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
+          {/* Next Match - Hero section */}
+          <NextMatchCard match={nextMatch} language={language} leagueInfo={leagueInfo} />
 
-        {/* Mini Standings Table */}
-        <MiniStandings 
-          standings={standings}
-          playerId={player?._id}
-          language={language}
-          locale={locale}
-        />
+          {/* Mini Standings Table */}
+          <MiniStandings 
+            standings={standings}
+            playerId={player?._id}
+            language={language}
+            locale={locale}
+          />
+        </div>
 
         {/* OpenRank Progress - Gamification element */}
         <OpenRankAchievement player={player} language={language} locale={locale} />

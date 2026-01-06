@@ -79,7 +79,7 @@ export default function MiniStandings({ standings, playerId, language, locale })
 
   if (!standings || displayRows.length === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+      <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm h-full">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
             <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -94,7 +94,7 @@ export default function MiniStandings({ standings, playerId, language, locale })
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+    <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm h-full">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
