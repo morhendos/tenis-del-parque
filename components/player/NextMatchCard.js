@@ -50,7 +50,7 @@ export default function NextMatchCard({ match, language, leagueInfo }) {
       days: 'd',
       hours: 'h',
       minutes: 'm',
-      getReady: '¡Prepárate para competir!'
+      getReady: 'Prepárate para competir'
     },
     en: {
       title: 'Next Match',
@@ -61,7 +61,7 @@ export default function NextMatchCard({ match, language, leagueInfo }) {
       days: 'd',
       hours: 'h',
       minutes: 'm',
-      getReady: 'Get ready to compete!'
+      getReady: 'Get ready to compete'
     }
   }
 
@@ -89,7 +89,7 @@ export default function NextMatchCard({ match, language, leagueInfo }) {
           
           {/* Countdown */}
           {countdown && (
-            <div className="flex gap-2 mb-4">
+            <div className="flex gap-2 mb-4 max-w-xs">
               <div className="flex-1 bg-white rounded-xl p-3 text-center border border-parque-purple/10">
                 <div className="text-2xl font-bold text-parque-purple">{countdown.days}</div>
                 <div className="text-xs text-gray-500 uppercase">{t.days}</div>
@@ -106,7 +106,7 @@ export default function NextMatchCard({ match, language, leagueInfo }) {
           )}
           
           {/* Start date */}
-          <div className="flex items-center justify-between bg-white rounded-xl p-3 border border-parque-purple/10">
+          <div className="flex items-center justify-between bg-white rounded-xl p-3 border border-parque-purple/10 max-w-sm">
             <span className="text-sm text-gray-600">{t.startsOn}</span>
             <span className="text-sm font-semibold text-parque-purple">
               {startDate.toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
@@ -117,7 +117,7 @@ export default function NextMatchCard({ match, language, leagueInfo }) {
             </span>
           </div>
           
-          <p className="text-center text-sm text-gray-500 mt-3">🎾 {t.getReady}</p>
+          <p className="text-sm text-gray-500 mt-3">{t.getReady}</p>
         </div>
       )
     }

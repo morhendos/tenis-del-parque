@@ -41,21 +41,21 @@ export default function LeagueCountdownCard({ league, language }) {
   
   const content = {
     es: {
-      title: '⏳ La liga comienza pronto',
+      title: 'La liga comienza pronto',
       startsOn: 'Fecha de inicio',
       days: 'días',
       hours: 'horas',
       minutes: 'min',
-      getReady: '¡Prepárate para competir! Pronto recibirás tu primer emparejamiento.',
+      getReady: 'Prepárate para competir. Pronto recibirás tu primer emparejamiento.',
       registeredPlayers: 'jugadores inscritos'
     },
     en: {
-      title: '⏳ League starts soon',
+      title: 'League starts soon',
       startsOn: 'Start date',
       days: 'days',
       hours: 'hours',
       minutes: 'min',
-      getReady: 'Get ready to compete! You\'ll receive your first match pairing soon.',
+      getReady: 'Get ready to compete. You\'ll receive your first match pairing soon.',
       registeredPlayers: 'registered players'
     }
   }
@@ -63,7 +63,7 @@ export default function LeagueCountdownCard({ league, language }) {
   const t = content[language] || content.es
   
   return (
-    <div className="bg-gradient-to-br from-parque-purple/5 via-purple-50 to-indigo-50 rounded-xl border border-parque-purple/20 p-5 shadow-sm">
+    <div className="bg-gradient-to-br from-parque-purple/5 via-purple-50 to-indigo-50 rounded-xl border border-parque-purple/20 p-5 shadow-sm max-w-md">
       <div className="flex items-center gap-3 mb-4">
         <div className="w-10 h-10 rounded-xl bg-parque-purple/10 flex items-center justify-center">
           <svg className="w-5 h-5 text-parque-purple" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -106,7 +106,7 @@ export default function LeagueCountdownCard({ league, language }) {
       
       {/* Player count if available */}
       {league?.playerCount > 0 && (
-        <div className="flex items-center justify-center gap-2 text-sm text-gray-600 mb-3">
+        <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
@@ -114,9 +114,7 @@ export default function LeagueCountdownCard({ league, language }) {
         </div>
       )}
       
-      <p className="text-center text-sm text-gray-600">
-        🎾 {t.getReady}
-      </p>
+      <p className="text-sm text-gray-600">{t.getReady}</p>
     </div>
   )
 }
