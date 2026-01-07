@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
+import confetti from 'canvas-confetti'
 import { getRandomQuote } from '../../lib/content/tennisQuotes'
 
 export default function EnhancedSuccessMessage({ 
@@ -74,6 +75,44 @@ export default function EnhancedSuccessMessage({
     
     // Get a random motivational quote in the right language
     setQuote(getRandomQuote(language))
+    
+    // Trigger confetti celebration!
+    const triggerConfetti = () => {
+      // First burst - center
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#10b981', '#14b8a6', '#6366f1', '#8b5cf6', '#fbbf24']
+      })
+      
+      // Second burst - left side (delayed)
+      setTimeout(() => {
+        confetti({
+          particleCount: 50,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0, y: 0.6 },
+          colors: ['#10b981', '#14b8a6', '#6366f1', '#8b5cf6', '#fbbf24']
+        })
+      }, 150)
+      
+      // Third burst - right side (delayed)
+      setTimeout(() => {
+        confetti({
+          particleCount: 50,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1, y: 0.6 },
+          colors: ['#10b981', '#14b8a6', '#6366f1', '#8b5cf6', '#fbbf24']
+        })
+      }, 300)
+    }
+    
+    // Small delay to let the page render first
+    const timer = setTimeout(triggerConfetti, 300)
+    
+    return () => clearTimeout(timer)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [language])
 
