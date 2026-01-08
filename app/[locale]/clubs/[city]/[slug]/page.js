@@ -1,6 +1,7 @@
 import dbConnect from '@/lib/db/mongoose'
 import Club from '@/lib/models/Club'
 import City from '@/lib/models/City'
+import League from '@/lib/models/League'
 import ClubDetailPageSSG from '@/components/pages/ClubDetailPageSSG'
 
 // Generate static params for all club pages
@@ -127,9 +128,22 @@ async function getClubData(city, slug) {
     .limit(5)
     .lean()
     
+    // Check if there's an active league for this city
+    const activeLeague = await League.findOne({
+      'location.city': city,
+      status: { $in: ['active', 'registration', 'upcoming'] }
+    })
+    .select('slug name status')
+    .lean()
+    
     return {
       club,
       nearbyClubs,
+      activeLeague: activeLeague ? {
+        slug: activeLeague.slug,
+        name: activeLeague.name,
+        status: activeLeague.status
+      } : null,
       lastUpdated: new Date().toISOString()
     }
   } catch (error) {
@@ -137,6 +151,7 @@ async function getClubData(city, slug) {
     return {
       club: null,
       nearbyClubs: [],
+      activeLeague: null,
       error: error.message,
       lastUpdated: new Date().toISOString()
     }

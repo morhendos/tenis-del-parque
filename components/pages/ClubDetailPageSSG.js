@@ -16,13 +16,18 @@ export default function ClubDetailPageSSG({ locale, city, slug, clubData }) {
   const [imageLoading, setImageLoading] = useState({})
   
   const t = homeContent[locale] || homeContent['es']
-  const { club, nearbyClubs, error } = clubData
+  const { club, nearbyClubs, activeLeague, error } = clubData
 
-  // Helper function to convert city slug to league slug
-  const getCityLeagueSlug = (citySlug) => {
-    if (!citySlug) return null
-    return `liga-de-${citySlug}`
+  // Get the correct league URL - use actual league if exists, otherwise waitlist
+  const getLeagueUrl = () => {
+    if (activeLeague?.slug) {
+      return `/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${activeLeague.slug}`
+    }
+    // Fallback to waitlist (which shows the interest form)
+    return `/${locale}/${locale === 'es' ? 'registro' : 'signup'}/liga-de-${city}`
   }
+  
+  const leagueUrl = getLeagueUrl()
 
   // Helper function to format price display
   const formatPriceRange = (min, max, locale) => {
@@ -1090,7 +1095,7 @@ export default function ClubDetailPageSSG({ locale, city, slug, clubData }) {
                       : 'Join our amateur league and find players at your level'}
                   </p>
                   <Link
-                    href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${getCityLeagueSlug(city)}`}
+                    href={leagueUrl}
                     className="block w-full bg-white text-parque-purple text-center py-4 rounded-xl font-bold text-lg hover:bg-gray-50 transition-colors shadow-lg hover:shadow-xl"
                   >
                     {locale === 'es' ? 'Únete a la Liga' : 'Join the League'}
@@ -1294,7 +1299,7 @@ export default function ClubDetailPageSSG({ locale, city, slug, clubData }) {
               {/* CTA */}
               <div className="pt-4 border-t">
                 <Link
-                  href={`/${locale}/${locale === 'es' ? 'registro' : 'signup'}/${getCityLeagueSlug(city)}`}
+                  href={leagueUrl}
                   className="block w-full bg-parque-purple text-white text-center py-4 rounded-xl font-bold text-lg shadow-lg"
                 >
                   {locale === 'es' ? 'Únete a la Liga' : 'Join the League'}
