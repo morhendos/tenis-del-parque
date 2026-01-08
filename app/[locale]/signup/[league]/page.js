@@ -6,6 +6,7 @@ import { signIn } from 'next-auth/react'
 import Navigation from '../../../../components/common/Navigation'
 import Footer from '../../../../components/common/Footer'
 import ModernRegistrationForm from '../../../../components/leagues/ModernRegistrationForm'
+import LeagueWaitlistForm from '../../../../components/leagues/LeagueWaitlistForm'
 import EnhancedSuccessMessage from '../../../../components/ui/EnhancedSuccessMessage'
 import { homeContent } from '../../../../lib/content/homeContent'
 import { i18n } from '../../../../lib/i18n/config'
@@ -226,29 +227,45 @@ export default function LeagueRegistrationPage() {
     )
   }
 
-  // Error state
+  // Error state - Show waitlist form instead of error
   if (error || !league) {
+    // Extract city from slug (e.g., "liga-de-marbella" -> "marbella")
+    const citySlug = leagueSlug?.replace(/^liga-de-/, '') || ''
+    const cityName = citySlug
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+
     return (
-      <div className="min-h-screen flex flex-col bg-white">
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50">
+        {/* Decorative background */}
+        <div className="hidden sm:block absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 right-10 w-72 h-72 bg-purple-300/15 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-20 left-10 w-64 h-64 bg-blue-300/15 rounded-full blur-3xl"></div>
+        </div>
+        
         <Navigation locale={validLocale} showBackButton={true} />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="container mx-auto px-4 py-16 text-center">
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              {validLocale === 'es' ? 'Liga no encontrada' : 'League not found'}
-            </h1>
-            <p className="text-gray-600 mb-8">
-              {validLocale === 'es' 
-                ? 'La liga que buscas no existe o no está activa.'
-                : 'The league you are looking for does not exist or is not active.'}
-            </p>
-            <a 
-              href={`/${validLocale}/leagues`}
-              className="inline-block bg-parque-purple text-white px-6 py-3 rounded-xl hover:bg-parque-purple/90 transition-colors font-medium"
-            >
-              {validLocale === 'es' ? 'Ver todas las ligas' : 'View all leagues'}
-            </a>
+        
+        <div className="flex-1 flex items-center justify-center px-4 py-8 pt-24">
+          <div className="w-full max-w-lg">
+            <LeagueWaitlistForm 
+              citySlug={citySlug}
+              cityName={cityName}
+              locale={validLocale}
+            />
+            
+            {/* Link to see other leagues */}
+            <div className="text-center mt-6">
+              <a 
+                href={`/${validLocale}/leagues`}
+                className="text-purple-600 hover:text-purple-700 font-medium text-sm"
+              >
+                {validLocale === 'es' ? '← Ver ligas disponibles' : '← View available leagues'}
+              </a>
+            </div>
           </div>
         </div>
+        
         <Footer content={t.footer} />
       </div>
     )
