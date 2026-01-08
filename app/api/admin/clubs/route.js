@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import Club from '@/lib/models/Club'
@@ -227,9 +228,23 @@ export async function POST(request) {
     await club.save()
     console.log('Club created successfully:', club._id)
 
+    // Auto-revalidate clubs listing pages
+    try {
+      console.log(`🔄 Auto-revalidating clubs pages after creating: ${club.name}`)
+      revalidatePath('/es/clubs')
+      revalidatePath('/en/clubs')
+      revalidatePath(`/es/clubs/${citySlug}`)
+      revalidatePath(`/en/clubs/${citySlug}`)
+      console.log('✅ Clubs pages revalidated')
+    } catch (revalidateError) {
+      console.error('⚠️ Error revalidating clubs pages:', revalidateError)
+      // Don't fail the creation if revalidation fails
+    }
+
     return NextResponse.json({ 
       success: true, 
-      club: club.toObject() 
+      club: club.toObject(),
+      revalidated: true
     })
   } catch (error) {
     console.error('Error creating club:', error)

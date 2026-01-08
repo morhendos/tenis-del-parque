@@ -173,16 +173,22 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: 'Club not found' }, { status: 404 })
     }
 
-    // Auto-revalidate the club page to clear cache
+    // Auto-revalidate club and listing pages to clear cache
     try {
       const city = club.location?.city
       const slug = club.slug
       
       if (city && slug) {
         console.log(`🔄 Auto-revalidating club pages: ${city}/${slug}`)
+        // Revalidate individual club pages
         revalidatePath(`/es/clubs/${city}/${slug}`)
         revalidatePath(`/en/clubs/${city}/${slug}`)
-        console.log('✅ Club pages revalidated')
+        // Revalidate listing pages
+        revalidatePath('/es/clubs')
+        revalidatePath('/en/clubs')
+        revalidatePath(`/es/clubs/${city}`)
+        revalidatePath(`/en/clubs/${city}`)
+        console.log('✅ Club and listing pages revalidated')
       }
     } catch (revalidateError) {
       console.error('⚠️ Error revalidating club pages:', revalidateError)
@@ -219,9 +225,25 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: 'Club not found' }, { status: 404 })
     }
 
+    // Auto-revalidate listing pages after deletion
+    try {
+      const city = club.location?.city
+      console.log(`🔄 Auto-revalidating clubs pages after deleting: ${club.name}`)
+      revalidatePath('/es/clubs')
+      revalidatePath('/en/clubs')
+      if (city) {
+        revalidatePath(`/es/clubs/${city}`)
+        revalidatePath(`/en/clubs/${city}`)
+      }
+      console.log('✅ Clubs pages revalidated')
+    } catch (revalidateError) {
+      console.error('⚠️ Error revalidating clubs pages:', revalidateError)
+    }
+
     return NextResponse.json({ 
       success: true, 
-      message: 'Club deleted successfully' 
+      message: 'Club deleted successfully',
+      revalidated: true
     })
   } catch (error) {
     console.error('Error deleting club:', error)
