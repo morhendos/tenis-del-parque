@@ -74,12 +74,12 @@ export default function LeagueWaitlistForm({ citySlug, cityName, locale, onSucce
           </svg>
         </div>
         <h3 className="text-xl font-bold text-gray-900 mb-2">
-          {locale === 'es' ? '¡Te has unido a la lista!' : 'You&apos;ve joined the list!'}
+          {locale === 'es' ? '¡Te has unido a la lista!' : "You've joined the list!"}
         </h3>
         <p className="text-gray-600 mb-4">
           {locale === 'es' 
             ? `Te avisaremos cuando lancemos la liga en ${cityName}.`
-            : `We&apos;ll notify you when we launch the league in ${cityName}.`}
+            : `We'll notify you when we launch the league in ${cityName}.`}
         </p>
         {cityCount && cityCount > 1 && (
           <div className="bg-purple-50 rounded-xl p-4 text-sm text-purple-700">
@@ -104,7 +104,7 @@ export default function LeagueWaitlistForm({ citySlug, cityName, locale, onSucce
         <p className="text-gray-600 text-sm">
           {locale === 'es' 
             ? `Todavía no tenemos liga en ${cityName}, pero si hay suficiente interés, ¡la lanzaremos!`
-            : `We don&apos;t have a league in ${cityName} yet, but if there&apos;s enough interest, we&apos;ll launch one!`}
+            : `We don't have a league in ${cityName} yet, but if there's enough interest, we'll launch one!`}
         </p>
       </div>
 
@@ -183,13 +183,13 @@ export default function LeagueWaitlistForm({ citySlug, cityName, locale, onSucce
         >
           {isSubmitting 
             ? (locale === 'es' ? 'Enviando...' : 'Sending...') 
-            : (locale === 'es' ? '¡Avísame cuando haya liga!' : 'Notify me when there&apos;s a league!')}
+            : (locale === 'es' ? '¡Avísame cuando haya liga!' : "Notify me when there's a league!")}
         </button>
 
         <p className="text-xs text-gray-500 text-center">
           {locale === 'es' 
             ? 'Te contactaremos solo cuando lancemos la liga en tu zona.'
-            : 'We&apos;ll only contact you when we launch a league in your area.'}
+            : "We'll only contact you when we launch a league in your area."}
         </p>
       </form>
     </div>
