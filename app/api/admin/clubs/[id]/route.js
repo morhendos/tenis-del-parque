@@ -149,6 +149,15 @@ export async function PUT(request, { params }) {
       }
     }
 
+    // Sanitize coordinates - remove if null/invalid to avoid 2dsphere index errors
+    if (data.location?.coordinates) {
+      const { lat, lng } = data.location.coordinates
+      if (lat == null || lng == null || isNaN(lat) || isNaN(lng)) {
+        // Remove invalid coordinates entirely
+        delete data.location.coordinates
+      }
+    }
+
     const club = await Club.findByIdAndUpdate(
       params.id,
       {
