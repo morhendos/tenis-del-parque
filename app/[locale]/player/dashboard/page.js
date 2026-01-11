@@ -30,7 +30,11 @@ export default function PlayerDashboard() {
     leagueInfo,
     showFirstRoundAnnouncement,
     handleCloseFirstRoundAnnouncement,
-    getDynamicFirstRoundAnnouncement
+    getDynamicFirstRoundAnnouncement,
+    // League-specific announcements
+    leagueAnnouncement,
+    showLeagueAnnouncement,
+    handleCloseLeagueAnnouncement
   } = usePlayerDashboard()
 
   // Get the next upcoming match (first one)
@@ -122,6 +126,15 @@ export default function PlayerDashboard() {
             isOpen={true}
             onClose={handleCloseFirstRoundAnnouncement}
             announcement={getDynamicFirstRoundAnnouncement()}
+          />
+        )}
+        
+        {/* League-Specific Announcements */}
+        {showLeagueAnnouncement && leagueAnnouncement && (
+          <AnnouncementModal
+            isOpen={true}
+            onClose={handleCloseLeagueAnnouncement}
+            announcement={leagueAnnouncement}
           />
         )}
       </div>

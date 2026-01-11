@@ -1,0 +1,70 @@
+'use client'
+
+import { useEffect } from 'react'
+
+export default function Error({
+  error,
+  reset,
+}) {
+  useEffect(() => {
+    // Log the error to an error reporting service
+    console.error('Page Error:', error)
+  }, [error])
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-6 sm:p-8 text-center">
+        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        
+        <h2 className="text-xl font-bold text-gray-900 mb-2">
+          Algo salió mal / Something went wrong
+        </h2>
+        
+        <p className="text-gray-600 mb-4 text-sm">
+          Ha ocurrido un error. Por favor, intenta de nuevo.
+          <br />
+          An error occurred. Please try again.
+        </p>
+        
+        {/* Show error message for debugging */}
+        <div className="bg-gray-100 rounded-lg p-3 mb-4 text-left">
+          <p className="text-xs text-gray-500 mb-1">Error details:</p>
+          <code className="text-xs text-red-600 break-all">
+            {error?.message || 'Unknown error'}
+          </code>
+          {error?.digest && (
+            <p className="text-xs text-gray-400 mt-1">
+              Digest: {error.digest}
+            </p>
+          )}
+        </div>
+        
+        <div className="space-y-3">
+          <button
+            onClick={() => reset()}
+            className="w-full bg-parque-purple text-white py-3 px-4 rounded-lg font-medium hover:bg-parque-purple/90 transition-colors"
+          >
+            Intentar de nuevo / Try again
+          </button>
+          
+          <a
+            href="/"
+            className="block w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+          >
+            Volver al inicio / Go home
+          </a>
+        </div>
+        
+        <p className="mt-4 text-xs text-gray-400">
+          Si el problema persiste, limpia la caché de tu navegador.
+          <br />
+          If the problem persists, clear your browser cache.
+        </p>
+      </div>
+    </div>
+  )
+}

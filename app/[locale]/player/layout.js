@@ -63,6 +63,24 @@ export default function PlayerLayout({ children }) {
             const profileData = await profileResponse.json()
             setPlayerData(profileData)
             
+            // Check for league-specific announcements based on player's registrations
+            const playerLeagueSlugs = (profileData.player?.registrations || [])
+              .map(reg => reg.league?.slug)
+              .filter(Boolean)
+            
+            const hasUnseenLeagueAnnouncement = Object.values(announcementContent).some(announcement => {
+              if (!announcement.targetLeagues || announcement.targetLeagues.length === 0) return false
+              const isInTargetedLeague = announcement.targetLeagues.some(
+                targetSlug => playerLeagueSlugs.includes(targetSlug)
+              )
+              return isInTargetedLeague && !seenAnnouncements.includes(announcement.id)
+            })
+            
+            // Update hasNewAnnouncement to include league-specific ones
+            if (hasUnseenLeagueAnnouncement) {
+              setHasNewAnnouncement(true)
+            }
+            
             // Check if user has a language preference
             const userLanguage = profileData.user?.preferences?.language
             
