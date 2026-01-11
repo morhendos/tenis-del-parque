@@ -100,7 +100,7 @@ export async function POST(request) {
     // Connect to database
     await dbConnect()
 
-    // Verify both players exist and belong to the league
+    // Verify both players exist and are registered in the league
     const [player1, player2] = await Promise.all([
       Player.findById(player1Id),
       Player.findById(player2Id)
@@ -113,9 +113,17 @@ export async function POST(request) {
       )
     }
 
-    if (player1.league.toString() !== league || player2.league.toString() !== league) {
+    // Check if players are registered in this league (using registrations array)
+    const player1InLeague = player1.registrations?.some(
+      reg => reg.league.toString() === league
+    )
+    const player2InLeague = player2.registrations?.some(
+      reg => reg.league.toString() === league
+    )
+
+    if (!player1InLeague || !player2InLeague) {
       return NextResponse.json(
-        { error: 'Players must belong to the same league' },
+        { error: 'Players must be registered in the specified league' },
         { status: 400 }
       )
     }

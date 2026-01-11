@@ -30,6 +30,7 @@ root/
 │   │   │   └── page.js
 │   │   ├── elo
 │   │   │   └── page.js
+│   │   ├── error.js
 │   │   ├── forgot-password
 │   │   │   └── page.js
 │   │   ├── layout.js
@@ -78,7 +79,9 @@ root/
 │   │   ├── signup
 │   │   │   └── [league]
 │   │   │       └── page.js
-│   │   └── swiss
+│   │   ├── swiss
+│   │   │   └── page.js
+│   │   └── test-success
 │   │       └── page.js
 │   ├── admin
 │   │   ├── README.md
@@ -135,7 +138,9 @@ root/
 │   │   ├── page.js
 │   │   ├── players
 │   │   │   └── page.js
-│   │   └── users
+│   │   ├── users
+│   │   │   └── page.js
+│   │   └── waitlist
 │   │       └── page.js
 │   ├── admin-login
 │   │   └── page.js
@@ -183,6 +188,8 @@ root/
 │   │   │   │   └── route.js
 │   │   │   ├── docs
 │   │   │   │   └── route.js
+│   │   │   ├── league-interest
+│   │   │   │   └── route.js
 │   │   │   ├── leagues
 │   │   │   │   ├── [id]
 │   │   │   │   │   ├── discounts
@@ -195,6 +202,8 @@ root/
 │   │   │   │   │   │   ├── notifications
 │   │   │   │   │   │   │   └── route.js
 │   │   │   │   │   │   └── route.js
+│   │   │   │   │   └── route.js
+│   │   │   │   ├── display-order
 │   │   │   │   │   └── route.js
 │   │   │   │   ├── export
 │   │   │   │   │   └── route.js
@@ -275,6 +284,8 @@ root/
 │   │   ├── debug
 │   │   │   └── league
 │   │   │       └── [slug]
+│   │   ├── league-interest
+│   │   │   └── route.js
 │   │   ├── leagues
 │   │   │   ├── [league]
 │   │   │   │   ├── [slug]
@@ -292,7 +303,9 @@ root/
 │   │   │   ├── location
 │   │   │   │   └── [location]
 │   │   │   │       └── route.js
-│   │   │   └── route.js
+│   │   │   ├── route.js
+│   │   │   └── siblings
+│   │   │       └── route.js
 │   │   ├── openrank
 │   │   │   └── route.js
 │   │   ├── player
@@ -421,6 +434,7 @@ root/
 │   ├── clubs
 │   │   └── ClubCard.js
 │   ├── common
+│   │   ├── DiscountCapture.js
 │   │   ├── Footer.js
 │   │   ├── LanguageSwitcher.js
 │   │   ├── Navigation.js
@@ -453,8 +467,8 @@ root/
 │   ├── leagues
 │   │   ├── CityCard.js
 │   │   ├── CityLeagueHero.js
-│   │   ├── LeagueLevelCard.js
 │   │   ├── LeagueSeasonSection.js
+│   │   ├── LeagueWaitlistForm.js
 │   │   ├── ModernRegistrationForm.js
 │   │   └── SeasonLevelSelector.js
 │   ├── pages
@@ -470,6 +484,7 @@ root/
 │   │   └── RulesPageContent.js
 │   ├── player
 │   │   ├── BadgeCard.js
+│   │   ├── CountdownCard.js
 │   │   ├── DashboardHeader.js
 │   │   ├── EloProgressionChart.js
 │   │   ├── LeagueCard.js
@@ -605,6 +620,7 @@ root/
 │   │   ├── passwordResetContent.js
 │   │   ├── rulesContent.js
 │   │   ├── swissContent.js
+│   │   ├── tennisQuotes.js
 │   │   └── welcomeContent.js
 │   ├── data
 │   │   └── mockData.js
@@ -636,6 +652,7 @@ root/
 │   │   ├── City.js
 │   │   ├── Club.js
 │   │   ├── League.js
+│   │   ├── LeagueInterest.js
 │   │   ├── Match.js
 │   │   ├── Player.js
 │   │   ├── Season.js
@@ -652,8 +669,10 @@ root/
 │       ├── cacheUtils.js
 │       ├── clubAssignmentCache.js
 │       ├── demoMode.js
+│       ├── discountCode.js
 │       ├── duplicateDetection.js
 │       ├── geographicBoundaries.js
+│       ├── leagueSiblings.js
 │       ├── matchResultUtils.js
 │       ├── phoneUtils.js
 │       ├── playerModelHelpers.js
@@ -744,7 +763,6 @@ root/
 │   ├── checkAuth.mjs
 │   ├── checkGoogleImages.mjs
 │   ├── checkLeagueSkillLevels.js
-│   ├── checkLeagueStatus.js
 │   ├── checkMatch.js
 │   ├── checkMatchSeasons.js
 │   ├── checkPlayoffMatchesForPlayer.js

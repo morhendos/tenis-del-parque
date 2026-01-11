@@ -49,7 +49,8 @@ export default function LeagueManagementPage() {
       // Store league in session for consistency with other pages
       sessionStorage.setItem('selectedLeague', JSON.stringify({ 
         id: foundLeague._id, 
-        name: foundLeague.name 
+        name: foundLeague.name,
+        season: foundLeague.season
       }))
       
     } catch (error) {

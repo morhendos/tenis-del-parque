@@ -53,7 +53,7 @@ function PlayerCard({ player, isSelected, onSelect, isDragging, matchHistory = [
             </span>
           </div>
           <div className="text-sm text-gray-600">
-            {player.level} • ELO: {player.stats?.eloRating || 1200}
+            {player.level} • ELO: {player.eloRating || player.stats?.eloRating || 1200}
           </div>
           <div className="text-xs text-gray-500 mt-1">
             W: {player.stats?.matchesWon || 0} - L: {player.stats?.matchesPlayed - player.stats?.matchesWon || 0}
@@ -83,7 +83,7 @@ function MatchPairing({ match, index, onSwapPlayers, onRemoveMatch, playerHistor
   }
   
   const hasPlayedBefore = playerHistory[match.player1._id]?.includes(match.player2._id)
-  const eloDiff = Math.abs((match.player1.stats?.eloRating || 1200) - (match.player2.stats?.eloRating || 1200))
+  const eloDiff = Math.abs((match.player1.eloRating || match.player1.stats?.eloRating || 1200) - (match.player2.eloRating || match.player2.stats?.eloRating || 1200))
   const isHighEloDiff = eloDiff > 200
   const isDifferentLevel = match.player1.level !== match.player2.level
   
@@ -373,7 +373,7 @@ function CreateMatchContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           leagueId: selectedLeague?.id || leagueId,
-          season: 'summer-2025',
+          season: selectedLeague?.season ? `${selectedLeague.season.type}-${selectedLeague.season.year}` : leagueId,
           round: roundNumber,
           generateMatches: false
         })
@@ -425,7 +425,7 @@ function CreateMatchContent() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             league: leagueId || selectedLeague?.id,
-            season: 'summer-2025',
+            season: selectedLeague?.season ? `${selectedLeague.season.type}-${selectedLeague.season.year}` : leagueId,
             round: roundNumber,
             player1Id: match.player1._id,
             player2Id: match.player2._id
