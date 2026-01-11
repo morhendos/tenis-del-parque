@@ -94,6 +94,11 @@ export default function MessagesPage() {
         ? firstRoundMatch.players.player2 
         : firstRoundMatch.players.player1
       
+      // Get the league name from the match or player's registration
+      const matchLeagueName = firstRoundMatch.league?.name || 
+        player.registrations?.find(r => r.league?._id === firstRoundMatch.league)?.league?.name ||
+        'Silver League'
+      
       messages.push({
         id: announcementContent.firstRoundMatch.id,
         type: 'announcement',
@@ -112,7 +117,7 @@ export default function MessagesPage() {
               player.name,
               opponent.name,
               opponent.whatsapp,
-              { level: player.level }
+              { level: player.level, leagueName: matchLeagueName }
             )
           },
           en: {
@@ -121,7 +126,7 @@ export default function MessagesPage() {
               player.name,
               opponent.name,
               opponent.whatsapp,
-              { level: player.level }
+              { level: player.level, leagueName: matchLeagueName }
             )
           }
         }
@@ -175,11 +180,7 @@ export default function MessagesPage() {
         )
       case 'match':
         return (
-          <svg className={className} fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="9" />
-            <path strokeLinecap="round" d="M12 3c-2.5 2.5-2.5 6.5 0 9s2.5 6.5 0 9" />
-            <path strokeLinecap="round" d="M12 3c2.5 2.5 2.5 6.5 0 9s-2.5 6.5 0 9" />
-          </svg>
+          <span className="text-base font-bold">1</span>
         )
       case 'announcement':
         return (

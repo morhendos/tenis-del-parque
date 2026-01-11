@@ -47,7 +47,13 @@ const TargetIcon = () => (
   </svg>
 )
 
-export default function PlayoffExplanation({ language }) {
+export default function PlayoffExplanation({ language, playoffConfig }) {
+  // Check if we should show both playoff groups or just one
+  const numberOfGroups = playoffConfig?.numberOfGroups || 1
+  const groupAPlayers = playoffConfig?.groupAPlayers || 8
+  const groupBPlayers = playoffConfig?.groupBPlayers || 8
+  const showPlayoffB = numberOfGroups === 2
+
   return (
     <div className="mt-8 space-y-6">
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
@@ -65,24 +71,33 @@ export default function PlayoffExplanation({ language }) {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className={`grid grid-cols-1 ${showPlayoffB ? 'md:grid-cols-2' : ''} gap-6`}>
+          {/* Playoff A - Always shown */}
           <div className="bg-white rounded-xl p-4 border border-blue-200">
             <div className="flex items-center space-x-3 mb-3">
               <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                 <span className="text-white font-bold text-sm">A</span>
               </div>
-              <h4 className="text-lg font-semibold text-blue-800">Playoff A</h4>
+              <h4 className="text-lg font-semibold text-blue-800">
+                {showPlayoffB ? 'Playoff A' : 'Playoffs'}
+              </h4>
             </div>
             <p className="text-sm text-gray-600 mb-3">
               {language === 'es' ? (
                 <>
-                  <strong>Posiciones 1-8:</strong> Los 8 mejores jugadores clasifican al Playoff A, 
-                  donde compiten por el título de campeón de la liga.
+                  <strong>Posiciones 1-{groupAPlayers}:</strong> {showPlayoffB ? (
+                    <>Los {groupAPlayers} mejores jugadores clasifican al Playoff A, donde compiten por el título de campeón de la liga.</>
+                  ) : (
+                    <>Los {groupAPlayers} mejores jugadores clasifican a los playoffs, donde compiten por el título de campeón de la liga.</>
+                  )}
                 </>
               ) : (
                 <>
-                  <strong>Positions 1-8:</strong> The top 8 players qualify for Playoff A, 
-                  where they compete for the league championship title.
+                  <strong>Positions 1-{groupAPlayers}:</strong> {showPlayoffB ? (
+                    <>The top {groupAPlayers} players qualify for Playoff A, where they compete for the league championship title.</>
+                  ) : (
+                    <>The top {groupAPlayers} players qualify for the playoffs, where they compete for the league championship title.</>
+                  )}
                 </>
               )}
             </p>
@@ -94,33 +109,36 @@ export default function PlayoffExplanation({ language }) {
             </div>
           </div>
           
-          <div className="bg-white rounded-xl p-4 border border-green-200">
-            <div className="flex items-center space-x-3 mb-3">
-              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">B</span>
+          {/* Playoff B - Only shown if numberOfGroups === 2 */}
+          {showPlayoffB && (
+            <div className="bg-white rounded-xl p-4 border border-green-200">
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">B</span>
+                </div>
+                <h4 className="text-lg font-semibold text-green-800">Playoff B</h4>
               </div>
-              <h4 className="text-lg font-semibold text-green-800">Playoff B</h4>
-            </div>
-            <p className="text-sm text-gray-600 mb-3">
-              {language === 'es' ? (
-                <>
-                  <strong>Posiciones 9-16:</strong> Los siguientes 8 jugadores clasifican al Playoff B, 
-                  una competición paralela con sus propios premios.
-                </>
-              ) : (
-                <>
-                  <strong>Positions 9-16:</strong> The next 8 players qualify for Playoff B, 
-                  a parallel competition with its own prizes.
-                </>
-              )}
-            </p>
-            <div className="bg-green-50 rounded-lg p-3 flex items-start gap-2">
-              <MedalIcon className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-              <p className="text-xs text-green-700">
-                <strong>{language === 'es' ? 'Premio:' : 'Prize:'}</strong> {language === 'es' ? 'Campeón Playoff B + Puntos ELO adicionales' : 'Playoff B Champion + Additional ELO Points'}
+              <p className="text-sm text-gray-600 mb-3">
+                {language === 'es' ? (
+                  <>
+                    <strong>Posiciones {groupAPlayers + 1}-{groupAPlayers + groupBPlayers}:</strong> Los siguientes {groupBPlayers} jugadores clasifican al Playoff B, 
+                    una competición paralela con sus propios premios.
+                  </>
+                ) : (
+                  <>
+                    <strong>Positions {groupAPlayers + 1}-{groupAPlayers + groupBPlayers}:</strong> The next {groupBPlayers} players qualify for Playoff B, 
+                    a parallel competition with its own prizes.
+                  </>
+                )}
               </p>
+              <div className="bg-green-50 rounded-lg p-3 flex items-start gap-2">
+                <MedalIcon className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-green-700">
+                  <strong>{language === 'es' ? 'Premio:' : 'Prize:'}</strong> {language === 'es' ? 'Campeón Playoff B + Puntos ELO adicionales' : 'Playoff B Champion + Additional ELO Points'}
+                </p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
       
@@ -173,10 +191,15 @@ export default function PlayoffExplanation({ language }) {
               {language === 'es' ? 'Objetivo' : 'Objective'}
             </h4>
             <p className="text-sm text-gray-600">
-              {language === 'es' ? 
-                'Alcanza las primeras 16 posiciones para clasificar a los playoffs y competir por el título.' :
-                'Reach the top 16 positions to qualify for the playoffs and compete for the title.'
-              }
+              {language === 'es' ? (
+                showPlayoffB 
+                  ? `Alcanza las primeras ${groupAPlayers + groupBPlayers} posiciones para clasificar a los playoffs y competir por el título.`
+                  : `Alcanza las primeras ${groupAPlayers} posiciones para clasificar a los playoffs y competir por el título.`
+              ) : (
+                showPlayoffB
+                  ? `Reach the top ${groupAPlayers + groupBPlayers} positions to qualify for the playoffs and compete for the title.`
+                  : `Reach the top ${groupAPlayers} positions to qualify for the playoffs and compete for the title.`
+              )}
             </p>
           </div>
         </div>

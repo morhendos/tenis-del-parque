@@ -543,8 +543,9 @@ export default function PlayerLeague() {
                     players={standings.unifiedStandings} 
                     language={language}
                     unified={true}
+                    playoffConfig={currentLeague?.playoffConfig}
                   />
-                  <PlayoffExplanation language={language} />
+                  <PlayoffExplanation language={language} playoffConfig={currentLeague?.playoffConfig} />
                 </>
               ) : (
                 <div className="text-center py-12">

@@ -1,0 +1,28 @@
+🔌 Connecting to MongoDB...
+✅ Connected
+
+📋 Silver League Configuration:
+   Name: Silver League
+   Skill Level: intermediate
+   Status: registration_open
+
+🏆 Playoff Config:
+{
+  "enabled": true,
+  "numberOfGroups": 1,
+  "groupAPlayers": 8,
+  "groupBPlayers": 0,
+  "format": "tournament",
+  "currentPhase": "regular_season",
+  "playoffStartDate": "2025-09-28T20:03:19.783Z",
+  "qualifiedPlayers": {
+    "groupA": [],
+    "groupB": []
+  },
+  "bracket": {
+    "groupA": null,
+    "groupB": null
+  }
+}
+
+🔌 Disconnected

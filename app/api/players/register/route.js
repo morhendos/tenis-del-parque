@@ -6,6 +6,16 @@ import User from '../../../../lib/models/User'
 import { generateWelcomeEmail } from '../../../../lib/email/templates/welcomeEmail'
 import { sendEmail } from '../../../../lib/email/resend'
 
+// Helper function to normalize name to Title Case
+function toTitleCase(str) {
+  return str
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+    .trim()
+}
+
 export async function POST(request) {
   try {
     // Connect to database
@@ -37,6 +47,9 @@ export async function POST(request) {
         { status: 400 }
       )
     }
+
+    // Normalize name to Title Case (e.g., "JOHN DOE" -> "John Doe")
+    const normalizedName = toTitleCase(name)
 
     // Validate league exists
     let league
@@ -191,7 +204,7 @@ export async function POST(request) {
       isNewPlayer = true
       
       player = new Player({
-        name,
+        name: normalizedName,
         email: email.toLowerCase(),
         whatsapp,
         registrations: [{
