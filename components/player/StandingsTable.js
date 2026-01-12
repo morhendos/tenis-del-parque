@@ -24,20 +24,6 @@ export default function StandingsTable({ players, language, unified = false, pla
     return ''
   }
 
-  const getWinPercentage = (won, total) => {
-    if (total === 0) return 0
-    return Math.round((won / total) * 100)
-  }
-
-  const qualifiesForPlayoffs = (position) => {
-    if (!playoffsEnabled) return false
-    if (numberOfGroups === 1) {
-      return position <= groupAPlayers
-    } else {
-      return position <= groupAPlayers + groupBPlayers
-    }
-  }
-
   return (
     <div>
       {/* Playoff Qualification Legend - Compact version */}
@@ -71,42 +57,40 @@ export default function StandingsTable({ players, language, unified = false, pla
         </div>
       )}
 
-      {/* Modern Compact Table - Works on both mobile and desktop */}
+      {/* Modern Compact Table - Responsive columns */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         {/* Table Header */}
-        <div className="bg-gradient-to-r from-parque-purple to-purple-600 text-white">
-          <div className="grid grid-cols-[2.5rem_1fr_2.5rem_3rem_3rem] sm:grid-cols-[3rem_1fr_3.5rem_4rem_4rem_4rem] text-xs font-semibold">
-            <div className="px-2 py-3 text-center">#</div>
-            <div className="px-2 py-3">{language === 'es' ? 'Jugador' : 'Player'}</div>
-            <div className="px-1 py-3 text-center hidden sm:block">{language === 'es' ? 'PJ' : 'MP'}</div>
-            <div className="px-1 py-3 text-center">{language === 'es' ? 'V-D' : 'W-L'}</div>
-            <div className="px-1 py-3 text-center hidden sm:block">{language === 'es' ? 'Sets' : 'Sets'}</div>
-            <div className="px-2 py-3 text-center font-bold">{language === 'es' ? 'Pts' : 'Pts'}</div>
+        <div className="bg-gradient-to-r from-parque-purple to-purple-600 text-white text-xs font-semibold">
+          <div className="flex items-center">
+            <div className="w-10 sm:w-12 px-2 py-3 text-center flex-shrink-0">#</div>
+            <div className="flex-1 px-2 py-3 min-w-0">{language === 'es' ? 'Jugador' : 'Player'}</div>
+            <div className="w-10 px-1 py-3 text-center flex-shrink-0 hidden sm:block">{language === 'es' ? 'PJ' : 'MP'}</div>
+            <div className="w-12 px-1 py-3 text-center flex-shrink-0">{language === 'es' ? 'V-D' : 'W-L'}</div>
+            <div className="w-14 px-1 py-3 text-center flex-shrink-0 hidden md:block">{language === 'es' ? 'Sets' : 'Sets'}</div>
+            <div className="w-16 px-1 py-3 text-center flex-shrink-0 hidden lg:block">{language === 'es' ? 'Juegos' : 'Games'}</div>
+            <div className="w-12 sm:w-14 px-2 py-3 text-center flex-shrink-0 font-bold">{language === 'es' ? 'Pts' : 'Pts'}</div>
           </div>
         </div>
 
         {/* Table Body */}
         <div className="divide-y divide-gray-100">
           {players.map((standing, index) => {
-            const winPercentage = getWinPercentage(standing.stats.matchesWon, standing.stats.matchesPlayed)
-            const isTopHalf = index < players.length / 2
-            
             return (
               <div 
                 key={standing.player._id} 
-                className={`grid grid-cols-[2.5rem_1fr_2.5rem_3rem_3rem] sm:grid-cols-[3rem_1fr_3.5rem_4rem_4rem_4rem] items-center ${getRowAccent(standing.position)} ${
+                className={`flex items-center ${getRowAccent(standing.position)} ${
                   index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
                 } hover:bg-purple-50/50 transition-colors`}
               >
                 {/* Position */}
-                <div className="px-2 py-3 flex justify-center">
+                <div className="w-10 sm:w-12 px-2 py-2.5 flex justify-center flex-shrink-0">
                   <span className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-xs font-bold ${getPositionBadgeStyle(standing.position)}`}>
                     {standing.position}
                   </span>
                 </div>
 
                 {/* Player Name */}
-                <div className="px-2 py-3 min-w-0">
+                <div className="flex-1 px-2 py-2.5 min-w-0">
                   <div className="font-semibold text-gray-900 text-sm truncate">
                     {formatPlayerNameForStandings(standing.player.name, language)}
                   </div>
@@ -116,13 +100,13 @@ export default function StandingsTable({ players, language, unified = false, pla
                   </div>
                 </div>
 
-                {/* Matches Played - Hidden on mobile, shown in name subtitle instead */}
-                <div className="px-1 py-3 text-center text-sm text-gray-600 hidden sm:block">
+                {/* Matches Played - Hidden on XS */}
+                <div className="w-10 px-1 py-2.5 text-center text-sm text-gray-600 flex-shrink-0 hidden sm:block">
                   {standing.stats.matchesPlayed}
                 </div>
 
                 {/* Wins - Losses */}
-                <div className="px-1 py-3 text-center">
+                <div className="w-12 px-1 py-2.5 text-center flex-shrink-0">
                   <span className="text-sm font-medium">
                     <span className="text-green-600">{standing.stats.matchesWon}</span>
                     <span className="text-gray-400">-</span>
@@ -130,15 +114,22 @@ export default function StandingsTable({ players, language, unified = false, pla
                   </span>
                 </div>
 
-                {/* Sets - Hidden on smallest screens */}
-                <div className="px-1 py-3 text-center text-sm text-gray-600 hidden sm:block">
+                {/* Sets - Hidden on XS and SM */}
+                <div className="w-14 px-1 py-2.5 text-center text-sm text-gray-600 flex-shrink-0 hidden md:block">
                   <span className="text-green-600">{standing.stats.setsWon}</span>
                   <span className="text-gray-400">-</span>
                   <span className="text-red-500">{standing.stats.setsLost}</span>
                 </div>
 
-                {/* Points */}
-                <div className="px-2 py-3 text-center">
+                {/* Games - Hidden on XS, SM, MD */}
+                <div className="w-16 px-1 py-2.5 text-center text-sm text-gray-600 flex-shrink-0 hidden lg:block">
+                  <span className="text-green-600">{standing.stats.gamesWon || 0}</span>
+                  <span className="text-gray-400">-</span>
+                  <span className="text-red-500">{standing.stats.gamesLost || 0}</span>
+                </div>
+
+                {/* Points - Always visible, flush right */}
+                <div className="w-12 sm:w-14 px-2 py-2.5 text-center flex-shrink-0">
                   <span className="text-sm sm:text-base font-bold text-gray-900">
                     {standing.stats.totalPoints || 0}
                   </span>
@@ -146,14 +137,6 @@ export default function StandingsTable({ players, language, unified = false, pla
               </div>
             )
           })}
-        </div>
-
-        {/* Legend for abbreviations - Mobile only */}
-        <div className="sm:hidden px-3 py-2 bg-gray-50 border-t border-gray-200">
-          <div className="flex justify-center gap-4 text-[10px] text-gray-500">
-            <span>{language === 'es' ? 'V-D = Victorias-Derrotas' : 'W-L = Wins-Losses'}</span>
-            <span>{language === 'es' ? 'Pts = Puntos' : 'Pts = Points'}</span>
-          </div>
         </div>
       </div>
     </div>
