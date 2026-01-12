@@ -8,19 +8,16 @@ export default function StandingsTable({ players, language, unified = false, pla
   const groupBPlayers = playoffConfig?.groupBPlayers ?? 8
   const playoffsEnabled = playoffConfig?.enabled !== false
 
-  const getPositionBadgeStyle = (position) => {
-    if (!playoffsEnabled) {
-      return 'bg-gray-100 text-gray-700'
-    }
-    if (position <= groupAPlayers) return 'bg-blue-600 text-white'
-    if (numberOfGroups === 2 && position <= groupAPlayers + groupBPlayers) return 'bg-green-600 text-white'
-    return 'bg-gray-100 text-gray-700'
+  // All position badges are the same subtle gray
+  const getPositionBadgeStyle = () => {
+    return 'bg-gray-100 text-gray-600'
   }
 
+  // Left border indicates playoff qualification
   const getRowAccent = (position) => {
     if (!playoffsEnabled) return ''
-    if (position <= groupAPlayers) return 'border-l-2 border-l-blue-500'
-    if (numberOfGroups === 2 && position <= groupAPlayers + groupBPlayers) return 'border-l-2 border-l-green-500'
+    if (position <= groupAPlayers) return 'border-l-4 border-l-blue-500'
+    if (numberOfGroups === 2 && position <= groupAPlayers + groupBPlayers) return 'border-l-4 border-l-green-500'
     return ''
   }
 
@@ -34,14 +31,14 @@ export default function StandingsTable({ players, language, unified = false, pla
           </h3>
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
             <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 bg-blue-600 rounded"></div>
+              <div className="w-3 h-3 bg-blue-500 rounded"></div>
               <span className="text-gray-600">
                 1-{groupAPlayers}: {numberOfGroups === 1 ? 'Playoff' : 'Playoff'}
               </span>
             </div>
             {numberOfGroups === 2 && (
               <div className="flex items-center gap-1.5">
-                <div className="w-3 h-3 bg-green-600 rounded"></div>
+                <div className="w-3 h-3 bg-green-500 rounded"></div>
                 <span className="text-gray-600">
                   {groupAPlayers + 1}-{groupAPlayers + groupBPlayers}: Playoff B
                 </span>
@@ -83,7 +80,7 @@ export default function StandingsTable({ players, language, unified = false, pla
               >
                 {/* Position */}
                 <div className="w-8 sm:w-11 px-1 py-2 sm:py-2.5 flex justify-center flex-shrink-0">
-                  <span className={`w-5 h-5 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold ${getPositionBadgeStyle(standing.position)}`}>
+                  <span className={`w-5 h-5 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold ${getPositionBadgeStyle()}`}>
                     {standing.position}
                   </span>
                 </div>
