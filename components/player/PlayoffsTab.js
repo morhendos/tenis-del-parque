@@ -23,9 +23,9 @@ export default function PlayoffsTab({ playoffConfig, matches, language = 'es' })
   }
 
   const currentPhase = playoffConfig.currentPhase
-  const isPlayoffsActive = currentPhase !== 'regular_season' && currentPhase !== 'completed'
-
-  if (!isPlayoffsActive) {
+  
+  // Show "waiting" only if still in regular season
+  if (currentPhase === 'regular_season') {
     return (
       <div className="text-center py-12">
         <div className="w-24 h-24 mx-auto mb-4 bg-yellow-100 rounded-full flex items-center justify-center">
