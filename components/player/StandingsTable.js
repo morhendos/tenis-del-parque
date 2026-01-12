@@ -81,9 +81,9 @@ export default function StandingsTable({ players, language, unified = false, pla
                   index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
                 } hover:bg-purple-50/50 transition-colors`}
               >
-                {/* Playoff indicator bar - gradient fade */}
+                {/* Playoff indicator bar - short gradient */}
                 {indicatorGradient && (
-                  <div className={`absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r ${indicatorGradient} to-transparent opacity-30`} />
+                  <div className={`absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-r ${indicatorGradient} to-transparent`} />
                 )}
 
                 {/* Position */}
