@@ -137,7 +137,7 @@ export default function StandingsTable({ players, language, unified = false, pla
 
                 {/* Wins - Losses */}
                 <div className="w-9 sm:w-12 px-0.5 py-2 sm:py-2.5 text-center flex-shrink-0">
-                  <span className="text-[11px] sm:text-sm font-medium">
+                  <span className="text-[11px] sm:text-sm font-medium tabular-nums">
                     <span className="text-green-600">{standing.stats.matchesWon}</span>
                     <span className="text-gray-300">-</span>
                     <span className="text-red-500">{standing.stats.matchesLost}</span>
@@ -145,14 +145,14 @@ export default function StandingsTable({ players, language, unified = false, pla
                 </div>
 
                 {/* Sets */}
-                <div className="w-9 sm:w-12 px-0.5 py-2 sm:py-2.5 text-center text-[11px] sm:text-sm flex-shrink-0">
+                <div className="w-9 sm:w-12 px-0.5 py-2 sm:py-2.5 text-center text-[11px] sm:text-sm flex-shrink-0 tabular-nums">
                   <span className="text-green-600">{standing.stats.setsWon}</span>
                   <span className="text-gray-300">-</span>
                   <span className="text-red-500">{standing.stats.setsLost}</span>
                 </div>
 
                 {/* Games */}
-                <div className="w-12 sm:w-14 px-0.5 py-2 sm:py-2.5 text-center text-[11px] sm:text-sm flex-shrink-0">
+                <div className="w-12 sm:w-14 px-0.5 py-2 sm:py-2.5 text-center text-[11px] sm:text-sm flex-shrink-0 tabular-nums">
                   <span className="text-green-600">{standing.stats.gamesWon || 0}</span>
                   <span className="text-gray-300">-</span>
                   <span className="text-red-500">{standing.stats.gamesLost || 0}</span>
@@ -160,7 +160,7 @@ export default function StandingsTable({ players, language, unified = false, pla
 
                 {/* Points */}
                 <div className="w-9 sm:w-11 px-1 py-2 sm:py-2.5 text-center flex-shrink-0">
-                  <span className="text-[12px] sm:text-base font-bold text-gray-900">
+                  <span className="text-[12px] sm:text-base font-bold text-gray-900 tabular-nums">
                     {standing.stats.totalPoints || 0}
                   </span>
                 </div>
