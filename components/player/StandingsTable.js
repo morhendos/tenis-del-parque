@@ -68,7 +68,7 @@ export default function StandingsTable({ players, language, unified = false, pla
           <div className="flex items-center w-full">
             <div className="w-8 sm:w-11 px-1 py-2.5 sm:py-3 text-center flex-shrink-0">#</div>
             <div className="flex-1 px-1 sm:px-2 py-2.5 sm:py-3 min-w-0">{language === 'es' ? 'Jugador' : 'Player'}</div>
-            <div className="hidden md:block w-24 px-1 py-2.5 sm:py-3 text-center flex-shrink-0">{language === 'es' ? 'Forma' : 'Form'}</div>
+            <div className="hidden sm:block w-24 px-1 py-2.5 sm:py-3 text-center flex-shrink-0">{language === 'es' ? 'Forma' : 'Form'}</div>
             <div className="w-9 sm:w-12 px-0.5 py-2.5 sm:py-3 text-center flex-shrink-0">W-L</div>
             <div className="w-9 sm:w-12 px-0.5 py-2.5 sm:py-3 text-center flex-shrink-0">Sets</div>
             <div className="w-12 sm:w-14 px-0.5 py-2.5 sm:py-3 text-center flex-shrink-0">{language === 'es' ? 'Juegos' : 'Games'}</div>
@@ -113,7 +113,7 @@ export default function StandingsTable({ players, language, unified = false, pla
                 </div>
 
                 {/* Form - last 5 matches as dots - desktop only */}
-                <div className="hidden md:flex w-24 px-1 py-2 sm:py-2.5 justify-center items-center gap-1 flex-shrink-0">
+                <div className="hidden sm:flex w-24 px-1 py-2 sm:py-2.5 justify-center items-center gap-1 flex-shrink-0">
                   {form.length > 0 ? (
                     form.map((result, i) => (
                       <div
