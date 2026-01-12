@@ -54,6 +54,35 @@ function categorizeRegistrations(registrations) {
   return categories
 }
 
+// Helper to format season display
+function formatSeasonDisplay(league, language) {
+  if (!league?.season) return null
+  
+  const seasonNames = {
+    es: {
+      spring: 'Primavera',
+      summer: 'Verano',
+      autumn: 'Otoño',
+      winter: 'Invierno',
+      annual: 'Anual'
+    },
+    en: {
+      spring: 'Spring',
+      summer: 'Summer',
+      autumn: 'Autumn',
+      winter: 'Winter',
+      annual: 'Annual'
+    }
+  }
+  
+  const season = league.season
+  const seasonType = season.type || 'summer'
+  const seasonYear = season.year || 2025
+  
+  const localizedSeasonName = seasonNames[language || 'es'][seasonType] || seasonType
+  return `${localizedSeasonName} ${seasonYear}`
+}
+
 // League Selector Component with Categories - Mobile-optimized collapsible
 function CategorizedLeagueSelector({ 
   registrations, 
@@ -70,111 +99,182 @@ function CategorizedLeagueSelector({
     const playoffPhase = league?.playoffConfig?.currentPhase
     
     if (playoffPhase && playoffPhase !== 'regular_season' && playoffPhase !== 'completed') {
-      return { text: 'Playoffs', color: 'bg-amber-100 text-amber-700', dotColor: 'bg-amber-500' }
+      return { 
+        text: 'Playoffs', 
+        color: 'bg-amber-50 text-amber-700 border-amber-200', 
+        dotColor: 'bg-amber-500',
+        ringColor: 'ring-amber-500/20'
+      }
     }
     if (status === 'active') {
-      return { text: language === 'es' ? 'Activa' : 'Active', color: 'bg-green-100 text-green-700', dotColor: 'bg-green-500' }
+      return { 
+        text: language === 'es' ? 'Activa' : 'Active', 
+        color: 'bg-emerald-50 text-emerald-700 border-emerald-200', 
+        dotColor: 'bg-emerald-500',
+        ringColor: 'ring-emerald-500/20'
+      }
     }
     if (status === 'registration_open') {
-      return { text: language === 'es' ? 'Inscripción' : 'Registration', color: 'bg-purple-100 text-purple-700', dotColor: 'bg-purple-500' }
+      return { 
+        text: language === 'es' ? 'Inscripción' : 'Registration', 
+        color: 'bg-violet-50 text-violet-700 border-violet-200', 
+        dotColor: 'bg-violet-500',
+        ringColor: 'ring-violet-500/20'
+      }
     }
     if (status === 'coming_soon') {
-      return { text: language === 'es' ? 'Próximamente' : 'Soon', color: 'bg-blue-100 text-blue-700', dotColor: 'bg-blue-500' }
+      return { 
+        text: language === 'es' ? 'Próximamente' : 'Soon', 
+        color: 'bg-sky-50 text-sky-700 border-sky-200', 
+        dotColor: 'bg-sky-500',
+        ringColor: 'ring-sky-500/20'
+      }
     }
     if (status === 'completed') {
-      return { text: language === 'es' ? 'Completada' : 'Completed', color: 'bg-gray-100 text-gray-600', dotColor: 'bg-gray-400' }
+      return { 
+        text: language === 'es' ? 'Completada' : 'Completed', 
+        color: 'bg-gray-50 text-gray-600 border-gray-200', 
+        dotColor: 'bg-gray-400',
+        ringColor: 'ring-gray-400/20'
+      }
     }
-    return { text: '', color: '', dotColor: 'bg-gray-400' }
+    return { text: '', color: '', dotColor: 'bg-gray-400', ringColor: 'ring-gray-400/20' }
   }
 
   const handleLeagueSelect = (leagueId) => {
     onLeagueChange(leagueId)
-    setIsExpanded(false) // Collapse after selection on mobile
+    setIsExpanded(false)
   }
 
-  const renderCompactLeagueButton = (registration, isInActiveCategory) => {
+  const renderLeagueCard = (registration) => {
     const isSelected = currentLeagueId === registration.league?._id
     const badge = getStatusBadge(registration.league)
+    const seasonDisplay = formatSeasonDisplay(registration.league, language)
+    const leagueName = registration.league?.name || 'Liga'
+    const location = registration.league?.location?.city
     
     return (
       <button
         key={registration._id}
         onClick={() => handleLeagueSelect(registration.league._id)}
-        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
+        className={`w-full text-left p-3 rounded-xl transition-all duration-200 ${
           isSelected
-            ? 'bg-parque-purple text-white shadow-md'
-            : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+            ? 'bg-gradient-to-r from-parque-purple to-purple-600 text-white shadow-lg shadow-purple-500/25 ring-2 ring-purple-500/50'
+            : 'bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 hover:shadow-sm'
         }`}
       >
-        {!isSelected && (
-          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${badge.dotColor}`} />
-        )}
-        <span className="font-medium truncate">{registration.league?.name || 'Liga'}</span>
-        {!isSelected && badge.text && (
-          <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded ${badge.color} flex-shrink-0`}>
-            {badge.text}
-          </span>
-        )}
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              {!isSelected && (
+                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${badge.dotColor}`} />
+              )}
+              <span className={`font-semibold truncate ${isSelected ? 'text-white' : 'text-gray-900'}`}>
+                {leagueName}
+              </span>
+            </div>
+            {(seasonDisplay || location) && (
+              <div className={`text-xs mt-0.5 ${isSelected ? 'text-white/80' : 'text-gray-500'} ${!isSelected ? 'ml-4' : ''}`}>
+                {[location, seasonDisplay].filter(Boolean).join(' · ')}
+              </div>
+            )}
+          </div>
+          {!isSelected && badge.text && (
+            <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full border flex-shrink-0 ${badge.color}`}>
+              {badge.text}
+            </span>
+          )}
+          {isSelected && (
+            <svg className="w-5 h-5 text-white/90 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+        </div>
       </button>
     )
   }
 
   const currentBadge = getStatusBadge(currentLeague)
+  const currentSeasonDisplay = formatSeasonDisplay(currentLeague, language)
 
   return (
-    <div className="bg-white rounded-xl shadow-md overflow-hidden">
-      {/* Collapsed Header - Always visible */}
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      {/* Collapsed Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-gray-50/50 transition-colors"
       >
         <div className="flex items-center gap-3 min-w-0">
-          <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${currentBadge.dotColor}`} />
+          <div className={`w-3 h-3 rounded-full flex-shrink-0 ${currentBadge.dotColor} ring-4 ${currentBadge.ringColor}`} />
           <div className="min-w-0">
-            <span className="font-semibold text-gray-900 truncate block">
-              {currentLeague?.name || 'Liga'}
-            </span>
-            {currentLeague?.location?.city && (
-              <span className="text-xs text-gray-500">
-                {currentLeague.location.city}
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-gray-900 truncate">
+                {currentLeague?.name || 'Liga'}
               </span>
-            )}
+              {currentSeasonDisplay && (
+                <span className="text-gray-400 font-normal hidden sm:inline">·</span>
+              )}
+              {currentSeasonDisplay && (
+                <span className="text-gray-500 font-normal text-sm hidden sm:inline">
+                  {currentSeasonDisplay}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+              {currentLeague?.location?.city && (
+                <span className="flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  {currentLeague.location.city}
+                </span>
+              )}
+              {currentSeasonDisplay && (
+                <span className="sm:hidden">· {currentSeasonDisplay}</span>
+              )}
+            </div>
           </div>
+        </div>
+        <div className="flex items-center gap-3 flex-shrink-0">
           {currentBadge.text && (
-            <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${currentBadge.color} flex-shrink-0 hidden sm:inline`}>
+            <span className={`px-2.5 py-1 text-xs font-medium rounded-full border hidden sm:inline ${currentBadge.color}`}>
               {currentBadge.text}
             </span>
           )}
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <span className="text-xs text-gray-400 hidden sm:inline">
-            {registrations.length} {language === 'es' ? 'ligas' : 'leagues'}
-          </span>
-          <svg 
-            className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-          </svg>
+          <div className="flex items-center gap-1.5 text-gray-400">
+            <span className="text-xs hidden sm:inline">
+              {registrations.length} {language === 'es' ? 'ligas' : 'leagues'}
+            </span>
+            <svg 
+              className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
         </div>
       </button>
       
       {/* Expanded Content */}
       <div className={`transition-all duration-200 ease-in-out overflow-hidden ${
-        isExpanded ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'
+        isExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
       }`}>
-        <div className="px-4 pb-4 space-y-3 border-t border-gray-100 pt-3">
+        <div className="px-4 pb-4 space-y-4 border-t border-gray-100 pt-4 bg-gray-50/50">
           {/* Active Leagues */}
           {categories.active.length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-green-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                {language === 'es' ? 'Activas' : 'Active'}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {categories.active.map(reg => renderCompactLeagueButton(reg, true))}
+              <div className="flex items-center gap-2 mb-2.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span className="text-xs font-semibold text-emerald-700 uppercase tracking-wider">
+                  {language === 'es' ? 'Activas' : 'Active'}
+                </span>
+                <div className="flex-1 h-px bg-emerald-200/50" />
+              </div>
+              <div className="space-y-2">
+                {categories.active.map(reg => renderLeagueCard(reg))}
               </div>
             </div>
           )}
@@ -182,12 +282,15 @@ function CategorizedLeagueSelector({
           {/* Upcoming Leagues */}
           {categories.upcoming.length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-purple-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
-                {language === 'es' ? 'Próximas' : 'Upcoming'}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {categories.upcoming.map(reg => renderCompactLeagueButton(reg, false))}
+              <div className="flex items-center gap-2 mb-2.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-violet-500" />
+                <span className="text-xs font-semibold text-violet-700 uppercase tracking-wider">
+                  {language === 'es' ? 'Próximas' : 'Upcoming'}
+                </span>
+                <div className="flex-1 h-px bg-violet-200/50" />
+              </div>
+              <div className="space-y-2">
+                {categories.upcoming.map(reg => renderLeagueCard(reg))}
               </div>
             </div>
           )}
@@ -195,12 +298,15 @@ function CategorizedLeagueSelector({
           {/* Past Leagues */}
           {categories.past.length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
-                {language === 'es' ? 'Pasadas' : 'Past'}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {categories.past.map(reg => renderCompactLeagueButton(reg, false))}
+              <div className="flex items-center gap-2 mb-2.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  {language === 'es' ? 'Pasadas' : 'Past'}
+                </span>
+                <div className="flex-1 h-px bg-gray-200" />
+              </div>
+              <div className="space-y-2">
+                {categories.past.map(reg => renderLeagueCard(reg))}
               </div>
             </div>
           )}
@@ -591,7 +697,7 @@ export default function PlayerLeague() {
           )}
           
           {activeTab === LEAGUE_TABS.PLAYOFFS && (
-            // For leagues that haven't started, show empty state immediately
+            // For leagues that haven&apos;t started, show empty state immediately
             (currentLeague?.status === 'registration_open' || currentLeague?.status === 'coming_soon') ? (
               <div className="text-center py-12">
                 <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
