@@ -275,24 +275,19 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
       {roundMatches.length > 0 ? (
         <div className="space-y-3">
           {roundMatches.map((match) => (
-            <div key={match._id} className="relative">
-              {/* Player's match indicator */}
-              {match.isPlayerMatch && !isPublic && (
-                <div className="absolute -left-1 top-0 bottom-0 w-1 bg-yellow-400 rounded-full" />
-              )}
-              <MatchCard
-                match={match}
-                player={match.isPlayerMatch ? player : null}
-                language={language}
-                onSchedule={match.isPlayerMatch ? handleSchedule : undefined}
-                onResult={match.isPlayerMatch ? handleResult : undefined}
-                onWhatsApp={match.isPlayerMatch ? handleWhatsApp : undefined}
-                isUpcoming={true}
-                showActions={match.isPlayerMatch && !isPublic}
-                isPublic={!match.isPlayerMatch || isPublic}
-                className={match.isPlayerMatch && !isPublic ? 'ring-1 ring-yellow-300 bg-yellow-50/30' : ''}
-              />
-            </div>
+            <MatchCard
+              key={match._id}
+              match={match}
+              player={match.isPlayerMatch ? player : null}
+              language={language}
+              onSchedule={match.isPlayerMatch ? handleSchedule : undefined}
+              onResult={match.isPlayerMatch ? handleResult : undefined}
+              onWhatsApp={match.isPlayerMatch ? handleWhatsApp : undefined}
+              isUpcoming={true}
+              showActions={match.isPlayerMatch && !isPublic}
+              isPublic={!match.isPlayerMatch || isPublic}
+              className={match.isPlayerMatch && !isPublic ? 'ring-1 ring-yellow-300 bg-yellow-50/30' : ''}
+            />
           ))}
         </div>
       ) : (
