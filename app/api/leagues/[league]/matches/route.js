@@ -71,23 +71,13 @@ export async function GET(request, { params }) {
       type: league.season.type
     })
     
-    if (!seasonDoc) {
-      console.error(`Season not found for year: ${league.season.year}, type: ${league.season.type}`)
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Season not found' 
-        },
-        { status: 404 }
-      )
-    }
-    
-    console.log('API: Found Season ObjectId:', seasonDoc._id)
-    
-    // Query matches by season ObjectId (matches store season as ObjectId reference)
-    const matchQuery = { 
-      league: league._id, 
-      season: seasonDoc._id
+    // Build match query - use season if found, otherwise just league
+    const matchQuery = { league: league._id }
+    if (seasonDoc) {
+      matchQuery.season = seasonDoc._id
+      console.log('API: Found Season ObjectId:', seasonDoc._id)
+    } else {
+      console.log('API: Season not found, querying by league only')
     }
     if (status) matchQuery.status = status
     if (round) matchQuery.round = parseInt(round)
@@ -158,27 +148,22 @@ export async function GET(request, { params }) {
       }
     })
     
-    // Get match statistics
-    const totalMatches = await Match.countDocuments({ 
-      league: league._id, 
-      season: seasonDoc._id
-    })
+    // Get match statistics - use same query base as main query
+    const statsQuery = { league: league._id }
+    if (seasonDoc) statsQuery.season = seasonDoc._id
+    
+    const totalMatches = await Match.countDocuments(statsQuery)
     const completedMatches = await Match.countDocuments({ 
-      league: league._id, 
-      season: seasonDoc._id,
+      ...statsQuery,
       status: 'completed' 
     })
     const scheduledMatches = await Match.countDocuments({ 
-      league: league._id, 
-      season: seasonDoc._id,
+      ...statsQuery,
       status: 'scheduled' 
     })
     
     // Get current round info
-    const latestRound = await Match.findOne({ 
-      league: league._id, 
-      season: seasonDoc._id
-    }).sort({ round: -1 }).select('round')
+    const latestRound = await Match.findOne(statsQuery).sort({ round: -1 }).select('round')
     
     return NextResponse.json({
       success: true,
