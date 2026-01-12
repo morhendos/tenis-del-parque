@@ -13,12 +13,12 @@ export default function StandingsTable({ players, language, unified = false, pla
     return 'bg-gray-100 text-gray-600'
   }
 
-  // Left border indicates playoff qualification
-  const getRowAccent = (position) => {
-    if (!playoffsEnabled) return ''
-    if (position <= groupAPlayers) return 'border-l-4 border-l-blue-500'
-    if (numberOfGroups === 2 && position <= groupAPlayers + groupBPlayers) return 'border-l-4 border-l-green-500'
-    return ''
+  // Get playoff indicator color
+  const getPlayoffIndicatorColor = (position) => {
+    if (!playoffsEnabled) return null
+    if (position <= groupAPlayers) return 'bg-blue-500'
+    if (numberOfGroups === 2 && position <= groupAPlayers + groupBPlayers) return 'bg-green-500'
+    return null
   }
 
   return (
@@ -71,14 +71,21 @@ export default function StandingsTable({ players, language, unified = false, pla
         {/* Table Body */}
         <div className="divide-y divide-gray-100">
           {players.map((standing, index) => {
-            const position = standing.position || (index + 1)
+            const position = index + 1
+            const indicatorColor = getPlayoffIndicatorColor(position)
+            
             return (
               <div 
                 key={standing.player._id} 
-                className={`flex items-center ${getRowAccent(position)} ${
+                className={`relative flex items-center ${
                   index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
                 } hover:bg-purple-50/50 transition-colors`}
               >
+                {/* Playoff indicator bar */}
+                {indicatorColor && (
+                  <div className={`absolute left-0 top-0 bottom-0 w-1 ${indicatorColor}`} />
+                )}
+
                 {/* Position */}
                 <div className="w-8 sm:w-11 px-1 py-2 sm:py-2.5 flex justify-center flex-shrink-0">
                   <span className={`w-5 h-5 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold ${getPositionBadgeStyle()}`}>
