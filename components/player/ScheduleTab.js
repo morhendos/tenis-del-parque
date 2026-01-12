@@ -5,7 +5,7 @@ import MatchResultCard from './MatchResultCard'
 import { toast } from '@/components/ui/Toast'
 import { processMatchResult } from '@/lib/utils/matchResultUtils'
 
-export default function ScheduleTab({ schedule, language, totalRounds = 8, player = null, isPublic = false }) {
+export default function ScheduleTab({ schedule, language, totalRounds = 8, player = null, isPublic = false, league = null }) {
   const [currentRound, setCurrentRound] = useState(1)
   const [showResultModal, setShowResultModal] = useState(false)
   const [showScheduleModal, setShowScheduleModal] = useState(false)
@@ -313,6 +313,7 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
           selectedMatch={selectedMatch}
           player={player}
           language={language}
+          league={league}
           onCloseResult={() => setShowResultModal(false)}
           onCloseSchedule={() => {
             setShowScheduleModal(false)

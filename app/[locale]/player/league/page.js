@@ -616,6 +616,7 @@ export default function PlayerLeague() {
               language={language}
               totalRounds={DEFAULT_TOTAL_ROUNDS}
               player={player}
+              league={currentLeague}
             />
           )}
           

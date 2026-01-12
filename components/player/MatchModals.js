@@ -6,12 +6,32 @@ export function MatchModals({
   selectedMatch,
   player,
   language,
+  league,
   onCloseResult,
   onCloseSchedule,
   onSubmitResult,
   onSubmitSchedule,
   isEditingSchedule = false
 }) {
+  // Venue options by city
+  const VENUE_OPTIONS = {
+    sotogrande: [
+      { value: 'La Reserva', label: 'La Reserva' },
+      { value: 'Racket Center', label: 'Racket Center' },
+      { value: 'Octagono', label: 'Octágono' },
+      { value: 'Faisan', label: 'Faisán' },
+      { value: 'San Roque Club', label: 'San Roque Club' },
+      { value: 'other', label: language === 'es' ? 'Otro...' : 'Other...' }
+    ]
+  }
+
+  // Get venues for current league city
+  const getVenueOptions = () => {
+    const citySlug = league?.location?.citySlug?.toLowerCase()
+    return VENUE_OPTIONS[citySlug] || null
+  }
+
+  const venueOptions = getVenueOptions()
   const [resultForm, setResultForm] = useState({ 
     sets: [
       { myScore: '', opponentScore: '' },
@@ -24,6 +44,7 @@ export function MatchModals({
     date: '',
     time: '',
     venue: '',
+    customVenue: '',
     court: '',
     notes: ''
   })
@@ -72,22 +93,27 @@ export function MatchModals({
 
   useEffect(() => {
     if (!showScheduleModal) {
-      setScheduleForm({ date: '', time: '', venue: '', court: '', notes: '' })
+      setScheduleForm({ date: '', time: '', venue: '', customVenue: '', court: '', notes: '' })
       setFormError('')
     } else if (showScheduleModal && isEditingSchedule && selectedMatch) {
       // Prefill form with existing schedule data when editing
       const schedule = selectedMatch.schedule || {}
       const scheduledDate = schedule.confirmedDate || selectedMatch.scheduledDate
+      const existingVenue = schedule.venue || schedule.club || ''
+      
+      // Check if existing venue is in our predefined list
+      const isPresetVenue = venueOptions?.some(opt => opt.value === existingVenue)
       
       setScheduleForm({
         date: scheduledDate ? new Date(scheduledDate).toISOString().split('T')[0] : '',
         time: schedule.time || '',
-        venue: schedule.venue || schedule.club || '',
+        venue: isPresetVenue ? existingVenue : (existingVenue ? 'other' : ''),
+        customVenue: isPresetVenue ? '' : existingVenue,
         court: schedule.court || (schedule.courtNumber ? `${language === 'es' ? 'Pista' : 'Court'} ${schedule.courtNumber}` : ''),
         notes: schedule.notes || ''
       })
     }
-  }, [showScheduleModal, isEditingSchedule, selectedMatch, language])
+  }, [showScheduleModal, isEditingSchedule, selectedMatch, language, venueOptions])
 
   // Check if we need a super tiebreak (1:1 in sets)
   const checkForSuperTiebreak = () => {
@@ -316,9 +342,15 @@ export function MatchModals({
     setFormError('')
     
     try {
+      // Determine the actual venue value
+      const actualVenue = scheduleForm.venue === 'other' 
+        ? scheduleForm.customVenue 
+        : scheduleForm.venue
+      
       await onSubmitSchedule({
         matchId: selectedMatch._id,
-        ...scheduleForm
+        ...scheduleForm,
+        venue: actualVenue
       })
     } catch (error) {
       console.error('Error scheduling match:', error)
@@ -566,17 +598,51 @@ export function MatchModals({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   {language === 'es' ? 'Lugar' : 'Venue'}
                 </label>
-                <input
-                  type="text"
-                  value={scheduleForm.venue}
-                  onChange={(e) => {
-                    setScheduleForm({...scheduleForm, venue: e.target.value})
-                    setFormError('')
-                  }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-parque-purple focus:border-transparent"
-                  placeholder={language === 'es' ? 'Ej: Club Deportivo' : 'Ex: Sports Club'}
-                  required
-                />
+                {venueOptions ? (
+                  // Dropdown for cities with predefined venues
+                  <>
+                    <select
+                      value={scheduleForm.venue}
+                      onChange={(e) => {
+                        setScheduleForm({...scheduleForm, venue: e.target.value, customVenue: ''})
+                        setFormError('')
+                      }}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-parque-purple focus:border-transparent bg-white"
+                      required
+                    >
+                      <option value="">{language === 'es' ? 'Seleccionar lugar...' : 'Select venue...'}</option>
+                      {venueOptions.map(opt => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                    {scheduleForm.venue === 'other' && (
+                      <input
+                        type="text"
+                        value={scheduleForm.customVenue}
+                        onChange={(e) => {
+                          setScheduleForm({...scheduleForm, customVenue: e.target.value})
+                          setFormError('')
+                        }}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-parque-purple focus:border-transparent mt-2"
+                        placeholder={language === 'es' ? 'Nombre del lugar...' : 'Venue name...'}
+                        required
+                      />
+                    )}
+                  </>
+                ) : (
+                  // Text input for cities without predefined venues
+                  <input
+                    type="text"
+                    value={scheduleForm.venue}
+                    onChange={(e) => {
+                      setScheduleForm({...scheduleForm, venue: e.target.value})
+                      setFormError('')
+                    }}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-parque-purple focus:border-transparent"
+                    placeholder={language === 'es' ? 'Ej: Club Deportivo' : 'Ex: Sports Club'}
+                    required
+                  />
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
