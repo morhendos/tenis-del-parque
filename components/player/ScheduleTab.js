@@ -17,8 +17,8 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
   const [submittedMatch, setSubmittedMatch] = useState(null)
   const [isWinner, setIsWinner] = useState(false)
 
-  // Filter out any matches that have results
-  const upcomingSchedule = schedule?.filter(match => !match.result?.winner) || []
+  // Show all matches (including completed ones)
+  const allSchedule = schedule || []
 
   // Fetch player's matches with full data - only if player is provided
   useEffect(() => {
@@ -28,8 +28,7 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
         const response = await fetch('/api/player/matches')
         if (response.ok) {
           const data = await response.json()
-          const upcomingPlayerMatches = (data.matches || []).filter(match => !match.result?.winner)
-          setPlayerMatches(upcomingPlayerMatches)
+          setPlayerMatches(data.matches || [])
         }
       } catch (error) {
         console.error('Error fetching player matches:', error)
@@ -44,7 +43,7 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
   }, [player, isPublic])
 
   const getCurrentRoundMatches = () => {
-    const allMatches = upcomingSchedule.filter(match => match.round === currentRound)
+    const allMatches = allSchedule.filter(match => match.round === currentRound)
     
     if (!player || isPublic) {
       return allMatches.map(match => ({ ...match, isPlayerMatch: false }))
@@ -71,7 +70,7 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
   const getAvailableRounds = () => {
     const allRounds = Array.from({ length: totalRounds }, (_, i) => i + 1)
     return allRounds.map(round => {
-      const roundMatches = upcomingSchedule.filter(match => match.round === round)
+      const roundMatches = allSchedule.filter(match => match.round === round)
       const hasPlayerMatch = player && !isPublic && roundMatches.some(match => 
         match.players?.player1?._id === player?._id || 
         match.players?.player2?._id === player?._id
