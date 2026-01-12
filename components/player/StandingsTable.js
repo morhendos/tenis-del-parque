@@ -71,17 +71,18 @@ export default function StandingsTable({ players, language, unified = false, pla
         {/* Table Body */}
         <div className="divide-y divide-gray-100">
           {players.map((standing, index) => {
+            const position = standing.position || (index + 1)
             return (
               <div 
                 key={standing.player._id} 
-                className={`flex items-center ${getRowAccent(standing.position)} ${
+                className={`flex items-center ${getRowAccent(position)} ${
                   index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
                 } hover:bg-purple-50/50 transition-colors`}
               >
                 {/* Position */}
                 <div className="w-8 sm:w-11 px-1 py-2 sm:py-2.5 flex justify-center flex-shrink-0">
                   <span className={`w-5 h-5 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold ${getPositionBadgeStyle()}`}>
-                    {standing.position}
+                    {position}
                   </span>
                 </div>
 
