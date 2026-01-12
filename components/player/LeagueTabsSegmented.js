@@ -12,9 +12,9 @@ const iconMap = {
 export default function LeagueTabs({ tabs, activeTab, onTabChange, language = 'es' }) {
   return (
     <div className="league-tabs-container">
-      {/* Mobile: iOS-style Segmented Control with purple gradient */}
-      <div className="md:hidden p-1.5 bg-gradient-to-r from-parque-purple to-purple-600 rounded-xl shadow-sm">
-        <div className="flex gap-1">
+      {/* Mobile: iOS-style Segmented Control */}
+      <div className="md:hidden p-2">
+        <div className="bg-gray-100 rounded-lg p-1 flex">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id
             const Icon = iconMap[tab.id]
@@ -23,11 +23,11 @@ export default function LeagueTabs({ tabs, activeTab, onTabChange, language = 'e
                 key={tab.id}
                 onClick={() => onTabChange(tab.id)}
                 className={`
-                  flex-1 flex items-center justify-center gap-1 py-2 px-1 rounded-lg text-xs font-medium
+                  flex-1 flex items-center justify-center gap-1 py-2 px-1 rounded-md text-xs font-medium
                   transition-all duration-200
                   ${isActive
-                    ? 'bg-white text-parque-purple shadow-md'
-                    : 'text-white/70 hover:text-white'
+                    ? 'bg-white text-parque-purple shadow-sm'
+                    : 'text-gray-500'
                   }
                 `}
               >

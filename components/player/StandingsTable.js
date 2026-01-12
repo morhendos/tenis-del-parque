@@ -30,37 +30,6 @@ export default function StandingsTable({ players, language, unified = false, pla
 
   return (
     <div>
-      {/* Playoff Qualification Legend - Compact version */}
-      {playoffsEnabled && (
-        <div className="mb-4 bg-gray-50 rounded-lg p-3 border border-gray-200">
-          <h3 className="text-xs font-semibold text-gray-700 mb-2">
-            {language === 'es' ? 'Clasificación a Playoffs' : 'Playoff Qualification'}
-          </h3>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 bg-blue-500 rounded"></div>
-              <span className="text-gray-600">
-                1-{groupAPlayers}: {numberOfGroups === 1 ? 'Playoff' : 'Playoff'}
-              </span>
-            </div>
-            {numberOfGroups === 2 && (
-              <div className="flex items-center gap-1.5">
-                <div className="w-3 h-3 bg-green-500 rounded"></div>
-                <span className="text-gray-600">
-                  {groupAPlayers + 1}-{groupAPlayers + groupBPlayers}: Playoff B
-                </span>
-              </div>
-            )}
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 bg-gray-300 rounded"></div>
-              <span className="text-gray-600">
-                {(numberOfGroups === 2 ? groupAPlayers + groupBPlayers : groupAPlayers) + 1}+: {language === 'es' ? 'Liga Regular' : 'Regular League'}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Modern Compact Table - Full Width */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden w-full">
         {/* Table Header */}
