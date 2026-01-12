@@ -52,7 +52,8 @@ export default function LeaguePlayoffsAdmin() {
     seasonIdentifier,
     playoffsInitialized,
     numberOfGroups,
-    setNumberOfGroups
+    setNumberOfGroups,
+    allPlayoffsComplete
   } = playoffData
   
   const {
@@ -60,7 +61,8 @@ export default function LeaguePlayoffsAdmin() {
     handleResetPlayoffs,
     handleUpdateConfig,
     handleCreateNextRound,
-    handleMatchClick
+    handleMatchClick,
+    handleCompletePlayoffs
   } = playoffActions
   
   const handleOpenNotifications = (group) => {
@@ -129,6 +131,8 @@ export default function LeaguePlayoffsAdmin() {
           onResetPlayoffs={handleResetPlayoffs}
           onOpenNotifications={handleOpenNotifications}
           onOpenFinalistEmails={handleOpenFinalistEmails}
+          onCompletePlayoffs={handleCompletePlayoffs}
+          allPlayoffsComplete={allPlayoffsComplete}
         />
       )}
       
@@ -159,6 +163,7 @@ export default function LeaguePlayoffsAdmin() {
           <li>Create semifinal matches after quarterfinals are complete</li>
           <li>Create final matches after semifinals are complete</li>
           <li>Click on any match to enter results</li>
+          <li>When all finals and 3rd place matches are done, click &quot;Complete Playoffs&quot; to finalize</li>
         </ul>
       </div>
       

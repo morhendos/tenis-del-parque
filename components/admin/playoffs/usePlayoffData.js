@@ -13,6 +13,7 @@ export function usePlayoffData(leagueId) {
   const [seasonIdentifier, setSeasonIdentifier] = useState('')
   const [playoffsInitialized, setPlayoffsInitialized] = useState(false)
   const [numberOfGroups, setNumberOfGroups] = useState(1)
+  const [allPlayoffsComplete, setAllPlayoffsComplete] = useState(false)
   
   const fetchLeagueData = useCallback(async () => {
     try {
@@ -40,6 +41,7 @@ export function usePlayoffData(leagueId) {
         setEligiblePlayerCount(data.eligiblePlayerCount || 0)
         setSeasonIdentifier(data.seasonIdentifier || '')
         setPlayoffsInitialized(data.playoffsInitialized || false)
+        setAllPlayoffsComplete(data.allPlayoffsComplete || false)
         
         // If league data is not set (due to league endpoint failure), use data from playoff endpoint
         setLeague(prevLeague => {
@@ -58,6 +60,7 @@ export function usePlayoffData(leagueId) {
         console.log('Season identifier:', data.seasonIdentifier)
         console.log('League slug:', data.leagueSlug)
         console.log('Playoffs initialized:', data.playoffsInitialized)
+        console.log('All playoffs complete:', data.allPlayoffsComplete)
       }
       return data
     } catch (error) {
@@ -91,8 +94,8 @@ export function usePlayoffData(leagueId) {
     playoffsInitialized,
     numberOfGroups,
     setNumberOfGroups,
+    allPlayoffsComplete,
     refetch,
     fetchPlayoffData
   }
 }
-

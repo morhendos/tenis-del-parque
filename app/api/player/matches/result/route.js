@@ -371,7 +371,7 @@ export async function POST(request) {
     }
   }
 
-  // AUTO-CREATE NEXT ROUND MATCHES (OUTSIDE TRANSACTION - AFTER SUCCESS)
+  // AUTO-CREATE NEXT ROUND MATCHES AND AUTO-COMPLETE PLAYOFFS (OUTSIDE TRANSACTION - AFTER SUCCESS)
   // This runs after the transaction commits successfully
   if (match && match.matchType === 'playoff' && match.playoffInfo) {
     try {
@@ -384,6 +384,11 @@ export async function POST(request) {
         
         // Create next round matches without transaction
         await autoCreateNextRoundMatchesNoTransaction(match, league, bracket, group, stage)
+        
+        // AUTO-COMPLETE: Check if all playoff matches are done and auto-complete
+        if (stage === 'final' || stage === 'third_place') {
+          await checkAndAutoCompletePlayoffs(league)
+        }
       }
     } catch (autoCreateError) {
       // Don't fail the whole request if auto-creation fails
@@ -490,6 +495,64 @@ async function autoCreateNextRoundMatchesNoTransaction(completedMatch, league, b
       }
     }
   }
+}
+
+// Check if all playoffs are complete and auto-complete
+async function checkAndAutoCompletePlayoffs(league) {
+  console.log('🏆 Checking if playoffs can be auto-completed...')
+  
+  if (!league.playoffConfig?.enabled) {
+    console.log('  Playoffs not enabled, skipping')
+    return
+  }
+  
+  if (league.playoffConfig.currentPhase === 'completed') {
+    console.log('  Playoffs already completed, skipping')
+    return
+  }
+  
+  const bracketA = league.playoffConfig.bracket?.groupA
+  if (!bracketA) {
+    console.log('  No bracket A found, skipping')
+    return
+  }
+  
+  // Check if Group A is complete
+  const groupAComplete = bracketA.final?.winner && bracketA.thirdPlace?.winner
+  console.log(`  Group A complete: ${groupAComplete} (final: ${!!bracketA.final?.winner}, 3rd: ${!!bracketA.thirdPlace?.winner})`)
+  
+  if (!groupAComplete) {
+    console.log('  Group A not complete yet')
+    return
+  }
+  
+  // Check if Group B is complete (if it exists)
+  if (league.playoffConfig.numberOfGroups === 2) {
+    const bracketB = league.playoffConfig.bracket?.groupB
+    if (!bracketB) {
+      console.log('  No bracket B found but 2 groups configured, skipping')
+      return
+    }
+    
+    const groupBComplete = bracketB.final?.winner && bracketB.thirdPlace?.winner
+    console.log(`  Group B complete: ${groupBComplete} (final: ${!!bracketB.final?.winner}, 3rd: ${!!bracketB.thirdPlace?.winner})`)
+    
+    if (!groupBComplete) {
+      console.log('  Group B not complete yet')
+      return
+    }
+  }
+  
+  // All playoff matches are complete - auto-complete the playoffs!
+  console.log('  ✅ All playoff matches complete! Auto-completing playoffs...')
+  
+  league.playoffConfig.currentPhase = 'completed'
+  league.playoffConfig.completedAt = new Date()
+  league.status = 'completed'
+  
+  await league.save({ validateModifiedOnly: true })
+  
+  console.log('  🏆 Playoffs auto-completed successfully!')
 }
 
 // ELO calculation helper (same as admin)

@@ -9,12 +9,45 @@ export default function PlayoffBrackets({
   onMatchClick,
   onResetPlayoffs,
   onOpenNotifications,
-  onOpenFinalistEmails
+  onOpenFinalistEmails,
+  onCompletePlayoffs,
+  allPlayoffsComplete
 }) {
+  // Check if playoffs can be completed (all finals done)
+  const bracketA = playoffConfig?.bracket?.groupA
+  const bracketB = playoffConfig?.bracket?.groupB
+  
+  const groupAComplete = bracketA?.final?.winner && bracketA?.thirdPlace?.winner
+  const groupBComplete = playoffConfig?.numberOfGroups === 2 
+    ? (bracketB?.final?.winner && bracketB?.thirdPlace?.winner)
+    : true
+  
+  const canComplete = groupAComplete && groupBComplete && playoffConfig?.currentPhase !== 'completed'
+  
   return (
     <>
       {/* Action Buttons */}
       <div className="mb-4 space-y-4">
+        {/* Complete Playoffs Button - Show when all matches done */}
+        {canComplete && (
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-400 rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-green-900 mb-2 flex items-center gap-2">
+              <span>🏆</span>
+              All Playoff Matches Complete!
+            </h3>
+            <p className="text-sm text-green-800 mb-3">
+              All finals and 3rd place matches have been played. You can now mark the playoffs as completed.
+            </p>
+            <button
+              onClick={onCompletePlayoffs}
+              className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-lg hover:from-green-700 hover:to-emerald-700 flex items-center gap-2 font-semibold shadow-lg text-lg"
+            >
+              <span>✓</span>
+              Complete Playoffs
+            </button>
+          </div>
+        )}
+        
         {/* Playoff Notifications */}
         <div className="flex justify-between items-center">
           <div className="space-x-2">
@@ -174,4 +207,3 @@ export default function PlayoffBrackets({
     </>
   )
 }
-

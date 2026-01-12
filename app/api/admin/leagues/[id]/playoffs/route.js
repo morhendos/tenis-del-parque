@@ -184,6 +184,9 @@ export async function GET(request, { params }) {
       }
     })
     
+    // Check if all playoff matches are completed for auto-complete detection
+    const allPlayoffsComplete = checkIfAllPlayoffsComplete(league.playoffConfig, populatedPlayoffMatches)
+    
     return NextResponse.json({
       success: true,
       playoffConfig: populatedPlayoffConfig,
@@ -194,7 +197,8 @@ export async function GET(request, { params }) {
       seasonIdentifier: SEASON_ID,
       leagueSlug: league.slug,
       leagueName: league.name,
-      playoffsInitialized // Let the frontend know if playoffs are locked in
+      playoffsInitialized, // Let the frontend know if playoffs are locked in
+      allPlayoffsComplete // Let the frontend know if playoffs can be marked complete
     })
     
   } catch (error) {
@@ -204,6 +208,35 @@ export async function GET(request, { params }) {
       { status: 500 }
     )
   }
+}
+
+// Helper function to check if all playoff matches are complete
+function checkIfAllPlayoffsComplete(playoffConfig, playoffMatches) {
+  if (!playoffConfig?.enabled) return false
+  if (playoffConfig.currentPhase === 'completed') return false // Already completed
+  
+  const bracket = playoffConfig.bracket?.groupA
+  if (!bracket) return false
+  
+  // Check if final and 3rd place matches exist and have winners
+  const finalComplete = bracket.final?.winner != null
+  const thirdPlaceComplete = bracket.thirdPlace?.winner != null
+  
+  // For Group A to be complete, we need final and 3rd place done
+  const groupAComplete = finalComplete && thirdPlaceComplete
+  
+  // If there's a Group B, check that too
+  if (playoffConfig.numberOfGroups === 2) {
+    const bracketB = playoffConfig.bracket?.groupB
+    if (!bracketB) return false
+    
+    const finalBComplete = bracketB.final?.winner != null
+    const thirdPlaceBComplete = bracketB.thirdPlace?.winner != null
+    
+    return groupAComplete && finalBComplete && thirdPlaceBComplete
+  }
+  
+  return groupAComplete
 }
 
 // POST /api/admin/leagues/[id]/playoffs - Initialize or update playoffs
@@ -248,6 +281,9 @@ export async function POST(request, { params }) {
       case 'completePhase':
         console.log('🏁 Completing playoff phase')
         return await completePlayoffPhase(league, body)
+      case 'complete':
+        console.log('🏆 Completing playoffs entirely')
+        return await completePlayoffs(league)
       default:
         console.error('❌ Invalid action:', action)
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
@@ -708,5 +744,29 @@ async function completePlayoffPhase(league, data) {
     success: true,
     message: 'Playoff phase completed',
     currentPhase: league.playoffConfig.currentPhase
+  })
+}
+
+// Complete playoffs entirely (mark as finished)
+async function completePlayoffs(league) {
+  if (!league.playoffConfig) {
+    return NextResponse.json({ error: 'Playoffs not initialized' }, { status: 400 })
+  }
+  
+  // Update playoff phase to completed
+  league.playoffConfig.currentPhase = 'completed'
+  league.playoffConfig.completedAt = new Date()
+  
+  // Also update the league status to completed
+  league.status = 'completed'
+  
+  await league.save({ validateModifiedOnly: true })
+  
+  console.log('🏆 Playoffs marked as completed for league:', league.name)
+  
+  return NextResponse.json({
+    success: true,
+    message: 'Playoffs completed successfully! 🏆',
+    currentPhase: 'completed'
   })
 }

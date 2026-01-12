@@ -145,12 +145,37 @@ export function usePlayoffActions(leagueId, playoffData) {
     window.location.href = `/admin/matches/${match._id}`
   }, [])
   
+  const handleCompletePlayoffs = useCallback(async () => {
+    if (!confirm('🏆 Mark playoffs as COMPLETED?\n\nThis will:\n• Set playoff phase to "completed"\n• Update the league status to "completed"\n\nAre you sure all playoff matches are finished?')) {
+      return
+    }
+    
+    try {
+      const res = await fetch(`/api/admin/leagues/${leagueId}/playoffs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'complete' })
+      })
+      
+      const data = await res.json()
+      if (data.success) {
+        alert('🏆 Playoffs completed successfully!')
+        await refetch()
+      } else {
+        alert(`Error: ${data.error}`)
+      }
+    } catch (error) {
+      console.error('Error completing playoffs:', error)
+      alert('Failed to complete playoffs')
+    }
+  }, [leagueId, refetch])
+  
   return {
     handleInitializePlayoffs,
     handleResetPlayoffs,
     handleUpdateConfig,
     handleCreateNextRound,
-    handleMatchClick
+    handleMatchClick,
+    handleCompletePlayoffs
   }
 }
-
