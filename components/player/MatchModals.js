@@ -345,7 +345,7 @@ export function MatchModals({
       {/* Result Modal - Mobile Optimized */}
       {showResultModal && selectedMatch && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4">
-          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-md p-6 max-h-[90vh] overflow-y-auto animate-slide-up-mobile sm:animate-fade-in">
+          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-md p-6 pb-24 sm:pb-6 max-h-[90vh] overflow-y-auto animate-slide-up-mobile sm:animate-fade-in">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900">
                 {language === 'es' ? 'Reportar Resultado' : 'Report Result'}
@@ -491,7 +491,7 @@ export function MatchModals({
       {/* Schedule Modal - Mobile Optimized */}
       {showScheduleModal && selectedMatch && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4">
-          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-md p-6 max-h-[90vh] overflow-y-auto animate-slide-up-mobile sm:animate-fade-in">
+          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-md p-6 pb-24 sm:pb-6 max-h-[90vh] overflow-y-auto animate-slide-up-mobile sm:animate-fade-in">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900">
                 {isEditingSchedule 
