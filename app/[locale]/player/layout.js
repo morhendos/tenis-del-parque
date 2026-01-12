@@ -316,7 +316,7 @@ export default function PlayerLayout({ children }) {
       <div className="flex-1 flex flex-col min-w-0 lg:ml-72">
         {/* Page content - Add bottom padding on mobile for bottom nav */}
         <main className="flex-1 overflow-y-auto bg-gray-50">
-          <div className="container mx-auto px-2 md:px-6 pt-2 pb-4 md:py-8 pb-24 lg:pb-8 max-w-[1400px]">
+          <div className="container mx-auto px-2 md:px-6 pt-2 pb-24 md:py-8 md:pb-8 max-w-[1400px]">
             {children}
           </div>
         </main>
