@@ -13,11 +13,11 @@ export default function StandingsTable({ players, language, unified = false, pla
     return 'bg-gray-100 text-gray-600'
   }
 
-  // Get playoff indicator color
-  const getPlayoffIndicatorColor = (position) => {
+  // Get playoff indicator gradient
+  const getPlayoffIndicatorGradient = (position) => {
     if (!playoffsEnabled) return null
-    if (position <= groupAPlayers) return 'bg-blue-500'
-    if (numberOfGroups === 2 && position <= groupAPlayers + groupBPlayers) return 'bg-green-500'
+    if (position <= groupAPlayers) return 'from-blue-500'
+    if (numberOfGroups === 2 && position <= groupAPlayers + groupBPlayers) return 'from-green-500'
     return null
   }
 
@@ -72,7 +72,7 @@ export default function StandingsTable({ players, language, unified = false, pla
         <div className="divide-y divide-gray-100">
           {players.map((standing, index) => {
             const position = index + 1
-            const indicatorColor = getPlayoffIndicatorColor(position)
+            const indicatorGradient = getPlayoffIndicatorGradient(position)
             
             return (
               <div 
@@ -81,9 +81,9 @@ export default function StandingsTable({ players, language, unified = false, pla
                   index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
                 } hover:bg-purple-50/50 transition-colors`}
               >
-                {/* Playoff indicator bar */}
-                {indicatorColor && (
-                  <div className={`absolute left-0 top-0 bottom-0 w-1 ${indicatorColor}`} />
+                {/* Playoff indicator bar - gradient fade */}
+                {indicatorGradient && (
+                  <div className={`absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r ${indicatorGradient} to-transparent opacity-30`} />
                 )}
 
                 {/* Position */}
