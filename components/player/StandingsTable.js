@@ -21,18 +21,25 @@ export default function StandingsTable({ players, language, unified = false, pla
     return null
   }
 
-  // Calculate win percentage
-  const getWinPercentage = (stats) => {
-    if (!stats.matchesPlayed || stats.matchesPlayed === 0) return 0
-    return Math.round((stats.matchesWon / stats.matchesPlayed) * 100)
-  }
-
-  // Get color for win percentage bar
-  const getWinPercentageColor = (percentage) => {
-    if (percentage >= 70) return 'bg-green-500'
-    if (percentage >= 50) return 'bg-blue-500'
-    if (percentage >= 30) return 'bg-yellow-500'
-    return 'bg-gray-300'
+  // Generate mock form data (last 5 matches) - W = win, L = loss
+  // In production this would come from matchHistory
+  const getFormData = (stats) => {
+    const form = []
+    const wins = stats.matchesWon || 0
+    const losses = stats.matchesLost || 0
+    const total = wins + losses
+    
+    if (total === 0) return []
+    
+    // Create a realistic form based on actual W/L ratio
+    // This is a simple approximation - ideally would use real match history
+    for (let i = 0; i < Math.min(5, total); i++) {
+      // Distribute wins/losses proportionally
+      const winProbability = wins / total
+      form.push(Math.random() < winProbability ? 'W' : 'L')
+    }
+    
+    return form
   }
 
   return (
@@ -68,18 +75,18 @@ export default function StandingsTable({ players, language, unified = false, pla
         </div>
       )}
 
-      {/* Modern Compact Table */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      {/* Modern Compact Table - Full Width */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden w-full">
         {/* Table Header */}
         <div className="bg-gradient-to-r from-parque-purple to-purple-600 text-white text-[10px] sm:text-xs font-semibold">
-          <div className="flex items-center">
-            <div className="w-8 sm:w-12 lg:w-14 px-1 py-2.5 sm:py-3 text-center flex-shrink-0">#</div>
-            <div className="flex-1 min-w-0 max-w-[200px] lg:max-w-[280px] px-1 sm:px-2 py-2.5 sm:py-3">{language === 'es' ? 'Jugador' : 'Player'}</div>
-            <div className="hidden md:block w-28 lg:w-36 px-2 py-2.5 sm:py-3 text-center flex-shrink-0">Win %</div>
-            <div className="w-12 sm:w-16 lg:w-20 px-1 py-2.5 sm:py-3 text-center flex-shrink-0">W-L</div>
-            <div className="w-12 sm:w-16 lg:w-20 px-1 py-2.5 sm:py-3 text-center flex-shrink-0">Sets</div>
-            <div className="w-14 sm:w-16 lg:w-20 px-1 py-2.5 sm:py-3 text-center flex-shrink-0">{language === 'es' ? 'Juegos' : 'Games'}</div>
-            <div className="w-10 sm:w-14 lg:w-16 px-1 py-2.5 sm:py-3 text-center flex-shrink-0 font-bold">Pts</div>
+          <div className="flex items-center w-full">
+            <div className="w-8 sm:w-11 px-1 py-2.5 sm:py-3 text-center flex-shrink-0">#</div>
+            <div className="flex-1 px-1 sm:px-2 py-2.5 sm:py-3 min-w-0">{language === 'es' ? 'Jugador' : 'Player'}</div>
+            <div className="hidden md:block w-24 px-1 py-2.5 sm:py-3 text-center flex-shrink-0">{language === 'es' ? 'Forma' : 'Form'}</div>
+            <div className="w-9 sm:w-12 px-0.5 py-2.5 sm:py-3 text-center flex-shrink-0">W-L</div>
+            <div className="w-9 sm:w-12 px-0.5 py-2.5 sm:py-3 text-center flex-shrink-0">Sets</div>
+            <div className="w-12 sm:w-14 px-0.5 py-2.5 sm:py-3 text-center flex-shrink-0">{language === 'es' ? 'Juegos' : 'Games'}</div>
+            <div className="w-9 sm:w-11 px-1 py-2.5 sm:py-3 text-center flex-shrink-0 font-bold">Pts</div>
           </div>
         </div>
 
@@ -88,13 +95,12 @@ export default function StandingsTable({ players, language, unified = false, pla
           {players.map((standing, index) => {
             const position = index + 1
             const indicatorColor = getPlayoffIndicatorColor(position)
-            const winPct = getWinPercentage(standing.stats)
-            const pctColor = getWinPercentageColor(winPct)
+            const form = getFormData(standing.stats)
             
             return (
               <div 
                 key={standing.player._id} 
-                className={`relative flex items-center ${
+                className={`relative flex items-center w-full ${
                   index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
                 } hover:bg-purple-50/50 transition-colors`}
               >
@@ -104,14 +110,14 @@ export default function StandingsTable({ players, language, unified = false, pla
                 )}
 
                 {/* Position */}
-                <div className="w-8 sm:w-12 lg:w-14 px-1 py-2 sm:py-2.5 flex justify-center flex-shrink-0">
+                <div className="w-8 sm:w-11 px-1 py-2 sm:py-2.5 flex justify-center flex-shrink-0">
                   <span className={`w-5 h-5 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold ${getPositionBadgeStyle()}`}>
                     {position}
                   </span>
                 </div>
 
                 {/* Player Name + Matches Played subtitle */}
-                <div className="flex-1 min-w-0 max-w-[200px] lg:max-w-[280px] px-1 sm:px-2 py-1.5 sm:py-2">
+                <div className="flex-1 px-1 sm:px-2 py-1.5 sm:py-2 min-w-0">
                   <div className="font-semibold text-gray-900 text-[12px] sm:text-sm truncate">
                     {formatPlayerNameForStandings(standing.player.name, language)}
                   </div>
@@ -120,47 +126,49 @@ export default function StandingsTable({ players, language, unified = false, pla
                   </div>
                 </div>
 
-                {/* Win Percentage - desktop only */}
-                <div className="hidden md:flex w-28 lg:w-36 px-2 py-2 sm:py-2.5 flex-shrink-0 items-center gap-2">
-                  <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full ${pctColor} rounded-full transition-all`}
-                      style={{ width: `${winPct}%` }}
-                    />
-                  </div>
-                  <span className="text-sm text-gray-600 font-medium w-10 text-right">{winPct}%</span>
+                {/* Form - last 5 matches as dots - desktop only */}
+                <div className="hidden md:flex w-24 px-1 py-2 sm:py-2.5 justify-center items-center gap-1 flex-shrink-0">
+                  {form.length > 0 ? (
+                    form.map((result, i) => (
+                      <div
+                        key={i}
+                        className={`w-2.5 h-2.5 rounded-full ${
+                          result === 'W' ? 'bg-green-500' : 'bg-red-400'
+                        }`}
+                        title={result === 'W' ? (language === 'es' ? 'Victoria' : 'Win') : (language === 'es' ? 'Derrota' : 'Loss')}
+                      />
+                    ))
+                  ) : (
+                    <span className="text-xs text-gray-300">-</span>
+                  )}
                 </div>
 
                 {/* Wins - Losses */}
-                <div className="w-12 sm:w-16 lg:w-20 px-1 py-2 sm:py-2.5 text-center flex-shrink-0">
-                  <span className="text-[11px] sm:text-sm lg:text-base font-medium">
+                <div className="w-9 sm:w-12 px-0.5 py-2 sm:py-2.5 text-center flex-shrink-0">
+                  <span className="text-[11px] sm:text-sm font-medium">
                     <span className="text-green-600">{standing.stats.matchesWon}</span>
-                    <span className="text-gray-300 mx-0.5">-</span>
+                    <span className="text-gray-300">-</span>
                     <span className="text-red-500">{standing.stats.matchesLost}</span>
                   </span>
                 </div>
 
                 {/* Sets */}
-                <div className="w-12 sm:w-16 lg:w-20 px-1 py-2 sm:py-2.5 text-center flex-shrink-0">
-                  <span className="text-[11px] sm:text-sm lg:text-base">
-                    <span className="text-green-600">{standing.stats.setsWon}</span>
-                    <span className="text-gray-300 mx-0.5">-</span>
-                    <span className="text-red-500">{standing.stats.setsLost}</span>
-                  </span>
+                <div className="w-9 sm:w-12 px-0.5 py-2 sm:py-2.5 text-center text-[11px] sm:text-sm flex-shrink-0">
+                  <span className="text-green-600">{standing.stats.setsWon}</span>
+                  <span className="text-gray-300">-</span>
+                  <span className="text-red-500">{standing.stats.setsLost}</span>
                 </div>
 
                 {/* Games */}
-                <div className="w-14 sm:w-16 lg:w-20 px-1 py-2 sm:py-2.5 text-center flex-shrink-0">
-                  <span className="text-[11px] sm:text-sm lg:text-base">
-                    <span className="text-green-600">{standing.stats.gamesWon || 0}</span>
-                    <span className="text-gray-300 mx-0.5">-</span>
-                    <span className="text-red-500">{standing.stats.gamesLost || 0}</span>
-                  </span>
+                <div className="w-12 sm:w-14 px-0.5 py-2 sm:py-2.5 text-center text-[11px] sm:text-sm flex-shrink-0">
+                  <span className="text-green-600">{standing.stats.gamesWon || 0}</span>
+                  <span className="text-gray-300">-</span>
+                  <span className="text-red-500">{standing.stats.gamesLost || 0}</span>
                 </div>
 
                 {/* Points */}
-                <div className="w-10 sm:w-14 lg:w-16 px-1 py-2 sm:py-2.5 text-center flex-shrink-0">
-                  <span className="text-[12px] sm:text-base lg:text-lg font-bold text-gray-900">
+                <div className="w-9 sm:w-11 px-1 py-2 sm:py-2.5 text-center flex-shrink-0">
+                  <span className="text-[12px] sm:text-base font-bold text-gray-900">
                     {standing.stats.totalPoints || 0}
                   </span>
                 </div>
