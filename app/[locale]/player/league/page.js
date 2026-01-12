@@ -83,16 +83,17 @@ function formatSeasonDisplay(league, language) {
   return `${localizedSeasonName} ${seasonYear}`
 }
 
-// League Selector Component with Categories - Mobile-optimized collapsible
-function CategorizedLeagueSelector({ 
+// League Header Component - shows current league info (collapsible if multiple leagues)
+function LeagueHeader({ 
   registrations, 
   currentLeagueId, 
   onLeagueChange, 
   language,
   currentLeague 
 }) {
+  const hasMultipleLeagues = registrations && registrations.length > 1
   const [isExpanded, setIsExpanded] = useState(false)
-  const categories = useMemo(() => categorizeRegistrations(registrations), [registrations])
+  const categories = useMemo(() => categorizeRegistrations(registrations || []), [registrations])
   
   const getStatusBadge = (league) => {
     const status = league?.status
@@ -197,6 +198,54 @@ function CategorizedLeagueSelector({
   const currentBadge = getStatusBadge(currentLeague)
   const currentSeasonDisplay = formatSeasonDisplay(currentLeague, language)
 
+  // For single league, show a simpler non-expandable header
+  if (!hasMultipleLeagues) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3.5">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className={`w-3 h-3 rounded-full flex-shrink-0 ${currentBadge.dotColor} ring-4 ${currentBadge.ringColor}`} />
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-gray-900 truncate">
+                  {currentLeague?.name || 'Liga'}
+                </span>
+                {currentSeasonDisplay && (
+                  <span className="text-gray-400 font-normal hidden sm:inline">·</span>
+                )}
+                {currentSeasonDisplay && (
+                  <span className="text-gray-500 font-normal text-sm hidden sm:inline">
+                    {currentSeasonDisplay}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+                {currentLeague?.location?.city && (
+                  <span className="flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {currentLeague.location.city}
+                  </span>
+                )}
+                {currentSeasonDisplay && (
+                  <span className="sm:hidden">· {currentSeasonDisplay}</span>
+                )}
+              </div>
+            </div>
+          </div>
+          {currentBadge.text && (
+            <span className={`px-2.5 py-1 text-xs font-medium rounded-full border ${currentBadge.color}`}>
+              {currentBadge.text}
+            </span>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // For multiple leagues, show expandable selector
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       {/* Collapsed Header */}
@@ -330,37 +379,6 @@ export default function PlayerLeague() {
   // Use tabs from constants - now includes playoffs
   const tabs = getLeagueTabs(language)
 
-  // Function to get season display name
-  const getSeasonDisplayName = () => {
-    if (currentLeague?.season) {
-      const seasonNames = {
-        es: {
-          spring: 'Primavera',
-          summer: 'Verano',
-          autumn: 'Otoño',
-          winter: 'Invierno',
-          annual: 'Anual'
-        },
-        en: {
-          spring: 'Spring',
-          summer: 'Summer',
-          autumn: 'Autumn',
-          winter: 'Winter',
-          annual: 'Annual'
-        }
-      }
-      
-      const season = currentLeague.season
-      const seasonType = season.type || 'summer'
-      const seasonYear = season.year || 2025
-      
-      const localizedSeasonName = seasonNames[language || 'es'][seasonType] || seasonType
-      return `${localizedSeasonName} ${seasonYear}`
-    }
-    
-    return language === 'es' ? 'Temporada 2025' : 'Season 2025'
-  }
-
   // Clear playoff data when league changes
   useEffect(() => {
     setPlayoffData(null)
@@ -380,7 +398,7 @@ export default function PlayerLeague() {
     const status = currentLeague?.status
     const slug = currentLeague?.slug
     
-    // Skip fetching for leagues that haven't started
+    // Skip fetching for leagues that haven&apos;t started
     if (status === 'registration_open' || status === 'coming_soon') {
       return
     }
@@ -419,9 +437,6 @@ export default function PlayerLeague() {
 
   // Handle league change
   const handleLeagueChange = (leagueId) => {
-    // Don't clear playoffData here - let the useEffect handle it
-    // when currentLeague actually changes. This prevents race conditions.
-    
     // Update URL with new leagueId
     const url = new URL(window.location.href)
     url.searchParams.set('leagueId', leagueId)
@@ -500,125 +515,16 @@ export default function PlayerLeague() {
     )
   }
 
-  // Get header color based on league status
-  const getHeaderGradient = () => {
-    const status = currentLeague?.status
-    const playoffPhase = currentLeague?.playoffConfig?.currentPhase
-    
-    if (playoffPhase && playoffPhase !== 'regular_season' && playoffPhase !== 'completed') {
-      return 'from-amber-500 via-orange-500 to-red-500' // Playoffs
-    }
-    if (status === 'active') {
-      return 'from-green-500 via-emerald-500 to-teal-500' // Active
-    }
-    if (status === 'completed' || status === 'archived') {
-      return 'from-gray-500 via-gray-600 to-gray-700' // Past
-    }
-    return 'from-parque-purple via-purple-600 to-indigo-600' // Default/Upcoming
-  }
-
-  // Get status badge for header
-  const getLeagueStatusBadge = () => {
-    const status = currentLeague?.status
-    const playoffPhase = currentLeague?.playoffConfig?.currentPhase
-    
-    if (playoffPhase && playoffPhase !== 'regular_season' && playoffPhase !== 'completed') {
-      return { 
-        text: 'Playoffs', 
-        show: true,
-        icon: (
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 15c-1.95 0-3.74-.77-5.07-2.03A6.972 6.972 0 015 8V4h14v4c0 1.87-.74 3.57-1.93 4.97A7.024 7.024 0 0112 15zm-5-9v2c0 2.76 2.24 5 5 5s5-2.24 5-5V6H7zm5 11c.34 0 .68-.02 1-.07v2.07h3v2H8v-2h3v-2.07c.32.05.66.07 1 .07z"/>
-          </svg>
-        )
-      }
-    }
-    if (status === 'registration_open') {
-      return { 
-        text: language === 'es' ? 'Inscripción Abierta' : 'Registration Open', 
-        show: true,
-        icon: (
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-        )
-      }
-    }
-    if (status === 'coming_soon') {
-      return { 
-        text: language === 'es' ? 'Próximamente' : 'Coming Soon', 
-        show: true,
-        icon: (
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        )
-      }
-    }
-    if (status === 'completed') {
-      return { 
-        text: language === 'es' ? 'Completada' : 'Completed', 
-        show: true,
-        icon: (
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-        )
-      }
-    }
-    return { show: false }
-  }
-
-  const statusBadge = getLeagueStatusBadge()
-
   return (
     <div className="space-y-6">
-      {/* Categorized League Selector (if multiple leagues) */}
-      {allRegistrations && allRegistrations.length > 1 && (
-        <CategorizedLeagueSelector
-          registrations={allRegistrations}
-          currentLeagueId={currentLeague._id}
-          currentLeague={currentLeague}
-          onLeagueChange={handleLeagueChange}
-          language={language}
-        />
-      )}
-
-      {/* League Header - Dynamic color based on status */}
-      <div className={`bg-gradient-to-r ${getHeaderGradient()} rounded-xl shadow-lg overflow-hidden`}>
-        <div className="px-6 py-8 sm:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center space-x-4">
-              <div>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <h1 className="text-3xl font-bold text-white">{currentLeague.name}</h1>
-                  {statusBadge.show && (
-                    <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm font-medium text-white flex items-center gap-1.5">
-                      {statusBadge.icon}
-                      {statusBadge.text}
-                    </span>
-                  )}
-                </div>
-                {currentLeague.location?.city && (
-                  <p className="text-white/80 text-sm mt-1 flex items-center gap-1">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    {currentLeague.location.city}
-                  </p>
-                )}
-                <p className="text-white/90 mt-1">
-                  {language === 'es' ? 'Temporada' : 'Season'}: {getSeasonDisplayName()}
-                </p>
-                <p className="text-white/70 text-sm mt-1">
-                  {language === 'es' ? 'Tu ELO' : 'Your ELO'}: {player?.eloRating || 1200}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* League Header - shows for all users, expandable if multiple leagues */}
+      <LeagueHeader
+        registrations={allRegistrations}
+        currentLeagueId={currentLeague._id}
+        currentLeague={currentLeague}
+        onLeagueChange={handleLeagueChange}
+        language={language}
+      />
 
       {/* Countdown Card for upcoming leagues */}
       <CountdownCard 
