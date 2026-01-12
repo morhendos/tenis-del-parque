@@ -21,25 +21,11 @@ export default function StandingsTable({ players, language, unified = false, pla
     return null
   }
 
-  // Generate mock form data (last 5 matches) - W = win, L = loss
-  // In production this would come from matchHistory
+  // Get form data (last 5 matches) - W = win, L = loss
+  // TODO: Wire up real matchHistory data
   const getFormData = (stats) => {
-    const form = []
-    const wins = stats.matchesWon || 0
-    const losses = stats.matchesLost || 0
-    const total = wins + losses
-    
-    if (total === 0) return []
-    
-    // Create a realistic form based on actual W/L ratio
-    // This is a simple approximation - ideally would use real match history
-    for (let i = 0; i < Math.min(5, total); i++) {
-      // Distribute wins/losses proportionally
-      const winProbability = wins / total
-      form.push(Math.random() < winProbability ? 'W' : 'L')
-    }
-    
-    return form
+    // For now return empty - will show gray placeholder dots
+    return []
   }
 
   return (
@@ -139,7 +125,13 @@ export default function StandingsTable({ players, language, unified = false, pla
                       />
                     ))
                   ) : (
-                    <span className="text-xs text-gray-300">-</span>
+                    // 5 gray placeholder dots
+                    [0, 1, 2, 3, 4].map((i) => (
+                      <div
+                        key={i}
+                        className="w-2.5 h-2.5 rounded-full bg-gray-200"
+                      />
+                    ))
                   )}
                 </div>
 
