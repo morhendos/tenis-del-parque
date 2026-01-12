@@ -27,7 +27,11 @@ export function MatchModals({
 
   // Get venues for current league city
   const getVenueOptions = () => {
-    const citySlug = league?.location?.citySlug?.toLowerCase()
+    // Try citySlug first, then fall back to city name converted to slug
+    let citySlug = league?.location?.citySlug?.toLowerCase()
+    if (!citySlug && league?.location?.city) {
+      citySlug = league.location.city.toLowerCase().replace(/\s+/g, '-')
+    }
     return VENUE_OPTIONS[citySlug] || null
   }
 
@@ -101,19 +105,23 @@ export function MatchModals({
       const scheduledDate = schedule.confirmedDate || selectedMatch.scheduledDate
       const existingVenue = schedule.venue || schedule.club || ''
       
-      // Check if existing venue is in our predefined list
-      const isPresetVenue = venueOptions?.some(opt => opt.value === existingVenue)
+      // Check if existing venue is in our predefined list (case-insensitive)
+      const currentVenueOptions = getVenueOptions()
+      const matchedOption = currentVenueOptions?.find(opt => 
+        opt.value.toLowerCase() === existingVenue.toLowerCase()
+      )
       
       setScheduleForm({
         date: scheduledDate ? new Date(scheduledDate).toISOString().split('T')[0] : '',
         time: schedule.time || '',
-        venue: isPresetVenue ? existingVenue : (existingVenue ? 'other' : ''),
-        customVenue: isPresetVenue ? '' : existingVenue,
+        venue: matchedOption ? matchedOption.value : (existingVenue ? 'other' : ''),
+        customVenue: matchedOption ? '' : existingVenue,
         court: schedule.court || (schedule.courtNumber ? `${language === 'es' ? 'Pista' : 'Court'} ${schedule.courtNumber}` : ''),
         notes: schedule.notes || ''
       })
     }
-  }, [showScheduleModal, isEditingSchedule, selectedMatch, language, venueOptions])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showScheduleModal, isEditingSchedule, selectedMatch, language])
 
   // Check if we need a super tiebreak (1:1 in sets)
   const checkForSuperTiebreak = () => {
@@ -460,7 +468,7 @@ export function MatchModals({
                             value={set.myScore}
                             onChange={(e) => handleSetChange(index, 'myScore', e.target.value)}
                             ref={(el) => inputRefs.current[`${index}-myScore`] = el}
-                            className={`w-20 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-transparent text-center font-medium ${
+                            className={`w-20 px-3 py-2 border rounded-lg focus:outline-none focus:border-parque-purple focus:ring-1 focus:ring-parque-purple text-center font-medium ${
                               validationErrors[`set${index}`] ? 'border-red-300' : 'border-gray-300'
                             }`}
                             required={index < 2 || (index === 2 && checkForSuperTiebreak())}
@@ -474,7 +482,7 @@ export function MatchModals({
                             value={set.opponentScore}
                             onChange={(e) => handleSetChange(index, 'opponentScore', e.target.value)}
                             ref={(el) => inputRefs.current[`${index}-opponentScore`] = el}
-                            className={`w-20 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-transparent text-center font-medium ${
+                            className={`w-20 px-3 py-2 border rounded-lg focus:outline-none focus:border-parque-purple focus:ring-1 focus:ring-parque-purple text-center font-medium ${
                               validationErrors[`set${index}`] ? 'border-red-300' : 'border-gray-300'
                             }`}
                             required={index < 2 || (index === 2 && checkForSuperTiebreak())}
@@ -575,7 +583,7 @@ export function MatchModals({
                     setFormError('')
                   }}
                   min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-parque-purple focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-parque-purple focus:ring-1 focus:ring-parque-purple"
                   required
                 />
               </div>
@@ -590,7 +598,7 @@ export function MatchModals({
                     setScheduleForm({...scheduleForm, time: e.target.value})
                     setFormError('')
                   }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-parque-purple focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-parque-purple focus:ring-1 focus:ring-parque-purple"
                   required
                 />
               </div>
@@ -601,20 +609,27 @@ export function MatchModals({
                 {venueOptions ? (
                   // Dropdown for cities with predefined venues
                   <>
-                    <select
-                      value={scheduleForm.venue}
-                      onChange={(e) => {
-                        setScheduleForm({...scheduleForm, venue: e.target.value, customVenue: ''})
-                        setFormError('')
-                      }}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-parque-purple focus:border-transparent bg-white"
-                      required
-                    >
-                      <option value="">{language === 'es' ? 'Seleccionar lugar...' : 'Select venue...'}</option>
-                      {venueOptions.map(opt => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        value={scheduleForm.venue}
+                        onChange={(e) => {
+                          setScheduleForm({...scheduleForm, venue: e.target.value, customVenue: ''})
+                          setFormError('')
+                        }}
+                        className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-xl focus:outline-none focus:border-parque-purple focus:ring-1 focus:ring-parque-purple bg-white appearance-none cursor-pointer"
+                        required
+                      >
+                        <option value="">{language === 'es' ? 'Seleccionar lugar...' : 'Select venue...'}</option>
+                        {venueOptions.map(opt => (
+                          <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        ))}
+                      </select>
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
                     {scheduleForm.venue === 'other' && (
                       <input
                         type="text"
@@ -623,7 +638,7 @@ export function MatchModals({
                           setScheduleForm({...scheduleForm, customVenue: e.target.value})
                           setFormError('')
                         }}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-parque-purple focus:border-transparent mt-2"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-parque-purple focus:ring-1 focus:ring-parque-purple mt-2"
                         placeholder={language === 'es' ? 'Nombre del lugar...' : 'Venue name...'}
                         required
                       />
@@ -638,7 +653,7 @@ export function MatchModals({
                       setScheduleForm({...scheduleForm, venue: e.target.value})
                       setFormError('')
                     }}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-parque-purple focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-parque-purple focus:ring-1 focus:ring-parque-purple"
                     placeholder={language === 'es' ? 'Ej: Club Deportivo' : 'Ex: Sports Club'}
                     required
                   />
@@ -655,7 +670,7 @@ export function MatchModals({
                     setScheduleForm({...scheduleForm, court: e.target.value})
                     setFormError('')
                   }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-parque-purple focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-parque-purple focus:ring-1 focus:ring-parque-purple"
                   placeholder={language === 'es' ? 'Ej: Cancha 1' : 'Ex: Court 1'}
                 />
               </div>
@@ -669,7 +684,7 @@ export function MatchModals({
                     setScheduleForm({...scheduleForm, notes: e.target.value})
                     setFormError('')
                   }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-parque-purple focus:border-transparent resize-none"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-parque-purple focus:ring-1 focus:ring-parque-purple resize-none"
                   rows="3"
                   placeholder={language === 'es' ? 'Información adicional...' : 'Additional information...'}
                 />
