@@ -21,6 +21,20 @@ export default function StandingsTable({ players, language, unified = false, pla
     return null
   }
 
+  // Calculate win percentage
+  const getWinPercentage = (stats) => {
+    if (!stats.matchesPlayed || stats.matchesPlayed === 0) return 0
+    return Math.round((stats.matchesWon / stats.matchesPlayed) * 100)
+  }
+
+  // Get color for win percentage bar
+  const getWinPercentageColor = (percentage) => {
+    if (percentage >= 70) return 'bg-green-500'
+    if (percentage >= 50) return 'bg-blue-500'
+    if (percentage >= 30) return 'bg-yellow-500'
+    return 'bg-red-400'
+  }
+
   return (
     <div>
       {/* Playoff Qualification Legend - Compact version */}
@@ -61,6 +75,7 @@ export default function StandingsTable({ players, language, unified = false, pla
           <div className="flex items-center">
             <div className="w-8 sm:w-11 px-1 py-2.5 sm:py-3 text-center flex-shrink-0">#</div>
             <div className="flex-1 px-1 sm:px-2 py-2.5 sm:py-3 min-w-0">{language === 'es' ? 'Jugador' : 'Player'}</div>
+            <div className="hidden md:block w-20 px-1 py-2.5 sm:py-3 text-center flex-shrink-0">Win %</div>
             <div className="w-9 sm:w-12 px-0.5 py-2.5 sm:py-3 text-center flex-shrink-0">W-L</div>
             <div className="w-9 sm:w-12 px-0.5 py-2.5 sm:py-3 text-center flex-shrink-0">Sets</div>
             <div className="w-12 sm:w-14 px-0.5 py-2.5 sm:py-3 text-center flex-shrink-0">{language === 'es' ? 'Juegos' : 'Games'}</div>
@@ -73,6 +88,8 @@ export default function StandingsTable({ players, language, unified = false, pla
           {players.map((standing, index) => {
             const position = index + 1
             const indicatorColor = getPlayoffIndicatorColor(position)
+            const winPct = getWinPercentage(standing.stats)
+            const pctColor = getWinPercentageColor(winPct)
             
             return (
               <div 
@@ -101,6 +118,17 @@ export default function StandingsTable({ players, language, unified = false, pla
                   <div className="text-[10px] text-gray-400">
                     {standing.stats.matchesPlayed} {language === 'es' ? 'partidos' : 'matches'}
                   </div>
+                </div>
+
+                {/* Win Percentage - desktop only */}
+                <div className="hidden md:flex w-20 px-1 py-2 sm:py-2.5 flex-shrink-0 items-center gap-1.5">
+                  <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full ${pctColor} rounded-full transition-all`}
+                      style={{ width: `${winPct}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-gray-500 w-8 text-right">{winPct}%</span>
                 </div>
 
                 {/* Wins - Losses */}
