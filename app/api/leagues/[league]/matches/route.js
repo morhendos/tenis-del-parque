@@ -71,14 +71,9 @@ export async function GET(request, { params }) {
       type: league.season.type
     })
     
-    // Build match query - use season if found, otherwise just league
+    // Build match query - just use league (season is embedded in league)
+    // Note: Match.season field has data inconsistency issues, so we rely on league only
     const matchQuery = { league: league._id }
-    if (seasonDoc) {
-      matchQuery.season = seasonDoc._id
-      console.log('API: Found Season ObjectId:', seasonDoc._id)
-    } else {
-      console.log('API: Season not found, querying by league only')
-    }
     if (status) matchQuery.status = status
     if (round) matchQuery.round = parseInt(round)
     
@@ -148,9 +143,8 @@ export async function GET(request, { params }) {
       }
     })
     
-    // Get match statistics - use same query base as main query
+    // Get match statistics - use league only (same as main query)
     const statsQuery = { league: league._id }
-    if (seasonDoc) statsQuery.season = seasonDoc._id
     
     const totalMatches = await Match.countDocuments(statsQuery)
     const completedMatches = await Match.countDocuments({ 
