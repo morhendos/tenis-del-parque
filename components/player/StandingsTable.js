@@ -57,14 +57,13 @@ export default function StandingsTable({ players, language, unified = false, pla
         </div>
       )}
 
-      {/* Modern Compact Table - All columns visible */}
+      {/* Modern Compact Table */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         {/* Table Header */}
         <div className="bg-gradient-to-r from-parque-purple to-purple-600 text-white text-[10px] sm:text-xs font-semibold">
           <div className="flex items-center">
             <div className="w-8 sm:w-11 px-1 py-2.5 sm:py-3 text-center flex-shrink-0">#</div>
             <div className="flex-1 px-1 sm:px-2 py-2.5 sm:py-3 min-w-0">{language === 'es' ? 'Jugador' : 'Player'}</div>
-            <div className="w-6 sm:w-8 px-0.5 py-2.5 sm:py-3 text-center flex-shrink-0">P</div>
             <div className="w-9 sm:w-12 px-0.5 py-2.5 sm:py-3 text-center flex-shrink-0">W-L</div>
             <div className="w-9 sm:w-12 px-0.5 py-2.5 sm:py-3 text-center flex-shrink-0">Sets</div>
             <div className="w-11 sm:w-14 px-0.5 py-2.5 sm:py-3 text-center flex-shrink-0">{language === 'es' ? 'Jueg' : 'Gms'}</div>
@@ -89,16 +88,14 @@ export default function StandingsTable({ players, language, unified = false, pla
                   </span>
                 </div>
 
-                {/* Player Name */}
-                <div className="flex-1 px-1 sm:px-2 py-2 sm:py-2.5 min-w-0">
+                {/* Player Name + Matches Played subtitle */}
+                <div className="flex-1 px-1 sm:px-2 py-1.5 sm:py-2 min-w-0">
                   <div className="font-semibold text-gray-900 text-[12px] sm:text-sm truncate">
                     {formatPlayerNameForStandings(standing.player.name, language)}
                   </div>
-                </div>
-
-                {/* Matches Played */}
-                <div className="w-6 sm:w-8 px-0.5 py-2 sm:py-2.5 text-center text-[11px] sm:text-sm text-gray-600 flex-shrink-0">
-                  {standing.stats.matchesPlayed}
+                  <div className="text-[10px] text-gray-400">
+                    {standing.stats.matchesPlayed} {language === 'es' ? 'partidos' : 'matches'}
+                  </div>
                 </div>
 
                 {/* Wins - Losses */}
