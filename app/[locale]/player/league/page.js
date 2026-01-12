@@ -103,43 +103,80 @@ function LeagueHeader({
       return { 
         text: 'Playoffs', 
         color: 'bg-amber-50 text-amber-700 border-amber-200', 
-        dotColor: 'bg-amber-500',
-        ringColor: 'ring-amber-500/20'
+        headerColor: 'bg-white/20 text-white border-white/30'
+      }
+    }
+    if (status === 'active') {
+      return { 
+        text: language === 'es' ? 'Activa' : 'Active', 
+        color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        headerColor: 'bg-white/20 text-white border-white/30'
+      }
+    }
+    if (status === 'registration_open') {
+      return { 
+        text: language === 'es' ? 'Inscripción' : 'Registration', 
+        color: 'bg-violet-50 text-violet-700 border-violet-200',
+        headerColor: 'bg-white/20 text-white border-white/30'
+      }
+    }
+    if (status === 'coming_soon') {
+      return { 
+        text: language === 'es' ? 'Próximamente' : 'Soon', 
+        color: 'bg-sky-50 text-sky-700 border-sky-200',
+        headerColor: 'bg-white/20 text-white border-white/30'
+      }
+    }
+    if (status === 'completed') {
+      return { 
+        text: language === 'es' ? 'Completada' : 'Completed', 
+        color: 'bg-gray-50 text-gray-600 border-gray-200',
+        headerColor: 'bg-white/20 text-white border-white/30'
+      }
+    }
+    return { text: '', color: '', headerColor: '' }
+  }
+
+  const getDropdownStatusBadge = (league) => {
+    const status = league?.status
+    const playoffPhase = league?.playoffConfig?.currentPhase
+    
+    if (playoffPhase && playoffPhase !== 'regular_season' && playoffPhase !== 'completed') {
+      return { 
+        text: 'Playoffs', 
+        color: 'bg-amber-50 text-amber-700 border-amber-200', 
+        dotColor: 'bg-amber-500'
       }
     }
     if (status === 'active') {
       return { 
         text: language === 'es' ? 'Activa' : 'Active', 
         color: 'bg-emerald-50 text-emerald-700 border-emerald-200', 
-        dotColor: 'bg-emerald-500',
-        ringColor: 'ring-emerald-500/20'
+        dotColor: 'bg-emerald-500'
       }
     }
     if (status === 'registration_open') {
       return { 
         text: language === 'es' ? 'Inscripción' : 'Registration', 
         color: 'bg-violet-50 text-violet-700 border-violet-200', 
-        dotColor: 'bg-violet-500',
-        ringColor: 'ring-violet-500/20'
+        dotColor: 'bg-violet-500'
       }
     }
     if (status === 'coming_soon') {
       return { 
         text: language === 'es' ? 'Próximamente' : 'Soon', 
         color: 'bg-sky-50 text-sky-700 border-sky-200', 
-        dotColor: 'bg-sky-500',
-        ringColor: 'ring-sky-500/20'
+        dotColor: 'bg-sky-500'
       }
     }
     if (status === 'completed') {
       return { 
         text: language === 'es' ? 'Completada' : 'Completed', 
         color: 'bg-gray-50 text-gray-600 border-gray-200', 
-        dotColor: 'bg-gray-400',
-        ringColor: 'ring-gray-400/20'
+        dotColor: 'bg-gray-400'
       }
     }
-    return { text: '', color: '', dotColor: 'bg-gray-400', ringColor: 'ring-gray-400/20' }
+    return { text: '', color: '', dotColor: 'bg-gray-400' }
   }
 
   const handleLeagueSelect = (leagueId) => {
@@ -149,7 +186,7 @@ function LeagueHeader({
 
   const renderLeagueCard = (registration) => {
     const isSelected = currentLeagueId === registration.league?._id
-    const badge = getStatusBadge(registration.league)
+    const badge = getDropdownStatusBadge(registration.league)
     const seasonDisplay = formatSeasonDisplay(registration.league, language)
     const leagueName = registration.league?.name || 'Liga'
     const location = registration.league?.location?.city
@@ -201,28 +238,19 @@ function LeagueHeader({
   // For single league, show a simpler non-expandable header
   if (!hasMultipleLeagues) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3.5">
+      <div className="bg-gradient-to-r from-parque-purple to-purple-600 rounded-xl shadow-lg overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3 min-w-0">
-            <div className={`w-3 h-3 rounded-full flex-shrink-0 ${currentBadge.dotColor} ring-4 ${currentBadge.ringColor}`} />
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-gray-900 truncate">
+                <span className="font-semibold text-white text-lg truncate">
                   {currentLeague?.name || 'Liga'}
                 </span>
-                {currentSeasonDisplay && (
-                  <span className="text-gray-400 font-normal hidden sm:inline">·</span>
-                )}
-                {currentSeasonDisplay && (
-                  <span className="text-gray-500 font-normal text-sm hidden sm:inline">
-                    {currentSeasonDisplay}
-                  </span>
-                )}
               </div>
-              <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+              <div className="flex items-center gap-2 text-sm text-white/80 mt-0.5">
                 {currentLeague?.location?.city && (
                   <span className="flex items-center gap-1">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
@@ -230,13 +258,16 @@ function LeagueHeader({
                   </span>
                 )}
                 {currentSeasonDisplay && (
-                  <span className="sm:hidden">· {currentSeasonDisplay}</span>
+                  <>
+                    <span className="text-white/50">·</span>
+                    <span>{currentSeasonDisplay}</span>
+                  </>
                 )}
               </div>
             </div>
           </div>
           {currentBadge.text && (
-            <span className={`px-2.5 py-1 text-xs font-medium rounded-full border ${currentBadge.color}`}>
+            <span className={`px-3 py-1 text-xs font-medium rounded-full border ${currentBadge.headerColor}`}>
               {currentBadge.text}
             </span>
           )}
@@ -247,32 +278,23 @@ function LeagueHeader({
 
   // For multiple leagues, show expandable selector
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-      {/* Collapsed Header */}
+    <div className="rounded-xl shadow-lg overflow-hidden">
+      {/* Collapsed Header - Purple gradient */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-gray-50/50 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-4 bg-gradient-to-r from-parque-purple to-purple-600 hover:from-parque-purple/95 hover:to-purple-600/95 transition-colors"
       >
         <div className="flex items-center gap-3 min-w-0">
-          <div className={`w-3 h-3 rounded-full flex-shrink-0 ${currentBadge.dotColor} ring-4 ${currentBadge.ringColor}`} />
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-gray-900 truncate">
+              <span className="font-semibold text-white text-lg truncate">
                 {currentLeague?.name || 'Liga'}
               </span>
-              {currentSeasonDisplay && (
-                <span className="text-gray-400 font-normal hidden sm:inline">·</span>
-              )}
-              {currentSeasonDisplay && (
-                <span className="text-gray-500 font-normal text-sm hidden sm:inline">
-                  {currentSeasonDisplay}
-                </span>
-              )}
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+            <div className="flex items-center gap-2 text-sm text-white/80 mt-0.5">
               {currentLeague?.location?.city && (
                 <span className="flex items-center gap-1">
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
@@ -280,18 +302,21 @@ function LeagueHeader({
                 </span>
               )}
               {currentSeasonDisplay && (
-                <span className="sm:hidden">· {currentSeasonDisplay}</span>
+                <>
+                  <span className="text-white/50">·</span>
+                  <span>{currentSeasonDisplay}</span>
+                </>
               )}
             </div>
           </div>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
           {currentBadge.text && (
-            <span className={`px-2.5 py-1 text-xs font-medium rounded-full border hidden sm:inline ${currentBadge.color}`}>
+            <span className={`px-3 py-1 text-xs font-medium rounded-full border hidden sm:inline ${currentBadge.headerColor}`}>
               {currentBadge.text}
             </span>
           )}
-          <div className="flex items-center gap-1.5 text-gray-400">
+          <div className="flex items-center gap-1.5 text-white/70">
             <span className="text-xs hidden sm:inline">
               {registrations.length} {language === 'es' ? 'ligas' : 'leagues'}
             </span>
@@ -307,8 +332,8 @@ function LeagueHeader({
         </div>
       </button>
       
-      {/* Expanded Content */}
-      <div className={`transition-all duration-200 ease-in-out overflow-hidden ${
+      {/* Expanded Content - White background for contrast */}
+      <div className={`transition-all duration-200 ease-in-out overflow-hidden bg-white ${
         isExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
       }`}>
         <div className="px-4 pb-4 space-y-4 border-t border-gray-100 pt-4 bg-gray-50/50">
