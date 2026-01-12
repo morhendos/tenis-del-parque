@@ -66,7 +66,7 @@ export default function StandingsTable({ players, language, unified = false, pla
             <div className="flex-1 px-1 sm:px-2 py-2.5 sm:py-3 min-w-0">{language === 'es' ? 'Jugador' : 'Player'}</div>
             <div className="w-9 sm:w-12 px-0.5 py-2.5 sm:py-3 text-center flex-shrink-0">W-L</div>
             <div className="w-9 sm:w-12 px-0.5 py-2.5 sm:py-3 text-center flex-shrink-0">Sets</div>
-            <div className="w-11 sm:w-14 px-0.5 py-2.5 sm:py-3 text-center flex-shrink-0">{language === 'es' ? 'Jueg' : 'Gms'}</div>
+            <div className="w-12 sm:w-14 px-0.5 py-2.5 sm:py-3 text-center flex-shrink-0 max-[340px]:hidden">{language === 'es' ? 'Juegos' : 'Games'}</div>
             <div className="w-9 sm:w-11 px-1 py-2.5 sm:py-3 text-center flex-shrink-0 font-bold">Pts</div>
           </div>
         </div>
@@ -114,8 +114,8 @@ export default function StandingsTable({ players, language, unified = false, pla
                   <span className="text-red-500">{standing.stats.setsLost}</span>
                 </div>
 
-                {/* Games */}
-                <div className="w-11 sm:w-14 px-0.5 py-2 sm:py-2.5 text-center text-[11px] sm:text-sm flex-shrink-0">
+                {/* Games - hidden below 340px */}
+                <div className="w-12 sm:w-14 px-0.5 py-2 sm:py-2.5 text-center text-[11px] sm:text-sm flex-shrink-0 max-[340px]:hidden">
                   <span className="text-green-600">{standing.stats.gamesWon || 0}</span>
                   <span className="text-gray-300">-</span>
                   <span className="text-red-500">{standing.stats.gamesLost || 0}</span>
