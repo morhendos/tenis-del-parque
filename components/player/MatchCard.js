@@ -200,6 +200,22 @@ export default function MatchCard({
         </div>
       )}
 
+      {/* Schedule info - Visible for ALL scheduled matches */}
+      {isUpcoming && isScheduled && (
+        <div className="px-3 pb-2 -mt-1">
+          <div className="flex items-center gap-2 text-xs text-gray-600">
+            <span className="text-green-600 font-medium">✓</span>
+            {(match.schedule?.confirmedDate || match.scheduledDate) && (
+              <span>{formatDateForDisplay(match.schedule?.confirmedDate || match.scheduledDate)}</span>
+            )}
+            {match.schedule?.time && <span>• {match.schedule.time}</span>}
+            {(match.schedule?.venue || match.schedule?.club) && (
+              <span className="truncate">• {match.schedule.venue || match.schedule.club}</span>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Set details for completed matches - Inline */}
       {!isUpcoming && match.result?.score?.sets && !isPublic && player && (
         <div className="px-3 pb-2 -mt-1">
@@ -229,23 +245,12 @@ export default function MatchCard({
       {/* Match Details - Only for upcoming matches when expanded */}
       {isUpcoming && showActions && isExpanded && !isPublic && (
         <div className="px-3 pb-3 border-t border-gray-100">
-          {/* Schedule info */}
-          {isScheduled ? (
-            <div className="py-2 flex items-center gap-2 text-xs text-gray-600">
-              <span className="text-green-600 font-medium">✓</span>
-              {(match.schedule?.confirmedDate || match.scheduledDate) && (
-                <span>{formatDateForDisplay(match.schedule?.confirmedDate || match.scheduledDate)}</span>
-              )}
-              {match.schedule?.time && <span>• {match.schedule.time}</span>}
-              {(match.schedule?.venue || match.schedule?.club) && (
-                <span className="truncate">• {match.schedule.venue || match.schedule.club}</span>
-              )}
-            </div>
-          ) : match.schedule?.deadline ? (
+          {/* Deadline warning (only if not scheduled yet) */}
+          {!isScheduled && match.schedule?.deadline && (
             <div className="py-2 text-xs text-amber-600">
               <span className="font-medium">⏰ {language === 'es' ? 'Límite:' : 'Due:'}</span> {formatDateForDisplay(match.schedule.deadline)}
             </div>
-          ) : null}
+          )}
 
           {/* Action buttons - Compact */}
           <div className="grid grid-cols-3 gap-2 pt-2">
