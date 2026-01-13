@@ -142,9 +142,6 @@ function LevelHelperModal({ isOpen, onClose, locale, colors, leagues, status }) 
   const sheetRef = useRef(null)
   const startYRef = useRef(0)
   
-  // Check if this is a past or active season
-  const isActivePastSeason = status === 'active' || status === 'past'
-  
   // Detect mobile vs desktop
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
@@ -206,7 +203,7 @@ function LevelHelperModal({ isOpen, onClose, locale, colors, leagues, status }) 
         intermediate: {
           title: 'Silver - Intermediate',
           points: [
-            'Played in leagues or tournaments',
+            'You\'ve played in leagues or tournaments',
             'You play regularly',
             'You have consistent serves and groundstrokes'
           ]
@@ -393,12 +390,10 @@ function LevelHelperModal({ isOpen, onClose, locale, colors, leagues, status }) 
             
             // If we have a league, make it clickable
             if (league && leagueSlug) {
-              // Determine link based on status
-              // Active/past leagues go to public league page
-              // Registration open leagues go to info/registration page
-              const linkHref = isActivePastSeason
-                ? `/${locale}/${citySlug}/liga/${leagueSlug}`
-                : `/${locale}/leagues/${citySlug}/info/${leagueSlug}`
+              // Route based on individual league status
+              const linkHref = league.status === 'registration_open'
+                ? `/${locale}/leagues/${citySlug}/info/${leagueSlug}`
+                : `/${locale}/${citySlug}/liga/${leagueSlug}`
               
               return (
                 <Link
@@ -450,13 +445,10 @@ function LevelOption({ league, locale, isRegistrationOpen, showSpots = false, co
   // Dark mode specific styles
   const isDark = colors.isDark
   
-  // Determine the correct link based on status
-  // Active/past/completed leagues go to public league page
-  // Registration open leagues go to info/registration page
-  const isActivePastOrCompleted = status === 'active' || status === 'past' || league.status === 'completed' || league.status === 'active'
-  const linkHref = isActivePastOrCompleted
-    ? `/${locale}/${citySlug}/liga/${league.slug}`
-    : `/${locale}/leagues/${citySlug}/info/${league.slug}`
+  // Route based on individual league status
+  const linkHref = league.status === 'registration_open'
+    ? `/${locale}/leagues/${citySlug}/info/${league.slug}`
+    : `/${locale}/${citySlug}/liga/${league.slug}`
   
   return (
     <Link
