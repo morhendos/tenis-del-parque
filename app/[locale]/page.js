@@ -83,28 +83,29 @@ async function getLeaguesData() {
       } : null
     }))
     
-    // Organize leagues by status for better performance
-    const activeLeagues = serializedLeagues.filter(league => league.status === 'active')
-    const registrationOpenLeagues = serializedLeagues.filter(league => league.status === 'registration_open')
+    // Organize leagues by priority
+    // Priority 1: Current seasons (mix of registration_open and active)
+    // Priority 2: Coming soon seasons
+    const currentSeasonLeagues = serializedLeagues.filter(league => 
+      league.status === 'registration_open' || league.status === 'active'
+    )
     const comingSoonLeagues = serializedLeagues.filter(league => league.status === 'coming_soon')
     
     return {
       leagues: serializedLeagues,
-      activeLeagues,
-      registrationOpenLeagues, 
+      currentSeasonLeagues,
       comingSoonLeagues,
       total: serializedLeagues.length,
-      activeCount: activeLeagues.length
+      currentCount: currentSeasonLeagues.length
     }
   } catch (error) {
     console.error('❌ Error fetching leagues data:', error)
     return {
       leagues: [],
-      activeLeagues: [],
-      registrationOpenLeagues: [],
+      currentSeasonLeagues: [],
       comingSoonLeagues: [],
       total: 0,
-      activeCount: 0,
+      currentCount: 0,
       error: error.message
     }
   }
