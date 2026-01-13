@@ -142,8 +142,8 @@ function LevelHelperModal({ isOpen, onClose, locale, colors, leagues, status }) 
   const sheetRef = useRef(null)
   const startYRef = useRef(0)
   
-  // Check if this is a past season
-  const isPastSeason = status === 'past'
+  // Check if this is a past or active season
+  const isActivePastSeason = status === 'active' || status === 'past'
   
   // Detect mobile vs desktop
   useEffect(() => {
@@ -206,7 +206,7 @@ function LevelHelperModal({ isOpen, onClose, locale, colors, leagues, status }) 
         intermediate: {
           title: 'Silver - Intermediate',
           points: [
-            'You\'ve played in leagues or tournaments',
+            'You\\'ve played in leagues or tournaments',
             'You play regularly',
             'You have consistent serves and groundstrokes'
           ]
@@ -305,7 +305,7 @@ function LevelHelperModal({ isOpen, onClose, locale, colors, leagues, status }) 
   if (typeof document === 'undefined') return null
   
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-end md:items-center justify-center md:p-4">
+    <div className=\"fixed inset-0 z-[9999] flex items-end md:items-center justify-center md:p-4\">
       {/* Backdrop */}
       <div 
         className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ease-out ${
@@ -336,28 +336,28 @@ function LevelHelperModal({ isOpen, onClose, locale, colors, leagues, status }) 
         {/* Drag Handle - mobile only */}
         {isMobile && (
           <div 
-            className="sticky top-0 bg-white pt-3 pb-2 cursor-grab active:cursor-grabbing z-10"
+            className=\"sticky top-0 bg-white pt-3 pb-2 cursor-grab active:cursor-grabbing z-10\"
             onMouseDown={handleDragStart}
             onTouchStart={handleDragStart}
           >
-            <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto" />
+            <div className=\"w-10 h-1 bg-gray-300 rounded-full mx-auto\" />
           </div>
         )}
         
         {/* Header */}
         <div className={`px-5 pb-3 flex items-center justify-between border-b border-gray-100 ${!isMobile ? 'pt-5' : ''}`}>
-          <h3 className="text-lg font-bold text-gray-900">{c.title}</h3>
+          <h3 className=\"text-lg font-bold text-gray-900\">{c.title}</h3>
           <button 
             onClick={handleCloseClick}
-            className="p-2 -mr-2 text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-gray-100"
+            className=\"p-2 -mr-2 text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-gray-100\"
           >
-            <X className="w-5 h-5" />
+            <X className=\"w-5 h-5\" />
           </button>
         </div>
         
         {/* Content */}
-        <div className="p-5 space-y-4 overflow-y-auto max-h-[calc(85vh-80px)]">
-          <p className="text-gray-600 text-sm">{c.intro}</p>
+        <div className=\"p-5 space-y-4 overflow-y-auto max-h-[calc(85vh-80px)]\">
+          <p className=\"text-gray-600 text-sm\">{c.intro}</p>
           
           {/* Level descriptions */}
           {['beginner', 'intermediate', 'advanced'].map((level) => {
@@ -369,9 +369,9 @@ function LevelHelperModal({ isOpen, onClose, locale, colors, leagues, status }) 
             
             const cardContent = (
               <>
-                <div className="flex items-center gap-2 mb-2">
+                <div className=\"flex items-center gap-2 mb-2\">
                   <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${config.gradient} flex items-center justify-center`}>
-                    <LevelIcon className="w-4 h-4 text-white" />
+                    <LevelIcon className=\"w-4 h-4 text-white\" />
                   </div>
                   <h4 className={`font-semibold ${config.text}`}>
                     {c.levels[level].title}
@@ -380,9 +380,9 @@ function LevelHelperModal({ isOpen, onClose, locale, colors, leagues, status }) 
                     <ChevronRight className={`w-4 h-4 ${config.text} opacity-50 ml-auto`} />
                   )}
                 </div>
-                <ul className="space-y-1.5 ml-10">
+                <ul className=\"space-y-1.5 ml-10\">
                   {c.levels[level].points.map((point, i) => (
-                    <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
+                    <li key={i} className=\"text-sm text-gray-600 flex items-start gap-2\">
                       <Check className={`w-4 h-4 ${colors.checkColor} flex-shrink-0 mt-0.5`} />
                       <span>{point}</span>
                     </li>
@@ -394,7 +394,9 @@ function LevelHelperModal({ isOpen, onClose, locale, colors, leagues, status }) 
             // If we have a league, make it clickable
             if (league && leagueSlug) {
               // Determine link based on status
-              const linkHref = isPastSeason
+              // Active/past leagues go to public league page
+              // Registration open leagues go to info/registration page
+              const linkHref = isActivePastSeason
                 ? `/${locale}/${citySlug}/liga/${leagueSlug}`
                 : `/${locale}/leagues/${citySlug}/info/${leagueSlug}`
               
@@ -419,13 +421,13 @@ function LevelHelperModal({ isOpen, onClose, locale, colors, leagues, status }) 
           })}
           
           {/* Tip */}
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-600">
+          <div className=\"bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-600\">
             {c.tip}
           </div>
         </div>
         
         {/* Safe area padding for iOS - mobile only */}
-        {isMobile && <div className="h-safe-area-inset-bottom bg-white" />}
+        {isMobile && <div className=\"h-safe-area-inset-bottom bg-white\" />}
       </div>
     </div>,
     document.body
@@ -449,9 +451,10 @@ function LevelOption({ league, locale, isRegistrationOpen, showSpots = false, co
   const isDark = colors.isDark
   
   // Determine the correct link based on status
-  // Past/completed leagues go to public league page
-  const isPastOrCompleted = status === 'past' || league.status === 'completed'
-  const linkHref = isPastOrCompleted
+  // Active/past/completed leagues go to public league page
+  // Registration open leagues go to info/registration page
+  const isActivePastOrCompleted = status === 'active' || status === 'past' || league.status === 'completed' || league.status === 'active'
+  const linkHref = isActivePastOrCompleted
     ? `/${locale}/${citySlug}/liga/${league.slug}`
     : `/${locale}/leagues/${citySlug}/info/${league.slug}`
   
@@ -477,7 +480,7 @@ function LevelOption({ league, locale, isRegistrationOpen, showSpots = false, co
         bg-gradient-to-br ${config.gradient} 
         flex items-center justify-center mb-2 shadow-md
       `}>
-        <LevelIcon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+        <LevelIcon className=\"w-6 h-6 sm:w-7 sm:h-7 text-white\" />
       </div>
       
       {/* Level Name */}
@@ -492,9 +495,9 @@ function LevelOption({ league, locale, isRegistrationOpen, showSpots = false, co
       
       {/* Spots indicator - only shown if showSpots is true */}
       {showSpots && isRegistrationOpen && (
-        <div className="mt-2 text-xs">
+        <div className=\"mt-2 text-xs\">
           {isFull ? (
-            <span className="text-red-400 font-medium">
+            <span className=\"text-red-400 font-medium\">
               {locale === 'es' ? 'Completo' : 'Full'}
             </span>
           ) : playerCount > 0 ? (
@@ -572,13 +575,13 @@ export default function SeasonLevelSelector({
               src={cityImage}
               alt={cityName}
               fill
-              className="object-cover"
+              className=\"object-cover\"
             />
           )}
           <div className={`absolute inset-0 ${colors.imageOverlay}`} />
           
           {/* Season Badge */}
-          <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
+          <div className=\"absolute top-3 left-3 sm:top-4 sm:left-4\">
             {isRegistrationOpen ? (
               <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 ${colors.badgeOpen} text-xs sm:text-sm font-semibold rounded-full shadow-lg`}>
                 <span className={`w-2 h-2 rounded-full animate-pulse ${variant === 'home' ? 'bg-parque-purple' : 'bg-white'}`} />
@@ -589,7 +592,7 @@ export default function SeasonLevelSelector({
                 {locale === 'es' ? 'En Curso' : 'In Progress'}
               </span>
             ) : status === 'past' ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-600 text-white text-xs sm:text-sm font-semibold rounded-full shadow-lg">
+              <span className=\"inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-600 text-white text-xs sm:text-sm font-semibold rounded-full shadow-lg\">
                 {locale === 'es' ? 'Temporada Pasada' : 'Past Season'}
               </span>
             ) : (
@@ -600,13 +603,13 @@ export default function SeasonLevelSelector({
           </div>
           
           {/* Season Title */}
-          <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4">
+          <div className=\"absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4\">
             <div className={`flex items-center gap-2 ${colors.textMuted} text-xs sm:text-sm mb-1`}>
-              <MapPin className="w-3.5 h-3.5" />
+              <MapPin className=\"w-3.5 h-3.5\" />
               <span>{cityName}</span>
             </div>
             <h3 className={`text-xl sm:text-2xl font-bold flex items-center gap-2 ${colors.textColor}`}>
-              <Calendar className="w-5 h-5 sm:w-6 sm:h-6" />
+              <Calendar className=\"w-5 h-5 sm:w-6 sm:h-6\" />
               {seasonName}
             </h3>
           </div>
@@ -615,7 +618,7 @@ export default function SeasonLevelSelector({
         {/* Level Selection Area */}
         <div className={`p-4 sm:p-5 ${colors.sectionBg}`}>
           {/* Header */}
-          <div className="flex items-center justify-between mb-4">
+          <div className=\"flex items-center justify-between mb-4\">
             <h4 className={`font-semibold ${colors.headerText}`}>
               {locale === 'es' ? 'Elige tu nivel' : 'Choose your level'}
             </h4>
@@ -623,7 +626,7 @@ export default function SeasonLevelSelector({
               onClick={() => setShowHelper(true)}
               className={`flex items-center gap-1 text-sm ${colors.isDark ? 'text-gray-400 hover:text-white' : colors.helpButton} transition-colors`}
             >
-              <HelpCircle className="w-4 h-4" />
+              <HelpCircle className=\"w-4 h-4\" />
               <span>
                 {locale === 'es' ? '¿Cuál elegir?' : 'Which one?'}
               </span>
@@ -631,7 +634,7 @@ export default function SeasonLevelSelector({
           </div>
           
           {/* Level Options Grid */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          <div className=\"grid grid-cols-3 gap-2 sm:gap-3\">
             {sortedLeagues.map(league => (
               <LevelOption 
                 key={league._id}
@@ -650,14 +653,14 @@ export default function SeasonLevelSelector({
             <div className={`mt-4 pt-4 border-t ${colors.footerBorder} flex items-center justify-between text-sm`}>
               <div className={`flex items-center gap-4 ${colors.footerText}`}>
                 {dateRange && (
-                  <div className="flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4" />
+                  <div className=\"flex items-center gap-1.5\">
+                    <Calendar className=\"w-4 h-4\" />
                     <span>{dateRange}</span>
                   </div>
                 )}
                 {showSpots && (
-                  <div className="flex items-center gap-1.5">
-                    <Users className="w-4 h-4" />
+                  <div className=\"flex items-center gap-1.5\">
+                    <Users className=\"w-4 h-4\" />
                     <span>
                       {isRegistrationOpen 
                         ? `${totalSpots - totalRegistered} ${locale === 'es' ? 'plazas' : 'spots'}`
