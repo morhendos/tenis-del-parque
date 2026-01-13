@@ -65,7 +65,7 @@ export default async function LeagueInfoPage({ params }) {
         language={language}
         showLanguageSwitcher={true}
         showBackButton={true}
-        backUrl={`/${locale}/${locale === 'es' ? 'ligas' : 'leagues'}/${citySlug}`}
+        backUrl={`/${locale}/leagues/${citySlug}`}
       />
       
       {/* SAME Hero component as city leagues page */}
