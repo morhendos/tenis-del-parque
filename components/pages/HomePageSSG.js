@@ -88,6 +88,7 @@ export default function HomePageSSG({ locale, leaguesData }) {
   
   // Group leagues by season for unified display
   const registrationOpenGroups = groupLeaguesBySeason(registrationOpenLeagues)
+  const activeGroups = groupLeaguesBySeason(activeLeagues)
   const comingSoonGroups = groupLeaguesBySeason(comingSoonLeagues)
   
   return (
@@ -209,7 +210,53 @@ export default function HomePageSSG({ locale, leaguesData }) {
                   </div>
                 )}
                 
-                {/* PRIORITY 2: Coming Soon Leagues */}
+                {/* PRIORITY 2: Active Leagues */}
+                {activeGroups.length > 0 && (
+                  <div className={registrationOpenGroups.length > 0 ? 'pt-6' : ''}>
+                    {registrationOpenGroups.length > 0 && (
+                      <div className="flex items-center justify-center gap-3 mb-4">
+                        <div className="h-px flex-1 max-w-[80px] bg-gradient-to-r from-transparent to-gray-200" />
+                        <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide">
+                          {validLocale === 'es' ? 'En Curso' : 'In Progress'}
+                        </h3>
+                        <div className="h-px flex-1 max-w-[80px] bg-gradient-to-l from-transparent to-gray-200" />
+                      </div>
+                    )}
+                    <div className="space-y-6">
+                      {activeGroups.map((group, index) => {
+                        const cityName = group.leagues[0]?.city?.name?.[validLocale] || group.leagues[0]?.city?.name?.es || ''
+                        return (
+                          <div key={`active-${index}`}>
+                            {registrationOpenGroups.length === 0 && (
+                              <h3 className="text-[0.9rem] sm:text-lg font-medium text-gray-600 mb-4 text-center flex items-center justify-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-green-600 animate-pulse" />
+                                {cityName}
+                              </h3>
+                            )}
+                            {group.leagues.length > 1 ? (
+                              <SeasonLevelSelector
+                                leagues={group.leagues}
+                                locale={validLocale}
+                                status="active"
+                                variant="default"
+                              />
+                            ) : (
+                              <div className="flex justify-center">
+                                <LeagueCard
+                                  league={group.leagues[0]}
+                                  content={content}
+                                  locale={validLocale}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+                
+                {/* PRIORITY 3: Coming Soon Leagues */}
                 {comingSoonGroups.length > 0 && (
                   <div className="pt-6">
                     <div className="flex items-center justify-center gap-3 mb-4">
