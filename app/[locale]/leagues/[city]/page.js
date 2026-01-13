@@ -98,40 +98,55 @@ export default async function CityLeaguePage({ params }) {
   // Convert MongoDB objects to plain objects and handle dates
   const plainLeagues = leaguesWithPlayerCounts.map(league => serializeLeague(league))
   
-  // Group by season status AND registration status
-  const now = new Date()
-  const grouped = {
-    registrationOpen: [], // Leagues with open registration - TOP PRIORITY
-    current: [],          // Active/in-progress leagues
-    upcoming: [],         // Coming soon (not yet open)
-    past: []              // Completed seasons
-  }
+  // Group leagues by season (year + type), keeping all skill levels together
+  const seasonGroups = {}
   
   plainLeagues.forEach(league => {
-    const start = league.seasonConfig?.startDate ? new Date(league.seasonConfig.startDate) : null
-    const end = league.seasonConfig?.endDate ? new Date(league.seasonConfig.endDate) : null
+    const seasonKey = `${league.season?.year || 'unknown'}-${league.season?.type || 'unknown'}`
     
-    // First check: is registration open?
-    if (league.status === 'registration_open') {
-      grouped.registrationOpen.push(league)
-      return
+    if (!seasonGroups[seasonKey]) {
+      seasonGroups[seasonKey] = {
+        year: league.season?.year,
+        type: league.season?.type,
+        leagues: [],
+        // Determine overall status for the season group
+        hasRegistrationOpen: false,
+        hasActive: false,
+        hasComingSoon: false
+      }
     }
     
-    // Then check time-based status
-    if (!start || !end) {
-      if (league.status === 'coming_soon') {
-        grouped.upcoming.push(league)
-      } else if (league.status === 'active') {
-        grouped.current.push(league)
-      } else {
-        grouped.past.push(league)
-      }
-    } else if (now >= start && now <= end) {
-      grouped.current.push(league)
-    } else if (now < start) {
-      grouped.upcoming.push(league)
+    seasonGroups[seasonKey].leagues.push(league)
+    
+    // Track statuses within this season
+    if (league.status === 'registration_open') seasonGroups[seasonKey].hasRegistrationOpen = true
+    if (league.status === 'active') seasonGroups[seasonKey].hasActive = true
+    if (league.status === 'coming_soon') seasonGroups[seasonKey].hasComingSoon = true
+  })
+  
+  // Convert to array and sort by year/type
+  const sortedSeasons = Object.values(seasonGroups).sort((a, b) => {
+    // Sort by year descending, then by season type
+    if (b.year !== a.year) return b.year - a.year
+    const seasonOrder = { spring: 1, summer: 2, autumn: 3, winter: 4 }
+    return (seasonOrder[a.type] || 0) - (seasonOrder[b.type] || 0)
+  })
+  
+  // Group seasons into current/upcoming/past based on their overall status
+  const grouped = {
+    current: [],    // Seasons with registration open or active leagues
+    upcoming: [],   // Seasons that are coming soon
+    past: []        // Completed seasons
+  }
+  
+  sortedSeasons.forEach(seasonGroup => {
+    // Determine if this season group should be in current, upcoming, or past
+    if (seasonGroup.hasRegistrationOpen || seasonGroup.hasActive) {
+      grouped.current.push(seasonGroup)
+    } else if (seasonGroup.hasComingSoon) {
+      grouped.upcoming.push(seasonGroup)
     } else {
-      grouped.past.push(league)
+      grouped.past.push(seasonGroup)
     }
   })
   
@@ -144,10 +159,13 @@ export default async function CityLeaguePage({ params }) {
   // Determine section titles based on what's available
   const getSectionTitle = (type) => {
     switch(type) {
-      case 'registrationOpen':
-        return locale === 'es' ? '¡Inscríbete Ahora!' : 'Join Now!'
       case 'current':
-        return locale === 'es' ? 'Temporada en Curso' : 'Current Season'
+        // Check if any season has registration open
+        const hasAnyRegistrationOpen = grouped.current.some(s => s.hasRegistrationOpen)
+        if (hasAnyRegistrationOpen) {
+          return locale === 'es' ? 'Temporada Actual' : 'Current Season'
+        }
+        return locale === 'es' ? 'Temporada en Curso' : 'Season in Progress'
       case 'upcoming':
         return locale === 'es' ? 'Próximamente' : 'Coming Soon'
       case 'past':
@@ -158,9 +176,9 @@ export default async function CityLeaguePage({ params }) {
   }
   
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className=\"min-h-screen bg-gray-50\">
       <Navigation 
-        currentPage="leagues" 
+        currentPage=\"leagues\" 
         language={locale}
         showLanguageSwitcher={true}
       />
@@ -168,61 +186,54 @@ export default async function CityLeaguePage({ params }) {
       <CityLeagueHero city={plainCity} locale={locale} />
       
       {/* Content container */}
-      <div className="container mx-auto px-4 py-6 sm:py-8 md:py-12 max-w-4xl">
-        {/* Registration Open - TOP PRIORITY */}
-        {grouped.registrationOpen.length > 0 && (
+      <div className=\"container mx-auto px-4 py-6 sm:py-8 md:py-12 max-w-4xl\">
+        {/* Current Season (includes registration open and active) */}
+        {grouped.current.length > 0 && grouped.current.map((seasonGroup, idx) => (
           <LeagueSeasonSection
-            title={getSectionTitle('registrationOpen')}
-            leagues={grouped.registrationOpen}
-            locale={locale}
-            status="upcoming"
-          />
-        )}
-        
-        {/* Current/Active Season */}
-        {grouped.current.length > 0 && (
-          <LeagueSeasonSection
+            key={`current-${idx}`}
             title={getSectionTitle('current')}
-            leagues={grouped.current}
+            leagues={seasonGroup.leagues}
             locale={locale}
-            status="current"
+            status=\"active\"
           />
-        )}
+        ))}
         
         {/* Coming Soon */}
-        {grouped.upcoming.length > 0 && (
+        {grouped.upcoming.length > 0 && grouped.upcoming.map((seasonGroup, idx) => (
           <LeagueSeasonSection
+            key={`upcoming-${idx}`}
             title={getSectionTitle('upcoming')}
-            leagues={grouped.upcoming}
+            leagues={seasonGroup.leagues}
             locale={locale}
-            status="upcoming"
+            status=\"upcoming\"
           />
-        )}
+        ))}
         
         {/* Past Seasons - Collapsible */}
-        {grouped.past.length > 0 && (
+        {grouped.past.length > 0 && grouped.past.map((seasonGroup, idx) => (
           <LeagueSeasonSection
+            key={`past-${idx}`}
             title={getSectionTitle('past')}
-            leagues={grouped.past}
+            leagues={seasonGroup.leagues}
             locale={locale}
-            status="past"
+            status=\"past\"
             collapsible
           />
-        )}
+        ))}
         
         {/* Empty State */}
         {plainLeagues.length === 0 && (
-          <div className="text-center py-12 sm:py-16">
-            <div className="w-16 h-16 mx-auto mb-4 text-gray-300">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M8 12h8M12 8v8" strokeLinecap="round" />
+          <div className=\"text-center py-12 sm:py-16\">
+            <div className=\"w-16 h-16 mx-auto mb-4 text-gray-300\">
+              <svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" strokeWidth=\"1.5\">
+                <circle cx=\"12\" cy=\"12\" r=\"10\" />
+                <path d=\"M8 12h8M12 8v8\" strokeLinecap=\"round\" />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            <h3 className=\"text-xl font-semibold text-gray-900 mb-2\">
               {locale === 'es' ? 'Próximamente' : 'Coming Soon'}
             </h3>
-            <p className="text-gray-600">
+            <p className=\"text-gray-600\">
               {locale === 'es' 
                 ? 'Estamos preparando ligas para esta ciudad. ¡Vuelve pronto!' 
                 : 'We are preparing leagues for this city. Check back soon!'}
