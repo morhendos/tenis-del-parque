@@ -105,7 +105,7 @@ const skillLevelConfig = {
 }
 
 const seasonTypeNames = {
-  es: { spring: 'Primavera', summer: 'Verano', autumn: 'Otoño', winter: 'Invierno', annual: 'Anual' },
+  es: { spring: 'Primavera', summer: 'Verano', autumn: 'Oto\u00f1o', winter: 'Invierno', annual: 'Anual' },
   en: { spring: 'Spring', summer: 'Summer', autumn: 'Autumn', winter: 'Winter', annual: 'Annual' }
 }
 
@@ -161,8 +161,8 @@ function LevelHelperModal({ isOpen, onClose, locale, colors, leagues, status }) 
   
   const content = {
     es: {
-      title: '¿Qué nivel elegir?',
-      intro: 'Elige según tu experiencia en tenis competitivo:',
+      title: '\u00bfQu\u00e9 nivel elegir?',
+      intro: 'Elige seg\u00fan tu experiencia en tenis competitivo:',
       levels: {
         beginner: {
           title: 'Bronce - Principiante',
@@ -184,12 +184,12 @@ function LevelHelperModal({ isOpen, onClose, locale, colors, leagues, status }) 
           title: 'Oro - Avanzado',
           points: [
             'Dominas a nivel recreativo',
-            'Múltiples temporadas competitivas',
+            'M\u00faltiples temporadas competitivas',
             'Buscas partidos de alto nivel'
           ]
         }
       },
-      tip: '💡 Si tienes dudas, empieza en el nivel inferior. ¡Siempre puedes subir en la siguiente temporada!'
+      tip: '\ud83d\udca1 Si tienes dudas, empieza en el nivel inferior. \u00a1Siempre puedes subir en la siguiente temporada!'
     },
     en: {
       title: 'Which level to choose?',
@@ -206,7 +206,7 @@ function LevelHelperModal({ isOpen, onClose, locale, colors, leagues, status }) 
         intermediate: {
           title: 'Silver - Intermediate',
           points: [
-            'You\\'ve played in leagues or tournaments',
+            "You've played in leagues or tournaments",
             'You play regularly',
             'You have consistent serves and groundstrokes'
           ]
@@ -220,7 +220,7 @@ function LevelHelperModal({ isOpen, onClose, locale, colors, leagues, status }) 
           ]
         }
       },
-      tip: '💡 If unsure, start at the lower level. You can always move up next season!'
+      tip: '\ud83d\udca1 If unsure, start at the lower level. You can always move up next season!'
     }
   }
   
@@ -585,7 +585,7 @@ export default function SeasonLevelSelector({
             {isRegistrationOpen ? (
               <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 ${colors.badgeOpen} text-xs sm:text-sm font-semibold rounded-full shadow-lg`}>
                 <span className={`w-2 h-2 rounded-full animate-pulse ${variant === 'home' ? 'bg-parque-purple' : 'bg-white'}`} />
-                {locale === 'es' ? 'Inscripción Abierta' : 'Registration Open'}
+                {locale === 'es' ? 'Inscripci\u00f3n Abierta' : 'Registration Open'}
               </span>
             ) : status === 'current' ? (
               <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 ${colors.badgeCurrent} text-white text-xs sm:text-sm font-semibold rounded-full shadow-lg`}>
@@ -597,7 +597,7 @@ export default function SeasonLevelSelector({
               </span>
             ) : (
               <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 ${colors.badgeComingSoon} text-white text-xs sm:text-sm font-semibold rounded-full shadow-lg`}>
-                {locale === 'es' ? 'Próximamente' : 'Coming Soon'}
+                {locale === 'es' ? 'Pr\u00f3ximamente' : 'Coming Soon'}
               </span>
             )}
           </div>
@@ -628,7 +628,7 @@ export default function SeasonLevelSelector({
             >
               <HelpCircle className=\"w-4 h-4\" />
               <span>
-                {locale === 'es' ? '¿Cuál elegir?' : 'Which one?'}
+                {locale === 'es' ? '\u00bfCu\u00e1l elegir?' : 'Which one?'}
               </span>
             </button>
           </div>
@@ -674,7 +674,7 @@ export default function SeasonLevelSelector({
                 <div className={`font-semibold ${colors.priceText}`}>
                   {isFree 
                     ? (locale === 'es' ? 'Gratis' : 'Free')
-                    : `${price}€`
+                    : `${price}\u20ac`
                   }
                 </div>
               )}
