@@ -197,6 +197,47 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
     }
   }
 
+  const handleUnschedule = async (match) => {
+    try {
+      const response = await fetch('/api/player/matches/unschedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ matchId: match._id })
+      })
+      
+      const result = await response.json()
+      
+      if (response.ok) {
+        setPlayerMatches(prevMatches => 
+          prevMatches.map(m => {
+            if (m._id === match._id) {
+              return {
+                ...m,
+                schedule: {
+                  ...m.schedule,
+                  confirmedDate: null,
+                  venue: null,
+                  court: null,
+                  time: null,
+                  notes: null
+                },
+                scheduledDate: null
+              }
+            }
+            return m
+          })
+        )
+        
+        toast.success(language === 'es' ? 'Partido desprogramado' : 'Match unscheduled')
+      } else {
+        toast.error(result.error || (language === 'es' ? 'Error al desprogramar partido' : 'Failed to unschedule match'))
+      }
+    } catch (error) {
+      console.error('Error unscheduling match:', error)
+      toast.error(language === 'es' ? 'Error al desprogramar partido' : 'Error unscheduling match')
+    }
+  }
+
   const roundMatches = getCurrentRoundMatches()
   const availableRounds = getAvailableRounds()
 
@@ -283,6 +324,7 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
               onSchedule={match.isPlayerMatch ? handleSchedule : undefined}
               onResult={match.isPlayerMatch ? handleResult : undefined}
               onWhatsApp={match.isPlayerMatch ? handleWhatsApp : undefined}
+              onUnschedule={match.isPlayerMatch ? handleUnschedule : undefined}
               isUpcoming={true}
               showActions={match.isPlayerMatch && !isPublic}
               isPublic={!match.isPlayerMatch || isPublic}
