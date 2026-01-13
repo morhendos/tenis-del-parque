@@ -363,6 +363,7 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
           }}
           onSubmitResult={handleSubmitResult}
           onSubmitSchedule={handleSubmitSchedule}
+          onUnschedule={handleUnschedule}
           isEditingSchedule={isEditingSchedule}
         />
       )}

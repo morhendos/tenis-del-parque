@@ -11,6 +11,7 @@ export function MatchModals({
   onCloseSchedule,
   onSubmitResult,
   onSubmitSchedule,
+  onUnschedule,
   isEditingSchedule = false
 }) {
   // Venue options by city
@@ -721,6 +722,29 @@ export function MatchModals({
                     rows="3"
                     placeholder={language === 'es' ? 'Información adicional...' : 'Additional information...'}
                   />
+                </div>
+              )}
+              
+              {/* Unschedule Button - Only show when editing */}
+              {isEditingSchedule && (
+                <div className="pt-2 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm(language === 'es' 
+                        ? '¿Estás seguro de que quieres desprogramar este partido? Esta acción no se puede deshacer.' 
+                        : 'Are you sure you want to unschedule this match? This cannot be undone.')) {
+                        onUnschedule && onUnschedule(selectedMatch)
+                        onCloseSchedule()
+                      }
+                    }}
+                    className="w-full py-2.5 text-red-600 hover:text-red-700 font-medium flex items-center justify-center gap-2 transition-colors border border-red-200 rounded-xl hover:bg-red-50"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    {language === 'es' ? 'Desprogramar Partido' : 'Unschedule Match'}
+                  </button>
                 </div>
               )}
               
