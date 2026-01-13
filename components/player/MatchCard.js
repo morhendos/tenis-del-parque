@@ -8,6 +8,7 @@ export default function MatchCard({
   onSchedule, 
   onResult,
   onWhatsApp,
+  onUnschedule,
   isUpcoming = true,
   showActions = true,
   isPublic = false,
@@ -253,7 +254,7 @@ export default function MatchCard({
           )}
 
           {/* Action buttons - Compact */}
-          <div className="grid grid-cols-3 gap-2 pt-2">
+          <div className={`grid ${isScheduled ? 'grid-cols-4' : 'grid-cols-3'} gap-2 pt-2`}>
             <button
               onClick={(e) => {
                 e.stopPropagation()
@@ -272,6 +273,26 @@ export default function MatchCard({
                 ? (language === 'es' ? 'Cambiar' : 'Change')
                 : (language === 'es' ? 'Fecha' : 'Schedule')}
             </button>
+            
+            {/* Unschedule button - only shown when match is scheduled */}
+            {isScheduled && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (window.confirm(language === 'es' 
+                    ? '¿Estás seguro de que quieres desprogramar este partido?' 
+                    : 'Are you sure you want to unschedule this match?')) {
+                    onUnschedule && onUnschedule(match)
+                  }
+                }}
+                className="bg-red-500 hover:bg-red-600 text-white px-2 py-1.5 rounded text-[10px] font-medium transition-all flex items-center justify-center gap-1"
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                {language === 'es' ? 'Borrar' : 'Clear'}
+              </button>
+            )}
             
             <button
               onClick={(e) => {
