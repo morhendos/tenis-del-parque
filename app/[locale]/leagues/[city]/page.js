@@ -176,9 +176,9 @@ export default async function CityLeaguePage({ params }) {
   }
   
   return (
-    <div className=\"min-h-screen bg-gray-50\">
+    <div className="min-h-screen bg-gray-50">
       <Navigation 
-        currentPage=\"leagues\" 
+        currentPage="leagues" 
         language={locale}
         showLanguageSwitcher={true}
       />
@@ -186,7 +186,7 @@ export default async function CityLeaguePage({ params }) {
       <CityLeagueHero city={plainCity} locale={locale} />
       
       {/* Content container */}
-      <div className=\"container mx-auto px-4 py-6 sm:py-8 md:py-12 max-w-4xl\">
+      <div className="container mx-auto px-4 py-6 sm:py-8 md:py-12 max-w-4xl">
         {/* Current Season (includes registration open and active) */}
         {grouped.current.length > 0 && grouped.current.map((seasonGroup, idx) => (
           <LeagueSeasonSection
@@ -194,7 +194,7 @@ export default async function CityLeaguePage({ params }) {
             title={getSectionTitle('current')}
             leagues={seasonGroup.leagues}
             locale={locale}
-            status=\"active\"
+            status="active"
           />
         ))}
         
@@ -205,7 +205,7 @@ export default async function CityLeaguePage({ params }) {
             title={getSectionTitle('upcoming')}
             leagues={seasonGroup.leagues}
             locale={locale}
-            status=\"upcoming\"
+            status="upcoming"
           />
         ))}
         
@@ -216,24 +216,24 @@ export default async function CityLeaguePage({ params }) {
             title={getSectionTitle('past')}
             leagues={seasonGroup.leagues}
             locale={locale}
-            status=\"past\"
+            status="past"
             collapsible
           />
         ))}
         
         {/* Empty State */}
         {plainLeagues.length === 0 && (
-          <div className=\"text-center py-12 sm:py-16\">
-            <div className=\"w-16 h-16 mx-auto mb-4 text-gray-300\">
-              <svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" strokeWidth=\"1.5\">
-                <circle cx=\"12\" cy=\"12\" r=\"10\" />
-                <path d=\"M8 12h8M12 8v8\" strokeLinecap=\"round\" />
+          <div className="text-center py-12 sm:py-16">
+            <div className="w-16 h-16 mx-auto mb-4 text-gray-300">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M8 12h8M12 8v8" strokeLinecap="round" />
               </svg>
             </div>
-            <h3 className=\"text-xl font-semibold text-gray-900 mb-2\">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
               {locale === 'es' ? 'Próximamente' : 'Coming Soon'}
             </h3>
-            <p className=\"text-gray-600\">
+            <p className="text-gray-600">
               {locale === 'es' 
                 ? 'Estamos preparando ligas para esta ciudad. ¡Vuelve pronto!' 
                 : 'We are preparing leagues for this city. Check back soon!'}
