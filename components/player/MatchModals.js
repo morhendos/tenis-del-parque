@@ -55,6 +55,7 @@ export function MatchModals({
   const [submitting, setSubmitting] = useState(false)
   const [validationErrors, setValidationErrors] = useState({})
   const [formError, setFormError] = useState('')
+  const [showNotes, setShowNotes] = useState(false)
   
   // Refs for auto-focus functionality
   const inputRefs = useRef({})
@@ -99,6 +100,7 @@ export function MatchModals({
     if (!showScheduleModal) {
       setScheduleForm({ date: '', time: '', venue: '', customVenue: '', court: '', notes: '' })
       setFormError('')
+      setShowNotes(false)
     } else if (showScheduleModal && isEditingSchedule && selectedMatch) {
       // Prefill form with existing schedule data when editing
       const schedule = selectedMatch.schedule || {}
@@ -119,6 +121,11 @@ export function MatchModals({
         court: schedule.court || (schedule.courtNumber ? `${language === 'es' ? 'Pista' : 'Court'} ${schedule.courtNumber}` : ''),
         notes: schedule.notes || ''
       })
+      
+      // Show notes section if there are existing notes
+      if (schedule.notes) {
+        setShowNotes(true)
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showScheduleModal, isEditingSchedule, selectedMatch, language])
@@ -385,7 +392,7 @@ export function MatchModals({
       {/* Result Modal - Mobile Optimized */}
       {showResultModal && selectedMatch && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4">
-          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-md p-6 pb-24 sm:pb-6 max-h-[90vh] overflow-y-auto animate-slide-up-mobile sm:animate-fade-in">
+          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-md p-6 pb-24 sm:pb-6 max-h-[95vh] overflow-y-auto animate-slide-up-mobile sm:animate-fade-in">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900">
                 {language === 'es' ? 'Reportar Resultado' : 'Report Result'}
@@ -531,7 +538,7 @@ export function MatchModals({
       {/* Schedule Modal - Mobile Optimized */}
       {showScheduleModal && selectedMatch && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4">
-          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-md p-6 pb-24 sm:pb-6 max-h-[90vh] overflow-y-auto animate-slide-up-mobile sm:animate-fade-in">
+          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-md p-6 pb-24 sm:pb-6 max-h-[95vh] overflow-y-auto animate-slide-up-mobile sm:animate-fade-in">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900">
                 {isEditingSchedule 
@@ -570,9 +577,9 @@ export function MatchModals({
               </div>
             )}
             
-            <form onSubmit={handleScheduleMatch} className="space-y-4">
+            <form onSubmit={handleScheduleMatch} className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   {language === 'es' ? 'Fecha' : 'Date'}
                 </label>
                 <input
@@ -583,12 +590,12 @@ export function MatchModals({
                     setFormError('')
                   }}
                   min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-parque-purple focus:ring-1 focus:ring-parque-purple"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-parque-purple focus:ring-1 focus:ring-parque-purple"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   {language === 'es' ? 'Hora' : 'Time'}
                 </label>
                 <input
@@ -598,12 +605,12 @@ export function MatchModals({
                     setScheduleForm({...scheduleForm, time: e.target.value})
                     setFormError('')
                   }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-parque-purple focus:ring-1 focus:ring-parque-purple"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-parque-purple focus:ring-1 focus:ring-parque-purple"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   {language === 'es' ? 'Lugar' : 'Venue'}
                 </label>
                 {venueOptions ? (
@@ -616,7 +623,7 @@ export function MatchModals({
                           setScheduleForm({...scheduleForm, venue: e.target.value, customVenue: ''})
                           setFormError('')
                         }}
-                        className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-xl focus:outline-none focus:border-parque-purple focus:ring-1 focus:ring-parque-purple bg-white appearance-none cursor-pointer"
+                        className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-xl focus:outline-none focus:border-parque-purple focus:ring-1 focus:ring-parque-purple bg-white appearance-none cursor-pointer"
                         required
                       >
                         <option value="">{language === 'es' ? 'Seleccionar lugar...' : 'Select venue...'}</option>
@@ -638,7 +645,7 @@ export function MatchModals({
                           setScheduleForm({...scheduleForm, customVenue: e.target.value})
                           setFormError('')
                         }}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-parque-purple focus:ring-1 focus:ring-parque-purple mt-2"
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-parque-purple focus:ring-1 focus:ring-parque-purple mt-2"
                         placeholder={language === 'es' ? 'Nombre del lugar...' : 'Venue name...'}
                         required
                       />
@@ -653,14 +660,14 @@ export function MatchModals({
                       setScheduleForm({...scheduleForm, venue: e.target.value})
                       setFormError('')
                     }}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-parque-purple focus:ring-1 focus:ring-parque-purple"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-parque-purple focus:ring-1 focus:ring-parque-purple"
                     placeholder={language === 'es' ? 'Ej: Club Deportivo' : 'Ex: Sports Club'}
                     required
                   />
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   {language === 'es' ? 'Cancha' : 'Court'}
                 </label>
                 <input
@@ -670,26 +677,54 @@ export function MatchModals({
                     setScheduleForm({...scheduleForm, court: e.target.value})
                     setFormError('')
                   }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-parque-purple focus:ring-1 focus:ring-parque-purple"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-parque-purple focus:ring-1 focus:ring-parque-purple"
                   placeholder={language === 'es' ? 'Ej: Cancha 1' : 'Ex: Court 1'}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {language === 'es' ? 'Notas' : 'Notes'}
-                </label>
-                <textarea
-                  value={scheduleForm.notes}
-                  onChange={(e) => {
-                    setScheduleForm({...scheduleForm, notes: e.target.value})
-                    setFormError('')
-                  }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-parque-purple focus:ring-1 focus:ring-parque-purple resize-none"
-                  rows="3"
-                  placeholder={language === 'es' ? 'Información adicional...' : 'Additional information...'}
-                />
-              </div>
-              <div className="flex gap-3 pt-4">
+              
+              {/* Notes Section - Collapsible */}
+              {!showNotes ? (
+                <button
+                  type="button"
+                  onClick={() => setShowNotes(true)}
+                  className="w-full py-2 text-sm text-parque-purple hover:text-purple-700 font-medium flex items-center justify-center gap-1 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  {language === 'es' ? 'Agregar notas (opcional)' : 'Add notes (optional)'}
+                </button>
+              ) : (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      {language === 'es' ? 'Notas' : 'Notes'}
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowNotes(false)
+                        setScheduleForm({...scheduleForm, notes: ''})
+                      }}
+                      className="text-xs text-gray-400 hover:text-gray-600"
+                    >
+                      {language === 'es' ? 'Quitar' : 'Remove'}
+                    </button>
+                  </div>
+                  <textarea
+                    value={scheduleForm.notes}
+                    onChange={(e) => {
+                      setScheduleForm({...scheduleForm, notes: e.target.value})
+                      setFormError('')
+                    }}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-parque-purple focus:ring-1 focus:ring-parque-purple resize-none"
+                    rows="3"
+                    placeholder={language === 'es' ? 'Información adicional...' : 'Additional information...'}
+                  />
+                </div>
+              )}
+              
+              <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={onCloseSchedule}
