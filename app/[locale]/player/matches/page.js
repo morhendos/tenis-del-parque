@@ -28,6 +28,7 @@ export default function PlayerMatches() {
   const [isWinner, setIsWinner] = useState(false)
   const [selectedLeagueId, setSelectedLeagueId] = useState(null) // For multi-league filtering
   const [openRankData, setOpenRankData] = useState({}) // OpenRank positions by player ID
+  const [extensionsRemaining, setExtensionsRemaining] = useState(3) // Extensions per season
   const router = useRouter()
 
   useEffect(() => {
@@ -35,6 +36,20 @@ export default function PlayerMatches() {
     fetchPlayerData()
     fetchOpenRankData()
   }, [])
+
+  // Fetch extensions remaining when player data changes
+  useEffect(() => {
+    if (player?.registrations?.length > 0) {
+      // Get the first registration's extensions (or the selected league's)
+      const registration = selectedLeagueId 
+        ? player.registrations.find(r => r.league?._id === selectedLeagueId || r.league === selectedLeagueId)
+        : player.registrations[0]
+      
+      if (registration?.extensions) {
+        setExtensionsRemaining(registration.extensions.total - registration.extensions.used)
+      }
+    }
+  }, [player, selectedLeagueId])
 
   const fetchLeaguePlayers = useCallback(async () => {
     if (!player?.league?._id) return
@@ -211,11 +226,13 @@ export default function PlayerMatches() {
                   ...match.schedule,
                   confirmedDate: new Date(`${data.date}T${data.time}`).toISOString(),
                   venue: data.venue,
+                  club: data.venue,
                   court: data.court,
                   time: data.time,
                   notes: data.notes
                 },
-                scheduledDate: new Date(`${data.date}T${data.time}`).toISOString()
+                scheduledDate: new Date(`${data.date}T${data.time}`).toISOString(),
+                notes: data.notes
               }
             }
             return match
@@ -234,6 +251,51 @@ export default function PlayerMatches() {
     } catch (error) {
       console.error('Error scheduling match:', error)
       toast.error(locale === 'es' ? 'Error al programar partido' : 'Error scheduling match')
+    }
+  }
+
+  const handleUnschedule = async (match) => {
+    try {
+      const response = await fetch('/api/player/matches/unschedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ matchId: match._id })
+      })
+      
+      const result = await response.json()
+      
+      if (response.ok) {
+        // Optimistically update the match in state
+        setMatches(prevMatches => 
+          prevMatches.map(m => {
+            if (m._id === match._id) {
+              return {
+                ...m,
+                schedule: {
+                  ...m.schedule,
+                  confirmedDate: null,
+                  venue: null,
+                  club: null,
+                  court: null,
+                  time: null,
+                  notes: null
+                },
+                scheduledDate: null,
+                notes: null
+              }
+            }
+            return m
+          })
+        )
+        
+        setShowScheduleModal(false)
+        toast.success(locale === 'es' ? 'Partido desprogramado' : 'Match unscheduled')
+      } else {
+        toast.error(result.error || (locale === 'es' ? 'Error al desprogramar partido' : 'Failed to unschedule match'))
+      }
+    } catch (error) {
+      console.error('Error unscheduling match:', error)
+      toast.error(locale === 'es' ? 'Error al desprogramar partido' : 'Error unscheduling match')
     }
   }
 
@@ -583,6 +645,7 @@ export default function PlayerMatches() {
           selectedMatch={selectedMatch}
           player={player}
           language={locale}
+          league={selectedMatch?.league}
           onCloseResult={() => setShowResultModal(false)}
           onCloseSchedule={() => {
             setShowScheduleModal(false)
@@ -590,6 +653,7 @@ export default function PlayerMatches() {
           }}
           onSubmitResult={handleSubmitResult}
           onSubmitSchedule={handleSubmitSchedule}
+          onUnschedule={handleUnschedule}
           isEditingSchedule={isEditingSchedule}
         />
 

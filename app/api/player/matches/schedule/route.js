@@ -82,14 +82,14 @@ export async function POST(request) {
       ...match.schedule,
       confirmedDate: datetime,
       club: venue,
+      venue: venue, // Store in both club and venue for compatibility
       court: court || '',
-      time: time
+      time: time,
+      notes: notes || ''
     }
     
-    // Add notes if provided
-    if (notes) {
-      match.notes = notes
-    }
+    // Also store notes at match level for backward compatibility
+    match.notes = notes || null
 
     await match.save()
     

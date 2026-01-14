@@ -142,6 +142,9 @@ function LevelHelperModal({ isOpen, onClose, locale, colors, leagues, status }) 
   const sheetRef = useRef(null)
   const startYRef = useRef(0)
   
+  // Check if this is a past or active season
+  const isActivePastSeason = status === 'active' || status === 'past'
+  
   // Detect mobile vs desktop
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)

@@ -16,6 +16,7 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
   const [showResultCard, setShowResultCard] = useState(false)
   const [submittedMatch, setSubmittedMatch] = useState(null)
   const [isWinner, setIsWinner] = useState(false)
+  const [extensionsRemaining, setExtensionsRemaining] = useState(3)
 
   // Show all matches (including completed ones)
   const allSchedule = schedule || []
@@ -37,10 +38,30 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
       }
     }
 
+    const fetchExtensionsStatus = async () => {
+      if (!league?._id) return
+      try {
+        const response = await fetch('/api/player/profile')
+        if (response.ok) {
+          const data = await response.json()
+          // Find registration for this league
+          const registration = data.player?.registrations?.find(
+            reg => reg.league?._id === league._id || reg.league === league._id
+          )
+          if (registration?.extensions) {
+            setExtensionsRemaining(registration.extensions.total - registration.extensions.used)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching extensions status:', error)
+      }
+    }
+
     if (player && !isPublic) {
       fetchPlayerMatches()
+      fetchExtensionsStatus()
     }
-  }, [player, isPublic])
+  }, [player, isPublic, league])
 
   const getCurrentRoundMatches = () => {
     const allMatches = allSchedule.filter(match => match.round === currentRound)
@@ -171,11 +192,13 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
                   ...match.schedule,
                   confirmedDate: new Date(`${data.date}T${data.time}`).toISOString(),
                   venue: data.venue,
+                  club: data.venue,
                   court: data.court,
                   time: data.time,
                   notes: data.notes
                 },
-                scheduledDate: new Date(`${data.date}T${data.time}`).toISOString()
+                scheduledDate: new Date(`${data.date}T${data.time}`).toISOString(),
+                notes: data.notes
               }
             }
             return match
@@ -217,11 +240,13 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
                   ...m.schedule,
                   confirmedDate: null,
                   venue: null,
+                  club: null,
                   court: null,
                   time: null,
                   notes: null
                 },
-                scheduledDate: null
+                scheduledDate: null,
+                notes: null
               }
             }
             return m
@@ -235,6 +260,46 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
     } catch (error) {
       console.error('Error unscheduling match:', error)
       toast.error(language === 'es' ? 'Error al desprogramar partido' : 'Error unscheduling match')
+    }
+  }
+
+  const handleExtend = async (match) => {
+    try {
+      const response = await fetch('/api/player/matches/extend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ matchId: match._id })
+      })
+      
+      const result = await response.json()
+      
+      if (response.ok) {
+        // Update the match deadline in local state
+        setPlayerMatches(prevMatches => 
+          prevMatches.map(m => {
+            if (m._id === match._id) {
+              return {
+                ...m,
+                schedule: {
+                  ...m.schedule,
+                  deadline: result.newDeadline
+                }
+              }
+            }
+            return m
+          })
+        )
+        
+        // Update extensions remaining
+        setExtensionsRemaining(result.extensionsRemaining)
+        
+        toast.success(language === 'es' ? 'Límite extendido 7 días' : 'Deadline extended by 7 days')
+      } else {
+        toast.error(result.error || (language === 'es' ? 'Error al extender límite' : 'Failed to extend deadline'))
+      }
+    } catch (error) {
+      console.error('Error extending deadline:', error)
+      toast.error(language === 'es' ? 'Error al extender límite' : 'Error extending deadline')
     }
   }
 
@@ -325,6 +390,8 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
               onResult={match.isPlayerMatch ? handleResult : undefined}
               onWhatsApp={match.isPlayerMatch ? handleWhatsApp : undefined}
               onUnschedule={match.isPlayerMatch ? handleUnschedule : undefined}
+              onExtend={match.isPlayerMatch ? handleExtend : undefined}
+              extensionsRemaining={extensionsRemaining}
               isUpcoming={true}
               showActions={match.isPlayerMatch && !isPublic}
               isPublic={!match.isPlayerMatch || isPublic}

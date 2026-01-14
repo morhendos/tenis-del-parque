@@ -134,6 +134,8 @@ export async function POST(request) {
 
     // Create the matches in the database
     const createdMatches = []
+    const deadlineDate = new Date()
+    deadlineDate.setDate(deadlineDate.getDate() + 7) // 7 days from now
     
     for (const pairing of result.pairings) {
       const match = new Match({
@@ -143,6 +145,9 @@ export async function POST(request) {
         players: {
           player1: pairing.player1._id,
           player2: pairing.player2._id
+        },
+        schedule: {
+          deadline: deadlineDate
         },
         status: 'scheduled',
         createdBy: 'Swiss Pairing System',

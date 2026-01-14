@@ -9,6 +9,8 @@ export default function MatchCard({
   onResult,
   onWhatsApp,
   onUnschedule,
+  onExtend,
+  extensionsRemaining = 3,
   isUpcoming = true,
   showActions = true,
   isPublic = false,
@@ -17,6 +19,7 @@ export default function MatchCard({
   className = ''
 }) {
   const [isExpanded, setIsExpanded] = useState(false)
+  const [extending, setExtending] = useState(false)
   
   const getOpponent = () => {
     if (!player) return null
@@ -28,6 +31,100 @@ export default function MatchCard({
   const getMatchResult = () => {
     if (!player || !match.result || !match.result.winner) return null
     return match.result.winner === player._id ? 'won' : 'lost'
+  }
+
+  // Calculate deadline status
+  const getDeadlineStatus = () => {
+    const deadline = match.schedule?.deadline
+    if (!deadline) return null
+    
+    const now = new Date()
+    const deadlineDate = new Date(deadline)
+    const diffMs = deadlineDate - now
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
+    const diffHours = Math.ceil(diffMs / (1000 * 60 * 60))
+    
+    if (diffMs < 0) {
+      // Overdue
+      const overdueDays = Math.abs(diffDays)
+      return {
+        status: 'overdue',
+        text: language === 'es' 
+          ? `Vencido hace ${overdueDays} día${overdueDays !== 1 ? 's' : ''}` 
+          : `Overdue by ${overdueDays} day${overdueDays !== 1 ? 's' : ''}`,
+        shortText: language === 'es' ? 'Vencido' : 'Overdue',
+        color: 'red',
+        urgent: true,
+        daysRemaining: -overdueDays
+      }
+    } else if (diffHours <= 24) {
+      // Less than 24 hours
+      return {
+        status: 'critical',
+        text: language === 'es' 
+          ? `${diffHours} hora${diffHours !== 1 ? 's' : ''} restante${diffHours !== 1 ? 's' : ''}` 
+          : `${diffHours} hour${diffHours !== 1 ? 's' : ''} left`,
+        shortText: language === 'es' ? 'Hoy' : 'Today',
+        color: 'red',
+        urgent: true,
+        daysRemaining: 0
+      }
+    } else if (diffDays <= 2) {
+      // 1-2 days
+      return {
+        status: 'warning',
+        text: language === 'es' 
+          ? `${diffDays} día${diffDays !== 1 ? 's' : ''} restante${diffDays !== 1 ? 's' : ''}` 
+          : `${diffDays} day${diffDays !== 1 ? 's' : ''} left`,
+        shortText: `${diffDays}d`,
+        color: 'orange',
+        urgent: true,
+        daysRemaining: diffDays
+      }
+    } else if (diffDays <= 3) {
+      // 3 days
+      return {
+        status: 'soon',
+        text: language === 'es' 
+          ? `${diffDays} días restantes` 
+          : `${diffDays} days left`,
+        shortText: `${diffDays}d`,
+        color: 'yellow',
+        urgent: false,
+        daysRemaining: diffDays
+      }
+    } else {
+      // More than 3 days
+      return {
+        status: 'ok',
+        text: deadlineDate.toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
+          month: 'short',
+          day: 'numeric'
+        }),
+        shortText: `${diffDays}d`,
+        color: 'gray',
+        urgent: false,
+        daysRemaining: diffDays
+      }
+    }
+  }
+
+  const handleExtend = async (e) => {
+    e.stopPropagation()
+    if (extending || extensionsRemaining <= 0) return
+    
+    const confirmMsg = language === 'es'
+      ? `¿Usar 1 de tus ${extensionsRemaining} extensiones para añadir 7 días al límite?`
+      : `Use 1 of your ${extensionsRemaining} extensions to add 7 days to the deadline?`
+    
+    if (!window.confirm(confirmMsg)) return
+    
+    setExtending(true)
+    try {
+      await onExtend(match)
+    } finally {
+      setExtending(false)
+    }
   }
 
   const formatDateForDisplay = (date) => {
@@ -101,6 +198,9 @@ export default function MatchCard({
 
   // Check if match has been scheduled
   const isScheduled = !!(match.schedule?.confirmedDate || match.schedule?.venue || match.scheduledDate)
+  
+  // Get deadline status
+  const deadlineStatus = getDeadlineStatus()
 
   return (
     <div 
@@ -166,6 +266,20 @@ export default function MatchCard({
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* Deadline indicator - show when upcoming and not scheduled */}
+            {isUpcoming && !isScheduled && deadlineStatus && !isPublic && (
+              <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                deadlineStatus.color === 'red' ? 'bg-red-100 text-red-700' :
+                deadlineStatus.color === 'orange' ? 'bg-orange-100 text-orange-700' :
+                deadlineStatus.color === 'yellow' ? 'bg-yellow-100 text-yellow-700' :
+                'bg-gray-100 text-gray-600'
+              }`}>
+                <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {deadlineStatus.shortText}
+              </div>
+            )}
             {!isUpcoming && !isPublic && player && (
               <div className="text-right">
                 <div className="text-base font-bold text-gray-900">
@@ -252,10 +366,57 @@ export default function MatchCard({
       {/* Match Details - Only for upcoming matches when expanded */}
       {isUpcoming && showActions && isExpanded && !isPublic && (
         <div className="px-3 pb-3 border-t border-gray-100">
-          {/* Deadline warning (only if not scheduled yet) */}
-          {!isScheduled && match.schedule?.deadline && (
-            <div className="py-2 text-xs text-amber-600">
-              <span className="font-medium">⏰ {language === 'es' ? 'Límite:' : 'Due:'}</span> {formatDateForDisplay(match.schedule.deadline)}
+          {/* Deadline section with extension */}
+          {deadlineStatus && !isScheduled && (
+            <div className={`py-2 px-2 -mx-2 rounded-lg mb-2 ${
+              deadlineStatus.color === 'red' ? 'bg-red-50' :
+              deadlineStatus.color === 'orange' ? 'bg-orange-50' :
+              deadlineStatus.color === 'yellow' ? 'bg-yellow-50' :
+              'bg-gray-50'
+            }`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <svg className={`w-4 h-4 ${
+                    deadlineStatus.color === 'red' ? 'text-red-500' :
+                    deadlineStatus.color === 'orange' ? 'text-orange-500' :
+                    deadlineStatus.color === 'yellow' ? 'text-yellow-500' :
+                    'text-gray-400'
+                  }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div>
+                    <span className={`text-xs font-medium ${
+                      deadlineStatus.color === 'red' ? 'text-red-700' :
+                      deadlineStatus.color === 'orange' ? 'text-orange-700' :
+                      deadlineStatus.color === 'yellow' ? 'text-yellow-700' :
+                      'text-gray-600'
+                    }`}>
+                      {deadlineStatus.text}
+                    </span>
+                    {extensionsRemaining > 0 && (
+                      <span className="text-[10px] text-gray-400 ml-2">
+                        ({extensionsRemaining} {language === 'es' ? 'ext. disponibles' : 'ext. left'})
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {/* Extension button */}
+                {onExtend && extensionsRemaining > 0 && (
+                  <button
+                    onClick={handleExtend}
+                    disabled={extending}
+                    className={`text-[10px] font-medium px-2 py-1 rounded transition-all ${
+                      extending 
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                    }`}
+                  >
+                    {extending 
+                      ? (language === 'es' ? 'Extendiendo...' : 'Extending...')
+                      : (language === 'es' ? '+7 días' : '+7 days')}
+                  </button>
+                )}
+              </div>
             </div>
           )}
 

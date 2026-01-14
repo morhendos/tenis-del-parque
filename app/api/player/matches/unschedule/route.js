@@ -30,21 +30,18 @@ export async function POST(request) {
 
     // Get player from session's playerId
     if (!session.user.playerId) {
-      // Try to find player by email as fallback
       const playerByEmail = await Player.findOne({ email: session.user.email.toLowerCase() })
       
       if (!playerByEmail) {
         return NextResponse.json({ 
           success: false, 
-          error: 'Your user account is not linked to a player profile. Please contact support to resolve this issue.',
-          details: 'No playerId found in session and no player found with your email address.'
+          error: 'Your user account is not linked to a player profile. Please contact support.'
         }, { status: 404 })
       }
       
       return NextResponse.json({ 
         success: false, 
-        error: 'Your user account is not properly linked to your player profile. Please contact support.',
-        details: `Found player with email ${session.user.email} but accounts are not linked.`
+        error: 'Your user account is not properly linked to your player profile. Please contact support.'
       }, { status: 404 })
     }
 
@@ -52,8 +49,7 @@ export async function POST(request) {
     if (!userPlayer) {
       return NextResponse.json({ 
         success: false, 
-        error: 'Player profile not found. Please contact support.',
-        details: `PlayerId ${session.user.playerId} not found in database.`
+        error: 'Player profile not found. Please contact support.'
       }, { status: 404 })
     }
 
@@ -64,17 +60,27 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'You are not part of this match' }, { status: 403 })
     }
 
-    // Clear schedule information
+    // Check if match is already completed (has a winner)
+    if (match.status === 'completed' || match.result?.winner) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Cannot unschedule a completed match' 
+      }, { status: 400 })
+    }
+
+    // Clear schedule fields
     match.schedule = {
       ...match.schedule,
       confirmedDate: null,
       club: null,
+      venue: null,
       court: null,
-      time: null
+      time: null,
+      notes: null
     }
     
-    // Clear notes if they exist
-    match.notes = ''
+    // Clear notes at match level too
+    match.notes = null
 
     await match.save()
     
