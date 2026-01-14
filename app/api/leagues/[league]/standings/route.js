@@ -144,16 +144,16 @@ export async function GET(request, { params }) {
       console.log(`Fallback: Found ${players.length} players without season filter`)
     }
     
-    // Get all completed matches for the league and season
-    // IMPORTANT: Query by season ObjectId (matches store season as ObjectId reference)
+    // Get all completed matches for the league
+    // NOTE: We query by league only, not by season, because each league instance
+    // already represents a specific season (e.g., "Sotogrande Gold Winter 2026")
     const matches = await Match.find({
       league: league._id,
-      season: seasonDoc._id,
       status: 'completed',
       matchType: { $ne: 'playoff' } // Exclude playoff matches from regular standings
     }).lean()
     
-    console.log(`API: Found ${matches.length} matches for league ${league.name} (${league.season.type} ${league.season.year})`)
+    console.log(`API: Found ${matches.length} matches for league ${league.name}`)
     
     console.log(`📊 PUBLIC STANDINGS: ${players.length} players, ${matches.length} matches`)
     

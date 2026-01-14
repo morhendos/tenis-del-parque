@@ -5,8 +5,7 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { useLeagueData } from '@/lib/hooks/useLeagueData'
 import { getLeagueTabs, LEAGUE_TABS, DEFAULT_TOTAL_ROUNDS } from '@/lib/constants/leagueConstants'
 import StandingsTable from '@/components/player/StandingsTable'
-import ScheduleTab from '@/components/player/ScheduleTab'
-import ResultsTab from '@/components/player/ResultsTab'
+import MatchesTab from '@/components/player/MatchesTab'
 import PlayoffsTab from '@/components/player/PlayoffsTab'
 import PlayoffExplanation from '@/components/player/PlayoffExplanation'
 import LeagueTabs from '@/components/player/LeagueTabs'
@@ -412,8 +411,13 @@ export default function PlayerLeague() {
   // Handle tab query parameter
   useEffect(() => {
     const tabParam = searchParams.get('tab')
-    if (tabParam && Object.values(LEAGUE_TABS).includes(tabParam)) {
-      setActiveTab(tabParam)
+    if (tabParam) {
+      // Backward compatibility: redirect old schedule/results to matches
+      if (tabParam === 'schedule' || tabParam === 'results') {
+        setActiveTab(LEAGUE_TABS.MATCHES)
+      } else if (Object.values(LEAGUE_TABS).includes(tabParam)) {
+        setActiveTab(tabParam)
+      }
     }
   }, [searchParams])
 
@@ -610,21 +614,14 @@ export default function PlayerLeague() {
             </div>
           )}
           
-          {activeTab === LEAGUE_TABS.SCHEDULE && (
-            <ScheduleTab 
+          {activeTab === LEAGUE_TABS.MATCHES && (
+            <MatchesTab 
               schedule={schedule}
+              matches={matches}
               language={language}
               totalRounds={DEFAULT_TOTAL_ROUNDS}
               player={player}
               league={currentLeague}
-            />
-          )}
-          
-          {activeTab === LEAGUE_TABS.RESULTS && (
-            <ResultsTab 
-              matches={matches}
-              language={language}
-              player={player}
             />
           )}
           
@@ -653,21 +650,44 @@ export default function PlayerLeague() {
                 locale={language}
               />
             ) : playoffData.noPlayoffs || !playoffData.success ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  {language === 'es' ? 'Playoffs no activos' : 'Playoffs not active'}
-                </h3>
-                <p className="text-gray-500 text-sm">
-                  {language === 'es' 
-                    ? 'Esta liga aún no tiene playoffs activos' 
-                    : 'This league does not have active playoffs yet'}
-                </p>
-              </div>
+              (() => {
+                // Calculate playoff start date from season start (8 rounds × 7 days)
+                let playoffDateStr = ''
+                if (currentLeague?.seasonConfig?.startDate) {
+                  const playoffDate = new Date(currentLeague.seasonConfig.startDate)
+                  playoffDate.setDate(playoffDate.getDate() + (8 * 7) - 1) // 8 weeks minus 1 day to land on Monday
+                  playoffDateStr = playoffDate.toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', {
+                    day: 'numeric',
+                    month: 'long'
+                  })
+                }
+                
+                return (
+                  <div className="text-center py-12 px-4">
+                    <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      {playoffDateStr 
+                        ? (language === 'es' ? `Playoffs: ${playoffDateStr}` : `Playoffs start ${playoffDateStr}`)
+                        : (language === 'es' ? 'Playoffs próximamente' : 'Playoffs coming soon')}
+                    </h3>
+                    <p className="text-gray-500 text-sm max-w-sm mx-auto mb-4">
+                      {language === 'es' 
+                        ? 'Los playoffs comenzarán después de completar las 8 rondas de la temporada regular.' 
+                        : 'Playoffs will begin after completing all 8 rounds of the regular season.'}
+                    </p>
+                    <div className="inline-flex items-center gap-2 bg-purple-50 text-parque-purple px-4 py-2 rounded-full text-sm font-medium">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                      </svg>
+                      {language === 'es' ? 'Top 8 clasifican a playoffs' : 'Top 8 qualify for playoffs'}
+                    </div>
+                  </div>
+                )
+              })()
             ) : (
               <PlayoffsTab
                 playoffConfig={playoffData.playoffConfig}

@@ -41,8 +41,9 @@ export default function MatchCard({
     const now = new Date()
     const deadlineDate = new Date(deadline)
     const diffMs = deadlineDate - now
-    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
-    const diffHours = Math.ceil(diffMs / (1000 * 60 * 60))
+    // Use floor for days to show "5d" when there's 5 days and some hours left
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
     
     if (diffMs < 0) {
       // Overdue
@@ -57,14 +58,14 @@ export default function MatchCard({
         urgent: true,
         daysRemaining: -overdueDays
       }
-    } else if (diffHours <= 24) {
-      // Less than 24 hours
+    } else if (diffDays === 0) {
+      // Less than 24 hours - show hours
       return {
         status: 'critical',
         text: language === 'es' 
           ? `${diffHours} hora${diffHours !== 1 ? 's' : ''} restante${diffHours !== 1 ? 's' : ''}` 
           : `${diffHours} hour${diffHours !== 1 ? 's' : ''} left`,
-        shortText: language === 'es' ? 'Hoy' : 'Today',
+        shortText: `${diffHours}h`,
         color: 'red',
         urgent: true,
         daysRemaining: 0
@@ -267,7 +268,7 @@ export default function MatchCard({
           </div>
           <div className="flex items-center gap-2">
             {/* Deadline indicator - show when upcoming and not scheduled */}
-            {isUpcoming && !isScheduled && deadlineStatus && !isPublic && (
+            {isUpcoming && !isScheduled && deadlineStatus && (
               <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
                 deadlineStatus.color === 'red' ? 'bg-red-100 text-red-700' :
                 deadlineStatus.color === 'orange' ? 'bg-orange-100 text-orange-700' :
