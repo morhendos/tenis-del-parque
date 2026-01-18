@@ -56,9 +56,12 @@ export default function PlayerLayout({ children }) {
                 // Get ALL round 1 matches (could be in multiple leagues)
                 const firstRoundMatches = matchesData.matches?.filter(match => match.round === 1) || []
                 
-                // Build per-league announcement IDs
+                // Build per-league announcement IDs (handles both regular and BYE matches)
                 const firstRoundAnnouncementIds = firstRoundMatches.map(match => {
                   const leagueSlug = match.league?.slug || 'unknown'
+                  if (match.isBye === true) {
+                    return `${announcementContent.byeRound.id}-${leagueSlug}-round-${match.round}`
+                  }
                   return `${announcementContent.firstRoundMatch.id}-${leagueSlug}`
                 })
                 

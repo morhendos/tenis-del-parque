@@ -89,13 +89,9 @@ export default function MessagesPage() {
       isNew: false // Welcome message is never "new"
     })
 
-    // Add first round match messages - one per league
+    // Add round 1 match messages - one per league (handles both regular and BYE matches)
     if (firstRoundMatches.length > 0 && player) {
       firstRoundMatches.forEach(match => {
-        const opponent = match.players.player1._id === player._id 
-          ? match.players.player2 
-          : match.players.player1
-        
         // Get the league info from the match
         const leagueId = match.league?._id || match.league
         const leagueSlug = match.league?.slug || 
@@ -105,45 +101,87 @@ export default function MessagesPage() {
           player.registrations?.find(r => r.league?._id === leagueId || r.league === leagueId)?.league?.name ||
           'League'
         
-        // Create unique ID per league so players in multiple leagues see separate messages
-        const uniqueId = `${announcementContent.firstRoundMatch.id}-${leagueSlug}`
-        
         // Use match creation date or current date for the announcement date
         const announcementDate = match.createdAt ? new Date(match.createdAt) : new Date()
         
-        messages.push({
-          id: uniqueId,
-          type: 'announcement',
-          date: announcementDate,
-          title: announcementContent.firstRoundMatch[locale].title,
-          subtitle: matchLeagueName,
-          iconType: 'match',
-          iconBg: 'bg-green-100',
-          iconColor: 'text-green-600',
-          isNew: !seenAnnouncements.includes(uniqueId),
-          content: {
-            ...announcementContent.firstRoundMatch,
-            id: uniqueId, // Override the ID for marking as seen
-            es: {
-              ...announcementContent.firstRoundMatch.es,
-              content: announcementContent.firstRoundMatch.es.getContent(
-                player.name,
-                opponent.name,
-                opponent.whatsapp,
-                { level: player.level, leagueName: matchLeagueName }
-              )
-            },
-            en: {
-              ...announcementContent.firstRoundMatch.en,
-              content: announcementContent.firstRoundMatch.en.getContent(
-                player.name,
-                opponent.name,
-                opponent.whatsapp,
-                { level: player.level, leagueName: matchLeagueName }
-              )
+        // Check if this is a BYE match
+        const isByeMatch = match.isBye === true
+        
+        if (isByeMatch) {
+          // BYE match - show BYE announcement
+          const uniqueId = `${announcementContent.byeRound.id}-${leagueSlug}-round-${match.round}`
+          
+          messages.push({
+            id: uniqueId,
+            type: 'announcement',
+            date: announcementDate,
+            title: announcementContent.byeRound[locale].title,
+            subtitle: matchLeagueName,
+            iconType: 'bye',
+            iconBg: 'bg-emerald-100',
+            iconColor: 'text-emerald-600',
+            isNew: !seenAnnouncements.includes(uniqueId),
+            content: {
+              ...announcementContent.byeRound,
+              id: uniqueId,
+              es: {
+                ...announcementContent.byeRound.es,
+                content: announcementContent.byeRound.es.getContent(
+                  player.name,
+                  { leagueName: matchLeagueName, round: match.round }
+                )
+              },
+              en: {
+                ...announcementContent.byeRound.en,
+                content: announcementContent.byeRound.en.getContent(
+                  player.name,
+                  { leagueName: matchLeagueName, round: match.round }
+                )
+              }
             }
-          }
-        })
+          })
+        } else {
+          // Regular match - show first round match announcement
+          const opponent = match.players.player1._id === player._id 
+            ? match.players.player2 
+            : match.players.player1
+          
+          const uniqueId = `${announcementContent.firstRoundMatch.id}-${leagueSlug}`
+          
+          messages.push({
+            id: uniqueId,
+            type: 'announcement',
+            date: announcementDate,
+            title: announcementContent.firstRoundMatch[locale].title,
+            subtitle: matchLeagueName,
+            iconType: 'match',
+            iconBg: 'bg-green-100',
+            iconColor: 'text-green-600',
+            isNew: !seenAnnouncements.includes(uniqueId),
+            content: {
+              ...announcementContent.firstRoundMatch,
+              id: uniqueId,
+              es: {
+                ...announcementContent.firstRoundMatch.es,
+                content: announcementContent.firstRoundMatch.es.getContent(
+                  player.name,
+                  opponent.name,
+                  opponent.whatsapp,
+                  { level: player.level, leagueName: matchLeagueName }
+                )
+              },
+              en: {
+                ...announcementContent.firstRoundMatch.en,
+                content: announcementContent.firstRoundMatch.en.getContent(
+                  player.name,
+                  opponent.name,
+                  opponent.whatsapp,
+                  { level: player.level, leagueName: matchLeagueName }
+                )
+              }
+            }
+          })
+        }
       })
     }
 
@@ -195,6 +233,12 @@ export default function MessagesPage() {
       case 'match':
         return (
           <span className="text-base font-bold">1</span>
+        )
+      case 'bye':
+        return (
+          <svg className={className} fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
         )
       case 'announcement':
         return (
