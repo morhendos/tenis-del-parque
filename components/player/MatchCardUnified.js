@@ -13,6 +13,7 @@ export default function MatchCardUnified({
   onWhatsApp,
   onUnschedule,
   onExtend,
+  onTapCompleted,
   extensionsRemaining = 3,
   isPublic = false,
   className = ''
@@ -217,12 +218,31 @@ export default function MatchCardUnified({
     )
   }
 
+  // Check if card should be tappable (completed player match)
+  const isTappable = isCompleted && isPlayerMatch && !isPublic && onTapCompleted
+
+  // Handle card tap
+  const handleCardTap = () => {
+    if (isTappable) {
+      // Determine if current player won
+      const currentPlayerIsPlayer1 = player && (
+        player._id === player1?._id || 
+        player._id?.toString() === player1?._id?.toString()
+      )
+      const playerWon = currentPlayerIsPlayer1 ? isPlayer1Winner : isPlayer2Winner
+      onTapCompleted(match, playerWon)
+    }
+  }
+
   return (
     <div 
+      onClick={handleCardTap}
       className={`rounded-xl overflow-hidden shadow-sm border transition-all ${
         isVirtuallyCancelled ? 'border-red-200 opacity-75' : 'border-gray-200'
       } ${
         isPlayerMatch && !isPublic && !isVirtuallyCancelled ? 'ring-2 ring-yellow-400/60 ring-offset-1' : ''
+      } ${
+        isTappable ? 'cursor-pointer active:scale-[0.99]' : ''
       } ${className}`}
     >
       {/* Header */}

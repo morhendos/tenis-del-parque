@@ -25,6 +25,7 @@ export default function MatchesTab({
   const [showResultCard, setShowResultCard] = useState(false)
   const [submittedMatch, setSubmittedMatch] = useState(null)
   const [isWinner, setIsWinner] = useState(false)
+  const [isNewResult, setIsNewResult] = useState(false) // Track if result was just submitted
   const [extensionsRemaining, setExtensionsRemaining] = useState(3)
 
   // Get all matches from schedule
@@ -168,6 +169,7 @@ export default function MatchesTab({
           setTimeout(() => {
             setSubmittedMatch(updatedMatch)
             setIsWinner(isPlayerWinner)
+            setIsNewResult(true) // This is a new submission
             setShowResultCard(true)
           }, 100)
           
@@ -318,6 +320,14 @@ export default function MatchesTab({
     }
   }
 
+  // Handle tap on completed match to show result card
+  const handleTapCompletedMatch = (match, playerWon) => {
+    setSubmittedMatch(match)
+    setIsWinner(playerWon)
+    setIsNewResult(false) // Just viewing existing result
+    setShowResultCard(true)
+  }
+
   const roundMatches = getCurrentRoundMatches()
   const availableRounds = getAvailableRounds()
 
@@ -413,6 +423,7 @@ export default function MatchesTab({
               onWhatsApp={handleWhatsApp}
               onUnschedule={handleUnschedule}
               onExtend={handleOpenExtendModal}
+              onTapCompleted={handleTapCompletedMatch}
               extensionsRemaining={extensionsRemaining}
               isPublic={!match.isPlayerMatch || isPublic}
             />
@@ -468,7 +479,10 @@ export default function MatchesTab({
           onClose={() => {
             setShowResultCard(false)
             setSubmittedMatch(null)
-            window.location.reload()
+            // Only reload if this was a new result submission
+            if (isNewResult) {
+              window.location.reload()
+            }
           }}
         />
       )}

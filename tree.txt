@@ -281,9 +281,6 @@ root/
 │   │   │   ├── photo
 │   │   │   │   └── route.js
 │   │   │   └── route.js
-│   │   ├── debug
-│   │   │   └── league
-│   │   │       └── [slug]
 │   │   ├── league-interest
 │   │   │   └── route.js
 │   │   ├── leagues
@@ -314,10 +311,14 @@ root/
 │   │   │   ├── elo-history
 │   │   │   │   └── route.js
 │   │   │   ├── matches
+│   │   │   │   ├── extend
+│   │   │   │   │   └── route.js
 │   │   │   │   ├── result
 │   │   │   │   │   └── route.js
 │   │   │   │   ├── route.js
-│   │   │   │   └── schedule
+│   │   │   │   ├── schedule
+│   │   │   │   │   └── route.js
+│   │   │   │   └── unschedule
 │   │   │   │       └── route.js
 │   │   │   ├── messages
 │   │   │   │   ├── mark-seen
@@ -345,6 +346,7 @@ root/
 │   ├── icon1.png
 │   ├── layout.js
 │   └── providers.js
+├── checkLeagueOutput.txt
 ├── components
 │   ├── admin
 │   │   ├── areas
@@ -489,9 +491,12 @@ root/
 │   │   ├── EloProgressionChart.js
 │   │   ├── LeagueCard.js
 │   │   ├── LeagueTabs.js
+│   │   ├── LeagueTabsSegmented.js
 │   │   ├── MatchCard.js
 │   │   ├── MatchModals.js
 │   │   ├── MatchResultCard.js
+│   │   ├── MatchScoreboard.js
+│   │   ├── MatchesTab.js
 │   │   ├── MiniStandings.js
 │   │   ├── NextMatchCard.js
 │   │   ├── OpenRankAchievement.js
@@ -580,10 +585,12 @@ root/
 │   ├── PRODUCT_LED_GROWTH.md
 │   ├── PRODUCT_OVERVIEW.md
 │   ├── PR_MULTILINGUAL_IMPLEMENTATION.md
+│   ├── PUSH_NOTIFICATIONS_IMPLEMENTATION.md
 │   ├── PWA_SCREENSHOTS_PLAN.md
 │   ├── README.md
 │   ├── REGISTRATION_ROUTES_REFACTORING.md
 │   ├── RESEND_EMAIL_SETUP.md
+│   ├── SCOREBOARD_PROJECT.md
 │   ├── SCORING_SYSTEM_INTEGRATION.md
 │   ├── SCRIPT_CREATION_RULES.md
 │   ├── SEASON_FIELD_REMOVAL.md
@@ -758,6 +765,8 @@ root/
 │   ├── web-app-manifest-192x192.png
 │   └── web-app-manifest-512x512.png
 ├── scripts
+│   ├── activateSilverPlayers.js
+│   ├── add-deadlines-to-matches.js
 │   ├── addWalkoverResult.js
 │   ├── check-google-photos.js
 │   ├── checkAuth.mjs
@@ -766,15 +775,23 @@ root/
 │   ├── checkMatch.js
 │   ├── checkMatchSeasons.js
 │   ├── checkPlayoffMatchesForPlayer.js
+│   ├── checkPlayoffPhase.js
 │   ├── checkPlayoffPlayers.js
 │   ├── checkSeasonData.js
 │   ├── checkSeasonObjectId.mjs
 │   ├── checkSemifinalMatches.js
 │   ├── checkSemifinalsCreated.js
+│   ├── checkSilverLeagueConfig.js
 │   ├── checkSotograndePlayers.js
+│   ├── check_match5_full.js
+│   ├── check_scheduling.js
+│   ├── check_silver_matches.js
+│   ├── check_silver_matches_mongoose.js
+│   ├── check_silver_matches_raw.js
 │   ├── cleanup-clubes-duplicates.sh
 │   ├── cleanup-old-editors.sh
 │   ├── comparePointCalculations.js
+│   ├── completePlayoffs.js
 │   ├── createAdminUser.js
 │   ├── createDiscountCodes.js
 │   ├── createSeasons.js
@@ -808,6 +825,8 @@ root/
 │   ├── migrateToNewPlayerModel.js
 │   ├── migrations
 │   │   └── removeNumberFromLeagueSeasons.mjs
+│   ├── movePlayersToSilver.js
+│   ├── normalizePlayerName.js
 │   ├── populateAssignments.js
 │   ├── populateClubAssignments.mjs
 │   ├── rebuildPlayerMatchHistory.js
