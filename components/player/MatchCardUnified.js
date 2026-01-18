@@ -67,6 +67,7 @@ export default function MatchCardUnified({
     const diffMs = deadlineDate - now
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffMinutes = Math.floor(diffMs / (1000 * 60))
     
     if (diffMs < 0) {
       const overdueDays = Math.abs(diffDays)
@@ -74,6 +75,15 @@ export default function MatchCardUnified({
         status: 'overdue',
         text: language === 'es' ? 'Vencido' : 'Overdue',
         shortText: `-${overdueDays}d`,
+        color: 'red',
+        urgent: true
+      }
+    } else if (diffHours < 1) {
+      // Less than 1 hour - show minutes
+      return {
+        status: 'critical',
+        text: `${diffMinutes}m`,
+        shortText: `${diffMinutes}m`,
         color: 'red',
         urgent: true
       }
