@@ -29,8 +29,8 @@ export default function MatchCardUnified({
   const player2 = match.players?.player2
   const winnerId = match.result?.winner?._id || match.result?.winner
 
-  const isPlayer1Winner = winnerId && (winnerId === player1?._id || winnerId.toString() === player1?._id?.toString())
-  const isPlayer2Winner = winnerId && (winnerId === player2?._id || winnerId.toString() === player2?._id?.toString())
+  const isPlayer1Winner = isByeMatch ? true : (winnerId && (winnerId === player1?._id || winnerId.toString() === player1?._id?.toString()))
+  const isPlayer2Winner = isByeMatch ? false : (winnerId && (winnerId === player2?._id || winnerId.toString() === player2?._id?.toString()))
 
   // Check if current user is in this match (for BYE matches, only check player1)
   const isPlayerMatch = player && (
