@@ -237,12 +237,12 @@ function LeagueHeader({
   // For single league, show a simpler non-expandable header
   if (!hasMultipleLeagues) {
     return (
-      <div className="-mx-4 sm:-mx-6 lg:-mx-8">
-        <div className="bg-gradient-to-r from-parque-purple to-purple-600 shadow-lg overflow-hidden relative">
+      <div className="-mx-2 -mt-4 sm:mx-0 sm:mt-0">
+        <div className="bg-gradient-to-r from-parque-purple to-purple-600 shadow-lg overflow-hidden relative sm:rounded-2xl">
           {/* Decorative circle */}
           <div className="absolute right-4 top-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-white/10" />
           
-          <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 relative">
+          <div className="flex items-center justify-between px-4 py-4 relative">
             <div className="flex items-center gap-3 min-w-0">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
@@ -282,12 +282,12 @@ function LeagueHeader({
 
   // For multiple leagues, show expandable selector
   return (
-    <div className="-mx-4 sm:-mx-6 lg:-mx-8">
-      <div className="shadow-lg overflow-hidden">
+    <div className="-mx-2 -mt-4 sm:mx-0 sm:mt-0">
+      <div className="shadow-lg overflow-hidden sm:rounded-2xl">
         {/* Collapsed Header - Purple gradient */}
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 bg-gradient-to-r from-parque-purple to-purple-600 hover:from-parque-purple/95 hover:to-purple-600/95 transition-colors relative"
+          className="w-full flex items-center justify-between px-4 py-4 bg-gradient-to-r from-parque-purple to-purple-600 hover:from-parque-purple/95 hover:to-purple-600/95 transition-colors relative"
         >
           {/* Decorative circle */}
           <div className="absolute right-16 top-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-white/10" />
