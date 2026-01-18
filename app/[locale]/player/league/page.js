@@ -393,6 +393,7 @@ function LeagueHeader({
             </div>
           )}
         </div>
+        </div>
       </div>
     </div>
   )
