@@ -290,8 +290,7 @@ async function createByeMatch(player, leagueId, season, round) {
     },
     status: 'completed',
     result: {
-      winner: player._id,
-      isBye: true
+      winner: player._id
     },
     isBye: true,
     createdBy: 'Swiss Pairing System',
@@ -301,25 +300,11 @@ async function createByeMatch(player, leagueId, season, round) {
 
   const savedByeMatch = await byeMatch.save()
   
-  // Update player stats for bye
-  await Player.findByIdAndUpdate(player._id, {
-    $inc: { 
-      'stats.matchesPlayed': 1,
-      'stats.matchesWon': 1
-    },
-    $push: {
-      matchHistory: {
-        match: savedByeMatch._id,
-        opponent: null,
-        result: 'won',
-        isBye: true,
-        eloChange: 0,
-        eloAfter: player.stats?.eloRating || 1200,
-        round: round,
-        date: new Date()
-      }
-    }
-  })
+  // Note: We don't manually update player stats here.
+  // Stats are calculated from matches in standingsService.calculatePlayerStats()
+  // BYE matches give 3 points but don't count toward matchesPlayed (for OpenRank)
+  
+  console.log(`Created BYE match for ${player.name} (Round ${round})`)
 
   return savedByeMatch
 }
