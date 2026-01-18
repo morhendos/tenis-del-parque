@@ -237,12 +237,65 @@ function LeagueHeader({
   // For single league, show a simpler non-expandable header
   if (!hasMultipleLeagues) {
     return (
-      <div className="bg-gradient-to-r from-parque-purple to-purple-600 rounded-xl shadow-lg overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-3 min-w-0">
+      <div className="-mx-4 sm:-mx-6 lg:-mx-8">
+        <div className="bg-gradient-to-r from-parque-purple to-purple-600 shadow-lg overflow-hidden relative">
+          {/* Decorative circle */}
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-white/10" />
+          
+          <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 relative">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-white text-xl truncate">
+                    {currentLeague?.name || 'Liga'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-white/80 mt-0.5">
+                  {currentLeague?.location?.city && (
+                    <span className="flex items-center gap-1">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      {currentLeague.location.city}
+                    </span>
+                  )}
+                  {currentSeasonDisplay && (
+                    <>
+                      <span className="text-white/50">·</span>
+                      <span>{currentSeasonDisplay}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+            {currentBadge.text && (
+              <span className={`px-3 py-1 text-xs font-medium rounded-full border ${currentBadge.headerColor}`}>
+                {currentBadge.text}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // For multiple leagues, show expandable selector
+  return (
+    <div className="-mx-4 sm:-mx-6 lg:-mx-8">
+      <div className="shadow-lg overflow-hidden">
+        {/* Collapsed Header - Purple gradient */}
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="w-full flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 bg-gradient-to-r from-parque-purple to-purple-600 hover:from-parque-purple/95 hover:to-purple-600/95 transition-colors relative"
+        >
+          {/* Decorative circle */}
+          <div className="absolute right-16 top-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-white/10" />
+          
+          <div className="flex items-center gap-3 min-w-0 relative">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-white text-lg truncate">
+                <span className="font-bold text-white text-xl truncate">
                   {currentLeague?.name || 'Liga'}
                 </span>
               </div>
@@ -265,74 +318,30 @@ function LeagueHeader({
               </div>
             </div>
           </div>
-          {currentBadge.text && (
-            <span className={`px-3 py-1 text-xs font-medium rounded-full border ${currentBadge.headerColor}`}>
-              {currentBadge.text}
-            </span>
-          )}
-        </div>
-      </div>
-    )
-  }
-
-  // For multiple leagues, show expandable selector
-  return (
-    <div className="rounded-xl shadow-lg overflow-hidden">
-      {/* Collapsed Header - Purple gradient */}
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between px-4 py-4 bg-gradient-to-r from-parque-purple to-purple-600 hover:from-parque-purple/95 hover:to-purple-600/95 transition-colors"
-      >
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-white text-lg truncate">
-                {currentLeague?.name || 'Liga'}
+          <div className="flex items-center gap-3 flex-shrink-0 relative">
+            {currentBadge.text && (
+              <span className={`px-3 py-1 text-xs font-medium rounded-full border hidden sm:inline ${currentBadge.headerColor}`}>
+                {currentBadge.text}
               </span>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-white/80 mt-0.5">
-              {currentLeague?.location?.city && (
-                <span className="flex items-center gap-1">
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  {currentLeague.location.city}
-                </span>
-              )}
-              {currentSeasonDisplay && (
-                <>
-                  <span className="text-white/50">·</span>
-                  <span>{currentSeasonDisplay}</span>
-                </>
-              )}
+            )}
+            <div className="flex items-center gap-1.5 text-white/70">
+              <span className="text-xs hidden sm:inline">
+                {registrations.length} {language === 'es' ? 'ligas' : 'leagues'}
+              </span>
+              <svg 
+                className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+              </svg>
             </div>
           </div>
-        </div>
-        <div className="flex items-center gap-3 flex-shrink-0">
-          {currentBadge.text && (
-            <span className={`px-3 py-1 text-xs font-medium rounded-full border hidden sm:inline ${currentBadge.headerColor}`}>
-              {currentBadge.text}
-            </span>
-          )}
-          <div className="flex items-center gap-1.5 text-white/70">
-            <span className="text-xs hidden sm:inline">
-              {registrations.length} {language === 'es' ? 'ligas' : 'leagues'}
-            </span>
-            <svg 
-              className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-        </div>
-      </button>
-      
-      {/* Expanded Content - White background for contrast */}
-      <div className={`transition-all duration-200 ease-in-out overflow-hidden bg-white ${
+        </button>
+        
+        {/* Expanded Content - White background for contrast */}
+        <div className={`transition-all duration-200 ease-in-out overflow-hidden bg-white ${
         isExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
       }`}>
         <div className="px-4 pb-4 space-y-4 border-t border-gray-100 pt-4 bg-gray-50/50">
