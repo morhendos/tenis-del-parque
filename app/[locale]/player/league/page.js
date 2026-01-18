@@ -244,6 +244,16 @@ function LeagueHeader({
           
           <div className="flex items-center justify-between px-4 py-4 relative">
             <div className="flex items-center gap-3 min-w-0">
+              {/* Logo */}
+              <div className="w-9 h-9 bg-white/30 rounded-lg flex items-center justify-center p-1 flex-shrink-0">
+                <img 
+                  src="/logo-big.png" 
+                  alt="Tenis del Parque" 
+                  width={26} 
+                  height={26}
+                  className="object-contain"
+                />
+              </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-white text-xl truncate">
@@ -293,6 +303,16 @@ function LeagueHeader({
           <div className="absolute right-16 top-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-white/10" />
           
           <div className="flex items-center gap-3 min-w-0 relative">
+            {/* Logo */}
+            <div className="w-9 h-9 bg-white/30 rounded-lg flex items-center justify-center p-1 flex-shrink-0">
+              <img 
+                src="/logo-big.png" 
+                alt="Tenis del Parque" 
+                width={26} 
+                height={26}
+                className="object-contain"
+              />
+            </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <span className="font-bold text-white text-xl truncate">
