@@ -147,7 +147,12 @@ export default function MatchCardUnified({
   }
 
   const deadlineStatus = getDeadlineStatus()
-  const showActions = isPlayerMatch && !isPublic && !isCompleted
+  
+  // Check if match is "virtually cancelled" (deadline passed + not scheduled + not completed)
+  const isVirtuallyCancelled = !isCompleted && !isScheduled && deadlineStatus?.status === 'overdue'
+  
+  // Don't show actions for completed or virtually cancelled matches
+  const showActions = isPlayerMatch && !isPublic && !isCompleted && !isVirtuallyCancelled
 
   // Render player row
   const renderPlayerRow = (playerData, isWinner, isFirst) => {
@@ -161,17 +166,26 @@ export default function MatchCardUnified({
         isFirst ? 'border-b border-gray-100' : ''
       } ${
         isCompleted && isWinner ? 'bg-purple-50' : 'bg-white'
+      } ${
+        isVirtuallyCancelled ? 'bg-gray-50' : ''
       }`}>
-        {/* Winner indicator */}
+        {/* Winner indicator or cancelled X */}
         <div className="w-5 flex-shrink-0">
           {isCompleted && isWinner && (
             <div className="w-2 h-2 rounded-full bg-yellow-500" />
+          )}
+          {isVirtuallyCancelled && isFirst && (
+            <svg className="w-3.5 h-3.5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           )}
         </div>
         
         {/* Player name */}
         <div className="flex-1 min-w-0">
-          <span className="font-semibold text-sm truncate block text-gray-800">
+          <span className={`font-semibold text-sm truncate block ${
+            isVirtuallyCancelled ? 'text-gray-400 line-through' : 'text-gray-800'
+          }`}>
             {formatName(playerData?.name)}
           </span>
         </div>
@@ -205,12 +219,18 @@ export default function MatchCardUnified({
 
   return (
     <div 
-      className={`rounded-xl overflow-hidden shadow-sm border border-gray-200 transition-all ${
-        isPlayerMatch && !isPublic ? 'ring-2 ring-yellow-400/60 ring-offset-1' : ''
+      className={`rounded-xl overflow-hidden shadow-sm border transition-all ${
+        isVirtuallyCancelled ? 'border-red-200 opacity-75' : 'border-gray-200'
+      } ${
+        isPlayerMatch && !isPublic && !isVirtuallyCancelled ? 'ring-2 ring-yellow-400/60 ring-offset-1' : ''
       } ${className}`}
     >
       {/* Header */}
-      <div className="bg-gradient-to-r from-parque-purple to-purple-600 px-3 py-1.5 flex items-center justify-between">
+      <div className={`px-3 py-1.5 flex items-center justify-between ${
+        isVirtuallyCancelled 
+          ? 'bg-gradient-to-r from-red-500 to-red-600' 
+          : 'bg-gradient-to-r from-parque-purple to-purple-600'
+      }`}>
         {/* Left side: status info */}
         <div className="flex items-center gap-1">
           {/* Playoff stage name */}
@@ -242,7 +262,19 @@ export default function MatchCardUnified({
             </>
           )}
           
-          {!isCompleted && !isScheduled && deadlineStatus && (
+          {/* Virtually cancelled - show cancelled status */}
+          {isVirtuallyCancelled && (
+            <>
+              <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              <span className="text-xs font-medium text-white">
+                {language === 'es' ? 'Cancelado - Plazo para programar vencido' : 'Cancelled - Deadline to schedule passed'}
+              </span>
+            </>
+          )}
+          
+          {!isCompleted && !isScheduled && !isVirtuallyCancelled && deadlineStatus && (
             <>
               <svg className={`w-3.5 h-3.5 ${deadlineStatus.urgent ? 'text-red-300' : 'text-white/90'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />

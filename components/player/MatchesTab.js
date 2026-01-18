@@ -109,29 +109,7 @@ export default function MatchesTab({
           m.round === currentRound &&
           (m.players?.player1?._id === player?._id || m.players?.player2?._id === player?._id)
         )
-        let finalMatch = { ...(fullMatch || match), isPlayerMatch: true }
-        
-        // TESTING: Override player's R1 match to appear unplayed with urgent deadline
-        // if (currentRound === 1) {
-        //   const urgentDeadline = new Date()
-        //   urgentDeadline.setDate(urgentDeadline.getDate() + 1) // 1 day from now
-        //   
-        //   finalMatch = {
-        //     ...finalMatch,
-        //     status: 'scheduled',
-        //     result: null,
-        //     schedule: {
-        //       ...finalMatch.schedule,
-        //       confirmedDate: null,
-        //       club: null,
-        //       time: null,
-        //       deadline: urgentDeadline.toISOString()
-        //     }
-        //   }
-        // }
-        // END TESTING
-        
-        return finalMatch
+        return { ...(fullMatch || match), isPlayerMatch: true }
       }
       
       return { ...match, isPlayerMatch: false }

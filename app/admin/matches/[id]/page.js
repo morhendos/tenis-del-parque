@@ -25,6 +25,7 @@ export default function MatchDetailPage() {
     updateSchedule,
     updateResult,
     updatePlayers,
+    updateStatus,
     resetToUnplayed
   } = useMatchDetail(matchId)
 
@@ -139,6 +140,7 @@ export default function MatchDetailPage() {
               <MatchOverviewTab 
                 match={match} 
                 onTabChange={setActiveTab}
+                onStatusUpdate={updateStatus}
               />
             )}
             

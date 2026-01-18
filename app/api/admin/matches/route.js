@@ -146,7 +146,11 @@ export async function POST(request) {
       )
     }
 
-    // Create the match
+    // Create the match with default deadline if not provided
+    const defaultDeadline = new Date()
+    defaultDeadline.setDate(defaultDeadline.getDate() + 7) // 7 days from now
+    defaultDeadline.setHours(23, 59, 59, 999) // End of day
+    
     const match = new Match({
       league,
       season,
@@ -155,7 +159,10 @@ export async function POST(request) {
         player1: player1Id,
         player2: player2Id
       },
-      schedule: schedule || {},
+      schedule: {
+        ...schedule,
+        deadline: schedule?.deadline || defaultDeadline
+      },
       status: 'scheduled'
     })
 

@@ -1,8 +1,119 @@
-import React from 'react'
+import React, { useState } from 'react'
 
-export default function MatchOverviewTab({ match, onTabChange }) {
+export default function MatchOverviewTab({ match, onTabChange, onStatusUpdate }) {
+  const [updatingStatus, setUpdatingStatus] = useState(false)
+
+  const handleStatusChange = async (newStatus) => {
+    if (!confirm(`Are you sure you want to change the match status to "${newStatus}"?`)) {
+      return
+    }
+    
+    setUpdatingStatus(true)
+    try {
+      await onStatusUpdate(newStatus)
+    } catch (error) {
+      console.error('Error updating status:', error)
+    } finally {
+      setUpdatingStatus(false)
+    }
+  }
+
+  const getStatusBadge = (status) => {
+    const styles = {
+      scheduled: 'bg-blue-100 text-blue-800',
+      completed: 'bg-green-100 text-green-800',
+      cancelled: 'bg-red-100 text-red-800',
+      postponed: 'bg-yellow-100 text-yellow-800'
+    }
+    return styles[status] || 'bg-gray-100 text-gray-800'
+  }
+
   return (
     <div className="space-y-6">
+      {/* Match Status Section */}
+      <div className="bg-gray-50 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="font-semibold text-gray-900">Match Status</h4>
+          <span className={`px-3 py-1 text-sm font-semibold rounded-full ${getStatusBadge(match.status)}`}>
+            {match.status.toUpperCase()}
+          </span>
+        </div>
+        
+        {/* Status Change Buttons */}
+        {match.status !== 'completed' && (
+          <div className="flex flex-wrap gap-2">
+            {match.status === 'cancelled' && (
+              <button
+                onClick={() => handleStatusChange('scheduled')}
+                disabled={updatingStatus}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm flex items-center"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Restore Match (Uncancel)
+              </button>
+            )}
+            
+            {match.status === 'scheduled' && (
+              <>
+                <button
+                  onClick={() => handleStatusChange('cancelled')}
+                  disabled={updatingStatus}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 text-sm flex items-center"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  Cancel Match
+                </button>
+                <button
+                  onClick={() => handleStatusChange('postponed')}
+                  disabled={updatingStatus}
+                  className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:opacity-50 text-sm flex items-center"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Postpone Match
+                </button>
+              </>
+            )}
+            
+            {match.status === 'postponed' && (
+              <>
+                <button
+                  onClick={() => handleStatusChange('scheduled')}
+                  disabled={updatingStatus}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm flex items-center"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Reschedule (Back to Scheduled)
+                </button>
+                <button
+                  onClick={() => handleStatusChange('cancelled')}
+                  disabled={updatingStatus}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 text-sm flex items-center"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  Cancel Match
+                </button>
+              </>
+            )}
+          </div>
+        )}
+        
+        {match.status === 'completed' && (
+          <p className="text-sm text-gray-600">
+            To change the status of a completed match, first reset it to unplayed from the Result tab.
+          </p>
+        )}
+      </div>
+
       {/* Player Details */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Player 1 Details */}

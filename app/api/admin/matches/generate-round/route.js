@@ -136,6 +136,7 @@ export async function POST(request) {
     const createdMatches = []
     const deadlineDate = new Date()
     deadlineDate.setDate(deadlineDate.getDate() + 7) // 7 days from now
+    deadlineDate.setHours(23, 59, 59, 999) // End of day
     
     for (const pairing of result.pairings) {
       const match = new Match({
