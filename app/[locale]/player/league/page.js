@@ -242,10 +242,9 @@ function LeagueHeader({
           {/* Background decoration - matching dashboard */}
           <div className="absolute inset-0 opacity-10">
             <div className="absolute -top-16 -right-16 w-48 h-48 bg-white rounded-full" />
-            <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-white rounded-full" />
           </div>
           
-          <div className="flex items-center justify-between px-4 py-4 relative">
+          <div className="flex items-center justify-between px-4 pt-5 pb-4 relative">
             <div className="flex items-center gap-3 min-w-0">
               {/* Logo - sized to match text height */}
               <div className="w-12 h-12 bg-white/30 rounded-xl flex items-center justify-center p-1.5 flex-shrink-0">
@@ -300,12 +299,11 @@ function LeagueHeader({
         {/* Collapsed Header - Purple gradient */}
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full flex items-center justify-between px-4 py-4 bg-gradient-to-br from-parque-purple via-purple-600 to-indigo-600 hover:from-parque-purple/95 hover:via-purple-600/95 hover:to-indigo-600/95 transition-colors relative overflow-hidden"
+          className="w-full flex items-center justify-between px-4 pt-5 pb-4 bg-gradient-to-br from-parque-purple via-purple-600 to-indigo-600 hover:from-parque-purple/95 hover:via-purple-600/95 hover:to-indigo-600/95 transition-colors relative overflow-hidden"
         >
           {/* Background decoration - matching dashboard */}
           <div className="absolute inset-0 opacity-10 pointer-events-none">
             <div className="absolute -top-16 -right-16 w-48 h-48 bg-white rounded-full" />
-            <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-white rounded-full" />
           </div>
           
           <div className="flex items-center gap-3 min-w-0 relative">
