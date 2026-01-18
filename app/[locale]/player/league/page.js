@@ -299,7 +299,7 @@ function LeagueHeader({
         {/* Collapsed Header - Purple gradient */}
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full flex items-center justify-between px-4 pt-5 pb-4 bg-gradient-to-br from-parque-purple via-purple-600 to-indigo-600 hover:from-parque-purple/95 hover:via-purple-600/95 hover:to-indigo-600/95 transition-colors relative overflow-hidden sm:rounded-2xl"
+          className="w-full flex items-center justify-between px-4 pt-5 pb-4 bg-gradient-to-br from-parque-purple via-purple-600 to-indigo-600 hover:from-parque-purple/95 hover:via-purple-600/95 hover:to-indigo-600/95 transition-colors relative overflow-hidden sm:rounded-2xl z-30"
         >
           {/* Background decoration - matching dashboard */}
           <div className="absolute inset-0 opacity-10 pointer-events-none">
@@ -372,14 +372,15 @@ function LeagueHeader({
           />
         )}
         
-        {/* Expanded Content - Floating dropdown */}
-        <div className={`absolute left-0 right-0 top-full z-20 transition-all duration-300 ease-out ${
-          isExpanded 
-            ? 'opacity-100 translate-y-0' 
-            : 'opacity-0 -translate-y-2 pointer-events-none'
-        }`}>
-          <div className="mx-2 sm:mx-0 bg-white rounded-b-xl shadow-2xl border border-t-0 border-gray-200 max-h-[400px] overflow-y-auto">
-            <div className="px-4 py-4 space-y-4 max-h-[400px] overflow-y-auto">
+        {/* Expanded Content - Drawer sliding from behind header */}
+        <div className="absolute left-0 right-0 top-full z-10 overflow-hidden">
+          <div className={`transition-transform duration-300 ease-out ${
+            isExpanded 
+              ? 'translate-y-0' 
+              : '-translate-y-full'
+          }`}>
+            <div className="mx-2 sm:mx-0 bg-white rounded-b-xl shadow-2xl border border-t-0 border-gray-200">
+              <div className="px-4 py-4 space-y-4 max-h-[400px] overflow-y-auto">
           {/* Active Leagues */}
           {categories.active.length > 0 && (
             <div>
@@ -427,6 +428,7 @@ function LeagueHeader({
               </div>
             </div>
           )}
+              </div>
             </div>
           </div>
         </div>
