@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import MatchCard from './MatchCard'
+import MatchCardUnified from './MatchCardUnified'
 import { MatchModals } from './MatchModals'
 import MatchResultCard from './MatchResultCard'
 import { toast } from '@/components/ui/Toast'
@@ -395,28 +395,21 @@ export default function MatchesTab({
       {/* Round Matches */}
       {roundMatches.length > 0 ? (
         <div className="space-y-3">
-          {roundMatches.map((match) => {
-            const isCompleted = match.status === 'completed' || match.result?.winner
-            
-            return (
-              <MatchCard
-                key={match._id}
-                match={match}
-                player={match.isPlayerMatch ? player : null}
-                language={language}
-                onSchedule={match.isPlayerMatch && !isCompleted ? handleSchedule : undefined}
-                onResult={match.isPlayerMatch && !isCompleted ? handleResult : undefined}
-                onWhatsApp={match.isPlayerMatch && !isCompleted ? handleWhatsApp : undefined}
-                onUnschedule={match.isPlayerMatch && !isCompleted ? handleUnschedule : undefined}
-                onExtend={match.isPlayerMatch && !isCompleted ? handleExtend : undefined}
-                extensionsRemaining={extensionsRemaining}
-                isUpcoming={!isCompleted}
-                showActions={match.isPlayerMatch && !isPublic && !isCompleted}
-                isPublic={!match.isPlayerMatch || isPublic}
-                className={match.isPlayerMatch && !isPublic ? 'ring-1 ring-yellow-300 bg-yellow-50/30' : ''}
-              />
-            )
-          })}
+          {roundMatches.map((match) => (
+            <MatchCardUnified
+              key={match._id}
+              match={match}
+              player={match.isPlayerMatch ? player : null}
+              language={language}
+              onSchedule={handleSchedule}
+              onResult={handleResult}
+              onWhatsApp={handleWhatsApp}
+              onUnschedule={handleUnschedule}
+              onExtend={handleExtend}
+              extensionsRemaining={extensionsRemaining}
+              isPublic={!match.isPlayerMatch || isPublic}
+            />
+          ))}
         </div>
       ) : (
         <div className="text-center py-12">
