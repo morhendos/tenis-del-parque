@@ -92,8 +92,8 @@ export default function MatchResultCard({
       )}
 
       {/* Result Card Modal */}
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden animate-scale-in">
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 pb-24">
+        <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden animate-scale-in max-h-[calc(100vh-8rem)] overflow-y-auto">
           {/* Header */}
           <div className={`p-6 text-center ${
             isWalkover 
