@@ -17,7 +17,7 @@ export default function MessagesPage() {
   
   const [loading, setLoading] = useState(true)
   const [player, setPlayer] = useState(null)
-  const [firstRoundMatch, setFirstRoundMatch] = useState(null)
+  const [firstRoundMatches, setFirstRoundMatches] = useState([])
   const [selectedMessage, setSelectedMessage] = useState(null)
   const [modalType, setModalType] = useState(null)
   const [seenAnnouncements, setSeenAnnouncements] = useState([])
@@ -50,12 +50,13 @@ export default function MessagesPage() {
           setSeenAnnouncements(preferencesData.seenAnnouncements || [])
         }
         
-        // Check for first round matches
+        // Check for first round matches (one per league)
         const matchesResponse = await fetch('/api/player/matches')
         if (matchesResponse.ok) {
           const matchesData = await matchesResponse.json()
-          const firstRound = matchesData.matches?.find(match => match.round === 1)
-          setFirstRoundMatch(firstRound)
+          // Get ALL round 1 matches (could be in multiple leagues)
+          const firstRounds = matchesData.matches?.filter(match => match.round === 1) || []
+          setFirstRoundMatches(firstRounds)
         }
       }
     } catch (error) {
@@ -88,48 +89,61 @@ export default function MessagesPage() {
       isNew: false // Welcome message is never "new"
     })
 
-    // Add first round match message if available
-    if (firstRoundMatch && player) {
-      const opponent = firstRoundMatch.players.player1._id === player._id 
-        ? firstRoundMatch.players.player2 
-        : firstRoundMatch.players.player1
-      
-      // Get the league name from the match or player's registration
-      const matchLeagueName = firstRoundMatch.league?.name || 
-        player.registrations?.find(r => r.league?._id === firstRoundMatch.league)?.league?.name ||
-        'Silver League'
-      
-      messages.push({
-        id: announcementContent.firstRoundMatch.id,
-        type: 'announcement',
-        date: announcementContent.firstRoundMatch.date,
-        title: announcementContent.firstRoundMatch[locale].title,
-        subtitle: announcementContent.firstRoundMatch[locale].subtitle,
-        iconType: 'match',
-        iconBg: 'bg-green-100',
-        iconColor: 'text-green-600',
-        isNew: !seenAnnouncements.includes(announcementContent.firstRoundMatch.id),
-        content: {
-          ...announcementContent.firstRoundMatch,
-          es: {
-            ...announcementContent.firstRoundMatch.es,
-            content: announcementContent.firstRoundMatch.es.getContent(
-              player.name,
-              opponent.name,
-              opponent.whatsapp,
-              { level: player.level, leagueName: matchLeagueName }
-            )
-          },
-          en: {
-            ...announcementContent.firstRoundMatch.en,
-            content: announcementContent.firstRoundMatch.en.getContent(
-              player.name,
-              opponent.name,
-              opponent.whatsapp,
-              { level: player.level, leagueName: matchLeagueName }
-            )
+    // Add first round match messages - one per league
+    if (firstRoundMatches.length > 0 && player) {
+      firstRoundMatches.forEach(match => {
+        const opponent = match.players.player1._id === player._id 
+          ? match.players.player2 
+          : match.players.player1
+        
+        // Get the league info from the match
+        const leagueId = match.league?._id || match.league
+        const leagueSlug = match.league?.slug || 
+          player.registrations?.find(r => r.league?._id === leagueId || r.league === leagueId)?.league?.slug ||
+          'unknown'
+        const matchLeagueName = match.league?.name || 
+          player.registrations?.find(r => r.league?._id === leagueId || r.league === leagueId)?.league?.name ||
+          'League'
+        
+        // Create unique ID per league so players in multiple leagues see separate messages
+        const uniqueId = `${announcementContent.firstRoundMatch.id}-${leagueSlug}`
+        
+        // Use match creation date or current date for the announcement date
+        const announcementDate = match.createdAt ? new Date(match.createdAt) : new Date()
+        
+        messages.push({
+          id: uniqueId,
+          type: 'announcement',
+          date: announcementDate,
+          title: announcementContent.firstRoundMatch[locale].title,
+          subtitle: matchLeagueName,
+          iconType: 'match',
+          iconBg: 'bg-green-100',
+          iconColor: 'text-green-600',
+          isNew: !seenAnnouncements.includes(uniqueId),
+          content: {
+            ...announcementContent.firstRoundMatch,
+            id: uniqueId, // Override the ID for marking as seen
+            es: {
+              ...announcementContent.firstRoundMatch.es,
+              content: announcementContent.firstRoundMatch.es.getContent(
+                player.name,
+                opponent.name,
+                opponent.whatsapp,
+                { level: player.level, leagueName: matchLeagueName }
+              )
+            },
+            en: {
+              ...announcementContent.firstRoundMatch.en,
+              content: announcementContent.firstRoundMatch.en.getContent(
+                player.name,
+                opponent.name,
+                opponent.whatsapp,
+                { level: player.level, leagueName: matchLeagueName }
+              )
+            }
           }
-        }
+        })
       })
     }
 

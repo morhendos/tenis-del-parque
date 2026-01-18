@@ -46,15 +46,29 @@ export default function PlayerLayout({ children }) {
           if (preferencesResponse.ok) {
             const preferencesData = await preferencesResponse.json()
             
-            // Check for new announcements
-            const allAnnouncementIds = [
-              announcementContent.firstRoundMatch.id
-            ]
-            
             const seenAnnouncements = preferencesData.seenAnnouncements || []
-            const hasUnseen = allAnnouncementIds.some(id => !seenAnnouncements.includes(id))
             
-            setHasNewAnnouncement(hasUnseen)
+            // Check for first round match announcements by fetching matches
+            try {
+              const matchesResponse = await fetch('/api/player/matches')
+              if (matchesResponse.ok) {
+                const matchesData = await matchesResponse.json()
+                // Get ALL round 1 matches (could be in multiple leagues)
+                const firstRoundMatches = matchesData.matches?.filter(match => match.round === 1) || []
+                
+                // Build per-league announcement IDs
+                const firstRoundAnnouncementIds = firstRoundMatches.map(match => {
+                  const leagueSlug = match.league?.slug || 'unknown'
+                  return `${announcementContent.firstRoundMatch.id}-${leagueSlug}`
+                })
+                
+                // Check if any first round announcements are unseen
+                const hasUnseenFirstRound = firstRoundAnnouncementIds.some(id => !seenAnnouncements.includes(id))
+                setHasNewAnnouncement(hasUnseenFirstRound)
+              }
+            } catch (error) {
+              console.error('Error checking first round announcements:', error)
+            }
           }
           
           // Also fetch player profile for name display AND language preference
