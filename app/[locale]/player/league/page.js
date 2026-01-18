@@ -373,7 +373,7 @@ function LeagueHeader({
         )}
         
         {/* Expanded Content - Drawer sliding from behind header */}
-        <div className="absolute left-0 right-0 top-full z-10 overflow-hidden">
+        <div className={`absolute left-0 right-0 top-full z-10 overflow-hidden ${!isExpanded ? 'pointer-events-none' : ''}`}>
           <div className={`transition-transform duration-300 ease-out ${
             isExpanded 
               ? 'translate-y-0' 
