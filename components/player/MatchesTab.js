@@ -17,6 +17,7 @@ export default function MatchesTab({
   const [currentRound, setCurrentRound] = useState(1)
   const [showResultModal, setShowResultModal] = useState(false)
   const [showScheduleModal, setShowScheduleModal] = useState(false)
+  const [showExtendModal, setShowExtendModal] = useState(false)
   const [selectedMatch, setSelectedMatch] = useState(null)
   const [playerMatches, setPlayerMatches] = useState([])
   const [loadingPlayerMatches, setLoadingPlayerMatches] = useState(true)
@@ -108,7 +109,29 @@ export default function MatchesTab({
           m.round === currentRound &&
           (m.players?.player1?._id === player?._id || m.players?.player2?._id === player?._id)
         )
-        return { ...(fullMatch || match), isPlayerMatch: true }
+        let finalMatch = { ...(fullMatch || match), isPlayerMatch: true }
+        
+        // TESTING: Override player's R1 match to appear unplayed with urgent deadline
+        // if (currentRound === 1) {
+        //   const urgentDeadline = new Date()
+        //   urgentDeadline.setDate(urgentDeadline.getDate() + 1) // 1 day from now
+        //   
+        //   finalMatch = {
+        //     ...finalMatch,
+        //     status: 'scheduled',
+        //     result: null,
+        //     schedule: {
+        //       ...finalMatch.schedule,
+        //       confirmedDate: null,
+        //       club: null,
+        //       time: null,
+        //       deadline: urgentDeadline.toISOString()
+        //     }
+        //   }
+        // }
+        // END TESTING
+        
+        return finalMatch
       }
       
       return { ...match, isPlayerMatch: false }
@@ -274,7 +297,12 @@ export default function MatchesTab({
     }
   }
 
-  const handleExtend = async (match) => {
+  const handleOpenExtendModal = (match) => {
+    setSelectedMatch(match)
+    setShowExtendModal(true)
+  }
+
+  const handleConfirmExtend = async (match) => {
     try {
       const response = await fetch('/api/player/matches/extend', {
         method: 'POST',
@@ -301,6 +329,7 @@ export default function MatchesTab({
         )
         
         setExtensionsRemaining(result.extensionsRemaining)
+        setShowExtendModal(false)
         toast.success(language === 'es' ? 'Límite extendido 7 días' : 'Deadline extended by 7 days')
       } else {
         toast.error(result.error || (language === 'es' ? 'Error al extender límite' : 'Failed to extend deadline'))
@@ -405,7 +434,7 @@ export default function MatchesTab({
               onResult={handleResult}
               onWhatsApp={handleWhatsApp}
               onUnschedule={handleUnschedule}
-              onExtend={handleExtend}
+              onExtend={handleOpenExtendModal}
               extensionsRemaining={extensionsRemaining}
               isPublic={!match.isPlayerMatch || isPublic}
             />
@@ -431,6 +460,7 @@ export default function MatchesTab({
         <MatchModals
           showResultModal={showResultModal}
           showScheduleModal={showScheduleModal}
+          showExtendModal={showExtendModal}
           selectedMatch={selectedMatch}
           player={player}
           language={language}
@@ -440,9 +470,12 @@ export default function MatchesTab({
             setShowScheduleModal(false)
             setIsEditingSchedule(false)
           }}
+          onCloseExtend={() => setShowExtendModal(false)}
           onSubmitResult={handleSubmitResult}
           onSubmitSchedule={handleSubmitSchedule}
           onUnschedule={handleUnschedule}
+          onConfirmExtend={handleConfirmExtend}
+          extensionsRemaining={extensionsRemaining}
           isEditingSchedule={isEditingSchedule}
         />
       )}

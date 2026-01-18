@@ -3,15 +3,19 @@ import { useState, useEffect, useRef } from 'react'
 export function MatchModals({ 
   showResultModal,
   showScheduleModal,
+  showExtendModal,
   selectedMatch,
   player,
   language,
   league,
   onCloseResult,
   onCloseSchedule,
+  onCloseExtend,
   onSubmitResult,
   onSubmitSchedule,
   onUnschedule,
+  onConfirmExtend,
+  extensionsRemaining = 0,
   isEditingSchedule = false
 }) {
   // Venue options by city
@@ -770,6 +774,50 @@ export function MatchModals({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Extend Deadline Modal - Mobile Optimized */}
+      {showExtendModal && selectedMatch && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4">
+          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-sm p-6 pb-24 sm:pb-6 animate-slide-up-mobile sm:animate-fade-in">
+            {/* Icon */}
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                <span style={{ fontSize: '2rem' }}>⏱</span>
+              </div>
+            </div>
+            
+            {/* Title */}
+            <h2 className="text-center text-xl font-bold text-gray-900 mb-2">
+              {language === 'es' ? 'Ampliar Plazo' : 'Extend Deadline'}
+            </h2>
+            
+            {/* Description */}
+            <p className="text-center text-base text-gray-600 mb-6">
+              {language === 'es'
+                ? `Añadir 7 días al plazo usando 1 de tus ${extensionsRemaining} extensiones disponibles`
+                : `Add 7 days to the deadline using 1 of your ${extensionsRemaining} available extensions`}
+            </p>
+            
+            {/* Buttons */}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={onCloseExtend}
+                className="flex-1 px-4 py-3 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all font-medium"
+              >
+                {language === 'es' ? 'Cancelar' : 'Cancel'}
+              </button>
+              <button
+                type="button"
+                onClick={() => onConfirmExtend(selectedMatch)}
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all font-medium shadow-lg shadow-blue-500/25"
+              >
+                {language === 'es' ? 'Confirmar' : 'Confirm'}
+              </button>
+            </div>
           </div>
         </div>
       )}

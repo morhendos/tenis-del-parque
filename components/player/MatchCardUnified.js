@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { formatOpponentName } from '@/lib/utils/playerNameUtils'
 
 /**
@@ -18,7 +17,6 @@ export default function MatchCardUnified({
   isPublic = false,
   className = ''
 }) {
-  const [extending, setExtending] = useState(false)
 
   // Determine match state
   const isCompleted = match.status === 'completed' || match.result?.winner
@@ -148,24 +146,6 @@ export default function MatchCardUnified({
     })
   }
 
-  const handleExtend = async (e) => {
-    e.stopPropagation()
-    if (extending || extensionsRemaining <= 0) return
-    
-    const confirmMsg = language === 'es'
-      ? `¿Usar 1 de tus ${extensionsRemaining} extensiones para añadir 7 días?`
-      : `Use 1 of your ${extensionsRemaining} extensions to add 7 days?`
-    
-    if (!window.confirm(confirmMsg)) return
-    
-    setExtending(true)
-    try {
-      await onExtend(match)
-    } finally {
-      setExtending(false)
-    }
-  }
-
   const deadlineStatus = getDeadlineStatus()
   const showActions = isPlayerMatch && !isPublic && !isCompleted
 
@@ -207,7 +187,7 @@ export default function MatchCardUnified({
               return (
                 <span 
                   key={idx} 
-                  className={`text-lg font-bold tabular-nums w-8 text-center ${
+                  className={`text-sm font-bold tabular-nums w-8 text-center ${
                     wonSet ? 'text-gray-900' : 'text-gray-500'
                   }`}
                 >
@@ -310,13 +290,16 @@ export default function MatchCardUnified({
             {/* Deadline extension option */}
             {!isScheduled && deadlineStatus && deadlineStatus.urgent && extensionsRemaining > 0 && onExtend && (
               <button
-                onClick={handleExtend}
-                disabled={extending}
-                className="w-full text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 py-1.5 rounded-lg transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onExtend(match)
+                }}
+                className="w-full text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 py-2.5 rounded-lg transition-colors font-medium flex items-center justify-center gap-1.5"
               >
-                {extending 
-                  ? (language === 'es' ? 'Extendiendo...' : 'Extending...')
-                  : (language === 'es' ? `+7 días (${extensionsRemaining} restantes)` : `+7 days (${extensionsRemaining} left)`)}
+                <span style={{ fontSize: '1.4rem' }}>⏱</span>
+                {language === 'es' 
+                  ? `Ampliar plazo 7 días (${extensionsRemaining} disponibles)` 
+                  : `Extend deadline by 7 days (${extensionsRemaining} left)`}
               </button>
             )}
             
