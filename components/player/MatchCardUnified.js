@@ -22,6 +22,7 @@ export default function MatchCardUnified({
   // Determine match state
   const isCompleted = match.status === 'completed' || match.result?.winner
   const hasSets = match.result?.score?.sets?.length > 0
+  const isByeMatch = match.isBye === true
 
   // Get player data
   const player1 = match.players?.player1
@@ -31,12 +32,11 @@ export default function MatchCardUnified({
   const isPlayer1Winner = winnerId && (winnerId === player1?._id || winnerId.toString() === player1?._id?.toString())
   const isPlayer2Winner = winnerId && (winnerId === player2?._id || winnerId.toString() === player2?._id?.toString())
 
-  // Check if current user is in this match
+  // Check if current user is in this match (for BYE matches, only check player1)
   const isPlayerMatch = player && (
     player._id === player1?._id || 
-    player._id === player2?._id ||
     player._id?.toString() === player1?._id?.toString() ||
-    player._id?.toString() === player2?._id?.toString()
+    (!isByeMatch && (player._id === player2?._id || player._id?.toString() === player2?._id?.toString()))
   )
 
   const isCurrentUserPlayer1 = player && (player._id === player1?._id || player._id?.toString() === player1?._id?.toString())
@@ -162,8 +162,8 @@ export default function MatchCardUnified({
   // Check if match is "virtually cancelled" (deadline passed + not scheduled + not completed)
   const isVirtuallyCancelled = !isCompleted && !isScheduled && deadlineStatus?.status === 'overdue'
   
-  // Don't show actions for completed or virtually cancelled matches
-  const showActions = isPlayerMatch && !isPublic && !isCompleted && !isVirtuallyCancelled
+  // Don't show actions for completed, virtually cancelled, or BYE matches
+  const showActions = isPlayerMatch && !isPublic && !isCompleted && !isVirtuallyCancelled && !isByeMatch
 
   // Render player row
   const renderPlayerRow = (playerData, isWinner, isFirst) => {
@@ -171,18 +171,27 @@ export default function MatchCardUnified({
       playerData?._id === player._id || 
       playerData?._id?.toString() === player._id?.toString()
     )
+    
+    // For BYE matches: second row shows "BYE"
+    const isByeRow = isByeMatch && !isFirst
+    const displayName = isByeRow ? 'BYE' : formatName(playerData?.name)
 
     return (
       <div className={`flex items-center px-3 py-2.5 ${
         isFirst ? 'border-b border-gray-100' : ''
       } ${
-        isCompleted && isWinner ? 'bg-purple-50' : 'bg-white'
+        isByeMatch && isFirst ? 'bg-emerald-50' : (isCompleted && isWinner ? 'bg-purple-50' : 'bg-white')
       } ${
         isVirtuallyCancelled ? 'bg-gray-50' : ''
       }`}>
         {/* Winner indicator or cancelled X */}
         <div className="w-5 flex-shrink-0">
-          {isCompleted && isWinner && (
+          {isByeMatch && isFirst && (
+            <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+          {!isByeMatch && isCompleted && isWinner && (
             <div className="w-2 h-2 rounded-full bg-yellow-500" />
           )}
           {isVirtuallyCancelled && isFirst && (
@@ -195,15 +204,30 @@ export default function MatchCardUnified({
         {/* Player name */}
         <div className="flex-1 min-w-0">
           <span className={`font-semibold text-sm truncate block ${
-            isVirtuallyCancelled ? 'text-gray-400 line-through' : 'text-gray-800'
+            isVirtuallyCancelled ? 'text-gray-400 line-through' : 
+            isByeRow ? 'text-gray-400 italic' : 'text-gray-800'
           }`}>
-            {formatName(playerData?.name)}
+            {displayName}
           </span>
         </div>
 
-        {/* Scores or placeholder */}
+        {/* Scores */}
         <div className="flex items-center ml-3">
-          {isCompleted && hasSets ? (
+          {isByeMatch ? (
+            // BYE match shows 2-0 score
+            <>
+              <span className={`text-sm font-bold tabular-nums w-8 text-center ${
+                isFirst ? 'text-emerald-600' : 'text-gray-400'
+              }`}>
+                {isFirst ? '2' : '0'}
+              </span>
+              <span className={`text-sm font-bold tabular-nums w-8 text-center ${
+                isFirst ? 'text-emerald-600' : 'text-gray-400'
+              }`}>
+                {isFirst ? '0' : '0'}
+              </span>
+            </>
+          ) : isCompleted && hasSets ? (
             match.result.score.sets.map((set, idx) => {
               const score = isFirst ? set.player1 : set.player2
               const opponentScore = isFirst ? set.player2 : set.player1
@@ -259,12 +283,26 @@ export default function MatchCardUnified({
       <div className={`px-3 py-1.5 flex items-center justify-between ${
         isVirtuallyCancelled 
           ? 'bg-gradient-to-r from-red-500 to-red-600' 
-          : 'bg-gradient-to-r from-parque-purple to-purple-600'
+          : isByeMatch
+            ? 'bg-gradient-to-r from-emerald-500 to-emerald-600'
+            : 'bg-gradient-to-r from-parque-purple to-purple-600'
       }`}>
         {/* Left side: status info */}
         <div className="flex items-center gap-1">
+          {/* BYE match indicator */}
+          {isByeMatch && (
+            <>
+              <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span className="text-xs font-medium text-white">
+                BYE · {language === 'es' ? '+3 puntos' : '+3 points'}
+              </span>
+            </>
+          )}
+          
           {/* Playoff stage name */}
-          {match.matchType === 'playoff' && match.playoffInfo?.stage && (
+          {!isByeMatch && match.matchType === 'playoff' && match.playoffInfo?.stage && (
             <span className="text-xs font-semibold text-white/90 uppercase tracking-wide mr-2">
               {(() => {
                 const stageNames = {
@@ -279,7 +317,7 @@ export default function MatchCardUnified({
             </span>
           )}
           
-          {!isCompleted && isScheduled && (
+          {!isByeMatch && !isCompleted && isScheduled && (
             <>
               <svg className="w-3.5 h-3.5 text-white/90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
@@ -293,7 +331,7 @@ export default function MatchCardUnified({
           )}
           
           {/* Virtually cancelled - show cancelled status */}
-          {isVirtuallyCancelled && (
+          {!isByeMatch && isVirtuallyCancelled && (
             <>
               <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -304,7 +342,7 @@ export default function MatchCardUnified({
             </>
           )}
           
-          {!isCompleted && !isScheduled && !isVirtuallyCancelled && deadlineStatus && (
+          {!isByeMatch && !isCompleted && !isScheduled && !isVirtuallyCancelled && deadlineStatus && (
             <>
               <svg className={`w-3.5 h-3.5 ${deadlineStatus.urgent ? 'text-red-300' : 'text-white/90'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -315,15 +353,21 @@ export default function MatchCardUnified({
             </>
           )}
           
-          {isCompleted && (
+          {!isByeMatch && isCompleted && (
             <span className="text-xs font-medium text-white/90">
               {formatPlayedDate()}
             </span>
           )}
         </div>
         
-        {/* Right side: score column headers for completed matches */}
-        {isCompleted && hasSets && (
+        {/* Right side: score column headers for BYE and completed matches */}
+        {isByeMatch && (
+          <div className="flex items-center ml-3">
+            <span className="text-[10px] font-medium text-white/60 w-8 text-center">S1</span>
+            <span className="text-[10px] font-medium text-white/60 w-8 text-center">S2</span>
+          </div>
+        )}
+        {!isByeMatch && isCompleted && hasSets && (
           <div className="flex items-center ml-3">
             {match.result.score.sets.map((set, idx) => {
               const isLastSet = idx === match.result.score.sets.length - 1
