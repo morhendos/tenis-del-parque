@@ -238,19 +238,22 @@ function LeagueHeader({
   if (!hasMultipleLeagues) {
     return (
       <div className="-mx-2 -mt-4 sm:mx-0 sm:mt-0">
-        <div className="bg-gradient-to-r from-parque-purple to-purple-600 shadow-lg overflow-hidden relative sm:rounded-2xl">
-          {/* Decorative circle */}
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-white/10" />
+        <div className="bg-gradient-to-br from-parque-purple via-purple-600 to-indigo-600 shadow-lg overflow-hidden relative sm:rounded-2xl">
+          {/* Background decoration - matching dashboard */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute -top-16 -right-16 w-48 h-48 bg-white rounded-full" />
+            <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-white rounded-full" />
+          </div>
           
           <div className="flex items-center justify-between px-4 py-4 relative">
             <div className="flex items-center gap-3 min-w-0">
-              {/* Logo */}
-              <div className="w-9 h-9 bg-white/30 rounded-lg flex items-center justify-center p-1 flex-shrink-0">
+              {/* Logo - sized to match text height */}
+              <div className="w-12 h-12 bg-white/30 rounded-xl flex items-center justify-center p-1.5 flex-shrink-0">
                 <img 
                   src="/logo-big.png" 
                   alt="Tenis del Parque" 
-                  width={26} 
-                  height={26}
+                  width={36} 
+                  height={36}
                   className="object-contain"
                 />
               </div>
@@ -297,19 +300,22 @@ function LeagueHeader({
         {/* Collapsed Header - Purple gradient */}
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full flex items-center justify-between px-4 py-4 bg-gradient-to-r from-parque-purple to-purple-600 hover:from-parque-purple/95 hover:to-purple-600/95 transition-colors relative"
+          className="w-full flex items-center justify-between px-4 py-4 bg-gradient-to-br from-parque-purple via-purple-600 to-indigo-600 hover:from-parque-purple/95 hover:via-purple-600/95 hover:to-indigo-600/95 transition-colors relative overflow-hidden"
         >
-          {/* Decorative circle */}
-          <div className="absolute right-16 top-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-white/10" />
+          {/* Background decoration - matching dashboard */}
+          <div className="absolute inset-0 opacity-10 pointer-events-none">
+            <div className="absolute -top-16 -right-16 w-48 h-48 bg-white rounded-full" />
+            <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-white rounded-full" />
+          </div>
           
           <div className="flex items-center gap-3 min-w-0 relative">
-            {/* Logo */}
-            <div className="w-9 h-9 bg-white/30 rounded-lg flex items-center justify-center p-1 flex-shrink-0">
+            {/* Logo - sized to match text height */}
+            <div className="w-12 h-12 bg-white/30 rounded-xl flex items-center justify-center p-1.5 flex-shrink-0">
               <img 
                 src="/logo-big.png" 
                 alt="Tenis del Parque" 
-                width={26} 
-                height={26}
+                width={36} 
+                height={36}
                 className="object-contain"
               />
             </div>
