@@ -294,12 +294,12 @@ function LeagueHeader({
 
   // For multiple leagues, show expandable selector
   return (
-    <div className="-mx-2 -mt-4 sm:mx-0 sm:mt-0">
-      <div className="shadow-lg overflow-hidden sm:rounded-2xl">
+    <div className="-mx-2 -mt-4 sm:mx-0 sm:mt-0 relative z-20">
+      <div className="shadow-lg overflow-visible sm:rounded-2xl">
         {/* Collapsed Header - Purple gradient */}
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full flex items-center justify-between px-4 pt-5 pb-4 bg-gradient-to-br from-parque-purple via-purple-600 to-indigo-600 hover:from-parque-purple/95 hover:via-purple-600/95 hover:to-indigo-600/95 transition-colors relative overflow-hidden"
+          className="w-full flex items-center justify-between px-4 pt-5 pb-4 bg-gradient-to-br from-parque-purple via-purple-600 to-indigo-600 hover:from-parque-purple/95 hover:via-purple-600/95 hover:to-indigo-600/95 transition-colors relative overflow-hidden sm:rounded-2xl"
         >
           {/* Background decoration - matching dashboard */}
           <div className="absolute inset-0 opacity-10 pointer-events-none">
@@ -364,11 +364,20 @@ function LeagueHeader({
           </div>
         </button>
         
-        {/* Expanded Content - White background for contrast */}
-        <div className={`transition-all duration-200 ease-in-out overflow-hidden bg-white ${
-        isExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
-      }`}>
-        <div className="px-4 pb-4 space-y-4 border-t border-gray-100 pt-4 bg-gray-50/50">
+        {/* Backdrop overlay */}
+        {isExpanded && (
+          <div 
+            className="fixed inset-0 bg-black/20 z-10"
+            onClick={() => setIsExpanded(false)}
+          />
+        )}
+        
+        {/* Expanded Content - Floating dropdown */}
+        <div className={`absolute left-0 right-0 top-full z-20 overflow-hidden transition-all duration-200 ease-in-out ${
+          isExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
+        }`}>
+          <div className="mx-2 sm:mx-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200">
+            <div className="px-4 py-4 space-y-4 max-h-[400px] overflow-y-auto">
           {/* Active Leagues */}
           {categories.active.length > 0 && (
             <div>
@@ -416,7 +425,8 @@ function LeagueHeader({
               </div>
             </div>
           )}
-        </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
