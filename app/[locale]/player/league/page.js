@@ -376,7 +376,7 @@ function LeagueHeader({
         <div className={`absolute left-0 right-0 top-full z-20 overflow-hidden transition-all duration-200 ease-in-out ${
           isExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
         }`}>
-          <div className="mx-2 sm:mx-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200">
+          <div className="mx-2 sm:mx-0 bg-white rounded-b-xl shadow-2xl border border-t-0 border-gray-200">
             <div className="px-4 py-4 space-y-4 max-h-[400px] overflow-y-auto">
           {/* Active Leagues */}
           {categories.active.length > 0 && (
