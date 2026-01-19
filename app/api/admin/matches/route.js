@@ -178,11 +178,12 @@ export async function POST(request) {
         status: 'completed',
         result: {
           winner: player1Id,
-          score: { player1: 2, player2: 0 },
-          sets: [
-            { player1: 6, player2: 0 },
-            { player1: 6, player2: 0 }
-          ]
+          score: {
+            sets: [
+              { player1: 6, player2: 0 },
+              { player1: 6, player2: 0 }
+            ]
+          }
         }
       })
 
