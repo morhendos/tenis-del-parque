@@ -42,7 +42,10 @@ export default function PlayerMatches() {
     if (player?.registrations?.length > 0) {
       // Get the first registration's extensions (or the selected league's)
       const registration = selectedLeagueId 
-        ? player.registrations.find(r => r.league?._id === selectedLeagueId || r.league === selectedLeagueId)
+        ? player.registrations.find(r => {
+            const regLeagueId = r.league?._id?.toString() || r.league?.toString()
+            return regLeagueId === selectedLeagueId?.toString()
+          })
         : player.registrations[0]
       
       if (registration?.extensions) {
@@ -305,7 +308,7 @@ export default function PlayerMatches() {
   
   // Filter matches by selected league (only if multi-league)
   const filteredMatches = hasMultipleLeagues && selectedLeagueId
-    ? matches.filter(m => m.league?._id === selectedLeagueId)
+    ? matches.filter(m => m.league?._id?.toString() === selectedLeagueId?.toString())
     : matches
   
   const upcomingMatches = filteredMatches.filter(m => m.status === 'scheduled' && !m.result?.winner)
@@ -441,21 +444,25 @@ export default function PlayerMatches() {
               )}
             </div>
             <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-              {playerLeagues.map((league) => (
-                <button
-                  key={league._id}
-                  onClick={() => setSelectedLeagueId(
-                    selectedLeagueId === league._id ? null : league._id
-                  )}
-                  className={`flex-shrink-0 px-3 py-1.5 rounded-lg font-medium text-xs transition-all ${
-                    selectedLeagueId === league._id
-                      ? 'bg-parque-purple text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  {league.name}
-                </button>
-              ))}
+              {playerLeagues.map((league) => {
+                const leagueIdStr = league._id?.toString()
+                const isSelected = selectedLeagueId?.toString() === leagueIdStr
+                return (
+                  <button
+                    key={leagueIdStr}
+                    onClick={() => setSelectedLeagueId(
+                      isSelected ? null : leagueIdStr
+                    )}
+                    className={`flex-shrink-0 px-3 py-1.5 rounded-lg font-medium text-xs transition-all ${
+                      isSelected
+                        ? 'bg-parque-purple text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {league.name}
+                  </button>
+                )
+              })}
             </div>
           </div>
         )}
