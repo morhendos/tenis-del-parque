@@ -47,8 +47,9 @@ export async function GET(request) {
       .lean()
 
     // Filter out matches with null player references (orphaned after CSV import)
+    // BUT keep BYE matches (they have player2 = null intentionally)
     const validMatches = matches.filter(match => 
-      match.players?.player1 && match.players?.player2
+      match.players?.player1 && (match.players?.player2 || match.isBye)
     )
 
     return NextResponse.json({
@@ -79,18 +80,26 @@ export async function POST(request) {
     if (error) return error
 
     const body = await request.json()
-    const { league, season, round, player1Id, player2Id, schedule } = body
+    const { league, season, round, player1Id, player2Id, schedule, isBye } = body
 
-    // Validate required fields
-    if (!league || !season || !round || !player1Id || !player2Id) {
+    // Validate required fields (player2Id not required for BYE)
+    if (!league || !season || !round || !player1Id) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       )
     }
 
-    // Validate players are different
-    if (player1Id === player2Id) {
+    // For non-BYE matches, validate player2Id
+    if (!isBye && !player2Id) {
+      return NextResponse.json(
+        { error: 'player2Id is required for non-BYE matches' },
+        { status: 400 }
+      )
+    }
+
+    // Validate players are different (only for non-BYE)
+    if (!isBye && player1Id === player2Id) {
       return NextResponse.json(
         { error: 'Players must be different' },
         { status: 400 }
@@ -100,30 +109,110 @@ export async function POST(request) {
     // Connect to database
     await dbConnect()
 
-    // Verify both players exist and are registered in the league
-    const [player1, player2] = await Promise.all([
-      Player.findById(player1Id),
-      Player.findById(player2Id)
-    ])
-
-    if (!player1 || !player2) {
+    // Verify player1 exists
+    const player1 = await Player.findById(player1Id)
+    if (!player1) {
       return NextResponse.json(
-        { error: 'One or both players not found' },
+        { error: 'Player 1 not found' },
         { status: 404 }
       )
     }
 
-    // Check if players are registered in this league (using registrations array)
+    // Check if player1 is registered in this league
     const player1InLeague = player1.registrations?.some(
       reg => reg.league.toString() === league
     )
+    if (!player1InLeague) {
+      return NextResponse.json(
+        { error: 'Player must be registered in the specified league' },
+        { status: 400 }
+      )
+    }
+
+    // Handle BYE match creation
+    if (isBye) {
+      // Check if player already has a BYE in this round
+      const existingBye = await Match.findOne({
+        league,
+        season,
+        round,
+        'players.player1': player1Id,
+        isBye: true
+      })
+
+      if (existingBye) {
+        return NextResponse.json(
+          { error: 'Player already has a BYE in this round' },
+          { status: 400 }
+        )
+      }
+
+      // Check if player already has any match in this round
+      const existingMatch = await Match.findOne({
+        league,
+        season,
+        round,
+        $or: [
+          { 'players.player1': player1Id },
+          { 'players.player2': player1Id }
+        ]
+      })
+
+      if (existingMatch) {
+        return NextResponse.json(
+          { error: 'Player already has a match scheduled in this round' },
+          { status: 400 }
+        )
+      }
+
+      // Create BYE match
+      const byeMatch = new Match({
+        league,
+        season,
+        round,
+        players: {
+          player1: player1Id,
+          player2: null
+        },
+        isBye: true,
+        status: 'completed',
+        result: {
+          winner: player1Id,
+          score: { player1: 2, player2: 0 },
+          sets: [
+            { player1: 6, player2: 0 },
+            { player1: 6, player2: 0 }
+          ]
+        }
+      })
+
+      await byeMatch.save()
+      await byeMatch.populate('players.player1')
+
+      console.log(`Created BYE match for ${player1.name} in round ${round}`)
+
+      return NextResponse.json({
+        message: 'BYE match created successfully',
+        match: byeMatch
+      }, { status: 201 })
+    }
+
+    // Regular match creation (non-BYE)
+    const player2 = await Player.findById(player2Id)
+    if (!player2) {
+      return NextResponse.json(
+        { error: 'Player 2 not found' },
+        { status: 404 }
+      )
+    }
+
+    // Check if player2 is registered in this league
     const player2InLeague = player2.registrations?.some(
       reg => reg.league.toString() === league
     )
-
-    if (!player1InLeague || !player2InLeague) {
+    if (!player2InLeague) {
       return NextResponse.json(
-        { error: 'Players must be registered in the specified league' },
+        { error: 'Player 2 must be registered in the specified league' },
         { status: 400 }
       )
     }

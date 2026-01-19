@@ -68,6 +68,44 @@ function PlayerCard({ player, isSelected, onSelect, isDragging, matchHistory = [
 function MatchPairing({ match, index, onSwapPlayers, onRemoveMatch, playerHistory, isEditable = true }) {
   const [dragOver, setDragOver] = useState(null)
   
+  // Handle BYE matches
+  if (match.isBye || !match.player2) {
+    return (
+      <div className="bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-lg shadow-md p-6 relative border-2 border-emerald-300">
+        {isEditable && (
+          <button
+            onClick={() => onRemoveMatch(index)}
+            className="absolute top-2 right-2 text-gray-400 hover:text-red-600"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
+        
+        <div className="flex items-center justify-between">
+          <div className="flex-1 p-3 rounded-lg border-2 border-emerald-200 bg-white">
+            <PlayerCard player={match.player1} isSelected={false} onSelect={() => {}} />
+          </div>
+          
+          <div className="mx-4 flex flex-col items-center">
+            <span className="text-emerald-600 text-lg font-bold">BYE</span>
+            <span className="text-emerald-500 text-xs">+3 pts</span>
+          </div>
+          
+          <div className="flex-1 p-3 rounded-lg border-2 border-dashed border-emerald-300 bg-emerald-50 flex items-center justify-center min-h-[100px]">
+            <div className="text-center">
+              <svg className="w-8 h-8 mx-auto text-emerald-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span className="text-emerald-600 font-medium">Auto Win</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+  
   const handleDrop = (e, position) => {
     e.preventDefault()
     const playerId = e.dataTransfer.getData('playerId')
@@ -341,6 +379,19 @@ function CreateMatchContent() {
       }
     }
   }
+
+  const handleCreateBye = () => {
+    if (selectedPlayers.length !== 1 || roundNumber === null) return
+    
+    const byeMatch = {
+      player1: selectedPlayers[0],
+      player2: null, // BYE indicator
+      round: roundNumber,
+      isBye: true
+    }
+    setMatches([...matches, byeMatch])
+    setSelectedPlayers([])
+  }
   
   const handleSwapPlayers = (matchIndex, position, playerId) => {
     const player = players.find(p => p._id === playerId)
@@ -418,8 +469,12 @@ function CreateMatchContent() {
     setError('')
     
     try {
-      // Create all matches
-      const promises = matches.map(match => 
+      // Separate BYE matches from regular matches
+      const byeMatches = matches.filter(m => m.isBye || !m.player2)
+      const regularMatches = matches.filter(m => !m.isBye && m.player2)
+      
+      // Create regular matches
+      const regularPromises = regularMatches.map(match => 
         fetch('/api/admin/matches', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -433,14 +488,35 @@ function CreateMatchContent() {
         })
       )
       
-      const results = await Promise.all(promises)
+      // Create BYE matches
+      const byePromises = byeMatches.map(match => 
+        fetch('/api/admin/matches', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            league: leagueId || selectedLeague?.id,
+            season: selectedLeague?.season ? `${selectedLeague.season.type}-${selectedLeague.season.year}` : leagueId,
+            round: roundNumber,
+            player1Id: match.player1._id,
+            isBye: true
+          })
+        })
+      )
+      
+      const results = await Promise.all([...regularPromises, ...byePromises])
       const failed = results.filter(r => !r.ok).length
       
       if (failed > 0) {
         throw new Error(`Failed to create ${failed} matches`)
       }
       
-      setSuccess(`Successfully created ${matches.length} matches for round ${roundNumber}`)
+      const byeCount = byeMatches.length
+      const regularCount = regularMatches.length
+      const message = byeCount > 0 
+        ? `Successfully created ${regularCount} matches and ${byeCount} BYE${byeCount > 1 ? 's' : ''} for round ${roundNumber}`
+        : `Successfully created ${matches.length} matches for round ${roundNumber}`
+      
+      setSuccess(message)
       
       // Clear round selection from session storage on success
       sessionStorage.removeItem('roundSelection')
@@ -705,10 +781,22 @@ function CreateMatchContent() {
             </div>
             
             {selectedPlayers.length === 1 && (
-              <div className="mt-4 p-3 bg-parque-purple/10 rounded-lg">
+              <div className="mt-4 p-3 bg-parque-purple/10 rounded-lg space-y-3">
                 <p className="text-sm text-parque-purple">
-                  Selected: {selectedPlayers[0].name}. Choose an opponent.
+                  Selected: {selectedPlayers[0].name}
                 </p>
+                <div className="flex gap-2">
+                  <span className="text-xs text-gray-500 self-center">Choose opponent or:</span>
+                  <button
+                    onClick={handleCreateBye}
+                    className="px-3 py-1.5 bg-emerald-600 text-white text-sm rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-1.5"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Create BYE
+                  </button>
+                </div>
               </div>
             )}
           </div>
