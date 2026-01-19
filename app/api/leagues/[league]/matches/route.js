@@ -91,8 +91,9 @@ export async function GET(request, { params }) {
     console.log('API: Found', matches.length, 'matches')
     
     // Filter out matches with null player references (orphaned after CSV import)
+    // BUT keep BYE matches (they have player2 = null intentionally)
     const validMatches = matches.filter(match => 
-      match.players?.player1 && match.players?.player2
+      match.players?.player1 && (match.players?.player2 || match.isBye)
     )
     
     console.log('API: Filtered out', matches.length - validMatches.length, 'invalid matches')
@@ -106,6 +107,7 @@ export async function GET(request, { params }) {
       return {
         _id: match._id,
         round: match.round,
+        isBye: match.isBye || false,
         players: {
           player1: match.players.player1 ? {
             _id: match.players.player1._id,
