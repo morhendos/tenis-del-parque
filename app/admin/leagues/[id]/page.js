@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import LeagueSeasonEditor from '../../../../components/admin/leagues/LeagueSeasonEditor'
+import SeasonStartEmailModal from '../../../../components/admin/leagues/SeasonStartEmailModal'
 
 export default function LeagueManagementPage() {
   const [league, setLeague] = useState(null)
@@ -11,6 +12,7 @@ export default function LeagueManagementPage() {
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('overview')
   const [showSeasonEditor, setShowSeasonEditor] = useState(false)
+  const [showSeasonStartEmail, setShowSeasonStartEmail] = useState(false)
   const [skillLevelEditing, setSkillLevelEditing] = useState(false)
   const [tempSkillLevel, setTempSkillLevel] = useState('')
   
@@ -447,6 +449,17 @@ export default function LeagueManagementPage() {
                     <div className="text-left">
                       <p className="font-medium text-gray-900">Discount Codes</p>
                       <p className="text-sm text-gray-600">Manage promo codes</p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setShowSeasonStartEmail(true)}
+                    className="flex items-center p-4 border border-amber-200 rounded-lg hover:bg-amber-50 transition-colors"
+                  >
+                    <span className="text-2xl mr-3">📧</span>
+                    <div className="text-left">
+                      <p className="font-medium text-gray-900">Season Start Email</p>
+                      <p className="text-sm text-gray-600">Notify players about Round 1</p>
                     </div>
                   </button>
 
@@ -963,6 +976,14 @@ export default function LeagueManagementPage() {
           }}
         />
       )}
+
+      {/* Season Start Email Modal */}
+      <SeasonStartEmailModal
+        isOpen={showSeasonStartEmail}
+        onClose={() => setShowSeasonStartEmail(false)}
+        leagueId={leagueId}
+        leagueName={league?.name}
+      />
     </div>
   )
 } 
