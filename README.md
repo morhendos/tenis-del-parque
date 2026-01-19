@@ -781,13 +781,14 @@ Once created, you can access the admin panel at [http://localhost:3000/admin](ht
 }
 ```
 
-### Match Model (Extended for Playoffs)
+### Match Model (Extended for Playoffs and BYE Matches)
 ```javascript
 {
   league: ObjectId,          // Reference to League
   season: String,            // Season identifier
   round: Number,             // Round number
   matchType: String,         // 'regular' or 'playoff'
+  isBye: Boolean,            // BYE match flag (player advances without opponent)
   playoffInfo: {             // Playoff-specific information
     group: String,           // 'A' or 'B'
     stage: String,           // 'quarterfinal', 'semifinal', 'final', 'third_place'
@@ -797,7 +798,7 @@ Once created, you can access the admin panel at [http://localhost:3000/admin](ht
   },
   players: {
     player1: ObjectId,
-    player2: ObjectId
+    player2: ObjectId        // null for BYE matches
   },
   schedule: {
     confirmedDate: Date,
@@ -806,12 +807,12 @@ Once created, you can access the admin panel at [http://localhost:3000/admin](ht
   result: {
     winner: ObjectId,
     score: {
-      sets: Array,           // Set scores
+      sets: Array,           // Set scores (6-0, 6-0 for BYE)
       walkover: Boolean,
       retiredPlayer: ObjectId
     }
   },
-  eloChanges: {              // ELO tracking (regular season only)
+  eloChanges: {              // ELO tracking (regular season only, not for BYE)
     player1: {
       before: Number,
       after: Number,
@@ -827,6 +828,15 @@ Once created, you can access the admin panel at [http://localhost:3000/admin](ht
 }
 ```
 
+### BYE Matches
+When a league has an odd number of players, one player receives a "BYE" and advances without playing:
+- **Points**: 3 points (equivalent to 2-0 win)
+- **Score**: Virtual 6-0, 6-0
+- **Status**: Immediately completed
+- **Standings**: Counts toward wins, sets, and games but NOT matches played
+
+See [BYE System Documentation](./docs/BYE_SYSTEM.md) for complete details.
+
 ## 🎯 Features
 
 ### Core Features
@@ -834,6 +844,7 @@ Once created, you can access the admin panel at [http://localhost:3000/admin](ht
 - **📊 Player Registration**: Complete signup flow with MongoDB persistence
 - **🎾 Match Management**: Schedule matches, track results, calculate ELO ratings
 - **🏅 Playoff Tournaments**: Knockout-style playoffs with visual bracket display
+- **⏭️ BYE System**: Automatic handling of odd player counts with fair point distribution
 - **👨‍💼 Admin Panel**: Protected admin interface for complete league control
 - **🌐 Dynamic League Pages**: Each league has its own signup page (`/signup/[league-slug]`)
 - **📅 Flexible Timeline**: League starts July 2025, no registration deadline
