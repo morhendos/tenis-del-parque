@@ -213,18 +213,33 @@ export default function MatchCardUnified({
 
         {/* Scores */}
         <div className="flex items-center ml-3">
-          {isByeMatch ? (
-            // BYE match shows 2-0 score
+          {isByeMatch && hasSets ? (
+            // BYE match shows actual set scores from result
+            match.result.score.sets.map((set, idx) => {
+              const score = isFirst ? set.player1 : set.player2
+              return (
+                <span 
+                  key={idx} 
+                  className={`text-sm font-bold tabular-nums w-8 text-center ${
+                    isFirst ? 'text-emerald-600' : 'text-gray-400'
+                  }`}
+                >
+                  {score}
+                </span>
+              )
+            })
+          ) : isByeMatch ? (
+            // Fallback if no sets data - show 6-0, 6-0
             <>
               <span className={`text-sm font-bold tabular-nums w-8 text-center ${
                 isFirst ? 'text-emerald-600' : 'text-gray-400'
               }`}>
-                {isFirst ? '2' : '0'}
+                {isFirst ? '6' : '0'}
               </span>
               <span className={`text-sm font-bold tabular-nums w-8 text-center ${
                 isFirst ? 'text-emerald-600' : 'text-gray-400'
               }`}>
-                {isFirst ? '0' : '0'}
+                {isFirst ? '6' : '0'}
               </span>
             </>
           ) : isCompleted && hasSets ? (
