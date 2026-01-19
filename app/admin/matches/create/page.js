@@ -263,6 +263,7 @@ function CreateMatchContent() {
         
         // Get existing rounds
         const rounds = [...new Set(matchData.matches?.map(m => m.round || 0) || [])].sort((a, b) => a - b)
+        console.log('Fetched matches:', matchData.matches?.length, 'Rounds found:', rounds)
         setExistingRounds(rounds)
         
         // Determine round number based on URL parameter or next available
@@ -550,7 +551,7 @@ function CreateMatchContent() {
   }
   
   const unpairedPlayers = players.filter(player => 
-    !matches.some(m => m.player1._id === player._id || m.player2._id === player._id)
+    !matches.some(m => m.player1._id === player._id || (m.player2 && m.player2._id === player._id))
   )
 
   // Show loading state while determining round
