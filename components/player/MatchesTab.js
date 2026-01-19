@@ -106,10 +106,13 @@ export default function MatchesTab({
       
       // If it's the player's match, try to get full data from playerMatches
       if (isPlayerMatch) {
-        const fullMatch = playerMatches.find(m => 
-          m.round === currentRound &&
-          (m.players?.player1?._id === player?._id || m.players?.player2?._id === player?._id)
-        )
+        const fullMatch = playerMatches.find(m => {
+          const matchLeagueId = m.league?._id?.toString() || m.league?.toString()
+          const currentLeagueId = league?._id?.toString() || league?.toString()
+          return m.round === currentRound &&
+            matchLeagueId === currentLeagueId &&
+            (m.players?.player1?._id === player?._id || m.players?.player2?._id === player?._id)
+        })
         return { ...(fullMatch || match), isPlayerMatch: true }
       }
       
