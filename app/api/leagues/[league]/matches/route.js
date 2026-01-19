@@ -34,8 +34,6 @@ export async function GET(request, { params }) {
     const round = searchParams.get('round')
     const limit = parseInt(searchParams.get('limit')) || 100 // INCREASED DEFAULT FROM 20 TO 100
     
-    console.log('API: Fetching matches for league:', identifier, 'season:', season, 'status:', status)
-    
     // Build query to support both ID and slug
     let query = {}
     
@@ -51,7 +49,6 @@ export async function GET(request, { params }) {
     const league = await League.findOne(query)
     
     if (!league) {
-      console.error('API: League not found for identifier:', identifier)
       return NextResponse.json(
         { 
           success: false, 
@@ -61,9 +58,6 @@ export async function GET(request, { params }) {
         { status: 404 }
       )
     }
-    
-    console.log('API: Found league:', league.name, 'with ID:', league._id)
-    console.log('API: League season:', league.season)
     
     // Find the Season ObjectId that matches the league's season
     const seasonDoc = await Season.findOne({
@@ -77,8 +71,6 @@ export async function GET(request, { params }) {
     if (status) matchQuery.status = status
     if (round) matchQuery.round = parseInt(round)
     
-    console.log('API: Match query:', JSON.stringify(matchQuery))
-    
     // Get matches with player details (using global ELO)
     const matches = await Match.find(matchQuery)
       .populate('players.player1', 'name eloRating registrations')
@@ -88,15 +80,11 @@ export async function GET(request, { params }) {
       .limit(limit)
       .lean()
     
-    console.log('API: Found', matches.length, 'matches')
-    
     // Filter out matches with null player references (orphaned after CSV import)
     // BUT keep BYE matches (they have player2 = null intentionally)
     const validMatches = matches.filter(match => 
       match.players?.player1 && (match.players?.player2 || match.isBye)
     )
-    
-    console.log('API: Filtered out', matches.length - validMatches.length, 'invalid matches')
     
     // Format matches for frontend
     const formattedMatches = validMatches.map(match => {

@@ -263,7 +263,6 @@ function CreateMatchContent() {
         
         // Get existing rounds
         const rounds = [...new Set(matchData.matches?.map(m => m.round || 0) || [])].sort((a, b) => a - b)
-        console.log('Fetched matches:', matchData.matches?.length, 'Rounds found:', rounds)
         setExistingRounds(rounds)
         
         // Determine round number based on URL parameter or next available
