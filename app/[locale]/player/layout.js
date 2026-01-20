@@ -41,12 +41,13 @@ export default function PlayerLayout({ children }) {
         setUser(session.user)
         
         // Fetch user preferences to get the latest seenAnnouncements
+        let seenAnnouncements = []
         try {
           const preferencesResponse = await fetch('/api/player/preferences')
           if (preferencesResponse.ok) {
             const preferencesData = await preferencesResponse.json()
             
-            const seenAnnouncements = preferencesData.seenAnnouncements || []
+            seenAnnouncements = preferencesData.seenAnnouncements || []
             
             // Check for first round match announcements by fetching matches
             try {
