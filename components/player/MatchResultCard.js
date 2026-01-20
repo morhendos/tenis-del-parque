@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 
 export default function MatchResultCard({ 
   match, 
@@ -70,6 +71,10 @@ export default function MatchResultCard({
     }
   }, [isPlayerMatch, actualIsWinner, isWalkover])
 
+  // Get venue/location info
+  const venue = match.schedule?.venue || match.schedule?.club
+  const court = match.schedule?.court
+
   return (
     <>
       {/* Confetti Animation - Only for player's winning matches (NOT walkovers) */}
@@ -83,7 +88,7 @@ export default function MatchResultCard({
                 style={{
                   left: `${Math.random() * 100}%`,
                   animationDelay: `${Math.random() * 3}s`,
-                  backgroundColor: ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8'][Math.floor(Math.random() * 6)]
+                  backgroundColor: ['#FFD700', '#A855F7', '#7C3AED', '#F59E0B', '#10B981', '#EC4899'][Math.floor(Math.random() * 6)]
                 }}
               />
             ))}
@@ -93,34 +98,57 @@ export default function MatchResultCard({
 
       {/* Result Card Modal */}
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 pb-24">
-        <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden animate-scale-in max-h-[calc(100vh-8rem)] overflow-y-auto">
-          {/* Header */}
-          <div className={`p-6 text-center ${
+        <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden animate-scale-in max-h-[calc(100vh-8rem)] overflow-y-auto shadow-2xl">
+          {/* Header - Purple gradient like league header */}
+          <div className={`relative overflow-hidden p-6 text-center ${
             isWalkover 
-              ? 'bg-gradient-to-br from-gray-400 to-gray-500'  // Neutral styling for walkovers
+              ? 'bg-gradient-to-br from-gray-500 to-gray-600'
               : (isPlayerMatch && actualIsWinner 
-                ? 'bg-gradient-to-br from-green-500 to-emerald-600' 
-                : 'bg-gradient-to-br from-gray-500 to-gray-600')
+                ? 'bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600' 
+                : 'bg-gradient-to-br from-parque-purple via-purple-600 to-indigo-600')
           } text-white`}>
-            <div className="text-6xl mb-3">
-              {isWalkover ? '📝' : (isPlayerMatch && actualIsWinner ? '🏆' : '🎾')}
+            {/* Background decoration */}
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute -top-16 -right-16 w-48 h-48 bg-white rounded-full" />
+              <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-white rounded-full" />
             </div>
-            <h2 className="text-3xl font-bold mb-2">
-              {isWalkover 
-                ? (language === 'es' ? 'Walkover' : 'Walkover')
-                : (isPlayerMatch 
-                  ? (actualIsWinner 
-                    ? (language === 'es' ? '¡Victoria!' : 'Victory!') 
-                    : (language === 'es' ? 'Partido Completado' : 'Match Complete'))
-                  : (language === 'es' ? 'Resultado del Partido' : 'Match Result'))}
-            </h2>
-            <p className="text-lg opacity-90">
-              {language === 'es' ? 'Ronda' : 'Round'} {match.round}
-            </p>
+            
+            <div className="relative z-10">
+              {/* Logo */}
+              <div className="w-16 h-16 mx-auto mb-3 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center p-2">
+                {isPlayerMatch && actualIsWinner && !isWalkover ? (
+                  // Trophy icon for wins
+                  <svg className="w-10 h-10 text-yellow-300" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C13.1 2 14 2.9 14 4V6H16C17.1 6 18 6.9 18 8V10C18 11.1 17.1 12 16 12H14V13.5C14 14.33 14.67 15 15.5 15H16V17H15.5C13.57 17 12 15.43 12 13.5V12H12C10.9 12 10 11.1 10 10V8C10 6.9 10.9 6 12 6V4C12 2.9 12.9 2 14 2H12ZM6 8H8V10H6V8ZM16 8H18V10H16V8ZM7 17H17V19C17 20.1 16.1 21 15 21H9C7.9 21 7 20.1 7 19V17Z"/>
+                  </svg>
+                ) : (
+                  <Image 
+                    src="/logo-big.png" 
+                    alt="Tenis del Parque" 
+                    width={48} 
+                    height={48}
+                    className="object-contain"
+                  />
+                )}
+              </div>
+              
+              <h2 className="text-2xl font-bold mb-1">
+                {isWalkover 
+                  ? 'Walkover'
+                  : (isPlayerMatch 
+                    ? (actualIsWinner 
+                      ? (language === 'es' ? '¡Victoria!' : 'Victory!') 
+                      : (language === 'es' ? 'Partido Completado' : 'Match Complete'))
+                    : (language === 'es' ? 'Resultado del Partido' : 'Match Result'))}
+              </h2>
+              <p className="text-sm opacity-80">
+                {language === 'es' ? 'Ronda' : 'Round'} {match.round}
+              </p>
+            </div>
           </div>
 
           {/* Match Details */}
-          <div className="p-6">
+          <div className="p-5">
             {/* Players and Score */}
             <div className="bg-gray-50 rounded-xl p-4 mb-4">
               <div className="flex items-center justify-between mb-4">
@@ -129,27 +157,27 @@ export default function MatchResultCard({
                     {/* Show in natural order: player1 vs player2 */}
                     {match.players.player1._id === player._id ? (
                       <>
-                        <div className="text-center">
+                        <div className="text-center flex-1">
                           <div className="text-sm text-gray-600 mb-1">
                             {player?.name}
                           </div>
-                          <div className={`text-3xl font-bold ${
+                          <div className={`text-4xl font-bold ${
                             isWalkover 
-                              ? 'text-gray-700'  // Neutral color for walkover
-                              : (actualIsWinner ? 'text-green-600' : 'text-gray-700')
+                              ? 'text-gray-400'
+                              : (actualIsWinner ? 'text-emerald-600' : 'text-gray-700')
                           }`}>
                             {isWalkover ? '–' : myScore}
                           </div>
                         </div>
-                        <div className="text-2xl text-gray-400">vs</div>
-                        <div className="text-center">
+                        <div className="text-lg text-gray-300 font-medium px-3">vs</div>
+                        <div className="text-center flex-1">
                           <div className="text-sm text-gray-600 mb-1">
                             {opponent?.name}
                           </div>
-                          <div className={`text-3xl font-bold ${
+                          <div className={`text-4xl font-bold ${
                             isWalkover 
-                              ? 'text-gray-700'  // Neutral color for walkover
-                              : (!actualIsWinner ? 'text-green-600' : 'text-gray-700')
+                              ? 'text-gray-400'
+                              : (!actualIsWinner ? 'text-emerald-600' : 'text-gray-700')
                           }`}>
                             {isWalkover ? '–' : opponentScore}
                           </div>
@@ -157,27 +185,27 @@ export default function MatchResultCard({
                       </>
                     ) : (
                       <>
-                        <div className="text-center">
+                        <div className="text-center flex-1">
                           <div className="text-sm text-gray-600 mb-1">
                             {opponent?.name}
                           </div>
-                          <div className={`text-3xl font-bold ${
+                          <div className={`text-4xl font-bold ${
                             isWalkover 
-                              ? 'text-gray-700'  // Neutral color for walkover
-                              : (!actualIsWinner ? 'text-green-600' : 'text-gray-700')
+                              ? 'text-gray-400'
+                              : (!actualIsWinner ? 'text-emerald-600' : 'text-gray-700')
                           }`}>
                             {isWalkover ? '–' : opponentScore}
                           </div>
                         </div>
-                        <div className="text-2xl text-gray-400">vs</div>
-                        <div className="text-center">
+                        <div className="text-lg text-gray-300 font-medium px-3">vs</div>
+                        <div className="text-center flex-1">
                           <div className="text-sm text-gray-600 mb-1">
                             {player?.name}
                           </div>
-                          <div className={`text-3xl font-bold ${
+                          <div className={`text-4xl font-bold ${
                             isWalkover 
-                              ? 'text-gray-700'  // Neutral color for walkover
-                              : (actualIsWinner ? 'text-green-600' : 'text-gray-700')
+                              ? 'text-gray-400'
+                              : (actualIsWinner ? 'text-emerald-600' : 'text-gray-700')
                           }`}>
                             {isWalkover ? '–' : myScore}
                           </div>
@@ -187,27 +215,27 @@ export default function MatchResultCard({
                   </>
                 ) : (
                   <>
-                    <div className="text-center">
+                    <div className="text-center flex-1">
                       <div className="text-sm text-gray-600 mb-1">
                         {match.players.player1.name}
                       </div>
-                      <div className={`text-3xl font-bold ${
+                      <div className={`text-4xl font-bold ${
                         isWalkover 
-                          ? 'text-gray-700'
-                          : (isPlayer1Winner ? 'text-green-600' : 'text-gray-700')
+                          ? 'text-gray-400'
+                          : (isPlayer1Winner ? 'text-emerald-600' : 'text-gray-700')
                       }`}>
                         {isWalkover ? '–' : p1Score}
                       </div>
                     </div>
-                    <div className="text-2xl text-gray-400">vs</div>
-                    <div className="text-center">
+                    <div className="text-lg text-gray-300 font-medium px-3">vs</div>
+                    <div className="text-center flex-1">
                       <div className="text-sm text-gray-600 mb-1">
                         {match.players.player2.name}
                       </div>
-                      <div className={`text-3xl font-bold ${
+                      <div className={`text-4xl font-bold ${
                         isWalkover 
-                          ? 'text-gray-700'
-                          : (isPlayer2Winner ? 'text-green-600' : 'text-gray-700')
+                          ? 'text-gray-400'
+                          : (isPlayer2Winner ? 'text-emerald-600' : 'text-gray-700')
                       }`}>
                         {isWalkover ? '–' : p2Score}
                       </div>
@@ -218,13 +246,12 @@ export default function MatchResultCard({
 
               {/* Set Details - Only show for non-walkover matches */}
               {!isWalkover && match.result?.score?.sets && match.result.score.sets.length > 0 && (
-                <div className="border-t pt-3">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">
+                <div className="border-t border-gray-200 pt-3">
+                  <h4 className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">
                     {language === 'es' ? 'Detalle de Sets' : 'Set Details'}
                   </h4>
-                  <div className="flex gap-3 justify-center">
+                  <div className="flex gap-2 justify-center">
                     {match.result.score.sets.map((set, index) => {
-                      // Always show natural order: player1 vs player2
                       const leftScore = set.player1
                       const rightScore = set.player2
                       
@@ -232,26 +259,25 @@ export default function MatchResultCard({
                       if (isPlayerMatch) {
                         const isPlayer1 = match.players.player1._id === player._id
                         wonSet = isPlayer1 
-                          ? set.player1 > set.player2  // Player is player1, won if player1 score higher
-                          : set.player2 > set.player1  // Player is player2, won if player2 score higher
+                          ? set.player1 > set.player2
+                          : set.player2 > set.player1
                       } else {
-                        // For non-player matches, color based on who won the set
                         wonSet = isPlayer1Winner ? set.player1 > set.player2 : set.player2 > set.player1
                       }
                       
                       return (
                         <div 
                           key={index} 
-                          className={`text-center px-3 py-2 rounded-lg ${
+                          className={`text-center px-4 py-2 rounded-lg ${
                             isPlayerMatch 
-                              ? (wonSet ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700')
+                              ? (wonSet ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600')
                               : 'bg-gray-100 text-gray-700'
                           }`}
                         >
                           <div className="text-lg font-bold">
                             {leftScore}-{rightScore}
                           </div>
-                          <div className="text-xs opacity-75">
+                          <div className="text-[10px] font-medium opacity-70">
                             {index === 2 ? 'Super TB' : `Set ${index + 1}`}
                           </div>
                         </div>
@@ -263,77 +289,61 @@ export default function MatchResultCard({
 
               {/* Walkover explanation */}
               {isWalkover && (
-                <div className="border-t pt-3">
-                  <div className="text-center">
-                    <p className="text-sm text-gray-600">
+                <div className="border-t border-gray-200 pt-3">
+                  <div className="flex items-center justify-center gap-2 text-amber-600 bg-amber-50 rounded-lg py-2 px-3">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span className="text-sm font-medium">
                       {language === 'es' 
-                        ? 'Uno de los jugadores no se presentó al partido'
-                        : 'One player did not show up for the match'}
-                    </p>
+                        ? 'Un jugador no se presentó'
+                        : 'One player did not show up'}
+                    </span>
                   </div>
                 </div>
               )}
             </div>
 
             {/* Match Info */}
-            <div className="space-y-2 mb-6">
+            <div className="space-y-2 mb-5">
+              {/* Date */}
               <div className="flex items-center text-sm text-gray-600">
-                <span className="w-5">📅</span>
-                <span className="ml-2">
+                <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center mr-3">
+                  <svg className="w-4 h-4 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <span>
                   {new Date(match.result?.playedAt || new Date()).toLocaleDateString(
                     language === 'es' ? 'es-ES' : 'en-US',
                     { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
                   )}
                 </span>
               </div>
-              {match.schedule?.venue && (
+              
+              {/* Venue & Court */}
+              {(venue || court) && (
                 <div className="flex items-center text-sm text-gray-600">
-                  <span className="w-5">📍</span>
-                  <span className="ml-2">{match.schedule.venue}</span>
-                </div>
-              )}
-              {match.schedule?.court && (
-                <div className="flex items-center text-sm text-gray-600">
-                  <span className="w-5">🎾</span>
-                  <span className="ml-2">{match.schedule.court}</span>
+                  <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center mr-3">
+                    <svg className="w-4 h-4 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <span>
+                    {[venue, court].filter(Boolean).join(' · ')}
+                  </span>
                 </div>
               )}
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-3">
-              {/* TODO: Re-enable share button when improved
-              {isPlayerMatch && actualIsWinner && !isWalkover && (
-                <button
-                  onClick={() => {
-                    const text = language === 'es' 
-                      ? `¡Acabo de ganar mi partido de tenis ${myScore}-${opponentScore} en la ronda ${match.round}! 🎾🏆`
-                      : `Just won my tennis match ${myScore}-${opponentScore} in round ${match.round}! 🎾🏆`
-                    
-                    if (navigator.share) {
-                      navigator.share({ text })
-                    } else {
-                      // Fallback to copying to clipboard
-                      navigator.clipboard.writeText(text)
-                      alert(language === 'es' ? 'Copiado al portapapeles' : 'Copied to clipboard')
-                    }
-                  }}
-                  className="flex-1 bg-green-500 text-white px-4 py-3 rounded-xl font-medium hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m9.032 4.026a9 9 0 10-13.432 0m13.432 0A9 9 0 0112 21m0 0a8.997 8.997 0 01-7.716-4.374m15.432 0a9 9 0 00-7.716 4.374M12 12a3 3 0 110-6 3 3 0 010 6z" />
-                  </svg>
-                  {language === 'es' ? 'Compartir' : 'Share'}
-                </button>
-              )}
-              */}
-              <button
-                onClick={onClose}
-                className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-xl font-medium hover:bg-gray-200 transition-colors"
-              >
-                {language === 'es' ? 'Cerrar' : 'Close'}
-              </button>
-            </div>
+            {/* Close Button */}
+            <button
+              onClick={onClose}
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-medium transition-colors"
+            >
+              {language === 'es' ? 'Cerrar' : 'Close'}
+            </button>
 
             {/* Motivational Message - Only for player's own losing matches (NOT walkovers) */}
             {isPlayerMatch && !actualIsWinner && !isWalkover && (
@@ -341,40 +351,28 @@ export default function MatchResultCard({
                 {(() => {
                   const motivationalMessages = {
                     es: [
-                      '¡Sigue practicando! La próxima victoria está cerca 💪',
-                      'Cada partido es una lección - ¡te estás fortaleciendo! 🎾',
-                      'Los campeones se forjan con derrotas como estas ⭐',
-                      '¡Gran esfuerzo! Los mejores jugadores también pierden 👏',
-                      '¡Tu historia de remontada empieza ahora! 🔥',
-                      'Los partidos difíciles hacen mejores jugadores 🏆',
-                      'Jugaste con el corazón - eso es lo que cuenta ❤️',
-                      'Todos los profesionales han estado donde estás ahora 🎯',
-                      '¡El próximo partido es un nuevo comienzo! ✨',
-                      'Estás forjando tu carácter con cada juego 💎',
-                      'Las derrotas son solo lecciones disfrazadas 🎓',
-                      'Estás coleccionando puntos de experiencia con cada juego 🎮',
-                      'La derrota de hoy es la ventaja de mañana 📈',
-                      '¡No estás perdiendo - estás aprendiendo a ganar! 🧠',
-                      'Los retrocesos son preparación para las remontadas 🎯',
-                      'Acabas de ganar experiencia de partido - ¡no tiene precio! 💰'
+                      '¡Sigue practicando! La próxima victoria está cerca.',
+                      'Cada partido es una lección — ¡te estás fortaleciendo!',
+                      'Los campeones se forjan con derrotas como estas.',
+                      '¡Gran esfuerzo! Los mejores jugadores también pierden.',
+                      '¡Tu historia de remontada empieza ahora!',
+                      'Los partidos difíciles hacen mejores jugadores.',
+                      'Jugaste con el corazón — eso es lo que cuenta.',
+                      'Todos los profesionales han estado donde estás ahora.',
+                      '¡El próximo partido es un nuevo comienzo!',
+                      'Los retrocesos son preparación para las remontadas.'
                     ],
                     en: [
-                      'Keep practicing! Your next victory is just around the corner 💪',
-                      'Every match is a lesson - you\'re getting stronger! 🎾',
-                      'Champions are made through defeats like these ⭐',
-                      'Great effort! The best players lose matches too 👏',
-                      'Your comeback story starts now! 🔥',
-                      'Tough matches make better players 🏆',
-                      'You played your heart out - that\'s what counts ❤️',
-                      'Every pro has been where you are right now 🎯',
-                      'The next match is a fresh start! ✨',
-                      'You\'re building character with every game 💎',
-                      'Losses are just lessons in disguise 🎓',
-                      'You\'re collecting experience points with every game 🎮',
-                      'Today\'s defeat is tomorrow\'s advantage 📈',
-                      'You\'re not losing - you\'re learning to win! 🧠',
-                      'Setbacks are setups for comebacks 🎯',
-                      'You just gained match experience - priceless! 💰'
+                      'Keep practicing! Your next victory is just around the corner.',
+                      'Every match is a lesson — you\'re getting stronger!',
+                      'Champions are made through defeats like these.',
+                      'Great effort! The best players lose matches too.',
+                      'Your comeback story starts now!',
+                      'Tough matches make better players.',
+                      'You played your heart out — that\'s what counts.',
+                      'Every pro has been where you are right now.',
+                      'The next match is a fresh start!',
+                      'Setbacks are setups for comebacks.'
                     ]
                   }
                   
