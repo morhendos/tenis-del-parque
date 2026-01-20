@@ -11,6 +11,14 @@ export default function MatchPlayersCard({ match, showEditIndicator = false }) {
   }
 
   const getSetsSummary = () => {
+    // For walkovers, show 2-0 to the winner
+    if (match.result?.score?.walkover) {
+      const winnerId = match.result?.winner?.toString() || match.result?.winner
+      const player1Id = match.players.player1._id?.toString() || match.players.player1.toString()
+      const player1Won = winnerId === player1Id
+      return player1Won ? '2 - 0' : '0 - 2'
+    }
+    
     if (!match.result?.score?.sets) return null
     
     const player1Sets = match.result.score.sets.filter(set => 

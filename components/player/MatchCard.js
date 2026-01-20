@@ -186,12 +186,22 @@ export default function MatchCard({
 
   // Determine the score display for completed matches
   let myScore, opponentScore
-  if (!isUpcoming && match.result?.score?.sets && player) {
+  if (!isUpcoming && player) {
     const isPlayer1 = match.players.player1._id === player._id
-    myScore = match.result.score.sets.filter((set) => 
-      isPlayer1 ? set.player1 > set.player2 : set.player2 > set.player1
-    ).length
-    opponentScore = match.result.score.sets.length - myScore
+    
+    // Handle walkover - winner gets 2-0
+    if (match.result?.score?.walkover) {
+      const winnerId = match.result?.winner?._id || match.result?.winner
+      const playerWon = (isPlayer1 && winnerId === match.players.player1._id) || 
+                        (!isPlayer1 && winnerId === match.players.player2._id)
+      myScore = playerWon ? 2 : 0
+      opponentScore = playerWon ? 0 : 2
+    } else if (match.result?.score?.sets) {
+      myScore = match.result.score.sets.filter((set) => 
+        isPlayer1 ? set.player1 > set.player2 : set.player2 > set.player1
+      ).length
+      opponentScore = match.result.score.sets.length - myScore
+    }
   }
 
   // For public view, always show match details
@@ -339,27 +349,38 @@ export default function MatchCard({
       )}
 
       {/* Set details for completed matches - Inline */}
-      {!isUpcoming && match.result?.score?.sets && !isPublic && player && (
+      {!isUpcoming && !isPublic && player && (
         <div className="px-3 pb-2 -mt-1">
           <div className="flex items-center gap-1.5">
-            <span className="text-[10px] text-gray-400">Sets:</span>
-            {match.result.score.sets.map((set, index) => {
-              const isPlayer1 = match.players.player1._id === player._id
-              const mySetScore = isPlayer1 ? set.player1 : set.player2
-              const oppSetScore = isPlayer1 ? set.player2 : set.player1
-              const wonSet = mySetScore > oppSetScore
-              
-              return (
-                <span 
-                  key={index} 
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
-                    wonSet ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                  }`}
-                >
-                  {mySetScore}-{oppSetScore}
+            {match.result?.score?.walkover ? (
+              <>
+                <span className="text-[10px] text-gray-400">Result:</span>
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-700">
+                  W/O
                 </span>
-              )
-            })}
+              </>
+            ) : match.result?.score?.sets && match.result.score.sets.length > 0 ? (
+              <>
+                <span className="text-[10px] text-gray-400">Sets:</span>
+                {match.result.score.sets.map((set, index) => {
+                  const isPlayer1 = match.players.player1._id === player._id
+                  const mySetScore = isPlayer1 ? set.player1 : set.player2
+                  const oppSetScore = isPlayer1 ? set.player2 : set.player1
+                  const wonSet = mySetScore > oppSetScore
+                  
+                  return (
+                    <span 
+                      key={index} 
+                      className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                        wonSet ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      }`}
+                    >
+                      {mySetScore}-{oppSetScore}
+                    </span>
+                  )
+                })}
+              </>
+            ) : null}
           </div>
         </div>
       )}

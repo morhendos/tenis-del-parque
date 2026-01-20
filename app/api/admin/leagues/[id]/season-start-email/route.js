@@ -429,8 +429,8 @@ export async function POST(request, { params }) {
         })
       }
 
-      // Small delay to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 100))
+      // Delay between emails to avoid rate limiting (1.5 seconds)
+      await new Promise(resolve => setTimeout(resolve, 1500))
     }
 
     // Count by language
