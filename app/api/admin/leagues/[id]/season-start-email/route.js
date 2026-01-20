@@ -3,11 +3,29 @@ import dbConnect from '@/lib/db/mongoose'
 import League from '@/lib/models/League'
 import Match from '@/lib/models/Match'
 import Player from '@/lib/models/Player'
+import User from '@/lib/models/User'
 import { requireAdmin } from '@/lib/auth/apiAuth'
 import { sendEmail } from '@/lib/email/resend'
 import { generateSeasonStartEmail } from '@/lib/email/templates/seasonStartEmail'
 
 export const dynamic = 'force-dynamic'
+
+/**
+ * Get user's language preference by email
+ * @param {string} email - Player's email
+ * @returns {string} - 'es' or 'en'
+ */
+async function getUserLanguage(email) {
+  if (!email) return 'es'
+  
+  try {
+    const user = await User.findOne({ email }).select('preferences.language').lean()
+    return user?.preferences?.language || 'es'
+  } catch (error) {
+    console.error('Error fetching user language:', error)
+    return 'es'
+  }
+}
 
 /**
  * GET /api/admin/leagues/[id]/season-start-email
@@ -36,7 +54,7 @@ export async function GET(request, { params }) {
       'registrations.status': 'active'
     }).select('name email registrations')
 
-    // Get Round 1 matches for this league
+    // Get Round matches for this league
     const matches = await Match.find({
       league: id,
       round: round,
@@ -45,7 +63,24 @@ export async function GET(request, { params }) {
     .populate('players.player1', 'name email whatsapp')
     .populate('players.player2', 'name email whatsapp')
 
-    // Build list of recipients with their match info
+    // Get all player emails to fetch their language preferences
+    const playerEmails = new Set()
+    matches.forEach(match => {
+      if (match.players.player1?.email) playerEmails.add(match.players.player1.email)
+      if (match.players.player2?.email) playerEmails.add(match.players.player2.email)
+    })
+
+    // Fetch all user language preferences in one query
+    const users = await User.find({ 
+      email: { $in: Array.from(playerEmails) } 
+    }).select('email preferences.language').lean()
+    
+    const languageMap = {}
+    users.forEach(user => {
+      languageMap[user.email] = user.preferences?.language || 'es'
+    })
+
+    // Build list of recipients with their match info and language
     const recipients = []
     const playersWithMatches = new Set()
 
@@ -60,7 +95,8 @@ export async function GET(request, { params }) {
           player: {
             _id: player1._id,
             name: player1.name,
-            email: player1.email
+            email: player1.email,
+            language: languageMap[player1.email] || 'es'
           },
           opponent: isBye ? null : {
             name: player2?.name,
@@ -77,7 +113,8 @@ export async function GET(request, { params }) {
           player: {
             _id: player2._id,
             name: player2.name,
-            email: player2.email
+            email: player2.email,
+            language: languageMap[player2.email] || 'es'
           },
           opponent: {
             name: player1?.name,
@@ -94,6 +131,10 @@ export async function GET(request, { params }) {
       p => !playersWithMatches.has(p._id.toString())
     ).map(p => ({ _id: p._id, name: p.name, email: p.email }))
 
+    // Count languages
+    const spanishCount = recipients.filter(r => r.player.language === 'es').length
+    const englishCount = recipients.filter(r => r.player.language === 'en').length
+
     return NextResponse.json({
       league: {
         _id: league._id,
@@ -106,7 +147,9 @@ export async function GET(request, { params }) {
         totalRecipients: recipients.length,
         regularMatches: recipients.filter(r => !r.isBye).length,
         byeMatches: recipients.filter(r => r.isBye).length,
-        playersWithoutMatches: playersWithoutMatches.length
+        playersWithoutMatches: playersWithoutMatches.length,
+        spanishEmails: spanishCount,
+        englishEmails: englishCount
       }
     })
 
@@ -132,7 +175,7 @@ export async function POST(request, { params }) {
     const { 
       round = 1, 
       testEmail = null,  // If provided, send only to this email
-      language = 'es' 
+      testLanguage = 'es' // Language for test emails
     } = body
 
     // Get league
@@ -156,7 +199,24 @@ export async function POST(request, { params }) {
       }, { status: 400 })
     }
 
-    // Build email list
+    // Get all player emails to fetch their language preferences
+    const playerEmails = new Set()
+    matches.forEach(match => {
+      if (match.players.player1?.email) playerEmails.add(match.players.player1.email)
+      if (match.players.player2?.email) playerEmails.add(match.players.player2.email)
+    })
+
+    // Fetch all user language preferences in one query
+    const users = await User.find({ 
+      email: { $in: Array.from(playerEmails) } 
+    }).select('email preferences.language').lean()
+    
+    const languageMap = {}
+    users.forEach(user => {
+      languageMap[user.email] = user.preferences?.language || 'es'
+    })
+
+    // Build email list with language preferences
     const emailsToSend = []
 
     matches.forEach(match => {
@@ -168,7 +228,8 @@ export async function POST(request, { params }) {
         emailsToSend.push({
           player: player1,
           opponent: isBye ? null : player2,
-          isBye
+          isBye,
+          language: languageMap[player1.email] || 'es'
         })
       }
 
@@ -176,10 +237,15 @@ export async function POST(request, { params }) {
         emailsToSend.push({
           player: player2,
           opponent: player1,
-          isBye: false
+          isBye: false,
+          language: languageMap[player2.email] || 'es'
         })
       }
     })
+
+    // Calculate deadline (7 days from now)
+    const deadline = new Date()
+    deadline.setDate(deadline.getDate() + 7)
 
     // If test email, only send to that address
     if (testEmail) {
@@ -188,10 +254,6 @@ export async function POST(request, { params }) {
       const sampleBye = emailsToSend.find(e => e.isBye)
       
       const results = []
-      
-      // Calculate deadline (7 days from now for test)
-      const deadline = new Date()
-      deadline.setDate(deadline.getDate() + 7)
       
       // Send test regular match email
       if (sampleRegular) {
@@ -205,7 +267,7 @@ export async function POST(request, { params }) {
           season: league.season ? `${league.season.type}-${league.season.year}` : '',
           deadline: deadline.toISOString(),
           isBye: false,
-          language
+          language: testLanguage
         })
         
         const result = await sendEmail({
@@ -218,6 +280,7 @@ export async function POST(request, { params }) {
         results.push({
           type: 'regular',
           email: testEmail,
+          language: testLanguage,
           success: result.success,
           error: result.error
         })
@@ -235,7 +298,7 @@ export async function POST(request, { params }) {
           season: league.season ? `${league.season.type}-${league.season.year}` : '',
           deadline: null,
           isBye: true,
-          language
+          language: testLanguage
         })
         
         const result = await sendEmail({
@@ -248,6 +311,7 @@ export async function POST(request, { params }) {
         results.push({
           type: 'bye',
           email: testEmail,
+          language: testLanguage,
           success: result.success,
           error: result.error
         })
@@ -261,15 +325,11 @@ export async function POST(request, { params }) {
       })
     }
 
-    // Send to all players
+    // Send to all players with their preferred language
     const results = {
       sent: [],
       failed: []
     }
-
-    // Calculate deadline (7 days from now)
-    const deadline = new Date()
-    deadline.setDate(deadline.getDate() + 7)
 
     for (const emailData of emailsToSend) {
       const emailContent = generateSeasonStartEmail({
@@ -282,7 +342,7 @@ export async function POST(request, { params }) {
         season: league.season ? `${league.season.type}-${league.season.year}` : '',
         deadline: emailData.isBye ? null : deadline.toISOString(),
         isBye: emailData.isBye,
-        language
+        language: emailData.language // Use player's preferred language
       })
 
       const result = await sendEmail({
@@ -296,7 +356,8 @@ export async function POST(request, { params }) {
         results.sent.push({
           email: emailData.player.email,
           name: emailData.player.name,
-          isBye: emailData.isBye
+          isBye: emailData.isBye,
+          language: emailData.language
         })
       } else {
         results.failed.push({
@@ -310,6 +371,10 @@ export async function POST(request, { params }) {
       await new Promise(resolve => setTimeout(resolve, 100))
     }
 
+    // Count by language
+    const spanishSent = results.sent.filter(r => r.language === 'es').length
+    const englishSent = results.sent.filter(r => r.language === 'en').length
+
     return NextResponse.json({
       mode: 'production',
       round,
@@ -317,7 +382,9 @@ export async function POST(request, { params }) {
       summary: {
         total: emailsToSend.length,
         sent: results.sent.length,
-        failed: results.failed.length
+        failed: results.failed.length,
+        spanishSent,
+        englishSent
       },
       results
     })

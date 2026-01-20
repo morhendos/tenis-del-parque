@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 /**
  * Season Start Email Modal
  * Allows admin to preview and send season start emails to players
+ * Language is automatically detected from each player's preferences
  */
 export default function SeasonStartEmailModal({ 
   isOpen, 
@@ -17,8 +18,8 @@ export default function SeasonStartEmailModal({
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState(null)
   const [testEmail, setTestEmail] = useState('')
+  const [testLanguage, setTestLanguage] = useState('es')
   const [selectedRound, setSelectedRound] = useState(1)
-  const [language, setLanguage] = useState('es')
 
   // Fetch preview when modal opens
   useEffect(() => {
@@ -58,8 +59,8 @@ export default function SeasonStartEmailModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           round: selectedRound, 
-          testEmail, 
-          language 
+          testEmail,
+          testLanguage
         })
       })
       const data = await response.json()
@@ -72,7 +73,15 @@ export default function SeasonStartEmailModal({
   }
 
   const handleSendAll = async () => {
-    if (!confirm(`Are you sure you want to send emails to ${preview?.summary?.totalRecipients} players?`)) {
+    const spanishCount = preview?.summary?.spanishEmails || 0
+    const englishCount = preview?.summary?.englishEmails || 0
+    
+    const confirmMsg = `Send emails to ${preview?.summary?.totalRecipients} players?\n\n` +
+      `• ${spanishCount} in Spanish\n` +
+      `• ${englishCount} in English\n\n` +
+      `Each player will receive the email in their preferred language.`
+    
+    if (!confirm(confirmMsg)) {
       return
     }
     
@@ -82,10 +91,7 @@ export default function SeasonStartEmailModal({
       const response = await fetch(`/api/admin/leagues/${leagueId}/season-start-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          round: selectedRound, 
-          language 
-        })
+        body: JSON.stringify({ round: selectedRound })
       })
       const data = await response.json()
       setResult(data)
@@ -121,31 +127,18 @@ export default function SeasonStartEmailModal({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
-          {/* Controls */}
-          <div className="flex flex-wrap gap-4 mb-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Round</label>
-              <select
-                value={selectedRound}
-                onChange={(e) => setSelectedRound(parseInt(e.target.value))}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
-              >
-                {[1, 2, 3, 4, 5, 6, 7, 8].map(r => (
-                  <option key={r} value={r}>Round {r}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Language</label>
-              <select
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
-              >
-                <option value="es">Spanish</option>
-                <option value="en">English</option>
-              </select>
-            </div>
+          {/* Round Selector */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Round</label>
+            <select
+              value={selectedRound}
+              onChange={(e) => setSelectedRound(parseInt(e.target.value))}
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+            >
+              {[1, 2, 3, 4, 5, 6, 7, 8].map(r => (
+                <option key={r} value={r}>Round {r}</option>
+              ))}
+            </select>
           </div>
 
           {/* Loading */}
@@ -160,18 +153,42 @@ export default function SeasonStartEmailModal({
           {!loading && preview && !preview.error && (
             <div className="space-y-6">
               {/* Summary Cards */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-purple-50 rounded-xl p-4 text-center">
                   <p className="text-3xl font-bold text-parque-purple">{preview.summary.totalRecipients}</p>
-                  <p className="text-sm text-gray-600">Total Recipients</p>
+                  <p className="text-sm text-gray-600">Total</p>
                 </div>
                 <div className="bg-blue-50 rounded-xl p-4 text-center">
                   <p className="text-3xl font-bold text-blue-600">{preview.summary.regularMatches}</p>
-                  <p className="text-sm text-gray-600">Regular Matches</p>
+                  <p className="text-sm text-gray-600">Matches</p>
                 </div>
                 <div className="bg-emerald-50 rounded-xl p-4 text-center">
                   <p className="text-3xl font-bold text-emerald-600">{preview.summary.byeMatches}</p>
-                  <p className="text-sm text-gray-600">BYE Players</p>
+                  <p className="text-sm text-gray-600">BYEs</p>
+                </div>
+                <div className="bg-amber-50 rounded-xl p-4 text-center">
+                  <div className="flex justify-center gap-2 text-lg font-bold">
+                    <span className="text-amber-700">{preview.summary.spanishEmails} ES</span>
+                    <span className="text-gray-400">/</span>
+                    <span className="text-blue-700">{preview.summary.englishEmails} EN</span>
+                  </div>
+                  <p className="text-sm text-gray-600">Languages</p>
+                </div>
+              </div>
+
+              {/* Auto Language Notice */}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div>
+                    <p className="font-medium text-blue-900">Automatic language detection</p>
+                    <p className="text-sm text-blue-700 mt-1">
+                      Each player will receive the email in their preferred language based on their account settings. 
+                      Players without a preference will receive Spanish.
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -201,13 +218,14 @@ export default function SeasonStartEmailModal({
                         <th className="text-left px-4 py-2 font-medium text-gray-600">Player</th>
                         <th className="text-left px-4 py-2 font-medium text-gray-600">Email</th>
                         <th className="text-left px-4 py-2 font-medium text-gray-600">Opponent</th>
+                        <th className="text-center px-4 py-2 font-medium text-gray-600">Lang</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                       {preview.recipients.map((r, i) => (
                         <tr key={i} className={r.isBye ? 'bg-emerald-50/50' : ''}>
                           <td className="px-4 py-2 font-medium text-gray-900">{r.player.name}</td>
-                          <td className="px-4 py-2 text-gray-600">{r.player.email}</td>
+                          <td className="px-4 py-2 text-gray-600 text-xs">{r.player.email}</td>
                           <td className="px-4 py-2">
                             {r.isBye ? (
                               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
@@ -216,6 +234,15 @@ export default function SeasonStartEmailModal({
                             ) : (
                               <span className="text-gray-600">{r.opponent?.name}</span>
                             )}
+                          </td>
+                          <td className="px-4 py-2 text-center">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                              r.player.language === 'en' 
+                                ? 'bg-blue-100 text-blue-700' 
+                                : 'bg-amber-100 text-amber-700'
+                            }`}>
+                              {r.player.language?.toUpperCase() || 'ES'}
+                            </span>
                           </td>
                         </tr>
                       ))}
@@ -227,14 +254,22 @@ export default function SeasonStartEmailModal({
               {/* Test Email Section */}
               <div className="bg-gray-50 rounded-xl p-4">
                 <h3 className="font-semibold text-gray-900 mb-3">Send Test Email</h3>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
                   <input
                     type="email"
                     value={testEmail}
                     onChange={(e) => setTestEmail(e.target.value)}
                     placeholder="your@email.com"
-                    className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-parque-purple focus:border-transparent"
+                    className="flex-1 min-w-[200px] border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-parque-purple focus:border-transparent"
                   />
+                  <select
+                    value={testLanguage}
+                    onChange={(e) => setTestLanguage(e.target.value)}
+                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                  >
+                    <option value="es">Spanish</option>
+                    <option value="en">English</option>
+                  </select>
                   <button
                     onClick={handleSendTest}
                     disabled={!testEmail || sending}
@@ -244,7 +279,7 @@ export default function SeasonStartEmailModal({
                   </button>
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  This will send both a regular match email and a BYE email (if applicable) to your test address.
+                  Test both regular match and BYE emails (if applicable) in your chosen language.
                 </p>
               </div>
 
@@ -263,7 +298,7 @@ export default function SeasonStartEmailModal({
                       <ul className="mt-2 text-sm text-green-700">
                         {result.results.map((r, i) => (
                           <li key={i}>
-                            {r.type === 'regular' ? 'Regular match' : 'BYE'} email: {r.success ? 'Sent' : `Failed - ${r.error}`}
+                            {r.type === 'regular' ? 'Regular match' : 'BYE'} ({r.language?.toUpperCase()}): {r.success ? 'Sent' : `Failed - ${r.error}`}
                           </li>
                         ))}
                       </ul>
@@ -274,7 +309,7 @@ export default function SeasonStartEmailModal({
                         Emails sent successfully!
                       </p>
                       <p className="text-sm text-green-700 mt-1">
-                        {result.summary.sent} sent, {result.summary.failed} failed
+                        {result.summary.sent} sent ({result.summary.spanishSent} ES, {result.summary.englishSent} EN), {result.summary.failed} failed
                       </p>
                       {result.results.failed?.length > 0 && (
                         <div className="mt-2 text-sm text-red-600">
