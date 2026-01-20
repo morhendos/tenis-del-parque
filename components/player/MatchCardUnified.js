@@ -22,6 +22,7 @@ export default function MatchCardUnified({
   // Determine match state
   const isCompleted = match.status === 'completed' || match.result?.winner
   const hasSets = match.result?.score?.sets?.length > 0
+  const isWalkover = match.result?.score?.walkover === true
   const isByeMatch = match.isBye === true
 
   // Get player data
@@ -242,6 +243,20 @@ export default function MatchCardUnified({
                 {isFirst ? '6' : '0'}
               </span>
             </>
+          ) : isCompleted && isWalkover ? (
+            // Walkover match - show 6-0, 6-0 to winner
+            <>
+              <span className={`text-sm font-bold tabular-nums w-8 text-center ${
+                isWinner ? 'text-gray-900' : 'text-gray-400'
+              }`}>
+                {isWinner ? '6' : '0'}
+              </span>
+              <span className={`text-sm font-bold tabular-nums w-8 text-center ${
+                isWinner ? 'text-gray-900' : 'text-gray-400'
+              }`}>
+                {isWinner ? '6' : '0'}
+              </span>
+            </>
           ) : isCompleted && hasSets ? (
             match.result.score.sets.map((set, idx) => {
               const score = isFirst ? set.player1 : set.player2
@@ -368,21 +383,33 @@ export default function MatchCardUnified({
             </>
           )}
           
-          {!isByeMatch && isCompleted && (
+          {!isByeMatch && isCompleted && isWalkover && (
+            <span className="text-xs font-medium text-white/90">
+              {formatPlayedDate()} · W/O
+            </span>
+          )}
+          
+          {!isByeMatch && isCompleted && !isWalkover && (
             <span className="text-xs font-medium text-white/90">
               {formatPlayedDate()}
             </span>
           )}
         </div>
         
-        {/* Right side: score column headers for BYE and completed matches */}
+        {/* Right side: score column headers for BYE, walkover, and completed matches */}
         {isByeMatch && (
           <div className="flex items-center ml-3">
             <span className="text-[10px] font-medium text-white/60 w-8 text-center">S1</span>
             <span className="text-[10px] font-medium text-white/60 w-8 text-center">S2</span>
           </div>
         )}
-        {!isByeMatch && isCompleted && hasSets && (
+        {!isByeMatch && isCompleted && isWalkover && (
+          <div className="flex items-center ml-3">
+            <span className="text-[10px] font-medium text-white/60 w-8 text-center">S1</span>
+            <span className="text-[10px] font-medium text-white/60 w-8 text-center">S2</span>
+          </div>
+        )}
+        {!isByeMatch && !isWalkover && isCompleted && hasSets && (
           <div className="flex items-center ml-3">
             {match.result.score.sets.map((set, idx) => {
               const isLastSet = idx === match.result.score.sets.length - 1
