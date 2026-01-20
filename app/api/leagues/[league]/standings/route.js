@@ -171,6 +171,21 @@ export async function GET(request, { params }) {
         ? Math.round((stats.setsWon / (stats.setsWon + stats.setsLost)) * 100)
         : 0
       
+      // Calculate form (last 5 matches) from the matches array
+      const playerIdStr = standing.player._id.toString()
+      const playerMatches = matches
+        .filter(match => {
+          const p1 = match.players?.player1?.toString() || match.players?.player1?._id?.toString()
+          const p2 = match.players?.player2?.toString() || match.players?.player2?._id?.toString()
+          return (p1 === playerIdStr || p2 === playerIdStr) && match.result?.winner
+        })
+        .sort((a, b) => (b.result?.playedAt || b.updatedAt) - (a.result?.playedAt || a.updatedAt))
+        .slice(0, 5)
+        .map(match => {
+          const winnerId = match.result.winner?.toString() || match.result.winner?._id?.toString()
+          return { result: winnerId === playerIdStr ? 'won' : 'lost', round: match.round }
+        })
+      
       return {
         position: standing.position,
         player: {
@@ -192,7 +207,9 @@ export async function GET(request, { params }) {
           totalPoints: stats.totalPoints,
           eloRating: 1200, // Default ELO if not tracked
           eloChange: 0
-        }
+        },
+        // Include last 5 match results for form display
+        matchHistory: playerMatches
       }
     })
     

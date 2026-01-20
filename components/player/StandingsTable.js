@@ -22,10 +22,10 @@ export default function StandingsTable({ players, language, unified = false, pla
   }
 
   // Get form data (last 5 matches) - W = win, L = loss
-  // TODO: Wire up real matchHistory data
-  const getFormData = (stats) => {
-    // For now return empty - will show gray placeholder dots
-    return []
+  const getFormData = (matchHistory) => {
+    if (!matchHistory || matchHistory.length === 0) return []
+    // matchHistory is already sorted most recent first, and limited to 5
+    return matchHistory.map(m => m.result === 'won' ? 'W' : 'L')
   }
 
   return (
@@ -50,7 +50,7 @@ export default function StandingsTable({ players, language, unified = false, pla
           {players.map((standing, index) => {
             const position = index + 1
             const indicatorColor = getPlayoffIndicatorColor(position)
-            const form = getFormData(standing.stats)
+            const form = getFormData(standing.matchHistory)
             
             return (
               <div 
