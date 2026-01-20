@@ -176,7 +176,8 @@ export async function POST(request, { params }) {
       round = 1, 
       testEmail = null,  // If provided, send only to this email
       testLanguage = 'es', // Language for test emails
-      languageOverrides = {} // { email: 'es' | 'en' } - manual overrides from admin
+      languageOverrides = {}, // { email: 'es' | 'en' } - manual overrides from admin
+      singlePlayerEmail = null // If provided, send only to this specific player
     } = body
 
     // Get league
@@ -326,6 +327,63 @@ export async function POST(request, { params }) {
         testEmail,
         results,
         message: `Test email(s) sent to ${testEmail}`
+      })
+    }
+
+    // If single player email, filter to just that player
+    if (singlePlayerEmail) {
+      const singlePlayerData = emailsToSend.find(e => e.player.email === singlePlayerEmail)
+      
+      if (!singlePlayerData) {
+        return NextResponse.json({ 
+          error: `Player with email ${singlePlayerEmail} not found in Round ${round}` 
+        }, { status: 404 })
+      }
+
+      const emailContent = generateSeasonStartEmail({
+        playerName: singlePlayerData.player.name,
+        playerEmail: singlePlayerData.player.email,
+        opponentName: singlePlayerData.opponent?.name,
+        opponentWhatsApp: singlePlayerData.opponent?.whatsapp,
+        leagueName: league.name,
+        city: league.location?.city || '',
+        season: league.season ? `${league.season.type}-${league.season.year}` : '',
+        deadline: singlePlayerData.isBye ? null : deadline.toISOString(),
+        isBye: singlePlayerData.isBye,
+        language: singlePlayerData.language
+      })
+
+      const result = await sendEmail({
+        to: singlePlayerData.player.email,
+        subject: emailContent.subject,
+        html: emailContent.html,
+        text: emailContent.text
+      })
+
+      return NextResponse.json({
+        mode: 'single',
+        round,
+        league: league.name,
+        summary: {
+          total: 1,
+          sent: result.success ? 1 : 0,
+          failed: result.success ? 0 : 1,
+          spanishSent: result.success && singlePlayerData.language === 'es' ? 1 : 0,
+          englishSent: result.success && singlePlayerData.language === 'en' ? 1 : 0
+        },
+        results: {
+          sent: result.success ? [{
+            email: singlePlayerData.player.email,
+            name: singlePlayerData.player.name,
+            isBye: singlePlayerData.isBye,
+            language: singlePlayerData.language
+          }] : [],
+          failed: result.success ? [] : [{
+            email: singlePlayerData.player.email,
+            name: singlePlayerData.player.name,
+            error: result.error
+          }]
+        }
       })
     }
 

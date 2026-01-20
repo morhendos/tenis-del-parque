@@ -1,4 +1,5 @@
 import React from 'react'
+import Image from 'next/image'
 
 /**
  * ============================================================================
@@ -7,13 +8,15 @@ import React from 'react'
  * 
  * This is a Server Component - no "use client" needed!
  * Animations are defined in tailwind.config.js
+ * 
+ * Uses an image instead of emoji for consistent cross-platform appearance
  */
 
 const SIZES = {
-  sm: { ball: 'text-2xl', shadow: 14 },
-  md: { ball: 'text-4xl', shadow: 24 }, 
-  lg: { ball: 'text-5xl', shadow: 34 },
-  xl: { ball: 'text-6xl', shadow: 48 }
+  sm: { ball: 28, shadow: 14 },
+  md: { ball: 40, shadow: 24 }, 
+  lg: { ball: 52, shadow: 34 },
+  xl: { ball: 64, shadow: 48 }
 }
 
 const TEXT_SIZES = {
@@ -40,10 +43,16 @@ export default function TennisPreloader({
   return (
     <div className={`${containerClasses} ${className}`} role="status" aria-label={displayText}>
       <div className="text-center">
-        {/* Bouncing Tennis Ball Emoji */}
+        {/* Bouncing Tennis Ball Image */}
         <div className="relative mx-auto mb-4 flex flex-col items-center">
           <div className="animate-tennis-bounce">
-            <span className={SIZES[size].ball}>🎾</span>
+            <Image 
+              src="/tennis-ball.webp" 
+              alt="Tennis ball" 
+              width={SIZES[size].ball} 
+              height={SIZES[size].ball}
+              priority
+            />
           </div>
           
           {/* Shadow that scales with bounce */}

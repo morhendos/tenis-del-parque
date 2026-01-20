@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react'
  * Allows admin to preview and send season start emails to players
  * Language is automatically detected from each player's preferences
  * Admin can manually override language for any player
+ * Supports sending to individual players or all at once
  */
 export default function SeasonStartEmailModal({ 
   isOpen, 
@@ -17,7 +18,9 @@ export default function SeasonStartEmailModal({
   const [loading, setLoading] = useState(false)
   const [preview, setPreview] = useState(null)
   const [sending, setSending] = useState(false)
+  const [sendingIndividual, setSendingIndividual] = useState(null) // Index of player being sent to
   const [result, setResult] = useState(null)
+  const [individualResults, setIndividualResults] = useState({}) // { index: { success, error } }
   const [testEmail, setTestEmail] = useState('')
   const [testLanguage, setTestLanguage] = useState('es')
   const [selectedRound, setSelectedRound] = useState(1)
@@ -28,6 +31,8 @@ export default function SeasonStartEmailModal({
     if (isOpen && leagueId) {
       fetchPreview()
       setLanguageOverrides({}) // Reset overrides when refetching
+      setIndividualResults({}) // Reset individual results
+      setResult(null)
     }
   }, [isOpen, leagueId, selectedRound])
 
@@ -107,6 +112,40 @@ export default function SeasonStartEmailModal({
     }
   }
 
+  // Send to individual player
+  const handleSendIndividual = async (index, recipient) => {
+    const lang = getEffectiveLanguage(index, recipient.player.language)
+    
+    setSendingIndividual(index)
+    try {
+      const response = await fetch(`/api/admin/leagues/${leagueId}/season-start-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          round: selectedRound,
+          singlePlayerEmail: recipient.player.email,
+          languageOverrides: { [recipient.player.email]: lang }
+        })
+      })
+      const data = await response.json()
+      
+      setIndividualResults(prev => ({
+        ...prev,
+        [index]: {
+          success: data.summary?.sent > 0,
+          error: data.results?.failed?.[0]?.error || null
+        }
+      }))
+    } catch (error) {
+      setIndividualResults(prev => ({
+        ...prev,
+        [index]: { success: false, error: 'Failed to send' }
+      }))
+    } finally {
+      setSendingIndividual(null)
+    }
+  }
+
   const handleSendAll = async () => {
     const { spanish, english } = getLanguageCounts()
     
@@ -155,7 +194,7 @@ export default function SeasonStartEmailModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="bg-gradient-to-r from-parque-purple to-purple-600 px-6 py-5 text-white">
           <div className="flex items-center justify-between">
@@ -232,9 +271,9 @@ export default function SeasonStartEmailModal({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <div>
-                    <p className="font-medium text-blue-900">Automatic language detection</p>
+                    <p className="font-medium text-blue-900">Individual &amp; bulk sending</p>
                     <p className="text-sm text-blue-700 mt-1">
-                      Languages are set from player preferences. You can click on any language badge below to change it manually.
+                      Click the send button next to any player to send just to them, or use &quot;Send to All&quot; for everyone.
                     </p>
                   </div>
                 </div>
@@ -277,7 +316,7 @@ export default function SeasonStartEmailModal({
                 <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
                   <h3 className="font-semibold text-gray-900">Recipients Preview</h3>
                 </div>
-                <div className="max-h-64 overflow-y-auto">
+                <div className="max-h-72 overflow-y-auto">
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50 sticky top-0">
                       <tr>
@@ -285,12 +324,15 @@ export default function SeasonStartEmailModal({
                         <th className="text-left px-4 py-2 font-medium text-gray-600">Email</th>
                         <th className="text-left px-4 py-2 font-medium text-gray-600">Opponent</th>
                         <th className="text-center px-4 py-2 font-medium text-gray-600">Lang</th>
+                        <th className="text-center px-4 py-2 font-medium text-gray-600">Send</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                       {preview.recipients.map((r, i) => {
                         const effectiveLang = getEffectiveLanguage(i, r.player.language)
                         const isOverridden = languageOverrides[i] !== undefined
+                        const individualResult = individualResults[i]
+                        const isSendingThis = sendingIndividual === i
                         
                         return (
                           <tr key={i} className={r.isBye ? 'bg-emerald-50/50' : ''}>
@@ -318,6 +360,36 @@ export default function SeasonStartEmailModal({
                                 <option value="es">ES</option>
                                 <option value="en">EN</option>
                               </select>
+                            </td>
+                            <td className="px-4 py-2 text-center">
+                              {individualResult?.success ? (
+                                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-600">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                  </svg>
+                                </span>
+                              ) : individualResult?.error ? (
+                                <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-100 text-red-600" title={individualResult.error}>
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </span>
+                              ) : (
+                                <button
+                                  onClick={() => handleSendIndividual(i, r)}
+                                  disabled={isSendingThis || sending}
+                                  className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-parque-purple/10 text-parque-purple hover:bg-parque-purple hover:text-white transition-colors disabled:opacity-50"
+                                  title={`Send to ${r.player.name}`}
+                                >
+                                  {isSendingThis ? (
+                                    <span className="animate-spin w-4 h-4 border-2 border-parque-purple border-t-transparent rounded-full"></span>
+                                  ) : (
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                    </svg>
+                                  )}
+                                </button>
+                              )}
                             </td>
                           </tr>
                         )
@@ -378,6 +450,12 @@ export default function SeasonStartEmailModal({
                           </li>
                         ))}
                       </ul>
+                    </div>
+                  ) : result.mode === 'single' ? (
+                    <div>
+                      <p className="font-medium text-green-800">
+                        Email sent to {result.results?.sent?.[0]?.name || 'player'}
+                      </p>
                     </div>
                   ) : (
                     <div>
