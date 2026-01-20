@@ -90,7 +90,7 @@ export default function StandingsTable({ players, language, unified = false, pla
                       return (
                         <div
                           key={i}
-                          className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full ${
+                          className={`w-1.5 h-1.5 sm:w-2.5 sm:h-2.5 rounded-full ${
                             match === 'W' ? 'bg-green-500' : 'bg-red-400'
                           }`}
                           title={match === 'W' ? (language === 'es' ? 'Victoria' : 'Win') : (language === 'es' ? 'Derrota' : 'Loss')}
@@ -100,7 +100,7 @@ export default function StandingsTable({ players, language, unified = false, pla
                     return (
                       <div
                         key={i}
-                        className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-gray-200"
+                        className="w-1.5 h-1.5 sm:w-2.5 sm:h-2.5 rounded-full bg-gray-200"
                         title={language === 'es' ? 'Sin jugar' : 'Not played'}
                       />
                     )
