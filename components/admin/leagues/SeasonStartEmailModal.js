@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react'
  * Season Start Email Modal
  * Allows admin to preview and send season start emails to players
  * Language is automatically detected from each player's preferences
+ * Admin can manually override language for any player
  */
 export default function SeasonStartEmailModal({ 
   isOpen, 
@@ -20,11 +21,13 @@ export default function SeasonStartEmailModal({
   const [testEmail, setTestEmail] = useState('')
   const [testLanguage, setTestLanguage] = useState('es')
   const [selectedRound, setSelectedRound] = useState(1)
+  const [languageOverrides, setLanguageOverrides] = useState({}) // { recipientIndex: 'es' | 'en' }
 
   // Fetch preview when modal opens
   useEffect(() => {
     if (isOpen && leagueId) {
       fetchPreview()
+      setLanguageOverrides({}) // Reset overrides when refetching
     }
   }, [isOpen, leagueId, selectedRound])
 
@@ -46,6 +49,38 @@ export default function SeasonStartEmailModal({
     } finally {
       setLoading(false)
     }
+  }
+
+  // Get effective language for a recipient (override or default)
+  const getEffectiveLanguage = (index, defaultLang) => {
+    return languageOverrides[index] || defaultLang || 'es'
+  }
+
+  // Handle language change for a recipient
+  const handleLanguageChange = (index, newLang) => {
+    setLanguageOverrides(prev => ({
+      ...prev,
+      [index]: newLang
+    }))
+  }
+
+  // Calculate language counts with overrides
+  const getLanguageCounts = () => {
+    if (!preview?.recipients) return { spanish: 0, english: 0 }
+    
+    let spanish = 0
+    let english = 0
+    
+    preview.recipients.forEach((r, i) => {
+      const lang = getEffectiveLanguage(i, r.player.language)
+      if (lang === 'en') {
+        english++
+      } else {
+        spanish++
+      }
+    })
+    
+    return { spanish, english }
   }
 
   const handleSendTest = async () => {
@@ -73,13 +108,12 @@ export default function SeasonStartEmailModal({
   }
 
   const handleSendAll = async () => {
-    const spanishCount = preview?.summary?.spanishEmails || 0
-    const englishCount = preview?.summary?.englishEmails || 0
+    const { spanish, english } = getLanguageCounts()
     
     const confirmMsg = `Send emails to ${preview?.summary?.totalRecipients} players?\n\n` +
-      `• ${spanishCount} in Spanish\n` +
-      `• ${englishCount} in English\n\n` +
-      `Each player will receive the email in their preferred language.`
+      `• ${spanish} in Spanish\n` +
+      `• ${english} in English\n\n` +
+      `Each player will receive the email in their assigned language.`
     
     if (!confirm(confirmMsg)) {
       return
@@ -88,10 +122,20 @@ export default function SeasonStartEmailModal({
     setSending(true)
     setResult(null)
     try {
+      // Build language map with overrides
+      const languageMap = {}
+      preview.recipients.forEach((r, i) => {
+        const lang = getEffectiveLanguage(i, r.player.language)
+        languageMap[r.player.email] = lang
+      })
+      
       const response = await fetch(`/api/admin/leagues/${leagueId}/season-start-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ round: selectedRound })
+        body: JSON.stringify({ 
+          round: selectedRound,
+          languageOverrides: languageMap
+        })
       })
       const data = await response.json()
       setResult(data)
@@ -102,7 +146,12 @@ export default function SeasonStartEmailModal({
     }
   }
 
+  // Check if any overrides have been made
+  const hasOverrides = Object.keys(languageOverrides).length > 0
+
   if (!isOpen) return null
+
+  const { spanish: spanishCount, english: englishCount } = getLanguageCounts()
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -168,9 +217,9 @@ export default function SeasonStartEmailModal({
                 </div>
                 <div className="bg-amber-50 rounded-xl p-4 text-center">
                   <div className="flex justify-center gap-2 text-lg font-bold">
-                    <span className="text-amber-700">{preview.summary.spanishEmails} ES</span>
+                    <span className="text-amber-700">{spanishCount} ES</span>
                     <span className="text-gray-400">/</span>
-                    <span className="text-blue-700">{preview.summary.englishEmails} EN</span>
+                    <span className="text-blue-700">{englishCount} EN</span>
                   </div>
                   <p className="text-sm text-gray-600">Languages</p>
                 </div>
@@ -185,12 +234,29 @@ export default function SeasonStartEmailModal({
                   <div>
                     <p className="font-medium text-blue-900">Automatic language detection</p>
                     <p className="text-sm text-blue-700 mt-1">
-                      Each player will receive the email in their preferred language based on their account settings. 
-                      Players without a preference will receive Spanish.
+                      Languages are set from player preferences. You can click on any language badge below to change it manually.
                     </p>
                   </div>
                 </div>
               </div>
+
+              {/* Override indicator */}
+              {hasOverrides && (
+                <div className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-xl p-3">
+                  <div className="flex items-center gap-2 text-amber-800">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span className="text-sm font-medium">{Object.keys(languageOverrides).length} language(s) manually adjusted</span>
+                  </div>
+                  <button
+                    onClick={() => setLanguageOverrides({})}
+                    className="text-sm text-amber-700 hover:text-amber-900 font-medium"
+                  >
+                    Reset all
+                  </button>
+                </div>
+              )}
 
               {/* Warning for players without matches */}
               {preview.playersWithoutMatches?.length > 0 && (
@@ -222,30 +288,40 @@ export default function SeasonStartEmailModal({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                      {preview.recipients.map((r, i) => (
-                        <tr key={i} className={r.isBye ? 'bg-emerald-50/50' : ''}>
-                          <td className="px-4 py-2 font-medium text-gray-900">{r.player.name}</td>
-                          <td className="px-4 py-2 text-gray-600 text-xs">{r.player.email}</td>
-                          <td className="px-4 py-2">
-                            {r.isBye ? (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
-                                BYE
-                              </span>
-                            ) : (
-                              <span className="text-gray-600">{r.opponent?.name}</span>
-                            )}
-                          </td>
-                          <td className="px-4 py-2 text-center">
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                              r.player.language === 'en' 
-                                ? 'bg-blue-100 text-blue-700' 
-                                : 'bg-amber-100 text-amber-700'
-                            }`}>
-                              {r.player.language?.toUpperCase() || 'ES'}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
+                      {preview.recipients.map((r, i) => {
+                        const effectiveLang = getEffectiveLanguage(i, r.player.language)
+                        const isOverridden = languageOverrides[i] !== undefined
+                        
+                        return (
+                          <tr key={i} className={r.isBye ? 'bg-emerald-50/50' : ''}>
+                            <td className="px-4 py-2 font-medium text-gray-900">{r.player.name}</td>
+                            <td className="px-4 py-2 text-gray-600 text-xs">{r.player.email}</td>
+                            <td className="px-4 py-2">
+                              {r.isBye ? (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+                                  BYE
+                                </span>
+                              ) : (
+                                <span className="text-gray-600">{r.opponent?.name}</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-2 text-center">
+                              <select
+                                value={effectiveLang}
+                                onChange={(e) => handleLanguageChange(i, e.target.value)}
+                                className={`text-xs font-medium rounded px-2 py-1 cursor-pointer border-0 focus:ring-2 focus:ring-parque-purple ${
+                                  effectiveLang === 'en'
+                                    ? 'bg-blue-100 text-blue-700'
+                                    : 'bg-amber-100 text-amber-700'
+                                } ${isOverridden ? 'ring-2 ring-amber-400' : ''}`}
+                              >
+                                <option value="es">ES</option>
+                                <option value="en">EN</option>
+                              </select>
+                            </td>
+                          </tr>
+                        )
+                      })}
                     </tbody>
                   </table>
                 </div>

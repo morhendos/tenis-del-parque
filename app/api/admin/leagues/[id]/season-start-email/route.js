@@ -175,7 +175,8 @@ export async function POST(request, { params }) {
     const { 
       round = 1, 
       testEmail = null,  // If provided, send only to this email
-      testLanguage = 'es' // Language for test emails
+      testLanguage = 'es', // Language for test emails
+      languageOverrides = {} // { email: 'es' | 'en' } - manual overrides from admin
     } = body
 
     // Get league
@@ -225,20 +226,23 @@ export async function POST(request, { params }) {
       const isBye = match.isBye || !player2
 
       if (player1?.email) {
+        // Check for admin override first, then user preference, then default to 'es'
+        const language = languageOverrides[player1.email] || languageMap[player1.email] || 'es'
         emailsToSend.push({
           player: player1,
           opponent: isBye ? null : player2,
           isBye,
-          language: languageMap[player1.email] || 'es'
+          language
         })
       }
 
       if (player2?.email && !isBye) {
+        const language = languageOverrides[player2.email] || languageMap[player2.email] || 'es'
         emailsToSend.push({
           player: player2,
           opponent: player1,
           isBye: false,
-          language: languageMap[player2.email] || 'es'
+          language
         })
       }
     })
