@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
+import confetti from 'canvas-confetti'
+import { getRandomQuote } from '@/lib/content/tennisQuotes'
 
 export default function MatchResultCard({ 
   match, 
@@ -8,7 +10,7 @@ export default function MatchResultCard({
   isWinner,
   onClose
 }) {
-  const [showConfetti, setShowConfetti] = useState(false)
+  const [quote, setQuote] = useState(null)
   
   const getOpponent = () => {
     if (!player || !match) return null
@@ -63,13 +65,61 @@ export default function MatchResultCard({
 
   // For walkover matches, we don't show confetti or treat it as a "real" win
   useEffect(() => {
+    // Get a random tennis quote for winning matches
     if (isPlayerMatch && actualIsWinner && !isWalkover) {
-      setShowConfetti(true)
-      // Stop confetti after 5 seconds
-      const timer = setTimeout(() => setShowConfetti(false), 5000)
+      setQuote(getRandomQuote(language))
+    }
+    
+    if (isPlayerMatch && actualIsWinner && !isWalkover) {
+      // Trigger spectacular confetti celebration!
+      const triggerConfetti = () => {
+        // First burst - center with gold/purple colors
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#FFD700', '#A855F7', '#7C3AED', '#F59E0B', '#10B981', '#EC4899']
+        })
+        
+        // Second burst - left side (delayed)
+        setTimeout(() => {
+          confetti({
+            particleCount: 50,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0, y: 0.6 },
+            colors: ['#FFD700', '#A855F7', '#7C3AED', '#F59E0B', '#10B981']
+          })
+        }, 150)
+        
+        // Third burst - right side (delayed)
+        setTimeout(() => {
+          confetti({
+            particleCount: 50,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1, y: 0.6 },
+            colors: ['#FFD700', '#A855F7', '#7C3AED', '#F59E0B', '#10B981']
+          })
+        }, 300)
+        
+        // Extra celebration burst from top
+        setTimeout(() => {
+          confetti({
+            particleCount: 30,
+            spread: 100,
+            origin: { y: 0.2 },
+            colors: ['#FFD700', '#FCD34D', '#FBBF24']
+          })
+        }, 500)
+      }
+      
+      // Small delay to let the modal render first
+      const timer = setTimeout(triggerConfetti, 200)
+      
       return () => clearTimeout(timer)
     }
-  }, [isPlayerMatch, actualIsWinner, isWalkover])
+  }, [isPlayerMatch, actualIsWinner, isWalkover, language])
 
   // Get venue/location info
   const venue = match.schedule?.venue || match.schedule?.club
@@ -77,35 +127,14 @@ export default function MatchResultCard({
 
   return (
     <>
-      {/* Confetti Animation - Only for player's winning matches (NOT walkovers) */}
-      {showConfetti && isPlayerMatch && actualIsWinner && !isWalkover && (
-        <div className="fixed inset-0 pointer-events-none z-[60]">
-          <div className="confetti-container">
-            {[...Array(50)].map((_, i) => (
-              <div
-                key={i}
-                className="confetti"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  animationDelay: `${Math.random() * 3}s`,
-                  backgroundColor: ['#FFD700', '#A855F7', '#7C3AED', '#F59E0B', '#10B981', '#EC4899'][Math.floor(Math.random() * 6)]
-                }}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Result Card Modal */}
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 pb-24">
         <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden animate-scale-in max-h-[calc(100vh-8rem)] overflow-y-auto shadow-2xl">
-          {/* Header - Purple gradient like league header */}
-          <div className={`relative overflow-hidden p-6 text-center ${
+          {/* Header - Compact purple gradient */}
+          <div className={`relative overflow-hidden p-4 sm:p-5 text-center ${
             isWalkover 
               ? 'bg-gradient-to-br from-gray-500 to-gray-600'
-              : (isPlayerMatch && actualIsWinner 
-                ? 'bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600' 
-                : 'bg-gradient-to-br from-parque-purple via-purple-600 to-indigo-600')
+              : 'bg-gradient-to-br from-parque-purple via-purple-600 to-indigo-600'
           } text-white`}>
             {/* Background decoration */}
             <div className="absolute inset-0 opacity-10">
@@ -114,25 +143,18 @@ export default function MatchResultCard({
             </div>
             
             <div className="relative z-10">
-              {/* Logo */}
-              <div className="w-16 h-16 mx-auto mb-3 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center p-2">
-                {isPlayerMatch && actualIsWinner && !isWalkover ? (
-                  // Trophy icon for wins
-                  <svg className="w-10 h-10 text-yellow-300" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C13.1 2 14 2.9 14 4V6H16C17.1 6 18 6.9 18 8V10C18 11.1 17.1 12 16 12H14V13.5C14 14.33 14.67 15 15.5 15H16V17H15.5C13.57 17 12 15.43 12 13.5V12H12C10.9 12 10 11.1 10 10V8C10 6.9 10.9 6 12 6V4C12 2.9 12.9 2 14 2H12ZM6 8H8V10H6V8ZM16 8H18V10H16V8ZM7 17H17V19C17 20.1 16.1 21 15 21H9C7.9 21 7 20.1 7 19V17Z"/>
-                  </svg>
-                ) : (
-                  <Image 
-                    src="/logo-big.png" 
-                    alt="Tenis del Parque" 
-                    width={48} 
-                    height={48}
-                    className="object-contain"
-                  />
-                )}
+              {/* Logo - Compact */}
+              <div className="w-12 h-12 sm:w-14 sm:h-14 mx-auto mb-2 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center p-1.5">
+                <Image 
+                  src="/logo-big.png" 
+                  alt="Tenis del Parque" 
+                  width={40} 
+                  height={40}
+                  className="object-contain"
+                />
               </div>
               
-              <h2 className="text-2xl font-bold mb-1">
+              <h2 className="text-xl sm:text-2xl font-bold mb-0.5">
                 {isWalkover 
                   ? 'Walkover'
                   : (isPlayerMatch 
@@ -141,74 +163,106 @@ export default function MatchResultCard({
                       : (language === 'es' ? 'Partido Completado' : 'Match Complete'))
                     : (language === 'es' ? 'Resultado del Partido' : 'Match Result'))}
               </h2>
-              <p className="text-sm opacity-80">
+              <p className="text-xs sm:text-sm opacity-80">
                 {language === 'es' ? 'Ronda' : 'Round'} {match.round}
               </p>
             </div>
           </div>
 
           {/* Match Details */}
-          <div className="p-5">
+          <div className="p-4 sm:p-5">
             {/* Players and Score */}
-            <div className="bg-gray-50 rounded-xl p-4 mb-4">
-              <div className="flex items-center justify-between mb-4">
+            <div className="bg-gray-50 rounded-xl p-3 sm:p-4 mb-4">
+              <div className="flex items-center justify-between mb-3">
                 {isPlayerMatch ? (
                   <>
                     {/* Show in natural order: player1 vs player2 */}
                     {match.players.player1._id === player._id ? (
                       <>
                         <div className="text-center flex-1">
-                          <div className="text-sm text-gray-600 mb-1">
+                          <div className="text-xs sm:text-sm text-gray-600 mb-0.5">
                             {player?.name}
                           </div>
-                          <div className={`text-4xl font-bold ${
+                          <div className={`text-3xl sm:text-4xl font-bold ${
                             isWalkover 
                               ? 'text-gray-400'
                               : (actualIsWinner ? 'text-emerald-600' : 'text-gray-700')
                           }`}>
                             {isWalkover ? '–' : myScore}
                           </div>
+                          {/* ELO Change for player */}
+                          {match.eloChanges?.player1?.change !== undefined && !isWalkover && (
+                            <div className={`text-xs font-medium mt-0.5 ${
+                              match.eloChanges.player1.change >= 0 ? 'text-teal-600/70' : 'text-gray-400'
+                            }`}>
+                              {match.eloChanges.player1.change >= 0 ? '+' : ''}{match.eloChanges.player1.change} ELO
+                            </div>
+                          )}
                         </div>
-                        <div className="text-lg text-gray-300 font-medium px-3">vs</div>
+                        <div className="text-base sm:text-lg text-gray-300 font-medium px-2 sm:px-3">vs</div>
                         <div className="text-center flex-1">
-                          <div className="text-sm text-gray-600 mb-1">
+                          <div className="text-xs sm:text-sm text-gray-600 mb-0.5">
                             {opponent?.name}
                           </div>
-                          <div className={`text-4xl font-bold ${
+                          <div className={`text-3xl sm:text-4xl font-bold ${
                             isWalkover 
                               ? 'text-gray-400'
                               : (!actualIsWinner ? 'text-emerald-600' : 'text-gray-700')
                           }`}>
                             {isWalkover ? '–' : opponentScore}
                           </div>
+                          {/* ELO Change for opponent */}
+                          {match.eloChanges?.player2?.change !== undefined && !isWalkover && (
+                            <div className={`text-xs font-medium mt-0.5 ${
+                              match.eloChanges.player2.change >= 0 ? 'text-teal-600/70' : 'text-gray-400'
+                            }`}>
+                              {match.eloChanges.player2.change >= 0 ? '+' : ''}{match.eloChanges.player2.change} ELO
+                            </div>
+                          )}
                         </div>
                       </>
                     ) : (
                       <>
                         <div className="text-center flex-1">
-                          <div className="text-sm text-gray-600 mb-1">
+                          <div className="text-xs sm:text-sm text-gray-600 mb-0.5">
                             {opponent?.name}
                           </div>
-                          <div className={`text-4xl font-bold ${
+                          <div className={`text-3xl sm:text-4xl font-bold ${
                             isWalkover 
                               ? 'text-gray-400'
                               : (!actualIsWinner ? 'text-emerald-600' : 'text-gray-700')
                           }`}>
                             {isWalkover ? '–' : opponentScore}
                           </div>
+                          {/* ELO Change for opponent (player1) */}
+                          {match.eloChanges?.player1?.change !== undefined && !isWalkover && (
+                            <div className={`text-xs font-medium mt-0.5 ${
+                              match.eloChanges.player1.change >= 0 ? 'text-teal-600/70' : 'text-gray-400'
+                            }`}>
+                              {match.eloChanges.player1.change >= 0 ? '+' : ''}{match.eloChanges.player1.change} ELO
+                            </div>
+                          )}
                         </div>
-                        <div className="text-lg text-gray-300 font-medium px-3">vs</div>
+                        <div className="text-base sm:text-lg text-gray-300 font-medium px-2 sm:px-3">vs</div>
                         <div className="text-center flex-1">
-                          <div className="text-sm text-gray-600 mb-1">
+                          <div className="text-xs sm:text-sm text-gray-600 mb-0.5">
                             {player?.name}
                           </div>
-                          <div className={`text-4xl font-bold ${
+                          <div className={`text-3xl sm:text-4xl font-bold ${
                             isWalkover 
                               ? 'text-gray-400'
                               : (actualIsWinner ? 'text-emerald-600' : 'text-gray-700')
                           }`}>
                             {isWalkover ? '–' : myScore}
                           </div>
+                          {/* ELO Change for player (player2) */}
+                          {match.eloChanges?.player2?.change !== undefined && !isWalkover && (
+                            <div className={`text-xs font-medium mt-0.5 ${
+                              match.eloChanges.player2.change >= 0 ? 'text-teal-600/70' : 'text-gray-400'
+                            }`}>
+                              {match.eloChanges.player2.change >= 0 ? '+' : ''}{match.eloChanges.player2.change} ELO
+                            </div>
+                          )}
                         </div>
                       </>
                     )}
@@ -216,29 +270,45 @@ export default function MatchResultCard({
                 ) : (
                   <>
                     <div className="text-center flex-1">
-                      <div className="text-sm text-gray-600 mb-1">
+                      <div className="text-xs sm:text-sm text-gray-600 mb-0.5">
                         {match.players.player1.name}
                       </div>
-                      <div className={`text-4xl font-bold ${
+                      <div className={`text-3xl sm:text-4xl font-bold ${
                         isWalkover 
                           ? 'text-gray-400'
                           : (isPlayer1Winner ? 'text-emerald-600' : 'text-gray-700')
                       }`}>
                         {isWalkover ? '–' : p1Score}
                       </div>
+                      {/* ELO Change for player1 */}
+                      {match.eloChanges?.player1?.change !== undefined && !isWalkover && (
+                        <div className={`text-xs font-medium mt-0.5 ${
+                          match.eloChanges.player1.change >= 0 ? 'text-teal-600/70' : 'text-gray-400'
+                        }`}>
+                          {match.eloChanges.player1.change >= 0 ? '+' : ''}{match.eloChanges.player1.change} ELO
+                        </div>
+                      )}
                     </div>
-                    <div className="text-lg text-gray-300 font-medium px-3">vs</div>
+                    <div className="text-base sm:text-lg text-gray-300 font-medium px-2 sm:px-3">vs</div>
                     <div className="text-center flex-1">
-                      <div className="text-sm text-gray-600 mb-1">
+                      <div className="text-xs sm:text-sm text-gray-600 mb-0.5">
                         {match.players.player2.name}
                       </div>
-                      <div className={`text-4xl font-bold ${
+                      <div className={`text-3xl sm:text-4xl font-bold ${
                         isWalkover 
                           ? 'text-gray-400'
                           : (isPlayer2Winner ? 'text-emerald-600' : 'text-gray-700')
                       }`}>
                         {isWalkover ? '–' : p2Score}
                       </div>
+                      {/* ELO Change for player2 */}
+                      {match.eloChanges?.player2?.change !== undefined && !isWalkover && (
+                        <div className={`text-xs font-medium mt-0.5 ${
+                          match.eloChanges.player2.change >= 0 ? 'text-teal-600/70' : 'text-gray-400'
+                        }`}>
+                          {match.eloChanges.player2.change >= 0 ? '+' : ''}{match.eloChanges.player2.change} ELO
+                        </div>
+                      )}
                     </div>
                   </>
                 )}
@@ -247,9 +317,6 @@ export default function MatchResultCard({
               {/* Set Details - Only show for non-walkover matches */}
               {!isWalkover && match.result?.score?.sets && match.result.score.sets.length > 0 && (
                 <div className="border-t border-gray-200 pt-3">
-                  <h4 className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">
-                    {language === 'es' ? 'Detalle de Sets' : 'Set Details'}
-                  </h4>
                   <div className="flex gap-2 justify-center">
                     {match.result.score.sets.map((set, index) => {
                       const leftScore = set.player1
@@ -270,7 +337,7 @@ export default function MatchResultCard({
                           key={index} 
                           className={`text-center px-4 py-2 rounded-lg ${
                             isPlayerMatch 
-                              ? (wonSet ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600')
+                              ? (wonSet ? 'bg-teal-50/60 text-teal-700' : 'bg-gray-100 text-gray-500')
                               : 'bg-gray-100 text-gray-700'
                           }`}
                         >
@@ -345,9 +412,21 @@ export default function MatchResultCard({
               {language === 'es' ? 'Cerrar' : 'Close'}
             </button>
 
-            {/* Motivational Message - Only for player's own losing matches (NOT walkovers) */}
+            {/* Motivational Quote - Only for player's own WINNING matches (NOT walkovers) */}
+            {isPlayerMatch && actualIsWinner && !isWalkover && quote && (
+              <div className="text-center mt-4 pt-4 border-t border-gray-100">
+                <p className="text-gray-600 italic text-sm">
+                  &ldquo;{quote.text}&rdquo;
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  — {quote.author}
+                </p>
+              </div>
+            )}
+
+            {/* Encouraging Message - Only for player's own LOSING matches (NOT walkovers) */}
             {isPlayerMatch && !actualIsWinner && !isWalkover && (
-              <p className="text-center text-sm text-gray-500 mt-4">
+              <p className="text-center text-sm text-gray-500 mt-4 pt-4 border-t border-gray-100 italic">
                 {(() => {
                   const motivationalMessages = {
                     es: [
@@ -400,39 +479,6 @@ export default function MatchResultCard({
 
         .animate-scale-in {
           animation: scale-in 0.3s ease-out;
-        }
-
-        .confetti-container {
-          position: absolute;
-          width: 100%;
-          height: 100%;
-          overflow: hidden;
-        }
-
-        .confetti {
-          position: absolute;
-          width: 10px;
-          height: 10px;
-          top: -10px;
-          animation: confetti-fall 3s linear forwards;
-        }
-
-        @keyframes confetti-fall {
-          to {
-            transform: translateY(calc(100vh + 10px)) rotate(360deg);
-          }
-        }
-
-        .confetti:nth-child(even) {
-          width: 8px;
-          height: 8px;
-          animation-duration: 4s;
-        }
-
-        .confetti:nth-child(3n) {
-          width: 6px;
-          height: 6px;
-          animation-duration: 2.5s;
         }
       `}</style>
     </>

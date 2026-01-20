@@ -3,7 +3,6 @@ import MatchCardUnified from './MatchCardUnified'
 import { MatchModals } from './MatchModals'
 import MatchResultCard from './MatchResultCard'
 import { toast } from '@/components/ui/Toast'
-import { processMatchResult } from '@/lib/utils/matchResultUtils'
 
 export default function MatchesTab({ 
   schedule, 
@@ -158,19 +157,26 @@ export default function MatchesTab({
       const result = await response.json()
       
       if (response.ok) {
-        const match = playerMatches.find(m => m._id === data.matchId)
+        // Use the match from API response which includes eloChanges
+        const apiMatch = result.match
         
-        if (match) {
-          const { updatedMatch, isPlayerWinner } = processMatchResult(match, player, data)
+        if (apiMatch) {
+          // Calculate if player won
+          const isPlayer1 = apiMatch.players?.player1?._id === player?._id || 
+                           apiMatch.players?.player1?._id?.toString() === player?._id?.toString()
+          const winnerId = apiMatch.result?.winner?._id || apiMatch.result?.winner
+          const isPlayerWinner = isPlayer1 
+            ? (winnerId === apiMatch.players?.player1?._id || winnerId?.toString() === apiMatch.players?.player1?._id?.toString())
+            : (winnerId === apiMatch.players?.player2?._id || winnerId?.toString() === apiMatch.players?.player2?._id?.toString())
           
           setPlayerMatches(prevMatches => 
-            prevMatches.map(m => m._id === data.matchId ? updatedMatch : m)
+            prevMatches.map(m => m._id === data.matchId ? apiMatch : m)
           )
           
           setShowResultModal(false)
           
           setTimeout(() => {
-            setSubmittedMatch(updatedMatch)
+            setSubmittedMatch(apiMatch)
             setIsWinner(isPlayerWinner)
             setIsNewResult(true) // This is a new submission
             setShowResultCard(true)
