@@ -37,7 +37,7 @@ export default function StandingsTable({ players, language, unified = false, pla
           <div className="flex items-center w-full">
             <div className="w-8 sm:w-11 px-1 py-2.5 sm:py-3 text-center flex-shrink-0">#</div>
             <div className="flex-1 px-1 sm:px-2 py-2.5 sm:py-3 min-w-0">{language === 'es' ? 'Jugador' : 'Player'}</div>
-            <div className="hidden min-[375px]:block w-16 sm:w-24 px-0.5 sm:px-1 py-2.5 sm:py-3 text-center flex-shrink-0">{language === 'es' ? 'Forma' : 'Form'}</div>
+            <div className="hidden min-[375px]:block w-16 min-[420px]:w-24 px-0.5 sm:px-1 py-2.5 sm:py-3 text-center flex-shrink-0">{language === 'es' ? 'Forma' : 'Form'}</div>
             <div className="w-9 sm:w-12 px-0.5 py-2.5 sm:py-3 text-center flex-shrink-0">W-L</div>
             <div className="w-9 sm:w-12 px-0.5 py-2.5 sm:py-3 text-center flex-shrink-0">Sets</div>
             <div className="w-12 sm:w-14 px-0.5 py-2.5 sm:py-3 text-center flex-shrink-0">{language === 'es' ? 'Juegos' : 'Games'}</div>
@@ -82,8 +82,8 @@ export default function StandingsTable({ players, language, unified = false, pla
                 </div>
 
                 {/* Form - last 5 matches as dots - show on 375px+ */}
-                <div className="hidden min-[375px]:flex w-16 sm:w-24 px-0.5 sm:px-1 py-2 sm:py-2.5 justify-center items-center gap-0.5 sm:gap-1 flex-shrink-0">
-                  {/* Show 4 dots on mobile, 5 on desktop */}
+                <div className="hidden min-[375px]:flex w-16 min-[420px]:w-24 px-0.5 sm:px-1 py-2 sm:py-2.5 justify-center items-center gap-0.5 min-[420px]:gap-1 flex-shrink-0">
+                  {/* Show 4 dots on mobile, 5 on 420px+ */}
                   {[0, 1, 2, 3, 4].map((i) => {
                     const match = form[i]
                     const isLastDot = i === 4
@@ -91,7 +91,7 @@ export default function StandingsTable({ players, language, unified = false, pla
                       return (
                         <div
                           key={i}
-                          className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full ${isLastDot ? 'hidden sm:block' : ''} ${
+                          className={`w-2 h-2 min-[420px]:w-2.5 min-[420px]:h-2.5 rounded-full ${isLastDot ? 'hidden min-[420px]:block' : ''} ${
                             match === 'W' ? 'bg-green-500' : 'bg-red-400'
                           }`}
                           title={match === 'W' ? (language === 'es' ? 'Victoria' : 'Win') : (language === 'es' ? 'Derrota' : 'Loss')}
@@ -101,7 +101,7 @@ export default function StandingsTable({ players, language, unified = false, pla
                     return (
                       <div
                         key={i}
-                        className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-gray-200 ${isLastDot ? 'hidden sm:block' : ''}`}
+                        className={`w-2 h-2 min-[420px]:w-2.5 min-[420px]:h-2.5 rounded-full bg-gray-200 ${isLastDot ? 'hidden min-[420px]:block' : ''}`}
                         title={language === 'es' ? 'Sin jugar' : 'Not played'}
                       />
                     )
