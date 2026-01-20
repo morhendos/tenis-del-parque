@@ -83,25 +83,28 @@ export default function StandingsTable({ players, language, unified = false, pla
 
                 {/* Form - last 5 matches as dots - desktop only */}
                 <div className="hidden min-[420px]:flex w-24 px-1 py-2 sm:py-2.5 justify-center items-center gap-1 flex-shrink-0">
-                  {form.length > 0 ? (
-                    form.map((result, i) => (
-                      <div
-                        key={i}
-                        className={`w-2.5 h-2.5 rounded-full ${
-                          result === 'W' ? 'bg-green-500' : 'bg-red-400'
-                        }`}
-                        title={result === 'W' ? (language === 'es' ? 'Victoria' : 'Win') : (language === 'es' ? 'Derrota' : 'Loss')}
-                      />
-                    ))
-                  ) : (
-                    // 5 gray placeholder dots
-                    [0, 1, 2, 3, 4].map((i) => (
+                  {/* Always show 5 dots: played matches first, then gray placeholders */}
+                  {[0, 1, 2, 3, 4].map((i) => {
+                    const match = form[i]
+                    if (match) {
+                      return (
+                        <div
+                          key={i}
+                          className={`w-2.5 h-2.5 rounded-full ${
+                            match === 'W' ? 'bg-green-500' : 'bg-red-400'
+                          }`}
+                          title={match === 'W' ? (language === 'es' ? 'Victoria' : 'Win') : (language === 'es' ? 'Derrota' : 'Loss')}
+                        />
+                      )
+                    }
+                    return (
                       <div
                         key={i}
                         className="w-2.5 h-2.5 rounded-full bg-gray-200"
+                        title={language === 'es' ? 'Sin jugar' : 'Not played'}
                       />
-                    ))
-                  )}
+                    )
+                  })}
                 </div>
 
                 {/* Wins - Losses */}
