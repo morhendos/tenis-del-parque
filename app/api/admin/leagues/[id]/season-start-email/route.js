@@ -189,12 +189,21 @@ export async function POST(request, { params }) {
       
       const results = []
       
+      // Calculate deadline (7 days from now for test)
+      const deadline = new Date()
+      deadline.setDate(deadline.getDate() + 7)
+      
       // Send test regular match email
       if (sampleRegular) {
         const emailContent = generateSeasonStartEmail({
-          player: { name: sampleRegular.player.name, email: testEmail },
-          opponent: sampleRegular.opponent,
-          league: { name: league.name },
+          playerName: sampleRegular.player.name,
+          playerEmail: testEmail,
+          opponentName: sampleRegular.opponent?.name,
+          opponentWhatsApp: sampleRegular.opponent?.whatsapp,
+          leagueName: league.name,
+          city: league.location?.city || '',
+          season: league.season ? `${league.season.type}-${league.season.year}` : '',
+          deadline: deadline.toISOString(),
           isBye: false,
           language
         })
@@ -217,9 +226,14 @@ export async function POST(request, { params }) {
       // Send test BYE email
       if (sampleBye) {
         const emailContent = generateSeasonStartEmail({
-          player: { name: sampleBye.player.name, email: testEmail },
-          opponent: null,
-          league: { name: league.name },
+          playerName: sampleBye.player.name,
+          playerEmail: testEmail,
+          opponentName: null,
+          opponentWhatsApp: null,
+          leagueName: league.name,
+          city: league.location?.city || '',
+          season: league.season ? `${league.season.type}-${league.season.year}` : '',
+          deadline: null,
           isBye: true,
           language
         })
@@ -253,11 +267,20 @@ export async function POST(request, { params }) {
       failed: []
     }
 
+    // Calculate deadline (7 days from now)
+    const deadline = new Date()
+    deadline.setDate(deadline.getDate() + 7)
+
     for (const emailData of emailsToSend) {
       const emailContent = generateSeasonStartEmail({
-        player: emailData.player,
-        opponent: emailData.opponent,
-        league: { name: league.name },
+        playerName: emailData.player.name,
+        playerEmail: emailData.player.email,
+        opponentName: emailData.opponent?.name,
+        opponentWhatsApp: emailData.opponent?.whatsapp,
+        leagueName: league.name,
+        city: league.location?.city || '',
+        season: league.season ? `${league.season.type}-${league.season.year}` : '',
+        deadline: emailData.isBye ? null : deadline.toISOString(),
         isBye: emailData.isBye,
         language
       })
