@@ -446,14 +446,15 @@ export async function DELETE(request, { params }) {
     const matchInfo = {
       id: match._id,
       round: match.round,
-      player1: match.players.player1?.name,
-      player2: match.players.player2?.name,
+      player1: match.players.player1?.name || 'Unknown',
+      player2: match.players.player2?.name || 'Unknown',
       league: match.league?.name,
       status: match.status,
       wasCompleted: match.status === 'completed'
     }
 
-    // If match was completed, we need to reverse stats first
+    // If match was completed, try to reverse stats (but don't fail if we can't)
+    let statsReversed = false
     if (match.status === 'completed' && match.result && recalculateStats) {
       session = await mongoose.startSession()
       session.startTransaction({
@@ -464,31 +465,52 @@ export async function DELETE(request, { params }) {
 
       try {
         // Get both players
+        const player1Id = match.players.player1?._id || match.players.player1
+        const player2Id = match.players.player2?._id || match.players.player2
+        
         const [player1, player2] = await Promise.all([
-          Player.findById(match.players.player1._id).session(session),
-          Player.findById(match.players.player2._id).session(session)
+          Player.findById(player1Id).session(session),
+          Player.findById(player2Id).session(session)
         ])
 
-        if (player1 && player2) {
-          // Reverse the match stats
-          await reversePlayerStatsOnMatchReset(match, player1, player2, session)
-          
-          // Save player changes
-          await player1.save({ session })
-          await player2.save({ session })
+        // Only reverse stats if both players exist and match has valid eloChanges
+        if (player1 && player2 && match.eloChanges) {
+          try {
+            await reversePlayerStatsOnMatchReset(match, player1, player2, session)
+            await player1.save({ session })
+            await player2.save({ session })
+            statsReversed = true
+            console.log(`✅ Stats reversed for: ${matchInfo.player1} vs ${matchInfo.player2}`)
+          } catch (reverseError) {
+            console.warn(`⚠️ Could not reverse stats (will still delete match): ${reverseError.message}`)
+            // Continue with deletion even if stats reversal fails
+          }
+        } else {
+          console.log(`⚠️ Skipping stats reversal - players or eloChanges not found`)
         }
 
         // Delete the match within transaction
         await Match.findByIdAndDelete(id).session(session)
 
         await session.commitTransaction()
-        console.log(`✅ Match deleted with stats reversed: ${matchInfo.player1} vs ${matchInfo.player2}`)
+        console.log(`✅ Match deleted: ${matchInfo.player1} vs ${matchInfo.player2}`)
         
       } catch (txError) {
-        await session.abortTransaction()
-        throw txError
+        console.error('Transaction error:', txError.message)
+        try {
+          await session.abortTransaction()
+        } catch (abortErr) {
+          console.warn('Error aborting transaction:', abortErr.message)
+        }
+        
+        // If transaction failed, try simple delete without stats reversal
+        console.log('⚠️ Falling back to simple delete without stats reversal...')
+        await Match.findByIdAndDelete(id)
+        console.log(`✅ Match deleted (without stats reversal): ${matchInfo.player1} vs ${matchInfo.player2}`)
       } finally {
-        await session.endSession()
+        try {
+          await session.endSession()
+        } catch (e) {}
         session = null
       }
     } else {
@@ -501,7 +523,7 @@ export async function DELETE(request, { params }) {
       success: true,
       message: 'Match deleted successfully',
       deletedMatch: matchInfo,
-      statsRecalculated: matchInfo.wasCompleted && recalculateStats
+      statsRecalculated: statsReversed
     })
 
   } catch (error) {
