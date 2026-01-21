@@ -26,7 +26,8 @@ export default function MatchDetailPage() {
     updateResult,
     updatePlayers,
     updateStatus,
-    resetToUnplayed
+    resetToUnplayed,
+    deleteMatch
   } = useMatchDetail(matchId)
 
   const tabs = [
@@ -141,6 +142,7 @@ export default function MatchDetailPage() {
                 match={match} 
                 onTabChange={setActiveTab}
                 onStatusUpdate={updateStatus}
+                onDeleteMatch={deleteMatch}
               />
             )}
             

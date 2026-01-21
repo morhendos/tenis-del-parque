@@ -410,46 +410,117 @@ export async function PATCH(request, { params }) {
   }
 }
 
-// DELETE /api/admin/matches/[id] - Delete/cancel match
+// DELETE /api/admin/matches/[id] - Delete match and recalculate stats
 export async function DELETE(request, { params }) {
+  let session = null
+  
   try {
     // Check authentication
-    const { session, error } = await requireAdmin(request)
+    const { session: authSession, error } = await requireAdmin(request)
     if (error) return error
 
     const { id } = params
+    
+    // Parse body for options
+    let recalculateStats = true
+    try {
+      const body = await request.json()
+      recalculateStats = body.recalculateStats !== false
+    } catch (e) {
+      // No body or invalid JSON, use defaults
+    }
 
     // Connect to database
     await dbConnect()
 
     // Find the match
     const match = await Match.findById(id)
+      .populate('players.player1', 'name')
+      .populate('players.player2', 'name')
+      .populate('league', 'name')
+    
     if (!match) {
       return NextResponse.json({ error: 'Match not found' }, { status: 404 })
     }
 
-    // Don't allow deletion of completed matches
-    if (match.status === 'completed') {
-      return NextResponse.json(
-        { error: 'Cannot delete completed matches. Reset to unplayed first.' },
-        { status: 400 }
-      )
+    const matchInfo = {
+      id: match._id,
+      round: match.round,
+      player1: match.players.player1?.name,
+      player2: match.players.player2?.name,
+      league: match.league?.name,
+      status: match.status,
+      wasCompleted: match.status === 'completed'
     }
 
-    // Update status to cancelled instead of deleting
-    match.status = 'cancelled'
-    await match.save()
+    // If match was completed, we need to reverse stats first
+    if (match.status === 'completed' && match.result && recalculateStats) {
+      session = await mongoose.startSession()
+      session.startTransaction({
+        readPreference: 'primary',
+        readConcern: { level: 'local' },
+        writeConcern: { w: 'majority' }
+      })
+
+      try {
+        // Get both players
+        const [player1, player2] = await Promise.all([
+          Player.findById(match.players.player1._id).session(session),
+          Player.findById(match.players.player2._id).session(session)
+        ])
+
+        if (player1 && player2) {
+          // Reverse the match stats
+          await reversePlayerStatsOnMatchReset(match, player1, player2, session)
+          
+          // Save player changes
+          await player1.save({ session })
+          await player2.save({ session })
+        }
+
+        // Delete the match within transaction
+        await Match.findByIdAndDelete(id).session(session)
+
+        await session.commitTransaction()
+        console.log(`✅ Match deleted with stats reversed: ${matchInfo.player1} vs ${matchInfo.player2}`)
+        
+      } catch (txError) {
+        await session.abortTransaction()
+        throw txError
+      } finally {
+        await session.endSession()
+        session = null
+      }
+    } else {
+      // Match not completed or no recalculation needed - just delete
+      await Match.findByIdAndDelete(id)
+      console.log(`✅ Match deleted (no stats to reverse): ${matchInfo.player1} vs ${matchInfo.player2}`)
+    }
 
     return NextResponse.json({
-      message: 'Match cancelled successfully'
+      success: true,
+      message: 'Match deleted successfully',
+      deletedMatch: matchInfo,
+      statsRecalculated: matchInfo.wasCompleted && recalculateStats
     })
 
   } catch (error) {
-    console.error('Error cancelling match:', error)
+    console.error('Error deleting match:', error)
     return NextResponse.json(
-      { error: 'Failed to cancel match' },
+      { error: error.message || 'Failed to delete match' },
       { status: 500 }
     )
+  } finally {
+    if (session) {
+      try {
+        if (session.inTransaction()) {
+          await session.abortTransaction()
+        }
+        await session.endSession()
+      } catch (err) {
+        console.warn('Error cleaning up session:', err.message)
+      }
+    }
   }
 }
 

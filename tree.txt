@@ -202,7 +202,9 @@ root/
 │   │   │   │   │   │   ├── notifications
 │   │   │   │   │   │   │   └── route.js
 │   │   │   │   │   │   └── route.js
-│   │   │   │   │   └── route.js
+│   │   │   │   │   ├── route.js
+│   │   │   │   │   └── season-start-email
+│   │   │   │   │       └── route.js
 │   │   │   │   ├── display-order
 │   │   │   │   │   └── route.js
 │   │   │   │   ├── export
@@ -396,7 +398,8 @@ root/
 │   │   │   ├── ImportCSVModal.js
 │   │   │   ├── LeagueCityLinker.js
 │   │   │   ├── LeagueFormModal.js
-│   │   │   └── LeagueSeasonEditor.js
+│   │   │   ├── LeagueSeasonEditor.js
+│   │   │   └── SeasonStartEmailModal.js
 │   │   ├── matches
 │   │   │   ├── MatchCard.js
 │   │   │   ├── MatchDetailHeader.js
@@ -493,6 +496,7 @@ root/
 │   │   ├── LeagueTabs.js
 │   │   ├── LeagueTabsSegmented.js
 │   │   ├── MatchCard.js
+│   │   ├── MatchCardUnified.js
 │   │   ├── MatchModals.js
 │   │   ├── MatchResultCard.js
 │   │   ├── MatchScoreboard.js
@@ -532,6 +536,7 @@ root/
 ├── docs
 │   ├── ADMIN_LEAGUE_CREATION_UPDATE.md
 │   ├── BUSINESS_PLAN_AND_FINANCIALS.md
+│   ├── BYE_SYSTEM.md
 │   ├── CACHE_MANAGEMENT_GUIDE.md
 │   ├── CITIES_MANAGEMENT_COMPLETE.md
 │   ├── CITIES_MANAGEMENT_SUMMARY.md
@@ -639,6 +644,7 @@ root/
 │   │   └── templates
 │   │       ├── finalistEmail.js
 │   │       ├── playoffEmail.js
+│   │       ├── seasonStartEmail.js
 │   │       └── welcomeEmail.js
 │   ├── hooks
 │   │   ├── useActiveSection.js
@@ -768,7 +774,9 @@ root/
 │   ├── activateSilverPlayers.js
 │   ├── add-deadlines-to-matches.js
 │   ├── addWalkoverResult.js
+│   ├── autoCancelOverdueMatches.js
 │   ├── check-google-photos.js
+│   ├── checkAmirCarlosMatch.js
 │   ├── checkAuth.mjs
 │   ├── checkGoogleImages.mjs
 │   ├── checkLeagueSkillLevels.js
@@ -796,6 +804,7 @@ root/
 │   ├── createDiscountCodes.js
 │   ├── createSeasons.js
 │   ├── createTestData.js
+│   ├── createTestMatch.js
 │   ├── debugClubCourts.js
 │   ├── debugPlayerPoints.js
 │   ├── diagnoseLinkIssues.js
@@ -811,6 +820,7 @@ root/
 │   ├── fixLeaguesToUseSeasonIds.js
 │   ├── fixMismatchedLinks.js
 │   ├── fixOneClub.mjs
+│   ├── fixRound1Deadlines.js
 │   ├── fixSeenAnnouncements.js
 │   ├── fixUpcomingLeaguesPlayoffs.js
 │   ├── fixUserPlayerReferences.js

@@ -1,7 +1,11 @@
 import React, { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
-export default function MatchOverviewTab({ match, onTabChange, onStatusUpdate }) {
+export default function MatchOverviewTab({ match, onTabChange, onStatusUpdate, onDeleteMatch }) {
   const [updatingStatus, setUpdatingStatus] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const router = useRouter()
 
   const handleStatusChange = async (newStatus) => {
     if (!confirm(`Are you sure you want to change the match status to "${newStatus}"?`)) {
@@ -15,6 +19,19 @@ export default function MatchOverviewTab({ match, onTabChange, onStatusUpdate })
       console.error('Error updating status:', error)
     } finally {
       setUpdatingStatus(false)
+    }
+  }
+
+  const handleDeleteMatch = async () => {
+    setDeleting(true)
+    try {
+      await onDeleteMatch(true) // recalculateStats = true
+      // Redirect to matches list after successful deletion
+      router.push(`/admin/matches?league=${match.league._id}`)
+    } catch (error) {
+      console.error('Error deleting match:', error)
+      setDeleting(false)
+      setShowDeleteConfirm(false)
     }
   }
 
@@ -226,6 +243,64 @@ export default function MatchOverviewTab({ match, onTabChange, onStatusUpdate })
             Send Email
           </button>
         </div>
+      </div>
+      {/* Danger Zone - Delete Match */}
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <h4 className="font-semibold text-red-800 mb-2 flex items-center">
+          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          Danger Zone
+        </h4>
+        <p className="text-sm text-red-700 mb-3">
+          Permanently delete this match. {match.status === 'completed' && 'Player stats and ELO will be recalculated automatically.'}
+        </p>
+        
+        {!showDeleteConfirm ? (
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm flex items-center"
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Delete Match
+          </button>
+        ) : (
+          <div className="bg-white rounded-lg p-4 border border-red-300">
+            <p className="text-sm text-gray-700 mb-3">
+              Are you sure you want to delete this match?
+              <br />
+              <strong className="text-red-700">This action cannot be undone.</strong>
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={handleDeleteMatch}
+                disabled={deleting}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 text-sm flex items-center"
+              >
+                {deleting ? (
+                  <>
+                    <svg className="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Deleting...
+                  </>
+                ) : (
+                  'Yes, Delete Match'
+                )}
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleting}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 text-sm"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
