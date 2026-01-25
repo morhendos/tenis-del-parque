@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { formatPlayerNameForPublic, formatOpponentName } from '@/lib/utils/playerNameUtils'
 
 export default function MatchCard({ 
@@ -18,7 +17,6 @@ export default function MatchCard({
   openRankData = {},
   className = ''
 }) {
-  const [extending, setExtending] = useState(false)
   
   const getOpponent = () => {
     if (!player) return null
@@ -108,22 +106,10 @@ export default function MatchCard({
     }
   }
 
-  const handleExtend = async (e) => {
+  const handleExtend = (e) => {
     e.stopPropagation()
-    if (extending || extensionsRemaining <= 0) return
-    
-    const confirmMsg = language === 'es'
-      ? `¿Usar 1 de tus ${extensionsRemaining} extensiones para añadir 7 días al límite?`
-      : `Use 1 of your ${extensionsRemaining} extensions to add 7 days to the deadline?`
-    
-    if (!window.confirm(confirmMsg)) return
-    
-    setExtending(true)
-    try {
-      await onExtend(match)
-    } finally {
-      setExtending(false)
-    }
+    if (extensionsRemaining <= 0) return
+    onExtend && onExtend(match)
   }
 
   const formatDateForDisplay = (date) => {
@@ -348,16 +334,9 @@ export default function MatchCard({
             {onExtend && extensionsRemaining > 0 && deadlineStatus.urgent && (
               <button
                 onClick={handleExtend}
-                disabled={extending}
-                className={`text-[10px] font-medium px-2 py-1 rounded transition-all ${
-                  extending 
-                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                }`}
+                className="text-[10px] font-medium px-2 py-1 rounded transition-all bg-blue-100 text-blue-700 hover:bg-blue-200"
               >
-                {extending 
-                  ? (language === 'es' ? '...' : '...')
-                  : (language === 'es' ? `+7 días (${extensionsRemaining})` : `+7 days (${extensionsRemaining})`)}
+                {language === 'es' ? `+7 días (${extensionsRemaining})` : `+7 days (${extensionsRemaining})`}
               </button>
             )}
           </div>

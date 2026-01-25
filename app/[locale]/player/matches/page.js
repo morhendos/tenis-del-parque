@@ -27,6 +27,7 @@ export default function PlayerMatches() {
   const [selectedLeagueId, setSelectedLeagueId] = useState(null) // For multi-league filtering
   const [openRankData, setOpenRankData] = useState({}) // OpenRank positions by player ID
   const [extensionsRemaining, setExtensionsRemaining] = useState(3) // Extensions per season
+  const [showExtendModal, setShowExtendModal] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -128,7 +129,12 @@ export default function PlayerMatches() {
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
   }
 
-  const handleExtend = async (match) => {
+  const handleOpenExtendModal = (match) => {
+    setSelectedMatch(match)
+    setShowExtendModal(true)
+  }
+
+  const handleConfirmExtend = async (match) => {
     try {
       const response = await fetch('/api/player/matches/extend', {
         method: 'POST',
@@ -156,6 +162,7 @@ export default function PlayerMatches() {
         )
         
         setExtensionsRemaining(result.extensionsRemaining)
+        setShowExtendModal(false)
         toast.success(locale === 'es' ? 'Límite extendido 7 días' : 'Deadline extended by 7 days')
       } else {
         toast.error(result.error || (locale === 'es' ? 'Error al extender límite' : 'Failed to extend deadline'))
@@ -519,7 +526,7 @@ export default function PlayerMatches() {
                   onSchedule={handleSchedule}
                   onResult={handleResult}
                   onWhatsApp={handleWhatsApp}
-                  onExtend={handleExtend}
+                  onExtend={handleOpenExtendModal}
                   extensionsRemaining={extensionsRemaining}
                   isUpcoming={true}
                   showActions={true}
@@ -582,6 +589,7 @@ export default function PlayerMatches() {
         <MatchModals
           showResultModal={showResultModal}
           showScheduleModal={showScheduleModal}
+          showExtendModal={showExtendModal}
           selectedMatch={selectedMatch}
           player={player}
           language={locale}
@@ -591,9 +599,12 @@ export default function PlayerMatches() {
             setShowScheduleModal(false)
             setIsEditingSchedule(false)
           }}
+          onCloseExtend={() => setShowExtendModal(false)}
           onSubmitResult={handleSubmitResult}
           onSubmitSchedule={handleSubmitSchedule}
           onUnschedule={handleUnschedule}
+          onConfirmExtend={handleConfirmExtend}
+          extensionsRemaining={extensionsRemaining}
           isEditingSchedule={isEditingSchedule}
         />
 
