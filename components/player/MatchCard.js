@@ -311,37 +311,39 @@ export default function MatchCard({
           deadlineStatus.color === 'yellow' ? 'bg-yellow-50' :
           'bg-gray-50'
         }`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <svg className={`w-4 h-4 ${
-                deadlineStatus.color === 'red' ? 'text-red-500' :
-                deadlineStatus.color === 'orange' ? 'text-orange-500' :
-                deadlineStatus.color === 'yellow' ? 'text-yellow-500' :
-                'text-gray-400'
-              }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className={`text-xs font-medium ${
-                deadlineStatus.color === 'red' ? 'text-red-700' :
-                deadlineStatus.color === 'orange' ? 'text-orange-700' :
-                deadlineStatus.color === 'yellow' ? 'text-yellow-700' :
-                'text-gray-600'
-              }`}>
-                {deadlineStatus.text}
-              </span>
-            </div>
+          <div className="flex items-center gap-2">
+            <svg className={`w-4 h-4 ${
+              deadlineStatus.color === 'red' ? 'text-red-500' :
+              deadlineStatus.color === 'orange' ? 'text-orange-500' :
+              deadlineStatus.color === 'yellow' ? 'text-yellow-500' :
+              'text-gray-400'
+            }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className={`text-xs font-medium ${
+              deadlineStatus.color === 'red' ? 'text-red-700' :
+              deadlineStatus.color === 'orange' ? 'text-orange-700' :
+              deadlineStatus.color === 'yellow' ? 'text-yellow-700' :
+              'text-gray-600'
+            }`}>
+              {deadlineStatus.text}
+            </span>
           </div>
           {/* Extension button - show when urgent and extensions available */}
           {onExtend && extensionsRemaining > 0 && deadlineStatus.urgent && (
             <button
               onClick={handleExtend}
-              className="mt-2 w-full text-xs font-medium px-3 py-2 rounded-lg transition-all bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center gap-1.5 shadow-sm"
+              className={`mt-2 w-full text-xs font-medium px-3 py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                deadlineStatus.color === 'red' 
+                  ? 'bg-red-600 hover:bg-red-700 text-white' 
+                  : 'bg-orange-500 hover:bg-orange-600 text-white'
+              }`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
               </svg>
-              {language === 'es' ? `Ampliar plazo (+7 días)` : `Extend deadline (+7 days)`}
-              <span className="opacity-75">({extensionsRemaining} {language === 'es' ? 'disp.' : 'left'})</span>
+              {language === 'es' ? `Ampliar plazo` : `Extend deadline`}
+              <span className="opacity-80 text-[10px]">+7d · {extensionsRemaining} {language === 'es' ? 'disp.' : 'left'}</span>
             </button>
           )}
         </div>
