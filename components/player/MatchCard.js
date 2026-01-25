@@ -330,16 +330,20 @@ export default function MatchCard({
                 {deadlineStatus.text}
               </span>
             </div>
-            {/* Extension button - show when urgent and extensions available */}
-            {onExtend && extensionsRemaining > 0 && deadlineStatus.urgent && (
-              <button
-                onClick={handleExtend}
-                className="text-[10px] font-medium px-2 py-1 rounded transition-all bg-blue-100 text-blue-700 hover:bg-blue-200"
-              >
-                {language === 'es' ? `+7 días (${extensionsRemaining})` : `+7 days (${extensionsRemaining})`}
-              </button>
-            )}
           </div>
+          {/* Extension button - show when urgent and extensions available */}
+          {onExtend && extensionsRemaining > 0 && deadlineStatus.urgent && (
+            <button
+              onClick={handleExtend}
+              className="mt-2 w-full text-xs font-medium px-3 py-2 rounded-lg transition-all bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center gap-1.5 shadow-sm"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {language === 'es' ? `Ampliar plazo (+7 días)` : `Extend deadline (+7 days)`}
+              <span className="opacity-75">({extensionsRemaining} {language === 'es' ? 'disp.' : 'left'})</span>
+            </button>
+          )}
         </div>
       )}
 
