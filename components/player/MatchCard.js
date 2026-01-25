@@ -326,6 +326,28 @@ export default function MatchCard({
         </div>
       )}
 
+      {/* Extension button - Always visible for upcoming unscheduled matches with urgent deadlines */}
+      {isUpcoming && !isScheduled && deadlineStatus && deadlineStatus.urgent && onExtend && extensionsRemaining > 0 && !isPublic && (
+        <div className="px-3 pb-2">
+          <button
+            onClick={handleExtend}
+            disabled={extending}
+            className={`w-full text-xs py-2 rounded-lg transition-colors font-medium flex items-center justify-center gap-1.5 ${
+              extending 
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+            }`}
+          >
+            <span style={{ fontSize: '1rem' }}>⏱</span>
+            {extending 
+              ? (language === 'es' ? 'Extendiendo...' : 'Extending...')
+              : (language === 'es' 
+                  ? `Ampliar plazo 7 días (${extensionsRemaining} disponibles)` 
+                  : `Extend deadline by 7 days (${extensionsRemaining} left)`)}
+          </button>
+        </div>
+      )}
+
       {/* Schedule info - Visible for ALL scheduled matches */}
       {isUpcoming && isScheduled && (
         <div className="px-3 pb-2 -mt-1 space-y-1">

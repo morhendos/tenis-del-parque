@@ -128,6 +128,44 @@ export default function PlayerMatches() {
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
   }
 
+  const handleExtend = async (match) => {
+    try {
+      const response = await fetch('/api/player/matches/extend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ matchId: match._id })
+      })
+      
+      const result = await response.json()
+      
+      if (response.ok) {
+        // Update match deadline in state
+        setMatches(prevMatches => 
+          prevMatches.map(m => {
+            if (m._id === match._id) {
+              return {
+                ...m,
+                schedule: {
+                  ...m.schedule,
+                  deadline: result.newDeadline
+                }
+              }
+            }
+            return m
+          })
+        )
+        
+        setExtensionsRemaining(result.extensionsRemaining)
+        toast.success(locale === 'es' ? 'Límite extendido 7 días' : 'Deadline extended by 7 days')
+      } else {
+        toast.error(result.error || (locale === 'es' ? 'Error al extender límite' : 'Failed to extend deadline'))
+      }
+    } catch (error) {
+      console.error('Error extending deadline:', error)
+      toast.error(locale === 'es' ? 'Error al extender límite' : 'Error extending deadline')
+    }
+  }
+
   const handleSubmitResult = async (data) => {
     try {
       const response = await fetch('/api/player/matches/result', {
@@ -481,6 +519,8 @@ export default function PlayerMatches() {
                   onSchedule={handleSchedule}
                   onResult={handleResult}
                   onWhatsApp={handleWhatsApp}
+                  onExtend={handleExtend}
+                  extensionsRemaining={extensionsRemaining}
                   isUpcoming={true}
                   showActions={true}
                   showLeagueBadge={hasMultipleLeagues}
