@@ -13,6 +13,7 @@ import OpenRankAchievement from '@/components/player/OpenRankAchievement'
 import NextMatchCard from '@/components/player/NextMatchCard'
 import MiniStandings from '@/components/player/MiniStandings'
 import RecentResults from '@/components/player/RecentResults'
+import NoLeaguesCTA from '@/components/player/NoLeaguesCTA'
 import { dashboardStyles } from '@/styles/dashboard'
 
 export default function PlayerDashboard() {
@@ -78,6 +79,19 @@ export default function PlayerDashboard() {
           </Link>
         </div>
       </div>
+    )
+  }
+
+  // Check if player has no league registrations - show CTA to join a league
+  const hasNoLeagues = !player.registrations || player.registrations.length === 0
+  
+  if (hasNoLeagues) {
+    return (
+      <NoLeaguesCTA 
+        playerName={player.name?.split(' ')[0] || 'Player'} 
+        language={language} 
+        locale={locale} 
+      />
     )
   }
 

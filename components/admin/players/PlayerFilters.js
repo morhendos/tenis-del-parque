@@ -73,6 +73,7 @@ export default function PlayerFilters({ filters, onFilterChange, leagues, league
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-transparent"
           >
             <option value="">All Leagues</option>
+            <option value="no-league" className="text-orange-600 font-medium">⚠️ No League (Account Only)</option>
             {leagues.map(league => (
               <option key={league._id} value={league._id}>
                 {league.name}

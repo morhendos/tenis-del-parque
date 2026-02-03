@@ -23,6 +23,47 @@ export async function GET(request) {
     const level = searchParams.get('level')
     const hasUser = searchParams.get('hasUser')
 
+    // Special case: filter for players with NO league registrations
+    if (league === 'no-league') {
+      const playersWithoutLeagues = await Player
+        .find({
+          $or: [
+            { registrations: { $exists: false } },
+            { registrations: { $size: 0 } }
+          ]
+        })
+        .populate('userId', 'email role isActive emailVerified')
+        .sort({ createdAt: -1 })
+        .lean()
+
+      // Transform to expected format
+      const transformedPlayers = playersWithoutLeagues.map(player => ({
+        ...player,
+        level: null,
+        status: player.status || 'confirmed',
+        stats: {},
+        league: null,
+        user: player.userId,
+        registeredAt: player.createdAt,
+        hasNoLeague: true // Flag for admin UI
+      }))
+
+      return NextResponse.json({
+        success: true,
+        players: transformedPlayers,
+        total: transformedPlayers.length,
+        timestamp: new Date().toISOString(),
+        filter: 'no-league'
+      }, {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+          'Surrogate-Control': 'no-store'
+        }
+      })
+    }
+
     // Build aggregation pipeline to handle new registrations structure
     let pipeline = []
 
