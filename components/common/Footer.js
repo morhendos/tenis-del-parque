@@ -1,6 +1,26 @@
-import Link from 'next/link'
+'use client'
 
-export default function Footer({ content }) {
+import Link from 'next/link'
+import { useParams } from 'next/navigation'
+
+export default function Footer({ content, locale: localeProp }) {
+  const params = useParams()
+  const locale = localeProp || params?.locale || 'es'
+  // Legal links with locale-aware URLs
+  const legalLinks = locale === 'es' 
+    ? [
+        { label: 'Aviso Legal', href: '/es/aviso-legal' },
+        { label: 'Privacidad', href: '/es/politica-privacidad' },
+        { label: 'Cookies', href: '/es/politica-cookies' },
+        { label: 'Términos', href: '/es/terminos-condiciones' },
+      ]
+    : [
+        { label: 'Legal Notice', href: '/en/legal-notice' },
+        { label: 'Privacy', href: '/en/privacy-policy' },
+        { label: 'Cookies', href: '/en/cookie-policy' },
+        { label: 'Terms', href: '/en/terms-conditions' },
+      ]
+
   return (
     <footer className="relative overflow-hidden">
       {/* Subtle gradient background */}
@@ -34,7 +54,7 @@ export default function Footer({ content }) {
           {/* Social / Contact */}
           <div className="flex gap-2 mb-6">
             <a
-              href="mailto:morhendos@gmail.com"
+              href="mailto:info@tenisdp.es"
               className="w-9 h-9 rounded-full bg-white border border-gray-200 hover:border-parque-purple/30 hover:bg-parque-purple/5 hover:text-parque-purple flex items-center justify-center transition-all duration-200 text-gray-400 shadow-sm"
               aria-label="Email"
             >
@@ -62,6 +82,19 @@ export default function Footer({ content }) {
                 <circle cx="18" cy="6" r="1.5" fill="currentColor" stroke="none" />
               </svg>
             </a>
+          </div>
+
+          {/* Legal links */}
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 mb-4">
+            {legalLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-gray-400 hover:text-parque-purple transition-colors text-xs"
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
           
           {/* Copyright */}
