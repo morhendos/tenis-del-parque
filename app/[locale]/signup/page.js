@@ -19,6 +19,7 @@ export default function SignupPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState({})
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -45,10 +46,16 @@ export default function SignupPage() {
         'Sistema de ranking ELO',
         'Encuentra rivales de tu nivel'
       ],
+      termsLabel: 'Acepto los',
+      termsLink: 'Términos y Condiciones',
+      andText: 'y la',
+      privacyLink: 'Política de Privacidad',
+      minorsNote: 'Si eres menor de 14 años, el registro debe realizarlo un padre o tutor legal.',
       errors: {
         name: 'El nombre es obligatorio',
         email: 'Email inválido',
         password: 'La contraseña debe tener al menos 6 caracteres',
+        terms: 'Debes aceptar los términos y la política de privacidad',
         submit: 'Error al crear cuenta. Inténtalo de nuevo.'
       }
     },
@@ -68,10 +75,16 @@ export default function SignupPage() {
         'ELO ranking system',
         'Find opponents at your level'
       ],
+      termsLabel: 'I accept the',
+      termsLink: 'Terms and Conditions',
+      andText: 'and the',
+      privacyLink: 'Privacy Policy',
+      minorsNote: 'If you are under 14, registration must be completed by a parent or legal guardian.',
       errors: {
         name: 'Name is required',
         email: 'Invalid email',
         password: 'Password must be at least 6 characters',
+        terms: 'You must accept the terms and privacy policy',
         submit: 'Error creating account. Please try again.'
       }
     }
@@ -101,6 +114,10 @@ export default function SignupPage() {
     
     if (!formData.password || formData.password.length < 6) {
       newErrors.password = c.errors.password
+    }
+
+    if (!acceptedTerms) {
+      newErrors.terms = c.errors.terms
     }
     
     setErrors(newErrors)
@@ -285,6 +302,46 @@ export default function SignupPage() {
                 {errors.password && (
                   <p className="text-red-500 text-sm mt-1">{errors.password}</p>
                 )}
+              </div>
+
+              {/* Terms & Privacy Checkbox */}
+              <div>
+                <label className="flex items-start gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={acceptedTerms}
+                    onChange={(e) => {
+                      setAcceptedTerms(e.target.checked)
+                      if (errors.terms) setErrors(prev => ({ ...prev, terms: null }))
+                    }}
+                    className="mt-1 w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 flex-shrink-0"
+                    disabled={isSubmitting}
+                  />
+                  <span className="text-sm text-gray-600 leading-snug">
+                    {c.termsLabel}{' '}
+                    <Link
+                      href={`/${validLocale}/${validLocale === 'es' ? 'terminos-condiciones' : 'terms-conditions'}`}
+                      className="text-purple-600 hover:text-purple-700 underline underline-offset-2"
+                      target="_blank"
+                    >
+                      {c.termsLink}
+                    </Link>
+                    {' '}{c.andText}{' '}
+                    <Link
+                      href={`/${validLocale}/${validLocale === 'es' ? 'politica-privacidad' : 'privacy-policy'}`}
+                      className="text-purple-600 hover:text-purple-700 underline underline-offset-2"
+                      target="_blank"
+                    >
+                      {c.privacyLink}
+                    </Link>
+                  </span>
+                </label>
+                {errors.terms && (
+                  <p className="text-red-500 text-sm mt-1 ml-7">{errors.terms}</p>
+                )}
+                <p className="text-xs text-gray-400 mt-2 ml-7">
+                  {c.minorsNote}
+                </p>
               </div>
 
               {/* Submit Error */}

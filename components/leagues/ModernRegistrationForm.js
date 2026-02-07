@@ -36,6 +36,7 @@ export default function ModernRegistrationForm({
 }) {
   const [hasAccount, setHasAccount] = useState(true)
   const [showPassword, setShowPassword] = useState(false)
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -108,8 +109,22 @@ export default function ModernRegistrationForm({
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
+  const [localErrors, setLocalErrors] = useState({})
+
   const handleSubmit = (e) => {
     e.preventDefault()
+    
+    // Validate terms acceptance for new accounts
+    if (!hasAccount && !acceptedTerms) {
+      setLocalErrors({
+        terms: locale === 'es' 
+          ? 'Debes aceptar los términos y la política de privacidad' 
+          : 'You must accept the terms and privacy policy'
+      })
+      return
+    }
+    setLocalErrors({})
+    
     const submissionData = {
       ...formData,
       discountCode: discountValidation?.valid ? discountCode : null
@@ -539,6 +554,50 @@ export default function ModernRegistrationForm({
                   <p className="mt-1 text-xs text-red-600">{errors.password}</p>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* Terms & Privacy Checkbox (only for new accounts) */}
+          {!hasAccount && (
+            <div className="mt-4 px-1">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(e) => {
+                    setAcceptedTerms(e.target.checked)
+                    if (localErrors.terms) setLocalErrors({})
+                  }}
+                  className="mt-0.5 w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 flex-shrink-0"
+                  disabled={isSubmitting}
+                />
+                <span className="text-xs text-gray-500 leading-relaxed">
+                  {locale === 'es' ? 'Acepto los' : 'I accept the'}{' '}
+                  <Link
+                    href={`/${locale}/${locale === 'es' ? 'terminos-condiciones' : 'terms-conditions'}`}
+                    className="text-emerald-600 hover:text-emerald-700 underline underline-offset-2"
+                    target="_blank"
+                  >
+                    {locale === 'es' ? 'Términos y Condiciones' : 'Terms and Conditions'}
+                  </Link>
+                  {' '}{locale === 'es' ? 'y la' : 'and the'}{' '}
+                  <Link
+                    href={`/${locale}/${locale === 'es' ? 'politica-privacidad' : 'privacy-policy'}`}
+                    className="text-emerald-600 hover:text-emerald-700 underline underline-offset-2"
+                    target="_blank"
+                  >
+                    {locale === 'es' ? 'Política de Privacidad' : 'Privacy Policy'}
+                  </Link>
+                </span>
+              </label>
+              {(localErrors.terms || errors.terms) && (
+                <p className="text-red-500 text-xs mt-1 ml-7">{localErrors.terms || errors.terms}</p>
+              )}
+              <p className="text-xs text-gray-400 mt-1.5 ml-7">
+                {locale === 'es'
+                  ? 'Si eres menor de 14 años, el registro debe realizarlo un padre o tutor legal.'
+                  : 'If you are under 14, registration must be completed by a parent or legal guardian.'}
+              </p>
             </div>
           )}
 
