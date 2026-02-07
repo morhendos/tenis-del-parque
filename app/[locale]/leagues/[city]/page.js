@@ -9,6 +9,7 @@ import CityLeagueHero from '@/components/leagues/CityLeagueHero'
 import LeagueSeasonSection from '@/components/leagues/LeagueSeasonSection'
 import { homeContent } from '@/lib/content/homeContent'
 import { serializeLeague } from '@/lib/utils/serializeLeague'
+import { applyEffectiveStatuses } from '@/lib/utils/leagueStatusUtils'
 
 export async function generateStaticParams() {
   await dbConnect()
@@ -96,7 +97,10 @@ export default async function CityLeaguePage({ params }) {
   )
   
   // Convert MongoDB objects to plain objects and handle dates
-  const plainLeagues = leaguesWithPlayerCounts.map(league => serializeLeague(league))
+  const serializedLeagues = leaguesWithPlayerCounts.map(league => serializeLeague(league))
+  
+  // Apply date-aware effective statuses (fixes stale 'registration_open' when dates have passed)
+  const plainLeagues = applyEffectiveStatuses(serializedLeagues)
   
   // Group leagues by season (year + type), keeping all skill levels together
   const seasonGroups = {}

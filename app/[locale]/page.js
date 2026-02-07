@@ -2,6 +2,7 @@ import dbConnect from '@/lib/db/mongoose'
 import League from '@/lib/models/League'
 import City from '@/lib/models/City' // Import City model for population
 import HomePageSSG from '@/components/pages/HomePageSSG'
+import { applyEffectiveStatuses } from '@/lib/utils/leagueStatusUtils'
 
 // Generate static params for all locales
 export async function generateStaticParams() {
@@ -83,16 +84,19 @@ async function getLeaguesData() {
       } : null
     }))
     
+    // Apply date-aware effective statuses (fixes stale 'registration_open' when dates have passed)
+    const effectiveLeagues = applyEffectiveStatuses(serializedLeagues)
+    
     // Organize leagues by priority
     // Priority 1: Current seasons (mix of registration_open and active)
     // Priority 2: Coming soon seasons
-    const currentSeasonLeagues = serializedLeagues.filter(league => 
+    const currentSeasonLeagues = effectiveLeagues.filter(league => 
       league.status === 'registration_open' || league.status === 'active'
     )
-    const comingSoonLeagues = serializedLeagues.filter(league => league.status === 'coming_soon')
+    const comingSoonLeagues = effectiveLeagues.filter(league => league.status === 'coming_soon')
     
     return {
-      leagues: serializedLeagues,
+      leagues: effectiveLeagues,
       currentSeasonLeagues,
       comingSoonLeagues,
       total: serializedLeagues.length,
