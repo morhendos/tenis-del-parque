@@ -3,6 +3,63 @@
 import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
+// ============================================================
+// DEADLINE HELPERS
+// ============================================================
+function getDeadlineStatus(match) {
+  if (match.status === 'completed') return { label: 'Completed', color: 'green', urgency: 0 }
+  if (match.status === 'cancelled') return { label: 'Cancelled', color: 'red', urgency: 3 }
+  if (match.isBye) return { label: 'BYE', color: 'gray', urgency: 0 }
+
+  const deadline = match.schedule?.deadline
+  if (!deadline) return { label: 'No deadline', color: 'gray', urgency: 1 }
+
+  const now = new Date()
+  const dl = new Date(deadline)
+  const diffMs = dl - now
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
+
+  if (diffMs < 0) {
+    const overdueDays = Math.abs(diffDays)
+    return { label: `Overdue ${overdueDays}d`, color: 'red', urgency: 4, overdueDays, diffDays }
+  }
+  if (diffDays <= 2) return { label: `${diffDays}d left`, color: 'orange', urgency: 2, diffDays }
+  if (diffDays <= 5) return { label: `${diffDays}d left`, color: 'yellow', urgency: 1, diffDays }
+  return { label: `${diffDays}d left`, color: 'green', urgency: 0, diffDays }
+}
+
+function DeadlineBadge({ match }) {
+  const status = getDeadlineStatus(match)
+  const colorClasses = {
+    green: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    yellow: 'bg-amber-50 text-amber-700 border-amber-200',
+    orange: 'bg-orange-50 text-orange-700 border-orange-200',
+    red: 'bg-red-50 text-red-700 border-red-200',
+    gray: 'bg-gray-50 text-gray-500 border-gray-200'
+  }
+  const dotColors = {
+    green: 'bg-emerald-400',
+    yellow: 'bg-amber-400',
+    orange: 'bg-orange-400 animate-pulse',
+    red: 'bg-red-500 animate-pulse',
+    gray: 'bg-gray-400'
+  }
+
+  if (match.status === 'completed' || match.isBye) return null
+
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full border ${colorClasses[status.color]}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${dotColors[status.color]}`} />
+      {match.schedule?.deadline && (
+        <span className="opacity-70">
+          {new Date(match.schedule.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+        </span>
+      )}
+      {status.label}
+    </span>
+  )
+}
+
 function AdminMatchesContent() {
   const [matches, setMatches] = useState([])
   const [loading, setLoading] = useState(true)
@@ -17,6 +74,7 @@ function AdminMatchesContent() {
   const [selectedMatches, setSelectedMatches] = useState([])
   const [showBulkActions, setShowBulkActions] = useState(false)
   const [showPlayerReplacementModal, setShowPlayerReplacementModal] = useState(false)
+  const [deadlineMatch, setDeadlineMatch] = useState(null) // match to manage deadline for
   
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -165,7 +223,20 @@ function AdminMatchesContent() {
 
   const filteredMatches = matches.filter(match => {
     if (filters.round !== 'all' && match.round !== parseInt(filters.round)) return false
-    if (filters.status !== 'all' && match.status !== filters.status) return false
+    // Enhanced status filter with deadline-aware options
+    if (filters.status !== 'all') {
+      if (filters.status === 'overdue') {
+        // Show scheduled matches past deadline OR cancelled matches
+        const dlStatus = getDeadlineStatus(match)
+        if (!(match.status === 'cancelled' || (match.status === 'scheduled' && dlStatus.urgency >= 4))) return false
+      } else if (filters.status === 'approaching') {
+        // Show scheduled matches with deadline within 5 days
+        const dlStatus = getDeadlineStatus(match)
+        if (!(match.status === 'scheduled' && dlStatus.diffDays !== undefined && dlStatus.diffDays <= 5 && dlStatus.diffDays >= 0)) return false
+      } else if (match.status !== filters.status) {
+        return false
+      }
+    }
     if (filters.search) {
       const searchLower = filters.search.toLowerCase()
       const player1Name = match.players?.player1?.name?.toLowerCase() || ''
@@ -277,13 +348,67 @@ function AdminMatchesContent() {
               </div>
               <div className="text-sm text-gray-600">Scheduled</div>
             </div>
-            <div className="bg-yellow-50 rounded-lg p-4">
-              <div className="text-2xl font-bold text-yellow-600">
-                {matches.filter(m => ['cancelled', 'postponed'].includes(m.status)).length}
+            <div className="bg-red-50 rounded-lg p-4">
+              <div className="text-2xl font-bold text-red-600">
+                {matches.filter(m => m.status === 'cancelled').length}
               </div>
-              <div className="text-sm text-gray-600">Cancelled/Postponed</div>
+              <div className="text-sm text-gray-600">Cancelled</div>
             </div>
           </div>
+
+          {/* Deadline health row */}
+          {(() => {
+            const scheduledMatches = matches.filter(m => m.status === 'scheduled')
+            const overdueCount = scheduledMatches.filter(m => getDeadlineStatus(m).urgency >= 4).length
+            const approachingCount = scheduledMatches.filter(m => {
+              const s = getDeadlineStatus(m)
+              return s.diffDays !== undefined && s.diffDays <= 5 && s.diffDays >= 0
+            }).length
+            const cancelledCount = matches.filter(m => m.status === 'cancelled').length
+            const needsAttention = overdueCount + cancelledCount
+
+            if (needsAttention > 0 || approachingCount > 0) {
+              return (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    Deadline Health
+                  </h4>
+                  <div className="flex flex-wrap gap-3">
+                    {overdueCount > 0 && (
+                      <button
+                        onClick={() => setFilters(f => ({ ...f, status: 'overdue' }))}
+                        className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors cursor-pointer"
+                      >
+                        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                        <span className="text-sm font-medium text-red-700">{overdueCount} overdue</span>
+                      </button>
+                    )}
+                    {cancelledCount > 0 && (
+                      <button
+                        onClick={() => setFilters(f => ({ ...f, status: 'cancelled' }))}
+                        className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors cursor-pointer"
+                      >
+                        <span className="w-2 h-2 rounded-full bg-red-400" />
+                        <span className="text-sm font-medium text-red-600">{cancelledCount} cancelled</span>
+                      </button>
+                    )}
+                    {approachingCount > 0 && (
+                      <button
+                        onClick={() => setFilters(f => ({ ...f, status: 'approaching' }))}
+                        className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors cursor-pointer"
+                      >
+                        <span className="w-2 h-2 rounded-full bg-amber-400" />
+                        <span className="text-sm font-medium text-amber-700">{approachingCount} approaching deadline</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )
+            }
+            return null
+          })()}
+
           <div className="mt-4 bg-gray-100 rounded-full h-3">
             <div 
               className="bg-green-500 h-3 rounded-full transition-all duration-300"
@@ -470,6 +595,8 @@ function AdminMatchesContent() {
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
               <option value="postponed">Postponed</option>
+              <option value="overdue">⚠ Overdue (needs attention)</option>
+              <option value="approaching">⏰ Deadline approaching (≤5d)</option>
             </select>
           </div>
         </div>
@@ -503,6 +630,7 @@ function AdminMatchesContent() {
                     onEdit={handleEditMatch}
                     onSelect={handleSelectMatch}
                     isSelected={selectedMatches.includes(match._id)}
+                    onDeadlineAction={setDeadlineMatch}
                   />
                 ))}
               </div>
@@ -542,6 +670,7 @@ function AdminMatchesContent() {
                 onEdit={handleEditMatch}
                 onSelect={handleSelectMatch}
                 isSelected={selectedMatches.includes(match._id)}
+                onDeadlineAction={setDeadlineMatch}
               />
             ))}
         </div>
@@ -598,12 +727,24 @@ function AdminMatchesContent() {
           }}
         />
       )}
+
+      {/* Deadline Management Modal */}
+      {deadlineMatch && (
+        <DeadlineModal
+          match={deadlineMatch}
+          onClose={() => setDeadlineMatch(null)}
+          onSuccess={() => {
+            setDeadlineMatch(null)
+            fetchMatches()
+          }}
+        />
+      )}
     </div>
   )
 }
 
 // Match Card Component
-function MatchCard({ match, onEdit, onSelect, isSelected }) {
+function MatchCard({ match, onEdit, onSelect, isSelected, onDeadlineAction }) {
   const getStatusBadgeClass = (status) => {
     switch (status) {
       case 'scheduled':
@@ -630,8 +771,22 @@ function MatchCard({ match, onEdit, onSelect, isSelected }) {
     })
   }
 
+  const dlStatus = getDeadlineStatus(match)
+  const showDeadlineActions = match.status === 'cancelled' || 
+    (match.status === 'scheduled' && dlStatus.urgency >= 2)
+  const extensionCount = match.schedule?.extensionHistory?.length || 0
+
+  // Card border highlight based on urgency
+  const urgencyBorder = match.status === 'cancelled' 
+    ? 'border-l-4 border-l-red-400' 
+    : dlStatus.urgency >= 4 
+      ? 'border-l-4 border-l-red-400' 
+      : dlStatus.urgency >= 2 
+        ? 'border-l-4 border-l-orange-400' 
+        : ''
+
   return (
-    <div className={`bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow ${isSelected ? 'ring-2 ring-blue-500' : ''}`}>
+    <div className={`bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow ${urgencyBorder} ${isSelected ? 'ring-2 ring-blue-500' : ''}`}>
       <div className="flex justify-between items-start">
         <div className="flex items-start space-x-3">
           <input
@@ -641,11 +796,17 @@ function MatchCard({ match, onEdit, onSelect, isSelected }) {
             className="mt-1 h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
           />
           <div className="flex-1">
-          <div className="flex items-center mb-3">
-            <span className="text-sm font-medium text-gray-500 mr-4">Round {match.round}</span>
+          <div className="flex items-center flex-wrap gap-2 mb-3">
+            <span className="text-sm font-medium text-gray-500">Round {match.round}</span>
             <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(match.status)}`}>
               {match.status.toUpperCase()}
             </span>
+            <DeadlineBadge match={match} />
+            {extensionCount > 0 && match.status !== 'completed' && (
+              <span className="text-xs text-gray-400" title={`${extensionCount} extension(s) used`}>
+                +{extensionCount} ext
+              </span>
+            )}
           </div>
           
           <div className="flex items-center mb-3">
@@ -654,7 +815,7 @@ function MatchCard({ match, onEdit, onSelect, isSelected }) {
                 {match.players?.player1?.name || 'Player 1'}
               </div>
               <div className="text-sm text-gray-500">
-                {match.players?.player1?.level} • ELO: {match.players?.player1?.stats?.eloRating || 1200}
+                {match.players?.player1?.level} &bull; ELO: {match.players?.player1?.stats?.eloRating || 1200}
               </div>
             </div>
             
@@ -665,7 +826,7 @@ function MatchCard({ match, onEdit, onSelect, isSelected }) {
                 {match.players?.player2?.name || 'Player 2'}
               </div>
               <div className="text-sm text-gray-500">
-                {match.players?.player2?.level} • ELO: {match.players?.player2?.stats?.eloRating || 1200}
+                {match.players?.player2?.level} &bull; ELO: {match.players?.player2?.stats?.eloRating || 1200}
               </div>
             </div>
           </div>
@@ -688,18 +849,25 @@ function MatchCard({ match, onEdit, onSelect, isSelected }) {
           
           <div className="flex items-center text-sm text-gray-500 space-x-4">
             <span className="flex items-center">
-              <span className="mr-1">📅</span> {formatDate(match.schedule?.confirmedDate)}
+              <svg className="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+              {formatDate(match.schedule?.confirmedDate)}
             </span>
             {match.schedule?.court && (
               <span className="flex items-center">
-                <span className="mr-1">🎾</span> {match.schedule.court}
+                <svg className="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                {match.schedule.court}
+              </span>
+            )}
+            {match.notes && (
+              <span className="flex items-center text-xs text-gray-400 italic max-w-[200px] truncate" title={match.notes}>
+                {match.notes}
               </span>
             )}
           </div>
           </div>
         </div>
         
-        <div className="ml-6 flex flex-col gap-2">
+        <div className="ml-4 flex flex-col gap-2 shrink-0">
           <button
             onClick={() => onEdit(match._id)}
             className="px-4 py-2 text-sm bg-parque-purple text-white rounded-lg hover:bg-opacity-90 flex items-center"
@@ -708,12 +876,27 @@ function MatchCard({ match, onEdit, onSelect, isSelected }) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
             </svg>
-            {match.status === 'scheduled' ? 'Manage Match' : 'View Details'}
+            {match.status === 'scheduled' ? 'Manage' : 'Details'}
           </button>
-          {match.status === 'scheduled' && (
-            <div className="text-xs text-gray-500 text-center">
-              Edit players • Schedule • Enter result
-            </div>
+
+          {/* Deadline action button */}
+          {match.status === 'cancelled' && (
+            <button
+              onClick={() => onDeadlineAction && onDeadlineAction(match)}
+              className="px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-1.5"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+              Restore
+            </button>
+          )}
+          {match.status === 'scheduled' && showDeadlineActions && (
+            <button
+              onClick={() => onDeadlineAction && onDeadlineAction(match)}
+              className="px-4 py-2 text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600 flex items-center gap-1.5"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              Extend
+            </button>
           )}
         </div>
       </div>
@@ -1038,6 +1221,173 @@ function PlayerReplacementModal({ selectedMatches, leagueId, onClose, onSuccess 
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// DEADLINE MANAGEMENT MODAL
+// ============================================================
+function DeadlineModal({ match, onClose, onSuccess }) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [customDate, setCustomDate] = useState('')
+  const [success, setSuccess] = useState('')
+
+  const isCancelled = match.status === 'cancelled'
+  const currentDeadline = match.schedule?.deadline
+  const extensionCount = match.schedule?.extensionHistory?.length || 0
+
+  const handleAction = async (days, isCustom = false) => {
+    setLoading(true)
+    setError('')
+    setSuccess('')
+
+    try {
+      const body = {
+        action: isCancelled ? 'uncancel' : 'extend',
+        ...(isCustom ? { customDeadline: customDate } : { days })
+      }
+
+      const res = await fetch(`/api/admin/matches/${match._id}/deadline`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to update')
+
+      setSuccess(
+        isCancelled 
+          ? `Match restored! New deadline: ${new Date(data.newDeadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`
+          : `Deadline updated to ${new Date(data.newDeadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`
+      )
+      
+      setTimeout(() => onSuccess(), 1200)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+        {/* Header */}
+        <div className={`px-6 py-4 rounded-t-xl ${isCancelled ? 'bg-red-50 border-b border-red-100' : 'bg-amber-50 border-b border-amber-100'}`}>
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900">
+              {isCancelled ? 'Restore Cancelled Match' : 'Extend Deadline'}
+            </h3>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+          <p className="text-sm text-gray-600 mt-1">
+            {match.players?.player1?.name || 'P1'} vs {match.players?.player2?.name || 'P2'} &bull; Round {match.round}
+          </p>
+        </div>
+
+        <div className="px-6 py-4 space-y-4">
+          {/* Current status */}
+          <div className="bg-gray-50 rounded-lg p-3 space-y-1">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Status:</span>
+              <span className={`font-medium ${isCancelled ? 'text-red-600' : 'text-blue-600'}`}>
+                {match.status.charAt(0).toUpperCase() + match.status.slice(1)}
+              </span>
+            </div>
+            {currentDeadline && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">{isCancelled ? 'Was due:' : 'Current deadline:'}</span>
+                <span className="font-medium text-gray-900">
+                  {new Date(currentDeadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </span>
+              </div>
+            )}
+            {extensionCount > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Extensions used:</span>
+                <span className="font-medium text-gray-900">{extensionCount}</span>
+              </div>
+            )}
+            {match.notes && (
+              <div className="text-xs text-gray-400 pt-1 border-t border-gray-200 mt-2">
+                {match.notes}
+              </div>
+            )}
+          </div>
+
+          {/* Error/Success messages */}
+          {error && (
+            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{error}</div>
+          )}
+          {success && (
+            <div className="bg-emerald-50 text-emerald-600 p-3 rounded-lg text-sm flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+              {success}
+            </div>
+          )}
+
+          {/* Quick extend buttons */}
+          {!success && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {isCancelled ? 'Restore with new deadline:' : 'Extend deadline by:'}
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[7, 14, 21].map(days => (
+                    <button
+                      key={days}
+                      onClick={() => handleAction(days)}
+                      disabled={loading}
+                      className="px-4 py-3 text-sm font-medium rounded-lg border-2 border-gray-200 hover:border-parque-purple hover:bg-parque-purple/5 transition-colors disabled:opacity-50"
+                    >
+                      +{days} days
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Custom date */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Or set a specific date:
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="date"
+                    value={customDate}
+                    onChange={(e) => setCustomDate(e.target.value)}
+                    min={new Date().toISOString().split('T')[0]}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-transparent text-sm"
+                  />
+                  <button
+                    onClick={() => handleAction(null, true)}
+                    disabled={loading || !customDate}
+                    className="px-4 py-2 text-sm bg-parque-purple text-white rounded-lg hover:bg-opacity-90 disabled:opacity-50"
+                  >
+                    {loading ? 'Saving...' : 'Set'}
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-3 bg-gray-50 rounded-b-xl flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+          >
+            {success ? 'Done' : 'Cancel'}
+          </button>
+        </div>
       </div>
     </div>
   )
