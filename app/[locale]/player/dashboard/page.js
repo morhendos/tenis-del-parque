@@ -25,6 +25,7 @@ export default function PlayerDashboard() {
   const {
     player,
     loading,
+    error,
     recentMatches,
     upcomingMatches,
     standings,
@@ -35,7 +36,8 @@ export default function PlayerDashboard() {
     // League-specific announcements
     leagueAnnouncement,
     showLeagueAnnouncement,
-    handleCloseLeagueAnnouncement
+    handleCloseLeagueAnnouncement,
+    refetch
   } = usePlayerDashboard()
 
   // Get the next upcoming match (first one)
@@ -48,6 +50,40 @@ export default function PlayerDashboard() {
         text={language === 'es' ? 'Cargando dashboard...' : 'Loading dashboard...'}
         locale={language}
       />
+    )
+  }
+
+  // Connection error - show retry with reload
+  if (error) {
+    return (
+      <div className="text-center py-12 px-4">
+        <div className="max-w-md mx-auto">
+          <div className="w-24 h-24 bg-gradient-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-12 h-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            {language === 'es' ? 'Error de conexi\u00f3n' : 'Connection error'}
+          </h2>
+          <p className="text-gray-600 mb-6">
+            {language === 'es' 
+              ? 'No se pudieron cargar tus datos. Comprueba tu conexi\u00f3n e int\u00e9ntalo de nuevo.' 
+              : 'Could not load your data. Check your connection and try again.'}
+          </p>
+          <div className="space-y-3">
+            <button
+              onClick={() => window.location.reload()}
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-parque-purple to-purple-700 text-white rounded-xl hover:from-purple-700 hover:to-purple-800 transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-purple-500/25 font-medium"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              {language === 'es' ? 'Recargar p\u00e1gina' : 'Reload page'}
+            </button>
+          </div>
+        </div>
+      </div>
     )
   }
 

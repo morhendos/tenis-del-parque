@@ -2,12 +2,8 @@
 
 import { useEffect } from 'react'
 
-export default function Error({
-  error,
-  reset,
-}) {
+export default function Error({ error }) {
   useEffect(() => {
-    // Log the error to an error reporting service
     console.error('Page Error:', error)
   }, [error])
 
@@ -30,22 +26,9 @@ export default function Error({
           An error occurred. Please try again.
         </p>
         
-        {/* Show error message for debugging */}
-        <div className="bg-gray-100 rounded-lg p-3 mb-4 text-left">
-          <p className="text-xs text-gray-500 mb-1">Error details:</p>
-          <code className="text-xs text-red-600 break-all">
-            {error?.message || 'Unknown error'}
-          </code>
-          {error?.digest && (
-            <p className="text-xs text-gray-400 mt-1">
-              Digest: {error.digest}
-            </p>
-          )}
-        </div>
-        
         <div className="space-y-3">
           <button
-            onClick={() => reset()}
+            onClick={() => window.location.reload()}
             className="w-full bg-parque-purple text-white py-3 px-4 rounded-lg font-medium hover:bg-parque-purple/90 transition-colors"
           >
             Intentar de nuevo / Try again
