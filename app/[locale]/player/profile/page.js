@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams, usePathname } from 'next/navigation'
 import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
+import NotificationSettings from '@/components/player/NotificationSettings'
 
 export default function PlayerProfile() {
   const [player, setPlayer] = useState(null)
@@ -430,6 +431,9 @@ export default function PlayerProfile() {
           </div>
         </div>
       </div>
+
+      {/* Push Notifications - Enable/Disable + Test */}
+      <NotificationSettings locale={locale} />
 
       {/* League Stats - Compact */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">

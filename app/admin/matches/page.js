@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import PushNotificationModal from '@/components/admin/matches/PushNotificationModal'
 
 // ============================================================
 // DEADLINE HELPERS
@@ -75,6 +76,7 @@ function AdminMatchesContent() {
   const [showBulkActions, setShowBulkActions] = useState(false)
   const [showPlayerReplacementModal, setShowPlayerReplacementModal] = useState(false)
   const [deadlineMatch, setDeadlineMatch] = useState(null) // match to manage deadline for
+  const [pushModal, setPushModal] = useState(null) // { mode: 'new-round'|'reminder', round: number }
   
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -613,7 +615,7 @@ function AdminMatchesContent() {
                   <h3 className="text-lg font-semibold text-gray-900">
                     Round {round} ({roundMatches.length} matches)
                   </h3>
-                  <button
+                  {/* <button
                     onClick={() => handleCreateMatch(round)}
                     className="px-3 py-1 text-sm bg-parque-purple text-white rounded-lg hover:bg-opacity-90 flex items-center"
                   >
@@ -621,7 +623,39 @@ function AdminMatchesContent() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                     </svg>
                     Add Matches to Round {round}
-                  </button>
+                  </button> */}
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setPushModal({ mode: 'new-round', round: parseInt(round) })}
+                      className="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
+                      title="Notify players about their matches"
+                    >
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                      </svg>
+                      Notify
+                    </button>
+                    <button
+                      onClick={() => setPushModal({ mode: 'reminder', round: parseInt(round) })}
+                      className="px-3 py-1 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 flex items-center"
+                      title="Send reminders for unplayed matches"
+                    >
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Remind
+                    </button>
+                    <button
+                      onClick={() => handleCreateMatch(round)}
+                      className="px-3 py-1 text-sm bg-parque-purple text-white rounded-lg hover:bg-opacity-90 flex items-center"
+                    >
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                      </svg>
+                      Add
+                    </button>
+                  </div>
                 </div>
                 {roundMatches.map((match) => (
                   <MatchCard 
@@ -737,6 +771,16 @@ function AdminMatchesContent() {
             setDeadlineMatch(null)
             fetchMatches()
           }}
+        />
+      )}
+
+      {/* Push Notification Modal */}
+      {pushModal && (
+        <PushNotificationModal
+          mode={pushModal.mode}
+          leagueId={leagueId || selectedLeague?.id}
+          round={pushModal.round}
+          onClose={() => setPushModal(null)}
         />
       )}
     </div>

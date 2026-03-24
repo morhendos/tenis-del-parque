@@ -1,44 +1,109 @@
 import { NextResponse } from 'next/server'
+import mongoose from 'mongoose'
 import dbConnect from '../../../../../lib/db/mongoose'
 import Match from '../../../../../lib/models/Match'
 import Player from '../../../../../lib/models/Player'
+import League from '../../../../../lib/models/League'
 import { generateSwissPairings, validatePairings, getPairingsSummary } from '../../../../../lib/utils/swissPairing'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
 
+/**
+ * Helper: Query players using the registrations array structure
+ * and flatten results so each player has top-level level, status, stats
+ */
+async function getLeaguePlayers(leagueId) {
+  const leagueObjectId = new mongoose.Types.ObjectId(leagueId)
+  
+  const rawPlayers = await Player.find({
+    registrations: {
+      $elemMatch: {
+        league: leagueObjectId,
+        status: { $in: ['active', 'confirmed'] }
+      }
+    }
+  }).lean()
+
+  // Flatten: extract the matching registration's level/status/stats to top level
+  const players = rawPlayers.map(player => {
+    const reg = player.registrations.find(r => 
+      r.league.toString() === leagueId.toString() &&
+      ['active', 'confirmed'].includes(r.status)
+    )
+    
+    if (!reg) return null
+    
+    return {
+      _id: player._id,
+      name: player.name,
+      email: player.email,
+      level: reg.level,
+      status: reg.status,
+      eloRating: player.eloRating || 1200,
+      stats: {
+        matchesPlayed: reg.stats?.matchesPlayed || 0,
+        matchesWon: reg.stats?.matchesWon || 0,
+        totalPoints: reg.stats?.totalPoints || 0,
+        setsWon: reg.stats?.setsWon || 0,
+        setsLost: reg.stats?.setsLost || 0,
+        gamesWon: reg.stats?.gamesWon || 0,
+        gamesLost: reg.stats?.gamesLost || 0,
+        eloRating: player.eloRating || 1200
+      }
+    }
+  }).filter(Boolean)
+
+  return players
+}
+
+/**
+ * Helper: Resolve the correct season value for a league.
+ * The frontend may send the leagueId as the season (fallback when selectedLeague is null),
+ * so we look up the league and construct the proper season string.
+ */
+async function resolveSeasonForLeague(leagueId, frontendSeason) {
+  // If the frontend sent a proper season string (like "summer-2025"), use it
+  if (frontendSeason && frontendSeason !== leagueId && !mongoose.Types.ObjectId.isValid(frontendSeason)) {
+    return frontendSeason
+  }
+  
+  // Otherwise, look up the league to get the actual season
+  const league = await League.findById(leagueId).lean()
+  if (league?.season?.type && league?.season?.year) {
+    const resolved = `${league.season.type}-${league.season.year}`
+    console.log(`Resolved season from league: "${resolved}" (frontend sent: "${frontendSeason}")`)
+    return resolved
+  }
+  
+  // Last resort: use what the frontend sent
+  console.warn(`Could not resolve season for league ${leagueId}, using frontend value: "${frontendSeason}"`)
+  return frontendSeason
+}
+
 export async function POST(request) {
   try {
     await dbConnect()
 
-    const { leagueId, season, round, generateMatches = false } = await request.json()
+    const { leagueId, season: frontendSeason, round, generateMatches = false } = await request.json()
 
-    if (!leagueId || !season || !round) {
+    if (!leagueId || !round) {
       return NextResponse.json(
-        { error: 'League ID, season, and round are required' },
+        { error: 'League ID and round are required' },
         { status: 400 }
       )
     }
 
-    // Get all active AND confirmed players in the league (be flexible with season)
-    let players = await Player.find({ 
-      league: leagueId,
-      season: season,
-      status: { $in: ['active', 'confirmed'] }
-    }).lean()
+    // Resolve the correct season value
+    const season = await resolveSeasonForLeague(leagueId, frontendSeason)
+    console.log(`Swiss pairing: league=${leagueId}, season="${season}", round=${round}`)
 
-    // If no players found with exact season, try finding active/confirmed players in the league
-    if (players.length === 0) {
-      console.log(`No players found for season ${season}, trying without season filter...`)
-      players = await Player.find({ 
-        league: leagueId,
-        status: { $in: ['active', 'confirmed'] }
-      }).lean()
-      
-      // Log what we found for debugging
-      console.log(`Found ${players.length} active/confirmed players in league ${leagueId}:`, 
-        players.map(p => ({ name: p.name, season: p.season, status: p.status }))
-      )
+    // Get all active AND confirmed players in the league using registrations structure
+    const players = await getLeaguePlayers(leagueId)
+    
+    console.log(`Swiss pairing: Found ${players.length} active/confirmed players in league ${leagueId}`)
+    if (players.length > 0) {
+      console.log('Players:', players.map(p => ({ name: p.name, level: p.level, status: p.status })))
     }
 
     if (players.length < 2) {
@@ -48,15 +113,33 @@ export async function POST(request) {
       )
     }
 
-    // Get all previous matches for this league/season
-    const previousMatches = await Match.find({
+    // IMPORTANT: Fetch ALL matches for this league to build complete opponent history.
+    // We do NOT filter by season here because:
+    // 1. The frontend may send the wrong season value
+    // 2. We want the full picture of who has played whom
+    const allLeagueMatches = await Match.find({
       league: leagueId,
-      season: season,
       status: { $in: ['completed', 'scheduled'] }
     }).lean()
+    
+    console.log(`Found ${allLeagueMatches.length} total matches for league (all seasons)`)
+    
+    // Also get season-specific matches for round existence check
+    const seasonMatches = allLeagueMatches.filter(m => {
+      const matchSeason = m.season?.toString()
+      return matchSeason === season
+    })
+    console.log(`Found ${seasonMatches.length} matches for season "${season}"`)
+    
+    // If season filter gives 0 but there are matches, log the actual season values for debugging
+    if (seasonMatches.length === 0 && allLeagueMatches.length > 0) {
+      const uniqueSeasons = [...new Set(allLeagueMatches.map(m => m.season?.toString()))]
+      console.log(`WARNING: No matches found for season "${season}". Actual season values in DB:`, uniqueSeasons)
+      // Use all matches anyway — the season string might not match exactly
+    }
 
-    // Check if matches already exist for this round
-    const existingRoundMatches = previousMatches.filter(m => m.round === round)
+    // Check if matches already exist for this round (use all league matches for robustness)
+    const existingRoundMatches = allLeagueMatches.filter(m => m.round === round)
     if (existingRoundMatches.length > 0 && !generateMatches) {
       return NextResponse.json(
         { 
@@ -84,14 +167,14 @@ export async function POST(request) {
     console.log(`Round ${round} - Player distribution by status:`, statusDistribution)
     console.log(`Using ${round <= 3 ? 'skill-level priority' : 'traditional Swiss'} pairing for round ${round}`)
 
-    // Generate pairings
-    const result = generateSwissPairings(players, previousMatches, round)
+    // Generate pairings — pass ALL league matches for complete opponent history
+    const result = generateSwissPairings(players, allLeagueMatches, round)
     
     // Log pairing results for debugging
     console.log(`Generated ${result.pairings.length} pairings for round ${round}:`)
     result.pairings.forEach((pairing, index) => {
       const crossLevel = pairing.player1.level !== pairing.player2.level
-      console.log(`  Match ${index + 1}: ${pairing.player1.name} (${pairing.player1.level}, ${pairing.player1.status}) vs ${pairing.player2.name} (${pairing.player2.level}, ${pairing.player2.status})${crossLevel ? ' [CROSS-LEVEL]' : ''}${pairing.isRematch ? ' [REMATCH - ERROR!]' : ''}`)
+      console.log(`  Match ${index + 1}: ${pairing.player1.name} (${pairing.player1.level}, ${pairing.player1.status}) vs ${pairing.player2.name} (${pairing.player2.level}, ${pairing.player2.status})${crossLevel ? ' [CROSS-LEVEL]' : ''}${pairing.isRematch ? ' [REMATCH]' : ''}`)
     })
     
     if (result.bye) {
@@ -105,10 +188,12 @@ export async function POST(request) {
       })
     }
     
-    // Check for any rematches that shouldn't exist
+    // Report rematch count
     const rematchCount = result.pairings.filter(p => p.isRematch).length
     if (rematchCount > 0) {
-      console.error(`ERROR: Found ${rematchCount} rematches that should have been avoided!`)
+      console.warn(`⚠ ${rematchCount} rematch(es) were unavoidable given opponent history`)
+    } else {
+      console.log(`✓ All pairings are fresh matchups!`)
     }
     
     // Validate pairings
@@ -238,29 +323,16 @@ export async function GET(request) {
 
     const rounds = Object.values(roundsData).sort((a, b) => a.round - b.round)
 
-    // Get active AND confirmed players count (be flexible with season)
-    let activePlayers = await Player.countDocuments({
-      league: leagueId,
-      season: season,
-      status: { $in: ['active', 'confirmed'] }
+    // Get active AND confirmed players count using registrations structure
+    const leagueObjectId = new mongoose.Types.ObjectId(leagueId)
+    const activePlayers = await Player.countDocuments({
+      registrations: {
+        $elemMatch: {
+          league: leagueObjectId,
+          status: { $in: ['active', 'confirmed'] }
+        }
+      }
     })
-
-    // If no players found with exact season, try without season filter
-    if (activePlayers === 0) {
-      console.log(`No active/confirmed players found for season ${season}, trying without season filter...`)
-      activePlayers = await Player.countDocuments({
-        league: leagueId,
-        status: { $in: ['active', 'confirmed'] }
-      })
-      
-      // Also get some debug info
-      const playersDebug = await Player.find({
-        league: leagueId,
-        status: { $in: ['active', 'confirmed'] }
-      }, 'name season status').lean()
-      
-      console.log(`Found ${activePlayers} active/confirmed players in league ${leagueId}:`, playersDebug)
-    }
 
     return NextResponse.json({
       rounds,
@@ -299,10 +371,6 @@ async function createByeMatch(player, leagueId, season, round) {
   })
 
   const savedByeMatch = await byeMatch.save()
-  
-  // Note: We don't manually update player stats here.
-  // Stats are calculated from matches in standingsService.calculatePlayerStats()
-  // BYE matches give 3 points but don't count toward matchesPlayed (for OpenRank)
   
   console.log(`Created BYE match for ${player.name} (Round ${round})`)
 

@@ -4,8 +4,8 @@ import { useEffect } from 'react';
 
 export default function ServiceWorkerRegistration() {
   useEffect(() => {
-    if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
-      // Register service worker after page load
+    if ('serviceWorker' in navigator) {
+      // Register in both dev and production so push notifications can be tested
       window.addEventListener('load', () => {
         navigator.serviceWorker
           .register('/sw.js')
