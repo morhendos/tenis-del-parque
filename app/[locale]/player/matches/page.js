@@ -26,32 +26,28 @@ export default function PlayerMatches() {
   const [isWinner, setIsWinner] = useState(false)
   const [selectedLeagueId, setSelectedLeagueId] = useState(null) // For multi-league filtering
   const [openRankData, setOpenRankData] = useState({}) // OpenRank positions by player ID
-  const [extensionsRemaining, setExtensionsRemaining] = useState(3) // Extensions per season
   const [showExtendModal, setShowExtendModal] = useState(false)
   const router = useRouter()
+
+  // Get extensions remaining for a specific league (looks up the correct registration)
+  const getExtensionsForLeague = (leagueId) => {
+    if (!player?.registrations?.length || !leagueId) return 3 // default
+    const lid = leagueId?._id?.toString() || leagueId?.toString()
+    const registration = player.registrations.find(r => {
+      const regLeagueId = r.league?._id?.toString() || r.league?.toString()
+      return regLeagueId === lid
+    })
+    if (registration?.extensions) {
+      return registration.extensions.total - registration.extensions.used
+    }
+    return 3 // default if no extensions tracking yet
+  }
 
   useEffect(() => {
     fetchMatches()
     fetchPlayerData()
     fetchOpenRankData()
   }, [])
-
-  // Fetch extensions remaining when player data changes
-  useEffect(() => {
-    if (player?.registrations?.length > 0) {
-      // Get the first registration's extensions (or the selected league's)
-      const registration = selectedLeagueId 
-        ? player.registrations.find(r => {
-            const regLeagueId = r.league?._id?.toString() || r.league?.toString()
-            return regLeagueId === selectedLeagueId?.toString()
-          })
-        : player.registrations[0]
-      
-      if (registration?.extensions) {
-        setExtensionsRemaining(registration.extensions.total - registration.extensions.used)
-      }
-    }
-  }, [player, selectedLeagueId])
 
   const fetchPlayerData = async () => {
     try {
@@ -161,7 +157,8 @@ export default function PlayerMatches() {
           })
         )
         
-        setExtensionsRemaining(result.extensionsRemaining)
+        // Refresh player data to update extension counts
+        fetchPlayerData()
         setShowExtendModal(false)
         toast.success(locale === 'es' ? 'Límite extendido 7 días' : 'Deadline extended by 7 days')
       } else {
@@ -527,7 +524,7 @@ export default function PlayerMatches() {
                   onResult={handleResult}
                   onWhatsApp={handleWhatsApp}
                   onExtend={handleOpenExtendModal}
-                  extensionsRemaining={extensionsRemaining}
+                  extensionsRemaining={getExtensionsForLeague(match.league?._id || match.league)}
                   isUpcoming={true}
                   showActions={true}
                   showLeagueBadge={hasMultipleLeagues}
@@ -604,7 +601,7 @@ export default function PlayerMatches() {
           onSubmitSchedule={handleSubmitSchedule}
           onUnschedule={handleUnschedule}
           onConfirmExtend={handleConfirmExtend}
-          extensionsRemaining={extensionsRemaining}
+          extensionsRemaining={getExtensionsForLeague(selectedMatch?.league?._id || selectedMatch?.league)}
           isEditingSchedule={isEditingSchedule}
         />
 
