@@ -34,7 +34,7 @@ export async function POST(request) {
 
     await dbConnect()
 
-    const { leagueId, subject, intro, outro, deadlineDate, channels } = await request.json()
+    const { leagueId, subject, intro, outro, deadlineDate, channels, testPlayerId } = await request.json()
 
     if (!leagueId) {
       return NextResponse.json({ error: 'leagueId is required' }, { status: 400 })
@@ -96,7 +96,23 @@ export async function POST(request) {
       playerMatchMap.get(p2Id).matches.push({ round: match.round, opponent: p1.name })
     }
 
-    // 4. Send personalized message to each player
+    // 4. Filter to test player if specified
+    if (testPlayerId) {
+      const testId = testPlayerId.toString()
+      if (!playerMatchMap.has(testId)) {
+        return NextResponse.json({
+          success: false,
+          error: 'Test player has no scheduled matches in this league'
+        }, { status: 400 })
+      }
+      // Keep only the test player
+      const testData = playerMatchMap.get(testId)
+      playerMatchMap.clear()
+      playerMatchMap.set(testId, testData)
+      console.log('[Personalized] TEST MODE: sending only to ' + testData.player.name)
+    }
+
+    // 5. Send personalized message to each player
     const stats = {
       targetedPlayers: playerMatchMap.size,
       emailsSent: 0,

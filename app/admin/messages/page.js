@@ -7,6 +7,18 @@ import { useState, useEffect } from 'react'
 // ============================================================
 function PersonalizedTab({ leagues, selectedLeagueId, setSelectedLeagueId, channelEmail, setChannelEmail, channelPush, setChannelPush, pSubject, setPSubject, pIntro, setPIntro, pOutro, setPOutro, pDeadline, setPDeadline, sending, setSending, sendResult, setSendResult, sendError, setSendError, fetchHistory }) {
   
+  const [testPlayerId, setTestPlayerId] = useState('')
+  const [players, setPlayers] = useState([])
+
+  useEffect(() => {
+    if (selectedLeagueId) {
+      fetch('/api/admin/players?league=' + selectedLeagueId + '&status=confirmed,active')
+        .then(r => r.ok ? r.json() : { players: [] })
+        .then(d => setPlayers(d.players || []))
+        .catch(() => {})
+    }
+  }, [selectedLeagueId])
+
   const handleSendPersonalized = async () => {
     setSending(true); setSendResult(null); setSendError(null)
     try {
@@ -15,6 +27,7 @@ function PersonalizedTab({ leagues, selectedLeagueId, setSelectedLeagueId, chann
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           leagueId: selectedLeagueId,
+          testPlayerId: testPlayerId || undefined,
           subject: pSubject,
           intro: pIntro,
           outro: pOutro,
@@ -69,6 +82,19 @@ function PersonalizedTab({ leagues, selectedLeagueId, setSelectedLeagueId, chann
                 <input type="checkbox" checked={channelPush} onChange={(e) => setChannelPush(e.target.checked)} className="h-4 w-4 text-parque-purple rounded" />
               </label>
             </div>
+          </div>
+          
+          {/* Test on single player */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
+            <h3 className="font-semibold text-gray-900 text-sm mb-3">Test Mode</h3>
+            <select value={testPlayerId} onChange={(e) => setTestPlayerId(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-parque-purple focus:border-transparent">
+              <option value="">Send to ALL players</option>
+              {players.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
+            </select>
+            {testPlayerId && (
+              <p className="text-xs text-amber-600 mt-2 font-medium">Test mode: only this player will receive the message</p>
+            )}
           </div>
         </div>
         
@@ -152,7 +178,7 @@ function PersonalizedTab({ leagues, selectedLeagueId, setSelectedLeagueId, chann
               <button onClick={handleSendPersonalized}
                 disabled={sending || !selectedLeagueId || (!channelEmail && !channelPush)}
                 className="px-6 py-2.5 bg-parque-purple text-white rounded-lg font-medium text-sm hover:bg-opacity-90 disabled:opacity-50 flex items-center gap-2">
-                {sending ? 'Sending...' : 'Send Personalized Messages'}
+                {sending ? 'Sending...' : testPlayerId ? 'Send Test to 1 Player' : 'Send to All Players'}
               </button>
             </div>
           )}
