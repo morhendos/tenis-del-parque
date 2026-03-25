@@ -4,6 +4,7 @@ import dbConnect from '@/lib/db/mongoose'
 import Match from '@/lib/models/Match'
 import Player from '@/lib/models/Player'
 import League from '@/lib/models/League'
+import User from '@/lib/models/User'
 import MessageLog from '@/lib/models/MessageLog'
 import { requireAdmin } from '@/lib/auth/apiAuth'
 import { sendToPlayer } from '@/lib/services/pushNotificationService'
@@ -96,7 +97,31 @@ export async function POST(request) {
       playerMatchMap.get(p2Id).matches.push({ round: match.round, opponent: p1.name })
     }
 
-    // 4. Filter to test player if specified
+    // 4. Resolve actual language from User model (profile saves to User.preferences.language)
+    const playerEmails = [...playerMatchMap.values()].map(d => d.player.email).filter(Boolean)
+    if (playerEmails.length > 0) {
+      const users = await User.find(
+        { email: { $in: playerEmails } },
+        'email preferences'
+      ).lean()
+      
+      const userLangMap = {}
+      users.forEach(u => {
+        if (u.email && u.preferences?.language) {
+          userLangMap[u.email] = u.preferences.language
+        }
+      })
+      
+      // Update player lang from User model
+      for (const [, data] of playerMatchMap) {
+        const userLang = userLangMap[data.player.email]
+        if (userLang) {
+          data.player.lang = userLang
+        }
+      }
+    }
+
+    // 5. Filter to test player if specified
     if (testPlayerId) {
       const testId = testPlayerId.toString()
       if (!playerMatchMap.has(testId)) {
