@@ -27,7 +27,7 @@ function LoginForm() {
   useEffect(() => {
     if (status === 'authenticated' && session?.user) {
       if (session.user.role === 'admin') {
-        router.replace('/admin/dashboard')
+        window.location.href = '/admin/dashboard'
       } else {
         // For players, check if they have a saved language preference
         checkUserLanguageAndRedirect()
@@ -49,22 +49,22 @@ function LoginForm() {
           if (returnUrl) {
             // Update the return URL to use the user's preferred language
             const updatedReturnUrl = returnUrl.replace(`/${locale}/`, `/${userLanguage}/`)
-            router.replace(updatedReturnUrl)
+            window.location.href = updatedReturnUrl
           } else {
-            router.replace(`/${userLanguage}/player/dashboard`)
+            window.location.href = `/${userLanguage}/player/dashboard`
           }
         } else {
           // Use the current locale or user's preference (they match)
-          router.replace(returnUrl || `/${locale}/player/dashboard`)
+          window.location.href = returnUrl || `/${locale}/player/dashboard`
         }
       } else {
         // If profile fetch fails, just use the URL locale
-        router.replace(returnUrl || `/${locale}/player/dashboard`)
+        window.location.href = returnUrl || `/${locale}/player/dashboard`
       }
     } catch (error) {
       console.error('Error fetching user language preference:', error)
       // Fallback to URL locale
-      router.replace(returnUrl || `/${locale}/player/dashboard`)
+      window.location.href = returnUrl || `/${locale}/player/dashboard`
     }
   }
 
