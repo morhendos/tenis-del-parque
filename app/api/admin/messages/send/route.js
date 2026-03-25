@@ -4,26 +4,13 @@ import { sendNotification } from '@/lib/services/notificationService'
 
 export const dynamic = 'force-dynamic'
 
-/**
- * POST /api/admin/messages/send
- * 
- * Send a message to players via email and/or push notifications.
- * 
- * Body:
- * {
- *   audience: { type: 'all'|'league'|'round_unplayed'|'individual', leagueId?, round?, playerId? },
- *   channels: { email: boolean, push: boolean },
- *   message: { subject: string, body: string, template?: string }
- * }
- */
 export async function POST(request) {
   try {
     const { session, error } = await requireAdmin(request)
     if (error) return error
 
-    const { audience, channels, message } = await request.json()
+    const { audience, channels, message, language } = await request.json()
 
-    // Validate
     if (!audience?.type) {
       return NextResponse.json({ error: 'Audience type is required' }, { status: 400 })
     }
@@ -43,8 +30,14 @@ export async function POST(request) {
       message: {
         subject: message.subject || message.body.substring(0, 60),
         body: message.body,
-        template: message.template || 'custom'
+        template: message.template || 'custom',
+        // Bilingual content for auto mode
+        subjectEs: message.subjectEs,
+        subjectEn: message.subjectEn,
+        bodyEs: message.bodyEs,
+        bodyEn: message.bodyEn
       },
+      language: language || 'auto',
       sender: {
         userId: session.user.id,
         name: session.user.name || session.user.email
