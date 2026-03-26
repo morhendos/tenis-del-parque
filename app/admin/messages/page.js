@@ -282,16 +282,16 @@ export default function AdminMessagesPage() {
   
   // Personalized mode state
   const [pIntro, setPIntro] = useState({
-    es: '\u00a1Hola! Quedan solo 2 semanas para que termine la temporada regular de la Silver League. Hemos extendido los plazos de todos los partidos pendientes para darte la oportunidad de jugarlos.\n\nAqu\u00ed tienes tus partidos que a\u00fan faltan por jugar:',
-    en: 'Hi! There are only 2 weeks left in the Silver League regular season. We have extended the deadlines for all pending matches to give you the chance to play them.\n\nHere are your matches still to be played:'
+    es: '\u00a1Hola! La temporada regular de la Silver League est\u00e1 llegando a su fin y queremos que todos teng\u00e1is la oportunidad de jugar vuestros partidos pendientes.\n\nHemos extendido los plazos de todas las rondas hasta el domingo 12 de abril. Despu\u00e9s de esa fecha, los partidos no jugados quedar\u00e1n sin puntos para ambos jugadores.\n\nAqu\u00ed tienes tus partidos pendientes:',
+    en: 'Hi! The Silver League regular season is coming to an end and we want everyone to have the chance to play their pending matches.\n\nWe\u2019ve extended the deadlines for all rounds to Sunday, April 12. After that date, unplayed matches will result in zero points for both players.\n\nHere are your pending matches:'
   })
   const [pOutro, setPOutro] = useState({
-    es: 'Contacta a tus rivales por WhatsApp y acordad fecha y lugar. \u00a1Cada partido cuenta para la clasificaci\u00f3n de los playoffs!\n\n\u00a1Nos vemos en la pista!',
-    en: 'Contact your opponents via WhatsApp and agree on a date and venue. Every match counts for the playoff rankings!\n\nSee you on the court!'
+    es: 'Contacta a tus rivales por WhatsApp cuanto antes y acordad fecha y lugar. \u00a1Cada partido cuenta para la clasificaci\u00f3n de los playoffs!\n\nSi tienes cualquier problema para contactar a tu rival o necesitas ayuda, escr\u00edbenos.\n\n\u00a1Nos vemos en la pista!',
+    en: 'Contact your opponents via WhatsApp as soon as possible and agree on a date and venue. Every match counts for the playoff standings!\n\nIf you have any trouble reaching your opponent or need help, just let us know.\n\nSee you on the court!'
   })
   const [pSubject, setPSubject] = useState({
-    es: '\u00daltimas 2 semanas \u2014 Juega tus partidos pendientes',
-    en: 'Last 2 weeks \u2014 Play your pending matches'
+    es: '\ud83c\udfbe \u00daltimas 2 semanas \u2014 \u00a1Juega tus partidos pendientes antes del 12 de abril!',
+    en: '\ud83c\udfbe Last 2 weeks \u2014 Play your pending matches before April 12!'
   })
   const [pDeadline, setPDeadline] = useState('')
   
