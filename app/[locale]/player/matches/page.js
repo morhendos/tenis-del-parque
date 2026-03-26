@@ -323,8 +323,14 @@ export default function PlayerMatches() {
     ? matches.filter(m => m.league?._id?.toString() === selectedLeagueId?.toString())
     : matches
   
-  const upcomingMatches = filteredMatches.filter(m => m.status === 'scheduled' && !m.result?.winner && m.status !== 'cancelled')
-  const completedMatches = filteredMatches.filter(m => m.status === 'completed' || m.status === 'cancelled' || m.result?.winner)
+  // A match is "overdue" if scheduled but deadline has passed
+  const isOverdue = (m) => {
+    if (m.status !== 'scheduled' || !m.schedule?.deadline) return false
+    return new Date(m.schedule.deadline) < new Date()
+  }
+  
+  const upcomingMatches = filteredMatches.filter(m => m.status === 'scheduled' && !m.result?.winner && !isOverdue(m))
+  const completedMatches = filteredMatches.filter(m => m.status === 'completed' || m.status === 'cancelled' || m.result?.winner || isOverdue(m))
 
   const tabs = [
     { id: 'upcoming', label: locale === 'es' ? 'Próximos' : 'Upcoming', count: upcomingMatches.length },
