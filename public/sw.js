@@ -41,7 +41,7 @@ self.addEventListener('push', function(event) {
     title: 'Tenis del Parque',
     body: 'Tienes una nueva notificación',
     icon: '/web-app-manifest-192x192.png',
-    badge: '/apple-touch-icon.png',
+    badge: '/notification-badge.png',
     tag: 'general',
     data: {}
   };
@@ -57,7 +57,7 @@ self.addEventListener('push', function(event) {
   const options = {
     body: data.body,
     icon: data.icon || '/web-app-manifest-192x192.png',
-    badge: data.badge || '/apple-touch-icon.png',
+    badge: data.badge || '/notification-badge.png',
     tag: data.tag || 'general',
     data: data.data || {},
     vibrate: [100, 50, 100],
