@@ -9,15 +9,15 @@ export const dynamic = 'force-dynamic'
 /**
  * POST /api/admin/matches/set-deadlines
  * 
- * Bulk set deadline for all scheduled matches in specific rounds of a league.
- * Also uncancels any cancelled matches in those rounds (restores them to scheduled).
+ * Bulk set deadline for all scheduled/cancelled matches in specific rounds.
  * 
  * Body:
  * {
  *   leagueId: string,
- *   rounds: number[],        // e.g. [5, 6, 7, 8]
- *   deadline: string,         // ISO date e.g. "2025-04-12"
- *   uncancelOverdue: boolean  // if true, also restore cancelled matches
+ *   rounds: number[],           // e.g. [5, 6, 7, 8]
+ *   deadline: string,            // ISO date e.g. "2025-04-12"
+ *   uncancelOverdue: boolean,    // if true, restore cancelled matches to scheduled
+ *   dryRun: boolean              // if true, show what would change without saving
  * }
  */
 export async function POST(request) {
@@ -27,7 +27,7 @@ export async function POST(request) {
 
     await dbConnect()
 
-    const { leagueId, rounds, deadline, uncancelOverdue = true } = await request.json()
+    const { leagueId, rounds, deadline, uncancelOverdue = true, dryRun = false } = await request.json()
 
     if (!leagueId) {
       return NextResponse.json({ error: 'leagueId is required' }, { status: 400 })
@@ -57,39 +57,91 @@ export async function POST(request) {
       round: { $in: rounds },
       status: statusFilter,
       isBye: { $ne: true }
+    }).populate('players.player1', 'name')
+      .populate('players.player2', 'name')
+
+    // Also count completed matches in these rounds (for context)
+    const completedCount = await Match.countDocuments({
+      league: leagueId,
+      round: { $in: rounds },
+      status: 'completed'
     })
 
     if (matches.length === 0) {
       return NextResponse.json({
         success: true,
-        message: 'No matches found to update',
-        stats: { updated: 0, uncancelled: 0 }
+        dryRun,
+        message: 'No scheduled/cancelled matches found in these rounds. ' + completedCount + ' matches already completed.',
+        stats: { wouldUpdate: 0, wouldUncancel: 0, alreadyCompleted: completedCount }
       })
     }
 
-    let updated = 0
-    let uncancelled = 0
+    // Build details with player names
+    let wouldUpdate = 0
+    let wouldUncancel = 0
     const details = []
 
     for (const match of matches) {
       const oldDeadline = match.schedule?.deadline
       const wasCancelled = match.status === 'cancelled'
+      const oldDeadlineStr = oldDeadline 
+        ? new Date(oldDeadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+        : 'none'
 
-      // Set new deadline
+      wouldUpdate++
+      if (wasCancelled && uncancelOverdue) wouldUncancel++
+
+      details.push({
+        round: match.round,
+        player1: match.players?.player1?.name || '?',
+        player2: match.players?.player2?.name || '?',
+        currentStatus: match.status,
+        currentDeadline: oldDeadlineStr,
+        willUncancel: wasCancelled && uncancelOverdue,
+        newDeadline: deadlineDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+      })
+    }
+
+    // Sort by round then player name
+    details.sort((a, b) => a.round - b.round || a.player1.localeCompare(b.player1))
+
+    if (dryRun) {
+      return NextResponse.json({
+        success: true,
+        dryRun: true,
+        message: 'DRY RUN — no changes made. Review the details below, then run again with dryRun: false to apply.',
+        stats: {
+          wouldUpdate,
+          wouldUncancel,
+          alreadyCompleted: completedCount,
+          rounds,
+          newDeadline: deadlineDate.toISOString(),
+          leagueName: league.name
+        },
+        details
+      })
+    }
+
+    // REAL RUN — apply changes
+    let updated = 0
+    let uncancelled = 0
+
+    for (const match of matches) {
+      const oldDeadline = match.schedule?.deadline
+      const wasCancelled = match.status === 'cancelled'
+
       if (!match.schedule) match.schedule = {}
       match.schedule.deadline = deadlineDate
 
-      // Add to extension history for audit trail
       if (!match.schedule.extensionHistory) match.schedule.extensionHistory = []
       match.schedule.extensionHistory.push({
-        player: null, // admin action
+        player: null,
         usedAt: new Date(),
         previousDeadline: oldDeadline || null,
         newDeadline: deadlineDate,
         reason: 'bulk_admin_set'
       })
 
-      // Uncancel if needed
       if (wasCancelled && uncancelOverdue) {
         match.status = 'scheduled'
         uncancelled++
@@ -97,25 +149,19 @@ export async function POST(request) {
 
       await match.save()
       updated++
-
-      details.push({
-        round: match.round,
-        player1: match.players?.player1?.toString().slice(-4),
-        player2: match.players?.player2?.toString().slice(-4),
-        wasCancelled,
-        newDeadline: deadlineDate.toISOString()
-      })
     }
 
     console.log('[SetDeadlines] Updated ' + updated + ' matches (' + uncancelled + ' uncancelled) in ' + league.name + ' rounds ' + rounds.join(',') + ' to ' + deadline)
 
     return NextResponse.json({
       success: true,
+      dryRun: false,
+      message: 'Done! Updated ' + updated + ' matches' + (uncancelled > 0 ? ' (' + uncancelled + ' restored from cancelled)' : '') + '.',
       stats: {
         updated,
         uncancelled,
-        totalMatches: matches.length,
-        rounds: rounds,
+        alreadyCompleted: completedCount,
+        rounds,
         newDeadline: deadlineDate.toISOString(),
         leagueName: league.name
       },
