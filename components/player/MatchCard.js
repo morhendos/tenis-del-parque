@@ -218,7 +218,9 @@ export default function MatchCard({
                   isPublic || !player
                     ? 'bg-gray-100 text-gray-600'
                     : isUpcoming 
-                    ? 'bg-purple-100 text-purple-700' 
+                    ? 'bg-purple-100 text-purple-700'
+                    : (match.status === 'cancelled' || (!match.result?.winner && match.schedule?.deadline && new Date(match.schedule.deadline) < new Date()))
+                    ? 'bg-orange-100 text-orange-600'
                     : isWinner 
                     ? 'bg-green-100 text-green-700' 
                     : 'bg-red-100 text-red-700'
@@ -259,14 +261,29 @@ export default function MatchCard({
           <div className="flex items-center gap-2">
             {!isUpcoming && !isPublic && player && (
               <div className="text-right">
-                <div className="text-base font-bold text-gray-900">
-                  {myScore !== undefined ? `${myScore}-${opponentScore}` : 'N/A'}
-                </div>
-                <div className={`text-[10px] font-medium ${
-                  isWinner ? 'text-green-600' : 'text-red-500'
-                }`}>
-                  {isWinner ? (language === 'es' ? 'Victoria' : 'Win') : (language === 'es' ? 'Derrota' : 'Loss')}
-                </div>
+                {match.status === 'cancelled' || (!match.result?.winner && match.schedule?.deadline && new Date(match.schedule.deadline) < new Date()) ? (
+                  <>
+                    <div className="text-xs font-semibold text-gray-400">
+                      {language === 'es' ? 'No jugado' : 'Not played'}
+                    </div>
+                    <div className="text-[10px] font-medium text-orange-500">
+                      {match.status === 'cancelled'
+                        ? (language === 'es' ? 'Cancelado' : 'Cancelled')
+                        : (language === 'es' ? 'Plazo vencido' : 'Deadline passed')}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-base font-bold text-gray-900">
+                      {myScore !== undefined ? `${myScore}-${opponentScore}` : 'N/A'}
+                    </div>
+                    <div className={`text-[10px] font-medium ${
+                      isWinner ? 'text-green-600' : 'text-red-500'
+                    }`}>
+                      {isWinner ? (language === 'es' ? 'Victoria' : 'Win') : (language === 'es' ? 'Derrota' : 'Loss')}
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>
