@@ -295,6 +295,10 @@ export async function POST(request) {
 }
 
 
+function stripEmojis(text) {
+  return text.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{200D}\u{20E3}]/gu, '').trim()
+}
+
 function buildPersonalizedEmail({ playerName, subjectText, introText, outroText, matchListHtml, matchCountLabel, deadlineFormatted, dashboardUrl, ctaLabel, lang }) {
   const deadlineSection = deadlineFormatted
     ? '<div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px 16px; border-radius: 0 6px 6px 0; margin: 20px 0;">'
@@ -312,7 +316,7 @@ function buildPersonalizedEmail({ playerName, subjectText, introText, outroText,
     
     // Logo above the card on gray background
     '<tr><td align="center" style="padding: 16px 20px 20px 20px;">',
-    '<img src="https://www.tenisdp.es/logo-horizontal-small.png" alt="Tenis del Parque" style="height: 52px; width: auto;" />',
+    '<img src="https://www.tenisdp.es/logo-horizontal-small.png" alt="Tenis del Parque" style="height: 64px; width: auto;" />',
     '</td></tr>',
     
     // Card with rounded corners
@@ -321,7 +325,7 @@ function buildPersonalizedEmail({ playerName, subjectText, introText, outroText,
     
     // Purple hero banner (top of card)
     '<tr><td style="background: linear-gradient(135deg, #563380 0%, #7c3aed 100%); padding: 28px 32px; text-align: center;">',
-    '<h1 style="color: white; margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0.3px;">' + subjectText + '</h1>',
+    '<h1 style="color: white; margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0.3px;">' + stripEmojis(subjectText) + '</h1>',
     '</td></tr>',
     
     // Content
