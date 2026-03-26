@@ -323,8 +323,8 @@ export default function PlayerMatches() {
     ? matches.filter(m => m.league?._id?.toString() === selectedLeagueId?.toString())
     : matches
   
-  const upcomingMatches = filteredMatches.filter(m => m.status === 'scheduled' && !m.result?.winner)
-  const completedMatches = filteredMatches.filter(m => m.status === 'completed' || m.result?.winner)
+  const upcomingMatches = filteredMatches.filter(m => m.status === 'scheduled' && !m.result?.winner && m.status !== 'cancelled')
+  const completedMatches = filteredMatches.filter(m => m.status === 'completed' || m.status === 'cancelled' || m.result?.winner)
 
   const tabs = [
     { id: 'upcoming', label: locale === 'es' ? 'Próximos' : 'Upcoming', count: upcomingMatches.length },
