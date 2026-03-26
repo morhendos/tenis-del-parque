@@ -312,9 +312,14 @@ function buildPersonalizedEmail({ playerName, subjectText, introText, outroText,
     '<tr><td align="center" style="padding: 20px;">',
     '<table role="presentation" width="600" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">',
     
-    // Header
-    '<tr><td style="background: linear-gradient(135deg, #563380 0%, #7c3aed 100%); padding: 24px 32px; text-align: center;">',
-    '<img src="https://www.tenisdp.es/logo-horizontal-big.png" alt="Tenis del Parque" style="height: 40px; width: auto;" />',
+    // Logo on white
+    '<tr><td style="padding: 24px 32px; text-align: center; background-color: #ffffff;">',
+    '<img src="https://www.tenisdp.es/logo-horizontal-small.png" alt="Tenis del Parque" style="height: 44px; width: auto;" />',
+    '</td></tr>',
+    
+    // Hero Banner with subject
+    '<tr><td style="background: linear-gradient(135deg, #563380 0%, #7c3aed 100%); padding: 28px 32px; text-align: center;">',
+    '<h1 style="color: white; margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0.3px;">' + subjectText + '</h1>',
     '</td></tr>',
     
     // Content
