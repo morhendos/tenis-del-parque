@@ -9,6 +9,7 @@ import WelcomeModal from '@/components/ui/WelcomeModal'
 import AnnouncementModal from '@/components/ui/AnnouncementModal'
 import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
 import DashboardHeader from '@/components/player/DashboardHeader'
+import PushNotificationPrompt from '@/components/player/PushNotificationPrompt'
 import OpenRankAchievement from '@/components/player/OpenRankAchievement'
 import NextMatchCard from '@/components/player/NextMatchCard'
 import MiniStandings from '@/components/player/MiniStandings'
@@ -138,6 +139,9 @@ export default function PlayerDashboard() {
       <div className="space-y-4 sm:space-y-5 animate-fade-in-up">
         {/* Welcome Header with Quick Links */}
         <DashboardHeader player={player} language={language} />
+        
+        {/* Push notification prompt - shows once if not enabled */}
+        <PushNotificationPrompt language={language} />
 
         {/* Next Match + Mini Standings - Side by side on desktop */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
