@@ -248,7 +248,7 @@ export default function MatchCard({
                   <span className={'text-[15px] font-medium ' + (isCancelled ? 'text-gray-400' : 'text-gray-900')}>
                     {opponent?.name ? formatOpponentName(opponent.name, language) : 'TBD'}
                   </span>
-                  {opponent?._id && openRankData[opponent._id] && (
+                  {isUpcoming && opponent?._id && openRankData[opponent._id] && (
                     <span className="text-[11px] font-medium text-amber-600">[{openRankData[opponent._id]}]</span>
                   )}
                 </div>
@@ -256,7 +256,7 @@ export default function MatchCard({
                   <span className={'text-[15px] ' + (isCancelled ? 'text-gray-300' : 'text-gray-500')}>
                     vs {player?.name || 'You'}
                   </span>
-                  {player?._id && openRankData[player._id] && (
+                  {isUpcoming && player?._id && openRankData[player._id] && (
                     <span className="text-[11px] font-medium text-amber-600">[{openRankData[player._id]}]</span>
                   )}
                 </div>
