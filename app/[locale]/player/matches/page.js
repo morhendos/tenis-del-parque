@@ -518,7 +518,7 @@ export default function PlayerMatches() {
 
         {/* Matches List */}
         {activeTab === 'upcoming' && (
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {upcomingMatches.length > 0 ? (
               upcomingMatches.map((match, index) => (
                 <MatchCard
@@ -540,7 +540,7 @@ export default function PlayerMatches() {
                 />
               ))
             ) : (
-              <div className="text-center py-10 bg-gray-50 rounded-xl">
+              <div className="text-center py-10 bg-gray-50 rounded-xl col-span-full">
                 <div className="text-4xl mb-3">🎾</div>
                 <h3 className="text-base font-medium text-gray-900 mb-1">
                   {locale === 'es' ? 'No hay partidos programados' : 'No scheduled matches'}
@@ -556,7 +556,7 @@ export default function PlayerMatches() {
         )}
 
         {activeTab === 'completed' && (
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {completedMatches.length > 0 ? (
               completedMatches.map((match, index) => (
                 <MatchCard
@@ -573,7 +573,7 @@ export default function PlayerMatches() {
                 />
               ))
             ) : (
-              <div className="text-center py-10 bg-gray-50 rounded-xl">
+              <div className="text-center py-10 bg-gray-50 rounded-xl col-span-full">
                 <div className="text-4xl mb-3">🏆</div>
                 <h3 className="text-base font-medium text-gray-900 mb-1">
                   {locale === 'es' ? 'No hay partidos completados' : 'No completed matches'}
