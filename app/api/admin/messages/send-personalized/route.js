@@ -314,7 +314,7 @@ function buildPersonalizedEmail({ playerName, subjectText, introText, outroText,
     
     // Header
     '<tr><td style="background: linear-gradient(135deg, #563380 0%, #7c3aed 100%); padding: 24px 32px; text-align: center;">',
-    '<h1 style="color: white; margin: 0; font-size: 22px; font-weight: 700;">&#127934; Tenis del Parque</h1>',
+    '<img src="https://www.tenisdp.es/logo-horizontal-big.png" alt="Tenis del Parque" style="height: 40px; width: auto;" />',
     '</td></tr>',
     
     // Content
