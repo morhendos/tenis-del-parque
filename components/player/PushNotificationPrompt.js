@@ -4,27 +4,23 @@ import { useState, useEffect } from 'react'
 
 /**
  * A lightweight banner that prompts players to enable push notifications.
- * Shows once per session, dismissible, and remembers if user dismissed it.
- * Only shows if push notifications are supported but not yet enabled.
+ * 
+ * Visibility logic:
+ * - "Not now" → hides for this session (sessionStorage)
+ * - X close   → hides permanently (localStorage)
+ * - "Enable"  → navigates to profile settings
+ * 
+ * No browser capability checks — this is a feature announcement,
+ * not a permission request. We want everyone to see it.
  */
 export default function PushNotificationPrompt({ language = 'es' }) {
   const [show, setShow] = useState(false)
   const [dismissed, setDismissed] = useState(false)
 
   useEffect(() => {
-    // Don't show if already dismissed this session or permanently
     if (typeof window === 'undefined') return
     if (sessionStorage.getItem('push-prompt-dismissed')) return
     if (localStorage.getItem('push-prompt-dismissed-permanent')) return
-    
-    // Don't show if push not supported
-    if (!('serviceWorker' in navigator) || !('PushManager' in navigator)) return
-    
-    // Don't show if already granted
-    if (Notification.permission === 'granted') return
-    
-    // Don't show if explicitly denied (can't ask again anyway)
-    if (Notification.permission === 'denied') return
     
     // Show after a short delay so it doesn't compete with other modals
     const timer = setTimeout(() => setShow(true), 2000)
