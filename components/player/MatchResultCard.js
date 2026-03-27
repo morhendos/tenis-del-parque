@@ -24,7 +24,9 @@ export default function MatchResultCard({
   // Check if this is the player's match
   const isPlayerMatch = player && (
     match.players.player1._id === player._id || 
-    match.players.player2._id === player._id
+    match.players.player1._id?.toString() === player._id?.toString() ||
+    match.players.player2._id === player._id ||
+    match.players.player2._id?.toString() === player._id?.toString()
   )
 
   // Check if this is a walkover match
@@ -33,7 +35,8 @@ export default function MatchResultCard({
   // Calculate final score and determine actual winner for player matches
   let myScore = 0, opponentScore = 0
   if (match.result?.score?.sets && isPlayerMatch) {
-    const isPlayer1 = match.players.player1._id === player._id
+    const isPlayer1 = match.players.player1._id === player._id || 
+                      match.players.player1._id?.toString() === player._id?.toString()
     match.result.score.sets.forEach(set => {
       if (isPlayer1) {
         if (set.player1 > set.player2) myScore++
@@ -54,13 +57,24 @@ export default function MatchResultCard({
     })
   }
 
-  // Use the same winner logic as ResultsTab - always use API winner
-  const isPlayer1Winner = match.result?.winner?._id === match.players.player1._id
-  const isPlayer2Winner = match.result?.winner?._id === match.players.player2._id
+  // Robust winner detection - handle both populated objects and raw ObjectId strings
+  const winnerId = match.result?.winner?._id || match.result?.winner
+  const isPlayer1Winner = winnerId && (
+    winnerId === match.players.player1._id || 
+    winnerId.toString() === match.players.player1._id?.toString()
+  )
+  const isPlayer2Winner = winnerId && (
+    winnerId === match.players.player2._id || 
+    winnerId.toString() === match.players.player2._id?.toString()
+  )
   
   // For player matches, determine if current player won
+  const isCurrentUserPlayer1 = player && (
+    match.players.player1._id === player._id || 
+    match.players.player1._id?.toString() === player._id?.toString()
+  )
   const actualIsWinner = isPlayerMatch 
-    ? (match.players.player1._id === player._id ? isPlayer1Winner : isPlayer2Winner)
+    ? (isCurrentUserPlayer1 ? isPlayer1Winner : isPlayer2Winner)
     : isWinner
 
   // For walkover matches, we don't show confetti or treat it as a "real" win
@@ -177,7 +191,7 @@ export default function MatchResultCard({
                 {isPlayerMatch ? (
                   <>
                     {/* Show in natural order: player1 vs player2 */}
-                    {match.players.player1._id === player._id ? (
+                    {isCurrentUserPlayer1 ? (
                       <>
                         <div className="text-center flex-1">
                           <div className="text-xs sm:text-sm text-gray-600 mb-0.5">
@@ -324,8 +338,7 @@ export default function MatchResultCard({
                       
                       let wonSet
                       if (isPlayerMatch) {
-                        const isPlayer1 = match.players.player1._id === player._id
-                        wonSet = isPlayer1 
+                        wonSet = isCurrentUserPlayer1
                           ? set.player1 > set.player2
                           : set.player2 > set.player1
                       } else {
