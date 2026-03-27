@@ -4,10 +4,8 @@ import { useState, useEffect } from 'react'
 
 /**
  * A lightweight banner that prompts players to enable push notifications.
- * Shows on the dashboard until dismissed.
- * - "Not now" hides for the current session (comes back next visit)
- * - X close hides permanently (localStorage flag)
- * - "Enable" navigates to profile settings with notification toggle
+ * Shows once per session, dismissible, and remembers if user dismissed permanently.
+ * Simple flag-based visibility — no browser capability checks.
  */
 export default function PushNotificationPrompt({ language = 'es' }) {
   const [show, setShow] = useState(false)
