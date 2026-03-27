@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react'
 
 /**
  * A lightweight banner that prompts players to enable push notifications.
- * Shows once per session, dismissible, and remembers if user dismissed permanently.
- * Simple flag-based visibility — no browser capability checks.
+ * Shows once per session, dismissible, and remembers if user dismissed it permanently.
+ * Simple seen/not-seen logic — no browser API checks.
  */
 export default function PushNotificationPrompt({ language = 'es' }) {
   const [show, setShow] = useState(false)
@@ -14,9 +14,11 @@ export default function PushNotificationPrompt({ language = 'es' }) {
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    // Don't show if dismissed this session or permanently
-    if (sessionStorage.getItem('push-prompt-dismissed')) return
+    // Don't show if dismissed permanently (X button)
     if (localStorage.getItem('push-prompt-dismissed-permanent')) return
+
+    // Don't show if dismissed this session ("Not now")
+    if (sessionStorage.getItem('push-prompt-dismissed')) return
 
     // Show after a short delay so it doesn't compete with other modals
     const timer = setTimeout(() => setShow(true), 2000)
