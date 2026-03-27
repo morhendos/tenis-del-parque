@@ -24,7 +24,7 @@ export default function DashboardHeader({ player, language }) {
   const firstName = displayName.split(' ')[0]
   
   return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-parque-purple via-purple-600 to-indigo-600 text-white p-4 sm:p-8 shadow-xl -mx-2 -mt-4 sm:mx-0 sm:mt-0 sm:rounded-2xl">
+    <div className="relative overflow-hidden bg-gradient-to-br from-parque-purple via-purple-600 to-indigo-600 text-white px-4 pt-8 pb-4 sm:p-8 shadow-xl -mx-2 -mt-4 sm:mx-0 sm:mt-0 sm:rounded-2xl">
       {/* Background decoration */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute -top-16 -right-16 w-64 h-64 sm:-top-24 sm:-right-24 sm:w-96 sm:h-96 bg-white rounded-full"></div>
