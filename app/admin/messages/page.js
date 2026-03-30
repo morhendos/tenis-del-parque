@@ -9,6 +9,8 @@ function PersonalizedTab({ leagues, selectedLeagueId, setSelectedLeagueId, chann
   
   const [testPlayerId, setTestPlayerId] = useState('')
   const [players, setPlayers] = useState([])
+  const [sendingStartTime, setSendingStartTime] = useState(null)
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
 
   useEffect(() => {
     if (selectedLeagueId) {
@@ -19,8 +21,22 @@ function PersonalizedTab({ leagues, selectedLeagueId, setSelectedLeagueId, chann
     }
   }, [selectedLeagueId])
 
+  // Elapsed time counter while sending
+  useEffect(() => {
+    if (!sending) {
+      setSendingStartTime(null)
+      setElapsedSeconds(0)
+      return
+    }
+    const interval = setInterval(() => {
+      setElapsedSeconds(prev => prev + 1)
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [sending])
+
   const handleSendPersonalized = async () => {
     setSending(true); setSendResult(null); setSendError(null)
+    setSendingStartTime(Date.now()); setElapsedSeconds(0)
     try {
       const res = await fetch('/api/admin/messages/send-personalized', {
         method: 'POST',
@@ -43,6 +59,10 @@ function PersonalizedTab({ leagues, selectedLeagueId, setSelectedLeagueId, chann
     finally { setSending(false) }
   }
 
+  // Estimate total time: ~0.8s per player for email (600ms delay + send time)
+  const estimatedPlayers = testPlayerId ? 1 : players.length
+  const estimatedSeconds = channelEmail ? Math.max(3, Math.ceil(estimatedPlayers * 0.8)) : 3
+
   return (
     <div className="space-y-5">
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -50,13 +70,44 @@ function PersonalizedTab({ leagues, selectedLeagueId, setSelectedLeagueId, chann
         <p className="text-blue-700 text-xs">Each player receives a unique message listing their specific pending matches and opponents. Only players with unplayed matches will be contacted.</p>
       </div>
       
+      {/* Sending overlay */}
+      {sending && (
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-6">
+          <div className="flex items-center gap-4">
+            <div className="relative w-12 h-12 flex-shrink-0">
+              <svg className="animate-spin w-12 h-12 text-parque-purple" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-purple-900 text-base">Sending personalized messages...</h3>
+              <p className="text-purple-700 text-sm mt-1">
+                Delivering to {testPlayerId ? '1 player (test)' : estimatedPlayers + ' players'} via {[channelEmail && 'email', channelPush && 'push'].filter(Boolean).join(' + ')}
+              </p>
+              <div className="flex items-center gap-3 mt-3">
+                <div className="flex-1 h-2 bg-purple-200 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-parque-purple rounded-full transition-all duration-1000 ease-linear"
+                    style={{ width: Math.min(95, (elapsedSeconds / estimatedSeconds) * 100) + '%' }}
+                  />
+                </div>
+                <span className="text-xs text-purple-600 font-medium tabular-nums w-10 text-right">{elapsedSeconds}s</span>
+              </div>
+              <p className="text-xs text-purple-500 mt-1">Please don't close this page. Estimated ~{estimatedSeconds}s total.</p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Left */}
         <div className="space-y-4">
           <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
             <h3 className="font-semibold text-gray-900 text-sm mb-3">League</h3>
             <select value={selectedLeagueId} onChange={(e) => setSelectedLeagueId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-parque-purple focus:border-transparent">
+              disabled={sending}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-parque-purple focus:border-transparent disabled:opacity-50">
               <option value="">Select league...</option>
               {leagues.map(l => <option key={l._id} value={l._id}>{l.name} ({l.status})</option>)}
             </select>
@@ -66,7 +117,8 @@ function PersonalizedTab({ leagues, selectedLeagueId, setSelectedLeagueId, chann
             <h3 className="font-semibold text-gray-900 text-sm mb-3">New Deadline</h3>
             <input type="date" value={pDeadline} onChange={(e) => setPDeadline(e.target.value)}
               min={new Date().toISOString().split('T')[0]}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-parque-purple focus:border-transparent" />
+              disabled={sending}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-parque-purple focus:border-transparent disabled:opacity-50" />
             <p className="text-xs text-gray-400 mt-1">Shown in each email</p>
           </div>
           
@@ -75,11 +127,11 @@ function PersonalizedTab({ leagues, selectedLeagueId, setSelectedLeagueId, chann
             <div className="space-y-2">
               <label className="flex items-center justify-between p-2 bg-gray-50 rounded-lg cursor-pointer">
                 <span className="text-sm text-gray-700">Email</span>
-                <input type="checkbox" checked={channelEmail} onChange={(e) => setChannelEmail(e.target.checked)} className="h-4 w-4 text-parque-purple rounded" />
+                <input type="checkbox" checked={channelEmail} onChange={(e) => setChannelEmail(e.target.checked)} disabled={sending} className="h-4 w-4 text-parque-purple rounded" />
               </label>
               <label className="flex items-center justify-between p-2 bg-gray-50 rounded-lg cursor-pointer">
                 <span className="text-sm text-gray-700">Push</span>
-                <input type="checkbox" checked={channelPush} onChange={(e) => setChannelPush(e.target.checked)} className="h-4 w-4 text-parque-purple rounded" />
+                <input type="checkbox" checked={channelPush} onChange={(e) => setChannelPush(e.target.checked)} disabled={sending} className="h-4 w-4 text-parque-purple rounded" />
               </label>
             </div>
           </div>
@@ -88,7 +140,8 @@ function PersonalizedTab({ leagues, selectedLeagueId, setSelectedLeagueId, chann
           <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-5">
             <h3 className="font-semibold text-gray-900 text-sm mb-3">Test Mode</h3>
             <select value={testPlayerId} onChange={(e) => setTestPlayerId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-parque-purple focus:border-transparent">
+              disabled={sending}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-parque-purple focus:border-transparent disabled:opacity-50">
               <option value="">Send to ALL players</option>
               {players.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
             </select>
@@ -104,9 +157,9 @@ function PersonalizedTab({ leagues, selectedLeagueId, setSelectedLeagueId, chann
             <h3 className="font-semibold text-gray-900 text-sm mb-3">Subject (bilingual)</h3>
             <div className="space-y-2">
               <div><label className="text-xs text-gray-500 mb-1 block">ES</label>
-                <input type="text" value={pSubject.es} onChange={(e) => setPSubject(s => ({...s, es: e.target.value}))} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" /></div>
+                <input type="text" value={pSubject.es} onChange={(e) => setPSubject(s => ({...s, es: e.target.value}))} disabled={sending} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm disabled:opacity-50" /></div>
               <div><label className="text-xs text-gray-500 mb-1 block">EN</label>
-                <input type="text" value={pSubject.en} onChange={(e) => setPSubject(s => ({...s, en: e.target.value}))} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" /></div>
+                <input type="text" value={pSubject.en} onChange={(e) => setPSubject(s => ({...s, en: e.target.value}))} disabled={sending} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm disabled:opacity-50" /></div>
             </div>
           </div>
           
@@ -115,9 +168,9 @@ function PersonalizedTab({ leagues, selectedLeagueId, setSelectedLeagueId, chann
             <p className="text-xs text-gray-400 mb-3">Shown before the match list</p>
             <div className="space-y-2">
               <div><label className="text-xs text-gray-500 mb-1 block">ES</label>
-                <textarea value={pIntro.es} onChange={(e) => setPIntro(s => ({...s, es: e.target.value}))} rows={4} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-y" /></div>
+                <textarea value={pIntro.es} onChange={(e) => setPIntro(s => ({...s, es: e.target.value}))} rows={4} disabled={sending} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-y disabled:opacity-50" /></div>
               <div><label className="text-xs text-gray-500 mb-1 block">EN</label>
-                <textarea value={pIntro.en} onChange={(e) => setPIntro(s => ({...s, en: e.target.value}))} rows={4} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-y" /></div>
+                <textarea value={pIntro.en} onChange={(e) => setPIntro(s => ({...s, en: e.target.value}))} rows={4} disabled={sending} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-y disabled:opacity-50" /></div>
             </div>
           </div>
           
@@ -136,9 +189,9 @@ function PersonalizedTab({ leagues, selectedLeagueId, setSelectedLeagueId, chann
             <p className="text-xs text-gray-400 mb-3">Shown after the match list</p>
             <div className="space-y-2">
               <div><label className="text-xs text-gray-500 mb-1 block">ES</label>
-                <textarea value={pOutro.es} onChange={(e) => setPOutro(s => ({...s, es: e.target.value}))} rows={3} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-y" /></div>
+                <textarea value={pOutro.es} onChange={(e) => setPOutro(s => ({...s, es: e.target.value}))} rows={3} disabled={sending} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-y disabled:opacity-50" /></div>
               <div><label className="text-xs text-gray-500 mb-1 block">EN</label>
-                <textarea value={pOutro.en} onChange={(e) => setPOutro(s => ({...s, en: e.target.value}))} rows={3} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-y" /></div>
+                <textarea value={pOutro.en} onChange={(e) => setPOutro(s => ({...s, en: e.target.value}))} rows={3} disabled={sending} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-y disabled:opacity-50" /></div>
             </div>
           </div>
           
@@ -150,20 +203,26 @@ function PersonalizedTab({ leagues, selectedLeagueId, setSelectedLeagueId, chann
                 <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 <h3 className="font-semibold text-green-800">Personalized Messages Sent!</h3>
               </div>
-              <div className="grid grid-cols-3 gap-3 text-sm mb-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm mb-3">
                 <div className="bg-white rounded-lg p-3 text-center"><div className="text-xl font-bold text-gray-900">{sendResult.stats?.targetedPlayers || 0}</div><div className="text-xs text-gray-500">Players</div></div>
-                <div className="bg-white rounded-lg p-3 text-center"><div className="text-xl font-bold text-blue-600">{sendResult.stats?.emailsSent || 0}</div><div className="text-xs text-gray-500">Emails</div></div>
-                <div className="bg-white rounded-lg p-3 text-center"><div className="text-xl font-bold text-purple-600">{sendResult.stats?.pushSent || 0}</div><div className="text-xs text-gray-500">Push</div></div>
+                <div className="bg-white rounded-lg p-3 text-center"><div className="text-xl font-bold text-blue-600">{sendResult.stats?.emailsSent || 0}</div><div className="text-xs text-gray-500">Emails sent</div></div>
+                <div className="bg-white rounded-lg p-3 text-center"><div className={'text-xl font-bold ' + (sendResult.stats?.emailsFailed > 0 ? 'text-red-600' : 'text-gray-300')}>{sendResult.stats?.emailsFailed || 0}</div><div className="text-xs text-gray-500">Emails failed</div></div>
+                <div className="bg-white rounded-lg p-3 text-center"><div className="text-xl font-bold text-purple-600">{sendResult.stats?.pushSent || 0}</div><div className="text-xs text-gray-500">Push sent</div></div>
               </div>
+              {sendResult.stats?.emailsFailed > 0 && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-3 text-sm text-red-700">
+                  {sendResult.stats.emailsFailed} email(s) failed to send. Check delivery details below for error info.
+                </div>
+              )}
               {sendResult.details?.length > 0 && (
                 <details className="text-xs text-gray-600">
-                  <summary className="cursor-pointer text-green-700 font-medium">Show delivery details</summary>
+                  <summary className="cursor-pointer text-green-700 font-medium">Show delivery details ({sendResult.details.length} players)</summary>
                   <div className="mt-2 space-y-1 max-h-48 overflow-y-auto">
                     {sendResult.details.map((d, i) => (
                       <div key={i} className="flex items-center gap-2 py-0.5">
                         <span className="font-medium w-28 truncate">{d.playerName}</span>
                         <span className="text-gray-400">{d.pendingMatches} matches</span>
-                        {d.emailSent ? <span className="text-green-600">&#10003; email</span> : <span className="text-gray-300">&#10007; email</span>}
+                        {d.emailSent ? <span className="text-green-600">&#10003; email</span> : <span className="text-red-400" title={d.emailError || ''}>&#10007; email</span>}
                         {d.pushSent ? <span className="text-purple-600">&#10003; push</span> : <span className="text-gray-300">&#10007; push</span>}
                       </div>
                     ))}
@@ -173,12 +232,18 @@ function PersonalizedTab({ leagues, selectedLeagueId, setSelectedLeagueId, chann
               <button onClick={() => { setSendResult(null); setSendError(null) }}
                 className="mt-4 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-50">Send Another</button>
             </div>
-          ) : (
-            <div className="flex items-center justify-end">
+          ) : !sending && (
+            <div className="flex items-center justify-between">
+              {channelEmail && estimatedPlayers > 1 && !testPlayerId && (
+                <p className="text-xs text-gray-400">
+                  Estimated delivery time: ~{Math.ceil(estimatedPlayers * 0.8)}s for {estimatedPlayers} players
+                </p>
+              )}
+              <div className="flex-1" />
               <button onClick={handleSendPersonalized}
                 disabled={sending || !selectedLeagueId || (!channelEmail && !channelPush)}
                 className="px-6 py-2.5 bg-parque-purple text-white rounded-lg font-medium text-sm hover:bg-opacity-90 disabled:opacity-50 flex items-center gap-2">
-                {sending ? 'Sending...' : testPlayerId ? 'Send Test to 1 Player' : 'Send to All Players'}
+                {testPlayerId ? 'Send Test to 1 Player' : 'Send to All Players'}
               </button>
             </div>
           )}
