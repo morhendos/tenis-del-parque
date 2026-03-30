@@ -94,7 +94,7 @@ function PersonalizedTab({ leagues, selectedLeagueId, setSelectedLeagueId, chann
                 </div>
                 <span className="text-xs text-purple-600 font-medium tabular-nums w-10 text-right">{elapsedSeconds}s</span>
               </div>
-              <p className="text-xs text-purple-500 mt-1">Please don't close this page. Estimated ~{estimatedSeconds}s total.</p>
+              <p className="text-xs text-purple-500 mt-1">{"Please do not close this page. Estimated ~" + estimatedSeconds + "s total."}</p>
             </div>
           </div>
         </div>
