@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth/apiAuth'
 import dbConnect from '@/lib/db/mongoose'
 import Player from '@/lib/models/Player'
 import User from '@/lib/models/User'
@@ -16,8 +15,9 @@ export const dynamic = 'force-dynamic'
  */
 export async function GET(request) {
   try {
-    const session = await getServerSession(authOptions)
-    
+    const { session, error } = await requireAuth(request)
+    if (error) return error
+
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
