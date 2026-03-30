@@ -11,6 +11,12 @@ import { sendToPlayer } from '@/lib/services/pushNotificationService'
 import { sendEmail } from '@/lib/email/resend'
 
 export const dynamic = 'force-dynamic'
+// Allow up to 120s for large leagues (Vercel default is 10s)
+export const maxDuration = 120
+
+// Delay helper to avoid Resend rate limits (2/sec free, 10/sec Growth)
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms))
+const EMAIL_DELAY_MS = 600 // ~1.6 emails/sec, safely under free tier limit
 
 /**
  * POST /api/admin/messages/send-personalized
@@ -137,7 +143,7 @@ export async function POST(request) {
       console.log('[Personalized] TEST MODE: sending only to ' + testData.player.name)
     }
 
-    // 5. Send personalized message to each player
+    // 6. Send personalized message to each player (with rate limiting)
     const stats = {
       targetedPlayers: playerMatchMap.size,
       emailsSent: 0,
@@ -146,6 +152,7 @@ export async function POST(request) {
       pushFailed: 0
     }
     const deliveryDetails = []
+    let emailCount = 0
 
     for (const [playerId, data] of playerMatchMap) {
       const { player, matches: playerMatches } = data
@@ -216,8 +223,14 @@ export async function POST(request) {
         ? 'Tienes ' + matchCountLabel + '. ' + (deadlineFormatted ? 'Plazo: ' + deadlineFormatted : '')
         : 'You have ' + matchCountLabel + '. ' + (deadlineFormatted ? 'Deadline: ' + deadlineFormatted : '')
 
-      // Send email
+      // Send email (with rate limit delay between sends)
       if (channels.email && player.email) {
+        // Throttle: wait between emails to avoid Resend rate limits
+        if (emailCount > 0) {
+          await sleep(EMAIL_DELAY_MS)
+        }
+        emailCount++
+
         try {
           const result = await sendEmail({
             to: player.email,
@@ -228,13 +241,16 @@ export async function POST(request) {
           if (result.success) {
             stats.emailsSent++
             detail.emailSent = true
+            detail.emailId = result.id
           } else {
-            console.error('[Personalized] Email failed for ' + player.name + ':', result.error)
+            console.error('[Personalized] Email failed for ' + player.name + ' (' + player.email + '):', result.error)
             stats.emailsFailed++
+            detail.emailError = result.error
           }
         } catch (err) {
           console.error('[Personalized] Email error for ' + player.name + ':', err.message)
           stats.emailsFailed++
+          detail.emailError = err.message
         }
       }
 
@@ -262,7 +278,7 @@ export async function POST(request) {
       deliveryDetails.push(detail)
     }
 
-    // 5. Log
+    // 7. Log
     await MessageLog.create({
       sentBy: session.user.id,
       sentByName: session.user.name || session.user.email,
@@ -277,7 +293,7 @@ export async function POST(request) {
       deliveryDetails
     })
 
-    console.log('[Personalized] Done: ' + stats.emailsSent + ' emails, ' + stats.pushSent + ' push to ' + playerMatchMap.size + ' players')
+    console.log('[Personalized] Done: ' + stats.emailsSent + '/' + stats.targetedPlayers + ' emails sent, ' + stats.emailsFailed + ' failed, ' + stats.pushSent + ' push to ' + playerMatchMap.size + ' players')
 
     return NextResponse.json({
       success: true,
