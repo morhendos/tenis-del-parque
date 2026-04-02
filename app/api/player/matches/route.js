@@ -42,7 +42,48 @@ export async function GET(request) {
       }
     })
   } catch (error) {
-    console.error('Error fetching matches:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    // On transient DB errors (stale connection after cold start), retry once with fresh connection
+    console.error('Error fetching matches (attempt 1):', error.message)
+    try {
+      // Force fresh MongoDB connection
+      const cached = global.mongoose
+      if (cached) { cached.conn = null; cached.promise = null }
+      await dbConnect()
+
+      const { session: retrySession } = await requirePlayer(request)
+      if (!retrySession) {
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+      }
+
+      const player = await Player.findOne({ email: retrySession.user.email })
+        .populate('registrations.league', 'name slug location')
+      if (!player) {
+        return NextResponse.json({ matches: [] })
+      }
+
+      const matches = await Match.find({
+        $or: [
+          { 'players.player1': player._id },
+          { 'players.player2': player._id }
+        ]
+      })
+      .populate('players.player1', 'name email whatsapp')
+      .populate('players.player2', 'name email whatsapp')
+      .populate('league', 'name slug location')
+      .sort('-createdAt')
+
+      console.log('✅ Matches retry succeeded after reconnect')
+      return NextResponse.json({ 
+        matches: matches || [],
+        player: {
+          _id: player._id,
+          name: player.name,
+          registrations: player.registrations || []
+        }
+      })
+    } catch (retryError) {
+      console.error('Error fetching matches (attempt 2 - giving up):', retryError.message)
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    }
   }
 }
