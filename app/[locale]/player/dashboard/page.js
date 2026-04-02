@@ -41,8 +41,7 @@ export default function PlayerDashboard() {
     refetch
   } = usePlayerDashboard()
 
-  // Get the next upcoming match (first one)
-  const nextMatch = upcomingMatches?.[0] || null
+  // All upcoming matches for the dashboard card
 
   // Show loading with standardized tennis preloader
   if (loading) {
@@ -146,7 +145,7 @@ export default function PlayerDashboard() {
         {/* Next Match + Mini Standings - Side by side on desktop */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
           {/* Next Match - Hero section */}
-          <NextMatchCard match={nextMatch} language={language} leagueInfo={leagueInfo} />
+          <NextMatchCard matches={upcomingMatches} language={language} leagueInfo={leagueInfo} />
 
           {/* Mini Standings Table */}
           <MiniStandings 
