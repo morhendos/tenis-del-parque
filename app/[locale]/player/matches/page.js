@@ -118,10 +118,21 @@ export default function PlayerMatches() {
       cleaned = cleaned.substring(2)
     }
     
-    const message = locale === 'es' 
-      ? `Hola ${opponent.name}! Soy ${player?.name} de TDP liga de tenis. ¿Cuándo te viene bien para jugar nuestro partido de la ronda ${match.round}?`
-      : `Hi ${opponent.name}! I'm ${player?.name} from the TDP tennis league. When would be a good time to play our round ${match.round} match?`
+    // Playoff-aware round label
+    const isPlayoff = match.matchType === 'playoff'
+    const stageLabels = {
+      quarterfinal: { es: 'cuartos de final de los playoffs', en: 'playoff quarterfinals' },
+      semifinal: { es: 'las semifinales de los playoffs', en: 'the playoff semifinals' },
+      final: { es: 'la final de los playoffs', en: 'the playoff final' },
+      third_place: { es: 'el partido por el tercer puesto', en: 'the 3rd place playoff' }
+    }
+    const roundLabel = isPlayoff
+      ? (stageLabels[match.playoffInfo?.stage]?.[locale] || stageLabels.quarterfinal[locale])
+      : (locale === 'es' ? `la ronda ${match.round}` : `round ${match.round}`)
     
+    const message = locale === 'es'
+      ? `Hola ${opponent.name}! Soy ${player?.name} de TDP liga de tenis. Cuando te viene bien para jugar nuestro partido de ${roundLabel}?`
+      : `Hi ${opponent.name}! I'm ${player?.name} from the TDP tennis league. When would be a good time to play our ${roundLabel} match?`
     const whatsappUrl = `https://wa.me/${cleaned}?text=${encodeURIComponent(message)}`
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
   }
