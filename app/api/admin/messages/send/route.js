@@ -3,6 +3,7 @@ import { requireAdmin } from '@/lib/auth/apiAuth'
 import { sendNotification } from '@/lib/services/notificationService'
 
 export const dynamic = 'force-dynamic'
+export const maxDuration = 120
 
 export async function POST(request) {
   try {
