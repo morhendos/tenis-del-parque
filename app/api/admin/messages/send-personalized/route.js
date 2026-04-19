@@ -75,12 +75,26 @@ export async function POST(request) {
     }
 
     // 3. Group matches by player
-    const playerMatchMap = new Map() // playerId -> { player, matches: [{ round, opponent }] }
+    const playerMatchMap = new Map() // playerId -> { player, matches: [{ round, opponent, isPlayoff, playoffStage }] }
+
+    // Helper to get playoff stage label
+    const getPlayoffLabel = (match, lang) => {
+      const stage = match.playoffInfo?.stage
+      const labels = {
+        quarterfinal: { es: 'Cuartos de Final', en: 'Quarterfinal' },
+        semifinal: { es: 'Semifinal', en: 'Semifinal' },
+        final: { es: 'Final', en: 'Final' },
+        third_place: { es: '3er Puesto', en: '3rd Place' }
+      }
+      return labels[stage]?.[lang || 'es'] || labels[stage]?.es || 'Playoff'
+    }
 
     for (const match of matches) {
       const p1 = match.players?.player1
       const p2 = match.players?.player2
       if (!p1 || !p2) continue
+
+      const isPlayoff = match.matchType === 'playoff'
 
       // Add match for player 1
       const p1Id = p1._id.toString()
@@ -90,7 +104,7 @@ export async function POST(request) {
           matches: []
         })
       }
-      playerMatchMap.get(p1Id).matches.push({ round: match.round, opponent: p2.name })
+      playerMatchMap.get(p1Id).matches.push({ round: match.round, opponent: p2.name, isPlayoff, playoffStage: match.playoffInfo?.stage })
 
       // Add match for player 2
       const p2Id = p2._id.toString()
@@ -100,7 +114,7 @@ export async function POST(request) {
           matches: []
         })
       }
-      playerMatchMap.get(p2Id).matches.push({ round: match.round, opponent: p1.name })
+      playerMatchMap.get(p2Id).matches.push({ round: match.round, opponent: p1.name, isPlayoff, playoffStage: match.playoffInfo?.stage })
     }
 
     // 4. Resolve actual language from User model (profile saves to User.preferences.language)
@@ -164,11 +178,18 @@ export async function POST(request) {
 
       // Build the match list text
       const matchListText = playerMatches
-        .map(m => '  \u2022 Ronda ' + m.round + ': vs ' + m.opponent)
+        .map(m => {
+          const label = m.isPlayoff ? getPlayoffLabel(m, lang) : ((lang === 'es' ? 'Ronda ' : 'Round ') + m.round)
+          return '  \u2022 ' + label + ': vs ' + m.opponent
+        })
         .join('\n')
 
       const matchListHtml = playerMatches
-        .map(m => '<tr><td style="padding: 8px 12px; border-bottom: 1px solid #e5e7eb; font-weight: 600; color: #7c3aed;">Ronda ' + m.round + '</td><td style="padding: 8px 12px; border-bottom: 1px solid #e5e7eb;">vs <strong>' + m.opponent + '</strong></td></tr>')
+        .map(m => {
+          const label = m.isPlayoff ? ('\ud83c\udfc6 ' + getPlayoffLabel(m, lang)) : ((lang === 'es' ? 'Ronda ' : 'Round ') + m.round)
+          const rowBg = m.isPlayoff ? 'background-color: #fef3c7;' : ''
+          return '<tr><td style="padding: 8px 12px; border-bottom: 1px solid #e5e7eb; font-weight: 600; color: ' + (m.isPlayoff ? '#b45309' : '#7c3aed') + '; ' + rowBg + '">' + label + '</td><td style="padding: 8px 12px; border-bottom: 1px solid #e5e7eb; ' + rowBg + '">vs <strong>' + m.opponent + '</strong></td></tr>'
+        })
         .join('')
 
       // Pick language-specific content
