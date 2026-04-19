@@ -232,8 +232,8 @@ export async function POST(request, { params }) {
         try {
           const { language, playerName, seed, opponentName, opponentSeed, leagueName } = notification.data
           const pushTitle = language === 'es'
-            ? `\ud83c\udfc6 \u00a1Playoffs ${leagueName}!`
-            : `\ud83c\udfc6 ${leagueName} Playoffs!`
+            ? `Playoffs ${leagueName}`
+            : `${leagueName} Playoffs`
           const pushBody = language === 'es'
             ? `Seed #${seed} \u2014 Cuartos de Final vs ${opponentName} (Seed #${opponentSeed})`
             : `Seed #${seed} \u2014 Quarterfinal vs ${opponentName} (Seed #${opponentSeed})`
