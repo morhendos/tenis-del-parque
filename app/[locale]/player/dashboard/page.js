@@ -15,6 +15,7 @@ import NextMatchCard from '@/components/player/NextMatchCard'
 import MiniStandings from '@/components/player/MiniStandings'
 import RecentResults from '@/components/player/RecentResults'
 import NoLeaguesCTA from '@/components/player/NoLeaguesCTA'
+import InjuryBanner from '@/components/player/InjuryBanner'
 import { dashboardStyles } from '@/styles/dashboard'
 
 export default function PlayerDashboard() {
@@ -64,11 +65,11 @@ export default function PlayerDashboard() {
             </svg>
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            {language === 'es' ? 'Error de conexi\u00f3n' : 'Connection error'}
+            {language === 'es' ? 'Error de conexión' : 'Connection error'}
           </h2>
           <p className="text-gray-600 mb-6">
             {language === 'es' 
-              ? 'No se pudieron cargar tus datos. Comprueba tu conexi\u00f3n e int\u00e9ntalo de nuevo.' 
+              ? 'No se pudieron cargar tus datos. Comprueba tu conexión e inténtalo de nuevo.' 
               : 'Could not load your data. Check your connection and try again.'}
           </p>
           <div className="space-y-3">
@@ -79,7 +80,7 @@ export default function PlayerDashboard() {
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              {language === 'es' ? 'Recargar p\u00e1gina' : 'Reload page'}
+              {language === 'es' ? 'Recargar página' : 'Reload page'}
             </button>
           </div>
         </div>
@@ -138,6 +139,9 @@ export default function PlayerDashboard() {
       <div className="space-y-4 sm:space-y-5 animate-fade-in-up">
         {/* Welcome Header with Quick Links */}
         <DashboardHeader player={player} language={language} />
+        
+        {/* Injury Status Banner */}
+        <InjuryBanner player={player} language={language} onUpdate={refetch} />
         
         {/* Push notification prompt - shows once if not enabled */}
         <PushNotificationPrompt language={language} />
