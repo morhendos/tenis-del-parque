@@ -7,6 +7,7 @@ import { requireAdmin } from '../../../../../../../lib/auth/apiAuth'
 import { generatePlayoffEmail } from '../../../../../../../lib/email/templates/playoffEmail'
 import { Resend } from 'resend'
 import { normalizePhoneForWhatsApp, createWhatsAppLink } from '../../../../../../../lib/utils/phoneUtils'
+import { sendToPlayer } from '../../../../../../../lib/services/pushNotificationService'
 
 // Initialize Resend if API key is available
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
@@ -179,7 +180,7 @@ export async function POST(request, { params }) {
       }
       
     } else if (action === 'sendEmails') {
-      // BULK EMAIL: Send to all qualified players
+      // BULK EMAIL + PUSH: Send to all qualified players
       if (!resend) {
         return NextResponse.json({ 
           error: 'Email service not configured. Please set RESEND_API_KEY in environment variables.' 
@@ -187,42 +188,65 @@ export async function POST(request, { params }) {
       }
       
       const emailResults = []
+      let pushSent = 0
       
       for (const notification of notifications) {
-        if (!notification.hasEmail) {
+        // Send email
+        if (notification.hasEmail) {
+          try {
+            const emailContent = generatePlayoffEmail(notification.data)
+            
+            const { data, error } = await resend.emails.send({
+              from: 'Tenis del Parque <noreply@tenisdp.es>',
+              to: notification.data.playerEmail,
+              subject: emailContent.subject,
+              html: emailContent.html
+            })
+            
+            if (error) {
+              errors.push(`Failed to send to ${notification.player.name}: ${error.message}`)
+            } else {
+              emailResults.push({
+                player: notification.player.name,
+                email: notification.data.playerEmail,
+                success: true,
+                emailId: data?.id
+              })
+            }
+          } catch (err) {
+            errors.push(`Error sending to ${notification.player.name}: ${err.message}`)
+          }
+        } else {
           errors.push(`No email for ${notification.player.name}`)
-          continue
         }
         
+        // Send push notification
         try {
-          const emailContent = generatePlayoffEmail(notification.data)
+          const { language, playerName, seed, opponentName, opponentSeed, leagueName } = notification.data
+          const pushTitle = language === 'es'
+            ? `\ud83c\udfc6 \u00a1Playoffs ${leagueName}!`
+            : `\ud83c\udfc6 ${leagueName} Playoffs!`
+          const pushBody = language === 'es'
+            ? `Seed #${seed} \u2014 Cuartos de Final vs ${opponentName} (Seed #${opponentSeed})`
+            : `Seed #${seed} \u2014 Quarterfinal vs ${opponentName} (Seed #${opponentSeed})`
           
-          const { data, error } = await resend.emails.send({
-            from: 'Tenis del Parque <noreply@tenisdp.es>',
-            to: notification.data.playerEmail,
-            subject: emailContent.subject,
-            html: emailContent.html
+          const result = await sendToPlayer(notification.player._id, {
+            title: pushTitle,
+            body: pushBody,
+            tag: 'playoff-pairing',
+            url: '/' + (language || 'es') + '/player/matches'
           })
-          
-          if (error) {
-            errors.push(`Failed to send to ${notification.player.name}: ${error.message}`)
-          } else {
-            emailResults.push({
-              player: notification.player.name,
-              email: notification.data.playerEmail,
-              success: true,
-              emailId: data?.id
-            })
-          }
+          if (result.sent > 0) pushSent++
         } catch (err) {
-          errors.push(`Error sending to ${notification.player.name}: ${err.message}`)
+          console.error(`Push error for ${notification.player.name}:`, err.message)
         }
       }
       
       return NextResponse.json({
         success: true,
-        message: `Emails sent to ${emailResults.length} players`,
+        message: `Emails sent to ${emailResults.length} players, ${pushSent} push notifications delivered`,
         results: emailResults,
+        pushSent,
         errors: errors.length > 0 ? errors : undefined
       })
       
