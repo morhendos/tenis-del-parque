@@ -50,9 +50,9 @@ export default function PlayoffsTab({ playoffConfig, matches, language = 'es' })
       {/* Group A Bracket */}
       {(currentPhase === 'playoffs_groupA' || currentPhase === 'playoffs_groupB' || currentPhase === 'completed') && (
         <div>
-          <h3 className="text-xl font-semibold mb-4 text-center text-gray-800">
+          <h3 className="text-2xl font-bold mb-2 text-center text-gray-800">
             {playoffConfig.numberOfGroups === 2
-              ? (language === 'es' ? 'Grupo A - Top 8' : 'Group A - Top 8')
+              ? (language === 'es' ? 'Grupo A — Top 8' : 'Group A — Top 8')
               : 'Top 8'
             }
           </h3>
