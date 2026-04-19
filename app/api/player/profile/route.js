@@ -74,7 +74,9 @@ export async function GET(request) {
         // Include all registrations for multi-league support
         registrations: player.registrations || [],
         // Include player preferences (set during registration)
-        preferences: player.preferences || { preferredLanguage: 'es' }
+        preferences: player.preferences || { preferredLanguage: 'es' },
+        // Injury status
+        injury: player.injury || { active: false }
       },
       user: {
         id: user._id,

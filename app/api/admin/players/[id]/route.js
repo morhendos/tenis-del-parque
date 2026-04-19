@@ -18,7 +18,7 @@ export async function PATCH(request, { params }) {
 
     const playerId = params.id
     const body = await request.json()
-    const { status, level, leagueId } = body
+    const { status, level, leagueId, injury } = body
 
     // Find the player
     const player = await Player.findById(playerId)
@@ -92,6 +92,29 @@ export async function PATCH(request, { params }) {
       }
 
       registration.level = level
+    }
+
+    // Handle injury status updates from admin
+    if (injury !== undefined) {
+      if (injury.active) {
+        player.injury = {
+          active: true,
+          reportedAt: new Date(),
+          estimatedReturnDate: injury.estimatedReturnDate ? new Date(injury.estimatedReturnDate) : null,
+          reason: injury.reason || '',
+          reportedBy: 'admin'
+        }
+        console.log(`🤕 Admin marked ${player.name} as injured`)
+      } else {
+        player.injury = {
+          active: false,
+          reportedAt: player.injury?.reportedAt,
+          estimatedReturnDate: player.injury?.estimatedReturnDate,
+          reason: player.injury?.reason,
+          reportedBy: player.injury?.reportedBy
+        }
+        console.log(`💪 Admin cleared injury for ${player.name}`)
+      }
     }
 
     // Save the player

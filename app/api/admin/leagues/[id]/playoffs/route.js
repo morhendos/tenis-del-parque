@@ -340,9 +340,22 @@ async function initializePlayoffs(league, data) {
   // USE THE SINGLE SOURCE OF TRUTH SERVICE!
   const standings = calculatePlayoffStandings(playersWithMatches, matches)
   
-  console.log(`👥 Calculated standings for ${standings.length} eligible players using SINGLE SOURCE OF TRUTH`)
+  // Filter out injured players — they can't participate in playoffs
+  // Their spot shifts down to the next healthy player
+  const healthyStandings = standings.filter(standing => {
+    const playerObj = playersWithMatches.find(p => p._id.toString() === standing.player._id.toString())
+    const isInjured = playerObj?.injury?.active === true
+    if (isInjured) {
+      console.log(`🤕 Excluding injured player from playoffs: ${standing.player.name} (position ${standing.position})`)
+    }
+    return !isInjured
+  })
+  // Re-number positions after filtering
+  healthyStandings.forEach((s, i) => s.position = i + 1)
+  
+  console.log(`👥 Calculated standings for ${standings.length} eligible players, ${healthyStandings.length} healthy for playoffs`)
   if (standings.length > 0) {
-    console.log('🔒 TOP 8 PLAYERS THAT WILL BE LOCKED IN:', standings.slice(0, 8).map(s => ({ 
+    console.log('🔒 TOP 8 PLAYERS THAT WILL BE LOCKED IN:', healthyStandings.slice(0, 8).map(s => ({ 
       position: s.position,
       name: s.player.name, 
       points: s.stats.totalPoints, 
@@ -352,16 +365,16 @@ async function initializePlayoffs(league, data) {
     })))
   }
   
-  if (standings.length < 8) {
-    console.error(`❌ Not enough players: ${standings.length} < 8`)
+  if (healthyStandings.length < 8) {
+    console.error(`❌ Not enough healthy players: ${healthyStandings.length} < 8 (${standings.length - healthyStandings.length} injured)`)
     return NextResponse.json(
-      { error: `Need at least 8 players to start playoffs. Found only ${standings.length} eligible players.` },
+      { error: `Need at least 8 healthy players to start playoffs. Found ${healthyStandings.length} healthy (${standings.length - healthyStandings.length} injured).` },
       { status: 400 }
     )
   }
   
   // CRITICAL: Store the qualified players with their qualification-time stats
-  const groupAPlayers = standings.slice(0, 8).map((standing, index) => ({
+  const groupAPlayers = healthyStandings.slice(0, 8).map((standing, index) => ({
     player: standing.player._id,
     seed: index + 1,
     regularSeasonPosition: standing.position,
@@ -379,8 +392,8 @@ async function initializePlayoffs(league, data) {
   }))
   
   // Prepare qualified players for Group B (9-16) if enabled
-  const groupBPlayers = numberOfGroups === 2 && standings.length >= 16
-    ? standings.slice(8, 16).map((standing, index) => ({
+  const groupBPlayers = numberOfGroups === 2 && healthyStandings.length >= 16
+    ? healthyStandings.slice(8, 16).map((standing, index) => ({
         player: standing.player._id,
         seed: index + 1,
         regularSeasonPosition: standing.position,

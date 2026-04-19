@@ -21,10 +21,10 @@ async function autoCancelOverdueMatches() {
     console.log('Connected to MongoDB')
     
     if (DRY_RUN) {
-      console.log('\n\ud83d\udd0d DRY RUN MODE - No changes will be made')
+      console.log('\n🔍 DRY RUN MODE - No changes will be made')
       console.log('   Run with --execute to apply changes\n')
     } else {
-      console.log('\n\u26a0\ufe0f  EXECUTE MODE - Changes will be applied!\n')
+      console.log('\n⚠️  EXECUTE MODE - Changes will be applied!\n')
     }
 
     const Match = mongoose.model('Match', new mongoose.Schema({}, { strict: false }))
@@ -46,7 +46,7 @@ async function autoCancelOverdueMatches() {
     console.log(`\nFound ${overdueMatches.length} overdue unscheduled matches:\n`)
 
     if (overdueMatches.length === 0) {
-      console.log('\u2705 No matches to cancel!')
+      console.log('✅ No matches to cancel!')
       return
     }
 
@@ -63,12 +63,12 @@ async function autoCancelOverdueMatches() {
       console.log(`Round ${match.round}: ${p1?.name || 'TBD'} vs ${p2?.name || 'TBD'}`)
       console.log(`  Deadline: ${deadline}`)
       console.log(`  Overdue by: ${hoursOverdue} hours`)
-      if (p1Injured) console.log(`  \ud83e\udd15 ${p1?.name} is INJURED`)
-      if (p2Injured) console.log(`  \ud83e\udd15 ${p2?.name} is INJURED`)
+      if (p1Injured) console.log(`  🤕 ${p1?.name} is INJURED`)
+      if (p2Injured) console.log(`  🤕 ${p2?.name} is INJURED`)
       
       if (!DRY_RUN) {
         if ((p1Injured && !p2Injured) || (!p1Injured && p2Injured)) {
-          // One player injured \u2014 walkover for healthy player
+          // One player injured — walkover for healthy player
           const winner = p1Injured ? match.players.player2 : match.players.player1
           const winnerName = p1Injured ? p2?.name : p1?.name
           const injuredName = p1Injured ? p1?.name : p2?.name
@@ -85,9 +85,9 @@ async function autoCancelOverdueMatches() {
               } 
             }
           )
-          console.log(`  \ud83c\udfc6 WALKOVER \u2192 ${winnerName} wins (${injuredName} injured)`)
+          console.log(`  🏆 WALKOVER → ${winnerName} wins (${injuredName} injured)`)
         } else {
-          // Both healthy (or both injured) \u2014 just cancel
+          // Both healthy (or both injured) — just cancel
           await Match.updateOne(
             { _id: match._id },
             { 
@@ -97,23 +97,23 @@ async function autoCancelOverdueMatches() {
               } 
             }
           )
-          console.log('  \u274c CANCELLED')
+          console.log('  ❌ CANCELLED')
         }
       } else {
         if ((p1Injured && !p2Injured) || (!p1Injured && p2Injured)) {
           const winnerName = p1Injured ? p2?.name : p1?.name
-          console.log(`  \u23f8\ufe0f  Would WALKOVER \u2192 ${winnerName} (dry run)`)
+          console.log(`  ⏸️  Would WALKOVER → ${winnerName} (dry run)`)
         } else {
-          console.log('  \u23f8\ufe0f  Would cancel (dry run)')
+          console.log('  ⏸️  Would cancel (dry run)')
         }
       }
       console.log('')
     }
 
     if (DRY_RUN) {
-      console.log('\n\ud83d\udd0d DRY RUN complete. Run with --execute to cancel these matches.')
+      console.log('\n🔍 DRY RUN complete. Run with --execute to cancel these matches.')
     } else {
-      console.log(`\n\u274c Cancelled ${overdueMatches.length} overdue matches.`)
+      console.log(`\n❌ Cancelled ${overdueMatches.length} overdue matches.`)
     }
 
   } catch (error) {
