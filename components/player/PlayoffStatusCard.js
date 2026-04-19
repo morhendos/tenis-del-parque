@@ -7,12 +7,14 @@ import Link from 'next/link'
 export default function PlayoffStatusCard({ matches, player, leagueInfo, language = 'es', locale = 'es' }) {
   const playerId = player?._id?.toString()
   
-  // Split playoff matches
+  // Filter playoff matches — handle both API format and dashboard hook format
   const playoffMatches = matches?.filter(m => m.matchType === 'playoff') || []
-  const scheduledMatch = playoffMatches.find(m => m.status === 'scheduled')
-  const completedMatches = playoffMatches.filter(m => m.status === 'completed')
   
-  // Sort completed by round desc to get the latest
+  // Find scheduled (upcoming) and completed
+  const scheduledMatch = playoffMatches.find(m => m.type === 'upcoming' || m.status === 'scheduled')
+  const completedMatches = playoffMatches.filter(m => m.type === 'recent' || m.status === 'completed')
+  
+  // Sort completed by round desc
   completedMatches.sort((a, b) => (b.round || 0) - (a.round || 0))
   const lastMatch = completedMatches[0]
 
@@ -28,23 +30,30 @@ export default function PlayoffStatusCard({ matches, player, leagueInfo, languag
     semifinal: 'final'
   }
 
-  const getOpponent = (match) => {
-    if (!match || !playerId) return null
+  // Get opponent name — works with both data formats
+  const getOpponentName = (match) => {
+    if (!match) return '—'
+    // Dashboard hook format
+    if (match.opponent) return match.opponent.split(' ')[0]
+    // API format
     const p1 = match.players?.player1
     const p2 = match.players?.player2
-    if (p1?._id?.toString() === playerId) return p2
-    if (p2?._id?.toString() === playerId) return p1
-    return null
+    if (p1?._id?.toString() === playerId) return p2?.name?.split(' ')[0] || '—'
+    if (p2?._id?.toString() === playerId) return p1?.name?.split(' ')[0] || '—'
+    return '—'
   }
 
   const didWin = (match) => {
-    if (!match?.result?.winner) return false
+    if (match.result === 'won') return true
+    if (match.result === 'lost') return false
+    if (!match.result?.winner) return false
     const winnerId = match.result.winner._id?.toString() || match.result.winner?.toString()
     return winnerId === playerId
   }
 
   const wins = completedMatches.filter(m => didWin(m)).length
   const losses = completedMatches.length - wins
+  const firstName = player?.name?.split(' ')[0] || '—'
 
   const t = language === 'es' ? {
     title: 'Playoffs',
@@ -54,7 +63,6 @@ export default function PlayoffStatusCard({ matches, player, leagueInfo, languag
     youWon: 'Ganaste',
     youLost: 'Perdiste',
     waitingFor: 'Esperando',
-    seasonOver: 'Temporada finalizada',
     goodSeason: 'Gran temporada'
   } : {
     title: 'Playoffs',
@@ -64,16 +72,12 @@ export default function PlayoffStatusCard({ matches, player, leagueInfo, languag
     youWon: 'You won',
     youLost: 'You lost',
     waitingFor: 'Waiting for',
-    seasonOver: 'Season finished',
     goodSeason: 'Great season'
   }
 
-  // Determine what to show
   const currentStage = scheduledMatch?.playoffInfo?.stage
   const lastStage = lastMatch?.playoffInfo?.stage
   const wonLast = lastMatch ? didWin(lastMatch) : null
-  const opponent = scheduledMatch ? getOpponent(scheduledMatch) : null
-  const lastOpponent = lastMatch ? getOpponent(lastMatch) : null
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-purple-200 shadow-sm" style={{ background: 'linear-gradient(145deg, #1a0a2e 0%, #16082a 50%, #0f0520 100%)' }}>
@@ -98,7 +102,6 @@ export default function PlayoffStatusCard({ matches, player, leagueInfo, languag
         </div>
 
         {scheduledMatch ? (
-          /* === ACTIVE MATCH === */
           <>
             <div className="mb-3">
               <span className="text-[11px] uppercase tracking-widest text-amber-400/70 font-semibold">
@@ -108,16 +111,14 @@ export default function PlayoffStatusCard({ matches, player, leagueInfo, languag
             <div className="rounded-lg p-3 mb-4" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(168,85,247,0.2)' }}>
               <p className="text-[10px] uppercase tracking-wider text-white/30 mb-2">{t.yourMatch}</p>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-white truncate flex-1">{player?.name?.split(' ')[0] || '—'}</span>
+                <span className="text-sm font-semibold text-white truncate flex-1">{firstName}</span>
                 <span className="text-xs text-white/40 mx-2">{t.vs}</span>
-                <span className="text-sm font-semibold text-white truncate flex-1 text-right">{opponent?.name?.split(' ')[0] || '—'}</span>
+                <span className="text-sm font-semibold text-white truncate flex-1 text-right">{getOpponentName(scheduledMatch)}</span>
               </div>
             </div>
           </>
         ) : lastMatch ? (
-          /* === LAST RESULT + WAITING === */
           <>
-            {/* Last result */}
             <div className="rounded-lg p-3 mb-3" style={{ background: wonLast ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', border: `1px solid ${wonLast ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}` }}>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[10px] uppercase tracking-wider text-white/40">
@@ -128,17 +129,13 @@ export default function PlayoffStatusCard({ matches, player, leagueInfo, languag
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-white truncate flex-1">{player?.name?.split(' ')[0] || '—'}</span>
+                <span className="text-sm font-semibold text-white truncate flex-1">{firstName}</span>
                 <span className="text-xs text-white/40 mx-2">{t.vs}</span>
-                <span className="text-sm text-white/60 truncate flex-1 text-right">{lastOpponent?.name?.split(' ')[0] || '—'}</span>
+                <span className="text-sm text-white/60 truncate flex-1 text-right">{getOpponentName(lastMatch)}</span>
               </div>
             </div>
-            
-            {/* What's next */}
             {wonLast && nextStage[lastStage] ? (
-              <p className="text-sm text-purple-300 mb-4">
-                {t.waitingFor} {stageNames[nextStage[lastStage]]?.[language]?.toLowerCase() || '...'}
-              </p>
+              <p className="text-sm text-purple-300 mb-4">{t.waitingFor} {stageNames[nextStage[lastStage]]?.[language]?.toLowerCase()}</p>
             ) : !wonLast ? (
               <p className="text-sm text-white/40 mb-4">{t.goodSeason}</p>
             ) : (
@@ -146,7 +143,6 @@ export default function PlayoffStatusCard({ matches, player, leagueInfo, languag
             )}
           </>
         ) : (
-          /* === NO MATCHES YET === */
           <div className="mb-4">
             <span className="text-[11px] uppercase tracking-widest text-amber-400/70 font-semibold">
               {stageNames.quarterfinal[language]}
@@ -155,7 +151,6 @@ export default function PlayoffStatusCard({ matches, player, leagueInfo, languag
           </div>
         )}
 
-        {/* View Bracket */}
         <Link
           href={`/${locale}/player/league?tab=playoffs`}
           className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-sm font-semibold text-purple-200 transition-colors hover:text-white"
