@@ -30,7 +30,7 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: 'League not found' }, { status: 404 })
     }
     
-    // Auto-detect season ID from existing matches for this league
+    // Auto-detect season ID from existing matches (for creating new playoff matches later)
     const sampleMatch = await mongoose.connection.db.collection('matches').findOne({
       league: new mongoose.Types.ObjectId(LEAGUE_ID),
       matchType: { $ne: 'playoff' }
@@ -50,14 +50,13 @@ export async function GET(request, { params }) {
     
     console.log(`✅ Found ${players.length} eligible players`)
     
-    // Get matches directly from database
-    const matchQuery = { 
+    // Get matches — filter by league only, NOT by season
+    // (matches can have mixed season formats: ObjectId, string league ID, season name)
+    const matches = await mongoose.connection.db.collection('matches').find({
       league: new mongoose.Types.ObjectId(LEAGUE_ID),
       status: 'completed',
       matchType: { $ne: 'playoff' }
-    }
-    if (detectedSeasonId) matchQuery.season = detectedSeasonId
-    const matches = await mongoose.connection.db.collection('matches').find(matchQuery).toArray()
+    }).toArray()
     
     console.log(`✅ Found ${matches.length} completed matches`)
     
@@ -166,13 +165,11 @@ export async function GET(request, { params }) {
       console.log(`✅ Generated fresh standings for ${standings.length} players with matches using SINGLE SERVICE`)
     }
     
-    // Get playoff matches
-    const playoffQuery = {
+    // Get playoff matches — filter by league only
+    const playoffMatches = await mongoose.connection.db.collection('matches').find({
       league: new mongoose.Types.ObjectId(LEAGUE_ID),
       matchType: 'playoff'
-    }
-    if (detectedSeasonId) playoffQuery.season = detectedSeasonId
-    const playoffMatches = await mongoose.connection.db.collection('matches').find(playoffQuery).toArray()
+    }).toArray()
     
     // Populate player data in playoff matches
     const playerMap = new Map()
@@ -311,13 +308,13 @@ export async function POST(request, { params }) {
 async function initializePlayoffs(league, data) {
   const { numberOfGroups = 1 } = data
   
-  // Auto-detect season ID from existing matches
+  // Auto-detect season from existing matches (used when creating new playoff matches)
   const sampleMatch = await mongoose.connection.db.collection('matches').findOne({
     league: league._id,
     matchType: { $ne: 'playoff' }
   })
-  const seasonId = sampleMatch?.season || league._id
-  console.log('📊 Initializing playoffs with detected season:', seasonId?.toString())
+  const seasonId = sampleMatch?.season || league._id.toString()
+  console.log('📊 Initializing playoffs with season:', seasonId?.toString())
   
   // Get players (no season filter — registrations don't always have it)
   const playerObjects = await mongoose.connection.db.collection('players').find({
@@ -329,13 +326,12 @@ async function initializePlayoffs(league, data) {
     }
   }).toArray()
   
-  const matchQuery = {
+  // Get matches — filter by league only, NOT by season (mixed formats)
+  const matches = await mongoose.connection.db.collection('matches').find({
     league: league._id,
     status: 'completed',
     matchType: { $ne: 'playoff' }
-  }
-  if (seasonId) matchQuery.season = seasonId
-  const matches = await mongoose.connection.db.collection('matches').find(matchQuery).toArray()
+  }).toArray()
   
   console.log(`📊 Found ${playerObjects.length} eligible players and ${matches.length} completed matches`)
   
