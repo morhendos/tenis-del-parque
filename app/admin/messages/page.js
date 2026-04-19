@@ -471,7 +471,7 @@ export default function AdminMessagesPage() {
 
   const buildAudience = () => {
     const audience = { type: audienceType }
-    if (audienceType === 'league' || audienceType === 'round_unplayed') audience.leagueId = selectedLeagueId
+    if (audienceType === 'league' || audienceType === 'league_non_playoff' || audienceType === 'round_unplayed') audience.leagueId = selectedLeagueId
     if (audienceType === 'round_unplayed') audience.round = parseInt(selectedRound)
     if (audienceType === 'individual') { audience.playerId = selectedPlayerId; audience.leagueId = selectedLeagueId }
     return audience
@@ -618,10 +618,11 @@ export default function AdminMessagesPage() {
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-parque-purple focus:border-transparent">
                   <option value="all">All Players (all leagues)</option>
                   <option value="league">Entire League</option>
+                  <option value="league_non_playoff">League - Non-playoff players only</option>
                   <option value="round_unplayed">Round — Unplayed Only</option>
                   <option value="individual">Individual Player</option>
                 </select>
-                {(audienceType === 'league' || audienceType === 'round_unplayed' || audienceType === 'individual') && (
+                {(audienceType === 'league' || audienceType === 'league_non_playoff' || audienceType === 'round_unplayed' || audienceType === 'individual') && (
                   <select value={selectedLeagueId} onChange={(e) => setSelectedLeagueId(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-parque-purple focus:border-transparent">
                     <option value="">Select league...</option>
