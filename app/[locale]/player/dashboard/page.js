@@ -155,7 +155,7 @@ export default function PlayerDashboard() {
           {/* Mini Standings or Playoff Status */}
           {leagueInfo?.playoffPhase && leagueInfo.playoffPhase !== 'regular_season' && leagueInfo.playoffPhase !== 'completed' ? (
             <PlayoffStatusCard
-              matches={upcomingMatches}
+              matches={[...(upcomingMatches || []), ...(recentMatches || [])]}
               player={player}
               leagueInfo={leagueInfo}
               language={language}

@@ -3,18 +3,18 @@ import Link from 'next/link'
 /**
  * Shows playoff status on the dashboard when playoffs are active.
  * Replaces MiniStandings during playoff phase.
- * Displays player's current stage, opponent, and link to bracket.
  */
 export default function PlayoffStatusCard({ matches, player, leagueInfo, language = 'es', locale = 'es' }) {
-  // Find the player's active playoff match
-  const playoffMatch = matches?.find(m => 
-    m.matchType === 'playoff' && m.status === 'scheduled'
-  )
+  const playerId = player?._id?.toString()
   
-  // Find completed playoff matches for this player
-  const completedPlayoffs = matches?.filter(m => 
-    m.matchType === 'playoff' && m.status === 'completed'
-  ) || []
+  // Split playoff matches
+  const playoffMatches = matches?.filter(m => m.matchType === 'playoff') || []
+  const scheduledMatch = playoffMatches.find(m => m.status === 'scheduled')
+  const completedMatches = playoffMatches.filter(m => m.status === 'completed')
+  
+  // Sort completed by round desc to get the latest
+  completedMatches.sort((a, b) => (b.round || 0) - (a.round || 0))
+  const lastMatch = completedMatches[0]
 
   const stageNames = {
     quarterfinal: { es: 'Cuartos de Final', en: 'Quarterfinals' },
@@ -23,47 +23,60 @@ export default function PlayoffStatusCard({ matches, player, leagueInfo, languag
     third_place: { es: 'Tercer Puesto', en: '3rd Place' }
   }
 
-  // Determine current stage
-  const currentStage = playoffMatch?.playoffInfo?.stage || null
-  const stageName = stageNames[currentStage]?.[language] || stageNames[currentStage]?.es || (language === 'es' ? 'Playoffs' : 'Playoffs')
+  const nextStage = {
+    quarterfinal: 'semifinal',
+    semifinal: 'final'
+  }
 
-  // Find opponent
   const getOpponent = (match) => {
-    if (!match || !player) return null
+    if (!match || !playerId) return null
     const p1 = match.players?.player1
     const p2 = match.players?.player2
-    const playerId = player._id?.toString()
     if (p1?._id?.toString() === playerId) return p2
     if (p2?._id?.toString() === playerId) return p1
     return null
   }
 
-  const opponent = getOpponent(playoffMatch)
-  const wins = completedPlayoffs.filter(m => m.result?.winner?.toString() === player?._id?.toString() || m.result?.winner?._id?.toString() === player?._id?.toString()).length
+  const didWin = (match) => {
+    if (!match?.result?.winner) return false
+    const winnerId = match.result.winner._id?.toString() || match.result.winner?.toString()
+    return winnerId === playerId
+  }
+
+  const wins = completedMatches.filter(m => didWin(m)).length
+  const losses = completedMatches.length - wins
 
   const t = language === 'es' ? {
     title: 'Playoffs',
     yourMatch: 'Tu partido',
     vs: 'vs',
-    seed: 'Seed',
-    won: 'ganado',
     viewBracket: 'Ver cuadro',
-    waiting: 'Esperando siguiente ronda',
-    eliminated: 'Temporada finalizada'
+    youWon: 'Ganaste',
+    youLost: 'Perdiste',
+    waitingFor: 'Esperando',
+    seasonOver: 'Temporada finalizada',
+    goodSeason: 'Gran temporada'
   } : {
     title: 'Playoffs',
     yourMatch: 'Your match',
     vs: 'vs',
-    seed: 'Seed',
-    won: 'won',
     viewBracket: 'View bracket',
-    waiting: 'Waiting for next round',
-    eliminated: 'Season finished'
+    youWon: 'You won',
+    youLost: 'You lost',
+    waitingFor: 'Waiting for',
+    seasonOver: 'Season finished',
+    goodSeason: 'Great season'
   }
+
+  // Determine what to show
+  const currentStage = scheduledMatch?.playoffInfo?.stage
+  const lastStage = lastMatch?.playoffInfo?.stage
+  const wonLast = lastMatch ? didWin(lastMatch) : null
+  const opponent = scheduledMatch ? getOpponent(scheduledMatch) : null
+  const lastOpponent = lastMatch ? getOpponent(lastMatch) : null
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-purple-200 shadow-sm" style={{ background: 'linear-gradient(145deg, #1a0a2e 0%, #16082a 50%, #0f0520 100%)' }}>
-      {/* Subtle glow */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl"></div>
       
       <div className="relative p-5">
@@ -77,41 +90,72 @@ export default function PlayoffStatusCard({ matches, player, leagueInfo, languag
             </div>
             <h3 className="font-bold text-white text-base">{t.title}</h3>
           </div>
-          {completedPlayoffs.length > 0 && (
+          {completedMatches.length > 0 && (
             <span className="text-xs text-purple-300 bg-purple-500/20 px-2 py-1 rounded-full">
-              {wins}W {completedPlayoffs.length - wins}L
+              {wins}W {losses}L
             </span>
           )}
         </div>
 
-        {playoffMatch ? (
+        {scheduledMatch ? (
+          /* === ACTIVE MATCH === */
           <>
-            {/* Current Stage */}
             <div className="mb-3">
-              <span className="text-[11px] uppercase tracking-widest text-amber-400/70 font-semibold">{stageName}</span>
+              <span className="text-[11px] uppercase tracking-widest text-amber-400/70 font-semibold">
+                {stageNames[currentStage]?.[language] || 'Playoffs'}
+              </span>
             </div>
-
-            {/* Match Card */}
             <div className="rounded-lg p-3 mb-4" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(168,85,247,0.2)' }}>
               <p className="text-[10px] uppercase tracking-wider text-white/30 mb-2">{t.yourMatch}</p>
               <div className="flex items-center justify-between">
-                <div className="text-sm font-semibold text-white truncate flex-1">
-                  {player?.name?.split(' ')[0] || '—'}
-                </div>
+                <span className="text-sm font-semibold text-white truncate flex-1">{player?.name?.split(' ')[0] || '—'}</span>
                 <span className="text-xs text-white/40 mx-2">{t.vs}</span>
-                <div className="text-sm font-semibold text-white truncate flex-1 text-right">
-                  {opponent?.name?.split(' ')[0] || '—'}
-                </div>
+                <span className="text-sm font-semibold text-white truncate flex-1 text-right">{opponent?.name?.split(' ')[0] || '—'}</span>
               </div>
             </div>
           </>
+        ) : lastMatch ? (
+          /* === LAST RESULT + WAITING === */
+          <>
+            {/* Last result */}
+            <div className="rounded-lg p-3 mb-3" style={{ background: wonLast ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', border: `1px solid ${wonLast ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}` }}>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] uppercase tracking-wider text-white/40">
+                  {stageNames[lastStage]?.[language] || 'Playoffs'}
+                </span>
+                <span className={`text-[10px] font-bold uppercase ${wonLast ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {wonLast ? t.youWon : t.youLost}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-white truncate flex-1">{player?.name?.split(' ')[0] || '—'}</span>
+                <span className="text-xs text-white/40 mx-2">{t.vs}</span>
+                <span className="text-sm text-white/60 truncate flex-1 text-right">{lastOpponent?.name?.split(' ')[0] || '—'}</span>
+              </div>
+            </div>
+            
+            {/* What's next */}
+            {wonLast && nextStage[lastStage] ? (
+              <p className="text-sm text-purple-300 mb-4">
+                {t.waitingFor} {stageNames[nextStage[lastStage]]?.[language]?.toLowerCase() || '...'}
+              </p>
+            ) : !wonLast ? (
+              <p className="text-sm text-white/40 mb-4">{t.goodSeason}</p>
+            ) : (
+              <p className="text-sm text-white/40 mb-4">{t.waitingFor}...</p>
+            )}
+          </>
         ) : (
+          /* === NO MATCHES YET === */
           <div className="mb-4">
-            <p className="text-sm text-white/50">{t.waiting}</p>
+            <span className="text-[11px] uppercase tracking-widest text-amber-400/70 font-semibold">
+              {stageNames.quarterfinal[language]}
+            </span>
+            <p className="text-sm text-white/40 mt-2">{t.waitingFor}...</p>
           </div>
         )}
 
-        {/* View Bracket Link */}
+        {/* View Bracket */}
         <Link
           href={`/${locale}/player/league?tab=playoffs`}
           className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-sm font-semibold text-purple-200 transition-colors hover:text-white"
