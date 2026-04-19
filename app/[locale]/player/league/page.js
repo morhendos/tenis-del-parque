@@ -623,7 +623,7 @@ export default function PlayerLeague() {
       />
 
       {/* Tab Content */}
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden p-2 sm:p-6">
+      <div className={activeTab === LEAGUE_TABS.PLAYOFFS ? 'rounded-xl overflow-hidden' : 'bg-white rounded-xl shadow-lg overflow-hidden p-2 sm:p-6'}>
           {activeTab === LEAGUE_TABS.STANDINGS && (
             <div>
               {standings && standings.unifiedStandings && standings.unifiedStandings.length > 0 ? (
