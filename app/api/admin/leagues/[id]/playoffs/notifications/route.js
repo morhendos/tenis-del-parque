@@ -9,6 +9,10 @@ import { Resend } from 'resend'
 import { normalizePhoneForWhatsApp, createWhatsAppLink } from '../../../../../../../lib/utils/phoneUtils'
 import { sendToPlayer } from '../../../../../../../lib/services/pushNotificationService'
 
+// Delay helper to avoid Resend rate limits (2/sec free tier)
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms))
+const EMAIL_DELAY_MS = 600
+
 // Initialize Resend if API key is available
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 
@@ -193,6 +197,10 @@ export async function POST(request, { params }) {
       for (const notification of notifications) {
         // Send email
         if (notification.hasEmail) {
+          // Throttle: wait between emails to avoid Resend rate limits
+          if (emailResults.length > 0 || errors.length > 0) {
+            await sleep(EMAIL_DELAY_MS)
+          }
           try {
             const emailContent = generatePlayoffEmail(notification.data)
             
