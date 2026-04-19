@@ -99,7 +99,17 @@ export default function NextMatchCard({ matches = [], language, leagueInfo }) {
               {/* Round + League label */}
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-purple-600">{t.round} {match.round}</span>
+                  <span className="text-xs font-semibold text-purple-600">
+                    {match.matchType === 'playoff' && match.playoffInfo?.stage
+                      ? ({
+                          quarterfinal: language === 'es' ? 'Cuartos' : 'QF',
+                          semifinal: language === 'es' ? 'Semifinal' : 'SF',
+                          final: 'Final',
+                          third_place: language === 'es' ? '3er Puesto' : '3rd Place'
+                        }[match.playoffInfo.stage] || `${t.round} ${match.round}`)
+                      : `${t.round} ${match.round}`
+                    }
+                  </span>
                   {match.leagueName && (
                     <span className="text-xs text-gray-400">{match.leagueName}</span>
                   )}
@@ -126,7 +136,22 @@ export default function NextMatchCard({ matches = [], language, leagueInfo }) {
                 {/* WhatsApp Button */}
                 {match.opponentWhatsapp && (
                   <div
-                    onClick={() => window.open(WhatsAppUtils.createMessageUrl(match.opponentWhatsapp, ''), '_blank')}
+                    onClick={() => {
+                      const isPlayoff = match.matchType === 'playoff'
+                      const stages = {
+                        quarterfinal: { es: 'cuartos de final de los playoffs', en: 'playoff quarterfinals' },
+                        semifinal: { es: 'las semifinales de los playoffs', en: 'the playoff semifinals' },
+                        final: { es: 'la final de los playoffs', en: 'the playoff final' },
+                        third_place: { es: 'el partido por el tercer puesto', en: 'the 3rd place playoff' }
+                      }
+                      const roundLabel = isPlayoff
+                        ? (stages[match.playoffInfo?.stage]?.[language] || stages.quarterfinal[language])
+                        : (language === 'es' ? `la ronda ${match.round}` : `round ${match.round}`)
+                      const msg = language === 'es'
+                        ? `Hola ${match.opponent}! Soy tu rival de la liga TDP. Cuando te viene bien para jugar nuestro partido de ${roundLabel}?`
+                        : `Hi ${match.opponent}! I'm your opponent from the TDP league. When would be a good time to play our ${roundLabel} match?`
+                      window.open(WhatsAppUtils.createMessageUrl(match.opponentWhatsapp, msg), '_blank')
+                    }}
                     className="flex items-center gap-1 px-2.5 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-medium rounded-lg transition-colors flex-shrink-0 cursor-pointer"
                   >
                     <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
