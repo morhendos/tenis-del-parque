@@ -3,6 +3,7 @@ import dbConnect from '../../../../../../../lib/db/mongoose'
 import League from '../../../../../../../lib/models/League'
 import Player from '../../../../../../../lib/models/Player'
 import User from '../../../../../../../lib/models/User'
+import Match from '../../../../../../../lib/models/Match'
 import { requireAdmin } from '../../../../../../../lib/auth/apiAuth'
 import { generatePlayoffEmail } from '../../../../../../../lib/email/templates/playoffEmail'
 import { Resend } from 'resend'
@@ -36,100 +37,130 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: 'Playoffs not initialized' }, { status: 400 })
     }
     
-    const qualifiedPlayers = league.playoffConfig.qualifiedPlayers[`group${group}`] || []
-    if (qualifiedPlayers.length === 0) {
-      return NextResponse.json({ error: `No qualified players in Group ${group}` }, { status: 400 })
-    }
+    // Player/user lookups and match pairing done below
     
-    // Get full player and user data
-    const playerIds = qualifiedPlayers.map(qp => qp.player)
-    const players = await Player.find({ _id: { $in: playerIds } })
-    const users = await User.find({ playerId: { $in: playerIds } })
+    // Get scheduled playoff matches to find actual pairings (works for any stage)
+    const playoffMatches = await Match.find({
+      league: params.id,
+      matchType: 'playoff',
+      status: 'scheduled',
+      'playoffInfo.group': group
+    }).lean()
     
-    // Create a map for quick lookups
-    const playerMap = new Map()
-    players.forEach(p => playerMap.set(p._id.toString(), p))
+    console.log('[Playoff Notifications] Found', playoffMatches.length, 'scheduled playoff matches for group', group)
     
-    const userMap = new Map()
-    users.forEach(u => userMap.set(u.playerId?.toString(), u))
-    
-    // Prepare notification data for each qualified player
+    // Build notifications from actual match pairings
     const notifications = []
     const errors = []
-    const topPlayers = group === 'A' ? 8 : 16
     
-    for (const qualified of qualifiedPlayers) {
-      const player = playerMap.get(qualified.player.toString())
-      const user = userMap.get(qualified.player.toString())
+    // Get ALL player IDs from matches
+    const matchPlayerIds = new Set()
+    playoffMatches.forEach(m => {
+      if (m.players?.player1) matchPlayerIds.add(m.players.player1.toString())
+      if (m.players?.player2) matchPlayerIds.add(m.players.player2.toString())
+    })
+    
+    // Fetch player + user data
+    const allPlayerIds = [...matchPlayerIds]
+    const matchPlayers = await Player.find({ _id: { $in: allPlayerIds } })
+    const matchUsers = await User.find({ email: { $in: matchPlayers.map(p => p.email).filter(Boolean) } })
+    
+    const playerMap = new Map()
+    matchPlayers.forEach(p => playerMap.set(p._id.toString(), p))
+    const userByEmail = new Map()
+    matchUsers.forEach(u => userByEmail.set(u.email, u))
+    
+    // Find seed info from qualified players config
+    const qualifiedPlayers = league.playoffConfig.qualifiedPlayers[`group${group}`] || []
+    const seedMap = new Map()
+    qualifiedPlayers.forEach(qp => seedMap.set(qp.player.toString(), qp))
+    
+    for (const match of playoffMatches) {
+      const stage = match.playoffInfo?.stage || 'quarterfinal'
+      const p1Id = match.players.player1.toString()
+      const p2Id = match.players.player2.toString()
+      const player1 = playerMap.get(p1Id)
+      const player2 = playerMap.get(p2Id)
       
-      if (!player) {
-        errors.push(`Player ${qualified.player} not found`)
+      if (!player1 || !player2) {
+        errors.push(`Match ${match._id}: missing player data`)
         continue
       }
       
-      // Find opponent based on seeding
-      const seed = qualified.seed
-      let opponentSeed, opponent, opponentQualified
-      
-      // Standard tournament pairing: 1v8, 4v5, 3v6, 2v7
-      if (seed === 1) opponentSeed = 8
-      else if (seed === 8) opponentSeed = 1
-      else if (seed === 4) opponentSeed = 5
-      else if (seed === 5) opponentSeed = 4
-      else if (seed === 3) opponentSeed = 6
-      else if (seed === 6) opponentSeed = 3
-      else if (seed === 2) opponentSeed = 7
-      else if (seed === 7) opponentSeed = 2
-      
-      opponentQualified = qualifiedPlayers.find(q => q.seed === opponentSeed)
-      if (opponentQualified) {
-        opponent = playerMap.get(opponentQualified.player.toString())
-      }
-      
-      // Determine semifinal matchup text
-      let semifinalMatchup = ''
-      if (seed === 1 || seed === 8) {
-        semifinalMatchup = '4/5'
-      } else if (seed === 4 || seed === 5) {
-        semifinalMatchup = '1/8'
-      } else if (seed === 3 || seed === 6) {
-        semifinalMatchup = '2/7'
-      } else if (seed === 2 || seed === 7) {
-        semifinalMatchup = '3/6'
-      }
-      
-      // Prepare notification data
-      const notificationData = {
-        playerName: player.name,
-        playerEmail: player.email || user?.email,
-        playerWhatsApp: player.whatsapp,
-        language: user?.preferences?.language || 'es',
-        position: qualified.regularSeasonPosition,
-        points: qualified.qualificationStats?.totalPoints || 0,
-        seed: qualified.seed,
-        playoffGroup: group,
-        topPlayers,
-        leagueName: league.name,
-        opponentName: opponent?.name || 'Por determinar',
-        opponentSeed: opponentSeed,
-        opponentWhatsApp: opponent?.whatsapp || '',
-        opponentMatches: opponentQualified?.qualificationStats?.matchesPlayed || 0,
-        opponentPoints: opponentQualified?.qualificationStats?.totalPoints || 0,
-        semifinalMatchup: `Partido ${semifinalMatchup}`,
-        bracketUrl: `${process.env.NEXT_PUBLIC_URL || 'https://tenisdp.es'}/${league.slug}/playoffs`,
-        dashboardUrl: `${process.env.NEXT_PUBLIC_URL || 'https://tenisdp.es'}/player/dashboard`
-      }
-      
+      // Create notification for player 1
+      const user1 = userByEmail.get(player1.email)
+      const seed1 = seedMap.get(p1Id)
       notifications.push({
-        player,
-        user,
-        data: notificationData,
-        hasEmail: !!(player.email || user?.email),
-        hasWhatsApp: !!player.whatsapp,
-        playerId: player._id.toString()
+        player: player1,
+        user: user1,
+        data: {
+          playerName: player1.name,
+          playerEmail: player1.email,
+          playerWhatsApp: player1.whatsapp,
+          language: user1?.preferences?.language || 'es',
+          position: seed1?.regularSeasonPosition || 0,
+          points: seed1?.qualificationStats?.totalPoints || 0,
+          seed: seed1?.seed || 0,
+          playoffGroup: group,
+          topPlayers: group === 'A' ? 8 : 16,
+          leagueName: league.name,
+          opponentName: player2.name,
+          opponentSeed: seedMap.get(p2Id)?.seed || 0,
+          opponentWhatsApp: player2.whatsapp || '',
+          opponentMatches: seedMap.get(p2Id)?.qualificationStats?.matchesPlayed || 0,
+          opponentPoints: seedMap.get(p2Id)?.qualificationStats?.totalPoints || 0,
+          semifinalMatchup: '',
+          bracketUrl: `${process.env.NEXT_PUBLIC_URL || 'https://tenisdp.es'}/${league.slug}/playoffs`,
+          dashboardUrl: `${process.env.NEXT_PUBLIC_URL || 'https://tenisdp.es'}/player/dashboard`,
+          stage
+        },
+        hasEmail: !!player1.email,
+        hasWhatsApp: !!player1.whatsapp,
+        playerId: p1Id
+      })
+      
+      // Create notification for player 2
+      const user2 = userByEmail.get(player2.email)
+      const seed2 = seedMap.get(p2Id)
+      notifications.push({
+        player: player2,
+        user: user2,
+        data: {
+          playerName: player2.name,
+          playerEmail: player2.email,
+          playerWhatsApp: player2.whatsapp,
+          language: user2?.preferences?.language || 'es',
+          position: seed2?.regularSeasonPosition || 0,
+          points: seed2?.qualificationStats?.totalPoints || 0,
+          seed: seed2?.seed || 0,
+          playoffGroup: group,
+          topPlayers: group === 'A' ? 8 : 16,
+          leagueName: league.name,
+          opponentName: player1.name,
+          opponentSeed: seed1?.seed || 0,
+          opponentWhatsApp: player1.whatsapp || '',
+          opponentMatches: seed1?.qualificationStats?.matchesPlayed || 0,
+          opponentPoints: seed1?.qualificationStats?.totalPoints || 0,
+          semifinalMatchup: '',
+          bracketUrl: `${process.env.NEXT_PUBLIC_URL || 'https://tenisdp.es'}/${league.slug}/playoffs`,
+          dashboardUrl: `${process.env.NEXT_PUBLIC_URL || 'https://tenisdp.es'}/player/dashboard`,
+          stage
+        },
+        hasEmail: !!player2.email,
+        hasWhatsApp: !!player2.whatsapp,
+        playerId: p2Id
       })
     }
     
+    if (notifications.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'No scheduled playoff matches found for Group ' + group + '. Create the next round matches first.'
+      }, { status: 400 })
+    }
+    
+    console.log('[Playoff Notifications] Built', notifications.length, 'notifications for stage:', playoffMatches[0]?.playoffInfo?.stage)
+
     // Process based on action
     if (action === 'sendIndividualEmail') {
       // INDIVIDUAL EMAIL FEATURE: Send email to a specific player for testing
@@ -235,7 +266,7 @@ export async function POST(request, { params }) {
             ? `Playoffs ${leagueName}`
             : `${leagueName} Playoffs`
           const pushBody = language === 'es'
-            ? `Seed #${seed} \u2014 Cuartos de Final vs ${opponentName} (Seed #${opponentSeed})`
+            ? `Seed #${seed} \u2014 ${notification.data.stage === "semifinal" ? (language === "es" ? "Semifinal" : "Semifinal") : notification.data.stage === "final" ? "Final" : notification.data.stage === "third_place" ? (language === "es" ? "3er Puesto" : "3rd Place") : (language === "es" ? "Cuartos de Final" : "Quarterfinal")} vs ${opponentName} (Seed #${opponentSeed})`
             : `Seed #${seed} \u2014 Quarterfinal vs ${opponentName} (Seed #${opponentSeed})`
           
           const result = await sendToPlayer(notification.player._id, {

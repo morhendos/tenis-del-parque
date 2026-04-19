@@ -318,10 +318,21 @@ const templates = {
     }
   },
   playoff_pairings: {
-    label: '\ud83c\udfc6 Playoff Pairings',
-    isSpecial: true, // Flag for special handling
+    label: 'Playoff Pairings',
+    isSpecial: true,
     es: { subject: '', body: '' },
     en: { subject: '', body: '' }
+  },
+  season_wrapup: {
+    label: 'Season Wrap-up',
+    es: {
+      subject: 'Gracias por una gran temporada',
+      body: 'Hola,\n\nLa temporada regular ha llegado a su fin y queremos darte las gracias por ser parte de esta liga. Tu participaci\u00f3n ha sido clave para hacer de esta temporada algo especial.\n\nLos playoffs ya est\u00e1n en marcha con los 8 mejores clasificados. Puedes seguir los resultados desde tu dashboard.\n\nEsperamos verte de nuevo en la pr\u00f3xima temporada. Sigue practicando y vuelve a\u00fan m\u00e1s fuerte.\n\nUn saludo,\nEquipo Tenis del Parque'
+    },
+    en: {
+      subject: 'Thanks for a great season',
+      body: 'Hi,\n\nThe regular season has come to an end and we want to thank you for being part of this league. Your participation has been key to making this season something special.\n\nThe playoffs are now underway with the top 8 players. You can follow the results from your dashboard.\n\nWe hope to see you again next season. Keep practising and come back even stronger.\n\nBest regards,\nTenis del Parque Team'
+    }
   }
 }
 
