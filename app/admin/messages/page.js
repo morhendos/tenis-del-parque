@@ -567,6 +567,7 @@ export default function AdminMessagesPage() {
                   <span className="text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded-full font-medium flex-shrink-0">
                     {msg.audience?.type === 'all' && 'All Players'}
                     {msg.audience?.type === 'league' && (msg.audience?.leagueName || 'League')}
+                    {msg.audience?.type === 'league_non_playoff' && ((msg.audience?.leagueName || 'League') + ' (non-playoff)')}
                     {msg.audience?.type === 'round_unplayed' && 'Round ' + msg.audience?.round + ' unplayed'}
                     {msg.audience?.type === 'individual' && (msg.audience?.playerName || 'Player')}
                   </span>
