@@ -57,7 +57,7 @@ export default function StandingsTable({
                   <>
                     {index < 8 && (
                       <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                        Group A
+                        {numberOfGroups === 2 ? 'Group A' : 'Playoffs'}
                       </span>
                     )}
                     {index >= 8 && index < 16 && numberOfGroups === 2 && (

@@ -146,7 +146,7 @@ export default function PlayoffBrackets({
       {/* Group A Bracket */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Group A Tournament</h2>
+          <h2 className="text-xl font-semibold">{playoffConfig.numberOfGroups === 2 ? 'Group A Tournament' : 'Playoff Bracket'}</h2>
           <div className="space-x-2">
             <button
               onClick={() => onCreateNextRound('A', 'semifinal')}
