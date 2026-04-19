@@ -24,7 +24,6 @@ export default function PlayoffsTab({ playoffConfig, matches, language = 'es' })
 
   const currentPhase = playoffConfig.currentPhase
   
-  // Show "waiting" only if still in regular season
   if (currentPhase === 'regular_season') {
     return (
       <div className="text-center py-12">
@@ -45,54 +44,44 @@ export default function PlayoffsTab({ playoffConfig, matches, language = 'es' })
     )
   }
 
+  const groupATitle = playoffConfig.numberOfGroups === 2
+    ? (language === 'es' ? 'Grupo A — Top 8' : 'Group A — Top 8')
+    : 'Top 8'
+
   return (
     <div className="space-y-8">
       {/* Group A Bracket */}
       {(currentPhase === 'playoffs_groupA' || currentPhase === 'playoffs_groupB' || currentPhase === 'completed') && (
-        <div>
-          <h3 className="text-2xl font-bold mb-2 text-center text-gray-800">
-            {playoffConfig.numberOfGroups === 2
-              ? (language === 'es' ? 'Grupo A — Top 8' : 'Group A — Top 8')
-              : 'Top 8'
-            }
-          </h3>
-          <TournamentBracket
-            bracket={playoffConfig.bracket?.groupA}
-            qualifiedPlayers={playoffConfig.qualifiedPlayers?.groupA}
-            matches={matches.filter(m => m.playoffInfo?.group === 'A')}
-            group="A"
-            language={language}
-            hideTitle={true}  // Hide title since we already have one
-            hideLegend={playoffConfig.numberOfGroups === 2} // Hide legend if we have Group B
-          />
-        </div>
+        <TournamentBracket
+          bracket={playoffConfig.bracket?.groupA}
+          qualifiedPlayers={playoffConfig.qualifiedPlayers?.groupA}
+          matches={matches.filter(m => m.playoffInfo?.group === 'A')}
+          group="A"
+          language={language}
+          title={groupATitle}
+          hideLegend={playoffConfig.numberOfGroups === 2}
+        />
       )}
 
       {/* Group B Bracket (if enabled) */}
       {playoffConfig.numberOfGroups === 2 && 
        (currentPhase === 'playoffs_groupB' || currentPhase === 'completed') && (
-        <div className="mt-12">
-          <h3 className="text-xl font-semibold mb-4 text-center text-gray-800">
-            {language === 'es' ? 'Grupo B - Posiciones 9-16' : 'Group B - Positions 9-16'}
-          </h3>
-          <TournamentBracket
-            bracket={playoffConfig.bracket?.groupB}
-            qualifiedPlayers={playoffConfig.qualifiedPlayers?.groupB}
-            matches={matches.filter(m => m.playoffInfo?.group === 'B')}
-            group="B"
-            language={language}
-            hideTitle={true}   // Hide title
-            hideLegend={false}  // Show legend on last bracket
-          />
-        </div>
+        <TournamentBracket
+          bracket={playoffConfig.bracket?.groupB}
+          qualifiedPlayers={playoffConfig.qualifiedPlayers?.groupB}
+          matches={matches.filter(m => m.playoffInfo?.group === 'B')}
+          group="B"
+          language={language}
+          title={language === 'es' ? 'Grupo B — Posiciones 9-16' : 'Group B — Positions 9-16'}
+          hideLegend={false}
+        />
       )}
 
       {/* Completed Status */}
       {currentPhase === 'completed' && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center mt-8">
-          <div className="text-4xl mb-4">🏆</div>
           <h3 className="text-xl font-semibold text-green-800 mb-2">
-            {language === 'es' ? '¡Playoffs Completados!' : 'Playoffs Completed!'}
+            {language === 'es' ? 'Playoffs Completados' : 'Playoffs Completed'}
           </h3>
           <p className="text-green-700">
             {language === 'es' 

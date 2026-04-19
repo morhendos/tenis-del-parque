@@ -8,6 +8,7 @@ export default function TournamentBracket({
   group = 'A',
   language = 'es',
   onMatchClick,
+  title,
   hideTitle = false,
   hideLegend = false
 }) {
@@ -212,9 +213,9 @@ export default function TournamentBracket({
     <div className="w-full rounded-2xl overflow-hidden" style={{ background: 'linear-gradient(145deg, #1a0a2e 0%, #16082a 30%, #0f0520 60%, #0a0318 100%)' }}>
       <div className="w-full p-5 lg:p-8">
         
-        {!hideTitle && (
+        {(title || !hideTitle) && (
           <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-white">{language === 'es' ? 'Playoff Grupo' : 'Playoff Group'} {group}</h2>
+            <h2 className="text-2xl font-bold text-white">{title || ((language === 'es' ? 'Playoff Grupo ' : 'Playoff Group ') + group)}</h2>
             <p className="text-sm text-white/40 mt-1">{language === 'es' ? 'Eliminación directa' : 'Single elimination'}</p>
           </div>
         )}
