@@ -316,6 +316,12 @@ const templates = {
       subject: 'Last chance to play your match',
       body: 'Attention! Your match still hasn\'t been played and the deadline is approaching. If the match is not completed in time, both players will lose their points for this round.\n\nPlease contact your opponent today and agree on a date. Every point counts!'
     }
+  },
+  playoff_pairings: {
+    label: '\ud83c\udfc6 Playoff Pairings',
+    isSpecial: true, // Flag for special handling
+    es: { subject: '', body: '' },
+    en: { subject: '', body: '' }
   }
 }
 
@@ -421,6 +427,9 @@ export default function AdminMessagesPage() {
     finally { setLoadingHistory(false) }
   }
 
+  const [playoffSending, setPlayoffSending] = useState(false)
+  const [playoffResult, setPlayoffResult] = useState(null)
+
   const handleSend = async () => {
     setSending(true); setSendResult(null); setSendError(null)
     try {
@@ -462,7 +471,28 @@ export default function AdminMessagesPage() {
     setSendResult(null); setSendError(null)
   }
 
-  const canSend = body.trim() && (channelEmail || channelPush) && 
+  const handlePlayoffPairings = async () => {
+    if (!selectedLeagueId) { setSendError('Select a league first'); return }
+    const confirmMsg = 'Send personalized playoff pairing emails + push notifications to all qualified players in this league?'
+    if (!confirm(confirmMsg)) return
+    setPlayoffSending(true); setSendError(null); setPlayoffResult(null)
+    try {
+      const res = await fetch(`/api/admin/leagues/${selectedLeagueId}/playoffs/notifications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'sendEmails', group: 'A' })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to send')
+      setPlayoffResult(data)
+      fetchHistory()
+    } catch (err) { setSendError(err.message) }
+    finally { setPlayoffSending(false) }
+  }
+
+  const canSend = template === 'playoff_pairings'
+    ? !!selectedLeagueId
+    : body.trim() && (channelEmail || channelPush) && 
     (!channelEmail || subject.trim()) &&
     (audienceType === 'all' || selectedLeagueId) &&
     (audienceType !== 'round_unplayed' || selectedRound) &&
@@ -653,6 +683,65 @@ export default function AdminMessagesPage() {
             
             <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-5 space-y-4">
               <h3 className="font-semibold text-gray-900 text-sm">Compose</h3>
+              {template === 'playoff_pairings' ? (
+                /* Special Playoff Pairings UI */
+                <div className="space-y-4">
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xl">\ud83c\udfc6</span>
+                      <h4 className="font-semibold text-amber-900">Personalized Playoff Pairings</h4>
+                    </div>
+                    <p className="text-sm text-amber-800 mb-3">
+                      Each qualified player will receive a personalized email + push notification with:
+                    </p>
+                    <ul className="text-sm text-amber-700 space-y-1 ml-4 list-disc">
+                      <li>Their seed number and qualification position</li>
+                      <li>Their quarterfinal opponent name and seed</li>
+                      <li>WhatsApp link to contact their opponent</li>
+                      <li>Link to view the full bracket</li>
+                    </ul>
+                  </div>
+                  {!selectedLeagueId && (
+                    <p className="text-sm text-red-600">\u2190 Select a league with initialized playoffs first</p>
+                  )}
+                  {sendError && <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-700">{sendError}</div>}
+                  {playoffResult ? (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-5">
+                      <h3 className="font-semibold text-green-800 mb-3">\u2705 Playoff Pairings Sent!</h3>
+                      <div className="grid grid-cols-3 gap-3 text-sm mb-3">
+                        <div className="bg-white rounded-lg p-3 text-center"><div className="text-xl font-bold">{playoffResult.results?.length || 0}</div><div className="text-xs text-gray-500">Emails</div></div>
+                        <div className="bg-white rounded-lg p-3 text-center"><div className="text-xl font-bold text-purple-600">{playoffResult.pushSent || 0}</div><div className="text-xs text-gray-500">Push</div></div>
+                        <div className="bg-white rounded-lg p-3 text-center"><div className={"text-xl font-bold " + (playoffResult.errors?.length > 0 ? 'text-red-600' : 'text-gray-300')}>{playoffResult.errors?.length || 0}</div><div className="text-xs text-gray-500">Errors</div></div>
+                      </div>
+                      {playoffResult.results?.length > 0 && (
+                        <details className="text-xs text-gray-600">
+                          <summary className="cursor-pointer text-green-700 font-medium">Show delivery details</summary>
+                          <div className="mt-2 space-y-1">
+                            {playoffResult.results.map((r, i) => (
+                              <div key={i} className="flex items-center gap-2 py-0.5">
+                                <span className="font-medium">{r.player}</span>
+                                <span className="text-green-600">\u2713 {r.email}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </details>
+                      )}
+                      <button onClick={() => { setPlayoffResult(null); setSendError(null); setTemplate('custom') }}
+                        className="mt-4 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-50">Done</button>
+                    </div>
+                  ) : (
+                    <div className="flex justify-end">
+                      <button onClick={handlePlayoffPairings}
+                        disabled={playoffSending || !selectedLeagueId}
+                        className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium text-sm disabled:opacity-50 flex items-center gap-2">
+                        {playoffSending ? 'Sending...' : '\ud83c\udfc6 Send Playoff Pairings'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Standard Compose UI */
+                <>
               {channelEmail && (
                 <div>
                   <label className="block text-xs font-medium text-gray-500 mb-1">Subject</label>
@@ -666,11 +755,13 @@ export default function AdminMessagesPage() {
                   placeholder="Write your message here..." rows={8}
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-parque-purple focus:border-transparent resize-y" />
               </div>
+              </>
+              )}
             </div>
             
-            {sendError && <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-700">{sendError}</div>}
+            {template !== 'playoff_pairings' && sendError && <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-700">{sendError}</div>}
             
-            {sendResult ? (
+            {template !== 'playoff_pairings' && (sendResult ? (
               <div className="bg-green-50 border border-green-200 rounded-lg p-5">
                 <h3 className="font-semibold text-green-800 mb-3">Message Sent!</h3>
                 <div className="grid grid-cols-3 gap-3 text-sm mb-3">
@@ -687,7 +778,7 @@ export default function AdminMessagesPage() {
                   {sending ? 'Sending...' : 'Send Message'}
                 </button>
               </div>
-            )}
+            ))}
           </div>
         </div>
       )}
