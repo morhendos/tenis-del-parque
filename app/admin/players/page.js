@@ -99,6 +99,62 @@ function AdminPlayersContent() {
     window.location.reload()
   }
 
+  // Injury toggle handler
+  const handleInjuryToggle = async (player) => {
+    const isCurrentlyInjured = player.injury?.active
+    
+    if (isCurrentlyInjured) {
+      // Clear injury
+      if (!confirm(`Clear injury status for ${player.name}?`)) return
+      try {
+        const res = await fetch(`/api/admin/players/${player._id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ injury: { active: false } })
+        })
+        if (res.ok) {
+          alert(`Injury cleared for ${player.name}`)
+          window.location.reload()
+        } else {
+          alert('Failed to clear injury')
+        }
+      } catch (error) {
+        console.error('Error clearing injury:', error)
+        alert('Error clearing injury')
+      }
+    } else {
+      // Mark as injured — prompt for return date
+      const weeks = prompt(`How many weeks will ${player.name} be out?`, '4')
+      if (!weeks) return
+      const returnDate = new Date()
+      returnDate.setDate(returnDate.getDate() + parseInt(weeks) * 7)
+      const reason = prompt('Reason (optional):', '')
+      
+      try {
+        const res = await fetch(`/api/admin/players/${player._id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            injury: {
+              active: true,
+              estimatedReturnDate: returnDate.toISOString(),
+              reason: reason || ''
+            }
+          })
+        })
+        if (res.ok) {
+          alert(`${player.name} marked as injured until ${returnDate.toLocaleDateString()}`)
+          window.location.reload()
+        } else {
+          alert('Failed to mark injury')
+        }
+      } catch (error) {
+        console.error('Error marking injury:', error)
+        alert('Error marking injury')
+      }
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -167,6 +223,7 @@ function AdminPlayersContent() {
         onRecalculateElo={handleRecalculateElo}
         onRemoveFromLeague={handleRemoveFromLeague}
         onViewDetails={handleViewDetails}
+        onInjuryToggle={handleInjuryToggle}
         updateLoading={updateLoading}
         invitationLoading={invitationLoading}
         eloRecalculateLoading={eloRecalculateLoading}

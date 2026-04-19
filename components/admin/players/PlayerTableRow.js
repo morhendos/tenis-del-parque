@@ -10,6 +10,7 @@ export default function PlayerTableRow({
   onRemoveFromLeague,
   onViewDetails,
   onPaymentStatusUpdate,
+  onInjuryToggle,
   updateLoading,
   invitationLoading,
   eloRecalculateLoading,
@@ -108,6 +109,11 @@ export default function PlayerTableRow({
             <div className="text-sm font-medium text-gray-900">
               {player.name}
             </div>
+            {player.injury?.active && (
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-800 border border-amber-200" title={`Injured${player.injury.reason ? ': ' + player.injury.reason : ''} — Est. return: ${player.injury.estimatedReturnDate ? new Date(player.injury.estimatedReturnDate).toLocaleDateString() : 'N/A'}`}>
+                🤕 Injured
+              </span>
+            )}
             {onViewDetails && (
               <button
                 onClick={() => onViewDetails(player)}
@@ -284,6 +290,21 @@ export default function PlayerTableRow({
               title="Remove from this league only"
             >
               Remove
+            </button>
+          )}
+          
+          {/* Injury Toggle */}
+          {onInjuryToggle && (
+            <button
+              onClick={() => onInjuryToggle(player)}
+              className={`text-xs px-2 py-1 rounded ${
+                player.injury?.active
+                  ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                  : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+              }`}
+              title={player.injury?.active ? 'Clear injury status' : 'Mark as injured'}
+            >
+              {player.injury?.active ? '💪 Clear' : '🤕 Injure'}
             </button>
           )}
           

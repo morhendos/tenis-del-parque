@@ -11,6 +11,7 @@ export default function PlayerTable({
   onRemoveFromLeague,
   onViewDetails,
   onPaymentStatusUpdate,
+  onInjuryToggle,
   updateLoading,
   invitationLoading,
   eloRecalculateLoading,
@@ -71,6 +72,7 @@ export default function PlayerTable({
                 onRemoveFromLeague={onRemoveFromLeague}
                 onViewDetails={onViewDetails}
                 onPaymentStatusUpdate={onPaymentStatusUpdate}
+                onInjuryToggle={onInjuryToggle}
                 updateLoading={updateLoading}
                 invitationLoading={invitationLoading}
                 eloRecalculateLoading={eloRecalculateLoading}
