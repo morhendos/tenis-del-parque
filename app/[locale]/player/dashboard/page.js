@@ -13,6 +13,7 @@ import PushNotificationPrompt from '@/components/player/PushNotificationPrompt'
 import OpenRankAchievement from '@/components/player/OpenRankAchievement'
 import NextMatchCard from '@/components/player/NextMatchCard'
 import MiniStandings from '@/components/player/MiniStandings'
+import PlayoffStatusCard from '@/components/player/PlayoffStatusCard'
 import RecentResults from '@/components/player/RecentResults'
 import NoLeaguesCTA from '@/components/player/NoLeaguesCTA'
 import InjuryBanner from '@/components/player/InjuryBanner'
@@ -151,13 +152,23 @@ export default function PlayerDashboard() {
           {/* Next Match - Hero section */}
           <NextMatchCard matches={upcomingMatches} language={language} leagueInfo={leagueInfo} />
 
-          {/* Mini Standings Table */}
-          <MiniStandings 
-            standings={standings}
-            playerId={player?._id}
-            language={language}
-            locale={locale}
-          />
+          {/* Mini Standings or Playoff Status */}
+          {leagueInfo?.playoffPhase && leagueInfo.playoffPhase !== 'regular_season' && leagueInfo.playoffPhase !== 'completed' ? (
+            <PlayoffStatusCard
+              matches={upcomingMatches}
+              player={player}
+              leagueInfo={leagueInfo}
+              language={language}
+              locale={locale}
+            />
+          ) : (
+            <MiniStandings 
+              standings={standings}
+              playerId={player?._id}
+              language={language}
+              locale={locale}
+            />
+          )}
         </div>
 
         {/* OpenRank Progress - Gamification element */}
