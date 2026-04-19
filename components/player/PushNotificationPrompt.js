@@ -68,7 +68,7 @@ export default function PushNotificationPrompt({ language = 'es' }) {
   }
 
   return (
-    <div className="fixed bottom-16 lg:bottom-0 left-0 right-0 z-50 animate-slideUp">
+    <div className="fixed bottom-20 lg:bottom-0 left-0 right-0 z-50 animate-slideUp">
       <div className="bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] px-4 py-3 safe-area-bottom">
         <div className="max-w-lg mx-auto flex items-center gap-3">
           {/* Bell icon */}
