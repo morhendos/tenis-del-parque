@@ -94,11 +94,6 @@ export default function PlayoffStatusCard({ matches, player, leagueInfo, languag
             </div>
             <h3 className="font-bold text-white text-base">{t.title}</h3>
           </div>
-          {completedMatches.length > 0 && (
-            <span className="text-xs text-purple-300 bg-purple-500/20 px-2 py-1 rounded-full">
-              {wins}W {losses}L
-            </span>
-          )}
         </div>
 
         {scheduledMatch ? (
