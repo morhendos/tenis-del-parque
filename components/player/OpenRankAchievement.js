@@ -1,4 +1,6 @@
-import Link from 'next/link'
+'use client'
+
+import { useState, useEffect } from 'react'
 
 export default function OpenRankAchievement({ player, language, locale }) {
   const MATCHES_REQUIRED = 8
@@ -9,6 +11,20 @@ export default function OpenRankAchievement({ player, language, locale }) {
   const isUnlocked = matchesPlayed >= MATCHES_REQUIRED
   const progress = Math.min((matchesPlayed / MATCHES_REQUIRED) * 100, 100)
   const matchesRemaining = Math.max(MATCHES_REQUIRED - matchesPlayed, 0)
+  
+
+  // Hide once user has seen and clicked View OpenRank
+  const [hidden, setHidden] = useState(false)
+  
+  useEffect(() => {
+    if (isUnlocked && typeof window !== 'undefined' && localStorage.getItem('openrank-achievement-seen')) {
+      setHidden(true)
+    }
+  }, [isUnlocked])
+  
+  // Don't render if unlocked and already seen
+  if (hidden) return null
+  // Don't render if not unlocked and no progress
   
   const content = {
     es: {
@@ -131,15 +147,16 @@ export default function OpenRankAchievement({ player, language, locale }) {
         
         {/* Action Button */}
         {isUnlocked ? (
-          <Link
+          <a
             href={`/${locale}/player/openrank`}
+            onClick={() => localStorage.setItem('openrank-achievement-seen', 'true')}
             className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 rounded-xl hover:from-yellow-500 hover:to-yellow-600 font-semibold shadow-md hover:shadow-lg transition-all"
           >
             <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
             </svg>
             {t.viewRanking}
-          </Link>
+          </a>
         ) : (
           <div className="w-full flex items-center justify-center px-4 py-3 bg-gray-100 text-gray-500 rounded-xl font-medium border border-gray-200">
             <svg className="w-5 h-5 mr-2 animate-pulse" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
