@@ -7,6 +7,7 @@ import { MatchModals } from '@/components/player/MatchModals'
 import MatchResultCard from '@/components/player/MatchResultCard'
 import { toast } from '@/components/ui/Toast'
 import { processMatchResult } from '@/lib/utils/matchResultUtils'
+import { fetchWithRetry } from '@/lib/utils/fetchWithRetry'
 import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
 
 export default function PlayerMatches() {
@@ -51,7 +52,7 @@ export default function PlayerMatches() {
 
   const fetchPlayerData = async () => {
     try {
-      const response = await fetch('/api/player/profile')
+      const response = await fetchWithRetry('/api/player/profile', {}, { label: 'Matches:profile' })
       if (response.ok) {
         const data = await response.json()
         setPlayer(data.player)
@@ -63,7 +64,7 @@ export default function PlayerMatches() {
 
   const fetchOpenRankData = async () => {
     try {
-      const response = await fetch('/api/openrank?all=true')
+      const response = await fetchWithRetry('/api/openrank?all=true', {}, { label: 'Matches:openrank' })
       if (response.ok) {
         const data = await response.json()
         // Create a map of player ID to their OpenRank position
@@ -81,7 +82,7 @@ export default function PlayerMatches() {
   const fetchMatches = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/player/matches')
+      const response = await fetchWithRetry('/api/player/matches', {}, { label: 'Matches:matches' })
       
       if (!response.ok) {
         throw new Error('Failed to fetch matches')
