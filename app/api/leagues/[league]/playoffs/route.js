@@ -26,9 +26,8 @@ export async function GET(request, { params }) {
     await dbConnect()
     
     const leagueSlug = params.league
-    const SEASON_ID = '688f5d51c94f8e3b3cbfd87b' // Summer 2025
     
-    console.log('🔍 PUBLIC PLAYOFF ENDPOINT - League slug:', leagueSlug)
+    console.log('PUBLIC PLAYOFF ENDPOINT - League slug:', leagueSlug)
     
     // Get league by slug
     const league = await mongoose.connection.db.collection('leagues').findOne({
@@ -84,10 +83,9 @@ export async function GET(request, { params }) {
       }
     }
     
-    // Get playoff matches
+    // Get playoff matches - filter by league only (no season filter needed)
     const playoffMatches = await mongoose.connection.db.collection('matches').find({
       league: league._id,
-      season: new mongoose.Types.ObjectId(SEASON_ID),
       matchType: 'playoff'
     }).toArray()
     
