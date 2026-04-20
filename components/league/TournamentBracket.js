@@ -66,8 +66,8 @@ export default function TournamentBracket({
     const date = new Date(match.schedule.confirmedDate)
     return {
       date: date.toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', { day: 'numeric', month: 'short' }),
-      time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      venue: match.schedule.club,
+      time: date.toLocaleTimeString(language === 'es' ? 'es-ES' : 'en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+      venue: match.schedule.club || match.schedule.venue,
       court: match.schedule.court
     }
   }
@@ -176,6 +176,11 @@ export default function TournamentBracket({
               <svg className="w-3 h-3 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
               <span className="font-medium">{scheduleInfo.date} · {scheduleInfo.time}</span>
             </div>
+            {(scheduleInfo.venue || scheduleInfo.court) && (
+              <div className="flex items-center text-[10px] text-purple-300/60 mt-0.5 ml-4">
+                {scheduleInfo.venue}{scheduleInfo.venue && scheduleInfo.court ? ' · ' : ''}{scheduleInfo.court ? ((language === 'es' ? 'Pista ' : 'Court ') + scheduleInfo.court) : ''}
+              </div>
+            )}
           </div>
         )}
 
