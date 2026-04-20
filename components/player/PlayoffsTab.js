@@ -1,7 +1,7 @@
 import React from 'react'
 import TournamentBracket from '@/components/league/TournamentBracket'
 
-export default function PlayoffsTab({ playoffConfig, matches, language = 'es' }) {
+export default function PlayoffsTab({ playoffConfig, matches, language = 'es', player, locale }) {
   if (!playoffConfig || !playoffConfig.enabled) {
     return (
       <div className="text-center py-12">
@@ -60,6 +60,8 @@ export default function PlayoffsTab({ playoffConfig, matches, language = 'es' })
           language={language}
           title={groupATitle}
           hideLegend={playoffConfig.numberOfGroups === 2}
+          player={player}
+          locale={locale}
         />
       )}
 

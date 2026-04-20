@@ -741,6 +741,8 @@ export default function PlayerLeague() {
                 playoffConfig={playoffData.playoffConfig}
                 matches={playoffData.matches || []}
                 language={language}
+                player={player}
+                locale={locale}
               />
             )
           )}
