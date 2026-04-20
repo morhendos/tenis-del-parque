@@ -6,9 +6,13 @@ import Link from 'next/link'
  */
 export default function PlayoffStatusCard({ matches, player, leagueInfo, language = 'es', locale = 'es' }) {
   const playerId = player?._id?.toString()
+  const currentLeagueId = leagueInfo?._id?.toString()
   
-  // Filter playoff matches — handle both API format and dashboard hook format
-  const playoffMatches = matches?.filter(m => m.matchType === 'playoff') || []
+  // Filter playoff matches for the CURRENT league only
+  const playoffMatches = matches?.filter(m => 
+    m.matchType === 'playoff' && 
+    (!currentLeagueId || !m.leagueId || m.leagueId === currentLeagueId)
+  ) || []
   
   // Find scheduled (upcoming) and completed
   const scheduledMatch = playoffMatches.find(m => m.type === 'upcoming' || m.status === 'scheduled')
