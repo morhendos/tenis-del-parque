@@ -66,7 +66,7 @@ export default function TournamentBracket({
     const date = new Date(match.schedule.confirmedDate)
     return {
       date: date.toLocaleDateString(language === 'es' ? 'es-ES' : 'en-US', { day: 'numeric', month: 'short' }),
-      time: date.toLocaleTimeString(language === 'es' ? 'es-ES' : 'en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+      time: match.schedule.time || date.toLocaleTimeString(language === 'es' ? 'es-ES' : 'en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
       venue: match.schedule.club || match.schedule.venue,
       court: match.schedule.court
     }
