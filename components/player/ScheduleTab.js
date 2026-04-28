@@ -174,10 +174,16 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
 
   const handleSubmitSchedule = async (data) => {
     try {
+      // Construct the Date in the browser (local timezone) and send as ISO string
+      // to avoid the server (UTC) misinterpreting the time
+      const confirmedDate = data.date && data.time
+        ? new Date(`${data.date}T${data.time}`).toISOString()
+        : null
+
       const response = await fetch('/api/player/matches/schedule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify({ ...data, confirmedDate })
       })
       
       const result = await response.json()

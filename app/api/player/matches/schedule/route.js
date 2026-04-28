@@ -12,7 +12,7 @@ export async function POST(request) {
     const { session, error } = await requirePlayer(request)
     if (error) return error
 
-    const { matchId, date, time, venue, court, notes } = await request.json()
+    const { matchId, date, time, venue, court, notes, confirmedDate } = await request.json()
 
     // Validate required fields
     if (!matchId || !date || !time || !venue) {
@@ -66,8 +66,9 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'You are not part of this match' }, { status: 403 })
     }
 
-    // Create datetime string
-    const datetime = new Date(`${date}T${time}`)
+    // Use pre-constructed ISO date from client (timezone-aware) if available,
+    // otherwise fall back to server-side construction (which runs in UTC)
+    const datetime = confirmedDate ? new Date(confirmedDate) : new Date(`${date}T${time}`)
     
     // Validate that the date is in the future
     if (datetime <= new Date()) {
