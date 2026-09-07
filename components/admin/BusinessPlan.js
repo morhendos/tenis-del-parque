@@ -93,11 +93,11 @@ const TIPS = {
   // Growth
   'Cities Y1': 'Number of active cities by end of Year 1.',
   'Players Y1': 'Total active players by end of Year 1.',
-  'Retention': 'Percentage of players who re-register for the next season. Higher retention = lower acquisition costs.',
-  'Fill Rate': 'Average percentage of max capacity filled per league. Computed from marketing spend × city maturity curve.',
+  'Retention': 'Percentage of players who re-register for the next season. A core driver: fill rate settles near new signups ÷ (1 - retention), capped by Max Fill. Stats, rankings and match history push this up.',
+  'Fill Rate': 'Share of league capacity filled. An OUTPUT now: it settles where new signups balance churn (signups ÷ (1 - retention)), capped at Max Fill.',
   'Mktg Response': 'Fill rate follows a saturation curve: organic baseline + marketing lift × city maturity. Diminishing returns on ad spend.',
-  'Organic Fill': 'Baseline fill rate with zero marketing spend. Driven by WhatsApp sharing, word-of-mouth, organic search.',
-  'Max Fill': 'Theoretical ceiling fill rate even with unlimited spend. Limited by market size, competition, and seasonal factors.',
+  'Organic Fill': 'New signups per season (as % of league capacity) with zero marketing. Driven by WhatsApp sharing, word-of-mouth, organic search.',
+  'Max Fill': 'Hard ceiling on how full leagues can get, regardless of demand.',
   'Half-Point': 'Monthly ad spend per city that achieves 50% of the maximum marketing lift. Lower = market responds more to ads.',
   'Steepness': 'How sharply returns diminish. Low (0.5) = gradual curve, more linear. High (2.0+) = steep initial gains then flat. Standard: 0.7-1.5.',
   'Maturity': 'Months for a newly launched city to reach ~95% of its fill potential. Reflects brand awareness, local network effects.',
@@ -220,7 +220,7 @@ function MktgExplainer() {
         <div className="px-3 pb-3 space-y-3 text-[10px] leading-relaxed text-gray-500">
           <div>
             <div className="text-gray-700 font-medium mb-1">The Formula</div>
-            <div className="bg-gray-100 rounded px-2 py-1.5 font-mono text-[9px] text-emerald-600 mb-1">fillRate = organic + (max - organic) &times; mktgEffect &times; maturity</div>
+            <div className="bg-gray-100 rounded px-2 py-1.5 font-mono text-[9px] text-emerald-600 mb-1">signups/season = organic + (max - organic) &times; mktgEffect &times; maturity; fill &asymp; signups &divide; (1 - retention)</div>
             <p>Marketing doesn&apos;t grow leagues linearly. Doubling your ad spend doesn&apos;t double signups. This uses a standard <span className="text-gray-700 font-medium">exponential saturation curve</span> from digital marketing theory.</p>
           </div>
           <div>
@@ -273,17 +273,16 @@ const STORAGE_KEY = 'tdp-bp-presets'
 
 const DEFAULT_VALUES = {
   registrationFee: 30, freeMonths: 3, discountPct: 50, discountMonths: 3,
-  playersPerLeague: 14, maxPlayersPerLeague: 20, seasonsPerYear: 4, seasonLengthWeeks: 10,
+  maxPlayersPerLeague: 20, seasonsPerYear: 4,
   startingCities: 1, newCitiesPerQuarter: 2, leaguesPerCityY1: 1.2, leaguesPerCityY3: 2.5,
-  organicFillRate: 25, maxFillRate: 90, mktgHalfPoint: 50, mktgResponseK: 1.0, cityMaturityMonths: 8,
-  retention: 70, organicGrowthPct: 30,
+  organicFillRate: 8, maxNewSignupRate: 30, maxFillRate: 90, mktgHalfPoint: 50, mktgResponseK: 1.0, cityMaturityMonths: 8,
+  retention: 70,
   hostingBase: 50, hostingPerKPlayers: 15,
   marketingPerCityLaunch: 150, marketingPerCityMonthly: 60,
   courtCostPerLeagueSeason: 0,
   adminHoursPerLeagueWeek: 1, adminHourlyRate: 0,
   founderSalary: 0,
   initialInvestment: 500,
-  cacPerPlayer: 3, organicPct: 40,
   targetCapturePct: 3,
 }
 
@@ -304,10 +303,8 @@ export default function BusinessPlan() {
   // =====================
   // LEAGUE CONFIG
   // =====================
-  const [playersPerLeague, setPlayersPerLeague] = useState(14)
   const [maxPlayersPerLeague, setMaxPlayersPerLeague] = useState(20)
   const [seasonsPerYear, setSeasonsPerYear] = useState(4)
-  const [seasonLengthWeeks, setSeasonLengthWeeks] = useState(10)
 
   // =====================
   // GROWTH
@@ -316,13 +313,13 @@ export default function BusinessPlan() {
   const [newCitiesPerQuarter, setNewCitiesPerQuarter] = useState(2)
   const [leaguesPerCityY1, setLeaguesPerCityY1] = useState(1.2)
   const [leaguesPerCityY3, setLeaguesPerCityY3] = useState(2.5)
-  const [organicFillRate, setOrganicFillRate] = useState(25)
+  const [organicFillRate, setOrganicFillRate] = useState(8)
+  const [maxNewSignupRate, setMaxNewSignupRate] = useState(30)
   const [maxFillRate, setMaxFillRate] = useState(90)
   const [mktgHalfPoint, setMktgHalfPoint] = useState(50)
   const [mktgResponseK, setMktgResponseK] = useState(1.0)
   const [cityMaturityMonths, setCityMaturityMonths] = useState(8)
   const [retention, setRetention] = useState(70)
-  const [organicGrowthPct, setOrganicGrowthPct] = useState(30)
 
   // =====================
   // COSTS
@@ -338,10 +335,8 @@ export default function BusinessPlan() {
   const [initialInvestment, setInitialInvestment] = useState(500)
 
   // =====================
-  // ACQUISITION
+  // MARKET SIZING
   // =====================
-  const [cacPerPlayer, setCacPerPlayer] = useState(3)
-  const [organicPct, setOrganicPct] = useState(40)
   const [targetCapturePct, setTargetCapturePct] = useState(3)
 
   // =====================
@@ -361,27 +356,26 @@ export default function BusinessPlan() {
 
   const getCurrentValues = useCallback(() => ({
     registrationFee, freeMonths, discountPct, discountMonths,
-    playersPerLeague, maxPlayersPerLeague, seasonsPerYear, seasonLengthWeeks,
+    maxPlayersPerLeague, seasonsPerYear,
     startingCities, newCitiesPerQuarter, leaguesPerCityY1, leaguesPerCityY3,
-    organicFillRate, maxFillRate, mktgHalfPoint, mktgResponseK, cityMaturityMonths, retention, organicGrowthPct,
+    organicFillRate, maxNewSignupRate, maxFillRate, mktgHalfPoint, mktgResponseK, cityMaturityMonths, retention,
     hostingBase, hostingPerKPlayers,
     marketingPerCityLaunch, marketingPerCityMonthly,
     courtCostPerLeagueSeason, adminHoursPerLeagueWeek, adminHourlyRate,
-    founderSalary, initialInvestment, cacPerPlayer, organicPct, targetCapturePct,
-  }), [registrationFee, freeMonths, discountPct, discountMonths, playersPerLeague, maxPlayersPerLeague, seasonsPerYear, seasonLengthWeeks, startingCities, newCitiesPerQuarter, leaguesPerCityY1, leaguesPerCityY3, organicFillRate, maxFillRate, mktgHalfPoint, mktgResponseK, cityMaturityMonths, retention, organicGrowthPct, hostingBase, hostingPerKPlayers, marketingPerCityLaunch, marketingPerCityMonthly, courtCostPerLeagueSeason, adminHoursPerLeagueWeek, adminHourlyRate, founderSalary, initialInvestment, cacPerPlayer, organicPct, targetCapturePct])
+    founderSalary, initialInvestment, targetCapturePct,
+  }), [registrationFee, freeMonths, discountPct, discountMonths, maxPlayersPerLeague, seasonsPerYear, startingCities, newCitiesPerQuarter, leaguesPerCityY1, leaguesPerCityY3, organicFillRate, maxNewSignupRate, maxFillRate, mktgHalfPoint, mktgResponseK, cityMaturityMonths, retention, hostingBase, hostingPerKPlayers, marketingPerCityLaunch, marketingPerCityMonthly, courtCostPerLeagueSeason, adminHoursPerLeagueWeek, adminHourlyRate, founderSalary, initialInvestment, targetCapturePct])
 
   const applyValues = useCallback((v) => {
     setRegistrationFee(v.registrationFee); setFreeMonths(v.freeMonths); setDiscountPct(v.discountPct); setDiscountMonths(v.discountMonths)
-    setPlayersPerLeague(v.playersPerLeague); setMaxPlayersPerLeague(v.maxPlayersPerLeague); setSeasonsPerYear(v.seasonsPerYear); setSeasonLengthWeeks(v.seasonLengthWeeks)
+    setMaxPlayersPerLeague(v.maxPlayersPerLeague); setSeasonsPerYear(v.seasonsPerYear)
     setStartingCities(v.startingCities); setNewCitiesPerQuarter(v.newCitiesPerQuarter); setLeaguesPerCityY1(v.leaguesPerCityY1); setLeaguesPerCityY3(v.leaguesPerCityY3)
-    setOrganicFillRate(v.organicFillRate); setMaxFillRate(v.maxFillRate); setMktgHalfPoint(v.mktgHalfPoint); setMktgResponseK(v.mktgResponseK); setCityMaturityMonths(v.cityMaturityMonths)
-    setRetention(v.retention); setOrganicGrowthPct(v.organicGrowthPct)
+    setOrganicFillRate(v.organicFillRate); if (v.maxNewSignupRate !== undefined) setMaxNewSignupRate(v.maxNewSignupRate); setMaxFillRate(v.maxFillRate); setMktgHalfPoint(v.mktgHalfPoint); setMktgResponseK(v.mktgResponseK); setCityMaturityMonths(v.cityMaturityMonths)
+    setRetention(v.retention)
     setHostingBase(v.hostingBase); setHostingPerKPlayers(v.hostingPerKPlayers)
     setMarketingPerCityLaunch(v.marketingPerCityLaunch); setMarketingPerCityMonthly(v.marketingPerCityMonthly)
     setCourtCostPerLeagueSeason(v.courtCostPerLeagueSeason); setAdminHoursPerLeagueWeek(v.adminHoursPerLeagueWeek); setAdminHourlyRate(v.adminHourlyRate)
     setFounderSalary(v.founderSalary); setInitialInvestment(v.initialInvestment)
-    setCacPerPlayer(v.cacPerPlayer); setOrganicPct(v.organicPct)
-    setTargetCapturePct(v.targetCapturePct)
+    if (v.targetCapturePct !== undefined) setTargetCapturePct(v.targetCapturePct)
   }, [])
 
   const savePreset = (name) => {
@@ -430,23 +424,27 @@ export default function BusinessPlan() {
       const totalLeagues = Math.round(activeCities * leaguesPerCity)
 
       const maturityTau = cityMaturityMonths / 3
-      let weightedFillSum = 0
+      let newRateSum = 0
       for (let ci = 0; ci < cityLaunchMonths.length; ci++) {
         const cityAge = m - cityLaunchMonths[ci]
         const maturity = 1 - Math.exp(-cityAge / Math.max(0.1, maturityTau))
         const mktgEffect = mktgHalfPoint > 0 ? 1 - Math.exp(-mktgResponseK * marketingPerCityMonthly / mktgHalfPoint) : 0
-        const cityFill = organicFillRate + (maxFillRate - organicFillRate) * mktgEffect * maturity
-        weightedFillSum += cityFill
+        newRateSum += organicFillRate + (maxNewSignupRate - organicFillRate) * mktgEffect * maturity
       }
-      const fillRate = activeCities > 0 ? weightedFillSum / activeCities : organicFillRate
+      const avgNewRate = activeCities > 0 ? newRateSum / activeCities : organicFillRate
 
-      const avgPlayersPerLeague = Math.round(maxPlayersPerLeague * fillRate / 100)
-      const totalActivePlayers = totalLeagues * avgPlayersPerLeague
-
+      const capacity = totalLeagues * maxPlayersPerLeague
+      const monthsPerSeason = 12 / seasonsPerYear
       const prevPlayers = m > 0 ? months[m - 1].totalActivePlayers : 0
-      const playerGrowth = Math.max(0, totalActivePlayers - Math.round(prevPlayers * retention / 100))
-      const newPlayers = Math.max(0, playerGrowth)
+      const churn = prevPlayers * (1 - retention / 100) / monthsPerSeason
+      const inflow = capacity * (avgNewRate / 100) / monthsPerSeason
+      const capPlayers = capacity * maxFillRate / 100
+      const totalActivePlayers = Math.round(Math.min(capPlayers, Math.max(0, prevPlayers - churn + inflow)))
+      const survivors = Math.max(0, Math.round(prevPlayers - churn))
+      const newPlayers = Math.max(0, totalActivePlayers - survivors)
       const returningPlayers = totalActivePlayers - newPlayers
+      const fillRate = capacity > 0 ? totalActivePlayers / capacity * 100 : 0
+      const avgPlayersPerLeague = totalLeagues > 0 ? Math.round(totalActivePlayers / totalLeagues) : 0
 
       const annualRevenuePerPlayer = effectiveFee * seasonsPerYear
       const monthlyRevenue = totalActivePlayers * annualRevenuePerPlayer / 12
@@ -455,9 +453,7 @@ export default function BusinessPlan() {
 
       const launchMarketing = newCitiesThisMonth * marketingPerCityLaunch
       const ongoingMarketing = activeCities * marketingPerCityMonthly
-      const paidNewPlayers = Math.round(newPlayers * (100 - organicPct) / 100)
-      const acquisitionMarketing = paidNewPlayers * cacPerPlayer
-      const totalMarketing = launchMarketing + ongoingMarketing + acquisitionMarketing
+      const totalMarketing = launchMarketing + ongoingMarketing
 
       const courtCosts = totalLeagues * courtCostPerLeagueSeason * seasonsPerYear / 12
 
@@ -485,7 +481,7 @@ export default function BusinessPlan() {
         avgPlayersPerLeague, totalActivePlayers, newPlayers, returningPlayers,
         fillRate: Math.round(fillRate),
         effectiveFee: Math.round(effectiveFee * 100) / 100,
-        monthlyRevenue, totalMarketing, launchMarketing, ongoingMarketing, acquisitionMarketing,
+        monthlyRevenue, totalMarketing, launchMarketing, ongoingMarketing,
         hosting, courtCosts, adminCosts, personnel, totalCosts,
         netProfit, netMargin: Math.round(netMargin), cumulativeCash,
         monthlyAdminHours: Math.round(monthlyAdminHours),
@@ -529,12 +525,12 @@ export default function BusinessPlan() {
     return { months, yearly, breakEvenMonth, monthlyProfitMonth, ltv, effectiveCac, ltvCacRatio, avgSeasonsBeforeChurn, profitPerCity }
   }, [
     registrationFee, freeMonths, discountPct, discountMonths,
-    playersPerLeague, maxPlayersPerLeague, seasonsPerYear, seasonLengthWeeks,
+    maxPlayersPerLeague, seasonsPerYear,
     startingCities, newCitiesPerQuarter, leaguesPerCityY1, leaguesPerCityY3,
-    organicFillRate, maxFillRate, mktgHalfPoint, mktgResponseK, cityMaturityMonths, retention, organicGrowthPct,
+    organicFillRate, maxNewSignupRate, maxFillRate, mktgHalfPoint, mktgResponseK, cityMaturityMonths, retention,
     hostingBase, hostingPerKPlayers, marketingPerCityLaunch, marketingPerCityMonthly,
     courtCostPerLeagueSeason, adminHoursPerLeagueWeek, adminHourlyRate,
-    founderSalary, initialInvestment, cacPerPlayer, organicPct
+    founderSalary, initialInvestment
   ])
 
   const m36 = model.months[35]
@@ -566,23 +562,21 @@ export default function BusinessPlan() {
         <Slider label="Discount Duration" value={discountMonths} onChange={setDiscountMonths} min={0} max={12} suffix=" mo" />
       </Card>
       <Card title="League Config" icon="🎾">
-        <Slider label="Avg Players / League" value={playersPerLeague} onChange={setPlayersPerLeague} min={6} max={20} />
         <Slider label="Max Players / League" value={maxPlayersPerLeague} onChange={setMaxPlayersPerLeague} min={10} max={30} />
         <Slider label="Seasons / Year" value={seasonsPerYear} onChange={setSeasonsPerYear} min={2} max={6} />
-        <Slider label="Season Length" value={seasonLengthWeeks} onChange={setSeasonLengthWeeks} min={6} max={16} suffix=" wk" />
       </Card>
       <Card title="Growth" icon="📈">
         <Slider label="Starting Cities" value={startingCities} onChange={setStartingCities} min={1} max={5} />
         <Slider label="New Cities / Quarter" value={newCitiesPerQuarter} onChange={setNewCitiesPerQuarter} min={0} max={6} />
         <Slider label="Leagues / City (Y1)" value={leaguesPerCityY1} onChange={setLeaguesPerCityY1} min={1} max={3} step={0.1} />
         <Slider label="Leagues / City (Y3)" value={leaguesPerCityY3} onChange={setLeaguesPerCityY3} min={1} max={5} step={0.1} />
-        <Slider label="Season Retention" value={retention} onChange={setRetention} min={40} max={95} suffix="%" />
-        <Slider label="Organic Growth" value={organicGrowthPct} onChange={setOrganicGrowthPct} min={0} max={80} suffix="%" />
+        <Slider label="Season Retention" value={retention} onChange={setRetention} min={40} max={95} suffix="%" tooltip="Share of players who re-register next season. Core lever: fill settles near new signups ÷ (1 - retention). Stats, rankings and good matches push this up." />
       </Card>
-      <Card title="Marketing Response" icon="📣">
-        <div className="text-[10px] text-gray-500 mb-2">Fill rate = organic + (max - organic) × mktg_effect × maturity</div>
-        <Slider label="Organic Fill Rate" value={organicFillRate} onChange={setOrganicFillRate} min={10} max={50} suffix="%" tooltip="Fill rate with zero ad spend." />
-        <Slider label="Max Fill Rate" value={maxFillRate} onChange={setMaxFillRate} min={60} max={100} suffix="%" tooltip="Theoretical ceiling regardless of spend." />
+      <Card title="Signups & Retention" icon="📣">
+        <div className="text-[10px] text-gray-500 mb-2">Fill settles where new signups balance churn: fill ≈ signups ÷ (1 - retention), capped at Max Fill</div>
+        <Slider label="Organic Signups / Season" value={organicFillRate} onChange={setOrganicFillRate} min={2} max={25} suffix="%" tooltip="New signups per season with zero ad spend, as % of league capacity. WhatsApp, word of mouth, search." />
+        <Slider label="Max Signups / Season" value={maxNewSignupRate} onChange={setMaxNewSignupRate} min={10} max={60} suffix="%" tooltip="New signups per season with unlimited ad spend in a mature city, as % of capacity." />
+        <Slider label="Max Fill Rate" value={maxFillRate} onChange={setMaxFillRate} min={60} max={100} suffix="%" tooltip="Hard ceiling on how full leagues can get, regardless of demand." />
         <Slider label="Mktg Half-Point" value={mktgHalfPoint} onChange={setMktgHalfPoint} min={10} max={200} prefix="€" suffix="/city" tooltip="Monthly spend per city to reach 50% of max marketing lift." />
         <Slider label="Response Steepness (k)" value={mktgResponseK} onChange={setMktgResponseK} min={0.3} max={3} step={0.1} tooltip="Shape of diminishing returns. 0.5=gradual, 1.0=standard, 2.0+=steep." />
         <Slider label="City Maturity" value={cityMaturityMonths} onChange={setCityMaturityMonths} min={2} max={18} suffix=" mo" tooltip="Months for a new city to reach ~95% of its potential." />
@@ -599,10 +593,6 @@ export default function BusinessPlan() {
         <Slider label="Founder Salary" value={founderSalary} onChange={setFounderSalary} min={0} max={3000} step={100} prefix="€" suffix="/mo" />
         <Slider label="Initial Investment" value={initialInvestment} onChange={setInitialInvestment} min={0} max={5000} step={100} prefix="€" />
       </Card>
-      <Card title="Acquisition" icon="🎯">
-        <Slider label="CAC per Player" value={cacPerPlayer} onChange={setCacPerPlayer} min={0} max={15} step={0.5} prefix="€" />
-        <Slider label="Organic %" value={organicPct} onChange={setOrganicPct} min={0} max={80} suffix="%" />
-      </Card>
     </div>
   )
 
@@ -612,7 +602,7 @@ export default function BusinessPlan() {
   return (
     <div className="-mx-6 -mt-6 text-gray-900">
       {/* HEADER */}
-      <div className="border-b border-gray-200 bg-white/90 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
+      <div className="border-b border-gray-200 bg-white/90 backdrop-blur-sm sticky top-16 z-30 shadow-sm">
         <div className="px-6 py-3">
           <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
             <div>
@@ -914,20 +904,22 @@ export default function BusinessPlan() {
               </Card>
 
               <Card title="Marketing Response Curve" icon="📉">
-                <p className="text-[10px] text-gray-500 mb-3">Shows how monthly marketing spend per city translates into fill rate. Dashed = organic baseline. Each line = different city age.</p>
+                <p className="text-[10px] text-gray-500 mb-3">Shows the steady-state fill each monthly ad spend supports (new signups ÷ churn, capped at Max Fill). Dashed = organic only. Each line = different city age.</p>
                 <div className="h-64">
                   <ResponsiveContainer>
                     <LineChart data={(() => {
                       const pts = []
+                      const churnFactor = Math.max(0.05, 1 - retention / 100)
                       for (let spend = 0; spend <= 250; spend += 5) {
                         const mktgEffect = mktgHalfPoint > 0 ? 1 - Math.exp(-mktgResponseK * spend / mktgHalfPoint) : 0
                         const row = { spend: `€${spend}` }
                         for (const age of [1, 3, 6, 12, 24]) {
                           const matTau = cityMaturityMonths / 3
                           const maturity = 1 - Math.exp(-age / Math.max(0.1, matTau))
-                          row[`${age}mo`] = Math.round(organicFillRate + (maxFillRate - organicFillRate) * mktgEffect * maturity)
+                          const newRate = organicFillRate + (maxNewSignupRate - organicFillRate) * mktgEffect * maturity
+                          row[`${age}mo`] = Math.round(Math.min(maxFillRate, newRate / churnFactor))
                         }
-                        row.organic = organicFillRate
+                        row.organic = Math.round(Math.min(maxFillRate, organicFillRate / churnFactor))
                         row.ceiling = maxFillRate
                         pts.push(row)
                       }
@@ -950,18 +942,30 @@ export default function BusinessPlan() {
                   </ResponsiveContainer>
                 </div>
                 <div className="mt-2 grid grid-cols-3 gap-2 text-[10px]">
-                  <div className="bg-gray-50 rounded p-2 border border-gray-100">
-                    <span className="text-gray-500">At €0 spend:</span>
-                    <span className="text-amber-600 ml-1 font-medium">{organicFillRate}% fill</span>
-                  </div>
-                  <div className="bg-gray-50 rounded p-2 border border-gray-100">
-                    <span className="text-gray-500">At €{marketingPerCityMonthly} (current):</span>
-                    <span className="text-emerald-600 ml-1 font-medium">{Math.round(organicFillRate + (maxFillRate - organicFillRate) * (1 - Math.exp(-mktgResponseK * marketingPerCityMonthly / Math.max(0.1, mktgHalfPoint))))}% mature city</span>
-                  </div>
-                  <div className="bg-gray-50 rounded p-2 border border-gray-100">
-                    <span className="text-gray-500">Doubling to €{marketingPerCityMonthly * 2}:</span>
-                    <span className="text-cyan-600 ml-1 font-medium">{Math.round(organicFillRate + (maxFillRate - organicFillRate) * (1 - Math.exp(-mktgResponseK * marketingPerCityMonthly * 2 / Math.max(0.1, mktgHalfPoint))))}% mature city</span>
-                  </div>
+                  {(() => {
+                    const churnFactor = Math.max(0.05, 1 - retention / 100)
+                    const ssFill = (spend) => {
+                      const mktgEffect = mktgHalfPoint > 0 ? 1 - Math.exp(-mktgResponseK * spend / Math.max(0.1, mktgHalfPoint)) : 0
+                      const newRate = organicFillRate + (maxNewSignupRate - organicFillRate) * mktgEffect
+                      return Math.round(Math.min(maxFillRate, newRate / churnFactor))
+                    }
+                    return (
+                      <>
+                        <div className="bg-gray-50 rounded p-2 border border-gray-100">
+                          <span className="text-gray-500">At €0 spend:</span>
+                          <span className="text-amber-600 ml-1 font-medium">{ssFill(0)}% fill</span>
+                        </div>
+                        <div className="bg-gray-50 rounded p-2 border border-gray-100">
+                          <span className="text-gray-500">At €{marketingPerCityMonthly} (current):</span>
+                          <span className="text-emerald-600 ml-1 font-medium">{ssFill(marketingPerCityMonthly)}% mature city</span>
+                        </div>
+                        <div className="bg-gray-50 rounded p-2 border border-gray-100">
+                          <span className="text-gray-500">Doubling to €{marketingPerCityMonthly * 2}:</span>
+                          <span className="text-cyan-600 ml-1 font-medium">{ssFill(marketingPerCityMonthly * 2)}% mature city</span>
+                        </div>
+                      </>
+                    )
+                  })()}
                 </div>
                 <details className="mt-3 group">
                   <summary className="text-[10px] text-gray-500 hover:text-gray-700 cursor-pointer font-medium">Understanding this chart &amp; how to calibrate it</summary>
