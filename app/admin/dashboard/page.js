@@ -143,36 +143,32 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-600">Beginners</p>
+              <p className="text-sm font-medium text-gray-600">Push Notifications</p>
+              <p className="mt-1 text-3xl font-semibold text-blue-600">
+                {stats?.pushNotifications?.uniquePlayers || 0}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {stats?.pushNotifications?.uniquePlayers || 0} players · {stats?.pushNotifications?.totalSubscriptions || 0} devices
+              </p>
+            </div>
+            <div className="text-3xl">🔔</div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-gray-600">Push Adoption</p>
               <p className="mt-1 text-3xl font-semibold text-green-600">
-                {stats?.byLevel?.beginner || 0}
+                {stats?.totalPlayers ? Math.round((stats?.pushNotifications?.uniquePlayers || 0) / stats.totalPlayers * 100) : 0}%
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {Object.entries(stats?.pushNotifications?.byPlatform || {}).map(([platform, count]) => (
+                  `${platform}: ${count}`
+                )).join(' · ') || 'No data'}
               </p>
             </div>
-            <div className="text-3xl">🟢</div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-600">Intermediate</p>
-              <p className="mt-1 text-3xl font-semibold text-yellow-600">
-                {stats?.byLevel?.intermediate || 0}
-              </p>
-            </div>
-            <div className="text-3xl">🟡</div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-600">Advanced</p>
-              <p className="mt-1 text-3xl font-semibold text-purple-600">
-                {stats?.byLevel?.advanced || 0}
-              </p>
-            </div>
-            <div className="text-3xl">🟣</div>
+            <div className="text-3xl">📊</div>
           </div>
         </div>
       </div>

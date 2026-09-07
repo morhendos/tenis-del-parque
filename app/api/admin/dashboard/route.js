@@ -1,6 +1,7 @@
 import dbConnect from '../../../../lib/db/mongoose'
 import Player from '../../../../lib/models/Player'
 import League from '../../../../lib/models/League'
+import PushSubscription from '../../../../lib/models/PushSubscription'
 import { requireAdmin } from '../../../../lib/auth/apiAuth'
 
 // Force dynamic rendering for this route
@@ -94,6 +95,16 @@ export async function GET(request) {
       { $sort: { _id: 1 } }
     ])
 
+    // Push notification stats
+    const totalPushSubscriptions = await PushSubscription.countDocuments({ isActive: true })
+    const uniquePushPlayers = await PushSubscription.distinct('playerId', { isActive: true, playerId: { $ne: null } })
+    const pushByPlatform = await PushSubscription.aggregate([
+      { $match: { isActive: true } },
+      { $group: { _id: '$deviceInfo.platform', count: { $sum: 1 } } }
+    ])
+    const platformBreakdown = {}
+    pushByPlatform.forEach(p => { platformBreakdown[p._id || 'unknown'] = p.count })
+
     // Create response
     const response = Response.json({
       success: true,
@@ -101,7 +112,12 @@ export async function GET(request) {
         totalPlayers,
         byLevel,
         byLeague,
-        registrationsByDay
+        registrationsByDay,
+        pushNotifications: {
+          totalSubscriptions: totalPushSubscriptions,
+          uniquePlayers: uniquePushPlayers.length,
+          byPlatform: platformBreakdown
+        }
       },
       recentPlayers,
       timestamp: new Date().toISOString() // Add timestamp to verify freshness
