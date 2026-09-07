@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import Navigation from '../../../../components/common/Navigation'
 import Footer from '../../../../components/common/Footer'
@@ -14,6 +14,7 @@ import { i18n } from '../../../../lib/i18n/config'
 export default function LeagueRegistrationPage() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const leagueSlug = params.league
   const locale = params.locale || 'en'
   
@@ -28,6 +29,56 @@ export default function LeagueRegistrationPage() {
   const [registrationData, setRegistrationData] = useState(null)
 
   const t = homeContent[validLocale] || homeContent[i18n.defaultLocale]
+
+  // Handle return from Stripe Checkout
+  useEffect(() => {
+    if (!league) return
+    const payment = searchParams.get('payment')
+    if (payment === 'success') {
+      let stored = {}
+      try {
+        stored = JSON.parse(sessionStorage.getItem('tdp_pending_payment') || '{}')
+      } catch (e) {}
+      sessionStorage.removeItem('tdp_pending_payment')
+      prepareSuccessData({ player: { league: {} } }, stored.playerName || 'Player')
+    } else if (payment === 'cancelled') {
+      let stored = {}
+      try {
+        stored = JSON.parse(sessionStorage.getItem('tdp_pending_payment') || '{}')
+      } catch (e) {}
+      setErrors({
+        payment: validLocale === 'es'
+          ? 'El pago no se completó. Tu plaza no está confirmada hasta que pagues.'
+          : 'Payment was not completed. Your spot is not confirmed until you pay.',
+        paymentEmail: stored.email || null
+      })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [league])
+
+  const startCheckout = async (email, playerName) => {
+    try {
+      sessionStorage.setItem('tdp_pending_payment', JSON.stringify({ email, playerName }))
+      const response = await fetch('/api/players/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          leagueId: league._id,
+          language: validLocale
+        })
+      })
+      const data = await response.json()
+      if (data.success && data.url) {
+        window.location.href = data.url
+        return true
+      }
+      return false
+    } catch (e) {
+      console.error('Checkout error:', e)
+      return false
+    }
+  }
 
   // Fetch league information
   useEffect(() => {
@@ -114,7 +165,13 @@ export default function LeagueRegistrationPage() {
           return
         }
         
-        prepareSuccessData(data, formData.name || 'Player')
+        const existingName = profileData.player.name || 'Player'
+        const existingReg = data.player?.currentRegistration
+        if (existingReg && existingReg.paymentStatus === 'pending' && existingReg.finalPrice > 0) {
+          const redirected = await startCheckout(data.player.email, existingName)
+          if (redirected) return
+        }
+        prepareSuccessData(data, existingName)
         
       } else {
         // New user flow - Register and create account
@@ -180,6 +237,11 @@ export default function LeagueRegistrationPage() {
           }
         }
         
+        const newReg = data.player?.currentRegistration
+        if (newReg && newReg.paymentStatus === 'pending' && newReg.finalPrice > 0) {
+          const redirected = await startCheckout(data.player.email, formData.name)
+          if (redirected) return
+        }
         prepareSuccessData(data, formData.name)
       }
       
@@ -322,6 +384,22 @@ export default function LeagueRegistrationPage() {
               : 'Complete the form to join'}
           </p>
         </div>
+
+        {errors.payment && (
+          <div className="max-w-lg mx-auto mb-4 px-4 sm:px-0">
+            <div className="bg-amber-50 border border-amber-300 rounded-lg p-4 text-sm text-amber-800">
+              <p>{errors.payment}</p>
+              {errors.paymentEmail && (
+                <button
+                  onClick={() => startCheckout(errors.paymentEmail, 'Player')}
+                  className="mt-3 px-4 py-2 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700"
+                >
+                  {validLocale === 'es' ? 'Reintentar pago' : 'Retry payment'}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         <ModernRegistrationForm
           league={league}
