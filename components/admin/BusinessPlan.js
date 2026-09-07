@@ -554,7 +554,7 @@ export default function BusinessPlan() {
   // SIDEBAR CONTROLS
   // ============================================================
   const sidebar = (
-    <div className="lg:w-72 shrink-0 space-y-4">
+    <div className="lg:w-72 shrink-0 space-y-4 lg:sticky lg:top-[13rem] lg:self-start lg:max-h-[calc(100vh-14rem)] lg:overflow-y-auto lg:pr-1">
       <Card title="Registration & Pricing" icon="💰">
         <Slider label="Registration Fee" value={registrationFee} onChange={setRegistrationFee} min={10} max={60} prefix="€" />
         <Slider label="Free Launch Months" value={freeMonths} onChange={setFreeMonths} min={0} max={12} suffix=" mo" />
