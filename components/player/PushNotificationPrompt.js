@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { usePushNotifications } from '@/lib/hooks/usePushNotifications'
 
 const SNOOZE_KEY = 'push-prompt-snoozed-until'
@@ -47,7 +48,20 @@ export default function PushNotificationPrompt({ language = 'es' }) {
       return // unsupported and not the iOS case: show nothing
     }
 
-    const timer = setTimeout(() => setShow(true), 1500)
+    // Before showing, ask the browser directly for an existing
+    // subscription. The hook's isSubscribed can resolve before this
+    // timer fires, which made the prompt reappear for players who
+    // were already subscribed.
+    const timer = setTimeout(async () => {
+      if (isSupported) {
+        try {
+          const reg = await navigator.serviceWorker.getRegistration()
+          const sub = reg && await reg.pushManager.getSubscription()
+          if (sub) return // already subscribed - never show
+        } catch (e) {}
+      }
+      setShow(true)
+    }, 1500)
     return () => clearTimeout(timer)
   }, [isSupported])
 
@@ -90,7 +104,10 @@ export default function PushNotificationPrompt({ language = 'es' }) {
     iosSteps: 'Tap Share and choose "Add to Home Screen"'
   }
 
-  return (
+  // Portal to <body>: the dashboard wrapper has a CSS transform
+  // (animate-fade-in-up) which breaks position:fixed for descendants,
+  // pushing the bar below the fold until the user scrolls.
+  return createPortal(
     <div className="fixed bottom-16 lg:bottom-0 left-0 right-0 z-50 animate-slideUp">
       <div className="bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]" style={{ padding: '16px' }}>
         <div className="max-w-lg mx-auto flex items-center gap-3">
@@ -130,6 +147,7 @@ export default function PushNotificationPrompt({ language = 'es' }) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
