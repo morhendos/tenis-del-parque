@@ -1034,3 +1034,23 @@ body {
     padding-bottom: max(env(safe-area-inset-bottom), 0px);
   }
 }
+
+/* Installed PWA: paint the iOS status bar area in brand purple.
+   Requires viewport-fit=cover + apple-mobile-web-app-status-bar-style
+   black-translucent (set in app/layout.js). Content is pushed down by
+   the body padding; the fixed strip keeps the bar purple while scrolling. */
+@media all and (display-mode: standalone) {
+  body {
+    padding-top: env(safe-area-inset-top);
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: env(safe-area-inset-top);
+    background: #6B46C1;
+    z-index: 60;
+  }
+}
