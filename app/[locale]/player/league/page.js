@@ -11,6 +11,7 @@ import PlayoffExplanation from '@/components/player/PlayoffExplanation'
 import LeagueTabs from '@/components/player/LeagueTabs'
 import CountdownCard from '@/components/player/CountdownCard'
 import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
+import { getEffectiveLeagueStatus } from '@/lib/utils/leagueSelection'
 
 // Helper to categorize registrations
 function categorizeRegistrations(registrations) {
@@ -24,29 +25,16 @@ function categorizeRegistrations(registrations) {
     const league = reg.league
     if (!league) return
     
-    const status = league.status
-    const playoffPhase = league.playoffConfig?.currentPhase
+    const status = getEffectiveLeagueStatus(league)
     
-    // Active: status is 'active' OR currently in playoffs (not completed)
-    if (status === 'active' || 
-        (playoffPhase && playoffPhase !== 'regular_season' && playoffPhase !== 'completed')) {
+    if (status === 'playoffs' || status === 'active') {
       categories.active.push(reg)
     }
-    // Upcoming: registration open or coming soon
     else if (status === 'registration_open' || status === 'coming_soon') {
       categories.upcoming.push(reg)
     }
-    // Past: completed or archived
-    else if (status === 'completed' || status === 'archived') {
-      categories.past.push(reg)
-    }
-    // Default to active if status is unclear but has matches
-    else if (reg.stats?.matchesPlayed > 0) {
-      categories.active.push(reg)
-    }
-    // Otherwise treat as upcoming
     else {
-      categories.upcoming.push(reg)
+      categories.past.push(reg)
     }
   })
   
