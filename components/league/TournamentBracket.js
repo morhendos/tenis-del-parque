@@ -192,7 +192,7 @@ export default function TournamentBracket({
             </span>
             {result && !isWalkover && (
               <span className="text-xs text-gray-400 font-mono ml-2 flex-shrink-0">
-                {result.score?.split(', ').map((set, idx) => <span key={idx} className={`ml-0.5 ${isWinner(player1, match) ? 'text-white' : ''}`}>{set.split('-')[0]}</span>)}
+                {result.score?.split(', ').map((set, idx) => <span key={idx} className={`inline-block w-[18px] text-center ${isWinner(player1, match) ? 'text-white' : ''}`}>{set.split('-')[0]}</span>)}
               </span>
             )}
           </div>
@@ -206,7 +206,7 @@ export default function TournamentBracket({
             </span>
             {result && !isWalkover && (
               <span className="text-xs text-gray-400 font-mono ml-2 flex-shrink-0">
-                {result.score?.split(', ').map((set, idx) => <span key={idx} className={`ml-0.5 ${isWinner(player2, match) ? 'text-white' : ''}`}>{set.split('-')[1]}</span>)}
+                {result.score?.split(', ').map((set, idx) => <span key={idx} className={`inline-block w-[18px] text-center ${isWinner(player2, match) ? 'text-white' : ''}`}>{set.split('-')[1]}</span>)}
               </span>
             )}
           </div>
