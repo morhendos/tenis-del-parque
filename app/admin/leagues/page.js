@@ -282,6 +282,23 @@ export default function AdminLeaguesPage() {
     return groups
   }, {})
 
+  // Reconcile stored custom city order with the actual city list:
+  // drop cities that no longer exist, append new ones alphabetically
+  const cityNames = Object.keys(groupedLeagues)
+  const reconciledCityOrder = [
+    ...customOrder.filter(n => cityNames.includes(n)),
+    ...cityNames.filter(n => !customOrder.includes(n)).sort((a, b) => a.localeCompare(b))
+  ]
+
+  // Reconcile stored custom league order for a city with its actual leagues
+  const getReconciledLeagueOrder = (cityName) => {
+    const ids = (groupedLeagues[cityName] || []).map(l => l._id)
+    const stored = customLeagueOrder[cityName] || []
+    const kept = stored.filter(id => ids.includes(id))
+    const missing = ids.filter(id => !kept.includes(id))
+    return [...kept, ...missing]
+  }
+
   // Sort cities based on selected option
   const sortedCities = Object.keys(groupedLeagues).sort((a, b) => {
     switch (sortBy) {
@@ -303,34 +320,20 @@ export default function AdminLeaguesPage() {
         return playersB - playersA
       
       case 'custom':
-        // Use custom order if available
-        if (customOrder.length > 0) {
-          return customOrder.indexOf(a) - customOrder.indexOf(b)
-        }
-        return a.localeCompare(b)
+        return reconciledCityOrder.indexOf(a) - reconciledCityOrder.indexOf(b)
       
       default:
         return a.localeCompare(b)
     }
   })
 
-  // Initialize custom order if not set
-  useEffect(() => {
-    if (sortBy === 'custom' && customOrder.length === 0 && sortedCities.length > 0) {
-      const initialOrder = [...sortedCities].sort((a, b) => a.localeCompare(b))
-      setCustomOrder(initialOrder)
-      localStorage.setItem('leaguesCustomOrder', JSON.stringify(initialOrder))
-    }
-  }, [sortBy, customOrder.length, sortedCities.length])
-
   // Move city up in custom order
   const moveCityUp = (cityName) => {
-    const currentIndex = customOrder.indexOf(cityName)
+    const newOrder = [...reconciledCityOrder]
+    const currentIndex = newOrder.indexOf(cityName)
     if (currentIndex > 0) {
-      const newOrder = [...customOrder]
-      const temp = newOrder[currentIndex - 1]
+      newOrder[currentIndex] = newOrder[currentIndex - 1]
       newOrder[currentIndex - 1] = cityName
-      newOrder[currentIndex] = temp
       setCustomOrder(newOrder)
       localStorage.setItem('leaguesCustomOrder', JSON.stringify(newOrder))
     }
@@ -338,12 +341,11 @@ export default function AdminLeaguesPage() {
 
   // Move city down in custom order
   const moveCityDown = (cityName) => {
-    const currentIndex = customOrder.indexOf(cityName)
-    if (currentIndex < customOrder.length - 1) {
-      const newOrder = [...customOrder]
-      const temp = newOrder[currentIndex + 1]
+    const newOrder = [...reconciledCityOrder]
+    const currentIndex = newOrder.indexOf(cityName)
+    if (currentIndex !== -1 && currentIndex < newOrder.length - 1) {
+      newOrder[currentIndex] = newOrder[currentIndex + 1]
       newOrder[currentIndex + 1] = cityName
-      newOrder[currentIndex] = temp
       setCustomOrder(newOrder)
       localStorage.setItem('leaguesCustomOrder', JSON.stringify(newOrder))
     }
@@ -357,20 +359,10 @@ export default function AdminLeaguesPage() {
       const orders = []
       let displayOrder = 0
 
-      // Use custom city order if available, otherwise alphabetical
-      const citiesToProcess = sortBy === 'custom' && customOrder.length > 0 
-        ? customOrder 
-        : sortedCities
-
-      citiesToProcess.forEach(cityName => {
-        const cityLeagues = groupedLeagues[cityName] || []
-        
-        // Use custom league order if available, otherwise current sort
-        const leaguesToProcess = leagueSortBy === 'custom' && customLeagueOrder[cityName]
-          ? customLeagueOrder[cityName].map(id => cityLeagues.find(l => l._id === id)).filter(Boolean)
-          : getSortedLeagues(cityName)
-
-        leaguesToProcess.forEach(league => {
+      // Save exactly what is rendered: sortedCities and getSortedLeagues
+      // already reflect custom order (reconciled) or whatever sort is active
+      sortedCities.forEach(cityName => {
+        getSortedLeagues(cityName).forEach(league => {
           orders.push({
             leagueId: league._id,
             displayOrder: displayOrder++
@@ -417,16 +409,10 @@ export default function AdminLeaguesPage() {
           const statusOrder = { 'active': 1, 'registration_open': 2, 'coming_soon': 3, 'completed': 4, 'inactive': 5 }
           return (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99)
         
-        case 'custom':
-          // Use custom order if available for this city
-          if (customLeagueOrder[cityName]) {
-            const indexA = customLeagueOrder[cityName].indexOf(a._id)
-            const indexB = customLeagueOrder[cityName].indexOf(b._id)
-            if (indexA !== -1 && indexB !== -1) {
-              return indexA - indexB
-            }
-          }
-          return a.name.localeCompare(b.name)
+        case 'custom': {
+          const order = getReconciledLeagueOrder(cityName)
+          return order.indexOf(a._id) - order.indexOf(b._id)
+        }
         
         default:
           return a.name.localeCompare(b.name)
@@ -436,13 +422,11 @@ export default function AdminLeaguesPage() {
 
   // Move league up within city
   const moveLeagueUp = (cityName, leagueId) => {
-    const cityOrder = customLeagueOrder[cityName] || []
-    const currentIndex = cityOrder.indexOf(leagueId)
+    const newCityOrder = getReconciledLeagueOrder(cityName)
+    const currentIndex = newCityOrder.indexOf(leagueId)
     if (currentIndex > 0) {
-      const newCityOrder = [...cityOrder]
-      const temp = newCityOrder[currentIndex - 1]
+      newCityOrder[currentIndex] = newCityOrder[currentIndex - 1]
       newCityOrder[currentIndex - 1] = leagueId
-      newCityOrder[currentIndex] = temp
       const newOrder = { ...customLeagueOrder, [cityName]: newCityOrder }
       setCustomLeagueOrder(newOrder)
       localStorage.setItem('customLeagueOrder', JSON.stringify(newOrder))
@@ -451,44 +435,16 @@ export default function AdminLeaguesPage() {
 
   // Move league down within city
   const moveLeagueDown = (cityName, leagueId) => {
-    const cityOrder = customLeagueOrder[cityName] || []
-    const currentIndex = cityOrder.indexOf(leagueId)
-    if (currentIndex < cityOrder.length - 1) {
-      const newCityOrder = [...cityOrder]
-      const temp = newCityOrder[currentIndex + 1]
+    const newCityOrder = getReconciledLeagueOrder(cityName)
+    const currentIndex = newCityOrder.indexOf(leagueId)
+    if (currentIndex !== -1 && currentIndex < newCityOrder.length - 1) {
+      newCityOrder[currentIndex] = newCityOrder[currentIndex + 1]
       newCityOrder[currentIndex + 1] = leagueId
-      newCityOrder[currentIndex] = temp
       const newOrder = { ...customLeagueOrder, [cityName]: newCityOrder }
       setCustomLeagueOrder(newOrder)
       localStorage.setItem('customLeagueOrder', JSON.stringify(newOrder))
     }
   }
-
-  // Initialize custom league order when switching to custom mode
-  // IMPORTANT: Must initialize ALL cities in a single state update to avoid React batching issues
-  useEffect(() => {
-    if (leagueSortBy === 'custom' && Object.keys(groupedLeagues).length > 0) {
-      setCustomLeagueOrder(prevOrder => {
-        const newOrder = { ...prevOrder }
-        let hasChanges = false
-        
-        Object.keys(groupedLeagues).forEach(cityName => {
-          // Only initialize if this city doesn't have an order yet
-          if (!newOrder[cityName]) {
-            const cityLeagues = groupedLeagues[cityName] || []
-            newOrder[cityName] = cityLeagues.map(l => l._id)
-            hasChanges = true
-          }
-        })
-        
-        if (hasChanges) {
-          localStorage.setItem('customLeagueOrder', JSON.stringify(newOrder))
-        }
-        
-        return hasChanges ? newOrder : prevOrder
-      })
-    }
-  }, [leagueSortBy, leagues.length]) // Re-run when leagues load
 
   if (loading) {
     return (
