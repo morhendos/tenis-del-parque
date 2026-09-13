@@ -9,6 +9,7 @@ import {
   updatePlayerStatsOnMatchComplete, 
   reversePlayerStatsOnMatchReset 
 } from '../../../../../lib/services/playerStatsService'
+import { broadcastMatchResult } from '../../../../../lib/services/pushNotificationService'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
@@ -383,6 +384,11 @@ export async function PATCH(request, { params }) {
 
     // Return updated match with populated data
     await match.populate('players.player1 players.player2 league')
+
+    // Broadcast newly entered results to the rest of the league
+    if (body.result) {
+      await broadcastMatchResult(match._id)
+    }
 
     return NextResponse.json({
       message: body.players ? 'Players updated successfully' : 'Match updated successfully',

@@ -5,6 +5,7 @@ import Player from '../../../../../lib/models/Player'
 import { requirePlayer } from '../../../../../lib/auth/apiAuth'
 import mongoose from 'mongoose'
 import { updatePlayerStatsOnMatchComplete } from '../../../../../lib/services/playerStatsService'
+import { broadcastMatchResult } from '../../../../../lib/services/pushNotificationService'
 
 // Helper function to get player registration for a league/season
 function getPlayerRegistration(player, leagueId, season) {
@@ -399,6 +400,9 @@ export async function POST(request) {
 
   // Populate match data for response
   await match.populate('players.player1 players.player2 league')
+
+  // Broadcast the new result to the rest of the league (never fails the request)
+  await broadcastMatchResult(match._id)
 
   return NextResponse.json({ 
     success: true, 
