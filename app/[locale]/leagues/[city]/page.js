@@ -11,6 +11,8 @@ import { homeContent } from '@/lib/content/homeContent'
 import { serializeLeague } from '@/lib/utils/serializeLeague'
 import { applyEffectiveStatuses } from '@/lib/utils/leagueStatusUtils'
 
+export const revalidate = 60
+
 export async function generateStaticParams() {
   await dbConnect()
   const cities = await City.find({ status: 'active' }).select('slug')
