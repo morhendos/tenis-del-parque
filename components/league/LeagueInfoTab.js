@@ -323,6 +323,19 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale,
                 </span>
               )}
             </div>
+
+            {!league.seasonConfig?.price?.isFree && (
+              <>
+                <p className="text-xs text-gray-500 mt-1">
+                  {language === 'es' ? 'IVA incluido' : 'VAT included'}
+                </p>
+                <p className="text-sm text-parque-green font-medium mt-2">
+                  {language === 'es'
+                    ? 'Juega todos tus partidos y la próxima temporada te sale a mitad de precio.'
+                    : 'Play all your matches and get 50% off next season.'}
+                </p>
+              </>
+            )}
             
             {/* Promo code badge */}
             {discountValid && (
