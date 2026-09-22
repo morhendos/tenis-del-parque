@@ -32,7 +32,9 @@ export default function ModernRegistrationForm({
   locale, 
   onSubmit, 
   isSubmitting,
-  errors = {} 
+  errors = {},
+  loggedInPlayer = null,
+  onSignOut
 }) {
   const [hasAccount, setHasAccount] = useState(true)
   const [showPassword, setShowPassword] = useState(false)
@@ -115,7 +117,7 @@ export default function ModernRegistrationForm({
     e.preventDefault()
     
     // Validate terms acceptance for new accounts
-    if (!hasAccount && !acceptedTerms) {
+    if (!loggedInPlayer && !hasAccount && !acceptedTerms) {
       setLocalErrors({
         terms: locale === 'es' 
           ? 'Debes aceptar los términos y la política de privacidad' 
@@ -149,6 +151,40 @@ export default function ModernRegistrationForm({
     }
     return `${seasonNames[locale]?.[type] || type} ${year}`
   }
+
+  const levelPicker = needsLevelSelection && (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        {locale === 'es' ? '¿Cuál es tu nivel?' : 'What is your level?'}
+      </label>
+      <div className="flex flex-wrap gap-2">
+        {['beginner', 'intermediate', 'advanced'].map((level) => (
+          <label
+            key={level}
+            className={`flex-1 min-w-[80px] text-center px-3 py-2.5 border-2 rounded-xl cursor-pointer transition-all text-sm font-medium ${
+              formData.level === level
+                ? 'border-emerald-600 bg-emerald-50 text-emerald-700'
+                : 'border-gray-200 text-gray-600 hover:border-gray-300'
+            }`}
+          >
+            <input
+              type="radio"
+              name="level"
+              value={level}
+              checked={formData.level === level}
+              onChange={handleChange}
+              className="sr-only"
+              required
+            />
+            {skillLevelNames[locale][level]}
+          </label>
+        ))}
+      </div>
+      {errors.level && (
+        <p className="mt-1.5 text-xs text-red-600">{errors.level}</p>
+      )}
+    </div>
+  )
 
   return (
     <div className="max-w-lg mx-auto">
@@ -306,6 +342,7 @@ export default function ModernRegistrationForm({
       </div>
 
       {/* Account Type Tabs */}
+      {!loggedInPlayer && (
       <div className="bg-white rounded-none sm:rounded-2xl shadow-sm sm:shadow-lg mx-0 sm:mx-0 mb-3 sm:mb-6 overflow-hidden">
         <div className="account-type-tabs p-1.5 sm:p-2 bg-gray-100">
           <div className="flex gap-1">
@@ -334,6 +371,7 @@ export default function ModernRegistrationForm({
           </div>
         </div>
       </div>
+      )}
 
       {/* Registration Form */}
       <form 
@@ -344,12 +382,34 @@ export default function ModernRegistrationForm({
       >
         <div className="px-4 sm:px-6 pt-5 sm:pt-6 pb-4 sm:pb-6">
           <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-5">
-            {hasAccount 
+            {loggedInPlayer
+              ? (locale === 'es' ? 'Unirte a la liga' : 'Join the league')
+              : hasAccount 
               ? (locale === 'es' ? 'Iniciar Sesión' : 'Sign In')
               : (locale === 'es' ? 'Crear Cuenta' : 'Create Account')}
           </h3>
 
-          {hasAccount ? (
+          {loggedInPlayer ? (
+            <div className="space-y-4">
+              <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                <p className="text-sm text-gray-900">
+                  {locale === 'es' ? 'Te unes como' : 'Joining as'}{' '}
+                  <span className="font-semibold">{loggedInPlayer.name}</span>
+                </p>
+                <p className="text-xs text-gray-500 mt-0.5">{loggedInPlayer.email}</p>
+                {onSignOut && (
+                  <button
+                    type="button"
+                    onClick={onSignOut}
+                    className="mt-2 text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+                  >
+                    {locale === 'es' ? '¿No eres tú? Cerrar sesión' : 'Not you? Sign out'}
+                  </button>
+                )}
+              </div>
+              {levelPicker}
+            </div>
+          ) : hasAccount ? (
             // Login Form
             <div className="space-y-4">
               {/* Hidden username field for password managers */}
@@ -418,6 +478,7 @@ export default function ModernRegistrationForm({
               >
                 {locale === 'es' ? '¿Olvidaste tu contraseña?' : 'Forgot password?'}
               </Link>
+              {levelPicker}
             </div>
           ) : (
             // New User Form
@@ -500,40 +561,7 @@ export default function ModernRegistrationForm({
                 )}
               </div>
 
-              {/* Level Selection - Compact pills on mobile */}
-              {needsLevelSelection && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {locale === 'es' ? '¿Cuál es tu nivel?' : 'What&apos;s your level?'}
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {['beginner', 'intermediate', 'advanced'].map((level) => (
-                      <label
-                        key={level}
-                        className={`flex-1 min-w-[80px] text-center px-3 py-2.5 border-2 rounded-xl cursor-pointer transition-all text-sm font-medium ${
-                          formData.level === level
-                            ? 'border-emerald-600 bg-emerald-50 text-emerald-700'
-                            : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="level"
-                          value={level}
-                          checked={formData.level === level}
-                          onChange={handleChange}
-                          className="sr-only"
-                          required
-                        />
-                        {skillLevelNames[locale][level]}
-                      </label>
-                    ))}
-                  </div>
-                  {errors.level && (
-                    <p className="mt-1.5 text-xs text-red-600">{errors.level}</p>
-                  )}
-                </div>
-              )}
+              {levelPicker}
 
               <div>
                 <label htmlFor="signup-password" className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -573,7 +601,7 @@ export default function ModernRegistrationForm({
           )}
 
           {/* Terms & Privacy Checkbox (only for new accounts) */}
-          {!hasAccount && (
+          {!hasAccount && !loggedInPlayer && (
             <div className="mt-4 px-1">
               <label className="flex items-start gap-3 cursor-pointer">
                 <input
@@ -661,7 +689,9 @@ export default function ModernRegistrationForm({
               </span>
             ) : (
               <span className="flex items-center justify-center">
-                {hasAccount 
+                {loggedInPlayer
+                  ? (locale === 'es' ? 'Unirme a la liga' : 'Join the league')
+                  : hasAccount 
                   ? (locale === 'es' ? 'Entrar y Registrarme' : 'Sign In & Register')
                   : (locale === 'es' ? 'Crear Cuenta' : 'Create Account')}
                 <ChevronRight className="w-5 h-5 ml-1" />
@@ -670,6 +700,7 @@ export default function ModernRegistrationForm({
           </button>
 
           {/* Toggle hint */}
+          {!loggedInPlayer && (
           <p className="mt-4 text-center text-sm text-gray-500">
             {hasAccount ? (
               <>
@@ -695,6 +726,7 @@ export default function ModernRegistrationForm({
               </>
             )}
           </p>
+          )}
         </div>
       </form>
     </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import { signIn } from 'next-auth/react'
+import { signIn, signOut, useSession } from 'next-auth/react'
 import Navigation from '../../../../components/common/Navigation'
 import Footer from '../../../../components/common/Footer'
 import ModernRegistrationForm from '../../../../components/leagues/ModernRegistrationForm'
@@ -27,6 +27,9 @@ export default function LeagueRegistrationPage() {
   const [errors, setErrors] = useState({})
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [registrationData, setRegistrationData] = useState(null)
+  const { status: sessionStatus } = useSession()
+  const [loggedInPlayer, setLoggedInPlayer] = useState(null)
+  const [profileChecked, setProfileChecked] = useState(false)
 
   const t = homeContent[validLocale] || homeContent[i18n.defaultLocale]
 
@@ -80,6 +83,62 @@ export default function LeagueRegistrationPage() {
     }
   }
 
+  useEffect(() => {
+    if (sessionStatus === 'loading') return
+    if (sessionStatus !== 'authenticated') {
+      setLoggedInPlayer(null)
+      setProfileChecked(true)
+      return
+    }
+    fetch('/api/player/profile')
+      .then(res => (res.ok ? res.json() : null))
+      .then(data => setLoggedInPlayer(data?.player?.email ? data.player : null))
+      .catch(() => setLoggedInPlayer(null))
+      .finally(() => setProfileChecked(true))
+  }, [sessionStatus])
+
+  const joinAsExistingPlayer = async (profilePlayer, formData) => {
+    const response = await fetch('/api/players/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: profilePlayer.name,
+        email: profilePlayer.email,
+        whatsapp: profilePlayer.whatsapp,
+        level: formData.level || league.skillLevel,
+        language: validLocale,
+        leagueId: league._id,
+        leagueSlug: league.slug,
+        discountCode: formData.discountCode
+      })
+    })
+
+    const data = await response.json()
+    const playerName = profilePlayer.name || 'Player'
+
+    if (!response.ok) {
+      if (response.status === 409) {
+        const redirected = await startCheckout(profilePlayer.email, playerName)
+        if (redirected) return
+        setErrors({
+          info: validLocale === 'es'
+            ? 'Ya estás registrado en esta liga. Puedes ver tu progreso en el panel de jugador.'
+            : 'You are already registered in this league. You can view your progress in the player dashboard.'
+        })
+      } else {
+        setErrors({ submit: data.error || 'Registration failed' })
+      }
+      return
+    }
+
+    const reg = data.player?.currentRegistration
+    if (reg && reg.paymentStatus === 'pending' && reg.finalPrice > 0) {
+      const redirected = await startCheckout(data.player.email, playerName)
+      if (redirected) return
+    }
+    prepareSuccessData(data, playerName)
+  }
+
   // Fetch league information
   useEffect(() => {
     async function fetchLeague() {
@@ -104,7 +163,9 @@ export default function LeagueRegistrationPage() {
     setIsSubmitting(true)
     
     try {
-      if (hasAccount) {
+      if (loggedInPlayer) {
+        await joinAsExistingPlayer(loggedInPlayer, formData)
+      } else if (hasAccount) {
         // Existing user flow - Sign in first, then register
         const signInResult = await signIn('credentials', {
           redirect: false,
@@ -133,45 +194,7 @@ export default function LeagueRegistrationPage() {
         }
         
         const profileData = await profileResponse.json()
-        
-        // Now register the signed-in user to the league using their existing data
-        const response = await fetch('/api/players/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: profileData.player.name,
-            email: profileData.player.email,
-            whatsapp: profileData.player.whatsapp,
-            level: formData.level || league.skillLevel,
-            language: validLocale,
-            leagueId: league._id,
-            leagueSlug: league.slug,
-            discountCode: formData.discountCode
-          })
-        })
-        
-        const data = await response.json()
-        
-        if (!response.ok) {
-          if (response.status === 409) {
-            setErrors({ 
-              info: validLocale === 'es' 
-                ? 'Ya estás registrado en esta liga. Puedes ver tu progreso en el panel de jugador.' 
-                : 'You are already registered in this league. You can view your progress in the player dashboard.' 
-            })
-          } else {
-            setErrors({ submit: data.error || 'Registration failed' })
-          }
-          return
-        }
-        
-        const existingName = profileData.player.name || 'Player'
-        const existingReg = data.player?.currentRegistration
-        if (existingReg && existingReg.paymentStatus === 'pending' && existingReg.finalPrice > 0) {
-          const redirected = await startCheckout(data.player.email, existingName)
-          if (redirected) return
-        }
-        prepareSuccessData(data, existingName)
+        await joinAsExistingPlayer(profileData.player, formData)
         
       } else {
         // New user flow - Register and create account
@@ -278,7 +301,7 @@ export default function LeagueRegistrationPage() {
   }
 
   // Loading state
-  if (loading) {
+  if (loading || !profileChecked) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
@@ -407,6 +430,8 @@ export default function LeagueRegistrationPage() {
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
           errors={errors}
+          loggedInPlayer={loggedInPlayer}
+          onSignOut={() => signOut({ redirect: false }).then(() => setLoggedInPlayer(null))}
         />
       </div>
       

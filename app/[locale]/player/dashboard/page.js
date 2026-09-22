@@ -17,6 +17,7 @@ import PlayoffStatusCard from '@/components/player/PlayoffStatusCard'
 import RecentResults from '@/components/player/RecentResults'
 import NoLeaguesCTA from '@/components/player/NoLeaguesCTA'
 import InjuryBanner from '@/components/player/InjuryBanner'
+import NewSeasonCard from '@/components/player/NewSeasonCard'
 import { dashboardStyles } from '@/styles/dashboard'
 
 export default function PlayerDashboard() {
@@ -143,6 +144,8 @@ export default function PlayerDashboard() {
         
         {/* Injury Status Banner */}
         <InjuryBanner player={player} language={language} onUpdate={refetch} />
+
+        <NewSeasonCard language={language} locale={locale} />
         
         {/* Push notification prompt - shows once if not enabled */}
         <PushNotificationPrompt language={language} />
