@@ -66,6 +66,11 @@ export async function PATCH(request, { params }) {
     await dbConnect()
     
     const body = await request.json()
+
+    if (body.cityId) {
+      body.city = body.cityId
+      delete body.cityId
+    }
     
     const league = await League.findByIdAndUpdate(
       params.id,
