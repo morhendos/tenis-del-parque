@@ -142,10 +142,10 @@ export default function PlayerDashboard() {
         {/* Welcome Header with Quick Links */}
         <DashboardHeader player={player} language={language} />
         
+        <NewSeasonCard language={language} locale={locale} />
+
         {/* Injury Status Banner */}
         <InjuryBanner player={player} language={language} onUpdate={refetch} />
-
-        <NewSeasonCard language={language} locale={locale} />
         
         {/* Push notification prompt - shows once if not enabled */}
         <PushNotificationPrompt language={language} />

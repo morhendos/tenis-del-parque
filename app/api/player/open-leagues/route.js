@@ -22,14 +22,19 @@ export async function GET(request) {
 
     const player = await Player.findOne({ email: user.email }).select('registrations.league')
     const joinedIds = (player?.registrations || []).map(r => r.league)
+    const joinedLeagues = await League.find({ _id: { $in: joinedIds } }).select('city status')
 
-    const joinedLeagues = await League.find({ _id: { $in: joinedIds } }).select('city')
     const cityIds = [...new Set(joinedLeagues.map(l => l.city?.toString()).filter(Boolean))]
+    const joinedOpenCityIds = new Set(
+      joinedLeagues
+        .filter(l => l.status === 'registration_open')
+        .map(l => l.city?.toString())
+        .filter(Boolean)
+    )
 
     const now = new Date()
     const query = {
       status: 'registration_open',
-      _id: { $nin: joinedIds },
       $and: [
         { $or: [{ 'seasonConfig.registrationStart': null }, { 'seasonConfig.registrationStart': { $lte: now } }] },
         { $or: [{ 'seasonConfig.registrationEnd': null }, { 'seasonConfig.registrationEnd': { $gte: now } }] }
@@ -44,38 +49,26 @@ export async function GET(request) {
       .sort({ displayOrder: 1 })
       .lean()
 
-    const counts = await Player.aggregate([
-      { $unwind: '$registrations' },
-      {
-        $match: {
-          'registrations.league': { $in: leagues.map(l => l._id) },
-          'registrations.status': { $in: ['confirmed', 'active'] }
-        }
-      },
-      { $group: { _id: '$registrations.league', count: { $sum: 1 } } }
-    ])
-    const countMap = Object.fromEntries(counts.map(c => [c._id.toString(), c.count]))
+    const cityMap = new Map()
+    for (const l of leagues) {
+      const cityId = l.city?._id?.toString()
+      if (!cityId || !l.city?.slug || joinedOpenCityIds.has(cityId)) continue
 
-    const result = leagues.map(l => {
-      const registered = countMap[l._id.toString()] || 0
-      const maxPlayers = l.seasonConfig?.maxPlayers || null
-      return {
-        _id: l._id.toString(),
-        name: l.name,
-        slug: l.slug,
-        skillLevel: l.skillLevel,
-        city: {
-          slug: l.city?.slug || null,
-          name: l.city?.name || { es: l.location?.city, en: l.location?.city }
-        },
-        startDate: l.seasonConfig?.startDate || null,
-        registrationEnd: l.seasonConfig?.registrationEnd || null,
-        price: l.seasonConfig?.price || null,
-        spotsLeft: maxPlayers ? Math.max(maxPlayers - registered, 0) : null
+      const registrationEnd = l.seasonConfig?.registrationEnd || null
+      const existing = cityMap.get(cityId)
+      if (!existing) {
+        cityMap.set(cityId, {
+          slug: l.city.slug,
+          name: l.city.name,
+          registrationEnd,
+          season: l.season || null
+        })
+      } else if (registrationEnd && (!existing.registrationEnd || registrationEnd > existing.registrationEnd)) {
+        existing.registrationEnd = registrationEnd
       }
-    })
+    }
 
-    return NextResponse.json({ success: true, leagues: result })
+    return NextResponse.json({ success: true, cities: [...cityMap.values()] })
   } catch (error) {
     console.error('Error fetching open leagues for player:', error)
     return NextResponse.json({ error: 'Failed to fetch open leagues' }, { status: 500 })
