@@ -145,7 +145,12 @@ export default function PlayerDashboard() {
         <NewSeasonCard language={language} locale={locale} />
 
         {/* Injury Status Banner */}
-        <InjuryBanner player={player} language={language} onUpdate={refetch} />
+        {(player?.injury?.active || (player?.registrations || []).some(r =>
+          ['confirmed', 'active'].includes(r.status) &&
+          ['active', 'registration_open', 'coming_soon'].includes(r.league?.status)
+        )) && (
+          <InjuryBanner player={player} language={language} onUpdate={refetch} />
+        )}
         
         {/* Push notification prompt - shows once if not enabled */}
         <PushNotificationPrompt language={language} />

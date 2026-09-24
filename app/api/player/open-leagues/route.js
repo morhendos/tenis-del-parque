@@ -40,14 +40,14 @@ export async function GET(request) {
         { $or: [{ 'seasonConfig.registrationEnd': null }, { 'seasonConfig.registrationEnd': { $gte: now } }] }
       ]
     }
-    if (cityIds.length > 0) {
-      query.city = { $in: cityIds }
-    }
 
-    const leagues = await League.find(query)
+    const leagues = (await League.find(query)
       .populate('city', 'slug name')
       .sort({ displayOrder: 1 })
-      .lean()
+      .lean())
+      .sort((a, b) =>
+        Number(!cityIds.includes(a.city?._id?.toString())) - Number(!cityIds.includes(b.city?._id?.toString()))
+      )
 
     const cityMap = new Map()
     for (const l of leagues) {
