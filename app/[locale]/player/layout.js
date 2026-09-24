@@ -235,7 +235,7 @@ export default function PlayerLayout({ children }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="player-shell min-h-screen bg-gray-50 flex">
       {/* Desktop Sidebar - Hidden on mobile */}
       <div className="fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-xl hidden lg:block">
         <div className="relative h-full">

@@ -22,6 +22,10 @@ html {
   scroll-behavior: smooth;
 }
 
+body:has(.player-shell) {
+  background: #f9fafb;
+}
+
 body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-start-rgb));
