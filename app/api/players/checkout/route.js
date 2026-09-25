@@ -72,6 +72,9 @@ export async function POST(request) {
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
+      payment_method_types: ['card'],
+      adaptive_pricing: { enabled: false },
+      locale: language === 'es' ? 'es' : 'en',
       customer_email: player.email,
       line_items: [
         {
