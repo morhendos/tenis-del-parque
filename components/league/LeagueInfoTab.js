@@ -522,6 +522,7 @@ export default function LeagueInfoTab({ league: baseLeague, currentSeason, langu
       </div>
 
       {/* Season Journey - Nice visual version */}
+      {!seasonMode && (
       <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-100 p-5 sm:p-6 mx-2 sm:mx-0">
         <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-5 flex items-center gap-2">
           <div className="w-8 h-8 bg-parque-purple/10 rounded-lg flex items-center justify-center">
@@ -552,6 +553,7 @@ export default function LeagueInfoTab({ league: baseLeague, currentSeason, langu
           </div>
         </div>
       </div>
+      )}
 
       {!seasonMode && (
       <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 shadow-sm mx-2 sm:mx-0">
