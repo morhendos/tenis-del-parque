@@ -43,8 +43,8 @@ export async function POST(request, { params }) {
     
     // Calculate discounted price
     const originalPrice = league.seasonConfig?.price?.amount || 0
-    const discountAmount = (originalPrice * discount.discountPercentage) / 100
-    const finalPrice = originalPrice - discountAmount
+    const discountAmount = Math.round(originalPrice * discount.discountPercentage) / 100
+    const finalPrice = Math.round((originalPrice - discountAmount) * 100) / 100
     
     return NextResponse.json({
       valid: true,

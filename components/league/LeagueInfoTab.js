@@ -313,7 +313,7 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale,
                     {discountDetails.originalPrice}€
                   </span>
                   <span className="text-3xl sm:text-4xl font-bold text-parque-green">
-                    {discountDetails.finalPrice}€
+                    {Number.isInteger(discountDetails.finalPrice) ? discountDetails.finalPrice : Number(discountDetails.finalPrice).toFixed(2)}€
                   </span>
                 </>
               ) : (

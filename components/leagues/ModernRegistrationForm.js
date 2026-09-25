@@ -243,7 +243,7 @@ export default function ModernRegistrationForm({
                   €{discountValidation.originalPrice}
                 </span>
                 <span className="font-bold text-emerald-600 text-base sm:text-lg">
-                  €{discountValidation.finalPrice}
+                  €{Number.isInteger(discountValidation.finalPrice) ? discountValidation.finalPrice : Number(discountValidation.finalPrice).toFixed(2)}
                 </span>
               </div>
             ) : (

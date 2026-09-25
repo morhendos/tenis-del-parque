@@ -94,8 +94,8 @@ export async function POST(request) {
       
       if (discount) {
         discountApplied = discount.discountPercentage
-        const discountAmount = (originalPrice * discount.discountPercentage) / 100
-        finalPrice = originalPrice - discountAmount
+        const discountAmount = Math.round(originalPrice * discount.discountPercentage) / 100
+        finalPrice = Math.round((originalPrice - discountAmount) * 100) / 100
         validatedDiscountCode = discount.code
         
         console.log(`Discount code ${discount.code} applied: ${discountApplied}% off, final price: €${finalPrice}`)
