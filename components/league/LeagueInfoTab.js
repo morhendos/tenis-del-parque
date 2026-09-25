@@ -187,6 +187,13 @@ export default function LeagueInfoTab({ league: baseLeague, currentSeason, langu
       const url = new URL(window.location.href)
       url.searchParams.set('level', level)
       window.history.replaceState(null, '', url.toString())
+      const card = document.getElementById('season-card')
+      if (card) {
+        const target = card.getBoundingClientRect().top + window.scrollY - 72
+        if (target > window.scrollY) {
+          window.scrollTo({ top: target, behavior: 'smooth' })
+        }
+      }
     }
   }
 
@@ -347,7 +354,7 @@ export default function LeagueInfoTab({ league: baseLeague, currentSeason, langu
       )}
       
       {/* Price + CTA Card */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mx-2 sm:mx-0">
+      <div id="season-card" className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mx-2 sm:mx-0">
         {/* Price + Dates row */}
         <div className="p-4 sm:p-6">
           <div className="mb-4">
