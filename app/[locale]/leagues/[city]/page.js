@@ -201,6 +201,7 @@ export default async function CityLeaguePage({ params }) {
             leagues={seasonGroup.leagues}
             locale={locale}
             status="active"
+            compact
           />
         ))}
         
@@ -212,23 +213,12 @@ export default async function CityLeaguePage({ params }) {
             leagues={seasonGroup.leagues}
             locale={locale}
             status="upcoming"
-          />
-        ))}
-        
-        {/* Past Seasons - Collapsible */}
-        {grouped.past.length > 0 && grouped.past.map((seasonGroup, idx) => (
-          <LeagueSeasonSection
-            key={`past-${idx}`}
-            title={getSectionTitle('past')}
-            leagues={seasonGroup.leagues}
-            locale={locale}
-            status="past"
-            collapsible
+            compact
           />
         ))}
         
         {/* Empty State */}
-        {plainLeagues.length === 0 && (
+        {grouped.current.length === 0 && grouped.upcoming.length === 0 && (
           <div className="text-center py-12 sm:py-16">
             <div className="w-16 h-16 mx-auto mb-4 text-gray-300">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">

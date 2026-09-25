@@ -76,7 +76,8 @@ export default function LeagueSeasonSection({
   collapsible = false,
   showSpots = false,
   showPrice = false,
-  variant = 'default'
+  variant = 'default',
+  compact = false
 }) {
   const [isExpanded, setIsExpanded] = useState(!collapsible)
   
@@ -125,6 +126,7 @@ export default function LeagueSeasonSection({
                   showSpots={showSpots}
                   showPrice={showPrice}
                   variant={variant}
+                  compact={compact}
                 />
               )
             }

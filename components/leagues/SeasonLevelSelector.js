@@ -520,7 +520,8 @@ export default function SeasonLevelSelector({
   status, 
   showSpots = false, 
   showPrice = false,
-  variant = 'default'
+  variant = 'default',
+  compact = false
 }) {
   const [showHelper, setShowHelper] = useState(false)
   
@@ -563,7 +564,25 @@ export default function SeasonLevelSelector({
   return (
     <>
       <div className={`${colors.cardBg} ${colors.cardBorder} ${colors.cardShadow} rounded-2xl overflow-hidden`}>
-        {/* Hero Image with Season Info */}
+        {compact ? (
+          <div className={`px-4 pt-4 sm:px-5 sm:pt-5 pb-3 flex items-center justify-between gap-3 border-b ${colors.footerBorder}`}>
+            <h3 className={`text-lg sm:text-xl font-bold ${colors.headerText}`}>{seasonName}</h3>
+            {isRegistrationOpen ? (
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 ${colors.badgeOpen} text-xs font-semibold rounded-full whitespace-nowrap`}>
+                <span className="w-2 h-2 rounded-full animate-pulse bg-white" />
+                {locale === 'es' ? 'Inscripción Abierta' : 'Registration Open'}
+              </span>
+            ) : status === 'active' ? (
+              <span className={`inline-flex items-center px-3 py-1 ${colors.badgeCurrent} text-white text-xs font-semibold rounded-full whitespace-nowrap`}>
+                {locale === 'es' ? 'En Curso' : 'In Progress'}
+              </span>
+            ) : (
+              <span className={`inline-flex items-center px-3 py-1 ${colors.badgeComingSoon} text-white text-xs font-semibold rounded-full whitespace-nowrap`}>
+                {locale === 'es' ? 'Próximamente' : 'Coming Soon'}
+              </span>
+            )}
+          </div>
+        ) : (
         <div className={`relative h-32 sm:h-40 ${colors.heroBg}`}>
           {cityImage && (
             <Image
@@ -609,6 +628,7 @@ export default function SeasonLevelSelector({
             </h3>
           </div>
         </div>
+        )}
         
         {/* Level Selection Area */}
         <div className={`p-4 sm:p-5 ${colors.sectionBg}`}>
