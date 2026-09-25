@@ -236,7 +236,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
   // SSR placeholder - more compact on mobile
   if (!isClient) {
     return (
-      <nav className="fixed top-0 w-full backdrop-blur-md z-[100] bg-white/95">
+      <nav className="fixed top-0 w-full backdrop-blur-md z-[100] bg-white/95 safe-area-top">
         <div className="container mx-auto px-3 md:px-4">
           <div className="flex items-center justify-between h-14 lg:h-16 relative">
             {/* Mobile: Back button + centered logo OR just left logo */}
@@ -318,7 +318,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
 
   return (
     <>
-      <nav className={`fixed top-0 w-full backdrop-blur-md z-[100] transition-all duration-300 ${
+      <nav className={`fixed top-0 w-full backdrop-blur-md z-[100] transition-all duration-300 safe-area-top ${
         scrolled ? 'bg-white/95 shadow-md' : 'bg-white/90 lg:bg-white/70'
       } ${navVisible ? 'translate-y-0' : '-translate-y-full'}`}>
         <div className="container mx-auto px-3 md:px-4">
