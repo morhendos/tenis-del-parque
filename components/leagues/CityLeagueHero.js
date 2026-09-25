@@ -133,7 +133,7 @@ export default function CityLeagueHero({ city, locale, leagueName, league, seaso
         </button>
         
         {/* Glassmorphic content card */}
-        <div className="bg-white/10 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-white/20 p-4 sm:p-6 shadow-2xl">
+        <div className="bg-black/15 backdrop-blur-[3px] rounded-2xl sm:rounded-3xl border border-white/25 p-4 sm:p-6 shadow-2xl [text-shadow:0_1px_8px_rgba(0,0,0,0.35)]">
           
           {/* Breadcrumb - hidden on mobile */}
           <nav className="hidden sm:block mb-2 text-sm text-white/80">
