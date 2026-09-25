@@ -325,20 +325,6 @@ export default function LeagueInfoTab({ league: baseLeague, currentSeason, langu
       {seasonMode && league.status === 'registration_open' && (
         <div className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <div className="flex items-center gap-3">
-            <div className="flex-shrink-0">
-              {discountValid && discountDetails ? (
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-sm text-gray-400 line-through">{discountDetails.originalPrice}€</span>
-                  <span className="text-xl font-bold text-parque-green">
-                    {Number.isInteger(discountDetails.finalPrice) ? discountDetails.finalPrice : Number(discountDetails.finalPrice).toFixed(2)}€
-                  </span>
-                </div>
-              ) : league.seasonConfig?.price?.isFree ? (
-                <span className="text-xl font-bold text-parque-green">{content.free}</span>
-              ) : (
-                <span className="text-xl font-bold text-gray-900">{league.seasonConfig?.price?.amount}€</span>
-              )}
-            </div>
             {selectedLevel ? (
               <a
                 href={buildRegistrationUrl()}
@@ -362,59 +348,6 @@ export default function LeagueInfoTab({ league: baseLeague, currentSeason, langu
       
       {/* Price + CTA Card */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mx-2 sm:mx-0">
-        {seasonMode && (
-          <div id="season-level-picker" className="p-4 sm:p-6 border-b border-gray-100">
-            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <div className="w-8 h-8 bg-parque-purple/10 rounded-lg flex items-center justify-center">
-                <Award className="w-5 h-5 text-parque-purple" />
-              </div>
-              {content.chooseLevel}
-            </h3>
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
-              {levels.map((level) => {
-                const available = seasonLeagues.some(l => getSkillLevel(l) === level.key)
-                const isSelected = selectedLevel === level.key
-                const LevelIcon = level.icon
-                return (
-                  <button
-                    key={level.key}
-                    type="button"
-                    disabled={!available}
-                    onClick={() => selectLevel(level.key)}
-                    className={`p-3 sm:p-4 rounded-xl border-2 transition-all ${
-                      !available
-                        ? 'border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed'
-                        : isSelected
-                          ? `${level.borderColor} ${level.bgColor} shadow-md`
-                          : 'border-gray-200 hover:border-parque-purple/40 active:scale-[0.98]'
-                    }`}
-                  >
-                    <div className="flex flex-col items-center text-center">
-                      <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${level.color} flex items-center justify-center text-white mb-2 ${isSelected ? '' : 'opacity-60'}`}>
-                        <LevelIcon className="w-5 h-5" />
-                      </div>
-                      <span className={`font-bold ${isSelected ? level.textColor : 'text-gray-600'}`}>{level.label}</span>
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-            {selectedLevel && content.levelDetails[selectedLevel] && (
-              <div className="mt-4">
-                <p className="text-sm font-medium text-gray-500 mb-2">{content.thisLevelIsFor}</p>
-                <ul className="space-y-1.5">
-                  {content.levelDetails[selectedLevel].points.map((point, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm text-gray-700">
-                      <CheckCircle className="w-4 h-4 text-parque-green flex-shrink-0 mt-0.5" />
-                      <span>{point}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
-
         {/* Price + Dates row */}
         <div className="p-4 sm:p-6">
           <div className="mb-4">
@@ -484,6 +417,59 @@ export default function LeagueInfoTab({ league: baseLeague, currentSeason, langu
             </div>
           )}
         </div>
+
+        {seasonMode && (
+          <div id="season-level-picker" className="p-4 sm:p-6 border-t border-gray-100">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <div className="w-8 h-8 bg-parque-purple/10 rounded-lg flex items-center justify-center">
+                <Award className="w-5 h-5 text-parque-purple" />
+              </div>
+              {content.chooseLevel}
+            </h3>
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+              {levels.map((level) => {
+                const available = seasonLeagues.some(l => getSkillLevel(l) === level.key)
+                const isSelected = selectedLevel === level.key
+                const LevelIcon = level.icon
+                return (
+                  <button
+                    key={level.key}
+                    type="button"
+                    disabled={!available}
+                    onClick={() => selectLevel(level.key)}
+                    className={`p-3 sm:p-4 rounded-xl border-2 transition-all ${
+                      !available
+                        ? 'border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed'
+                        : isSelected
+                          ? `${level.borderColor} ${level.bgColor} shadow-md`
+                          : 'border-gray-200 hover:border-parque-purple/40 active:scale-[0.98]'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center text-center">
+                      <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${level.color} flex items-center justify-center text-white mb-2 ${isSelected ? '' : 'opacity-60'}`}>
+                        <LevelIcon className="w-5 h-5" />
+                      </div>
+                      <span className={`font-bold ${isSelected ? level.textColor : 'text-gray-600'}`}>{level.label}</span>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+            {selectedLevel && content.levelDetails[selectedLevel] && (
+              <div className="mt-4">
+                <p className="text-sm font-medium text-gray-500 mb-2">{content.thisLevelIsFor}</p>
+                <ul className="space-y-1.5">
+                  {content.levelDetails[selectedLevel].points.map((point, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-sm text-gray-700">
+                      <CheckCircle className="w-4 h-4 text-parque-green flex-shrink-0 mt-0.5" />
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
         
         {/* Countdown - Purple themed */}
         {!seasonMode && league.status === 'registration_open' && league.seasonConfig?.registrationEnd && (
