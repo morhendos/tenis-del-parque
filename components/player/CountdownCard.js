@@ -25,7 +25,8 @@ export default function CountdownCard({
   playerCount,
   language = 'en',
   showQuote = true,
-  compact = false
+  compact = false,
+  joined = false
 }) {
   const [countdown, setCountdown] = useState(null)
   
@@ -97,6 +98,72 @@ export default function CountdownCard({
   }
   
   const t = content[language] || content.es
+
+  if (joined) {
+    const es = language === 'es'
+    const dateText = startDate.toLocaleDateString(es ? 'es-ES' : 'en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric'
+    })
+    const days = countdown?.days ?? null
+    const inText = days === null
+      ? ''
+      : days === 0
+        ? (es ? ' - hoy' : ' - today')
+        : days === 1
+          ? (es ? ' - mañana' : ' - tomorrow')
+          : (es ? ` - en ${days} días` : ` - in ${days} days`)
+
+    return (
+      <div className="relative overflow-hidden bg-white rounded-2xl border border-green-200 p-5 shadow-sm h-full flex flex-col">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-gray-900 font-bold text-lg">{es ? '¡Estás dentro!' : "You're in!"}</h3>
+            <p className="text-gray-500 text-sm truncate">
+              {leagueName}
+              {location && ` · ${location}`}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 flex items-start gap-2 text-sm text-gray-800">
+          <svg className="w-4 h-4 text-parque-purple flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span>
+            {es ? 'La temporada empieza el ' : 'Season starts '}
+            <strong className="font-semibold">{dateText}</strong>
+            {inText}
+          </span>
+        </div>
+        <p className="mt-2 text-sm text-gray-500">
+          {es
+            ? 'Tu primer partido aparecerá aquí cuando empiece la temporada.'
+            : 'Your first match will show up here when the season starts.'}
+        </p>
+
+        {showQuote && (
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <div className="flex gap-3">
+              <svg className="w-5 h-5 text-parque-purple/30 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
+              </svg>
+              <div>
+                <p className="text-gray-600 text-sm italic leading-relaxed">{quote.text}</p>
+                <p className="text-gray-400 text-xs mt-1.5 font-medium">{'- '}{quote.author}</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
   
   return (
     <div className="relative overflow-hidden bg-gradient-to-br from-parque-purple/5 via-purple-50 to-indigo-50 rounded-2xl border border-parque-purple/20 p-5 shadow-sm h-full flex flex-col">

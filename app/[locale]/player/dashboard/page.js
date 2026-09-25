@@ -142,12 +142,12 @@ export default function PlayerDashboard() {
         {/* Welcome Header with Quick Links */}
         <DashboardHeader player={player} language={language} />
         
-        <NewSeasonCard language={language} locale={locale} />
+        <NewSeasonCard language={language} locale={locale} placement="top" />
 
         {/* Injury Status Banner */}
         {(player?.injury?.active || (player?.registrations || []).some(r =>
           ['confirmed', 'active'].includes(r.status) &&
-          ['active', 'registration_open', 'coming_soon'].includes(r.league?.status)
+          r.league?.status === 'active'
         )) && (
           <InjuryBanner player={player} language={language} onUpdate={refetch} />
         )}
@@ -188,6 +188,8 @@ export default function PlayerDashboard() {
           language={language}
           maxResults={3}
         />
+
+        <NewSeasonCard language={language} locale={locale} placement="bottom" />
 
         {/* Welcome Modal */}
         <WelcomeModal

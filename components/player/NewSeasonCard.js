@@ -9,7 +9,7 @@ const seasonNames = {
   en: { spring: 'spring', summer: 'summer', autumn: 'autumn', winter: 'winter' }
 }
 
-export default function NewSeasonCard({ language, locale }) {
+export default function NewSeasonCard({ language, locale, placement = 'top' }) {
   const [cities, setCities] = useState([])
   const [joinedOpen, setJoinedOpen] = useState(false)
   const [expanded, setExpanded] = useState(false)
@@ -29,6 +29,8 @@ export default function NewSeasonCard({ language, locale }) {
   }, [])
 
   if (cities.length === 0) return null
+  if (placement === 'top' && joinedOpen) return null
+  if (placement === 'bottom' && !joinedOpen) return null
 
   const es = language === 'es'
   const seasonType = cities[0]?.season?.type
@@ -51,8 +53,8 @@ export default function NewSeasonCard({ language, locale }) {
         <span className="flex items-center gap-2 text-sm text-gray-700">
           <Trophy className="w-4 h-4 text-parque-purple flex-shrink-0" />
           {es
-            ? `También abierto en ${cities.length === 1 ? 'otra ciudad' : `${cities.length} ciudades más`}`
-            : `Also open in ${cities.length === 1 ? '1 other city' : `${cities.length} other cities`}`}
+            ? `¿Quieres jugar también en otra ciudad? (${cities.length} abiertas)`
+            : `Want to play in another city too? (${cities.length} open)`}
         </span>
         <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
       </button>

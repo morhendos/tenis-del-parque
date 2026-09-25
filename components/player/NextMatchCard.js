@@ -46,6 +46,7 @@ export default function NextMatchCard({ matches = [], language, leagueInfo }) {
           status={leagueInfo.status}
           language={language}
           showQuote={true}
+          joined={leagueInfo.paymentStatus !== 'pending'}
         />
       )
     }
