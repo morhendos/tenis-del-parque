@@ -450,6 +450,13 @@ export default function LeagueInfoTab({ league: baseLeague, currentSeason, langu
                         <LevelIcon className="w-5 h-5" />
                       </div>
                       <span className={`font-bold ${isSelected ? level.textColor : 'text-gray-600'}`}>{level.label}</span>
+                      <span className="text-xs text-gray-500 mt-0.5">
+                        {{
+                          advanced: language === 'es' ? 'Avanzado' : 'Advanced',
+                          intermediate: language === 'es' ? 'Intermedio' : 'Intermediate',
+                          beginner: language === 'es' ? 'Principiante' : 'Entry-level'
+                        }[level.key]}
+                      </span>
                     </div>
                   </button>
                 )
