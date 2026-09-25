@@ -322,6 +322,43 @@ export default function LeagueInfoTab({ league: baseLeague, currentSeason, langu
 
   return (
     <div className="space-y-6 sm:space-y-8 pt-4 sm:pt-0">
+      {seasonMode && league.status === 'registration_open' && (
+        <div className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <div className="flex items-center gap-3">
+            <div className="flex-shrink-0">
+              {discountValid && discountDetails ? (
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-sm text-gray-400 line-through">{discountDetails.originalPrice}€</span>
+                  <span className="text-xl font-bold text-parque-green">
+                    {Number.isInteger(discountDetails.finalPrice) ? discountDetails.finalPrice : Number(discountDetails.finalPrice).toFixed(2)}€
+                  </span>
+                </div>
+              ) : league.seasonConfig?.price?.isFree ? (
+                <span className="text-xl font-bold text-parque-green">{content.free}</span>
+              ) : (
+                <span className="text-xl font-bold text-gray-900">{league.seasonConfig?.price?.amount}€</span>
+              )}
+            </div>
+            {selectedLevel ? (
+              <a
+                href={buildRegistrationUrl()}
+                className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-parque-purple to-violet-600 text-white px-4 py-3.5 rounded-xl font-bold shadow-lg active:scale-[0.98] transition-all"
+              >
+                {content.registerNow}
+                <ArrowRight className="w-5 h-5" />
+              </a>
+            ) : (
+              <button
+                type="button"
+                onClick={scrollToLevelPicker}
+                className="flex-1 flex items-center justify-center gap-2 bg-gray-200 text-gray-600 px-4 py-3.5 rounded-xl font-bold active:scale-[0.98] transition-all"
+              >
+                {content.chooseLevelFirst}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       
       {/* Price + CTA Card */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mx-2 sm:mx-0">
@@ -357,7 +394,6 @@ export default function LeagueInfoTab({ league: baseLeague, currentSeason, langu
                         <LevelIcon className="w-5 h-5" />
                       </div>
                       <span className={`font-bold ${isSelected ? level.textColor : 'text-gray-600'}`}>{level.label}</span>
-                      <p className="text-[10px] text-gray-500 mt-1">{content.levelDescriptions[level.key]}</p>
                     </div>
                   </button>
                 )
@@ -436,31 +472,21 @@ export default function LeagueInfoTab({ league: baseLeague, currentSeason, langu
           
           {/* Season phases */}
           {seasonPhases && (
-            <div className="flex gap-2 sm:gap-3">
-              <div className="flex-1 bg-parque-purple/5 rounded-lg p-2.5 sm:p-3">
-                <div className="flex items-center gap-1.5 text-parque-purple mb-1">
-                  <Calendar className="w-3.5 h-3.5" />
-                  <span className="text-xs font-semibold uppercase tracking-wide">{content.regularSeason}</span>
-                </div>
-                <p className="text-sm sm:text-base font-bold text-gray-900">
-                  {formatDateShort(seasonPhases.regular.start)} - {formatDateShort(seasonPhases.regular.end)}
-                </p>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+              <div className="flex items-center gap-1.5 text-gray-900">
+                <Calendar className="w-4 h-4 text-parque-purple" />
+                <span className="font-semibold">{formatDateShort(seasonPhases.regular.start)} - {formatDateShort(seasonPhases.regular.end)}</span>
               </div>
-              <div className="flex-1 bg-parque-green/5 rounded-lg p-2.5 sm:p-3">
-                <div className="flex items-center gap-1.5 text-parque-green mb-1">
-                  <Trophy className="w-3.5 h-3.5" />
-                  <span className="text-xs font-semibold uppercase tracking-wide">{content.playoffsLabel}</span>
-                </div>
-                <p className="text-sm sm:text-base font-bold text-gray-900">
-                  {formatDateShort(seasonPhases.playoffs.start)} - {formatDateShort(seasonPhases.playoffs.end)}
-                </p>
+              <div className="flex items-center gap-1.5 text-gray-600">
+                <Trophy className="w-4 h-4 text-parque-green" />
+                <span>{content.playoffsLabel} {formatDateShort(seasonPhases.playoffs.start)} - {formatDateShort(seasonPhases.playoffs.end)}</span>
               </div>
             </div>
           )}
         </div>
         
         {/* Countdown - Purple themed */}
-        {league.status === 'registration_open' && league.seasonConfig?.registrationEnd && (
+        {!seasonMode && league.status === 'registration_open' && league.seasonConfig?.registrationEnd && (
           <div className="mx-4 sm:mx-6 mb-4 p-3 bg-parque-purple/5 border border-parque-purple/20 rounded-xl">
             <RegistrationCountdown 
               registrationEnd={league.seasonConfig.registrationEnd} 
@@ -473,7 +499,7 @@ export default function LeagueInfoTab({ league: baseLeague, currentSeason, langu
         
         {/* CTA - Purple gradient */}
         {league.status === 'registration_open' && (
-          <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+          <div className={`px-4 sm:px-6 pb-4 sm:pb-6 ${seasonMode ? 'hidden sm:block' : ''}`}>
             {seasonMode && !selectedLevel ? (
               <button
                 type="button"

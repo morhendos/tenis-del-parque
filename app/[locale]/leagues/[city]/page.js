@@ -198,14 +198,19 @@ export default async function CityLeaguePage({ params }) {
     const seasonName = `${seasonTypeNames[locale === 'es' ? 'es' : 'en'][openSeason.type] || openSeason.type || ''} ${openSeason.year || ''}`.trim()
 
     return (
-      <div className="min-h-screen bg-white sm:bg-gray-50">
+      <div className="min-h-screen bg-white sm:bg-gray-50 pb-24 sm:pb-0">
         <Navigation
           currentPage="leagues"
           language={locale}
           showLanguageSwitcher={true}
         />
 
-        <CityLeagueHero city={plainCity} locale={locale} seasonName={seasonName} />
+        <CityLeagueHero
+          city={plainCity}
+          locale={locale}
+          seasonName={seasonName}
+          registrationEnd={openLeagues[0].seasonConfig?.registrationEnd || null}
+        />
 
         <div className="container mx-auto px-0 sm:px-4 py-0 sm:py-8 md:py-12">
           <div className="max-w-5xl mx-auto">

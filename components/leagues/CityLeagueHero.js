@@ -2,10 +2,38 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, Trophy, Medal, Award } from 'lucide-react'
+import { ChevronLeft, Trophy, Medal, Award, Clock } from 'lucide-react'
 
-export default function CityLeagueHero({ city, locale, leagueName, league, seasonName }) {
+function HeroCountdown({ registrationEnd, locale }) {
+  const [now, setNow] = useState(null)
+
+  useEffect(() => {
+    setNow(Date.now())
+    const id = setInterval(() => setNow(Date.now()), 60000)
+    return () => clearInterval(id)
+  }, [])
+
+  if (!now || !registrationEnd) return null
+  const diff = new Date(registrationEnd).getTime() - now
+  if (diff <= 0) return null
+
+  const days = Math.floor(diff / 86400000)
+  const hours = Math.floor((diff % 86400000) / 3600000)
+  const minutes = Math.floor((diff % 3600000) / 60000)
+  const time = days > 0 ? `${days}d ${hours}h` : `${hours}h ${minutes}m`
+
+  return (
+    <p className="flex items-center gap-1.5 text-sm text-white/90 mt-3">
+      <Clock className="w-4 h-4" />
+      {locale === 'es' ? 'La inscripción cierra en' : 'Registration closes in'}
+      <span className="font-bold text-white">{time}</span>
+    </p>
+  )
+}
+
+export default function CityLeagueHero({ city, locale, leagueName, league, seasonName, registrationEnd }) {
   const router = useRouter()
   const cityName = city.name[locale] || city.name.es
   
@@ -175,6 +203,7 @@ export default function CityLeagueHero({ city, locale, leagueName, league, seaso
               </div>
             )}
           </div>
+          {seasonName && <HeroCountdown registrationEnd={registrationEnd} locale={locale} />}
         </div>
       </div>
     </div>
