@@ -11,7 +11,7 @@ function HeroCountdown({ registrationEnd, locale }) {
 
   useEffect(() => {
     setNow(Date.now())
-    const id = setInterval(() => setNow(Date.now()), 60000)
+    const id = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(id)
   }, [])
 
@@ -20,15 +20,17 @@ function HeroCountdown({ registrationEnd, locale }) {
   if (diff <= 0) return null
 
   const days = Math.floor(diff / 86400000)
-  const hours = Math.floor((diff % 86400000) / 3600000)
-  const minutes = Math.floor((diff % 3600000) / 60000)
-  const time = days > 0 ? `${days}d ${hours}h` : `${hours}h ${minutes}m`
+  const pad = (n) => String(n).padStart(2, '0')
+  const hours = pad(Math.floor((diff % 86400000) / 3600000))
+  const minutes = pad(Math.floor((diff % 3600000) / 60000))
+  const seconds = pad(Math.floor((diff % 60000) / 1000))
+  const time = `${days > 0 ? `${days}d ` : ''}${hours}:${minutes}:${seconds}`
 
   return (
     <p className="flex items-center gap-1.5 text-sm text-white/90 mt-3">
       <Clock className="w-4 h-4" />
       {locale === 'es' ? 'La inscripción cierra en' : 'Registration closes in'}
-      <span className="font-bold text-white">{time}</span>
+      <span className="font-bold text-white tabular-nums">{time}</span>
     </p>
   )
 }
