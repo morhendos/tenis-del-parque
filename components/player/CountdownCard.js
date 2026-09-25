@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { Users, MessageCircle, TrendingUp } from 'lucide-react'
 import { tennisQuotes } from '@/lib/content/tennisQuotes'
 
 /**
@@ -26,7 +27,8 @@ export default function CountdownCard({
   language = 'en',
   showQuote = true,
   compact = false,
-  joined = false
+  joined = false,
+  playerName = ''
 }) {
   const [countdown, setCountdown] = useState(null)
   
@@ -101,66 +103,97 @@ export default function CountdownCard({
 
   if (joined) {
     const es = language === 'es'
-    const dateText = startDate.toLocaleDateString(es ? 'es-ES' : 'en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric'
-    })
+    const locale = es ? 'es-ES' : 'en-US'
+    const weekday = startDate.toLocaleDateString(locale, { weekday: 'long' })
+    const longDate = startDate.toLocaleDateString(locale, { month: 'long', day: 'numeric' })
+    const shortDate = startDate.toLocaleDateString(locale, { month: 'short', day: 'numeric' })
+    const monthTile = startDate.toLocaleDateString(locale, { month: 'short' }).replace('.', '').toUpperCase()
+    const dayTile = startDate.getDate()
     const days = countdown?.days ?? null
-    const inText = days === null
-      ? ''
+    const pill = days === null
+      ? null
       : days === 0
-        ? (es ? ' - hoy' : ' - today')
+        ? (es ? 'Hoy' : 'Today')
         : days === 1
-          ? (es ? ' - mañana' : ' - tomorrow')
-          : (es ? ` - en ${days} días` : ` - in ${days} days`)
+          ? (es ? 'Mañana' : 'Tomorrow')
+          : (es ? `En ${days} días` : `In ${days} days`)
+    const title = es
+      ? `¡Estás dentro${playerName ? `, ${playerName}` : ''}! 🎾`
+      : `You're in${playerName ? `, ${playerName}` : ''}! 🎾`
+    const nextSteps = es
+      ? [
+          { icon: Users, text: `Tu primer rival aparecerá aquí el ${shortDate}` },
+          { icon: MessageCircle, text: 'Escríbele por WhatsApp y quedad para jugar' },
+          { icon: TrendingUp, text: 'Ganes o pierdas, cada partido mueve tu ranking' }
+        ]
+      : [
+          { icon: Users, text: `Your first rival shows up here on ${shortDate}` },
+          { icon: MessageCircle, text: 'Message them on WhatsApp and pick a time' },
+          { icon: TrendingUp, text: 'Win or lose, every match moves your ranking' }
+        ]
 
     return (
-      <div className="relative overflow-hidden bg-white rounded-2xl border border-green-200 p-5 shadow-sm h-full flex flex-col">
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <div className="min-w-0">
-            <h3 className="text-gray-900 font-bold text-lg">{es ? '¡Estás dentro!' : "You're in!"}</h3>
-            <p className="text-gray-500 text-sm truncate">
-              {leagueName}
-              {location && ` · ${location}`}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-4 flex items-start gap-2 text-sm text-gray-800">
-          <svg className="w-4 h-4 text-parque-purple flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          <span>
-            {es ? 'La temporada empieza el ' : 'Season starts '}
-            <strong className="font-semibold">{dateText}</strong>
-            {inText}
-          </span>
-        </div>
-        <p className="mt-2 text-sm text-gray-500">
-          {es
-            ? 'Tu primer partido aparecerá aquí cuando empiece la temporada.'
-            : 'Your first match will show up here when the season starts.'}
-        </p>
-
-        {showQuote && (
-          <div className="mt-4 pt-4 border-t border-gray-100">
-            <div className="flex gap-3">
-              <svg className="w-5 h-5 text-parque-purple/30 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
+      <div className="relative overflow-hidden bg-white rounded-2xl border border-gray-100 shadow-sm h-full flex flex-col">
+        <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-green-600 px-5 py-4 text-white">
+          <div className="absolute -top-8 -right-8 w-28 h-28 bg-white/10 rounded-full" />
+          <div className="relative flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-md">
+              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
-              <div>
-                <p className="text-gray-600 text-sm italic leading-relaxed">{quote.text}</p>
-                <p className="text-gray-400 text-xs mt-1.5 font-medium">{'- '}{quote.author}</p>
-              </div>
+            </div>
+            <div className="min-w-0">
+              <h3 className="font-bold text-lg leading-tight">{title}</h3>
+              <p className="text-white/85 text-sm truncate">
+                {leagueName}
+                {location && ` · ${location}`}
+              </p>
             </div>
           </div>
-        )}
+        </div>
+
+        <div className="p-5 flex flex-col flex-1">
+          <div className="flex items-center gap-4">
+            <div className="w-16 flex-shrink-0 rounded-xl overflow-hidden border border-gray-200 shadow-sm text-center">
+              <div className="bg-parque-purple text-white text-[11px] font-bold tracking-wider py-0.5">{monthTile}</div>
+              <div className="bg-white text-2xl font-bold text-gray-900 py-1.5">{dayTile}</div>
+            </div>
+            <div className="min-w-0">
+              <p className="text-gray-900 font-semibold">{es ? '¡Nos vemos en la pista!' : 'See you on court!'}</p>
+              <p className="text-sm text-gray-500">
+                {es ? `Empieza el ${weekday}, ${longDate}` : `Season kicks off ${weekday}, ${longDate}`}
+              </p>
+              {pill && (
+                <span className="inline-block mt-1.5 px-2.5 py-0.5 rounded-full bg-parque-purple/10 text-parque-purple text-xs font-semibold">
+                  {pill}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">
+              {es ? 'Qué viene ahora' : "What's next"}
+            </p>
+            <ul className="space-y-2">
+              {nextSteps.map(({ icon: Icon, text }, i) => (
+                <li key={i} className="flex items-center gap-2.5 text-sm text-gray-700">
+                  <span className="w-7 h-7 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0">
+                    <Icon className="w-4 h-4 text-parque-purple" />
+                  </span>
+                  {text}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {showQuote && (
+            <div className="mt-5 pt-4 border-t border-gray-100">
+              <p className="text-gray-600 text-sm italic leading-relaxed">&ldquo;{quote.text}&rdquo;</p>
+              <p className="text-gray-400 text-xs mt-1.5 font-medium">{'- '}{quote.author}</p>
+            </div>
+          )}
+        </div>
       </div>
     )
   }

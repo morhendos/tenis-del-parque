@@ -5,7 +5,7 @@ import { WhatsAppUtils } from '@/lib/utils/whatsappUtils'
 import { getMaskedName, isDemoModeActive } from '@/lib/utils/demoMode'
 import CountdownCard from './CountdownCard'
 
-export default function NextMatchCard({ matches = [], language, leagueInfo }) {
+export default function NextMatchCard({ matches = [], language, leagueInfo, playerName = '' }) {
   const [isDemoMode, setIsDemoMode] = useState(false)
   
   useEffect(() => {
@@ -47,6 +47,7 @@ export default function NextMatchCard({ matches = [], language, leagueInfo }) {
           language={language}
           showQuote={true}
           joined={leagueInfo.paymentStatus !== 'pending'}
+          playerName={playerName}
         />
       )
     }
