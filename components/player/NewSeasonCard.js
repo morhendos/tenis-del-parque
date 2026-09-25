@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Trophy, ChevronRight } from 'lucide-react'
+import { Trophy, ChevronRight, ChevronDown } from 'lucide-react'
 
 const seasonNames = {
   es: { spring: 'primavera', summer: 'verano', autumn: 'otoño', winter: 'invierno' },
@@ -11,13 +11,18 @@ const seasonNames = {
 
 export default function NewSeasonCard({ language, locale }) {
   const [cities, setCities] = useState([])
+  const [joinedOpen, setJoinedOpen] = useState(false)
+  const [expanded, setExpanded] = useState(false)
 
   useEffect(() => {
     let cancelled = false
     fetch('/api/player/open-leagues')
       .then(res => (res.ok ? res.json() : null))
       .then(data => {
-        if (!cancelled && data?.cities) setCities(data.cities)
+        if (!cancelled && data?.cities) {
+          setCities(data.cities)
+          setJoinedOpen(!!data.joinedOpen)
+        }
       })
       .catch(() => {})
     return () => { cancelled = true }
@@ -35,6 +40,24 @@ export default function NewSeasonCard({ language, locale }) {
 
   const formatDate = (date) =>
     new Date(date).toLocaleDateString(es ? 'es-ES' : 'en-GB', { day: 'numeric', month: 'short' })
+
+  if (joinedOpen && !expanded) {
+    return (
+      <button
+        type="button"
+        onClick={() => setExpanded(true)}
+        className="w-full flex items-center justify-between gap-3 bg-white rounded-2xl border border-purple-100 shadow-sm px-4 py-3 text-left active:scale-[0.99] transition-all"
+      >
+        <span className="flex items-center gap-2 text-sm text-gray-700">
+          <Trophy className="w-4 h-4 text-parque-purple flex-shrink-0" />
+          {es
+            ? `También abierto en ${cities.length === 1 ? 'otra ciudad' : `${cities.length} ciudades más`}`
+            : `Also open in ${cities.length === 1 ? '1 other city' : `${cities.length} other cities`}`}
+        </span>
+        <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
+      </button>
+    )
+  }
 
   return (
     <div className="bg-gradient-to-br from-parque-purple to-purple-700 rounded-2xl shadow-lg shadow-purple-500/25 p-4 sm:p-5 text-white">

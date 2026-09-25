@@ -81,7 +81,7 @@ export async function GET(request) {
       }
     }
 
-    return NextResponse.json({ success: true, cities: [...cityMap.values()] })
+    return NextResponse.json({ success: true, cities: [...cityMap.values()], joinedOpen: joinedOpenCityIds.size > 0 })
   } catch (error) {
     console.error('Error fetching open leagues for player:', error)
     return NextResponse.json({ error: 'Failed to fetch open leagues' }, { status: 500 })
