@@ -7,6 +7,7 @@ import Navigation from '@/components/common/Navigation'
 import Footer from '@/components/common/Footer'
 import CityLeagueHero from '@/components/leagues/CityLeagueHero'
 import LeagueSeasonSection from '@/components/leagues/LeagueSeasonSection'
+import LeagueInfoTab from '@/components/league/LeagueInfoTab'
 import { homeContent } from '@/lib/content/homeContent'
 import { serializeLeague } from '@/lib/utils/serializeLeague'
 import { applyEffectiveStatuses } from '@/lib/utils/leagueStatusUtils'
@@ -181,6 +182,51 @@ export default async function CityLeaguePage({ params }) {
     }
   }
   
+  const openSeason = grouped.current.find(s => s.hasRegistrationOpen)
+  const levelOrder = { advanced: 1, intermediate: 2, beginner: 3 }
+  const openLeagues = openSeason
+    ? openSeason.leagues
+        .filter(l => l.status === 'registration_open')
+        .sort((a, b) => (levelOrder[a.skillLevel] || 9) - (levelOrder[b.skillLevel] || 9))
+    : []
+
+  if (openLeagues.length > 0) {
+    const seasonTypeNames = {
+      es: { spring: 'Primavera', summer: 'Verano', autumn: 'Otoño', winter: 'Invierno', annual: 'Anual' },
+      en: { spring: 'Spring', summer: 'Summer', autumn: 'Autumn', winter: 'Winter', annual: 'Annual' }
+    }
+    const seasonName = `${seasonTypeNames[locale === 'es' ? 'es' : 'en'][openSeason.type] || openSeason.type || ''} ${openSeason.year || ''}`.trim()
+
+    return (
+      <div className="min-h-screen bg-white sm:bg-gray-50">
+        <Navigation
+          currentPage="leagues"
+          language={locale}
+          showLanguageSwitcher={true}
+        />
+
+        <CityLeagueHero city={plainCity} locale={locale} seasonName={seasonName} />
+
+        <div className="container mx-auto px-0 sm:px-4 py-0 sm:py-8 md:py-12">
+          <div className="max-w-5xl mx-auto">
+            <div className="sm:bg-white sm:rounded-2xl sm:shadow-md sm:p-6">
+              <LeagueInfoTab
+                league={openLeagues[0]}
+                seasonLeagues={openLeagues}
+                currentSeason={null}
+                language={locale}
+                locale={locale}
+                citySlug={citySlug}
+              />
+            </div>
+          </div>
+        </div>
+
+        <Footer content={footerContent} />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation 

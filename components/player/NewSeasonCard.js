@@ -52,7 +52,7 @@ export default function NewSeasonCard({ language, locale }) {
           return (
             <Link
               key={city.slug}
-              href={`/${locale}/leagues/${city.slug}`}
+              href={`/${locale}/leagues/${city.slug}${city.lastLevel ? `?level=${city.lastLevel}` : ''}`}
               className="flex items-center justify-between gap-3 bg-white rounded-xl px-4 py-3 text-gray-900 hover:bg-purple-50 active:scale-[0.99] transition-all"
             >
               <div className="min-w-0">

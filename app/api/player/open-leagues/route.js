@@ -22,7 +22,19 @@ export async function GET(request) {
 
     const player = await Player.findOne({ email: user.email }).select('registrations.league')
     const joinedIds = (player?.registrations || []).map(r => r.league)
-    const joinedLeagues = await League.find({ _id: { $in: joinedIds } }).select('city status')
+    const joinedLeagues = await League.find({ _id: { $in: joinedIds } }).select('city status skillLevel seasonConfig.startDate')
+
+    const lastLevelByCity = new Map()
+    const lastStartByCity = new Map()
+    for (const l of joinedLeagues) {
+      const cityId = l.city?.toString()
+      if (!cityId || !l.skillLevel || l.skillLevel === 'all') continue
+      const start = l.seasonConfig?.startDate ? new Date(l.seasonConfig.startDate).getTime() : 0
+      if (!lastStartByCity.has(cityId) || start > lastStartByCity.get(cityId)) {
+        lastStartByCity.set(cityId, start)
+        lastLevelByCity.set(cityId, l.skillLevel)
+      }
+    }
 
     const cityIds = [...new Set(joinedLeagues.map(l => l.city?.toString()).filter(Boolean))]
     const joinedOpenCityIds = new Set(
@@ -61,7 +73,8 @@ export async function GET(request) {
           slug: l.city.slug,
           name: l.city.name,
           registrationEnd,
-          season: l.season || null
+          season: l.season || null,
+          lastLevel: lastLevelByCity.get(cityId) || null
         })
       } else if (registrationEnd && (!existing.registrationEnd || registrationEnd > existing.registrationEnd)) {
         existing.registrationEnd = registrationEnd

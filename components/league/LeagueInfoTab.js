@@ -8,7 +8,13 @@ import { getRandomQuote } from '@/lib/content/tennisQuotes'
 
 import { getDiscountCode } from '@/lib/utils/discountCode'
 
-export default function LeagueInfoTab({ league, currentSeason, language, locale, citySlug }) {
+export default function LeagueInfoTab({ league: baseLeague, currentSeason, language, locale, citySlug, seasonLeagues = null }) {
+  const seasonMode = Array.isArray(seasonLeagues) && seasonLeagues.length > 0
+  const [selectedLevel, setSelectedLevel] = useState(null)
+  const selectedLeague = seasonMode && selectedLevel
+    ? seasonLeagues.find(l => getSkillLevel(l) === selectedLevel) || null
+    : null
+  const league = selectedLeague || baseLeague
   const [discountCode, setDiscountCode] = useState('')
   const [discountValid, setDiscountValid] = useState(false)
   const [discountDetails, setDiscountDetails] = useState(null)
@@ -41,6 +47,7 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale,
         { week: 'Fin', title: '¡Campeón!', desc: 'Gloria eterna' }
       ],
       chooseLevel: 'Elige Tu Nivel',
+      chooseLevelFirst: 'Elige tu nivel',
       currentLevel: 'Actual',
       levelDescriptions: {
         advanced: 'Alto nivel competitivo',
@@ -103,6 +110,7 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale,
         { week: 'End', title: 'Champion!', desc: 'Eternal glory' }
       ],
       chooseLevel: 'Choose Your Level',
+      chooseLevelFirst: 'Choose your level',
       currentLevel: 'Current',
       levelDescriptions: {
         advanced: 'High competitive level',
@@ -150,20 +158,44 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale,
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search)
-      // getDiscountCode checks URL first, then sessionStorage
-      const discount = getDiscountCode(urlParams, league.slug)
-      if (discount) {
-        setDiscountCode(discount)
-        validateDiscount(discount)
-      }
-      // Set motivation quote on mount
       setMotivationQuote(getRandomQuote(language, 'motivation'))
+      if (seasonMode) {
+        const level = new URLSearchParams(window.location.search).get('level')
+        if (level && seasonLeagues.some(l => getSkillLevel(l) === level)) {
+          setSelectedLevel(level)
+        }
+      }
     }
   }, [])
 
-  // Fetch sibling leagues (same city, same season, different levels)
   useEffect(() => {
+    if (typeof window === 'undefined') return
+    const urlParams = new URLSearchParams(window.location.search)
+    const discount = getDiscountCode(urlParams, league.slug)
+    if (discount) {
+      setDiscountCode(discount)
+      validateDiscount(discount)
+    } else {
+      setDiscountValid(false)
+      setDiscountDetails(null)
+    }
+  }, [league.slug])
+
+  const selectLevel = (level) => {
+    setSelectedLevel(level)
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href)
+      url.searchParams.set('level', level)
+      window.history.replaceState(null, '', url.toString())
+    }
+  }
+
+  const scrollToLevelPicker = () => {
+    document.getElementById('season-level-picker')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
+
+  useEffect(() => {
+    if (seasonMode) return
     const fetchSiblings = async () => {
       const seasonInfo = extractSeasonInfo(league)
       
@@ -293,6 +325,60 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale,
       
       {/* Price + CTA Card */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mx-2 sm:mx-0">
+        {seasonMode && (
+          <div id="season-level-picker" className="p-4 sm:p-6 border-b border-gray-100">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <div className="w-8 h-8 bg-parque-purple/10 rounded-lg flex items-center justify-center">
+                <Award className="w-5 h-5 text-parque-purple" />
+              </div>
+              {content.chooseLevel}
+            </h3>
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+              {levels.map((level) => {
+                const available = seasonLeagues.some(l => getSkillLevel(l) === level.key)
+                const isSelected = selectedLevel === level.key
+                const LevelIcon = level.icon
+                return (
+                  <button
+                    key={level.key}
+                    type="button"
+                    disabled={!available}
+                    onClick={() => selectLevel(level.key)}
+                    className={`p-3 sm:p-4 rounded-xl border-2 transition-all ${
+                      !available
+                        ? 'border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed'
+                        : isSelected
+                          ? `${level.borderColor} ${level.bgColor} shadow-md`
+                          : 'border-gray-200 hover:border-parque-purple/40 active:scale-[0.98]'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center text-center">
+                      <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${level.color} flex items-center justify-center text-white mb-2 ${isSelected ? '' : 'opacity-60'}`}>
+                        <LevelIcon className="w-5 h-5" />
+                      </div>
+                      <span className={`font-bold ${isSelected ? level.textColor : 'text-gray-600'}`}>{level.label}</span>
+                      <p className="text-[10px] text-gray-500 mt-1">{content.levelDescriptions[level.key]}</p>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+            {selectedLevel && content.levelDetails[selectedLevel] && (
+              <div className="mt-4">
+                <p className="text-sm font-medium text-gray-500 mb-2">{content.thisLevelIsFor}</p>
+                <ul className="space-y-1.5">
+                  {content.levelDetails[selectedLevel].points.map((point, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-sm text-gray-700">
+                      <CheckCircle className="w-4 h-4 text-parque-green flex-shrink-0 mt-0.5" />
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Price + Dates row */}
         <div className="p-4 sm:p-6">
           <div className="mb-4">
@@ -388,13 +474,23 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale,
         {/* CTA - Purple gradient */}
         {league.status === 'registration_open' && (
           <div className="px-4 sm:px-6 pb-4 sm:pb-6">
-            <a
-              href={buildRegistrationUrl()}
-              className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-parque-purple to-violet-600 text-white px-6 py-4 rounded-xl font-bold text-lg shadow-lg active:scale-[0.98] transition-all"
-            >
-              {content.registerNow}
-              <ArrowRight className="w-5 h-5" />
-            </a>
+            {seasonMode && !selectedLevel ? (
+              <button
+                type="button"
+                onClick={scrollToLevelPicker}
+                className="flex items-center justify-center gap-2 w-full bg-gray-200 text-gray-600 px-6 py-4 rounded-xl font-bold text-lg active:scale-[0.98] transition-all"
+              >
+                {content.chooseLevelFirst}
+              </button>
+            ) : (
+              <a
+                href={buildRegistrationUrl()}
+                className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-parque-purple to-violet-600 text-white px-6 py-4 rounded-xl font-bold text-lg shadow-lg active:scale-[0.98] transition-all"
+              >
+                {content.registerNow}
+                <ArrowRight className="w-5 h-5" />
+              </a>
+            )}
           </div>
         )}
       </div>
@@ -431,7 +527,7 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale,
         </div>
       </div>
 
-      {/* Level Selector - Cards version */}
+      {!seasonMode && (
       <div className="bg-white rounded-2xl border border-gray-100 p-5 sm:p-6 shadow-sm mx-2 sm:mx-0">
         <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
           <div className="w-8 h-8 bg-parque-purple/10 rounded-lg flex items-center justify-center">
@@ -509,6 +605,7 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale,
           </div>
         )}
       </div>
+      )}
 
       {/* What's Included - Links to How It Works */}
       <a 
@@ -568,7 +665,16 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale,
             ))}
           </div>
           
-          {league.status === 'registration_open' && (
+          {league.status === 'registration_open' && (seasonMode && !selectedLevel ? (
+            <button
+              type="button"
+              onClick={scrollToLevelPicker}
+              className="mt-5 flex items-center justify-center gap-2 w-full bg-white text-parque-purple px-6 py-3.5 rounded-xl font-bold shadow-lg active:scale-[0.98] transition-all"
+            >
+              {content.chooseLevelFirst}
+              <ArrowRight className="w-5 h-5 -rotate-90" />
+            </button>
+          ) : (
             <a
               href={buildRegistrationUrl()}
               className="mt-5 flex items-center justify-center gap-2 w-full bg-white text-parque-purple px-6 py-3.5 rounded-xl font-bold shadow-lg active:scale-[0.98] transition-all"
@@ -576,7 +682,7 @@ export default function LeagueInfoTab({ league, currentSeason, language, locale,
               {content.registerNow}
               <ArrowRight className="w-5 h-5" />
             </a>
-          )}
+          ))}
         </div>
       </div>
     </div>

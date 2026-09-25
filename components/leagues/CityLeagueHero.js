@@ -5,12 +5,12 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, Trophy, Medal, Award } from 'lucide-react'
 
-export default function CityLeagueHero({ city, locale, leagueName, league }) {
+export default function CityLeagueHero({ city, locale, leagueName, league, seasonName }) {
   const router = useRouter()
   const cityName = city.name[locale] || city.name.es
   
   // Build the page title based on context
-  const pageTitle = league && leagueName 
+  const pageTitle = (league && leagueName) || seasonName
     ? cityName
     : locale === 'es' 
       ? `Ligas de ${cityName}` 
@@ -132,7 +132,7 @@ export default function CityLeagueHero({ city, locale, leagueName, league }) {
               </h1>
               
               {/* Description - City page only */}
-              {!league && (
+              {!league && !seasonName && (
                 <p className="text-sm sm:text-base text-white/70 mt-1">
                   {locale === 'es' 
                     ? 'Elige el nivel de competición que mejor se adapte a ti' 
@@ -141,6 +141,17 @@ export default function CityLeagueHero({ city, locale, leagueName, league }) {
               )}
             </div>
             
+            {seasonName && (
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <span className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-gradient-to-r from-parque-purple to-violet-600 text-white font-bold text-sm shadow-lg">
+                  {seasonName}
+                </span>
+                <span className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-sm font-semibold bg-white/20 backdrop-blur-sm text-white border border-white/30 shadow-lg">
+                  {locale === 'es' ? 'Inscripciones Abiertas' : 'Registration Open'}
+                </span>
+              </div>
+            )}
+
             {/* Badges */}
             {league && leagueName && (
               <div className="flex flex-wrap items-center gap-2 sm:gap-3">
