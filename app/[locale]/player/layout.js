@@ -336,7 +336,7 @@ export default function PlayerLayout({ children }) {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0 min-h-0 lg:ml-72">
-        <main id="player-scroll" className="flex-1 min-h-0 overflow-y-auto overscroll-contain bg-gray-50 mb-[calc(4rem+env(safe-area-inset-bottom,0px))] lg:mb-0">
+        <main id="player-scroll" className="flex-1 min-h-0 overflow-y-auto overscroll-none bg-gray-50 mb-[calc(4rem+env(safe-area-inset-bottom,0px))] lg:mb-0">
           <div className="container mx-auto px-2 md:px-6 pt-2 pb-4 md:py-8 md:pb-8 max-w-[1400px]">
             {children}
           </div>
