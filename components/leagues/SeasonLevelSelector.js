@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Trophy, Medal, Award, MapPin, Calendar, Users, ChevronRight, HelpCircle, X, Check } from 'lucide-react'
+import { getSkillLevel } from '@/lib/utils/leagueSiblings'
 
 /**
  * =============================================================================
@@ -395,7 +396,7 @@ function LevelHelperModal({ isOpen, onClose, locale, colors, leagues, status }) 
             if (league && leagueSlug) {
               // Route based on individual league status
               const linkHref = league.status === 'registration_open'
-                ? `/${locale}/leagues/${citySlug}/info/${leagueSlug}`
+                ? `/${locale}/leagues/${citySlug}?level=${getSkillLevel(league)}`
                 : `/${locale}/${citySlug}/liga/${leagueSlug}`
               
               return (
@@ -450,7 +451,7 @@ function LevelOption({ league, locale, isRegistrationOpen, showSpots = false, co
   
   // Route based on individual league status
   const linkHref = league.status === 'registration_open'
-    ? `/${locale}/leagues/${citySlug}/info/${league.slug}`
+    ? `/${locale}/leagues/${citySlug}?level=${getSkillLevel(league)}`
     : `/${locale}/${citySlug}/liga/${league.slug}`
   
   return (
