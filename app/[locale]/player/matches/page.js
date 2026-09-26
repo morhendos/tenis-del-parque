@@ -393,12 +393,12 @@ export default function PlayerMatches() {
           }
         }
         
-        .animate-fade-in-up {
+        . {
           animation: fade-in-up 0.5s ease-out;
         }
       `}</style>
       
-      <div className="space-y-4 animate-fade-in-up">
+      <div className="space-y-4">
         {/* Hero Header - Like OpenRank */}
         <div className="relative overflow-hidden bg-gradient-to-br from-parque-purple via-purple-600 to-indigo-600 rounded-xl sm:rounded-2xl text-white p-4 sm:p-6">
           {/* Background decoration */}
@@ -547,7 +547,7 @@ export default function PlayerMatches() {
                   showActions={true}
                   showLeagueBadge={hasMultipleLeagues}
                   openRankData={openRankData}
-                  className="animate-fade-in-up"
+                  className=""
                   style={{ animationDelay: `${index * 0.1}s` }}
                 />
               ))
@@ -580,7 +580,7 @@ export default function PlayerMatches() {
                   showActions={false}
                   showLeagueBadge={hasMultipleLeagues}
                   openRankData={openRankData}
-                  className="animate-fade-in-up"
+                  className=""
                   style={{ animationDelay: `${index * 0.1}s` }}
                 />
               ))

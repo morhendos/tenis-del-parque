@@ -138,7 +138,7 @@ export default function PlayerDashboard() {
     <>
       <style jsx global>{dashboardStyles}</style>
       
-      <div className="space-y-4 sm:space-y-5 animate-fade-in-up">
+      <div className="space-y-4 sm:space-y-5">
         {/* Welcome Header with Quick Links */}
         <DashboardHeader player={player} language={language} />
         

@@ -52,7 +52,7 @@ export default function DashboardHeader({ player, language }) {
       </svg>
       
       <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-        <div className="animate-slide-in-left">
+        <div className="">
           <div className="flex items-center gap-2 mb-1 sm:mb-2">
             {/* Mobile Logo - inline with greeting */}
             <div className="w-9 h-9 bg-white/30 rounded-lg flex items-center justify-center p-1 sm:hidden">
@@ -85,7 +85,7 @@ export default function DashboardHeader({ player, language }) {
             </div>
           )}
         </div>
-        <div className="flex flex-row gap-2 sm:gap-3 animate-slide-in-right">
+        <div className="flex flex-row gap-2 sm:gap-3">
           <Link
             href={`/${locale}/player/matches`}
             className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 sm:px-5 py-2.5 sm:py-3 bg-white/20 backdrop-blur-sm border border-white/30 text-white rounded-xl hover:bg-white/30 transition-all transform hover:scale-105 active:scale-95 text-sm font-medium shadow-lg">
