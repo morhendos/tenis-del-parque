@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { useParams, usePathname, useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import LanguageSwitcher, { LanguageSwitcherToggle } from './LanguageSwitcher'
 import TennisPreloader from '../ui/TennisPreloader'
 
@@ -98,6 +99,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
       swiss: 'Sistema Suizo',
       openrank: 'OpenRank',
       login: 'Iniciar Sesión',
+      dashboard: 'Mi panel',
       language: 'Idioma',
       about: 'Acerca de',
       contact: 'Contacto'
@@ -111,6 +113,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
       swiss: 'Swiss System',
       openrank: 'OpenRank',
       login: 'Login',
+      dashboard: 'My dashboard',
       language: 'Language',
       about: 'About',
       contact: 'Contact'
@@ -119,6 +122,10 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
 
   const validLocale = navContent[locale] ? locale : 'es'
   const t = navContent[validLocale]
+  const { status: sessionStatus } = useSession()
+  const isLoggedIn = sessionStatus === 'authenticated'
+  const authHref = isLoggedIn ? `/${validLocale}/player/dashboard` : `/${validLocale}/login`
+  const authLabel = isLoggedIn ? t.dashboard : t.login
 
   const handleMobileMenuToggle = () => {
     if (!isClient) return
@@ -229,7 +236,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
     setTimeout(() => {
       setIsMobileMenuOpen(false)
       setIsNavigating(true)
-      router.push(`/${validLocale}/login`)
+      router.push(authHref)
     }, 150)
   }
 
@@ -289,7 +296,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
               
               <div className="ml-8">
                 <span className="bg-parque-purple text-white px-4 py-2 rounded-lg font-medium text-sm">
-                  {t.login}
+                  {authLabel}
                 </span>
               </div>
               
@@ -390,13 +397,13 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
               
               <div className="ml-8">
                 <a
-                  href={`/${validLocale}/login`}
+                  href={authHref}
                   onMouseEnter={() => setHoveredButton('login')}
                   onMouseLeave={() => setHoveredButton(null)}
                   className="bg-parque-purple text-white px-4 py-2 rounded-lg transition-colors font-medium text-sm"
                   style={{ backgroundColor: hoveredButton === 'login' ? '#452a66' : '#563380' }}
                 >
-                  {t.login}
+                  {authLabel}
                 </a>
               </div>
               
@@ -463,7 +470,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
               {/* Login Button */}
               <div className="pt-3 mt-2 border-t border-gray-200">
                 <a
-                  href={`/${validLocale}/login`}
+                  href={authHref}
                   onClick={handleLoginTap}
                   className={`block w-full text-center py-3 px-4 rounded-xl transition-all duration-150 font-medium ${
                     tappedItem === 'login'
@@ -471,7 +478,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
                       : 'bg-parque-purple text-white hover:bg-parque-purple/90'
                   }`}
                 >
-                  {t.login}
+                  {authLabel}
                 </a>
               </div>
               
