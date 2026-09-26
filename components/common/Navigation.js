@@ -318,6 +318,7 @@ export default function Navigation({ currentPage = 'home', language, onLanguageC
 
   return (
     <>
+      <div className="fixed top-0 inset-x-0 z-[101] bg-white pointer-events-none" style={{ height: 'env(safe-area-inset-top, 0px)' }} />
       <nav className={`fixed top-0 w-full backdrop-blur-md z-[100] transition-all duration-300 safe-area-top ${
         scrolled ? 'bg-white/95 shadow-md' : 'bg-white/90 lg:bg-white/70'
       } ${navVisible ? 'translate-y-0' : '-translate-y-full'}`}>
