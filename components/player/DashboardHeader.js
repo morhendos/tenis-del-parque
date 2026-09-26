@@ -5,6 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { getMaskedName, isDemoModeActive } from '@/lib/utils/demoMode'
+import MobileHeaderSlot from './MobileHeaderSlot'
 
 export default function DashboardHeader({ player, language }) {
   const params = useParams()
@@ -35,7 +36,9 @@ export default function DashboardHeader({ player, language }) {
   const firstName = displayName.split(' ')[0]
   
   return (
-    <div className={`sticky top-0 z-30 sm:relative overflow-hidden bg-gradient-to-br from-parque-purple via-purple-600 to-indigo-600 text-white px-4 ${compact ? 'pt-3 pb-3' : 'pt-8 pb-4'} sm:p-8 shadow-xl -mx-2 -mt-2 sm:mx-0 sm:mt-0 sm:rounded-2xl transition-[padding] duration-300`}>
+    <MobileHeaderSlot>
+    {(inSlot) => (
+    <div className={`${inSlot ? 'relative' : 'sticky top-0 z-30 sm:relative -mx-2 -mt-2 sm:mx-0 sm:mt-0'} overflow-hidden bg-gradient-to-br from-parque-purple via-purple-600 to-indigo-600 text-white px-4 ${compact ? 'pt-3 pb-3' : 'pt-8 pb-4'} sm:p-8 shadow-xl sm:rounded-2xl transition-[padding] duration-300`}>
       {/* Background decoration */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute -top-16 -right-16 w-64 h-64 sm:-top-24 sm:-right-24 sm:w-96 sm:h-96 bg-white rounded-full"></div>
@@ -114,5 +117,7 @@ export default function DashboardHeader({ player, language }) {
         </div>
       </div>
     </div>
+    )}
+    </MobileHeaderSlot>
   )
 }

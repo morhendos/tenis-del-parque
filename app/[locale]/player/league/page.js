@@ -10,6 +10,7 @@ import PlayoffsTab from '@/components/player/PlayoffsTab'
 import PlayoffExplanation from '@/components/player/PlayoffExplanation'
 import LeagueTabs from '@/components/player/LeagueTabs'
 import CountdownCard from '@/components/player/CountdownCard'
+import MobileHeaderSlot from '@/components/player/MobileHeaderSlot'
 import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
 import { getEffectiveLeagueStatus } from '@/lib/utils/leagueSelection'
 
@@ -76,7 +77,8 @@ function LeagueHeader({
   currentLeagueId, 
   onLeagueChange, 
   language,
-  currentLeague 
+  currentLeague,
+  inSlot = false
 }) {
   const hasMultipleLeagues = registrations && registrations.length > 1
   const [isExpanded, setIsExpanded] = useState(false)
@@ -225,7 +227,7 @@ function LeagueHeader({
   // For single league, show a simpler non-expandable header
   if (!hasMultipleLeagues) {
     return (
-      <div className="sticky top-0 z-30 sm:static -mx-2 -mt-2 sm:mx-0 sm:mt-0">
+      <div className={inSlot ? '' : 'sticky top-0 z-30 sm:static -mx-2 -mt-2 sm:mx-0 sm:mt-0'}>
         <div className="bg-gradient-to-br from-parque-purple via-purple-600 to-indigo-600 shadow-lg overflow-hidden relative sm:rounded-2xl">
           {/* Background decoration - matching dashboard */}
           <div className="absolute inset-0 opacity-10">
@@ -282,7 +284,7 @@ function LeagueHeader({
 
   // For multiple leagues, show expandable selector
   return (
-    <div className="sticky top-0 z-30 sm:relative sm:z-20 -mx-2 -mt-2 sm:mx-0 sm:mt-0">
+    <div className={inSlot ? 'relative z-20' : 'sticky top-0 z-30 sm:relative sm:z-20 -mx-2 -mt-2 sm:mx-0 sm:mt-0'}>
       <div className="shadow-lg overflow-visible sm:rounded-2xl">
         {/* Collapsed Header - Purple gradient */}
         <button
@@ -583,13 +585,18 @@ export default function PlayerLeague() {
   return (
     <div className="space-y-6">
       {/* League Header - shows for all users, expandable if multiple leagues */}
-      <LeagueHeader
-        registrations={allRegistrations}
-        currentLeagueId={currentLeague._id}
-        currentLeague={currentLeague}
-        onLeagueChange={handleLeagueChange}
-        language={language}
-      />
+      <MobileHeaderSlot>
+        {(inSlot) => (
+          <LeagueHeader
+            registrations={allRegistrations}
+            currentLeagueId={currentLeague._id}
+            currentLeague={currentLeague}
+            onLeagueChange={handleLeagueChange}
+            language={language}
+            inSlot={inSlot}
+          />
+        )}
+      </MobileHeaderSlot>
 
       {/* Countdown Card for upcoming leagues */}
       <CountdownCard 
