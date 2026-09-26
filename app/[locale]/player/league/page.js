@@ -597,7 +597,6 @@ export default function PlayerLeague() {
         location={currentLeague.location?.city}
         startDate={currentLeague.seasonConfig?.startDate}
         status={currentLeague.status}
-        playerCount={currentLeague.playerCount}
         language={language}
         showQuote={true}
       />
@@ -614,7 +613,7 @@ export default function PlayerLeague() {
       <div className={activeTab === LEAGUE_TABS.PLAYOFFS ? 'rounded-xl overflow-hidden' : 'bg-white rounded-xl shadow-lg overflow-hidden p-2 sm:p-6'}>
           {activeTab === LEAGUE_TABS.STANDINGS && (
             <div>
-              {standings && standings.unifiedStandings && standings.unifiedStandings.length > 0 ? (
+              {currentLeague?.status !== 'registration_open' && currentLeague?.status !== 'coming_soon' && standings && standings.unifiedStandings && standings.unifiedStandings.length > 0 ? (
                 <>
                   <StandingsTable 
                     players={standings.unifiedStandings} 
