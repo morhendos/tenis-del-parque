@@ -18,6 +18,10 @@ export default function PlayerLayout({ children }) {
   const { data: session, status } = useSession()
   const urlLocale = params.locale || 'es'
   const [locale, setLocale] = useState(urlLocale)
+
+  useEffect(() => {
+    document.getElementById('player-scroll')?.scrollTo(0, 0)
+  }, [pathname])
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [hasNewAnnouncement, setHasNewAnnouncement] = useState(false)
@@ -235,7 +239,7 @@ export default function PlayerLayout({ children }) {
   }
 
   return (
-    <div className="player-shell min-h-screen bg-gray-50 flex">
+    <div className="player-shell h-[calc(100dvh-env(safe-area-inset-top,0px))] overflow-hidden lg:h-auto lg:min-h-screen lg:overflow-visible bg-gray-50 flex">
       {/* Desktop Sidebar - Hidden on mobile */}
       <div className="fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-xl hidden lg:block">
         <div className="relative h-full">
@@ -331,10 +335,9 @@ export default function PlayerLayout({ children }) {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0 lg:ml-72">
-        {/* Page content - Add bottom padding on mobile for bottom nav */}
-        <main className="flex-1 overflow-y-auto bg-gray-50">
-          <div className="container mx-auto px-2 md:px-6 pt-2 pb-24 md:py-8 md:pb-8 max-w-[1400px]">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 lg:ml-72">
+        <main id="player-scroll" className="flex-1 min-h-0 overflow-y-auto overscroll-contain bg-gray-50 mb-[calc(4rem+env(safe-area-inset-bottom,0px))] lg:mb-0">
+          <div className="container mx-auto px-2 md:px-6 pt-2 pb-4 md:py-8 md:pb-8 max-w-[1400px]">
             {children}
           </div>
         </main>
