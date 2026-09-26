@@ -225,7 +225,7 @@ function LeagueHeader({
   // For single league, show a simpler non-expandable header
   if (!hasMultipleLeagues) {
     return (
-      <div className="-mx-2 -mt-4 sm:mx-0 sm:mt-0">
+      <div className="sticky top-0 z-30 sm:static -mx-2 -mt-2 sm:mx-0 sm:mt-0">
         <div className="bg-gradient-to-br from-parque-purple via-purple-600 to-indigo-600 shadow-lg overflow-hidden relative sm:rounded-2xl">
           {/* Background decoration - matching dashboard */}
           <div className="absolute inset-0 opacity-10">
@@ -282,7 +282,7 @@ function LeagueHeader({
 
   // For multiple leagues, show expandable selector
   return (
-    <div className="-mx-2 -mt-4 sm:mx-0 sm:mt-0 relative z-20">
+    <div className="sticky top-0 z-30 sm:relative sm:z-20 -mx-2 -mt-2 sm:mx-0 sm:mt-0">
       <div className="shadow-lg overflow-visible sm:rounded-2xl">
         {/* Collapsed Header - Purple gradient */}
         <button

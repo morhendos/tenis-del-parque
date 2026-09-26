@@ -10,9 +10,20 @@ export default function DashboardHeader({ player, language }) {
   const params = useParams()
   const locale = params?.locale || 'es'
   const [isDemoMode, setIsDemoMode] = useState(false)
+  const [compact, setCompact] = useState(false)
   
   useEffect(() => {
     setIsDemoMode(isDemoModeActive())
+  }, [])
+
+  useEffect(() => {
+    const el = document.getElementById('player-scroll')
+    if (!el) return
+    const onScroll = () => {
+      setCompact(prev => (prev ? el.scrollTop > 8 : el.scrollTop > 60))
+    }
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => el.removeEventListener('scroll', onScroll)
   }, [])
   
   // Count leagues if player has registrations
@@ -24,7 +35,7 @@ export default function DashboardHeader({ player, language }) {
   const firstName = displayName.split(' ')[0]
   
   return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-parque-purple via-purple-600 to-indigo-600 text-white px-4 pt-8 pb-4 sm:p-8 shadow-xl -mx-2 -mt-4 sm:mx-0 sm:mt-0 sm:rounded-2xl">
+    <div className={`sticky top-0 z-30 sm:relative overflow-hidden bg-gradient-to-br from-parque-purple via-purple-600 to-indigo-600 text-white px-4 ${compact ? 'pt-3 pb-3' : 'pt-8 pb-4'} sm:p-8 shadow-xl -mx-2 -mt-2 sm:mx-0 sm:mt-0 sm:rounded-2xl transition-[padding] duration-300`}>
       {/* Background decoration */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute -top-16 -right-16 w-64 h-64 sm:-top-24 sm:-right-24 sm:w-96 sm:h-96 bg-white rounded-full"></div>
@@ -54,7 +65,7 @@ export default function DashboardHeader({ player, language }) {
               {language === 'es' ? '¡Hola' : 'Hello'}, {firstName}!
             </h1>
           </div>
-          <p className="text-purple-100 text-sm sm:text-base">
+          <p className={`text-purple-100 text-sm sm:text-base ${compact ? 'hidden sm:block' : ''}`}>
             {language === 'es' 
               ? 'Tu centro de control personal de tenis'
               : 'Your personal tennis command center'}
