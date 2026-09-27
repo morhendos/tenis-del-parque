@@ -20,6 +20,7 @@ const SNOOZE_DAYS = 7
 export default function PushNotificationPrompt({ language = 'es' }) {
   const [show, setShow] = useState(false)
   const [variant, setVariant] = useState('enable') // 'enable' | 'ios-install'
+  const [iosBrowser, setIosBrowser] = useState('safari') // 'safari' | 'chrome' | 'inapp'
   const [feedback, setFeedback] = useState(null)
   const { subscribe, isSubscribed, isSupported, isLoading, permission } = usePushNotifications()
 
@@ -39,8 +40,16 @@ export default function PushNotificationPrompt({ language = 'es' }) {
       window.navigator.standalone === true
 
     if (isIOS && !isStandalone) {
-      // iOS Safari without home-screen install: push is impossible,
+      // iOS without home-screen install: push is impossible,
       // so ask them to install the PWA first
+      const ua = navigator.userAgent
+      if (/Instagram|FBAN|FBAV|FB_IAB|Line\/|TikTok/i.test(ua)) {
+        setIosBrowser('inapp')
+      } else if (/CriOS|EdgiOS/.test(ua)) {
+        setIosBrowser('chrome')
+      } else {
+        setIosBrowser('safari')
+      }
       setVariant('ios-install')
     } else if (isSupported) {
       setVariant('enable')
@@ -95,13 +104,21 @@ export default function PushNotificationPrompt({ language = 'es' }) {
     enable: 'Activar',
     enabling: 'Activando...',
     iosTitle: 'Instala la app para recibir los resultados de tu liga',
-    iosSteps: 'Pulsa Compartir y elige "Añadir a pantalla de inicio"'
+    stepShare: iosBrowser === 'chrome'
+      ? 'Pulsa Compartir (arriba, en la barra de direcciones)'
+      : 'Pulsa Compartir (abajo, en el centro)',
+    stepAdd: 'Elige "Añadir a pantalla de inicio"',
+    inapp: 'Abre tenisdp.es en Safari para poder instalar la app'
   } : {
     enableText: 'Get league results and updates the moment they happen',
     enable: 'Enable',
     enabling: 'Enabling...',
     iosTitle: 'Install the app to get your league results',
-    iosSteps: 'Tap Share and choose "Add to Home Screen"'
+    stepShare: iosBrowser === 'chrome'
+      ? 'Tap Share (top right, in the address bar)'
+      : 'Tap Share (bottom center)',
+    stepAdd: 'Choose "Add to Home Screen"',
+    inapp: 'Open tenisdp.es in Safari to install the app'
   }
 
   // Portal to <body>: the dashboard wrapper has a CSS transform
@@ -120,12 +137,29 @@ export default function PushNotificationPrompt({ language = 'es' }) {
           {variant === 'ios-install' ? (
             <div className="flex-1 min-w-0">
               <p className="text-sm text-gray-800 font-medium leading-tight">{t.iosTitle}</p>
-              <p className="text-xs text-gray-500 leading-tight mt-1 flex items-center gap-1">
-                <svg className="w-3.5 h-3.5 flex-shrink-0 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0-12l-4 4m4-4l4 4" />
-                </svg>
-                {t.iosSteps}
-              </p>
+              {iosBrowser === 'inapp' ? (
+                <p className="text-xs text-gray-600 leading-tight mt-1.5">{t.inapp}</p>
+              ) : (
+                <div className="mt-2 space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-md bg-parque-purple/10 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-3.5 h-3.5 text-parque-purple" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 12v7a2 2 0 002 2h12a2 2 0 002-2v-7M12 3v13m0-13L8 7m4-4l4 4" />
+                      </svg>
+                    </span>
+                    <p className="text-xs text-gray-600 leading-tight"><span className="font-semibold text-gray-800">1.</span> {t.stepShare}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-md bg-parque-purple/10 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-3.5 h-3.5 text-parque-purple" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <rect x="4" y="4" width="16" height="16" rx="3" />
+                        <path strokeLinecap="round" d="M12 9v6m-3-3h6" />
+                      </svg>
+                    </span>
+                    <p className="text-xs text-gray-600 leading-tight"><span className="font-semibold text-gray-800">2.</span> {t.stepAdd}</p>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <>
