@@ -156,7 +156,7 @@ export default function PlayerDashboard() {
         <PushNotificationPrompt language={language} />
 
         {/* Next Match + Mini Standings - Side by side on desktop */}
-        <div className={`grid grid-cols-1 ${leagueInfo?.status === 'active' ? 'lg:grid-cols-2' : ''} gap-4 sm:gap-5`}>
+        <div className={`grid grid-cols-1 ${leagueInfo?.status === 'active' && upcomingMatches?.length > 0 ? 'lg:grid-cols-2' : ''} gap-4 sm:gap-5`}>
           {/* Next Match - Hero section */}
           <NextMatchCard matches={upcomingMatches} language={language} leagueInfo={leagueInfo} playerName={player?.name?.split(' ')[0] || ''} />
 
