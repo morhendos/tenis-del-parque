@@ -33,6 +33,14 @@ export default function LeagueRegistrationPage() {
 
   const t = homeContent[validLocale] || homeContent[i18n.defaultLocale]
 
+  useEffect(() => {
+    const onPageShow = (e) => {
+      if (e.persisted) window.location.reload()
+    }
+    window.addEventListener('pageshow', onPageShow)
+    return () => window.removeEventListener('pageshow', onPageShow)
+  }, [])
+
   // Handle return from Stripe Checkout
   useEffect(() => {
     if (!league) return
