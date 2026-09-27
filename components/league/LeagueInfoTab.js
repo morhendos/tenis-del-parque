@@ -391,11 +391,14 @@ export default function LeagueInfoTab({ league: baseLeague, currentSeason, langu
                 <p className="text-xs text-gray-500 mt-1">
                   {language === 'es' ? 'IVA incluido' : 'VAT included'}
                 </p>
-                <p className="text-sm text-parque-green font-medium mt-2">
-                  {language === 'es'
-                    ? 'Juega todos tus partidos y la próxima temporada te sale a mitad de precio.'
-                    : 'Play all your matches and get 50% off next season.'}
-                </p>
+                <div className="inline-flex items-center gap-2 mt-2 px-2.5 py-1.5 bg-parque-green/10 rounded-lg">
+                  <span className="px-1.5 py-0.5 rounded bg-parque-green text-white text-xs font-bold flex-shrink-0">-50%</span>
+                  <p className="text-sm text-parque-green font-medium">
+                    {language === 'es'
+                      ? 'en la próxima temporada si juegas todos tus partidos'
+                      : 'off next season if you play all your matches'}
+                  </p>
+                </div>
               </>
             )}
             

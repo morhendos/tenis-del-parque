@@ -270,12 +270,15 @@ export default function ModernRegistrationForm({
         </div>
 
         {!league.seasonConfig?.price?.isFree && (
-          <div className="px-4 sm:px-6 py-2.5 border-t border-gray-100 bg-emerald-50">
-            <p className="text-xs sm:text-sm text-emerald-700 font-medium">
-              {locale === 'es'
-                ? 'Juega todos tus partidos y la próxima temporada te sale a mitad de precio.'
-                : 'Play all your matches and get 50% off next season.'}
-            </p>
+          <div className="px-4 sm:px-6 py-3 border-t border-gray-100 bg-emerald-50">
+            <div className="flex items-center gap-2.5">
+              <span className="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-sm font-bold flex-shrink-0">-50%</span>
+              <p className="text-xs sm:text-sm text-emerald-800 font-medium">
+                {locale === 'es'
+                  ? 'en la próxima temporada si juegas todos tus partidos'
+                  : 'off next season if you play all your matches'}
+              </p>
+            </div>
           </div>
         )}
         
