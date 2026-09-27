@@ -132,6 +132,7 @@ export async function POST(request) {
     let hasUserAccount = false
     let activationLink = null
     let user = null
+    let isResume = false
     
     if (player) {
       // EXISTING PLAYER - check if already registered for this league
@@ -140,39 +141,9 @@ export async function POST(request) {
       const existingRegistration = player.getLeagueRegistration(league._id)
       
       if (existingRegistration) {
-        return Response.json(
-          { 
-            success: false, 
-            error: language === 'es'
-              ? 'Ya estás registrado en esta liga'
-              : 'You are already registered for this league'
-          },
-          { status: 409 }
-        )
-      }
-      
-      // Add new league registration to existing player with discount info
-      try {
-        // Create registration object with discount tracking
-        const newRegistration = {
-          league: league._id,
-          level: level,
-          status: league.status === 'coming_soon' ? 'waiting' : 'pending',
-          stats: {},
-          // NEW: Discount tracking
-          discountCode: validatedDiscountCode,
-          discountApplied: discountApplied,
-          originalPrice: originalPrice,
-          finalPrice: finalPrice,
-          paymentStatus: finalPrice === 0 ? 'waived' : 'pending'
-        }
+        const isPaid = ['completed', 'waived'].includes(existingRegistration.paymentStatus)
         
-        // Check if already registered for this league (shouldn't happen, but double-check)
-        const existingReg = player.registrations.find(reg => 
-          reg.league.toString() === league._id.toString()
-        )
-        
-        if (existingReg) {
+        if (isPaid) {
           return Response.json(
             { 
               success: false, 
@@ -184,22 +155,59 @@ export async function POST(request) {
           )
         }
         
-        player.registrations.push(newRegistration)
+        isResume = true
+        existingRegistration.level = level
+        
+        if (validatedDiscountCode && !existingRegistration.discountCode) {
+          existingRegistration.discountCode = validatedDiscountCode
+          existingRegistration.discountApplied = discountApplied
+          existingRegistration.originalPrice = originalPrice
+          existingRegistration.finalPrice = finalPrice
+          if (finalPrice === 0) {
+            existingRegistration.paymentStatus = 'waived'
+          }
+        } else {
+          validatedDiscountCode = null
+        }
+        
         await player.save()
         
-        console.log(`Existing player ${email} registered for new league: ${league.name}`)
+        console.log(`Resumed unpaid registration for ${email} in league: ${league.name}`)
         
-      } catch (registrationError) {
-        console.error('Registration error:', registrationError)
-        return Response.json(
-          { 
-            success: false, 
-            error: language === 'es'
-              ? 'Error al registrarte en esta liga'
-              : 'Error registering for this league'
-          },
-          { status: 400 }
-        )
+      } else {
+        // Add new league registration to existing player with discount info
+        try {
+          // Create registration object with discount tracking
+          const newRegistration = {
+            league: league._id,
+            level: level,
+            status: league.status === 'coming_soon' ? 'waiting' : 'pending',
+            stats: {},
+            // NEW: Discount tracking
+            discountCode: validatedDiscountCode,
+            discountApplied: discountApplied,
+            originalPrice: originalPrice,
+            finalPrice: finalPrice,
+            paymentStatus: finalPrice === 0 ? 'waived' : 'pending'
+          }
+          
+          player.registrations.push(newRegistration)
+          await player.save()
+          
+          console.log(`Existing player ${email} registered for new league: ${league.name}`)
+          
+        } catch (registrationError) {
+          console.error('Registration error:', registrationError)
+          return Response.json(
+            { 
+              success: false, 
+              error: language === 'es'
+                ? 'Error al registrarte en esta liga'
+                : 'Error registering for this league'
+            },
+            { status: 400 }
+          )
+        }
       }
       
       // Check if player has a user account
@@ -378,20 +386,23 @@ export async function POST(request) {
     }
 
     // Update league stats
-    if (league.status === 'coming_soon') {
-      await League.findByIdAndUpdate(league._id, {
-        $inc: { 'waitingListCount': 1 }
-      })
-    } else {
-      await League.findByIdAndUpdate(league._id, {
-        $inc: { 'stats.totalPlayers': 1, 'stats.registeredPlayers': 1 }
-      })
+    if (!isResume) {
+      if (league.status === 'coming_soon') {
+        await League.findByIdAndUpdate(league._id, {
+          $inc: { 'waitingListCount': 1 }
+        })
+      } else {
+        await League.findByIdAndUpdate(league._id, {
+          $inc: { 'stats.totalPlayers': 1, 'stats.registeredPlayers': 1 }
+        })
+      }
     }
 
     // Get the registration we just created
     const registration = player.getLeagueRegistration(league._id)
 
     // Send welcome email with activation link
+    if (!isResume) {
     try {
       // Get WhatsApp group info if available
       const whatsappGroupInfo = league.getWhatsAppGroupInfo ? league.getWhatsAppGroupInfo() : null
@@ -443,6 +454,7 @@ export async function POST(request) {
     } catch (emailError) {
       console.error('Error sending welcome email:', emailError)
       // Don't fail registration if email fails - just log it
+    }
     }
 
     // Customize success message
