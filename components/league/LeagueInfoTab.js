@@ -328,7 +328,7 @@ export default function LeagueInfoTab({ league: baseLeague, currentSeason, langu
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8 pt-4 sm:pt-0">
+    <div className="space-y-6 sm:space-y-8 pt-2 sm:pt-0">
       {seasonMode && league.status === 'registration_open' && (
         <div className="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <div className="flex items-center gap-3">
@@ -354,7 +354,7 @@ export default function LeagueInfoTab({ league: baseLeague, currentSeason, langu
       )}
       
       {/* Price + CTA Card */}
-      <div id="season-card" className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mx-2 sm:mx-0">
+      <div id="season-card" className="!mt-0 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mx-2 sm:mx-0">
         {/* Price + Dates row */}
         <div className="p-4 sm:p-6">
           <div className="mb-4">

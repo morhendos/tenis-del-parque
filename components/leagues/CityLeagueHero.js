@@ -120,7 +120,7 @@ export default function CityLeagueHero({ city, locale, leagueName, league, seaso
       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20" />
       
       {/* Content */}
-      <div className="relative h-full container mx-auto px-4 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-6 sm:pb-8 z-10 flex flex-col justify-end">
+      <div className="relative min-h-[280px] sm:min-h-[320px] md:min-h-[360px] container mx-auto px-4 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-4 sm:pb-8 z-10 flex flex-col justify-end">
         
         {/* Mobile Back Button - glassmorphic */}
         <button
