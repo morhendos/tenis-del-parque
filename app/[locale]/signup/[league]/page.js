@@ -359,7 +359,7 @@ export default function LeagueRegistrationPage() {
           </div>
         </div>
         
-        <Footer content={t.footer} />
+        <Footer content={t.footer} minimal />
       </div>
     )
   }
@@ -385,7 +385,7 @@ export default function LeagueRegistrationPage() {
         </div>
         
         <div className="mt-auto">
-          <Footer content={t.footer} />
+          <Footer content={t.footer} minimal />
         </div>
       </div>
     )
@@ -444,7 +444,7 @@ export default function LeagueRegistrationPage() {
       </div>
       
       {/* Footer */}
-      <Footer content={t.footer} />
+      <Footer content={t.footer} minimal />
     </div>
   )
 }
