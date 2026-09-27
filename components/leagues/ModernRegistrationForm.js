@@ -125,6 +125,14 @@ export default function ModernRegistrationForm({
       })
       return
     }
+    if (!loggedInPlayer && !hasAccount && formData.password.length < 8) {
+      setLocalErrors({
+        password: locale === 'es'
+          ? 'La contraseña debe tener al menos 8 caracteres'
+          : 'Password must be at least 8 characters'
+      })
+      return
+    }
     setLocalErrors({})
     
     const submissionData = {
@@ -575,10 +583,10 @@ export default function ModernRegistrationForm({
                     value={formData.password}
                     onChange={handleChange}
                     required
-                    minLength={6}
+                    minLength={8}
                     autoComplete="new-password"
                     className={`w-full px-3.5 py-2.5 sm:py-3 pr-10 border ${
-                      errors.password ? 'border-red-400 bg-red-50' : 'border-gray-200'
+                      (localErrors.password || errors.password) ? 'border-red-400 bg-red-50' : 'border-gray-200'
                     } rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-base`}
                     placeholder="••••••••"
                   />
@@ -591,10 +599,10 @@ export default function ModernRegistrationForm({
                   </button>
                 </div>
                 <p className="mt-1 text-xs text-gray-500">
-                  {locale === 'es' ? 'Mínimo 6 caracteres' : 'Minimum 6 characters'}
+                  {locale === 'es' ? 'Mínimo 8 caracteres' : 'Minimum 8 characters'}
                 </p>
-                {errors.password && (
-                  <p className="mt-1 text-xs text-red-600">{errors.password}</p>
+                {(localErrors.password || errors.password) && (
+                  <p className="mt-1 text-xs text-red-600">{localErrors.password || errors.password}</p>
                 )}
               </div>
             </div>

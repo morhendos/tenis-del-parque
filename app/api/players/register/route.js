@@ -48,6 +48,18 @@ export async function POST(request) {
       )
     }
 
+    if (password && password.length < 8) {
+      return Response.json(
+        {
+          success: false,
+          error: language === 'es'
+            ? 'La contraseña debe tener al menos 8 caracteres'
+            : 'Password must be at least 8 characters long'
+        },
+        { status: 400 }
+      )
+    }
+
     // Normalize name to Title Case (e.g., "JOHN DOE" -> "John Doe")
     const normalizedName = toTitleCase(name)
 
@@ -296,7 +308,14 @@ export async function POST(request) {
           console.log(`Generated activation link for ${email}: ${activationLink}`)
         }
         
-        await user.save()
+        try {
+          await user.save()
+        } catch (userSaveError) {
+          if (isNewPlayer) {
+            await Player.findByIdAndDelete(player._id)
+          }
+          throw userSaveError
+        }
         
         // Update player with userId
         player.userId = user._id
