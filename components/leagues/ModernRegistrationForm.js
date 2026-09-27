@@ -399,17 +399,24 @@ export default function ModernRegistrationForm({
 
           {loggedInPlayer ? (
             <div className="space-y-4">
-              <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl">
-                <p className="text-sm text-gray-900">
-                  {locale === 'es' ? 'Te unes como' : 'Joining as'}{' '}
-                  <span className="font-semibold">{loggedInPlayer.name}</span>
-                </p>
-                <p className="text-xs text-gray-500 mt-0.5">{loggedInPlayer.email}</p>
+              <div className="p-4 bg-emerald-50 border-2 border-emerald-300 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-base flex-shrink-0">
+                    {(loggedInPlayer.name || '?').split(' ').map(w => w.charAt(0)).slice(0, 2).join('').toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs text-emerald-700 font-medium uppercase tracking-wide">
+                      {locale === 'es' ? 'Te unes como' : 'Joining as'}
+                    </p>
+                    <p className="text-base font-bold text-gray-900 truncate">{loggedInPlayer.name}</p>
+                    <p className="text-xs text-gray-600 truncate">{loggedInPlayer.email}</p>
+                  </div>
+                </div>
                 {onSignOut && (
                   <button
                     type="button"
                     onClick={onSignOut}
-                    className="mt-2 text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+                    className="mt-3 text-xs text-emerald-700 hover:text-emerald-800 font-medium underline"
                   >
                     {locale === 'es' ? '¿No eres tú? Cerrar sesión' : 'Not you? Sign out'}
                   </button>
