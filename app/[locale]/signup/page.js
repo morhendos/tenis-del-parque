@@ -36,7 +36,7 @@ export default function SignupPage() {
       namePlaceholder: 'Tu nombre completo',
       emailPlaceholder: 'tu@email.com',
       whatsappPlaceholder: 'WhatsApp (opcional)',
-      passwordPlaceholder: 'Contraseña (mín. 6 caracteres)',
+      passwordPlaceholder: 'Contraseña (mín. 8 caracteres)',
       submitButton: 'Crear Cuenta',
       submitting: 'Creando cuenta...',
       alreadyHaveAccount: '¿Ya tienes cuenta?',
@@ -54,7 +54,7 @@ export default function SignupPage() {
       errors: {
         name: 'El nombre es obligatorio',
         email: 'Email inválido',
-        password: 'La contraseña debe tener al menos 6 caracteres',
+        password: 'La contraseña debe tener al menos 8 caracteres',
         terms: 'Debes aceptar los términos y la política de privacidad',
         submit: 'Error al crear cuenta. Inténtalo de nuevo.'
       }
@@ -65,7 +65,7 @@ export default function SignupPage() {
       namePlaceholder: 'Your full name',
       emailPlaceholder: 'your@email.com',
       whatsappPlaceholder: 'WhatsApp (optional)',
-      passwordPlaceholder: 'Password (min. 6 characters)',
+      passwordPlaceholder: 'Password (min. 8 characters)',
       submitButton: 'Create Account',
       submitting: 'Creating account...',
       alreadyHaveAccount: 'Already have an account?',
@@ -83,7 +83,7 @@ export default function SignupPage() {
       errors: {
         name: 'Name is required',
         email: 'Invalid email',
-        password: 'Password must be at least 6 characters',
+        password: 'Password must be at least 8 characters',
         terms: 'You must accept the terms and privacy policy',
         submit: 'Error creating account. Please try again.'
       }
@@ -112,7 +112,7 @@ export default function SignupPage() {
       newErrors.email = c.errors.email
     }
     
-    if (!formData.password || formData.password.length < 6) {
+    if (!formData.password || formData.password.length < 8) {
       newErrors.password = c.errors.password
     }
 

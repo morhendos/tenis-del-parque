@@ -46,13 +46,13 @@ export async function POST(request) {
     }
 
     // Password validation
-    if (password.length < 6) {
+    if (password.length < 8) {
       return Response.json(
         { 
           success: false, 
           error: language === 'es' 
-            ? 'La contraseña debe tener al menos 6 caracteres' 
-            : 'Password must be at least 6 characters' 
+            ? 'La contraseña debe tener al menos 8 caracteres' 
+            : 'Password must be at least 8 characters' 
         },
         { status: 400 }
       )
