@@ -27,7 +27,7 @@ const DO_SEND = args.includes('--send')
 const toIdx = args.indexOf('--to')
 const SINGLE_TO = toIdx !== -1 ? args[toIdx + 1] : null
 
-const EXCLUDE = /tomasz\+|tomasz@skilling\.com|@tenisdp\.es|@asdd\.as|@gma\.zs|@as\.as/i
+const EXCLUDE = /tomasz\+|tomasz@skilling\.com|@tenisdp\.es|jan@urban\.com|@asdd\.as|@gma\.zs|@as\.as/i
 const BASE = 'https://www.tenisdp.es'
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms))
