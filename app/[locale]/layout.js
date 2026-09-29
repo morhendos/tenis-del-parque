@@ -1,4 +1,6 @@
+import { Suspense } from 'react'
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics'
+import AttributionTracker from '@/components/analytics/AttributionTracker'
 import MicrosoftClarity from '@/components/analytics/MicrosoftClarity'
 import { i18n } from '@/lib/i18n/config'
 
@@ -126,6 +128,9 @@ export default function LocaleLayout({ children, params }) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
       />
       {children}
+      <Suspense fallback={null}>
+        <AttributionTracker />
+      </Suspense>
       {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
         <GoogleAnalytics GA_MEASUREMENT_ID={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
       )}

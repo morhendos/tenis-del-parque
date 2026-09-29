@@ -32,8 +32,23 @@ export async function POST(request) {
       leagueId,
       leagueSlug,
       password,
-      discountCode // NEW: Discount code support
+      discountCode, // NEW: Discount code support
+      attribution
     } = body
+
+    const cleanAttribution = (() => {
+      if (!attribution || typeof attribution !== 'object') return null
+      const pick = (k, max) => typeof attribution[k] === 'string' ? attribution[k].slice(0, max) : ''
+      const a = {
+        source: pick('source', 100),
+        medium: pick('medium', 100),
+        campaign: pick('campaign', 100),
+        content: pick('content', 100),
+        referrer: pick('referrer', 200),
+        landing: pick('landing', 200)
+      }
+      return a.source ? a : null
+    })()
 
     // Basic validation
     if (!name || !email || !whatsapp || !level) {
@@ -183,6 +198,7 @@ export async function POST(request) {
             level: level,
             status: league.status === 'coming_soon' ? 'waiting' : 'pending',
             stats: {},
+            attribution: cleanAttribution || undefined,
             // NEW: Discount tracking
             discountCode: validatedDiscountCode,
             discountApplied: discountApplied,
@@ -232,6 +248,7 @@ export async function POST(request) {
           level: level,
           status: league.status === 'coming_soon' ? 'waiting' : 'pending',
           stats: {},
+          attribution: cleanAttribution || undefined,
           // NEW: Discount tracking
           discountCode: validatedDiscountCode,
           discountApplied: discountApplied,
@@ -243,7 +260,7 @@ export async function POST(request) {
           preferredLanguage: language
         },
         metadata: {
-          source: 'web',
+          source: cleanAttribution?.source || 'web',
           userAgent,
           ipAddress
         }

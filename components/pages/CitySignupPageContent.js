@@ -8,6 +8,7 @@ import Footer from '@/components/common/Footer'
 import { TennisPreloaderFullScreen } from '@/components/ui/TennisPreloader'
 import { homeContent } from '@/lib/content/homeContent'
 import { multiLeagueHomeContent } from '@/lib/content/multiLeagueHomeContent'
+import { getAttribution } from '@/lib/utils/attribution'
 
 export default function CitySignupPageContent({ locale }) {
   const params = useParams()
@@ -110,7 +111,8 @@ export default function CitySignupPageContent({ locale }) {
           language: locale,
           leagueId: league._id,
           leagueSlug: league.slug,
-          season: league.seasons?.[0]?.name || 'summer-2025'
+          season: league.seasons?.[0]?.name || 'summer-2025',
+          attribution: getAttribution()
         })
       })
       

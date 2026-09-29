@@ -60,9 +60,10 @@ async function main() {
     const city = lastReg ? leagueCity[String(lastReg.league)] : null
     const language = p.preferences?.preferredLanguage === 'en' ? 'en' : 'es'
     const cityName = city ? (city.name?.[language] || city.name?.es || '') : ''
+    const UTM = 'utm_source=email&utm_medium=email&utm_campaign=season3-announcement'
     const ctaUrl = city
-      ? `${BASE}/${language}/leagues/${city.slug}`
-      : `${BASE}/${language}/leagues`
+      ? `${BASE}/${language}/leagues/${city.slug}?${UTM}`
+      : `${BASE}/${language}/leagues?${UTM}`
 
     recipients.push({ name: p.name, email, language, cityName, ctaUrl })
   }
