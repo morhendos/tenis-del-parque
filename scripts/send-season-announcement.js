@@ -26,6 +26,8 @@ const args = process.argv.slice(2)
 const DO_SEND = args.includes('--send')
 const toIdx = args.indexOf('--to')
 const SINGLE_TO = toIdx !== -1 ? args[toIdx + 1] : null
+const langIdx = args.indexOf('--lang')
+const FORCE_LANG = langIdx !== -1 ? args[langIdx + 1] : null
 
 const EXCLUDE = /tomasz\+|tomasz@skilling\.com|@tenisdp\.es|jan@urban\.com|@asdd\.as|@gma\.zs|@as\.as/i
 const BASE = 'https://www.tenisdp.es'
@@ -72,6 +74,9 @@ async function main() {
   if (SINGLE_TO) {
     const found = recipients.find(r => r.email === SINGLE_TO.toLowerCase())
     list = [found || { name: 'Test', email: SINGLE_TO, language: 'es', cityName: 'Sotogrande', ctaUrl: `${BASE}/es/leagues/sotogrande` }]
+    if (FORCE_LANG) {
+      list = list.map(r => ({ ...r, language: FORCE_LANG, ctaUrl: r.ctaUrl.replace(/\/(es|en)\//, `/${FORCE_LANG}/`) }))
+    }
   }
 
   console.log(`Recipients: ${list.length}${SINGLE_TO ? ' (single --to)' : ''}${DO_SEND || SINGLE_TO ? '' : '  [DRY RUN - nothing sent]'}`)
