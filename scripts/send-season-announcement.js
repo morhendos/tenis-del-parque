@@ -32,8 +32,6 @@ const tagIdx = args.indexOf('--tag')
 const SUBJECT_TAG = tagIdx !== -1 ? args[tagIdx + 1] : null
 const codeIdx = args.indexOf('--code')
 const TEST_CODE = codeIdx !== -1 ? args[codeIdx + 1] : null
-const testLeagueIdx = args.indexOf('--league')
-const TEST_LEAGUE = testLeagueIdx !== -1 ? args[testLeagueIdx + 1] : null
 
 let loyaltyMap = {}
 try {
@@ -74,16 +72,15 @@ async function main() {
     const language = p.preferences?.preferredLanguage === 'en' ? 'en' : 'es'
     const cityName = city ? (city.name?.[language] || city.name?.es || '') : ''
     const loyalty = loyaltyMap[email]
-    const UTM = loyalty
+    const loyaltyCode = typeof loyalty === 'string' ? loyalty : loyalty?.code
+    const UTM = loyaltyCode
       ? 'utm_source=email&utm_medium=email&utm_campaign=season3-loyalty50'
       : 'utm_source=email&utm_medium=email&utm_campaign=season3-announcement'
-    const ctaUrl = loyalty
-      ? `${BASE}/${language}/registro/${loyalty.league}?code=${encodeURIComponent(loyalty.code)}&${UTM}`
-      : city
-        ? `${BASE}/${language}/leagues/${city.slug}?${UTM}`
-        : `${BASE}/${language}/leagues?${UTM}`
+    const ctaUrl = city
+      ? `${BASE}/${language}/leagues/${city.slug}?${loyaltyCode ? `code=${encodeURIComponent(loyaltyCode)}&` : ''}${UTM}`
+      : `${BASE}/${language}/leagues?${UTM}`
 
-    recipients.push({ name: p.name, email, language, cityName, ctaUrl, discountCode: loyalty ? loyalty.code : null })
+    recipients.push({ name: p.name, email, language, cityName, ctaUrl, discountCode: loyaltyCode || null })
   }
 
   let list = recipients
@@ -94,11 +91,10 @@ async function main() {
       list = list.map(r => ({ ...r, language: FORCE_LANG, ctaUrl: r.ctaUrl.replace(/\/(es|en)\//, `/${FORCE_LANG}/`) }))
     }
     if (TEST_CODE) {
-      const lg = TEST_LEAGUE || 'sotogrande-gold-autumn-2026'
       list = list.map(r => ({
         ...r,
         discountCode: TEST_CODE,
-        ctaUrl: `${BASE}/${r.language}/registro/${lg}?code=${encodeURIComponent(TEST_CODE)}&utm_source=email&utm_medium=email&utm_campaign=season3-loyalty50`
+        ctaUrl: `${BASE}/${r.language}/leagues/sotogrande?code=${encodeURIComponent(TEST_CODE)}&utm_source=email&utm_medium=email&utm_campaign=season3-loyalty50`
       }))
     }
   }

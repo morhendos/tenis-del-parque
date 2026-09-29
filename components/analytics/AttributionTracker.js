@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { captureAttribution } from '@/lib/utils/attribution'
+import { storeDiscountCode } from '@/lib/utils/discountCode'
 
 export default function AttributionTracker() {
   const pathname = usePathname()
@@ -10,6 +11,8 @@ export default function AttributionTracker() {
 
   useEffect(() => {
     captureAttribution()
+    const code = searchParams.get('code')
+    if (code) storeDiscountCode(code)
   }, [pathname, searchParams])
 
   return null
