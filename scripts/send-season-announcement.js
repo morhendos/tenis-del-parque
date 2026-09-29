@@ -28,6 +28,8 @@ const toIdx = args.indexOf('--to')
 const SINGLE_TO = toIdx !== -1 ? args[toIdx + 1] : null
 const langIdx = args.indexOf('--lang')
 const FORCE_LANG = langIdx !== -1 ? args[langIdx + 1] : null
+const tagIdx = args.indexOf('--tag')
+const SUBJECT_TAG = tagIdx !== -1 ? args[tagIdx + 1] : null
 
 const EXCLUDE = /tomasz\+|tomasz@skilling\.com|@tenisdp\.es|jan@urban\.com|@asdd\.as|@gma\.zs|@as\.as/i
 const BASE = 'https://www.tenisdp.es'
@@ -89,7 +91,8 @@ async function main() {
       continue
     }
     const { subject, html, text } = generateSeasonAnnouncementEmail(r)
-    const res = await sendEmail({ to: r.email, subject, html, text })
+    const finalSubject = SUBJECT_TAG ? `${subject} [${SUBJECT_TAG}]` : subject
+    const res = await sendEmail({ to: r.email, subject: finalSubject, html, text })
     if (res.success) { ok++ } else { fail++; console.log(`FAILED ${r.email}: ${res.error}`) }
     await sleep(700)
   }
