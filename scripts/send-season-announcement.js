@@ -30,6 +30,15 @@ const langIdx = args.indexOf('--lang')
 const FORCE_LANG = langIdx !== -1 ? args[langIdx + 1] : null
 const tagIdx = args.indexOf('--tag')
 const SUBJECT_TAG = tagIdx !== -1 ? args[tagIdx + 1] : null
+const codeIdx = args.indexOf('--code')
+const TEST_CODE = codeIdx !== -1 ? args[codeIdx + 1] : null
+const testLeagueIdx = args.indexOf('--league')
+const TEST_LEAGUE = testLeagueIdx !== -1 ? args[testLeagueIdx + 1] : null
+
+let loyaltyMap = {}
+try {
+  loyaltyMap = JSON.parse(fs.readFileSync(path.join(__dirname, 'loyalty-codes.json'), 'utf8'))
+} catch { /* no loyalty file, fine */ }
 
 const EXCLUDE = /tomasz\+|tomasz@skilling\.com|@tenisdp\.es|jan@urban\.com|@asdd\.as|@gma\.zs|@as\.as/i
 const BASE = 'https://www.tenisdp.es'
@@ -64,12 +73,17 @@ async function main() {
     const city = lastReg ? leagueCity[String(lastReg.league)] : null
     const language = p.preferences?.preferredLanguage === 'en' ? 'en' : 'es'
     const cityName = city ? (city.name?.[language] || city.name?.es || '') : ''
-    const UTM = 'utm_source=email&utm_medium=email&utm_campaign=season3-announcement'
-    const ctaUrl = city
-      ? `${BASE}/${language}/leagues/${city.slug}?${UTM}`
-      : `${BASE}/${language}/leagues?${UTM}`
+    const loyalty = loyaltyMap[email]
+    const UTM = loyalty
+      ? 'utm_source=email&utm_medium=email&utm_campaign=season3-loyalty50'
+      : 'utm_source=email&utm_medium=email&utm_campaign=season3-announcement'
+    const ctaUrl = loyalty
+      ? `${BASE}/${language}/registro/${loyalty.league}?code=${encodeURIComponent(loyalty.code)}&${UTM}`
+      : city
+        ? `${BASE}/${language}/leagues/${city.slug}?${UTM}`
+        : `${BASE}/${language}/leagues?${UTM}`
 
-    recipients.push({ name: p.name, email, language, cityName, ctaUrl })
+    recipients.push({ name: p.name, email, language, cityName, ctaUrl, discountCode: loyalty ? loyalty.code : null })
   }
 
   let list = recipients
@@ -78,6 +92,14 @@ async function main() {
     list = [found || { name: 'Test', email: SINGLE_TO, language: 'es', cityName: 'Sotogrande', ctaUrl: `${BASE}/es/leagues/sotogrande` }]
     if (FORCE_LANG) {
       list = list.map(r => ({ ...r, language: FORCE_LANG, ctaUrl: r.ctaUrl.replace(/\/(es|en)\//, `/${FORCE_LANG}/`) }))
+    }
+    if (TEST_CODE) {
+      const lg = TEST_LEAGUE || 'sotogrande-gold-autumn-2026'
+      list = list.map(r => ({
+        ...r,
+        discountCode: TEST_CODE,
+        ctaUrl: `${BASE}/${r.language}/registro/${lg}?code=${encodeURIComponent(TEST_CODE)}&utm_source=email&utm_medium=email&utm_campaign=season3-loyalty50`
+      }))
     }
   }
 
