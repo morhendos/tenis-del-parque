@@ -38,6 +38,12 @@ try {
   loyaltyMap = JSON.parse(fs.readFileSync(path.join(__dirname, 'loyalty-codes.json'), 'utf8'))
 } catch { /* no loyalty file, fine */ }
 
+const SENT_LOG = path.join(__dirname, 'season3-sent.json')
+let sentLog = []
+try {
+  sentLog = JSON.parse(fs.readFileSync(SENT_LOG, 'utf8'))
+} catch { /* no log yet */ }
+
 const EXCLUDE = /tomasz\+|tomasz@skilling\.com|@tenisdp\.es|jan@urban\.com|@asdd\.as|@gma\.zs|@as\.as/i
 const BASE = 'https://www.tenisdp.es'
 
@@ -102,20 +108,37 @@ async function main() {
   console.log(`Recipients: ${list.length}${SINGLE_TO ? ' (single --to)' : ''}${DO_SEND || SINGLE_TO ? '' : '  [DRY RUN - nothing sent]'}`)
   console.log('')
 
-  let ok = 0, fail = 0
+  let ok = 0, fail = 0, skipped = 0
+  let i = 0
   for (const r of list) {
+    i++
     if (!DO_SEND && !SINGLE_TO) {
       console.log(`${r.email.padEnd(42)} ${r.language}  ${(r.cityName || '-').padEnd(12)} ${r.ctaUrl}`)
+      continue
+    }
+    if (DO_SEND && sentLog.includes(r.email)) {
+      skipped++
+      console.log(`[${i}/${list.length}] SKIP (already sent) ${r.email}`)
       continue
     }
     const { subject, html, text } = generateSeasonAnnouncementEmail(r)
     const finalSubject = SUBJECT_TAG ? `${subject} [${SUBJECT_TAG}]` : subject
     const res = await sendEmail({ to: r.email, subject: finalSubject, html, text })
-    if (res.success) { ok++ } else { fail++; console.log(`FAILED ${r.email}: ${res.error}`) }
+    if (res.success) {
+      ok++
+      console.log(`[${i}/${list.length}] SENT ${r.email}`)
+      if (DO_SEND) {
+        sentLog.push(r.email)
+        fs.writeFileSync(SENT_LOG, JSON.stringify(sentLog, null, 2))
+      }
+    } else {
+      fail++
+      console.log(`[${i}/${list.length}] FAILED ${r.email}: ${res.error}`)
+    }
     await sleep(700)
   }
 
-  if (DO_SEND || SINGLE_TO) console.log(`\nSent: ${ok}, failed: ${fail}`)
+  if (DO_SEND || SINGLE_TO) console.log(`\nSent: ${ok}, failed: ${fail}, skipped (already sent): ${skipped}`)
   await mongoose.disconnect()
 }
 

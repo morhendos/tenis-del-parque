@@ -38,4 +38,4 @@ next-env.d.ts
 
 # uploaded images
 public/uploads/clubs/*
-!public/uploads/clubs/.gitkeep
+!public/uploads/clubs/.gitkeepscripts/season3-sent.json
