@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import dbConnect from '../../../../lib/db/mongoose'
 import Player from '../../../../lib/models/Player'
 import User from '../../../../lib/models/User'
+import Match from '../../../../lib/models/Match'
 import { requirePlayer } from '../../../../lib/auth/apiAuth'
 
 // Import League model to ensure it's registered
@@ -43,6 +44,29 @@ export async function GET(request) {
       ? player.registrations[0] // Use first registration as primary
       : null
 
+    const matches = await Match.find({
+      status: 'completed',
+      isBye: { $ne: true },
+      'result.winner': { $exists: true, $ne: null },
+      $or: [{ 'players.player1': player._id }, { 'players.player2': player._id }]
+    }).select('players result').lean()
+
+    const matchStats = { matchesPlayed: 0, matchesWon: 0, matchesLost: 0, setsWon: 0, setsLost: 0 }
+    for (const m of matches) {
+      const isP1 = String(m.players.player1) === String(player._id)
+      const won = String(m.result.winner) === String(player._id)
+      matchStats.matchesPlayed++
+      if (won) matchStats.matchesWon++
+      else matchStats.matchesLost++
+      if (m.result.score?.walkover) continue
+      for (const s of m.result.score?.sets || []) {
+        const mine = isP1 ? s.player1 : s.player2
+        const theirs = isP1 ? s.player2 : s.player1
+        if (mine > theirs) matchStats.setsWon++
+        else if (theirs > mine) matchStats.setsLost++
+      }
+    }
+
     return NextResponse.json({
       player: {
         _id: player._id,
@@ -60,11 +84,8 @@ export async function GET(request) {
         season: activeRegistration?.season || null,
         status: activeRegistration?.status || 'active',
         stats: {
-          // Global ELO (not from registration)
           eloRating: player.eloRating || 1200,
-          // These will be calculated from matches in the frontend
-          matchesPlayed: 0,
-          matchesWon: 0,
+          ...matchStats,
           totalPoints: 0
         },
         wildCards: activeRegistration?.wildCards || { total: 3, used: 0, history: [] },
