@@ -128,7 +128,7 @@ export default function CityLeagueHero({ city, locale, leagueName, league, seaso
       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20" />
       
       {/* Content */}
-      <div className="relative min-h-[240px] sm:min-h-[320px] md:min-h-[360px] lg:min-h-[300px] container mx-auto px-4 pt-12 sm:pt-24 md:pt-28 lg:pt-24 pb-4 sm:pb-8 lg:pb-6 z-10 flex flex-col justify-end">
+      <div className="relative min-h-[240px] sm:min-h-[320px] md:min-h-[360px] lg:min-h-[300px] container mx-auto px-4 pt-20 sm:pt-24 md:pt-28 lg:pt-24 pb-4 sm:pb-8 lg:pb-6 z-10 flex flex-col justify-end">
         
         {/* Glassmorphic content card */}
         <div className="w-full max-w-5xl mx-auto bg-black/15 backdrop-blur-[3px] rounded-2xl sm:rounded-3xl border border-white/25 p-4 sm:p-6 shadow-2xl [text-shadow:0_1px_8px_rgba(0,0,0,0.35)]">
