@@ -4,6 +4,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams, usePathname } from 'next/navigation'
 import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
 import NotificationSettings from '@/components/player/NotificationSettings'
+import AvatarUpload from '@/components/player/AvatarUpload'
+import TennisProfileCard from '@/components/player/TennisProfileCard'
+import { getCountryOptions } from '@/lib/utils/countries'
 
 export default function PlayerProfile() {
   const [player, setPlayer] = useState(null)
@@ -26,6 +29,7 @@ export default function PlayerProfile() {
     name: '',
     email: '',
     phone: '',
+    country: '',
     preferences: {
       language: 'es',
       notifications: {
@@ -55,6 +59,7 @@ export default function PlayerProfile() {
         name: data.player.name || '',
         email: data.user.email || '',
         phone: data.player.phone || '',
+        country: data.player.country || '',
         preferences: {
           language: data.user.preferences?.language || 'es',
           notifications: {
@@ -137,6 +142,7 @@ export default function PlayerProfile() {
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
+          country: formData.country,
           preferences: formData.preferences
         })
       })
@@ -154,7 +160,8 @@ export default function PlayerProfile() {
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
-        whatsapp: formData.phone
+        whatsapp: formData.phone,
+        country: formData.country
       }))
       setUser(prev => ({
         ...prev,
@@ -229,6 +236,7 @@ export default function PlayerProfile() {
 
   // Extract league name properly
   const leagueName = player?.league?.name || (language === 'es' ? 'Sin Liga' : 'No League')
+  const countryOptions = getCountryOptions(language)
 
   return (
     <div className="space-y-4">
@@ -242,11 +250,13 @@ export default function PlayerProfile() {
           {/* Top row: Avatar, Name */}
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-3">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm flex-shrink-0">
-                <span className="text-2xl sm:text-3xl font-bold">
-                  {player?.name ? player.name.charAt(0).toUpperCase() : '?'}
-                </span>
-              </div>
+              <AvatarUpload
+                avatar={player?.avatar}
+                name={player?.name}
+                country={player?.country}
+                language={language}
+                onChange={(avatar) => setPlayer(prev => ({ ...prev, avatar }))}
+              />
               <div>
                 <h1 className="text-lg sm:text-xl font-bold">
                   {player?.name || (language === 'es' ? 'Tu Perfil' : 'Your Profile')}
@@ -353,6 +363,27 @@ export default function PlayerProfile() {
             />
           </div>
 
+          {/* Country */}
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">
+              {language === 'es' ? 'País que representas' : 'Country you represent'}
+            </label>
+            <select
+              value={formData.country}
+              onChange={(e) => handleInputChange('country', e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-parque-purple focus:border-transparent"
+            >
+              <option value="">{language === 'es' ? 'Sin indicar' : 'Not set'}</option>
+              {countryOptions.popular.map(c => (
+                <option key={c.code} value={c.code}>{c.flag} {c.name}</option>
+              ))}
+              <option disabled>──────────</option>
+              {countryOptions.rest.map(c => (
+                <option key={c.code} value={c.code}>{c.flag} {c.name}</option>
+              ))}
+            </select>
+          </div>
+
           {/* Language */}
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">
@@ -371,6 +402,12 @@ export default function PlayerProfile() {
       </div>
 
       {/* Notifications - Always Editable */}
+      <TennisProfileCard
+        tennisProfile={player?.tennisProfile}
+        language={language}
+        onSaved={(tp) => setPlayer(prev => ({ ...prev, tennisProfile: tp }))}
+      />
+
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
           <svg className="w-5 h-5 text-parque-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">

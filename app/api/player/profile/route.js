@@ -76,7 +76,10 @@ export async function GET(request) {
         // Include player preferences (set during registration)
         preferences: player.preferences || { preferredLanguage: 'es' },
         // Injury status
-        injury: player.injury || { active: false }
+        injury: player.injury || { active: false },
+        avatar: player.avatar || null,
+        country: player.country || null,
+        tennisProfile: player.tennisProfile || {}
       },
       user: {
         id: user._id,
@@ -104,7 +107,7 @@ export async function PUT(request) {
 
     // Get request body
     const body = await request.json()
-    const { name, email, phone, preferences } = body
+    const { name, email, phone, preferences, country, tennisProfile } = body
 
     // Get current user
     const user = await User.findById(session.user.id)
@@ -127,6 +130,25 @@ export async function PUT(request) {
     // Update player fields
     if (name) player.name = name
     if (phone) player.whatsapp = phone // Save phone to whatsapp field
+
+    if (country !== undefined) {
+      player.country = country && /^[A-Za-z]{2}$/.test(country) ? country.toUpperCase() : null
+    }
+
+    if (tennisProfile && typeof tennisProfile === 'object') {
+      const fields = ['surface', 'playStyle', 'bestShot', 'dominantHand', 'backhand', 'racket', 'racketYear']
+      for (const f of fields) {
+        if (!(f in tennisProfile)) continue
+        const v = tennisProfile[f]
+        if (v === '' || v === null) {
+          player.set(`tennisProfile.${f}`, undefined)
+        } else if (f === 'racketYear') {
+          player.set(`tennisProfile.${f}`, parseInt(v, 10))
+        } else {
+          player.set(`tennisProfile.${f}`, String(v).slice(0, 60))
+        }
+      }
+    }
 
     // Update user fields
     if (email && email !== user.email) {
@@ -197,7 +219,9 @@ export async function PUT(request) {
         name: player.name,
         email: player.email,
         phone: player.whatsapp,
-        whatsapp: player.whatsapp
+        whatsapp: player.whatsapp,
+        country: player.country || null,
+        tennisProfile: player.tennisProfile || {}
       },
       user: {
         id: user._id,
