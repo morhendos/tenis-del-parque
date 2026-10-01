@@ -133,7 +133,7 @@ export default function TennisProfileCard({ tennisProfile, language = 'es', onSa
           {Object.entries(OPTIONS).map(([key, o]) => (
             <div key={key}>
               <label className="block text-xs font-medium text-gray-500 mb-1">{o.label[language]}</label>
-              <select value={form[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} className={inputClass}>
+              <select value={form[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} className={`select-chevron ${inputClass}`}>
                 <option value="">{notSet}</option>
                 {Object.entries(o.values).map(([v, l]) => <option key={v} value={v}>{l[language]}</option>)}
               </select>
@@ -145,7 +145,7 @@ export default function TennisProfileCard({ tennisProfile, language = 'es', onSa
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">{t('Raqueta desde', 'Racket since')}</label>
-            <select value={form.racketYear} onChange={e => setForm(f => ({ ...f, racketYear: e.target.value }))} className={inputClass}>
+            <select value={form.racketYear} onChange={e => setForm(f => ({ ...f, racketYear: e.target.value }))} className={`select-chevron ${inputClass}`}>
               <option value="">{notSet}</option>
               {years.map(y => <option key={y} value={y}>{y}</option>)}
             </select>

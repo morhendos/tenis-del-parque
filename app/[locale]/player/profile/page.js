@@ -371,7 +371,7 @@ export default function PlayerProfile() {
             <select
               value={formData.country}
               onChange={(e) => handleInputChange('country', e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-parque-purple focus:border-transparent"
+              className="select-chevron w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-parque-purple focus:border-transparent"
             >
               <option value="">{language === 'es' ? 'Sin indicar' : 'Not set'}</option>
               {countryOptions.popular.map(c => (
@@ -392,7 +392,7 @@ export default function PlayerProfile() {
             <select
               value={formData.preferences.language}
               onChange={(e) => handleInputChange('preferences.language', e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple focus:border-transparent"
+              className="select-chevron w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-parque-purple focus:border-transparent"
             >
               <option value="es">Español</option>
               <option value="en">English</option>
