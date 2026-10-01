@@ -45,7 +45,7 @@ export default function NextMatchCard({ matches = [], language, leagueInfo, play
           startDate={startDate}
           status={leagueInfo.status}
           language={language}
-          showQuote={true}
+          showQuote={false}
           joined={leagueInfo.paymentStatus !== 'pending'}
           playerName={playerName}
         />
