@@ -6,7 +6,8 @@ import { Camera, Flag, Zap, Bell, X, ChevronRight, Check, Trophy, Loader2 } from
 import { usePushNotifications } from '@/lib/hooks/usePushNotifications'
 
 const DISMISS_KEY = 'profile-prompt-dismissed'
-const TEST_EMAILS = ['tomasz@skilling.com', 'morhendos@gmail.com']
+const SEEN_KEY = 'profile-prompt-seen'
+const CELEBRATED_KEY = 'profile-prompt-celebrated'
 const TENNIS_FIELDS = ['surface', 'playStyle', 'bestShot', 'dominantHand', 'backhand', 'racket']
 
 function inUpcomingLeague(registrations = []) {
@@ -24,19 +25,11 @@ function inUpcomingLeague(registrations = []) {
 export default function ProfilePromptCard({ player, language = 'es', locale = 'es' }) {
   const [show, setShow] = useState(false)
   const [barWidth, setBarWidth] = useState(0)
-  const [preview, setPreview] = useState(false)
   const { isSupported, isSubscribed, permission, subscribe } = usePushNotifications()
   const [pushBusy, setPushBusy] = useState(false)
   const [pushChecked, setPushChecked] = useState(false)
   const [pushOn, setPushOn] = useState(false)
-  const isTest = TEST_EMAILS.includes((player?.email || '').toLowerCase())
   const t = (es, en) => (language === 'es' ? es : en)
-
-  useEffect(() => {
-    if (isTest && typeof window !== 'undefined') {
-      setPreview(new URLSearchParams(window.location.search).get('preview') === 'partial')
-    }
-  }, [isTest])
 
   useEffect(() => {
     let cancelled = false
@@ -57,30 +50,40 @@ export default function ProfilePromptCard({ player, language = 'es', locale = 'e
   }, [])
 
   const tp = player?.tennisProfile || {}
-  const hasPhoto = preview ? true : !!player?.avatar
-  const hasCountry = preview ? false : !!player?.country
-  const tennisDone = preview ? 2 : TENNIS_FIELDS.filter(f => tp[f]).length
-  const hasPush = preview ? false : (pushOn || !!isSubscribed)
+  const hasPhoto = !!player?.avatar
+  const hasCountry = !!player?.country
+  const tennisDone = TENNIS_FIELDS.filter(f => tp[f]).length
+  const hasPush = pushOn || !!isSubscribed
   const total = 3 + TENNIS_FIELDS.length
   const done = (hasPhoto ? 1 : 0) + (hasCountry ? 1 : 0) + tennisDone + (hasPush ? 1 : 0)
   const percent = Math.round((done / total) * 100)
   const complete = done === total
 
   useEffect(() => {
-    if (!player || !pushChecked) return
-    const store = isTest ? sessionStorage : localStorage
-    if (store.getItem(DISMISS_KEY) && !preview) return
-    if (isTest || (!complete && inUpcomingLeague(player.registrations))) setShow(true)
-  }, [player, isTest, complete, pushChecked, preview])
+    if (!player || !pushChecked || show) return
+    try {
+      if (localStorage.getItem(DISMISS_KEY)) return
+      if (complete) {
+        if (localStorage.getItem(SEEN_KEY) && !localStorage.getItem(CELEBRATED_KEY)) {
+          localStorage.setItem(CELEBRATED_KEY, '1')
+          setShow(true)
+        }
+      } else if (inUpcomingLeague(player.registrations)) {
+        localStorage.setItem(SEEN_KEY, '1')
+        setShow(true)
+      }
+    } catch {}
+  }, [player, complete, pushChecked, show])
 
   useEffect(() => {
     if (!show) return
+    if (complete) { try { localStorage.setItem(CELEBRATED_KEY, '1') } catch {} }
     const id = setTimeout(() => setBarWidth(percent), 150)
     return () => clearTimeout(id)
-  }, [show, percent])
+  }, [show, percent, complete])
 
   const dismiss = () => {
-    (isTest ? sessionStorage : localStorage).setItem(DISMISS_KEY, '1')
+    try { localStorage.setItem(DISMISS_KEY, '1') } catch {}
     setShow(false)
   }
 
@@ -154,7 +157,7 @@ export default function ProfilePromptCard({ player, language = 'es', locale = 'e
             <Trophy className="w-5 h-5 text-parque-yellow" />
             {t('Listo para la pista. ¡Nos vemos en el primer partido!', 'Ready for court. See you at your first match!')}
           </div>
-        ) : next?.key === 'push' && canPushHere && !preview ? (
+        ) : next?.key === 'push' && canPushHere ? (
           <button onClick={enablePush} disabled={pushBusy} className={btnClass}>
             {pushBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bell className="w-4 h-4" />}
             {next.cta}
