@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Camera, Flag, Zap, X, ChevronRight, Check } from 'lucide-react'
+import { Camera, Flag, Zap, X, ChevronRight, Check, Trophy } from 'lucide-react'
 
 const DISMISS_KEY = 'profile-prompt-dismissed'
 const TEST_EMAILS = ['tomasz@skilling.com', 'morhendos@gmail.com']
+const TENNIS_FIELDS = ['surface', 'playStyle', 'bestShot', 'dominantHand', 'backhand', 'racket']
 
 function inUpcomingLeague(registrations = []) {
   const now = Date.now()
@@ -21,13 +22,18 @@ function inUpcomingLeague(registrations = []) {
 
 export default function ProfilePromptCard({ player, language = 'es', locale = 'es' }) {
   const [show, setShow] = useState(false)
+  const [barWidth, setBarWidth] = useState(0)
   const isTest = TEST_EMAILS.includes((player?.email || '').toLowerCase())
   const t = (es, en) => (language === 'es' ? es : en)
 
+  const tp = player?.tennisProfile || {}
   const hasPhoto = !!player?.avatar
   const hasCountry = !!player?.country
-  const hasTennis = Object.values(player?.tennisProfile || {}).some(v => v !== null && v !== undefined && v !== '')
-  const complete = hasPhoto && hasCountry && hasTennis
+  const tennisDone = TENNIS_FIELDS.filter(f => tp[f]).length
+  const total = 2 + TENNIS_FIELDS.length
+  const done = (hasPhoto ? 1 : 0) + (hasCountry ? 1 : 0) + tennisDone
+  const percent = Math.round((done / total) * 100)
+  const complete = done === total
 
   useEffect(() => {
     if (!player) return
@@ -36,6 +42,12 @@ export default function ProfilePromptCard({ player, language = 'es', locale = 'e
     if (isTest || (!complete && inUpcomingLeague(player.registrations))) setShow(true)
   }, [player, isTest, complete])
 
+  useEffect(() => {
+    if (!show) return
+    const id = setTimeout(() => setBarWidth(percent), 150)
+    return () => clearTimeout(id)
+  }, [show, percent])
+
   const dismiss = () => {
     (isTest ? sessionStorage : localStorage).setItem(DISMISS_KEY, '1')
     setShow(false)
@@ -43,45 +55,74 @@ export default function ProfilePromptCard({ player, language = 'es', locale = 'e
 
   if (!show) return null
 
-  const items = [
-    { done: hasPhoto, icon: Camera, label: t('Foto de perfil', 'Profile photo') },
-    { done: hasCountry, icon: Flag, label: t('País que representas', 'Country you represent') },
-    { done: hasTennis, icon: Zap, label: t('Tu estilo de juego', 'Your playing style') }
+  const steps = [
+    { done: hasPhoto, icon: Camera, label: t('Foto', 'Photo'), cta: t('Añadir foto', 'Add photo') },
+    { done: hasCountry, icon: Flag, label: t('País', 'Country'), cta: t('Elegir país', 'Pick your country') },
+    {
+      done: tennisDone === TENNIS_FIELDS.length,
+      icon: Zap,
+      label: `${t('Estilo de juego', 'Playing style')} ${tennisDone}/${TENNIS_FIELDS.length}`,
+      cta: t('Completar estilo de juego', 'Add your playing style')
+    }
   ]
+  const next = steps.find(s => !s.done)
 
   return (
-    <div className="relative bg-white rounded-2xl border border-purple-100 shadow-sm overflow-hidden">
-      <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-parque-purple to-violet-500" />
-      <button onClick={dismiss} className="absolute top-3 right-3 p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100" aria-label={t('Cerrar', 'Close')}>
+    <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-parque-purple via-purple-700 to-indigo-700 text-white shadow-lg">
+      <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full bg-white/10" />
+      <div className="absolute -bottom-12 -left-8 w-28 h-28 rounded-full bg-white/5" />
+      <button onClick={dismiss} className="absolute top-3 right-3 p-1 text-white/60 hover:text-white rounded-full hover:bg-white/10 z-10" aria-label={t('Cerrar', 'Close')}>
         <X className="w-4 h-4" />
       </button>
-      <div className="p-4 sm:p-5 pl-5 sm:pl-6">
-        <p className="text-xs font-semibold text-parque-purple uppercase tracking-wide">
-          {t('Mientras esperas el inicio', 'While you wait for the start')}
-        </p>
-        <h3 className="mt-1 text-base sm:text-lg font-bold text-gray-900 pr-6">
-          {t('Tus rivales verán tu perfil', 'Your rivals will see your profile')}
-        </h3>
-        <p className="mt-1 text-sm text-gray-600">
-          {t('Añade una foto, tu país y cómo juegas. Así sabrán a quién se enfrentan.', 'Add a photo, your country and how you play. So they know who they are up against.')}
-        </p>
+
+      <div className="relative p-4 sm:p-5">
+        <div className="flex items-end justify-between gap-3 pr-6">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-purple-200">
+              {t('Mientras empieza la temporada', 'Before the season starts')}
+            </p>
+            <h3 className="mt-0.5 text-lg sm:text-xl font-bold">
+              {complete ? t('¡Ficha completa!', 'Player card complete!') : t('Prepara tu ficha de jugador', 'Build your player card')}
+            </h3>
+          </div>
+          <div className="text-3xl sm:text-4xl font-extrabold tabular-nums leading-none">
+            {percent}<span className="text-lg sm:text-xl text-purple-200">%</span>
+          </div>
+        </div>
+
+        <div className="mt-3 h-3 rounded-full bg-white/15 overflow-hidden">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-parque-yellow to-lime-300 transition-[width] duration-1000 ease-out"
+            style={{ width: `${barWidth}%` }}
+          />
+        </div>
 
         <div className="mt-3 flex flex-wrap gap-2">
-          {items.map(({ done, icon: Icon, label }) => (
-            <span key={label} className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${done ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+          {steps.map(({ done, icon: Icon, label }) => (
+            <span
+              key={label}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${done ? 'bg-parque-yellow text-parque-purple' : 'bg-white/15 text-white'}`}
+            >
               {done ? <Check className="w-3.5 h-3.5" /> : <Icon className="w-3.5 h-3.5" />}
               {label}
             </span>
           ))}
         </div>
 
-        <Link
-          href={`/${locale}/player/profile`}
-          className="mt-4 inline-flex items-center gap-1.5 bg-parque-purple text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-parque-purple/90 active:scale-[0.98] transition-all"
-        >
-          {t('Completar perfil', 'Complete profile')}
-          <ChevronRight className="w-4 h-4" />
-        </Link>
+        {complete ? (
+          <div className="mt-4 flex items-center gap-2 text-sm font-medium text-purple-100">
+            <Trophy className="w-5 h-5 text-parque-yellow" />
+            {t('Listo para la pista. ¡Nos vemos en el primer partido!', 'Ready for court. See you at your first match!')}
+          </div>
+        ) : (
+          <Link
+            href={`/${locale}/player/profile`}
+            className="mt-4 inline-flex items-center gap-1.5 bg-white text-parque-purple px-4 py-2.5 rounded-xl text-sm font-bold shadow hover:bg-purple-50 active:scale-[0.98] transition-all"
+          >
+            {next?.cta}
+            <ChevronRight className="w-4 h-4" />
+          </Link>
+        )}
       </div>
     </div>
   )
