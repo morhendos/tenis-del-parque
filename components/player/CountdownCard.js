@@ -39,9 +39,9 @@ export default function CountdownCard({
   
   // Get a stable random quote based on the day
   const quote = useMemo(() => {
-    const today = new Date().toDateString()
-    const seed = today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-    const index = seed % tennisQuotes.length
+    const now = new Date()
+    const dayNumber = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 86400000)
+    const index = dayNumber % tennisQuotes.length
     const q = tennisQuotes[index]
     return {
       text: q.text[language] || q.text.en,
