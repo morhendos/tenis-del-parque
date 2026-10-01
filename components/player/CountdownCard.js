@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { Users, MessageCircle, TrendingUp } from 'lucide-react'
-import { tennisQuotes } from '@/lib/content/tennisQuotes'
+import { getDailyQuote } from '@/lib/content/tennisQuotes'
 
 /**
  * Unified Countdown Card Component
@@ -38,16 +38,7 @@ export default function CountdownCard({
   }, [startDateProp])
   
   // Get a stable random quote based on the day
-  const quote = useMemo(() => {
-    const now = new Date()
-    const dayNumber = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 86400000)
-    const index = dayNumber % tennisQuotes.length
-    const q = tennisQuotes[index]
-    return {
-      text: q.text[language] || q.text.en,
-      author: q.author
-    }
-  }, [language])
+  const quote = useMemo(() => getDailyQuote(language), [language])
   
   // Calculate countdown
   useEffect(() => {
