@@ -46,6 +46,8 @@ export const authOptions = {
             throw new Error('Invalid password')
           }
 
+          await User.updateOne({ _id: user._id }, { $set: { lastLogin: new Date() } })
+
           // Get player data if linked
           let playerData = null
           if (user.playerId) {
@@ -75,7 +77,17 @@ export const authOptions = {
           ...token,
           id: user.id,
           role: user.role,
-          playerId: user.playerId
+          playerId: user.playerId,
+          seenAt: Date.now()
+        }
+      }
+      if (token.id && (!token.seenAt || Date.now() - token.seenAt > 6 * 60 * 60 * 1000)) {
+        try {
+          await dbConnect()
+          await User.updateOne({ _id: token.id }, { $set: { lastLogin: new Date() } })
+          token.seenAt = Date.now()
+        } catch (e) {
+          console.error('lastLogin update failed:', e.message)
         }
       }
       return token
