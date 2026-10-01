@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Camera, Flag, Zap, X, ChevronRight, Check, Trophy } from 'lucide-react'
+import { Camera, Flag, Zap, Bell, X, ChevronRight, Check, Trophy, Loader2 } from 'lucide-react'
+import { usePushNotifications } from '@/lib/hooks/usePushNotifications'
 
 const DISMISS_KEY = 'profile-prompt-dismissed'
 const TEST_EMAILS = ['tomasz@skilling.com', 'morhendos@gmail.com']
@@ -23,24 +24,54 @@ function inUpcomingLeague(registrations = []) {
 export default function ProfilePromptCard({ player, language = 'es', locale = 'es' }) {
   const [show, setShow] = useState(false)
   const [barWidth, setBarWidth] = useState(0)
+  const [preview, setPreview] = useState(false)
+  const { isSupported, isSubscribed, permission, subscribe } = usePushNotifications()
+  const [pushBusy, setPushBusy] = useState(false)
+  const [pushChecked, setPushChecked] = useState(false)
+  const [pushOn, setPushOn] = useState(false)
   const isTest = TEST_EMAILS.includes((player?.email || '').toLowerCase())
   const t = (es, en) => (language === 'es' ? es : en)
 
+  useEffect(() => {
+    if (isTest && typeof window !== 'undefined') {
+      setPreview(new URLSearchParams(window.location.search).get('preview') === 'partial')
+    }
+  }, [isTest])
+
+  useEffect(() => {
+    let cancelled = false
+    const check = async () => {
+      try {
+        if ('serviceWorker' in navigator && 'PushManager' in window) {
+          const reg = await navigator.serviceWorker.getRegistration()
+          const sub = reg ? await reg.pushManager.getSubscription() : null
+          if (!cancelled) setPushOn(!!sub)
+        }
+      } catch {
+      } finally {
+        if (!cancelled) setPushChecked(true)
+      }
+    }
+    check()
+    return () => { cancelled = true }
+  }, [])
+
   const tp = player?.tennisProfile || {}
-  const hasPhoto = !!player?.avatar
-  const hasCountry = !!player?.country
-  const tennisDone = TENNIS_FIELDS.filter(f => tp[f]).length
-  const total = 2 + TENNIS_FIELDS.length
-  const done = (hasPhoto ? 1 : 0) + (hasCountry ? 1 : 0) + tennisDone
+  const hasPhoto = preview ? true : !!player?.avatar
+  const hasCountry = preview ? false : !!player?.country
+  const tennisDone = preview ? 2 : TENNIS_FIELDS.filter(f => tp[f]).length
+  const hasPush = preview ? false : (pushOn || !!isSubscribed)
+  const total = 3 + TENNIS_FIELDS.length
+  const done = (hasPhoto ? 1 : 0) + (hasCountry ? 1 : 0) + tennisDone + (hasPush ? 1 : 0)
   const percent = Math.round((done / total) * 100)
   const complete = done === total
 
   useEffect(() => {
-    if (!player) return
+    if (!player || !pushChecked) return
     const store = isTest ? sessionStorage : localStorage
-    if (store.getItem(DISMISS_KEY)) return
+    if (store.getItem(DISMISS_KEY) && !preview) return
     if (isTest || (!complete && inUpcomingLeague(player.registrations))) setShow(true)
-  }, [player, isTest, complete])
+  }, [player, isTest, complete, pushChecked, preview])
 
   useEffect(() => {
     if (!show) return
@@ -53,19 +84,28 @@ export default function ProfilePromptCard({ player, language = 'es', locale = 'e
     setShow(false)
   }
 
+  const enablePush = async () => {
+    setPushBusy(true)
+    try { await subscribe() } finally { setPushBusy(false) }
+  }
+
   if (!show) return null
 
+  const canPushHere = isSupported && permission !== 'denied'
   const steps = [
-    { done: hasPhoto, icon: Camera, label: t('Foto', 'Photo'), cta: t('Añadir foto', 'Add photo') },
-    { done: hasCountry, icon: Flag, label: t('País', 'Country'), cta: t('Elegir país', 'Pick your country') },
+    { key: 'photo', done: hasPhoto, icon: Camera, label: t('Foto', 'Photo'), cta: t('Añadir foto', 'Add photo') },
+    { key: 'country', done: hasCountry, icon: Flag, label: t('País', 'Country'), cta: t('Elegir país', 'Pick your country') },
     {
+      key: 'style',
       done: tennisDone === TENNIS_FIELDS.length,
       icon: Zap,
       label: `${t('Estilo de juego', 'Playing style')} ${tennisDone}/${TENNIS_FIELDS.length}`,
       cta: t('Completar estilo de juego', 'Add your playing style')
-    }
+    },
+    { key: 'push', done: hasPush, icon: Bell, label: t('Notificaciones', 'Notifications'), cta: t('Activar notificaciones', 'Turn on notifications') }
   ]
   const next = steps.find(s => !s.done)
+  const btnClass = 'mt-4 inline-flex items-center gap-1.5 bg-white text-parque-purple px-4 py-2.5 rounded-xl text-sm font-bold shadow hover:bg-purple-50 active:scale-[0.98] transition-all disabled:opacity-70'
 
   return (
     <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-parque-purple via-purple-700 to-indigo-700 text-white shadow-lg">
@@ -98,9 +138,9 @@ export default function ProfilePromptCard({ player, language = 'es', locale = 'e
         </div>
 
         <div className="mt-3 flex flex-wrap gap-2">
-          {steps.map(({ done, icon: Icon, label }) => (
+          {steps.map(({ key, done, icon: Icon, label }) => (
             <span
-              key={label}
+              key={key}
               className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${done ? 'bg-parque-yellow text-parque-purple' : 'bg-white/15 text-white'}`}
             >
               {done ? <Check className="w-3.5 h-3.5" /> : <Icon className="w-3.5 h-3.5" />}
@@ -114,11 +154,13 @@ export default function ProfilePromptCard({ player, language = 'es', locale = 'e
             <Trophy className="w-5 h-5 text-parque-yellow" />
             {t('Listo para la pista. ¡Nos vemos en el primer partido!', 'Ready for court. See you at your first match!')}
           </div>
+        ) : next?.key === 'push' && canPushHere && !preview ? (
+          <button onClick={enablePush} disabled={pushBusy} className={btnClass}>
+            {pushBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bell className="w-4 h-4" />}
+            {next.cta}
+          </button>
         ) : (
-          <Link
-            href={`/${locale}/player/profile`}
-            className="mt-4 inline-flex items-center gap-1.5 bg-white text-parque-purple px-4 py-2.5 rounded-xl text-sm font-bold shadow hover:bg-purple-50 active:scale-[0.98] transition-all"
-          >
+          <Link href={`/${locale}/player/profile${next?.key === 'push' ? '#notifications' : ''}`} className={btnClass}>
             {next?.cta}
             <ChevronRight className="w-4 h-4" />
           </Link>

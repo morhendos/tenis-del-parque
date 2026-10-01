@@ -85,6 +85,12 @@ export default function PlayerProfile() {
     fetchProfile()
   }, [fetchProfile])
 
+  useEffect(() => {
+    if (loading || typeof window === 'undefined' || !window.location.hash) return
+    const el = document.getElementById(window.location.hash.slice(1))
+    if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
+  }, [loading])
+
   // Check for changes whenever formData updates
   useEffect(() => {
     if (originalData) {
@@ -470,7 +476,9 @@ export default function PlayerProfile() {
       </div>
 
       {/* Push Notifications - Enable/Disable + Test */}
-      <NotificationSettings locale={locale} />
+      <div id="notifications" className="scroll-mt-20">
+        <NotificationSettings locale={locale} />
+      </div>
 
       {/* League Stats - Compact */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
