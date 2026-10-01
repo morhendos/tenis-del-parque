@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Camera, Flag, Zap, X, ChevronRight, Check } from 'lucide-react'
 
 const DISMISS_KEY = 'profile-prompt-dismissed'
-const TEST_EMAILS = ['tomasz@skilling.com']
+const TEST_EMAILS = ['tomasz@skilling.com', 'morhendos@gmail.com']
 
 function inUpcomingLeague(registrations = []) {
   const now = Date.now()
