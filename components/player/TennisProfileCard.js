@@ -141,7 +141,7 @@ export default function TennisProfileCard({ tennisProfile, language = 'es', onSa
           ))}
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">{t('Raqueta', 'Racket')}</label>
-            <input value={form.racket} maxLength={60} onChange={e => setForm(f => ({ ...f, racket: e.target.value }))} className={inputClass} placeholder="Head Boom Pro" />
+            <input value={form.racket} maxLength={60} onChange={e => setForm(f => ({ ...f, racket: e.target.value }))} className={inputClass} placeholder={t('Marca y modelo', 'Brand and model')} />
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">{t('Raqueta desde', 'Racket since')}</label>
