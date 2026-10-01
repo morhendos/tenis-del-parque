@@ -66,24 +66,27 @@ async function main() {
   }
 
   const recipients = []
-  for (const email of announced) {
-    const p = byEmail[email]
-    if (!p) continue
-    if (p.preferences?.emailNotifications === false) continue
-    if ((p.registrations || []).some(r => seasonLeagueIds.has(String(r.league)))) continue
-
+  const buildRecipient = (email, p) => {
     const lastReg = (p.registrations || []).slice(-1)[0]
     const city = lastReg ? leagueCity[String(lastReg.league)] : null
     const language = p.preferences?.preferredLanguage === 'en' ? 'en' : 'es'
     const cityName = city ? (city.name?.[language] || city.name?.es || '') : ''
     const loyalty = loyaltyMap[email]
     const code = (typeof loyalty === 'string' ? loyalty : loyalty?.code) || null
-    recipients.push({ name: p.name, email, language, cityName, citySlug: city?.slug, discountCode: code, ctaUrl: buildUrl(language, city?.slug, code) })
+    return { name: p.name, email, language, cityName, citySlug: city?.slug, discountCode: code, ctaUrl: buildUrl(language, city?.slug, code) }
+  }
+  for (const email of announced) {
+    const p = byEmail[email]
+    if (!p) continue
+    if (p.preferences?.emailNotifications === false) continue
+    if ((p.registrations || []).some(r => seasonLeagueIds.has(String(r.league)))) continue
+    recipients.push(buildRecipient(email, p))
   }
 
   let list = recipients
   if (SINGLE_TO) {
-    const found = recipients.find(r => r.email === SINGLE_TO.toLowerCase())
+    const to = SINGLE_TO.toLowerCase()
+    const found = recipients.find(r => r.email === to) || (byEmail[to] ? buildRecipient(to, byEmail[to]) : null)
     let r = found || { name: 'Tom', email: SINGLE_TO, language: 'es', cityName: 'Sotogrande', citySlug: 'sotogrande', discountCode: null }
     if (FORCE_LANG) r = { ...r, language: FORCE_LANG }
     if (TEST_CODE) r = { ...r, discountCode: TEST_CODE }
