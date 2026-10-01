@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, Trophy, Medal, Award, Clock } from 'lucide-react'
 
-function HeroCountdown({ registrationEnd, locale }) {
+function HeroCountdown({ registrationEnd, locale, variant = 'line' }) {
   const [now, setNow] = useState(null)
 
   useEffect(() => {
@@ -25,11 +25,37 @@ function HeroCountdown({ registrationEnd, locale }) {
   const minutes = pad(Math.floor((diff % 3600000) / 60000))
   const seconds = pad(Math.floor((diff % 60000) / 1000))
   const time = `${days > 0 ? `${days}d ` : ''}${hours}:${minutes}:${seconds}`
+  const label = locale === 'es' ? 'La inscripción cierra en' : 'Registration closes in'
+
+  if (variant === 'blocks') {
+    const units = [
+      { v: days, l: locale === 'es' ? 'días' : 'days' },
+      { v: hours, l: locale === 'es' ? 'horas' : 'hours' },
+      { v: minutes, l: 'min' },
+      { v: seconds, l: locale === 'es' ? 'seg' : 'sec' }
+    ]
+    return (
+      <div className="text-right">
+        <p className="flex items-center justify-end gap-1.5 text-sm text-white/90 mb-2">
+          <Clock className="w-4 h-4" />
+          {label}
+        </p>
+        <div className="flex gap-2">
+          {units.map(u => (
+            <div key={u.l} className="min-w-[68px] rounded-xl bg-white/15 border border-white/25 px-3 py-2 text-center backdrop-blur-sm">
+              <div className="text-3xl font-bold text-white tabular-nums leading-none">{u.v}</div>
+              <div className="mt-1 text-[11px] uppercase tracking-wider text-white/75">{u.l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <p className="flex items-center gap-1.5 text-sm text-white/90 mt-3">
       <Clock className="w-4 h-4" />
-      {locale === 'es' ? 'La inscripción cierra en' : 'Registration closes in'}
+      {label}
       <span className="font-bold text-white tabular-nums">{time}</span>
     </p>
   )
@@ -102,7 +128,7 @@ export default function CityLeagueHero({ city, locale, leagueName, league, seaso
   }
   
   return (
-    <div className="relative min-h-[280px] sm:min-h-[320px] md:min-h-[360px]">
+    <div className="relative min-h-[280px] sm:min-h-[320px] md:min-h-[360px] lg:min-h-[300px]">
       {/* Background Image - full visibility */}
       {city.images?.main && (
         <div className="absolute inset-0">
@@ -120,7 +146,7 @@ export default function CityLeagueHero({ city, locale, leagueName, league, seaso
       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20" />
       
       {/* Content */}
-      <div className="relative min-h-[280px] sm:min-h-[320px] md:min-h-[360px] container mx-auto px-4 pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-4 sm:pb-8 z-10 flex flex-col justify-end">
+      <div className="relative min-h-[280px] sm:min-h-[320px] md:min-h-[360px] lg:min-h-[300px] container mx-auto px-4 pt-20 sm:pt-24 md:pt-28 lg:pt-24 pb-4 sm:pb-8 lg:pb-6 z-10 flex flex-col justify-end">
         
         {/* Mobile Back Button - glassmorphic */}
         <button
@@ -169,10 +195,21 @@ export default function CityLeagueHero({ city, locale, leagueName, league, seaso
                     : 'Choose the level of competition that suits you best'}
                 </p>
               )}
+
+              {seasonName && (
+                <div className="hidden lg:flex items-center gap-2 mt-3">
+                  <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-parque-purple to-violet-600 text-white font-bold text-sm shadow-lg">
+                    {seasonName}
+                  </span>
+                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold bg-white/20 backdrop-blur-sm text-white border border-white/30 shadow-lg">
+                    {locale === 'es' ? 'Inscripciones Abiertas' : 'Registration Open'}
+                  </span>
+                </div>
+              )}
             </div>
             
             {seasonName && (
-              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <div className="flex lg:hidden flex-wrap items-center gap-2 sm:gap-3">
                 <span className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-gradient-to-r from-parque-purple to-violet-600 text-white font-bold text-sm shadow-lg">
                   {seasonName}
                 </span>
@@ -204,8 +241,18 @@ export default function CityLeagueHero({ city, locale, leagueName, league, seaso
                 )}
               </div>
             )}
+
+            {seasonName && (
+              <div className="hidden lg:block">
+                <HeroCountdown registrationEnd={registrationEnd} locale={locale} variant="blocks" />
+              </div>
+            )}
           </div>
-          {seasonName && <HeroCountdown registrationEnd={registrationEnd} locale={locale} />}
+          {seasonName && (
+            <div className="lg:hidden">
+              <HeroCountdown registrationEnd={registrationEnd} locale={locale} />
+            </div>
+          )}
         </div>
       </div>
     </div>
