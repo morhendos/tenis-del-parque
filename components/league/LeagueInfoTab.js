@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Calendar, Users, Trophy, Target, ChartLine, CheckCircle, Tag, Medal, Award, ArrowRight } from 'lucide-react'
 import RegistrationCountdown from '@/components/ui/RegistrationCountdown'
 import { extractSeasonInfo, getSkillLevel } from '@/lib/utils/leagueSiblings'
-import { getRandomQuote } from '@/lib/content/tennisQuotes'
+import { getDailyQuote } from '@/lib/content/tennisQuotes'
 
 import { getDiscountCode } from '@/lib/utils/discountCode'
 
@@ -158,7 +158,7 @@ export default function LeagueInfoTab({ league: baseLeague, currentSeason, langu
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setMotivationQuote(getRandomQuote(language, 'motivation'))
+      setMotivationQuote(getDailyQuote(language))
       if (seasonMode) {
         const level = new URLSearchParams(window.location.search).get('level')
         if (level && seasonLeagues.some(l => getSkillLevel(l) === level)) {
