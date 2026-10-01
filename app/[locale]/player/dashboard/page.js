@@ -18,6 +18,7 @@ import RecentResults from '@/components/player/RecentResults'
 import NoLeaguesCTA from '@/components/player/NoLeaguesCTA'
 import InjuryBanner from '@/components/player/InjuryBanner'
 import NewSeasonCard from '@/components/player/NewSeasonCard'
+import ProfilePromptCard from '@/components/player/ProfilePromptCard'
 import { dashboardStyles } from '@/styles/dashboard'
 
 export default function PlayerDashboard() {
@@ -143,6 +144,8 @@ export default function PlayerDashboard() {
         <DashboardHeader player={player} language={language} />
         
         <NewSeasonCard language={language} locale={locale} placement="top" />
+
+        <ProfilePromptCard player={player} language={language} locale={locale} />
 
         {/* Injury Status Banner */}
         {(player?.injury?.active || (player?.registrations || []).some(r =>
