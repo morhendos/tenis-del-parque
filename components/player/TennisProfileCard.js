@@ -26,7 +26,7 @@ const OPTIONS = {
   },
   bestShot: {
     icon: Target,
-    label: { es: 'Mejor golpe', en: 'Best shot' },
+    label: { es: 'Golpe favorito', en: 'Favorite shot' },
     values: {
       forehand: { es: 'Derecha', en: 'Forehand' },
       backhand: { es: 'Revés', en: 'Backhand' },
