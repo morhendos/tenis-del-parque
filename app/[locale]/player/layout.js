@@ -5,7 +5,11 @@ import { usePathname, useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useSession, signOut } from 'next-auth/react'
-import { announcementContent } from '@/lib/content/announcementContent'
+import {
+  getLiveRoundOneMatches,
+  getRoundOneAnnouncementId,
+  getLeagueTargetedAnnouncements
+} from '@/lib/utils/announcementRules'
 import { ToastContainer } from '@/components/ui/Toast'
 import { TennisPreloaderFullScreen } from '@/components/ui/TennisPreloader'
 import { BottomNavigation } from '@/components/player/navigation'
@@ -59,17 +63,8 @@ export default function PlayerLayout({ children }) {
               const matchesResponse = await fetch('/api/player/matches')
               if (matchesResponse.ok) {
                 const matchesData = await matchesResponse.json()
-                // Get ALL round 1 matches (could be in multiple leagues)
-                const firstRoundMatches = matchesData.matches?.filter(match => match.round === 1) || []
-                
-                // Build per-league announcement IDs (handles both regular and BYE matches)
-                const firstRoundAnnouncementIds = firstRoundMatches.map(match => {
-                  const leagueSlug = match.league?.slug || 'unknown'
-                  if (match.isBye === true) {
-                    return `${announcementContent.byeRound.id}-${leagueSlug}-round-${match.round}`
-                  }
-                  return `${announcementContent.firstRoundMatch.id}-${leagueSlug}`
-                })
+                const firstRoundAnnouncementIds = getLiveRoundOneMatches(matchesData.matches)
+                  .map(getRoundOneAnnouncementId)
                 
                 // Check if any first round announcements are unseen
                 const hasUnseenFirstRound = firstRoundAnnouncementIds.some(id => !seenAnnouncements.includes(id))
@@ -91,13 +86,10 @@ export default function PlayerLayout({ children }) {
               .map(reg => reg.league?.slug)
               .filter(Boolean)
             
-            const hasUnseenLeagueAnnouncement = Object.values(announcementContent).some(announcement => {
-              if (!announcement.targetLeagues || announcement.targetLeagues.length === 0) return false
-              const isInTargetedLeague = announcement.targetLeagues.some(
-                targetSlug => playerLeagueSlugs.includes(targetSlug)
-              )
-              return isInTargetedLeague && !seenAnnouncements.includes(announcement.id)
-            })
+            const hasUnseenLeagueAnnouncement = getLeagueTargetedAnnouncements(
+              playerLeagueSlugs,
+              seenAnnouncements
+            ).length > 0
             
             // Update hasNewAnnouncement to include league-specific ones
             if (hasUnseenLeagueAnnouncement) {

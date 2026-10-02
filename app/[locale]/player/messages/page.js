@@ -8,6 +8,7 @@ import AnnouncementModal from '@/components/ui/AnnouncementModal'
 import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
 import { welcomeContent } from '@/lib/content/welcomeContent'
 import { announcementContent } from '@/lib/content/announcementContent'
+import { isLeagueLive, isAnnouncementExpired } from '@/lib/utils/announcementRules'
 
 export default function MessagesPage() {
   const router = useRouter()
@@ -120,7 +121,7 @@ export default function MessagesPage() {
             iconType: 'bye',
             iconBg: 'bg-emerald-100',
             iconColor: 'text-emerald-600',
-            isNew: !seenAnnouncements.includes(uniqueId),
+            isNew: isLeagueLive(match.league) && !seenAnnouncements.includes(uniqueId),
             content: {
               ...announcementContent.byeRound,
               id: uniqueId,
@@ -157,7 +158,7 @@ export default function MessagesPage() {
             iconType: 'match',
             iconBg: 'bg-green-100',
             iconColor: 'text-green-600',
-            isNew: !seenAnnouncements.includes(uniqueId),
+            isNew: isLeagueLive(match.league) && !seenAnnouncements.includes(uniqueId),
             content: {
               ...announcementContent.firstRoundMatch,
               id: uniqueId,
@@ -209,7 +210,7 @@ export default function MessagesPage() {
             iconType: 'announcement',
             iconBg: 'bg-amber-100',
             iconColor: 'text-amber-600',
-            isNew: !seenAnnouncements.includes(announcement.id),
+            isNew: !isAnnouncementExpired(announcement) && !seenAnnouncements.includes(announcement.id),
             content: announcement
           })
         }

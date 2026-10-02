@@ -30,7 +30,7 @@ export async function GET(request) {
     })
     .populate('players.player1', 'name email whatsapp')
     .populate('players.player2', 'name email whatsapp')
-    .populate('league', 'name slug location') // Add league data with location object for multi-league support
+    .populate('league', 'name slug location status season') // Add league data with location object for multi-league support
     .sort('-createdAt')
 
     return NextResponse.json({ 
@@ -69,7 +69,7 @@ export async function GET(request) {
       })
       .populate('players.player1', 'name email whatsapp')
       .populate('players.player2', 'name email whatsapp')
-      .populate('league', 'name slug location')
+      .populate('league', 'name slug location status season')
       .sort('-createdAt')
 
       console.log('✅ Matches retry succeeded after reconnect')
