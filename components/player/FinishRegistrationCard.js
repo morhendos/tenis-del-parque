@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CreditCard, Loader2 } from 'lucide-react'
 
 function unpaidOpenRegistration(registrations = []) {
@@ -19,6 +19,13 @@ function unpaidOpenRegistration(registrations = []) {
 export default function FinishRegistrationCard({ player, language = 'es' }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(false)
+
+  useEffect(() => {
+    const reset = () => setBusy(false)
+    window.addEventListener('pageshow', reset)
+    return () => window.removeEventListener('pageshow', reset)
+  }, [])
+
   const reg = unpaidOpenRegistration(player?.registrations)
   if (!reg) return null
 
@@ -55,14 +62,22 @@ export default function FinishRegistrationCard({ player, language = 'es' }) {
   }
 
   return (
-    <div className="bg-gradient-to-br from-parque-purple to-purple-700 rounded-2xl shadow-lg shadow-purple-500/25 p-4 sm:p-5 text-white">
-      <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center flex-shrink-0">
+    <div className="relative overflow-hidden bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl shadow-lg shadow-orange-500/30 ring-2 ring-orange-300/60 p-4 sm:p-5 text-white">
+      <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/15 rounded-full" />
+      <div className="relative inline-flex items-center gap-1.5 bg-white/25 rounded-full px-2.5 py-1 text-xs font-semibold mb-3">
+        <span className="relative flex w-2 h-2">
+          <span className="absolute inline-flex w-full h-full rounded-full bg-white opacity-75 animate-ping" />
+          <span className="relative inline-flex w-2 h-2 rounded-full bg-white" />
+        </span>
+        {es ? 'Pago pendiente' : 'Payment pending'}
+      </div>
+      <div className="relative flex items-start gap-3">
+        <div className="w-10 h-10 rounded-full bg-white/25 flex items-center justify-center flex-shrink-0">
           <CreditCard className="w-5 h-5" />
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="font-bold text-lg leading-tight">{es ? 'Te queda un paso' : 'One step left'}</h3>
-          <p className="text-white/85 text-sm mt-1">
+          <h3 className="font-bold text-xl leading-tight">{es ? 'Te queda un paso' : 'One step left'}</h3>
+          <p className="text-white/95 text-sm mt-1">
             {es
               ? `Termina tu inscripción en ${league.name}${date ? ` y estarás listo para el ${date}` : ''}.`
               : `Finish your registration for ${league.name}${date ? ` and you're ready for ${date}` : ''}.`}
@@ -72,13 +87,13 @@ export default function FinishRegistrationCard({ player, language = 'es' }) {
       <button
         onClick={goToCheckout}
         disabled={busy}
-        className="mt-4 w-full flex items-center justify-center gap-2 bg-white text-parque-purple font-semibold rounded-xl py-3 active:scale-[0.99] transition-all disabled:opacity-80"
+        className="relative mt-4 w-full flex items-center justify-center gap-2 bg-white text-orange-600 font-bold text-base rounded-xl py-3.5 shadow-md active:scale-[0.99] transition-all disabled:opacity-80"
       >
         {busy && <Loader2 className="w-4 h-4 animate-spin" />}
         {es ? 'Terminar inscripción' : 'Finish registration'}
       </button>
       {error && (
-        <p className="text-white/90 text-xs mt-2 text-center">
+        <p className="relative text-white text-xs mt-2 text-center">
           {es ? 'No se pudo abrir el pago. Inténtalo de nuevo.' : "Couldn't open the payment. Please try again."}
         </p>
       )}
