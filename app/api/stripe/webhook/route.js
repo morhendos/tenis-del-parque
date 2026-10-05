@@ -1,6 +1,7 @@
 import Stripe from 'stripe'
 import dbConnect from '../../../../lib/db/mongoose'
 import Player from '../../../../lib/models/Player'
+import League from '../../../../lib/models/League'
 
 export async function POST(request) {
   if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
@@ -55,6 +56,9 @@ export async function POST(request) {
           registration.status = 'confirmed'
         }
         await player.save()
+        await League.findByIdAndUpdate(leagueId, {
+          $inc: { 'stats.totalPlayers': 1, 'stats.registeredPlayers': 1 }
+        })
         console.log(`Payment completed for player ${playerId}, league ${leagueId}, session ${session.id}`)
       }
     } catch (error) {

@@ -86,7 +86,7 @@ export async function GET(request, { params }) {
         (!level || reg.level === level)
       )
       
-      if (!registration) return null
+      if (!registration || (registration.status === 'pending' && registration.paymentStatus === 'pending')) return null
       
       return {
         _id: player._id,
@@ -121,7 +121,7 @@ export async function GET(request, { params }) {
           (!level || reg.level === level)
         )
         
-        if (!registration) return null
+        if (!registration || (registration.status === 'pending' && registration.paymentStatus === 'pending')) return null
         
         return {
           _id: player._id,

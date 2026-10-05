@@ -148,6 +148,7 @@ export async function POST(request) {
     let activationLink = null
     let user = null
     let isResume = false
+    let resumedToWaived = false
     
     if (player) {
       // EXISTING PLAYER - check if already registered for this league
@@ -180,6 +181,7 @@ export async function POST(request) {
           existingRegistration.finalPrice = finalPrice
           if (finalPrice === 0) {
             existingRegistration.paymentStatus = 'waived'
+            resumedToWaived = true
           }
         } else {
           validatedDiscountCode = null
@@ -403,16 +405,17 @@ export async function POST(request) {
     }
 
     // Update league stats
-    if (!isResume) {
-      if (league.status === 'coming_soon') {
+    const currentRegistration = player.getLeagueRegistration(league._id)
+    if (league.status === 'coming_soon') {
+      if (!isResume) {
         await League.findByIdAndUpdate(league._id, {
           $inc: { 'waitingListCount': 1 }
         })
-      } else {
-        await League.findByIdAndUpdate(league._id, {
-          $inc: { 'stats.totalPlayers': 1, 'stats.registeredPlayers': 1 }
-        })
       }
+    } else if (currentRegistration?.paymentStatus === 'waived' && (!isResume || resumedToWaived)) {
+      await League.findByIdAndUpdate(league._id, {
+        $inc: { 'stats.totalPlayers': 1, 'stats.registeredPlayers': 1 }
+      })
     }
 
     // Get the registration we just created

@@ -50,8 +50,7 @@ export async function GET(request, { params }) {
 
     // Get active players in this league
     const players = await Player.find({
-      'registrations.league': id,
-      'registrations.status': 'active'
+      registrations: { $elemMatch: { league: id, status: { $in: ['active', 'confirmed'] } } }
     }).select('name email registrations')
 
     // Get Round matches for this league
