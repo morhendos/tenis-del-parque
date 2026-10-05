@@ -422,7 +422,7 @@ export async function POST(request) {
     const registration = player.getLeagueRegistration(league._id)
 
     // Send welcome email with activation link
-    if (!isResume) {
+    if ((!isResume && (league.status === 'coming_soon' || registration.paymentStatus === 'waived')) || resumedToWaived) {
     try {
       // Get WhatsApp group info if available
       const whatsappGroupInfo = league.getWhatsAppGroupInfo ? league.getWhatsAppGroupInfo() : null
