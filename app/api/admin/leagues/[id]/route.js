@@ -3,6 +3,7 @@ import dbConnect from '../../../../../lib/db/mongoose'
 import League from '../../../../../lib/models/League'
 import '../../../../../lib/models/City'
 import { requireAdmin } from '../../../../../lib/auth/apiAuth'
+import { normalizeSeasonConfigDates, normalizeRegistrationEnd } from '../../../../../lib/utils/registrationEnd'
 
 // GET /api/admin/leagues/[id] - Get single league details
 export async function GET(request, { params }) {
@@ -70,6 +71,10 @@ export async function PATCH(request, { params }) {
     if (body.cityId) {
       body.city = body.cityId
       delete body.cityId
+    }
+    normalizeSeasonConfigDates(body.seasonConfig)
+    if ('seasonConfig.registrationEnd' in body) {
+      body['seasonConfig.registrationEnd'] = normalizeRegistrationEnd(body['seasonConfig.registrationEnd'])
     }
     
     const league = await League.findByIdAndUpdate(

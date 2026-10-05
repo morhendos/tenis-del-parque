@@ -5,6 +5,7 @@ import League from '../../../../lib/models/League'
 import Player from '../../../../lib/models/Player'
 import City from '../../../../lib/models/City'
 import { requireAdmin } from '../../../../lib/auth/apiAuth'
+import { normalizeRegistrationEnd } from '../../../../lib/utils/registrationEnd'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
@@ -167,7 +168,7 @@ export async function POST(request) {
         startDate: data.seasonConfig.startDate || null,
         endDate: data.seasonConfig.endDate || null,
         registrationStart: data.seasonConfig.registrationStart || null,
-        registrationEnd: data.seasonConfig.registrationEnd || null,
+        registrationEnd: normalizeRegistrationEnd(data.seasonConfig.registrationEnd),
         maxPlayers: data.seasonConfig.maxPlayers || 20,
         minPlayers: data.seasonConfig.minPlayers || 8,
         price: data.seasonConfig.price || {

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import dbConnect from '../../../../../lib/db/mongoose'
 import League from '../../../../../lib/models/League'
 import City from '../../../../../lib/models/City'
+import { normalizeRegistrationEnd } from '../../../../../lib/utils/registrationEnd'
 
 function parseCSV(csvText) {
   const lines = csvText.trim().split('\n')
@@ -139,7 +140,7 @@ export async function POST(request) {
             startDate: startDate,
             endDate: endDate,
             registrationStart: row.registrationStart ? new Date(row.registrationStart) : null,
-            registrationEnd: row.registrationEnd ? new Date(row.registrationEnd) : null,
+            registrationEnd: row.registrationEnd ? normalizeRegistrationEnd(String(row.registrationEnd)) : null,
             maxPlayers: row.maxPlayers ? parseInt(row.maxPlayers) : 20,
             minPlayers: row.minPlayers ? parseInt(row.minPlayers) : 8,
             price: {

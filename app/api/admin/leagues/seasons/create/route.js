@@ -3,6 +3,7 @@ import dbConnect from '../../../../../../lib/db/mongoose'
 import League from '../../../../../../lib/models/League'
 import City from '../../../../../../lib/models/City'
 import { requireAdmin } from '../../../../../../lib/auth/apiAuth'
+import { normalizeSeasonConfigDates } from '../../../../../../lib/utils/registrationEnd'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,6 +20,7 @@ export async function POST(request) {
       seasonData,
       isNewLeague = false // Flag to create completely new league vs new season of existing league
     } = await request.json()
+    normalizeSeasonConfigDates(seasonData?.seasonConfig)
 
     let newLeague
 
