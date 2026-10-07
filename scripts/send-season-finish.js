@@ -28,6 +28,7 @@ try { sentLog = JSON.parse(fs.readFileSync(SENT_LOG, 'utf8')) } catch {}
 const BASE = 'https://www.tenisdp.es'
 const SEASON_SLUG = /autumn-2026/
 const EXCLUDE = /@tenisdp\.es$|tomasz/i
+const SKIP = new Set(['dgt.juliya@gmail.com'])
 const sleep = (ms) => new Promise(r => setTimeout(r, ms))
 const LEVEL = { gold: 'Gold', silver: 'Silver', bronze: 'Bronze' }
 
@@ -47,7 +48,7 @@ async function main() {
   const players = await db.collection('players').find({ 'registrations.league': { $in: leagues.map(l => l._id) } }).toArray()
   const recipients = []
   for (const p of players) {
-    if (EXCLUDE.test(p.email || '')) continue
+    if (EXCLUDE.test(p.email || '') || SKIP.has((p.email || '').toLowerCase())) continue
     if (p.preferences?.emailNotifications === false) continue
     const regs = (p.registrations || []).filter(r => leagueInfo[String(r.league)])
     if (regs.some(r => ['completed', 'waived'].includes(r.paymentStatus) || ['confirmed', 'active'].includes(r.status))) continue
