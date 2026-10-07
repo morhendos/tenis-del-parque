@@ -19,6 +19,8 @@ function unpaidOpenRegistration(registrations = []) {
 export default function FinishRegistrationCard({ player, language = 'es' }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(false)
+  const [confirming, setConfirming] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
 
   useEffect(() => {
     const reset = () => setBusy(false)
@@ -35,6 +37,31 @@ export default function FinishRegistrationCard({ player, language = 'es' }) {
   const date = start
     ? start.toLocaleDateString(es ? 'es-ES' : 'en-US', { month: es ? 'long' : 'short', day: 'numeric' })
     : null
+
+  const levelName = (league.name || '').replace(/\s*(League|Liga)\s*/i, '').trim()
+  const label = [league.location?.city, levelName].filter(Boolean).join(' ') || league.name
+
+  const changeChoice = async () => {
+    setCancelling(true)
+    setError(false)
+    try {
+      const res = await fetch('/api/player/cancel-registration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leagueId: league._id })
+      })
+      const data = await res.json()
+      if (data.success) {
+        window.location.href = data.citySlug ? `/${language}/leagues/${data.citySlug}` : `/${language}/leagues`
+        return
+      }
+      setError(true)
+    } catch {
+      setError(true)
+    }
+    setCancelling(false)
+    setConfirming(false)
+  }
 
   const goToCheckout = async () => {
     setBusy(true)
@@ -79,8 +106,8 @@ export default function FinishRegistrationCard({ player, language = 'es' }) {
           <h3 className="font-bold text-xl leading-tight">{es ? 'Te queda un paso' : 'One step left'}</h3>
           <p className="text-white/95 text-sm mt-1">
             {es
-              ? `Termina tu inscripción en ${league.name}${date ? ` y estarás listo para el ${date}` : ''}.`
-              : `Finish your registration for ${league.name}${date ? ` and you're ready for ${date}` : ''}.`}
+              ? `Termina tu inscripción en ${label}${date ? ` y estarás listo para el ${date}` : ''}.`
+              : `Finish your registration for ${label}${date ? ` and you're ready for ${date}` : ''}.`}
           </p>
         </div>
       </div>
@@ -92,9 +119,42 @@ export default function FinishRegistrationCard({ player, language = 'es' }) {
         {busy && <Loader2 className="w-4 h-4 animate-spin" />}
         {es ? 'Terminar inscripción' : 'Finish registration'}
       </button>
+      {confirming ? (
+        <div className="relative mt-3 bg-white/20 rounded-xl p-3 text-sm text-center">
+          <p className="text-white">
+            {es
+              ? `Se cancelará tu inscripción sin pagar en ${label}. Después podrás elegir de nuevo.`
+              : `This cancels your unpaid registration for ${label}. You can then pick again.`}
+          </p>
+          <div className="flex gap-2 mt-3">
+            <button
+              onClick={() => setConfirming(false)}
+              disabled={cancelling}
+              className="flex-1 rounded-lg py-2 font-semibold bg-white/25 text-white"
+            >
+              {es ? 'Volver' : 'Back'}
+            </button>
+            <button
+              onClick={changeChoice}
+              disabled={cancelling}
+              className="flex-1 flex items-center justify-center gap-2 rounded-lg py-2 font-semibold bg-white text-orange-600 disabled:opacity-80"
+            >
+              {cancelling && <Loader2 className="w-4 h-4 animate-spin" />}
+              {es ? 'Sí, cambiar' : 'Yes, change'}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={() => setConfirming(true)}
+          className="relative mt-3 w-full text-center text-sm text-white/90 underline underline-offset-2"
+        >
+          {es ? '¿Nivel o ciudad equivocados? Cámbialo' : 'Wrong level or city? Change it'}
+        </button>
+      )}
       {error && (
         <p className="relative text-white text-xs mt-2 text-center">
-          {es ? 'No se pudo abrir el pago. Inténtalo de nuevo.' : "Couldn't open the payment. Please try again."}
+          {es ? 'Algo salió mal. Inténtalo de nuevo.' : 'Something went wrong. Please try again.'}
         </p>
       )}
     </div>
