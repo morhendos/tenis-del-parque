@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import confetti from 'canvas-confetti'
 
-const LIVE = false
+const LIVE = true
 const TEST_EMAILS = ['tomasz@skilling.com']
 const SHOW_MS = 3200
 const FADE_MS = 600
