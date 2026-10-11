@@ -94,6 +94,7 @@ export async function GET(request) {
         createdAt: player.createdAt,
         // Include all registrations for multi-league support
         registrations: player.registrations || [],
+        dismissedTips: player.dismissedTips || [],
         // Include player preferences (set during registration)
         preferences: player.preferences || { preferredLanguage: 'es' },
         // Injury status

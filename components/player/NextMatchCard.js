@@ -5,7 +5,7 @@ import { WhatsAppUtils } from '@/lib/utils/whatsappUtils'
 import { getMaskedName, isDemoModeActive } from '@/lib/utils/demoMode'
 import CountdownCard from './CountdownCard'
 
-export default function NextMatchCard({ matches = [], language, leagueInfo, playerName = '' }) {
+export default function NextMatchCard({ matches = [], language, leagueInfo, playerName = '', registrations = [] }) {
   const [isDemoMode, setIsDemoMode] = useState(false)
   
   useEffect(() => {
@@ -18,14 +18,18 @@ export default function NextMatchCard({ matches = [], language, leagueInfo, play
       titleSingle: 'Próximo Partido',
       noMatches: 'No tienes partidos programados',
       round: 'Ronda',
-      daysLeft: 'días'
+      daysLeft: 'días',
+      playBefore: 'Jugad antes del',
+      extensions: (n) => `${n} ${n === 1 ? 'extensión disponible' : 'extensiones disponibles'}`
     },
     en: {
       title: 'Next Matches',
       titleSingle: 'Next Match',
       noMatches: 'No matches scheduled',
       round: 'Round',
-      daysLeft: 'days'
+      daysLeft: 'days',
+      playBefore: 'Play before',
+      extensions: (n) => `${n} ${n === 1 ? 'extension left' : 'extensions left'}`
     }
   }
 
@@ -151,6 +155,17 @@ export default function NextMatchCard({ matches = [], language, leagueInfo, play
                   </div>
                 )}
               </div>
+              {match.deadline && (() => {
+                const reg = registrations.find(r => String(r.league?._id || r.league) === String(match.leagueId))
+                const ext = reg?.extensions
+                const left = ext ? Math.max(0, (ext.total ?? 3) - (ext.used ?? 0)) : 3
+                const date = new Date(match.deadline).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/Madrid' })
+                return (
+                  <p className="mt-2 text-xs text-gray-500">
+                    {t.playBefore} <span className="font-medium text-gray-700">{date}</span> · {t.extensions(left)}
+                  </p>
+                )
+              })()}
             </div>
           )
         })}
