@@ -26,6 +26,13 @@ body:has(.player-shell) {
   background: #f9fafb;
 }
 
+@media (max-width: 1023px) {
+  html:has(.player-shell),
+  body:has(.player-shell) {
+    background: linear-gradient(to right, #563380, #9333ea, #4f46e5);
+  }
+}
+
 body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-start-rgb));
