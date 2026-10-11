@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import dbConnect from '../../../../../../lib/db/mongoose'
 import Player from '../../../../../../lib/models/Player'
 import Match from '../../../../../../lib/models/Match'
+import League from '../../../../../../lib/models/League'
 import { requireAdmin } from '../../../../../../lib/auth/apiAuth'
 
 // Force dynamic rendering for this route
@@ -31,14 +32,6 @@ export async function POST(request, { params }) {
       return NextResponse.json(
         { error: 'Player not found' },
         { status: 404 }
-      )
-    }
-
-    // Check if player has multiple registrations
-    if (!player.registrations || player.registrations.length <= 1) {
-      return NextResponse.json(
-        { error: 'Cannot remove player from their only league. Use delete player instead.' },
-        { status: 400 }
       )
     }
 
@@ -81,6 +74,12 @@ export async function POST(request, { params }) {
 
     // Save the updated player
     await player.save()
+
+    if (['completed', 'waived'].includes(registrationToRemove.paymentStatus)) {
+      await League.findByIdAndUpdate(leagueId, {
+        $inc: { 'stats.totalPlayers': -1, 'stats.registeredPlayers': -1 }
+      })
+    }
 
     console.log(`Player ${player.name} removed from league ${leagueId}`)
 
