@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import confetti from 'canvas-confetti'
 
 const LIVE = false
@@ -60,9 +61,9 @@ export default function SeasonStartCelebration({ player, language = 'es' }) {
     timersRef.current = [setTimeout(() => setPhase('hidden'), FADE_MS)]
   }
 
-  if (phase === 'hidden') return null
+  if (phase === 'hidden' || typeof document === 'undefined') return null
 
-  return (
+  return createPortal(
     <div
       onClick={close}
       className="fixed inset-0 z-[100] flex items-center justify-center px-6 cursor-pointer"
@@ -102,7 +103,8 @@ export default function SeasonStartCelebration({ player, language = 'es' }) {
           {t.sub}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

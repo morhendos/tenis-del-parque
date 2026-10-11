@@ -20,9 +20,19 @@ export async function GET(request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    const player = await Player.findOne({ email: user.email }).select('registrations.league')
+    const player = await Player.findOne({ email: user.email }).select('registrations.league registrations.status registrations.paymentStatus')
     const joinedIds = (player?.registrations || []).map(r => r.league)
     const joinedLeagues = await League.find({ _id: { $in: joinedIds } }).select('city status skillLevel seasonConfig.startDate')
+
+    const playingNow = (player?.registrations || []).some(r => {
+      if (!['confirmed', 'active'].includes(r.status)) return false
+      if (!['completed', 'waived'].includes(r.paymentStatus)) return false
+      const l = joinedLeagues.find(x => x._id.toString() === r.league?.toString())
+      return l && ['active', 'registration_open'].includes(l.status)
+    })
+    if (playingNow) {
+      return NextResponse.json({ success: true, cities: [], joinedOpen: true })
+    }
 
     const lastLevelByCity = new Map()
     const lastStartByCity = new Map()
