@@ -229,6 +229,27 @@ export default function PlayerRules() {
         </div>
       </div>
 
+      {/* Where to play */}
+      <div className="bg-white rounded-2xl border border-purple-100 p-6 mb-4">
+        <h2 className="text-lg font-bold text-gray-900">{locale === 'es' ? 'Dónde jugar' : 'Where to play'}</h2>
+        <p className="mt-1 text-sm text-gray-500">{locale === 'es' ? 'Pistas con precio especial para partidos de la liga' : 'Courts with a special price for league matches'}</p>
+        <div className="mt-4 rounded-xl bg-purple-50 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-parque-purple">Sotogrande</p>
+          <p className="mt-1 font-semibold text-gray-900">Club El Faisán</p>
+          <p className="mt-1 text-sm text-gray-600">
+            {locale === 'es'
+              ? '25€ por 1.5 horas (12.50€ por jugador). Llama a Lorenzo y di que es un partido de la Liga TDP.'
+              : "25€ for 1.5 hours (12.50€ per player). Call Lorenzo and say it's a TDP League match."}
+          </p>
+          <a
+            href="tel:+34617462570"
+            className="mt-3 inline-flex items-center px-4 py-2 bg-parque-purple hover:bg-purple-800 text-white text-sm font-medium rounded-lg"
+          >
+            {locale === 'es' ? 'Llamar a Lorenzo' : 'Call Lorenzo'} · +34 617 46 25 70
+          </a>
+        </div>
+      </div>
+
       {/* Rules Sections */}
       <div className="space-y-4">
         {t.sections.map((section, index) => (
