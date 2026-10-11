@@ -5,12 +5,12 @@ import confetti from 'canvas-confetti'
 
 const LIVE = false
 const TEST_EMAILS = ['tomasz@skilling.com']
-const SHOW_MS = 3200
+const SHOW_MS = 4500
 const FADE_MS = 600
 
 const text = {
-  es: { top: 'Temporada oficialmente en marcha', title: '¡Arranca la temporada!', sub: '¡Vamos! 🎾', skip: 'Toca para continuar' },
-  en: { top: 'Season officially underway', title: 'The season has started!', sub: "Let's go! 🎾", skip: 'Tap to continue' }
+  es: { top: 'Temporada oficialmente en marcha', title: '¡Arranca la temporada!', sub: '¡Vamos! 🎾' },
+  en: { top: 'Season officially underway', title: 'The season has started!', sub: "Let's go! 🎾" }
 }
 
 function findLeagueToCelebrate(player) {
@@ -100,12 +100,6 @@ export default function SeasonStartCelebration({ player, language = 'es' }) {
           style={{ color: '#E6E94E', animation: 'tdpRise 500ms ease 700ms both' }}
         >
           {t.sub}
-        </div>
-        <div
-          className="mt-10 text-xs text-purple-200/70"
-          style={{ animation: 'tdpRise 500ms ease 1400ms both' }}
-        >
-          {t.skip}
         </div>
       </div>
     </div>
