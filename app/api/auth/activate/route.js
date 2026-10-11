@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import '@/lib/models/League'
 import dbConnect from '../../../../lib/db/mongoose'
 import User from '../../../../lib/models/User'
 import Player from '../../../../lib/models/Player'

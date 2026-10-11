@@ -1,4 +1,5 @@
 import dbConnect from '../../../../../lib/db/mongoose'
+import '@/lib/models/League'
 import Match from '../../../../../lib/models/Match'
 
 // Force dynamic rendering for this route
