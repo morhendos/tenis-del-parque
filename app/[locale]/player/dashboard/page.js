@@ -20,6 +20,7 @@ import InjuryBanner from '@/components/player/InjuryBanner'
 import NewSeasonCard from '@/components/player/NewSeasonCard'
 import ProfilePromptCard from '@/components/player/ProfilePromptCard'
 import FinishRegistrationCard from '@/components/player/FinishRegistrationCard'
+import SeasonStartCelebration from '@/components/player/SeasonStartCelebration'
 import { dashboardStyles } from '@/styles/dashboard'
 
 export default function PlayerDashboard() {
@@ -144,6 +145,7 @@ export default function PlayerDashboard() {
         {/* Welcome Header with Quick Links */}
         <DashboardHeader player={player} language={language} />
         
+        <SeasonStartCelebration player={player} language={language} />
         <FinishRegistrationCard player={player} language={language} />
         <NewSeasonCard language={language} locale={locale} placement="top" />
 
