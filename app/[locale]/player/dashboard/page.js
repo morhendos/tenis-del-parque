@@ -205,15 +205,6 @@ export default function PlayerDashboard() {
           playerName={playerName || player?.name || 'Player'}
         />
         
-        {/* First Round Match Announcement */}
-        {showFirstRoundAnnouncement && (
-          <AnnouncementModal
-            isOpen={true}
-            onClose={handleCloseFirstRoundAnnouncement}
-            announcement={getDynamicFirstRoundAnnouncement()}
-          />
-        )}
-        
         {/* League-Specific Announcements */}
         {showLeagueAnnouncement && leagueAnnouncement && (
           <AnnouncementModal
