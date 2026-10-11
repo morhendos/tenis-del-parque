@@ -37,7 +37,8 @@ export default function MatchCard({
     const now = new Date()
     const deadlineDate = new Date(deadline)
     const diffMs = deadlineDate - now
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+    const fullDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+    const diffDays = diffMs < 0 || fullDays === 0 ? fullDays : Math.ceil(diffMs / (1000 * 60 * 60 * 24))
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
     
     if (diffMs < 0) {
