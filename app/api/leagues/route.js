@@ -16,7 +16,8 @@ export async function GET() {
     
     // Get all public leagues with city data
     const leagues = await League.find({ 
-      status: { $in: ['active', 'coming_soon', 'registration_open'] } 
+      status: { $in: ['active', 'coming_soon', 'registration_open'] },
+      slug: { $not: /^test-/ }
     })
     .populate('city', 'slug name images coordinates googleData province')
     .sort({ 

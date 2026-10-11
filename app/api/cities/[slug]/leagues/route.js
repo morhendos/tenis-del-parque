@@ -18,7 +18,8 @@ export async function GET(request, { params }) {
     // Find all leagues for this city
     const leagues = await League.find({ 
       city: city._id,
-      status: { $in: ['active', 'coming_soon', 'registration_open', 'completed'] }
+      status: { $in: ['active', 'coming_soon', 'registration_open', 'completed'] },
+      slug: { $not: /^test-/ }
     })
     .populate('city', 'slug name images')
     .sort({ 

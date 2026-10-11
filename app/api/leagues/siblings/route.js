@@ -40,6 +40,7 @@ export async function GET(request) {
     // Find all leagues for this city and season
     const leagues = await League.find({
       city: city._id,
+      slug: { $not: /^test-/ },
       'season.type': seasonType,
       'season.year': parseInt(seasonYear, 10)
     }).select('name slug skillLevel season status').lean()

@@ -57,6 +57,7 @@ export async function GET(request) {
     const now = new Date()
     const query = {
       status: 'registration_open',
+      slug: { $not: /^test-/ },
       $and: [
         { $or: [{ 'seasonConfig.registrationStart': null }, { 'seasonConfig.registrationStart': { $lte: now } }] },
         { $or: [{ 'seasonConfig.registrationEnd': null }, { 'seasonConfig.registrationEnd': { $gte: now } }] }
