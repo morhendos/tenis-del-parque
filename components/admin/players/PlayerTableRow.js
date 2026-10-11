@@ -8,6 +8,7 @@ export default function PlayerTableRow({
   onDelete,
   onRecalculateElo,
   onRemoveFromLeague,
+  onMoveToLeague,
   onViewDetails,
   onPaymentStatusUpdate,
   onInjuryToggle,
@@ -282,6 +283,16 @@ export default function PlayerTableRow({
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
         <div className="flex items-center justify-end space-x-2">
+          {currentLeagueId && onMoveToLeague && (
+            <button
+              onClick={() => onMoveToLeague(player)}
+              className="text-purple-600 hover:text-purple-900 text-xs"
+              title="Move to another league"
+            >
+              Move
+            </button>
+          )}
+
           {/* Remove from League - only show when viewing a specific league */}
           {currentLeagueId && onRemoveFromLeague && (
             <button

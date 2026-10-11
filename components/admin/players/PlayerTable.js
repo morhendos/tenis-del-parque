@@ -9,6 +9,7 @@ export default function PlayerTable({
   onDelete,
   onRecalculateElo,
   onRemoveFromLeague,
+  onMoveToLeague,
   onViewDetails,
   onPaymentStatusUpdate,
   onInjuryToggle,
@@ -70,6 +71,7 @@ export default function PlayerTable({
                 onDelete={onDelete}
                 onRecalculateElo={onRecalculateElo}
                 onRemoveFromLeague={onRemoveFromLeague}
+                onMoveToLeague={onMoveToLeague}
                 onViewDetails={onViewDetails}
                 onPaymentStatusUpdate={onPaymentStatusUpdate}
                 onInjuryToggle={onInjuryToggle}

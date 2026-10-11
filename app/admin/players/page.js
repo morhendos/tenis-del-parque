@@ -10,6 +10,7 @@ import ImportCSVModal from '../../../components/admin/players/ImportCSVModal'
 import EloRecalculateModal from '../../../components/admin/players/EloRecalculateModal'
 import StatsRecalculateModal from '../../../components/admin/players/StatsRecalculateModal'
 import PlayerDetailsModal from '../../../components/admin/players/PlayerDetailsModal'
+import MoveLeagueModal from '../../../components/admin/players/MoveLeagueModal'
 
 function AdminPlayersContent() {
   const [deleteModal, setDeleteModal] = useState({ show: false, player: null })
@@ -19,6 +20,7 @@ function AdminPlayersContent() {
   const [eloRecalculateResult, setEloRecalculateResult] = useState(null)
   const [statsRecalculateModal, setStatsRecalculateModal] = useState({ show: false })
   const [detailsModal, setDetailsModal] = useState({ show: false, player: null })
+  const [movePlayer, setMovePlayer] = useState(null)
   
   const {
     players,
@@ -37,9 +39,19 @@ function AdminPlayersContent() {
     handleInvitePlayer,
     handleDeletePlayer,
     handleRemoveFromLeague,
+    handleMoveToLeague,
     handleImportCSV,
     exportCSV
   } = usePlayersData()
+
+  const handleMove = async (playerId, fromLeagueId, toLeagueId) => {
+    const result = await handleMoveToLeague(playerId, fromLeagueId, toLeagueId)
+    if (result.success) {
+      setMovePlayer(null)
+    } else {
+      alert(result.message)
+    }
+  }
 
   const handleDelete = async () => {
     if (!deleteModal.player) return
@@ -222,6 +234,7 @@ function AdminPlayersContent() {
         onDelete={setDeleteModal}
         onRecalculateElo={handleRecalculateElo}
         onRemoveFromLeague={handleRemoveFromLeague}
+        onMoveToLeague={setMovePlayer}
         onViewDetails={handleViewDetails}
         onInjuryToggle={handleInjuryToggle}
         updateLoading={updateLoading}
@@ -262,6 +275,14 @@ function AdminPlayersContent() {
       <PlayerDetailsModal
         player={detailsModal.player}
         onClose={() => setDetailsModal({ show: false, player: null })}
+      />
+
+      <MoveLeagueModal
+        player={movePlayer}
+        currentLeagueId={leagueParam}
+        leagues={leagues}
+        onClose={() => setMovePlayer(null)}
+        onMove={handleMove}
       />
 
       {statsRecalculateModal.show && (
