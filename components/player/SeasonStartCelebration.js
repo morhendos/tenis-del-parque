@@ -6,7 +6,7 @@ import confetti from 'canvas-confetti'
 
 const LIVE = false
 const TEST_EMAILS = ['tomasz@skilling.com']
-const SHOW_MS = 4500
+const SHOW_MS = 3200
 const FADE_MS = 600
 
 const text = {
