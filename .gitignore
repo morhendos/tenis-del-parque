@@ -45,3 +45,4 @@ scripts/season3-whatsnew-sent.json
 scripts/season3-finish-sent.json
 scripts/season3-lastcall-sent.json
 scripts/test-account.json
+scripts/season-start-sent-*.json
