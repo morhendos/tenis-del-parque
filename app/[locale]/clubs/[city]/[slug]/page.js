@@ -131,6 +131,7 @@ async function getClubData(city, slug) {
     // Check if there's an active league for this city
     const activeLeague = await League.findOne({
       'location.city': city,
+      slug: { $not: /^test-/ },
       status: { $in: ['active', 'registration', 'upcoming'] }
     })
     .select('slug name status')

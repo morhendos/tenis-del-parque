@@ -53,7 +53,7 @@ async function getLeaguesData() {
     
     // Get all leagues with city data for images - FIXED: Added city population and image fields
     // Sort by displayOrder first (admin control), then by status and other fields
-    const leagues = await League.find({})
+    const leagues = await League.find({ slug: { $not: /^test-/ } })
       .populate('city', 'slug name images coordinates googleData province')
       .sort({ displayOrder: 1, status: 1, 'season.year': -1, name: 1 })
       .select('name slug status location season seasonConfig currentSeason playerCount maxPlayers description city cityData skillLevel displayOrder stats')

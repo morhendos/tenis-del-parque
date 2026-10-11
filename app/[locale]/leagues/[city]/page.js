@@ -64,6 +64,7 @@ export default async function CityLeaguePage({ params }) {
   // Fetch leagues for this city
   const leagues = await League.find({ 
     city: city._id,
+    slug: { $not: /^test-/ },
     status: { $in: ['active', 'coming_soon', 'registration_open', 'completed'] }
   })
   .populate('city', 'slug name images')
