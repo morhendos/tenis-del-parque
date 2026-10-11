@@ -214,36 +214,7 @@ export default function MatchCardUnified({
 
         {/* Scores */}
         <div className="flex items-center ml-3">
-          {isByeMatch && hasSets ? (
-            // BYE match shows actual set scores from result
-            match.result.score.sets.map((set, idx) => {
-              const score = isFirst ? set.player1 : set.player2
-              return (
-                <span 
-                  key={idx} 
-                  className={`text-sm font-bold tabular-nums w-8 text-center ${
-                    isFirst ? 'text-emerald-600' : 'text-gray-400'
-                  }`}
-                >
-                  {score}
-                </span>
-              )
-            })
-          ) : isByeMatch ? (
-            // Fallback if no sets data - show 6-0, 6-0
-            <>
-              <span className={`text-sm font-bold tabular-nums w-8 text-center ${
-                isFirst ? 'text-emerald-600' : 'text-gray-400'
-              }`}>
-                {isFirst ? '6' : '0'}
-              </span>
-              <span className={`text-sm font-bold tabular-nums w-8 text-center ${
-                isFirst ? 'text-emerald-600' : 'text-gray-400'
-              }`}>
-                {isFirst ? '6' : '0'}
-              </span>
-            </>
-          ) : isCompleted && isWalkover ? (
+          {isByeMatch ? null : isCompleted && isWalkover ? (
             // Walkover match - show 6-0, 6-0 to winner
             <>
               <span className={`text-sm font-bold tabular-nums w-8 text-center ${
@@ -397,12 +368,6 @@ export default function MatchCardUnified({
         </div>
         
         {/* Right side: score column headers for BYE, walkover, and completed matches */}
-        {isByeMatch && (
-          <div className="flex items-center ml-3">
-            <span className="text-[10px] font-medium text-white/60 w-8 text-center">S1</span>
-            <span className="text-[10px] font-medium text-white/60 w-8 text-center">S2</span>
-          </div>
-        )}
         {!isByeMatch && isCompleted && isWalkover && (
           <div className="flex items-center ml-3">
             <span className="text-[10px] font-medium text-white/60 w-8 text-center">S1</span>

@@ -17,7 +17,9 @@ export default function RecentResults({ matches, language, maxResults = 3 }) {
       round: 'R',
       win: 'V',
       loss: 'D',
-      viewAll: 'Ver todos'
+      viewAll: 'Ver todos',
+      bye: 'Descanso (BYE)',
+      byePoints: '+3 pts'
     },
     en: {
       title: 'Recent Activity',
@@ -25,7 +27,9 @@ export default function RecentResults({ matches, language, maxResults = 3 }) {
       round: 'R',
       win: 'W',
       loss: 'L',
-      viewAll: 'View all'
+      viewAll: 'View all',
+      bye: 'Rest round (BYE)',
+      byePoints: '+3 pts'
     }
   }
 
@@ -71,7 +75,8 @@ export default function RecentResults({ matches, language, maxResults = 3 }) {
       <div className="space-y-2">
         {displayMatches.map((match, index) => {
           const isWin = match.result === 'won'
-          const scoreStr = formatScore(match.score)
+          const isBye = match.isBye === true
+          const scoreStr = isBye ? '' : formatScore(match.score)
           const eloChange = match.eloChange || 0
           const position = match.opponentPosition
           
@@ -89,7 +94,7 @@ export default function RecentResults({ matches, language, maxResults = 3 }) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="font-medium text-gray-900 text-sm truncate">
-                    {isDemoMode ? getMaskedName(match.opponent) : match.opponent}
+                    {isBye ? t.bye : (isDemoMode ? getMaskedName(match.opponent) : match.opponent)}
                   </p>
                   {position && (
                     <span className="text-xs text-gray-400">#{position}</span>
@@ -108,9 +113,9 @@ export default function RecentResults({ matches, language, maxResults = 3 }) {
               
               {/* ELO Change */}
               <div className={`text-sm font-medium ${
-                eloChange >= 0 ? 'text-green-600' : 'text-red-500'
+                isBye || eloChange >= 0 ? 'text-green-600' : 'text-red-500'
               }`}>
-                {eloChange >= 0 ? '+' : ''}{eloChange}
+                {isBye ? t.byePoints : `${eloChange >= 0 ? '+' : ''}${eloChange}`}
               </div>
             </div>
           )
