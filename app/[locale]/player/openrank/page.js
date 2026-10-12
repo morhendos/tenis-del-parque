@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Star, TrendingUp, Users, Target, ChevronDown, ChevronUp } from 'lucide-react'
 import EloProgressionChart from '@/components/player/EloProgressionChart'
+import EloInfoLink from '@/components/player/EloInfoLink'
 import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
 import { getMaskedName, isDemoModeActive } from '@/lib/utils/demoMode'
 
@@ -208,7 +209,7 @@ export default function OpenRankPage() {
             </div>
             <div className="bg-white/20 backdrop-blur-sm rounded-xl p-3 text-center">
               <div className="text-2xl font-bold">{currentPlayer?.eloRating || '-'}</div>
-              <div className="text-xs text-purple-200">{t.yourElo}</div>
+              <div className="text-xs text-purple-200 inline-flex items-center gap-1">{t.yourElo} <EloInfoLink locale={locale} variant="icon" /></div>
             </div>
           </div>
         </div>

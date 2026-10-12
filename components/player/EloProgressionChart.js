@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import EloInfoLink from '@/components/player/EloInfoLink'
 import {
   LineChart,
   Line,
@@ -133,6 +134,7 @@ export default function EloProgressionChart({ chartData, stats, locale = 'es' })
             </svg>
           </div>
           <h2 className="text-xl font-bold text-gray-900">{t.title}</h2>
+          <EloInfoLink locale={locale} className="ml-auto" />
         </div>
         
         <div className="text-center py-12">
@@ -170,6 +172,7 @@ export default function EloProgressionChart({ chartData, stats, locale = 'es' })
         </div>
         <div>
           <h2 className="text-xl font-bold text-gray-900">{t.title}</h2>
+          <EloInfoLink locale={locale} />
           <p className="text-sm text-gray-500">
             {stats.totalMatches} {t.matches} • {stats.wins}W - {stats.losses}L
           </p>

@@ -5,6 +5,7 @@ import { useRouter, useParams, usePathname } from 'next/navigation'
 import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
 import NotificationSettings from '@/components/player/NotificationSettings'
 import AvatarUpload from '@/components/player/AvatarUpload'
+import EloInfoLink from '@/components/player/EloInfoLink'
 import TennisProfileCard from '@/components/player/TennisProfileCard'
 import { getCountryOptions } from '@/lib/utils/countries'
 
@@ -278,7 +279,7 @@ export default function PlayerProfile() {
           <div className="grid grid-cols-4 gap-2">
             <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2 text-center">
               <div className="text-lg sm:text-xl font-bold">{player?.stats?.eloRating || 1200}</div>
-              <div className="text-[10px] sm:text-xs text-purple-200">ELO</div>
+              <div className="text-[10px] sm:text-xs text-purple-200 inline-flex items-center gap-1">ELO <EloInfoLink locale={language} variant="icon" /></div>
             </div>
             <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2 text-center">
               <div className="text-lg sm:text-xl font-bold">{player?.stats?.matchesPlayed || 0}</div>

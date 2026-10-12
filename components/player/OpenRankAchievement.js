@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import EloInfoLink from '@/components/player/EloInfoLink'
 
 export default function OpenRankAchievement({ player, language, locale }) {
   const MATCHES_REQUIRED = 8
@@ -93,6 +94,7 @@ export default function OpenRankAchievement({ player, language, locale }) {
             <div>
               <h3 className="font-bold text-gray-900 text-lg">{t.title}</h3>
               <p className="text-sm text-gray-500">{t.subtitle}</p>
+              <EloInfoLink locale={locale} className="mt-1" />
             </div>
           </div>
           
