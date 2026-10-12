@@ -7,13 +7,23 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { loginContent } from '@/lib/content/loginContent'
 
+function toSafePath(raw) {
+  if (!raw) return null
+  if (raw.startsWith('/') && !raw.startsWith('//')) return raw
+  try {
+    const url = new URL(raw)
+    if (typeof window !== 'undefined' && url.host === window.location.host) return url.pathname + url.search
+  } catch {}
+  return null
+}
+
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const params = useParams()
   const { data: session, status } = useSession()
   const locale = params.locale || 'es'
-  const returnUrl = searchParams.get('return')
+  const returnUrl = toSafePath(searchParams.get('return') || searchParams.get('callbackUrl'))
   const activated = searchParams.get('activated')
   const error = searchParams.get('error')
   
