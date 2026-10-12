@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Star, TrendingUp, Users, Target, ChevronDown, ChevronUp } from 'lucide-react'
@@ -388,6 +389,9 @@ export default function OpenRankPage() {
           <div>
             <h3 className="font-bold text-gray-900 mb-1">{t.howItWorks}</h3>
             <p className="text-sm text-gray-600">{t.howItWorksDesc}</p>
+            <Link href={`/${locale}/player/elo`} className="mt-2 inline-block text-sm font-medium text-parque-purple hover:underline">
+              {locale === 'es' ? '¿Qué es el ELO? Descúbrelo →' : 'What is ELO? Learn more →'}
+            </Link>
           </div>
         </div>
       </div>
