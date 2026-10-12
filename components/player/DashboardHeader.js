@@ -120,7 +120,7 @@ export default function DashboardHeader({ player, language, leagueInfo = null, s
         <div className="absolute -bottom-16 -left-16 w-44 h-44 sm:-bottom-24 sm:-left-24 sm:w-64 sm:h-64 bg-white rounded-full"></div>
       </div>
 
-      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div className="flex items-center gap-3 min-w-0">
           <Link href={`/${locale}/player/profile`} className="relative flex-shrink-0" aria-label={hasPhoto ? displayName : t.addPhoto}>
             <PlayerAvatar
@@ -131,21 +131,23 @@ export default function DashboardHeader({ player, language, leagueInfo = null, s
               onDark
               className="transition-all duration-300"
             />
-            {!hasPhoto && !compact && (
-              <span className="absolute -bottom-1 -left-1 w-6 h-6 rounded-full bg-white text-parque-purple shadow flex items-center justify-center">
+            {!hasPhoto && (
+              <span className={`absolute -bottom-1 -left-1 w-6 h-6 rounded-full bg-white text-parque-purple shadow flex items-center justify-center transition-opacity duration-300 ${compact ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                 <Camera className="w-3.5 h-3.5" />
               </span>
             )}
           </Link>
           <div className="min-w-0">
-            <h1 className={`${compact ? 'text-lg' : 'text-xl'} sm:text-2xl font-bold leading-tight truncate`}>{displayName}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold leading-tight truncate">{displayName}</h1>
             {subtitle && (
-              <p className={`text-purple-100 text-sm truncate ${compact ? 'hidden sm:block' : ''}`}>{subtitle}</p>
+              <p className={`text-purple-100 text-sm truncate overflow-hidden transition-all duration-300 sm:max-h-6 sm:opacity-100 ${compact ? 'max-h-0 opacity-0' : 'max-h-6 opacity-100'}`}>{subtitle}</p>
             )}
           </div>
         </div>
 
-        <div className={`${compact ? 'hidden sm:grid' : 'grid'} grid-cols-4 gap-1.5 sm:gap-2 sm:w-[26rem] flex-shrink-0`}>
+        <div className={`grid transition-all duration-300 sm:w-[26rem] flex-shrink-0 sm:grid-rows-[1fr] sm:opacity-100 ${compact ? 'grid-rows-[0fr] opacity-0' : 'grid-rows-[1fr] opacity-100'}`}>
+        <div className="overflow-hidden min-h-0">
+        <div className="grid grid-cols-4 gap-1.5 sm:gap-2 pt-4 sm:pt-0">
           <div className={tile}>
             <div className="text-[11px] text-purple-100 inline-flex items-center gap-1">{t.elo} <EloInfoLink locale={locale} variant="icon" /></div>
             <div className={value}>{player?.eloRating || 1200}</div>
@@ -181,6 +183,8 @@ export default function DashboardHeader({ player, language, leagueInfo = null, s
               )}
             </Link>
           )}
+        </div>
+        </div>
         </div>
       </div>
     </div>
