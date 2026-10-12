@@ -172,7 +172,7 @@ function PostCard({ post, language, t, adminMode, isDemo, onChange, onRemove }) 
       <>
         <PlayerAvatar name={post.author?.name} avatar={avatar(post.author)} country={post.author?.country} size="md" />
         <div className="min-w-0">
-          <PlayerLink playerId={post.author?._id} className="font-semibold text-gray-900 text-sm truncate block">{post.author ? name(post.author.name) : '-'}</PlayerLink>
+          <PlayerLink playerId={post.author?._id} stretch className="font-semibold text-gray-900 text-sm truncate block">{post.author ? name(post.author.name) : '-'}</PlayerLink>
           <div className="text-xs text-gray-400">{timeAgo(post.createdAt, language)}</div>
         </div>
       </>
@@ -216,7 +216,7 @@ function PostCard({ post, language, t, adminMode, isDemo, onChange, onRemove }) 
   return (
     <div className={`bg-white rounded-2xl border shadow-sm ${post.pinned ? 'border-purple-200 ring-1 ring-purple-100' : 'border-gray-100'}`}>
       <div className="px-4 pt-3 flex items-start justify-between gap-2">
-        <div className="flex items-center gap-3 min-w-0">{header}</div>
+        <div className="relative flex items-center gap-3 min-w-0">{header}</div>
         <div className="flex items-center gap-1 flex-shrink-0">
           {post.pinned && (
             <span className="inline-flex items-center gap-1 text-[11px] font-medium text-parque-purple bg-purple-50 px-2 py-0.5 rounded-full">
