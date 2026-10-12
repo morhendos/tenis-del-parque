@@ -4,6 +4,7 @@ const SIZES = {
   xs: { box: 'w-6 h-6', text: 'text-[9px]', flag: 'text-[10px] -bottom-1 -right-1' },
   sm: { box: 'w-8 h-8', text: 'text-[11px]', flag: 'text-xs -bottom-1 -right-1' },
   md: { box: 'w-10 h-10', text: 'text-sm', flag: 'text-sm -bottom-1 -right-1' },
+  hero: { box: 'w-16 h-16', text: 'text-xl', flag: 'text-xl -bottom-1 -right-1' },
   lg: { box: 'w-24 h-24', text: 'text-3xl', flag: 'text-2xl -bottom-0.5 -right-0.5' }
 }
 

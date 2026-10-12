@@ -144,7 +144,7 @@ export default function PlayerDashboard() {
       
       <div className="space-y-4 sm:space-y-5">
         {/* Welcome Header with Quick Links */}
-        <DashboardHeader player={player} language={language} />
+        <DashboardHeader player={player} language={language} leagueInfo={leagueInfo} standings={standings} />
         
         <SeasonStartCelebration player={player} language={language} />
         <FinishRegistrationCard player={player} language={language} />

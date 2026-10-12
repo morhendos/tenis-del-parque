@@ -1,18 +1,47 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
+import { Camera } from 'lucide-react'
 import { getMaskedName, isDemoModeActive } from '@/lib/utils/demoMode'
 import MobileHeaderSlot from './MobileHeaderSlot'
+import PlayerAvatar from './PlayerAvatar'
+import EloInfoLink from './EloInfoLink'
 
-export default function DashboardHeader({ player, language }) {
+const OPENRANK_MATCHES_REQUIRED = 8
+
+const content = {
+  es: {
+    levels: { beginner: 'Bronce', intermediate: 'Plata', advanced: 'Oro' },
+    elo: 'ELO',
+    matches: 'Partidos',
+    league: 'Liga',
+    of: 'de',
+    openRank: 'OpenRank',
+    toQualify: 'para entrar',
+    addPhoto: 'Añadir foto'
+  },
+  en: {
+    levels: { beginner: 'Bronze', intermediate: 'Silver', advanced: 'Gold' },
+    elo: 'ELO',
+    matches: 'Matches',
+    league: 'League',
+    of: 'of',
+    openRank: 'OpenRank',
+    toQualify: 'to qualify',
+    addPhoto: 'Add photo'
+  }
+}
+
+export default function DashboardHeader({ player, language, leagueInfo = null, standings = null }) {
   const params = useParams()
   const locale = params?.locale || 'es'
+  const t = content[language] || content.es
   const [isDemoMode, setIsDemoMode] = useState(false)
   const [compact, setCompact] = useState(false)
-  
+  const [openRankPosition, setOpenRankPosition] = useState(null)
+
   useEffect(() => {
     setIsDemoMode(isDemoModeActive())
   }, [])
@@ -27,94 +56,100 @@ export default function DashboardHeader({ player, language }) {
     el.addEventListener('scroll', onScroll, { passive: true })
     return () => el.removeEventListener('scroll', onScroll)
   }, [])
-  
-  // Count leagues if player has registrations
-  const leagueCount = player?.registrations?.length || 0
-  const isMultiLeague = leagueCount > 1
-  
-  // Get display name (masked if demo mode)
+
+  const matchesPlayed = player?.stats?.matchesPlayed || 0
+  const rows = standings?.unifiedStandings || []
+  const myIndex = rows.findIndex(s => String(s.player._id) === String(player?._id))
+  const showLeaguePosition = leagueInfo?.status === 'active' && myIndex >= 0
+  const qualified = matchesPlayed >= OPENRANK_MATCHES_REQUIRED
+
+  useEffect(() => {
+    if (showLeaguePosition || !qualified || !player?._id) return
+    let cancelled = false
+    fetch('/api/openrank')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => {
+        if (cancelled || !d) return
+        const me = (d.rankings || []).find(r => String(r._id) === String(player._id))
+        if (me) setOpenRankPosition(me.position)
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [showLeaguePosition, qualified, player?._id])
+
   const displayName = isDemoMode ? getMaskedName(player.name) : player.name
-  const firstName = displayName.split(' ')[0]
-  
+  const registration = (player?.registrations || []).find(r => String(r.league?._id || r.league) === String(leagueInfo?._id))
+  const level = registration?.level ? t.levels[registration.level] : null
+  const subtitle = [leagueInfo?.location, level].filter(Boolean).join(' · ')
+  const hasPhoto = !!player?.avatar && !isDemoMode
+
+  const tile = 'bg-white/20 backdrop-blur-sm rounded-xl px-2 py-2.5 text-center border border-white/20'
+
   return (
     <MobileHeaderSlot>
     {(inSlot) => (
-    <div className={`${inSlot ? 'relative' : 'sticky top-0 z-30 sm:relative -mx-2 -mt-2 sm:mx-0 sm:mt-0'} overflow-hidden bg-gradient-to-br from-parque-purple via-purple-600 to-indigo-600 text-white px-4 ${compact ? 'pt-3 pb-3' : 'pt-8 pb-4'} sm:p-8 shadow-xl sm:rounded-2xl transition-[padding] duration-300`}>
-      {/* Background decoration */}
+    <div className={`${inSlot ? 'relative' : 'sticky top-0 z-30 sm:relative -mx-2 -mt-2 sm:mx-0 sm:mt-0'} overflow-hidden bg-gradient-to-br from-parque-purple via-purple-600 to-indigo-600 text-white px-4 ${compact ? 'pt-3 pb-3' : 'pt-6 pb-4'} sm:p-6 shadow-xl sm:rounded-2xl transition-[padding] duration-300`}>
       <div className="absolute inset-0 opacity-10">
         <div className="absolute -top-16 -right-16 w-64 h-64 sm:-top-24 sm:-right-24 sm:w-96 sm:h-96 bg-white rounded-full"></div>
         <div className="absolute -bottom-16 -left-16 w-44 h-44 sm:-bottom-24 sm:-left-24 sm:w-64 sm:h-64 bg-white rounded-full"></div>
       </div>
-      
-      {/* Decorative tennis ball icon */}
-      <svg className="absolute top-3 right-3 w-20 h-20 text-white/10 sm:w-32 sm:h-32 sm:top-6 sm:right-6" viewBox="0 0 24 24" fill="currentColor">
-        <circle cx="12" cy="12" r="10" />
-        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8 0-1.85.63-3.55 1.69-4.9C7.33 8.64 9.57 10 12 10s4.67-1.36 6.31-2.9C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z" fill="currentColor" opacity="0.3"/>
-      </svg>
-      
-      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-        <div className="">
-          <div className="flex items-center gap-2 mb-1 sm:mb-2">
-            {/* Mobile Logo - inline with greeting */}
-            <div className="w-9 h-9 bg-white/30 rounded-lg flex items-center justify-center p-1 sm:hidden">
-              <Image 
-                src="/logo-big.png" 
-                alt="Tenis del Parque" 
-                width={26} 
-                height={26}
-                className="object-contain"
-              />
-            </div>
-            <h1 className="text-xl sm:text-3xl font-bold">
-              {language === 'es' ? '¡Hola' : 'Hello'}, {firstName}!
-            </h1>
+
+      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <Link href={`/${locale}/player/profile`} className="relative flex-shrink-0" aria-label={hasPhoto ? displayName : t.addPhoto}>
+            <PlayerAvatar
+              name={displayName}
+              avatar={hasPhoto ? player.avatar : null}
+              country={player?.country}
+              size={compact ? 'md' : 'hero'}
+              onDark
+              className="transition-all duration-300"
+            />
+            {!hasPhoto && !compact && (
+              <span className="absolute -bottom-1 -left-1 w-6 h-6 rounded-full bg-white text-parque-purple shadow flex items-center justify-center">
+                <Camera className="w-3.5 h-3.5" />
+              </span>
+            )}
+          </Link>
+          <div className="min-w-0">
+            <h1 className={`${compact ? 'text-lg' : 'text-xl'} sm:text-2xl font-bold leading-tight truncate`}>{displayName}</h1>
+            {subtitle && (
+              <p className={`text-purple-100 text-sm truncate ${compact ? 'hidden sm:block' : ''}`}>{subtitle}</p>
+            )}
           </div>
-          <p className={`text-purple-100 text-sm sm:text-base ${compact ? 'hidden sm:block' : ''}`}>
-            {language === 'es' 
-              ? 'Tu centro de control personal de tenis'
-              : 'Your personal tennis command center'}
-          </p>
-          {/* Multi-league badge - hidden on mobile */}
-          {isMultiLeague && (
-            <div className="mt-3 hidden sm:inline-flex items-center px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-full text-xs font-medium border border-white/30">
-              <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-              </svg>
-              {language === 'es' 
-                ? `${leagueCount} Ligas Activas` 
-                : `${leagueCount} Active Leagues`}
-            </div>
-          )}
         </div>
-        <div className="flex flex-row gap-2 sm:gap-3">
-          <Link
-            href={`/${locale}/player/matches`}
-            className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 sm:px-5 py-2.5 sm:py-3 bg-white/20 backdrop-blur-sm border border-white/30 text-white rounded-xl hover:bg-white/30 transition-all transform hover:scale-105 active:scale-95 text-sm font-medium shadow-lg">
-            <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round"/>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 2 A10 10 0 0 1 12 22 M12 2 A10 10 0 0 0 12 22"/>
-              <circle cx="12" cy="12" r="3" fill="currentColor"/>
-            </svg>
-            <span className="hidden sm:inline">{language === 'es' ? 'Mis Partidos' : 'My Matches'}</span>
-            <span className="sm:hidden">{language === 'es' ? 'Partidos' : 'Matches'}</span>
+
+        <div className={`${compact ? 'hidden sm:grid' : 'grid'} grid-cols-3 gap-2 sm:w-80 flex-shrink-0`}>
+          <div className={tile}>
+            <div className="text-[11px] text-purple-100 inline-flex items-center gap-1">{t.elo} <EloInfoLink locale={locale} variant="icon" /></div>
+            <div className="text-xl font-bold tabular-nums leading-tight">{player?.eloRating || 1200}</div>
+          </div>
+
+          <Link href={`/${locale}/player/matches`} className={`${tile} hover:bg-white/30 transition-colors`}>
+            <div className="text-[11px] text-purple-100">{t.matches}</div>
+            <div className="text-xl font-bold tabular-nums leading-tight">{matchesPlayed}</div>
           </Link>
-          <Link
-            href={`/${locale}/player/league`}
-            className="flex-1 sm:flex-none inline-flex items-center justify-center px-4 sm:px-5 py-2.5 sm:py-3 bg-white/20 backdrop-blur-sm border border-white/30 text-white rounded-xl hover:bg-white/30 transition-all transform hover:scale-105 active:scale-95 text-sm font-medium shadow-lg">
-            <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-            </svg>
-            <span className="hidden sm:inline">
-              {isMultiLeague 
-                ? (language === 'es' ? 'Mis Ligas' : 'My Leagues')
-                : (language === 'es' ? 'Ver Liga' : 'View League')}
-            </span>
-            <span className="sm:hidden">
-              {isMultiLeague 
-                ? (language === 'es' ? 'Ligas' : 'Leagues')
-                : (language === 'es' ? 'Liga' : 'League')}
-            </span>
-          </Link>
+
+          {showLeaguePosition ? (
+            <Link href={`/${locale}/player/league`} className={`${tile} hover:bg-white/30 transition-colors`}>
+              <div className="text-[11px] text-purple-100">{t.league}</div>
+              <div className="text-xl font-bold tabular-nums leading-tight">
+                #{myIndex + 1}<span className="text-xs font-medium text-purple-100"> {t.of} {rows.length}</span>
+              </div>
+            </Link>
+          ) : (
+            <Link href={`/${locale}/player/openrank`} className={`${tile} hover:bg-white/30 transition-colors`}>
+              <div className="text-[11px] text-purple-100">{t.openRank}</div>
+              {qualified ? (
+                <div className="text-xl font-bold tabular-nums leading-tight">{openRankPosition ? `#${openRankPosition}` : '-'}</div>
+              ) : (
+                <div className="leading-tight">
+                  <span className="text-xl font-bold tabular-nums">{OPENRANK_MATCHES_REQUIRED - matchesPlayed}</span>
+                  <span className="text-[10px] text-purple-100"> {t.toQualify}</span>
+                </div>
+              )}
+            </Link>
+          )}
         </div>
       </div>
     </div>
