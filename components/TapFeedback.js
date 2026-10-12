@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect } from 'react'
-import NextTopLoader from 'nextjs-toploader'
 
 export default function TapFeedback() {
   useEffect(() => {
@@ -10,5 +9,5 @@ export default function TapFeedback() {
     return () => document.removeEventListener('touchstart', noop)
   }, [])
 
-  return <NextTopLoader color="#8FBF60" height={3} showSpinner={false} shadow={false} zIndex={9999} />
+  return null
 }
