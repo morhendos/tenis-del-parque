@@ -103,7 +103,7 @@ export default function PlayerLayout({ children }) {
               // User's preferred language differs from URL locale
               // Redirect to the correct locale while preserving the rest of the path
               const pathWithoutLocale = pathname.replace(`/${urlLocale}`, '')
-              const newPath = `/${userLanguage}${pathWithoutLocale}`
+              const newPath = `/${userLanguage}${pathWithoutLocale}${typeof window !== 'undefined' ? window.location.search : ''}`
               
               console.log(`[Player Layout] Redirecting from ${pathname} to ${newPath} based on user preference`)
               router.replace(newPath)
