@@ -137,7 +137,7 @@ function Toast({ id, message, type }) {
       </div>
       <button
         onClick={handleClose}
-        className="flex-shrink-0 ml-2 hover:opacity-75 transition-opacity"
+        className="tap-target flex-shrink-0 ml-2 hover:opacity-75 transition-opacity"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />

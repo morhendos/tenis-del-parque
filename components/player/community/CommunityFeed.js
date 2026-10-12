@@ -227,7 +227,7 @@ function PostCard({ post, language, t, adminMode, isDemo, onChange, onRemove }) 
             <span className="text-[11px] font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full">{t.reports(post.reportCount)}</span>
           )}
           <div className="relative">
-            <button onClick={() => setMenuOpen(o => !o)} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg" aria-label="menu">
+            <button onClick={() => setMenuOpen(o => !o)} className="tap-target p-1.5 text-gray-400 hover:text-gray-600 rounded-lg" aria-label="menu">
               <MoreHorizontal className="w-4 h-4" />
             </button>
             {menuOpen && (
@@ -293,7 +293,7 @@ function PostCard({ post, language, t, adminMode, isDemo, onChange, onRemove }) 
                   <div className="flex items-center gap-1.5 flex-shrink-0">
                     <span className="text-[10px] text-gray-400">{timeAgo(c.createdAt, language)}</span>
                     {c.canDelete && (
-                      <button onClick={() => deleteComment(c._id)} className="text-gray-300 hover:text-red-500" aria-label={t.delete}>
+                      <button onClick={() => deleteComment(c._id)} className="tap-target text-gray-300 hover:text-red-500" aria-label={t.delete}>
                         <Trash2 className="w-3 h-3" />
                       </button>
                     )}

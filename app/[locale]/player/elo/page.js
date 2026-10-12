@@ -84,7 +84,7 @@ export default function PlayerEloPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-4">
-      <Link href={`/${locale}/player/openrank`} className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-parque-purple">
+      <Link href={`/${locale}/player/openrank`} className="tap-target inline-flex items-center gap-1 text-sm text-gray-500 hover:text-parque-purple">
         <ArrowLeft className="w-4 h-4" />
         {t.back}
       </Link>

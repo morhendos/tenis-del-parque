@@ -1,3 +1,5 @@
+const plugin = require('tailwindcss/plugin')
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
@@ -63,5 +65,11 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    plugin(({ addVariant }) => {
+      addVariant('hover', ['@media (hover: hover) and (pointer: fine) { &:hover }', '&:where(:active)'])
+      addVariant('group-hover', ['@media (hover: hover) and (pointer: fine) { :merge(.group):hover & }', ':merge(.group):where(:active) &'])
+      addVariant('peer-hover', ['@media (hover: hover) and (pointer: fine) { :merge(.peer):hover ~ & }', ':merge(.peer):where(:active) ~ &'])
+    }),
+  ],
 }

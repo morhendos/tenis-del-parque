@@ -73,9 +73,24 @@ body {
 }
 
 /* Touch-friendly interactions */
-.touch-manipulation {
+.touch-manipulation,
+a, button, label, input, select, textarea, summary, [role="button"] {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+}
+
+:where(.tap-target) {
+  position: relative;
+}
+
+.tap-target::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+  transform: translate(-50%, -50%);
 }
 
 /* Custom scrollbar */

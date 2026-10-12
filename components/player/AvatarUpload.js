@@ -108,7 +108,7 @@ export default function AvatarUpload({ avatar, name, country, language = 'es', o
         <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" className="hidden" onChange={upload} />
       </div>
       {avatar && !busy && (
-        <button type="button" onClick={remove} className="mt-2 text-[11px] text-purple-200 hover:text-white flex items-center gap-1">
+        <button type="button" onClick={remove} className="tap-target mt-2 text-[11px] text-purple-200 hover:text-white flex items-center gap-1">
           <Trash2 className="w-3 h-3" /> {t('Quitar foto', 'Remove photo')}
         </button>
       )}

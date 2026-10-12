@@ -640,7 +640,7 @@ export default function SeasonLevelSelector({
             </h4>
             <button
               onClick={() => setShowHelper(true)}
-              className={`flex items-center gap-1 text-sm ${colors.isDark ? 'text-gray-400 hover:text-white' : colors.helpButton} transition-colors`}
+              className={`tap-target flex items-center gap-1 text-sm ${colors.isDark ? 'text-gray-400 hover:text-white' : colors.helpButton} transition-colors`}
             >
               <HelpCircle className="w-4 h-4" />
               <span>

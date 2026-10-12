@@ -467,7 +467,7 @@ export default function PlayerMatches() {
               {selectedLeagueId && (
                 <button
                   onClick={() => setSelectedLeagueId(null)}
-                  className="text-xs text-parque-purple hover:text-purple-700 font-medium"
+                  className="tap-target text-xs text-parque-purple hover:text-purple-700 font-medium"
                 >
                   {locale === 'es' ? 'Todas' : 'All'}
                 </button>

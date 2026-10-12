@@ -259,7 +259,7 @@ export default function ResultsTab({ matches, language, player = null }) {
           </p>
           <button
             onClick={() => setFilters({ search: '', round: 'all' })}
-            className="text-parque-purple hover:underline"
+            className="tap-target text-parque-purple hover:underline"
           >
             {language === 'es' ? 'Limpiar filtros' : 'Clear filters'}
           </button>

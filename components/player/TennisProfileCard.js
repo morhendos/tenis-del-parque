@@ -114,7 +114,7 @@ export default function TennisProfileCard({ tennisProfile, language = 'es', onSa
       <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
         <h3 className="font-semibold text-gray-900 text-sm">{t('Perfil de jugador', 'Player profile')}</h3>
         {!editing && !readOnly && (
-          <button onClick={() => setEditing(true)} className="p-1.5 -mr-1.5 text-gray-500 hover:text-parque-purple rounded-lg hover:bg-gray-50" aria-label={t('Editar', 'Edit')}>
+          <button onClick={() => setEditing(true)} className="tap-target p-1.5 -mr-1.5 text-gray-500 hover:text-parque-purple rounded-lg hover:bg-gray-50" aria-label={t('Editar', 'Edit')}>
             <Pencil className="w-4 h-4" />
           </button>
         )}

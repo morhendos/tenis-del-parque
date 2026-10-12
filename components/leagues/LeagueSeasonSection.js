@@ -94,7 +94,7 @@ export default function LeagueSeasonSection({
         {collapsible && (
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="text-emerald-600 hover:text-emerald-700 font-semibold flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base"
+            className="tap-target text-emerald-600 hover:text-emerald-700 font-semibold flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base"
           >
             {isExpanded 
               ? (locale === 'es' ? 'Ocultar' : 'Hide')

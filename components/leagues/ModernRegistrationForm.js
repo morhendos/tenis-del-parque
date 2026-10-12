@@ -296,7 +296,7 @@ export default function ModernRegistrationForm({
               <button
                 type="button"
                 onClick={() => setShowDiscountInput(true)}
-                className="text-emerald-600 hover:text-emerald-700 font-medium text-sm flex items-center gap-1"
+                className="tap-target text-emerald-600 hover:text-emerald-700 font-medium text-sm flex items-center gap-1"
               >
                 <Tag className="w-3.5 h-3.5" />
                 {locale === 'es' ? '¿Tienes un código de descuento?' : 'Have a discount code?'}
@@ -406,7 +406,7 @@ export default function ModernRegistrationForm({
                   <button
                     type="button"
                     onClick={onSignOut}
-                    className="mt-3 text-xs text-emerald-700 hover:text-emerald-800 font-medium underline"
+                    className="tap-target mt-3 text-xs text-emerald-700 hover:text-emerald-800 font-medium underline"
                   >
                     {locale === 'es' ? '¿No eres tú? Cerrar sesión' : 'Not you? Sign out'}
                   </button>
@@ -467,7 +467,7 @@ export default function ModernRegistrationForm({
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="tap-target absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -479,7 +479,7 @@ export default function ModernRegistrationForm({
 
               <Link 
                 href={`/${locale}/forgot-password`}
-                className="inline-block text-emerald-600 hover:text-emerald-700 font-medium text-sm"
+                className="tap-target inline-block text-emerald-600 hover:text-emerald-700 font-medium text-sm"
               >
                 {locale === 'es' ? '¿Olvidaste tu contraseña?' : 'Forgot password?'}
               </Link>
@@ -590,7 +590,7 @@ export default function ModernRegistrationForm({
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="tap-target absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -713,7 +713,7 @@ export default function ModernRegistrationForm({
                 <button
                   type="button"
                   onClick={() => setHasAccount(false)}
-                  className="text-emerald-600 hover:text-emerald-700 font-medium"
+                  className="tap-target text-emerald-600 hover:text-emerald-700 font-medium"
                 >
                   {locale === 'es' ? 'Crear una' : 'Create one'}
                 </button>
@@ -724,7 +724,7 @@ export default function ModernRegistrationForm({
                 <button
                   type="button"
                   onClick={() => setHasAccount(true)}
-                  className="text-emerald-600 hover:text-emerald-700 font-medium"
+                  className="tap-target text-emerald-600 hover:text-emerald-700 font-medium"
                 >
                   {locale === 'es' ? 'Entrar' : 'Sign in'}
                 </button>

@@ -364,7 +364,7 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
             <button
               onClick={() => setCurrentRound(Math.max(1, currentRound - 1))}
               disabled={currentRound === 1}
-              className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="tap-target p-1.5 rounded-lg bg-white/20 hover:bg-white/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
@@ -373,7 +373,7 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
             <button
               onClick={() => setCurrentRound(Math.min(totalRounds, currentRound + 1))}
               disabled={currentRound === totalRounds}
-              className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="tap-target p-1.5 rounded-lg bg-white/20 hover:bg-white/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />

@@ -109,7 +109,7 @@ export default function MiniStandings({ standings, playerId, language, locale })
         </div>
         <Link 
           href={`/${locale}/player/league`}
-          className="text-sm text-parque-purple font-medium hover:underline"
+          className="tap-target text-sm text-parque-purple font-medium hover:underline"
         >
           {t.viewTable} →
         </Link>

@@ -114,7 +114,7 @@ export default function ProfilePromptCard({ player, language = 'es', locale = 'e
     <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-parque-purple via-purple-700 to-indigo-700 text-white shadow-lg">
       <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full bg-white/10" />
       <div className="absolute -bottom-12 -left-8 w-28 h-28 rounded-full bg-white/5" />
-      <button onClick={dismiss} className="absolute top-3 right-3 p-1 text-white/60 hover:text-white rounded-full hover:bg-white/10 z-10" aria-label={t('Cerrar', 'Close')}>
+      <button onClick={dismiss} className="tap-target absolute top-3 right-3 p-1 text-white/60 hover:text-white rounded-full hover:bg-white/10 z-10" aria-label={t('Cerrar', 'Close')}>
         <X className="w-4 h-4" />
       </button>
 

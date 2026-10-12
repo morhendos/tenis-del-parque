@@ -265,7 +265,7 @@ export default function EloProgressionChart({ chartData, stats, locale = 'es' })
         <div className="mt-4">
           <button
             onClick={() => setShowDetails(!showDetails)}
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors text-sm"
+            className="tap-target flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors text-sm"
           >
             <svg 
               className={`w-4 h-4 transition-transform ${showDetails ? 'rotate-180' : ''}`} 

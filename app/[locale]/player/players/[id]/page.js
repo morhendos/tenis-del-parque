@@ -178,7 +178,7 @@ export default function PlayerPublicProfilePage() {
   if (notFound || !data) {
     return (
       <div className="max-w-2xl mx-auto space-y-4">
-        <button onClick={goBack} className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-parque-purple">
+        <button onClick={goBack} className="tap-target inline-flex items-center gap-1 text-sm text-gray-500 hover:text-parque-purple">
           <ArrowLeft className="w-4 h-4" /> {t.back}
         </button>
         <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center text-gray-500">{t.notFound}</div>
@@ -193,7 +193,7 @@ export default function PlayerPublicProfilePage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-4 pb-6">
-      <button onClick={goBack} className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-parque-purple">
+      <button onClick={goBack} className="tap-target inline-flex items-center gap-1 text-sm text-gray-500 hover:text-parque-purple">
         <ArrowLeft className="w-4 h-4" /> {t.back}
       </button>
 
@@ -215,7 +215,7 @@ export default function PlayerPublicProfilePage() {
                 <span className="px-2 py-0.5 rounded-full bg-white/20 text-xs font-medium">{t.levels[player.level] || player.level}</span>
               )}
               {isMe && (
-                <Link href={`/${locale}/player/profile`} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white text-parque-purple text-xs font-semibold">
+                <Link href={`/${locale}/player/profile`} className="tap-target inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white text-parque-purple text-xs font-semibold">
                   <Pencil className="w-3 h-3" /> {t.editProfile}
                 </Link>
               )}

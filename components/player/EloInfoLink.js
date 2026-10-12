@@ -13,7 +13,7 @@ export default function EloInfoLink({ locale = 'es', variant = 'text', className
         href={href}
         aria-label={label}
         onClick={(e) => e.stopPropagation()}
-        className={`inline-flex items-center justify-center align-middle opacity-80 hover:opacity-100 ${className}`}
+        className={`tap-target inline-flex items-center justify-center align-middle opacity-80 hover:opacity-100 ${className}`}
       >
         <Info className="w-3.5 h-3.5" />
       </Link>
@@ -24,7 +24,7 @@ export default function EloInfoLink({ locale = 'es', variant = 'text', className
     <Link
       href={href}
       onClick={(e) => e.stopPropagation()}
-      className={`inline-flex items-center gap-1 text-xs font-medium text-parque-purple hover:underline ${className}`}
+      className={`tap-target inline-flex items-center gap-1 text-xs font-medium text-parque-purple hover:underline ${className}`}
     >
       <Info className="w-3.5 h-3.5" />
       {label}

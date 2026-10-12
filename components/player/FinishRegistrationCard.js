@@ -147,7 +147,7 @@ export default function FinishRegistrationCard({ player, language = 'es' }) {
       ) : (
         <button
           onClick={() => setConfirming(true)}
-          className="relative mt-3 w-full text-center text-sm text-white/90 underline underline-offset-2"
+          className="tap-target relative mt-3 w-full text-center text-sm text-white/90 underline underline-offset-2"
         >
           {es ? '¿Nivel o ciudad equivocados? Cámbialo' : 'Wrong level or city? Change it'}
         </button>
