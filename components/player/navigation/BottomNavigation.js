@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import MoreMenu from './MoreMenu'
@@ -8,6 +8,11 @@ import MoreMenu from './MoreMenu'
 export default function BottomNavigation({ locale, user, playerData, onLogout }) {
   const pathname = usePathname()
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false)
+  const [pendingHref, setPendingHref] = useState(null)
+
+  useEffect(() => {
+    setPendingHref(null)
+  }, [pathname])
 
   const navItems = [
     {
@@ -69,7 +74,7 @@ export default function BottomNavigation({ locale, user, playerData, onLogout })
     },
   ]
 
-  const isActive = (href) => pathname === href
+  const isActive = (href) => (pendingHref ? pendingHref === href : pathname === href)
   
   // Check if any "More" item is active
   const moreItemPaths = [
@@ -104,7 +109,8 @@ export default function BottomNavigation({ locale, user, playerData, onLogout })
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex flex-col items-center justify-center flex-1 py-2 transition-all duration-200 ${
+                onClick={() => { if (pathname !== item.href) setPendingHref(item.href) }}
+                className={`flex flex-col items-center justify-center flex-1 py-2 transition-all duration-200 touch-manipulation ${
                   active 
                     ? 'text-white scale-105' 
                     : 'text-purple-200 hover:text-white'

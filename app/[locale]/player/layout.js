@@ -127,13 +127,6 @@ export default function PlayerLayout({ children }) {
     checkAuth()
   }, [checkAuth])
 
-  // Re-check for new announcements when pathname changes (user navigates)
-  useEffect(() => {
-    if (session?.user && !loading) {
-      checkAuth()
-    }
-  }, [pathname, session, loading, checkAuth])
-
   const navigation = [
     { 
       name: 'Dashboard', 
