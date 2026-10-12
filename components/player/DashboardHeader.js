@@ -13,9 +13,14 @@ const OPENRANK_MATCHES_REQUIRED = 8
 
 const content = {
   es: {
-    levels: { beginner: 'Bronce', intermediate: 'Plata', advanced: 'Oro' },
+    levelLeague: { beginner: 'Liga Bronce', intermediate: 'Liga Plata', advanced: 'Liga Oro' },
+    round: (r, n) => (n ? `Ronda ${r} de ${n}` : `Ronda ${r}`),
+    playoffs: 'Playoffs',
+    startsOn: (d) => `La temporada empieza el ${d}`,
+    memberSince: (y) => `Jugador desde ${y}`,
     elo: 'ELO',
     matches: 'Partidos',
+    wins: 'Victorias',
     league: 'Liga',
     of: 'de',
     openRank: 'OpenRank',
@@ -23,9 +28,14 @@ const content = {
     addPhoto: 'Añadir foto'
   },
   en: {
-    levels: { beginner: 'Bronze', intermediate: 'Silver', advanced: 'Gold' },
+    levelLeague: { beginner: 'Bronze League', intermediate: 'Silver League', advanced: 'Gold League' },
+    round: (r, n) => (n ? `Round ${r} of ${n}` : `Round ${r}`),
+    playoffs: 'Playoffs',
+    startsOn: (d) => `Season starts ${d}`,
+    memberSince: (y) => `Player since ${y}`,
     elo: 'ELO',
     matches: 'Matches',
+    wins: 'Wins',
     league: 'League',
     of: 'of',
     openRank: 'OpenRank',
@@ -34,7 +44,7 @@ const content = {
   }
 }
 
-export default function DashboardHeader({ player, language, leagueInfo = null, standings = null }) {
+export default function DashboardHeader({ player, language, leagueInfo = null, standings = null, upcomingMatches = [], recentMatches = [] }) {
   const params = useParams()
   const locale = params?.locale || 'es'
   const t = content[language] || content.es
@@ -58,6 +68,7 @@ export default function DashboardHeader({ player, language, leagueInfo = null, s
   }, [])
 
   const matchesPlayed = player?.stats?.matchesPlayed || 0
+  const matchesWon = player?.stats?.matchesWon || 0
   const rows = standings?.unifiedStandings || []
   const myIndex = rows.findIndex(s => String(s.player._id) === String(player?._id))
   const showLeaguePosition = leagueInfo?.status === 'active' && myIndex >= 0
@@ -78,12 +89,27 @@ export default function DashboardHeader({ player, language, leagueInfo = null, s
   }, [showLeaguePosition, qualified, player?._id])
 
   const displayName = isDemoMode ? getMaskedName(player.name) : player.name
-  const registration = (player?.registrations || []).find(r => String(r.league?._id || r.league) === String(leagueInfo?._id))
-  const level = registration?.level ? t.levels[registration.level] : null
-  const subtitle = [leagueInfo?.location, level].filter(Boolean).join(' · ')
+  const subtitle = (() => {
+    const leagueLabel = leagueInfo?.level ? t.levelLeague[leagueInfo.level] : leagueInfo?.name
+    const startDate = leagueInfo?.startDate ? new Date(leagueInfo.startDate) : null
+    if (leagueInfo?.status === 'active' && startDate && startDate <= new Date()) {
+      const phase = leagueInfo.playoffPhase
+      if (phase && phase !== 'regular_season' && phase !== 'completed') return [leagueLabel, t.playoffs].filter(Boolean).join(' · ')
+      const rounds = [...(upcomingMatches || []), ...(recentMatches || [])]
+        .filter(m => String(m.leagueId) === String(leagueInfo._id) && m.matchType !== 'playoff')
+        .map(m => m.round || 0)
+      const round = rounds.length ? Math.max(...rounds) : null
+      return [leagueLabel, round ? t.round(round, leagueInfo.totalRounds) : null].filter(Boolean).join(' · ')
+    }
+    if (startDate && startDate > new Date()) {
+      return t.startsOn(startDate.toLocaleDateString(language === 'es' ? 'es-ES' : 'en-GB', { day: 'numeric', month: 'short', timeZone: 'Europe/Madrid' }))
+    }
+    return player?.createdAt ? t.memberSince(new Date(player.createdAt).getFullYear()) : ''
+  })()
   const hasPhoto = !!player?.avatar && !isDemoMode
 
-  const tile = 'bg-white/20 backdrop-blur-sm rounded-xl px-2 py-2.5 text-center border border-white/20'
+  const tile = 'bg-white/20 backdrop-blur-sm rounded-xl px-1 py-2 text-center border border-white/20 min-w-0'
+  const value = 'text-lg sm:text-xl font-bold tabular-nums leading-tight'
 
   return (
     <MobileHeaderSlot>
@@ -119,33 +145,38 @@ export default function DashboardHeader({ player, language, leagueInfo = null, s
           </div>
         </div>
 
-        <div className={`${compact ? 'hidden sm:grid' : 'grid'} grid-cols-3 gap-2 sm:w-80 flex-shrink-0`}>
+        <div className={`${compact ? 'hidden sm:grid' : 'grid'} grid-cols-4 gap-1.5 sm:gap-2 sm:w-[26rem] flex-shrink-0`}>
           <div className={tile}>
             <div className="text-[11px] text-purple-100 inline-flex items-center gap-1">{t.elo} <EloInfoLink locale={locale} variant="icon" /></div>
-            <div className="text-xl font-bold tabular-nums leading-tight">{player?.eloRating || 1200}</div>
+            <div className={value}>{player?.eloRating || 1200}</div>
           </div>
 
           <Link href={`/${locale}/player/matches`} className={`${tile} hover:bg-white/30 transition-colors`}>
-            <div className="text-[11px] text-purple-100">{t.matches}</div>
-            <div className="text-xl font-bold tabular-nums leading-tight">{matchesPlayed}</div>
+            <div className="text-[11px] text-purple-100 truncate">{t.matches}</div>
+            <div className={value}>{matchesPlayed}</div>
+          </Link>
+
+          <Link href={`/${locale}/player/matches`} className={`${tile} hover:bg-white/30 transition-colors`}>
+            <div className="text-[11px] text-purple-100 truncate">{t.wins}</div>
+            <div className={value}>{matchesWon}</div>
           </Link>
 
           {showLeaguePosition ? (
             <Link href={`/${locale}/player/league`} className={`${tile} hover:bg-white/30 transition-colors`}>
-              <div className="text-[11px] text-purple-100">{t.league}</div>
-              <div className="text-xl font-bold tabular-nums leading-tight">
-                #{myIndex + 1}<span className="text-xs font-medium text-purple-100"> {t.of} {rows.length}</span>
+              <div className="text-[11px] text-purple-100 truncate">{t.league}</div>
+              <div className={value}>
+                #{myIndex + 1}<span className="text-[11px] font-medium text-purple-100">/{rows.length}</span>
               </div>
             </Link>
           ) : (
             <Link href={`/${locale}/player/openrank`} className={`${tile} hover:bg-white/30 transition-colors`}>
-              <div className="text-[11px] text-purple-100">{t.openRank}</div>
+              <div className="text-[11px] text-purple-100 truncate">{t.openRank}</div>
               {qualified ? (
-                <div className="text-xl font-bold tabular-nums leading-tight">{openRankPosition ? `#${openRankPosition}` : '-'}</div>
+                <div className={value}>{openRankPosition ? `#${openRankPosition}` : '-'}</div>
               ) : (
                 <div className="leading-tight">
-                  <span className="text-xl font-bold tabular-nums">{OPENRANK_MATCHES_REQUIRED - matchesPlayed}</span>
-                  <span className="text-[10px] text-purple-100"> {t.toQualify}</span>
+                  <div className={value}>{OPENRANK_MATCHES_REQUIRED - matchesPlayed}</div>
+                  <div className="text-[9px] text-purple-100 -mt-0.5">{t.toQualify}</div>
                 </div>
               )}
             </Link>
