@@ -92,6 +92,8 @@ export default function BottomNavigation({ locale, user, playerData, onLogout })
           }}
         />
         
+        <div className="absolute left-0 right-0 top-full h-32 bg-gradient-to-r from-parque-purple via-purple-600 to-indigo-600 pointer-events-none" aria-hidden="true" />
+
         {/* Subtle top highlight */}
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-purple-400/50 via-white/30 to-indigo-400/50" />
         
