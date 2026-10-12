@@ -4,11 +4,15 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import MoreMenu from './MoreMenu'
+import { findBestDefaultRegistration } from '@/lib/utils/leagueSelection'
+import { useCommunityLatest } from '@/components/player/community/useCommunityUnread'
 
 export default function BottomNavigation({ locale, user, playerData, onLogout }) {
   const pathname = usePathname()
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false)
   const [pendingHref, setPendingHref] = useState(null)
+  const bestRegistration = findBestDefaultRegistration(playerData?.player?.registrations || [])
+  const { unread: communityUnread } = useCommunityLatest(bestRegistration?.league?._id || null)
 
   useEffect(() => {
     setPendingHref(null)
@@ -123,6 +127,9 @@ export default function BottomNavigation({ locale, user, playerData, onLogout })
                   )}
                   <div className="relative">
                     {active ? item.iconFilled : item.icon}
+                    {item.href === `/${locale}/player/league` && communityUnread && (
+                      <span className="absolute -top-0.5 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-purple-600" />
+                    )}
                   </div>
                 </div>
                 <span className={`text-[10px] mt-1 font-medium ${active ? 'text-white' : 'text-purple-200'}`}>

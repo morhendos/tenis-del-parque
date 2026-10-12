@@ -9,6 +9,8 @@ import MatchesTab from '@/components/player/MatchesTab'
 import PlayoffsTab from '@/components/player/PlayoffsTab'
 import PlayoffExplanation from '@/components/player/PlayoffExplanation'
 import LeagueTabs from '@/components/player/LeagueTabs'
+import CommunityFeed from '@/components/player/community/CommunityFeed'
+import { useCommunityLatest } from '@/components/player/community/useCommunityUnread'
 import CountdownCard from '@/components/player/CountdownCard'
 import MobileHeaderSlot from '@/components/player/MobileHeaderSlot'
 import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
@@ -439,7 +441,10 @@ export default function PlayerLeague() {
   const language = locale
 
   // Use tabs from constants - now includes playoffs
-  const tabs = getLeagueTabs(language)
+  const { unread: communityUnread } = useCommunityLatest(currentLeague?._id)
+  const tabs = getLeagueTabs(language).map(tab =>
+    tab.id === LEAGUE_TABS.COMMUNITY ? { ...tab, dot: communityUnread && activeTab !== LEAGUE_TABS.COMMUNITY } : tab
+  )
 
   // Clear playoff data when league changes
   useEffect(() => {
@@ -617,7 +622,11 @@ export default function PlayerLeague() {
       />
 
       {/* Tab Content */}
-      <div className={activeTab === LEAGUE_TABS.PLAYOFFS ? 'rounded-xl overflow-hidden' : 'bg-white rounded-xl shadow-lg overflow-hidden p-2 sm:p-6'}>
+      <div className={activeTab === LEAGUE_TABS.PLAYOFFS ? 'rounded-xl overflow-hidden' : activeTab === LEAGUE_TABS.COMMUNITY ? '' : 'bg-white rounded-xl shadow-lg overflow-hidden p-2 sm:p-6'}>
+          {activeTab === LEAGUE_TABS.COMMUNITY && currentLeague?._id && (
+            <CommunityFeed leagueId={currentLeague._id} language={language} />
+          )}
+
           {activeTab === LEAGUE_TABS.STANDINGS && (
             <div>
               {currentLeague?.status !== 'registration_open' && currentLeague?.status !== 'coming_soon' && standings && standings.unifiedStandings && standings.unifiedStandings.length > 0 ? (

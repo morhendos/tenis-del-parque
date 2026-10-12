@@ -22,6 +22,7 @@ import ProfilePromptCard from '@/components/player/ProfilePromptCard'
 import FinishRegistrationCard from '@/components/player/FinishRegistrationCard'
 import SeasonStartCelebration from '@/components/player/SeasonStartCelebration'
 import CourtTipCard from '@/components/player/CourtTipCard'
+import CommunityTeaser from '@/components/player/community/CommunityTeaser'
 import { dashboardStyles } from '@/styles/dashboard'
 
 export default function PlayerDashboard() {
@@ -188,6 +189,8 @@ export default function PlayerDashboard() {
         </div>
 
         <CourtTipCard player={player} hasUpcomingMatch={upcomingMatches?.length > 0} language={language} />
+
+        {leagueInfo?._id && <CommunityTeaser leagueId={leagueInfo._id} language={language} locale={locale} />}
 
         {/* OpenRank Progress - Gamification element */}
         <OpenRankAchievement player={player} language={language} locale={locale} />

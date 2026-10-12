@@ -5,6 +5,7 @@ import Match from '../../../../../lib/models/Match'
 import Player from '../../../../../lib/models/Player'
 import League from '../../../../../lib/models/League'
 import { generateSwissPairings, validatePairings, getPairingsSummary } from '../../../../../lib/utils/swissPairing'
+import { postNewRound } from '../../../../../lib/services/leagueFeedService'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
@@ -259,6 +260,10 @@ export async function POST(request) {
         const byeMatch = await createByeMatch(player, leagueId, season, round)
         createdMatches.push(byeMatch)
       }
+    }
+
+    if (createdMatches.length > 0) {
+      await postNewRound(leagueId, round)
     }
 
     return NextResponse.json({

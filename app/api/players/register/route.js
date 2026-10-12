@@ -5,6 +5,7 @@ import League from '../../../../lib/models/League'
 import User from '../../../../lib/models/User'
 import { generateWelcomeEmail } from '../../../../lib/email/templates/welcomeEmail'
 import { sendEmail } from '../../../../lib/email/resend'
+import { postNewPlayer } from '../../../../lib/services/leagueFeedService'
 
 // Helper function to normalize name to Title Case
 function toTitleCase(str) {
@@ -416,6 +417,7 @@ export async function POST(request) {
       await League.findByIdAndUpdate(league._id, {
         $inc: { 'stats.totalPlayers': 1, 'stats.registeredPlayers': 1 }
       })
+      await postNewPlayer(player._id, league._id)
     }
 
     // Get the registration we just created

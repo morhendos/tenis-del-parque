@@ -1,13 +1,16 @@
 'use client'
-import { BarChart3, Trophy, Calendar, Award } from 'lucide-react'
+import { BarChart3, Trophy, Calendar, Award, MessageCircle } from 'lucide-react'
 
 // Icon mapping for each tab type
 const iconMap = {
   'standings': BarChart3,
   'playoffs': Trophy,
   'schedule': Calendar,
-  'results': Award
+  'results': Award,
+  'community': MessageCircle
 }
+
+const Dot = ({ className = '' }) => <span className={`w-2 h-2 rounded-full bg-red-500 flex-shrink-0 ${className}`} />
 
 export default function LeagueTabs({ tabs, activeTab, onTabChange, language = 'es' }) {
   return (
@@ -31,8 +34,9 @@ export default function LeagueTabs({ tabs, activeTab, onTabChange, language = 'e
                   }
                 `}
               >
-                {Icon && <Icon className="w-3.5 h-3.5 flex-shrink-0" strokeWidth={2.5} />}
+                {Icon && tabs.length < 4 && <Icon className="w-3.5 h-3.5 flex-shrink-0" strokeWidth={2.5} />}
                 <span className="truncate">{tab.label}</span>
+                {tab.dot && <Dot />}
               </button>
             )
           })}
@@ -70,6 +74,7 @@ export default function LeagueTabs({ tabs, activeTab, onTabChange, language = 'e
                     ) : null
                   })()}
                   <span>{tab.label}</span>
+                  {tab.dot && <Dot />}
                 </div>
                 
                 {/* Active indicator */}

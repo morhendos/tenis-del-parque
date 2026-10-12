@@ -10,6 +10,7 @@ import {
   reversePlayerStatsOnMatchReset 
 } from '../../../../../lib/services/playerStatsService'
 import { broadcastMatchResult } from '../../../../../lib/services/pushNotificationService'
+import { postMatchResult, removeMatchResultPost } from '../../../../../lib/services/leagueFeedService'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
@@ -387,6 +388,7 @@ export async function PATCH(request, { params }) {
 
     // Broadcast newly entered results to the rest of the league
     if (body.result) {
+      await postMatchResult(match._id)
       await broadcastMatchResult(match._id)
     }
 
@@ -525,6 +527,8 @@ export async function DELETE(request, { params }) {
       console.log(`✅ Match deleted (no stats to reverse): ${matchInfo.player1} vs ${matchInfo.player2}`)
     }
 
+    await removeMatchResultPost(id)
+
     return NextResponse.json({
       success: true,
       message: 'Match deleted successfully',
@@ -605,6 +609,7 @@ async function resetMatchToUnplayed(matchId) {
     await player2.save({ session })
 
     await session.commitTransaction()
+    await removeMatchResultPost(match._id)
 
     // Return updated match with populated data
     await match.populate('players.player1 players.player2 league')

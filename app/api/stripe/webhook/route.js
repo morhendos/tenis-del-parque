@@ -3,6 +3,7 @@ import dbConnect from '../../../../lib/db/mongoose'
 import Player from '../../../../lib/models/Player'
 import League from '../../../../lib/models/League'
 import { sendLeagueWelcomeEmail } from '../../../../lib/email/sendLeagueWelcomeEmail'
+import { postNewPlayer } from '../../../../lib/services/leagueFeedService'
 
 export async function POST(request) {
   if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
@@ -61,6 +62,8 @@ export async function POST(request) {
           $inc: { 'stats.totalPlayers': 1, 'stats.registeredPlayers': 1 }
         })
         console.log(`Payment completed for player ${playerId}, league ${leagueId}, session ${session.id}`)
+
+        await postNewPlayer(playerId, leagueId)
         try {
           const league = await League.findById(leagueId)
           if (league) {
