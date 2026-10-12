@@ -27,6 +27,7 @@ const content = {
     h2hTitle: 'Cara a cara',
     you: 'Tú',
     league: 'Liga actual',
+    lastLeague: 'Última liga',
     position: 'Posición',
     of: 'de',
     points: 'Puntos',
@@ -60,6 +61,7 @@ const content = {
     h2hTitle: 'Head to head',
     you: 'You',
     league: 'Current league',
+    lastLeague: 'Last league',
     position: 'Position',
     of: 'of',
     points: 'Points',
@@ -277,7 +279,7 @@ export default function PlayerPublicProfilePage() {
       )}
 
       {league && (
-        <Card icon={Trophy} title={t.league} right={<span className="text-xs text-gray-500 truncate">{league.name}</span>}>
+        <Card icon={Trophy} title={league.status === 'active' ? t.league : t.lastLeague} right={<span className="text-xs text-gray-500 truncate">{league.name}</span>}>
           <div className="p-3 grid grid-cols-3 gap-2">
             <Stat label={t.position} value={league.position ? `#${league.position}` : '-'} sub={league.totalPlayers ? `${t.of} ${league.totalPlayers}` : null} />
             <Stat label={t.points} value={league.stats.totalPoints} />
