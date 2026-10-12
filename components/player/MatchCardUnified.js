@@ -1,4 +1,8 @@
+'use client'
+
 import { formatOpponentName } from '@/lib/utils/playerNameUtils'
+import PlayerAvatar from './PlayerAvatar'
+import PlayerLink, { usePlayerProfileHref } from './PlayerLink'
 
 /**
  * Unified match card component for both completed and unplayed matches
@@ -18,6 +22,7 @@ export default function MatchCardUnified({
   isPublic = false,
   className = ''
 }) {
+  const showProfiles = !!usePlayerProfileHref()('x')
 
   // Determine match state
   const isCompleted = match.status === 'completed' || match.result?.winner
@@ -204,13 +209,24 @@ export default function MatchCardUnified({
         </div>
         
         {/* Player name */}
-        <div className="flex-1 min-w-0">
-          <span className={`font-semibold text-sm truncate block ${
-            isVirtuallyCancelled ? 'text-gray-400 line-through' : 
-            isByeRow ? 'text-gray-400 italic' : 'text-gray-800'
-          }`}>
-            {displayName}
-          </span>
+        <div className="flex-1 min-w-0 flex items-center gap-2">
+          {showProfiles && !isByeRow && playerData && (
+            <PlayerAvatar name={playerData.name} avatar={playerData.avatar} country={playerData.country} size="xs" />
+          )}
+          {showProfiles && !isByeRow && playerData?._id ? (
+            <PlayerLink playerId={playerData._id} className={`font-semibold text-sm truncate block min-w-0 ${
+              isVirtuallyCancelled ? 'text-gray-400 line-through' : 'text-gray-800'
+            }`}>
+              {displayName}
+            </PlayerLink>
+          ) : (
+            <span className={`font-semibold text-sm truncate block ${
+              isVirtuallyCancelled ? 'text-gray-400 line-through' : 
+              isByeRow ? 'text-gray-400 italic' : 'text-gray-800'
+            }`}>
+              {displayName}
+            </span>
+          )}
         </div>
 
         {/* Scores */}

@@ -1,4 +1,7 @@
 import { formatPlayerNameForPublic, formatOpponentName } from '@/lib/utils/playerNameUtils'
+import { countryFlag } from '@/lib/utils/countries'
+import PlayerAvatar from './PlayerAvatar'
+import PlayerLink from './PlayerLink'
 
 export default function MatchCard({ 
   match, 
@@ -230,9 +233,16 @@ export default function MatchCard({
       <div className="px-4 py-3">
         <div className="flex items-center gap-3">
           {/* Opponent avatar */}
-          <div className={'w-10 h-10 rounded-full flex items-center justify-center font-medium text-sm flex-shrink-0 ' + avatarStyle.bg + ' ' + avatarStyle.text}>
-            {getInitials(opponent?.name)}
-          </div>
+          {opponent?.avatar ? (
+            <PlayerAvatar name={opponent.name} avatar={opponent.avatar} country={opponent.country} size="md" className={isCancelled ? 'opacity-50' : ''} />
+          ) : (
+            <div className={'relative w-10 h-10 rounded-full flex items-center justify-center font-medium text-sm flex-shrink-0 ' + avatarStyle.bg + ' ' + avatarStyle.text}>
+              {getInitials(opponent?.name)}
+              {countryFlag(opponent?.country) && (
+                <span className="absolute -bottom-1 -right-1 text-sm leading-none drop-shadow">{countryFlag(opponent.country)}</span>
+              )}
+            </div>
+          )}
           
           <div className="flex-1 min-w-0">
             {isPublic || !player ? (
@@ -246,9 +256,9 @@ export default function MatchCard({
               /* Player view - both names same size */
               <>
                 <div className="flex items-baseline gap-1.5 flex-wrap">
-                  <span className={'text-[15px] font-medium ' + (isCancelled ? 'text-gray-400' : 'text-gray-900')}>
+                  <PlayerLink playerId={opponent?._id} className={'text-[15px] font-medium ' + (isCancelled ? 'text-gray-400' : 'text-gray-900')}>
                     {opponent?.name ? formatOpponentName(opponent.name, language) : 'TBD'}
-                  </span>
+                  </PlayerLink>
                   {isUpcoming && opponent?._id && openRankData[opponent._id] && (
                     <span className="text-[11px] font-medium text-amber-600">[{openRankData[opponent._id]}]</span>
                   )}

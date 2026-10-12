@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { getMaskedName, isDemoModeActive } from '@/lib/utils/demoMode'
+import PlayerAvatar from '@/components/player/PlayerAvatar'
+import PlayerLink from '@/components/player/PlayerLink'
 
 export default function MiniStandings({ standings, playerId, language, locale }) {
   const [isDemoMode, setIsDemoMode] = useState(false)
@@ -138,10 +140,13 @@ export default function MiniStandings({ standings, playerId, language, locale })
             }`}>
               {row.position}
             </div>
-            <div className={`col-span-7 text-sm truncate ${
+            <div className={`col-span-7 text-sm min-w-0 flex items-center gap-2 ${
               row.isCurrentPlayer ? 'text-parque-purple' : 'text-gray-900'
             }`}>
-              {row.isCurrentPlayer && '→ '}{isDemoMode ? getMaskedName(row.player.name) : row.player.name}
+              <PlayerAvatar name={row.player.name} avatar={isDemoMode ? null : row.player.avatar} country={row.player.country} size="xs" />
+              <PlayerLink playerId={row.player._id} className="truncate">
+                {isDemoMode ? getMaskedName(row.player.name) : row.player.name}
+              </PlayerLink>
             </div>
             <div className={`col-span-2 text-center text-sm ${
               row.isCurrentPlayer ? 'text-parque-purple' : 'text-gray-600'

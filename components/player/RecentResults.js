@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { getMaskedName, isDemoModeActive } from '@/lib/utils/demoMode'
+import PlayerLink from './PlayerLink'
 
 export default function RecentResults({ matches, language, maxResults = 3 }) {
   const [isDemoMode, setIsDemoMode] = useState(false)
@@ -93,9 +94,13 @@ export default function RecentResults({ matches, language, maxResults = 3 }) {
               {/* Player Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="font-medium text-gray-900 text-sm truncate">
-                    {isBye ? t.bye : (isDemoMode ? getMaskedName(match.opponent) : match.opponent)}
-                  </p>
+                  {isBye ? (
+                    <p className="font-medium text-gray-900 text-sm truncate">{t.bye}</p>
+                  ) : (
+                    <PlayerLink playerId={match.opponentId} className="font-medium text-gray-900 text-sm truncate">
+                      {isDemoMode ? getMaskedName(match.opponent) : match.opponent}
+                    </PlayerLink>
+                  )}
                   {position && (
                     <span className="text-xs text-gray-400">#{position}</span>
                   )}

@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { WhatsAppUtils } from '@/lib/utils/whatsappUtils'
 import { getMaskedName, isDemoModeActive } from '@/lib/utils/demoMode'
 import CountdownCard from './CountdownCard'
+import PlayerAvatar from './PlayerAvatar'
+import PlayerLink from './PlayerLink'
 
 export default function NextMatchCard({ matches = [], language, leagueInfo, playerName = '', registrations = [] }) {
   const [isDemoMode, setIsDemoMode] = useState(false)
@@ -113,18 +115,15 @@ export default function NextMatchCard({ matches = [], language, leagueInfo, play
                 )}
               </div>
               <div className="flex items-center gap-2">
-                {/* Position Circle */}
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-parque-purple to-purple-700 flex items-center justify-center flex-shrink-0 shadow-md shadow-purple-500/20">
-                  <span className="text-white text-xs font-semibold">
-                    {match.opponentPosition ? `#${match.opponentPosition}` : '—'}
-                  </span>
-                </div>
-                
-                {/* Player Info */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                <PlayerAvatar name={match.opponent} avatar={isDemoMode ? null : match.opponentAvatar} country={match.opponentCountry} size="sm" />
+
+                <div className="flex-1 min-w-0 flex items-baseline gap-1.5">
+                  <PlayerLink playerId={match.opponentId} className="text-sm font-medium text-gray-900 truncate">
                     {isDemoMode ? getMaskedName(match.opponent) : match.opponent}
-                  </p>
+                  </PlayerLink>
+                  {match.opponentPosition && (
+                    <span className="text-xs text-gray-400 flex-shrink-0">#{match.opponentPosition}</span>
+                  )}
                 </div>
                 
                 {/* WhatsApp Button */}

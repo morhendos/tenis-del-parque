@@ -9,6 +9,8 @@ import EloProgressionChart from '@/components/player/EloProgressionChart'
 import EloInfoLink from '@/components/player/EloInfoLink'
 import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
 import { getMaskedName, isDemoModeActive } from '@/lib/utils/demoMode'
+import PlayerAvatar from '@/components/player/PlayerAvatar'
+import PlayerLink from '@/components/player/PlayerLink'
 
 export default function OpenRankPage() {
   const params = useParams()
@@ -265,16 +267,15 @@ export default function OpenRankPage() {
                     
                     {/* Player Name & Avatar */}
                     <div className="flex-1 ml-2 flex items-center min-w-0">
-                      <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shadow-sm flex-shrink-0 ${
-                        player.position <= 3 
-                          ? 'bg-gradient-to-br from-purple-500 to-indigo-600 text-white' 
-                          : 'bg-purple-100 text-purple-700'
-                      }`}>
-                        {(isDemoMode ? getMaskedName(player.name) : player.name).charAt(0).toUpperCase()}
-                      </div>
+                      <PlayerAvatar
+                        name={isDemoMode ? getMaskedName(player.name) : player.name}
+                        avatar={isDemoMode ? null : player.avatar}
+                        country={player.country}
+                        size="md"
+                      />
                       <div className="ml-2 min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-gray-900 truncate">{isDemoMode ? getMaskedName(player.name) : player.name}</span>
+                          <PlayerLink playerId={player._id} className="font-medium text-gray-900 truncate">{isDemoMode ? getMaskedName(player.name) : player.name}</PlayerLink>
                           {isCurrentPlayer && (
                             <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full font-medium flex-shrink-0">
                               {t.you}
@@ -344,11 +345,14 @@ export default function OpenRankPage() {
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-3">
-                          <div className="w-9 h-9 bg-gray-200 rounded-full flex items-center justify-center text-sm font-bold text-gray-600">
-                            {(isDemoMode ? getMaskedName(player.name) : player.name).charAt(0).toUpperCase()}
-                          </div>
+                          <PlayerAvatar
+                            name={isDemoMode ? getMaskedName(player.name) : player.name}
+                            avatar={isDemoMode ? null : player.avatar}
+                            country={player.country}
+                            size="md"
+                          />
                           <div>
-                            <span className="font-medium text-gray-900">{isDemoMode ? getMaskedName(player.name) : player.name}</span>
+                            <PlayerLink playerId={player._id} className="font-medium text-gray-900">{isDemoMode ? getMaskedName(player.name) : player.name}</PlayerLink>
                             {isCurrentPlayer && (
                               <span className="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium">
                                 {t.you}

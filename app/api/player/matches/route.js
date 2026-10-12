@@ -29,8 +29,8 @@ export async function GET(request) {
         { 'players.player2': player._id }
       ]
     })
-    .populate('players.player1', 'name email whatsapp')
-    .populate('players.player2', 'name email whatsapp')
+    .populate('players.player1', 'name email whatsapp avatar country')
+    .populate('players.player2', 'name email whatsapp avatar country')
     .populate('league', 'name slug location status season') // Add league data with location object for multi-league support
     .sort('-createdAt')
 
@@ -68,8 +68,8 @@ export async function GET(request) {
           { 'players.player2': player._id }
         ]
       })
-      .populate('players.player1', 'name email whatsapp')
-      .populate('players.player2', 'name email whatsapp')
+      .populate('players.player1', 'name email whatsapp avatar country')
+      .populate('players.player2', 'name email whatsapp avatar country')
       .populate('league', 'name slug location status season')
       .sort('-createdAt')
 

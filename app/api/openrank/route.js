@@ -33,6 +33,8 @@ export async function GET(request) {
       return {
         _id: player._id,
         name: player.name,
+        avatar: player.avatar || null,
+        country: player.country || null,
         eloRating: player.eloRating || 1200,
         highestElo: player.highestElo || player.eloRating || 1200,
         matchesPlayed,

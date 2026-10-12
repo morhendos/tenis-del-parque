@@ -58,7 +58,7 @@ const EMPTY = { surface: '', playStyle: '', bestShot: '', dominantHand: '', back
 
 const toForm = (p = {}) => ({ ...EMPTY, ...Object.fromEntries(Object.entries(p || {}).filter(([, v]) => v !== null && v !== undefined).map(([k, v]) => [k, String(v)])) })
 
-export default function TennisProfileCard({ tennisProfile, language = 'es', onSaved }) {
+export default function TennisProfileCard({ tennisProfile, language = 'es', onSaved, readOnly = false }) {
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState(toForm(tennisProfile))
   const [saved, setSaved] = useState(toForm(tennisProfile))
@@ -113,14 +113,30 @@ export default function TennisProfileCard({ tennisProfile, language = 'es', onSa
     <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
       <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
         <h3 className="font-semibold text-gray-900 text-sm">{t('Perfil de jugador', 'Player profile')}</h3>
-        {!editing && (
+        {!editing && !readOnly && (
           <button onClick={() => setEditing(true)} className="p-1.5 -mr-1.5 text-gray-500 hover:text-parque-purple rounded-lg hover:bg-gray-50" aria-label={t('Editar', 'Edit')}>
             <Pencil className="w-4 h-4" />
           </button>
         )}
       </div>
 
-      {!editing ? (
+      {readOnly ? (
+        (() => {
+          const rows = [
+            ...Object.entries(OPTIONS).map(([key, o]) => ({ key, icon: o.icon, label: o.label[language], value: saved[key] ? o.values[saved[key]]?.[language] : '' })),
+            { key: 'racket', icon: Circle, label: t('Raqueta', 'Racket'), value: saved.racket },
+            { key: 'racketYear', icon: Calendar, label: t('Raqueta desde', 'Racket since'), value: saved.racketYear }
+          ].filter(r => r.value)
+          if (rows.length === 0) {
+            return <p className="px-4 py-4 text-sm text-gray-400">{t('Todavía no ha rellenado su perfil.', 'No tennis profile yet.')}</p>
+          }
+          return (
+            <div className="px-4 py-1 grid grid-cols-1 min-[380px]:grid-cols-2 gap-x-4">
+              {rows.map(r => <Row key={r.key} icon={r.icon} label={r.label} value={r.value} />)}
+            </div>
+          )
+        })()
+      ) : !editing ? (
         <div className="px-4 py-1 divide-y divide-gray-50">
           {Object.entries(OPTIONS).map(([key, o]) => (
             <Row key={key} icon={o.icon} label={o.label[language]} value={saved[key] ? o.values[saved[key]]?.[language] : ''} />

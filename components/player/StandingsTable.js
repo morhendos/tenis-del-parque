@@ -1,7 +1,12 @@
+'use client'
+
 import React from 'react'
 import { formatPlayerNameForStandings } from '@/lib/utils/playerNameUtils'
+import PlayerAvatar from '@/components/player/PlayerAvatar'
+import PlayerLink, { usePlayerProfileHref } from '@/components/player/PlayerLink'
 
 export default function StandingsTable({ players, language, unified = false, playoffConfig = null }) {
+  const showProfiles = !!usePlayerProfileHref()('x')
   // Get playoff configuration or use defaults
   const numberOfGroups = playoffConfig?.numberOfGroups ?? 2
   const groupAPlayers = playoffConfig?.groupAPlayers ?? 8
@@ -72,12 +77,17 @@ export default function StandingsTable({ players, language, unified = false, pla
                 </div>
 
                 {/* Player Name + Matches Played subtitle */}
-                <div className="flex-1 px-1 sm:px-2 py-1.5 sm:py-2 min-w-0">
-                  <div className="font-semibold text-gray-900 text-[12px] sm:text-sm truncate">
-                    {formatPlayerNameForStandings(standing.player.name, language)}
-                  </div>
-                  <div className="text-[10px] text-gray-400">
-                    {standing.stats.matchesPlayed} {language === 'es' ? 'partidos' : 'matches'}
+                <div className="flex-1 px-1 sm:px-2 py-1.5 sm:py-2 min-w-0 flex items-center gap-2">
+                  {showProfiles && (
+                    <PlayerAvatar name={standing.player.name} avatar={standing.player.avatar} country={standing.player.country} size="sm" className="hidden min-[360px]:block" />
+                  )}
+                  <div className="min-w-0">
+                    <PlayerLink playerId={standing.player._id} className="block font-semibold text-gray-900 text-[12px] sm:text-sm truncate">
+                      {formatPlayerNameForStandings(standing.player.name, language)}
+                    </PlayerLink>
+                    <div className="text-[10px] text-gray-400">
+                      {standing.stats.matchesPlayed} {language === 'es' ? 'partidos' : 'matches'}
+                    </div>
                   </div>
                 </div>
 

@@ -101,6 +101,8 @@ export async function GET(request, { params }) {
         matchHistory: registration.matchHistory,
         wildCards: registration.wildCards,
         notes: registration.notes,
+        avatar: player.avatar,
+        country: player.country,
         // Keep player-level data
         preferences: player.preferences,
         metadata: player.metadata
@@ -136,6 +138,8 @@ export async function GET(request, { params }) {
           matchHistory: registration.matchHistory,
           wildCards: registration.wildCards,
           notes: registration.notes,
+          avatar: player.avatar,
+          country: player.country,
           preferences: player.preferences,
           metadata: player.metadata
         }
@@ -159,6 +163,7 @@ export async function GET(request, { params }) {
     
     // USE THE SINGLE SOURCE OF TRUTH SERVICE!
     const sortedStandings = calculateLeagueStandings(players, matches, true) // include status sort for public
+    const profileById = new Map(players.map(p => [String(p._id), { avatar: p.avatar || null, country: p.country || null }]))
     
     // Create final standings with additional calculated fields
     const standings = sortedStandings.map((standing) => {
@@ -191,6 +196,7 @@ export async function GET(request, { params }) {
         player: {
           _id: standing.player._id,
           name: standing.player.name,
+          ...(profileById.get(String(standing.player._id)) || {}),
           level: level || 'all',
           status: standing.player.status
         },

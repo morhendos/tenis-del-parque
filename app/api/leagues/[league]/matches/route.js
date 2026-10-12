@@ -73,8 +73,8 @@ export async function GET(request, { params }) {
     
     // Get matches with player details (using global ELO)
     const matches = await Match.find(matchQuery)
-      .populate('players.player1', 'name eloRating registrations')
-      .populate('players.player2', 'name eloRating registrations')
+      .populate('players.player1', 'name eloRating registrations avatar country')
+      .populate('players.player2', 'name eloRating registrations avatar country')
       .populate('result.winner', 'name')
       .sort({ round: 1, 'schedule.confirmedDate': 1 })
       .limit(limit)
@@ -100,12 +100,16 @@ export async function GET(request, { params }) {
           player1: match.players.player1 ? {
             _id: match.players.player1._id,
             name: match.players.player1.name,
+            avatar: match.players.player1.avatar || null,
+            country: match.players.player1.country || null,
             level: getPlayerLevelForLeague(match.players.player1, match.league, match.season),
             eloRating: match.players.player1.eloRating || 1200 // Global ELO
           } : null,
           player2: match.players.player2 ? {
             _id: match.players.player2._id,
             name: match.players.player2.name,
+            avatar: match.players.player2.avatar || null,
+            country: match.players.player2.country || null,
             level: getPlayerLevelForLeague(match.players.player2, match.league, match.season),
             eloRating: match.players.player2.eloRating || 1200 // Global ELO
           } : null
