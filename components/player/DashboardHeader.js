@@ -1,15 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { Camera } from 'lucide-react'
 import { getMaskedName, isDemoModeActive } from '@/lib/utils/demoMode'
-import MobileHeaderSlot from './MobileHeaderSlot'
 import PlayerAvatar from './PlayerAvatar'
 import EloInfoLink from './EloInfoLink'
 
 const OPENRANK_MATCHES_REQUIRED = 8
+const COLLAPSE = 46
 
 const content = {
   es: {
@@ -22,7 +23,6 @@ const content = {
     matches: 'Partidos',
     wins: 'Victorias',
     league: 'Liga',
-    of: 'de',
     openRank: 'OpenRank',
     toQualify: 'para entrar',
     addPhoto: 'Añadir foto'
@@ -37,7 +37,6 @@ const content = {
     matches: 'Matches',
     wins: 'Wins',
     league: 'League',
-    of: 'of',
     openRank: 'OpenRank',
     toQualify: 'to qualify',
     addPhoto: 'Add photo'
@@ -49,23 +48,58 @@ export default function DashboardHeader({ player, language, leagueInfo = null, s
   const locale = params?.locale || 'es'
   const t = content[language] || content.es
   const [isDemoMode, setIsDemoMode] = useState(false)
-  const [compact, setCompact] = useState(false)
   const [openRankPosition, setOpenRankPosition] = useState(null)
+  const [slot, setSlot] = useState(null)
+  const [fullH, setFullH] = useState(0)
+  const headerRef = useRef(null)
+  const progressRef = useRef(0)
 
   useEffect(() => {
     setIsDemoMode(isDemoModeActive())
   }, [])
 
   useEffect(() => {
+    const media = window.matchMedia('(max-width: 639px)')
+    const update = () => setSlot(media.matches ? document.getElementById('player-header-slot') : null)
+    update()
+    media.addEventListener('change', update)
+    return () => media.removeEventListener('change', update)
+  }, [])
+
+  useEffect(() => {
+    if (!slot) return
     const el = document.getElementById('player-scroll')
     if (!el) return
-    const onScroll = () => {
-      const extraContent = el.scrollHeight - el.clientHeight
-      setCompact(prev => (prev ? el.scrollTop > 8 : el.scrollTop > 60 && extraContent > 160))
+    let frame = null
+    const apply = () => {
+      frame = null
+      const p = Math.min(1, Math.max(0, el.scrollTop / COLLAPSE))
+      if (p === progressRef.current) return
+      progressRef.current = p
+      headerRef.current?.style.setProperty('--p', String(p))
     }
+    const onScroll = () => {
+      if (frame === null) frame = requestAnimationFrame(apply)
+    }
+    apply()
     el.addEventListener('scroll', onScroll, { passive: true })
-    return () => el.removeEventListener('scroll', onScroll)
-  }, [])
+    return () => {
+      el.removeEventListener('scroll', onScroll)
+      if (frame !== null) cancelAnimationFrame(frame)
+    }
+  }, [slot])
+
+  useLayoutEffect(() => {
+    if (!slot || !headerRef.current) return
+    const node = headerRef.current
+    const measure = () => {
+      if (progressRef.current === 0) setFullH(node.offsetHeight)
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(node)
+    return () => ro.disconnect()
+  }, [slot])
 
   const matchesPlayed = player?.stats?.matchesPlayed || 0
   const matchesWon = player?.stats?.matchesWon || 0
@@ -110,29 +144,35 @@ export default function DashboardHeader({ player, language, leagueInfo = null, s
 
   const tile = 'bg-white/20 backdrop-blur-sm rounded-xl px-1 py-2 text-center border border-white/20 min-w-0'
   const value = 'text-lg sm:text-xl font-bold tabular-nums leading-tight'
+  const mobile = !!slot
 
-  return (
-    <MobileHeaderSlot>
-    {(inSlot) => (
-    <div className={`${inSlot ? 'relative' : 'sticky top-0 z-30 sm:relative -mx-2 -mt-2 sm:mx-0 sm:mt-0'} overflow-hidden bg-gradient-to-br from-parque-purple via-purple-600 to-indigo-600 text-white px-4 ${compact ? 'pt-3 pb-3' : 'pt-6 pb-4'} sm:p-6 shadow-xl sm:rounded-2xl transition-[padding] duration-300`}>
-      <div className="absolute inset-0 opacity-10">
+  const card = (
+    <div
+      ref={headerRef}
+      style={mobile ? { '--p': 0, paddingTop: 'calc(24px - 12px * var(--p))', paddingBottom: 'calc(16px - 4px * var(--p))' } : undefined}
+      className={`relative overflow-hidden bg-gradient-to-br from-parque-purple via-purple-600 to-indigo-600 text-white px-4 shadow-xl ${mobile ? '' : 'sm:p-6 sm:rounded-2xl'}`}
+    >
+      <div className="absolute inset-0 opacity-10 pointer-events-none">
         <div className="absolute -top-16 -right-16 w-64 h-64 sm:-top-24 sm:-right-24 sm:w-96 sm:h-96 bg-white rounded-full"></div>
         <div className="absolute -bottom-16 -left-16 w-44 h-44 sm:-bottom-24 sm:-left-24 sm:w-64 sm:h-64 bg-white rounded-full"></div>
       </div>
 
       <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div className="flex items-center gap-3 min-w-0">
-          <Link href={`/${locale}/player/profile`} className="relative flex-shrink-0" aria-label={hasPhoto ? displayName : t.addPhoto}>
-            <PlayerAvatar
-              name={displayName}
-              avatar={hasPhoto ? player.avatar : null}
-              country={player?.country}
-              size={compact ? 'md' : 'hero'}
-              onDark
-              className="transition-all duration-300"
-            />
+          <Link
+            href={`/${locale}/player/profile`}
+            className="relative flex-shrink-0"
+            style={mobile ? { width: 'calc(64px - 24px * var(--p))', height: 'calc(64px - 24px * var(--p))' } : undefined}
+            aria-label={hasPhoto ? displayName : t.addPhoto}
+          >
+            <div style={mobile ? { transform: 'scale(calc(1 - 0.375 * var(--p)))', transformOrigin: 'top left' } : undefined}>
+              <PlayerAvatar name={displayName} avatar={hasPhoto ? player.avatar : null} country={player?.country} size="hero" onDark />
+            </div>
             {!hasPhoto && (
-              <span className={`absolute -bottom-1 -left-1 w-6 h-6 rounded-full bg-white text-parque-purple shadow flex items-center justify-center transition-opacity duration-300 ${compact ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+              <span
+                className="absolute -bottom-1 -left-1 w-6 h-6 rounded-full bg-white text-parque-purple shadow flex items-center justify-center"
+                style={mobile ? { opacity: 'calc(1 - 2 * var(--p))' } : undefined}
+              >
                 <Camera className="w-3.5 h-3.5" />
               </span>
             )}
@@ -140,14 +180,20 @@ export default function DashboardHeader({ player, language, leagueInfo = null, s
           <div className="min-w-0">
             <h1 className="text-xl sm:text-2xl font-bold leading-tight truncate">{displayName}</h1>
             {subtitle && (
-              <p className={`text-purple-100 text-sm truncate overflow-hidden transition-all duration-300 sm:max-h-6 sm:opacity-100 ${compact ? 'max-h-0 opacity-0' : 'max-h-6 opacity-100'}`}>{subtitle}</p>
+              <p
+                className="text-purple-100 text-sm truncate overflow-hidden"
+                style={mobile ? { maxHeight: 'calc(20px - 20px * var(--p))', opacity: 'calc(1 - 1.5 * var(--p))' } : undefined}
+              >
+                {subtitle}
+              </p>
             )}
           </div>
         </div>
 
-        <div className={`grid transition-all duration-300 sm:w-[26rem] flex-shrink-0 sm:grid-rows-[1fr] sm:opacity-100 ${compact ? 'grid-rows-[0fr] opacity-0' : 'grid-rows-[1fr] opacity-100'}`}>
-        <div className="overflow-hidden min-h-0">
-        <div className="grid grid-cols-4 gap-1.5 sm:gap-2 pt-4 sm:pt-0">
+        <div
+          className="grid grid-cols-4 gap-1.5 sm:gap-2 sm:w-[26rem] flex-shrink-0 mt-4 sm:mt-0"
+          style={mobile ? { marginTop: 'calc(16px - 6px * var(--p))' } : undefined}
+        >
           <div className={tile}>
             <div className="text-[11px] text-purple-100 inline-flex items-center gap-1">{t.elo} <EloInfoLink locale={locale} variant="icon" /></div>
             <div className={value}>{player?.eloRating || 1200}</div>
@@ -184,11 +230,18 @@ export default function DashboardHeader({ player, language, leagueInfo = null, s
             </Link>
           )}
         </div>
-        </div>
-        </div>
       </div>
     </div>
-    )}
-    </MobileHeaderSlot>
   )
+
+  if (mobile) {
+    return (
+      <>
+        {createPortal(<div className="absolute top-0 inset-x-0">{card}</div>, slot)}
+        <div aria-hidden="true" style={{ height: Math.max(0, fullH - 16) }} />
+      </>
+    )
+  }
+
+  return card
 }
