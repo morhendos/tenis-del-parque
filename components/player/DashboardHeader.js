@@ -10,7 +10,6 @@ import PlayerAvatar from './PlayerAvatar'
 import EloInfoLink from './EloInfoLink'
 
 const OPENRANK_MATCHES_REQUIRED = 8
-const COLLAPSE = 46
 
 const content = {
   es: {
@@ -53,6 +52,7 @@ export default function DashboardHeader({ player, language, leagueInfo = null, s
   const [fullH, setFullH] = useState(0)
   const headerRef = useRef(null)
   const progressRef = useRef(0)
+  const collapseRef = useRef(46)
 
   useEffect(() => {
     setIsDemoMode(isDemoModeActive())
@@ -73,7 +73,7 @@ export default function DashboardHeader({ player, language, leagueInfo = null, s
     let frame = null
     const apply = () => {
       frame = null
-      const p = Math.min(1, Math.max(0, el.scrollTop / COLLAPSE))
+      const p = Math.min(1, Math.max(0, el.scrollTop / collapseRef.current))
       if (p === progressRef.current) return
       progressRef.current = p
       headerRef.current?.style.setProperty('--p', String(p))
@@ -93,7 +93,13 @@ export default function DashboardHeader({ player, language, leagueInfo = null, s
     if (!slot || !headerRef.current) return
     const node = headerRef.current
     const measure = () => {
-      if (progressRef.current === 0) setFullH(node.offsetHeight)
+      if (progressRef.current !== 0) return
+      const full = node.offsetHeight
+      node.style.setProperty('--p', '1')
+      const min = node.offsetHeight
+      node.style.setProperty('--p', '0')
+      if (full > min) collapseRef.current = full - min
+      setFullH(full)
     }
     measure()
     const ro = new ResizeObserver(measure)
@@ -145,6 +151,8 @@ export default function DashboardHeader({ player, language, leagueInfo = null, s
   const tile = 'bg-white/20 backdrop-blur-sm rounded-xl px-1 py-2 text-center border border-white/20 min-w-0'
   const value = 'text-lg sm:text-xl font-bold tabular-nums leading-tight'
   const mobile = !!slot
+  const tileStyle = mobile ? { paddingTop: 'calc(8px - 4px * var(--p))', paddingBottom: 'calc(8px - 4px * var(--p))' } : undefined
+  const valueStyle = mobile ? { fontSize: 'calc(18px - 3px * var(--p))' } : undefined
 
   const card = (
     <div
@@ -192,39 +200,44 @@ export default function DashboardHeader({ player, language, leagueInfo = null, s
 
         <div
           className="grid grid-cols-4 gap-1.5 sm:gap-2 sm:w-[26rem] flex-shrink-0 mt-4 sm:mt-0"
-          style={mobile ? { marginTop: 'calc(16px - 6px * var(--p))' } : undefined}
+          style={mobile ? { marginTop: 'calc(16px - 8px * var(--p))' } : undefined}
         >
-          <div className={tile}>
+          <div className={tile} style={tileStyle}>
             <div className="text-[11px] text-purple-100 inline-flex items-center gap-1">{t.elo} <EloInfoLink locale={locale} variant="icon" /></div>
-            <div className={value}>{player?.eloRating || 1200}</div>
+            <div className={value} style={valueStyle}>{player?.eloRating || 1200}</div>
           </div>
 
-          <Link href={`/${locale}/player/matches`} className={`${tile} hover:bg-white/30 transition-colors`}>
+          <Link href={`/${locale}/player/matches`} className={`${tile} hover:bg-white/30 transition-colors`} style={tileStyle}>
             <div className="text-[11px] text-purple-100 truncate">{t.matches}</div>
-            <div className={value}>{matchesPlayed}</div>
+            <div className={value} style={valueStyle}>{matchesPlayed}</div>
           </Link>
 
-          <Link href={`/${locale}/player/matches`} className={`${tile} hover:bg-white/30 transition-colors`}>
+          <Link href={`/${locale}/player/matches`} className={`${tile} hover:bg-white/30 transition-colors`} style={tileStyle}>
             <div className="text-[11px] text-purple-100 truncate">{t.wins}</div>
-            <div className={value}>{matchesWon}</div>
+            <div className={value} style={valueStyle}>{matchesWon}</div>
           </Link>
 
           {showLeaguePosition ? (
-            <Link href={`/${locale}/player/league`} className={`${tile} hover:bg-white/30 transition-colors`}>
+            <Link href={`/${locale}/player/league`} className={`${tile} hover:bg-white/30 transition-colors`} style={tileStyle}>
               <div className="text-[11px] text-purple-100 truncate">{t.league}</div>
-              <div className={value}>
+              <div className={value} style={valueStyle}>
                 #{myIndex + 1}<span className="text-[11px] font-medium text-purple-100">/{rows.length}</span>
               </div>
             </Link>
           ) : (
-            <Link href={`/${locale}/player/openrank`} className={`${tile} hover:bg-white/30 transition-colors`}>
+            <Link href={`/${locale}/player/openrank`} className={`${tile} hover:bg-white/30 transition-colors`} style={tileStyle}>
               <div className="text-[11px] text-purple-100 truncate">{t.openRank}</div>
               {qualified ? (
-                <div className={value}>{openRankPosition ? `#${openRankPosition}` : '-'}</div>
+                <div className={value} style={valueStyle}>{openRankPosition ? `#${openRankPosition}` : '-'}</div>
               ) : (
                 <div className="leading-tight">
-                  <div className={value}>{OPENRANK_MATCHES_REQUIRED - matchesPlayed}</div>
-                  <div className="text-[9px] text-purple-100 -mt-0.5">{t.toQualify}</div>
+                  <div className={value} style={valueStyle}>{OPENRANK_MATCHES_REQUIRED - matchesPlayed}</div>
+                  <div
+                    className="text-[9px] text-purple-100 -mt-0.5 overflow-hidden"
+                    style={mobile ? { maxHeight: 'calc(12px - 12px * var(--p))', opacity: 'calc(1 - 2 * var(--p))' } : undefined}
+                  >
+                    {t.toQualify}
+                  </div>
                 </div>
               )}
             </Link>
