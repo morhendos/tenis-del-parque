@@ -225,7 +225,7 @@ export default function PlayerPublicProfilePage() {
 
         <div className="relative mt-5 grid grid-cols-3 gap-2">
           <div className="bg-white/20 backdrop-blur-sm rounded-xl p-2.5 text-center">
-            <div className="text-xs text-purple-100">{t.elo}</div>
+            <div className="text-xs text-purple-100 inline-flex items-center gap-1">{t.elo} <EloInfoLink locale={locale} variant="icon" /></div>
             <div className="text-xl font-bold tabular-nums">{player.eloRating}</div>
           </div>
           <Link href={`/${locale}/player/openrank`} className="bg-white/20 backdrop-blur-sm rounded-xl p-2.5 text-center">
@@ -240,9 +240,6 @@ export default function PlayerPublicProfilePage() {
             <div className="text-xs text-purple-100">{t.winRate}</div>
             <div className="text-xl font-bold tabular-nums">{winRate === null ? '-' : `${winRate}%`}</div>
           </div>
-        </div>
-        <div className="relative mt-3 text-center">
-          <EloInfoLink locale={locale} className="!text-purple-100" />
         </div>
       </div>
 
