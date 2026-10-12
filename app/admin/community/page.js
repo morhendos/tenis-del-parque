@@ -21,7 +21,9 @@ export default function AdminCommunityPage() {
     fetch('/api/admin/leagues')
       .then(r => r.json())
       .then(d => {
-        const list = (d.leagues || []).filter(l => ['active', 'registration_open', 'coming_soon'].includes(l.status))
+        const list = (d.leagues || [])
+          .filter(l => ['active', 'registration_open', 'coming_soon'].includes(l.status))
+          .sort((a, b) => (a.status === 'active' ? 0 : 1) - (b.status === 'active' ? 0 : 1))
         setLeagues(list)
         if (list.length && !leagueId) setLeagueId(String(list[0]._id))
       })
@@ -63,7 +65,7 @@ export default function AdminCommunityPage() {
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1">League</label>
           <select value={leagueId} onChange={e => setLeagueId(e.target.value)} className={input}>
-            {leagues.map(l => <option key={l._id} value={l._id}>{l.name} ({l.status})</option>)}
+            {leagues.map(l => <option key={l._id} value={l._id}>{l.location?.city || l.city?.name?.es || l.slug} - {l.name} ({l.status})</option>)}
           </select>
         </div>
         <div>
