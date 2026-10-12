@@ -21,7 +21,8 @@ export default function DashboardHeader({ player, language }) {
     const el = document.getElementById('player-scroll')
     if (!el) return
     const onScroll = () => {
-      setCompact(prev => (prev ? el.scrollTop > 8 : el.scrollTop > 60))
+      const extraContent = el.scrollHeight - el.clientHeight
+      setCompact(prev => (prev ? el.scrollTop > 8 : el.scrollTop > 60 && extraContent > 160))
     }
     el.addEventListener('scroll', onScroll, { passive: true })
     return () => el.removeEventListener('scroll', onScroll)
