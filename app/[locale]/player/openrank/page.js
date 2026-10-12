@@ -255,7 +255,7 @@ export default function OpenRankPage() {
               return (
                 <div 
                   key={player._id}
-                  className={`px-4 py-3 ${getRowStyle(player.position, isCurrentPlayer)}`}
+                  className={`relative px-4 py-3 ${getRowStyle(player.position, isCurrentPlayer)}`}
                 >
                   <div className="flex items-center">
                     {/* Position */}
@@ -275,7 +275,7 @@ export default function OpenRankPage() {
                       />
                       <div className="ml-2 min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <PlayerLink playerId={player._id} className="font-medium text-gray-900 truncate">{isDemoMode ? getMaskedName(player.name) : player.name}</PlayerLink>
+                          <PlayerLink playerId={player._id} stretch className="font-medium text-gray-900 truncate">{isDemoMode ? getMaskedName(player.name) : player.name}</PlayerLink>
                           {isCurrentPlayer && (
                             <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full font-medium flex-shrink-0">
                               {t.you}
@@ -341,7 +341,7 @@ export default function OpenRankPage() {
                   return (
                     <div 
                       key={player._id}
-                      className={`px-4 py-3 ${isCurrentPlayer ? 'bg-purple-50' : ''}`}
+                      className={`relative px-4 py-3 ${isCurrentPlayer ? 'bg-purple-50' : ''}`}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-3">
@@ -352,7 +352,7 @@ export default function OpenRankPage() {
                             size="md"
                           />
                           <div>
-                            <PlayerLink playerId={player._id} className="font-medium text-gray-900">{isDemoMode ? getMaskedName(player.name) : player.name}</PlayerLink>
+                            <PlayerLink playerId={player._id} stretch className="font-medium text-gray-900">{isDemoMode ? getMaskedName(player.name) : player.name}</PlayerLink>
                             {isCurrentPlayer && (
                               <span className="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium">
                                 {t.you}

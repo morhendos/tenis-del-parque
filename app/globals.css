@@ -79,6 +79,10 @@ a, button, label, input, select, textarea, summary, [role="button"] {
   -webkit-tap-highlight-color: transparent;
 }
 
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
 :where(.tap-target) {
   position: relative;
 }

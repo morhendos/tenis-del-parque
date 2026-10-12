@@ -129,7 +129,7 @@ export default function MiniStandings({ standings, playerId, language, locale })
         {displayRows.map((row, idx) => (
           <div 
             key={row.player._id || idx}
-            className={`grid grid-cols-12 gap-2 px-3 py-2.5 border-t border-gray-100 ${
+            className={`relative grid grid-cols-12 gap-2 px-3 py-2.5 border-t border-gray-100 ${
               row.isCurrentPlayer 
                 ? 'bg-purple-50 font-semibold' 
                 : 'bg-white'
@@ -144,7 +144,7 @@ export default function MiniStandings({ standings, playerId, language, locale })
               row.isCurrentPlayer ? 'text-parque-purple' : 'text-gray-900'
             }`}>
               <PlayerAvatar name={row.player.name} avatar={isDemoMode ? null : row.player.avatar} country={row.player.country} size="xs" />
-              <PlayerLink playerId={row.player._id} className="truncate">
+              <PlayerLink playerId={row.player._id} stretch className="truncate">
                 {isDemoMode ? getMaskedName(row.player.name) : row.player.name}
               </PlayerLink>
             </div>

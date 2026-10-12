@@ -11,12 +11,12 @@ export function usePlayerProfileHref() {
   return (id) => (inPlayerArea && id ? `/${locale}/player/players/${id}` : null)
 }
 
-export default function PlayerLink({ playerId, className = '', children }) {
+export default function PlayerLink({ playerId, className = '', stretch = false, children }) {
   const hrefFor = usePlayerProfileHref()
   const href = hrefFor(playerId)
   if (!href) return <span className={className}>{children}</span>
   return (
-    <Link href={href} onClick={(e) => e.stopPropagation()} className={`hover:underline underline-offset-2 ${className}`}>
+    <Link href={href} onClick={(e) => e.stopPropagation()} className={`hover:underline underline-offset-2 ${stretch ? "after:content-[''] after:absolute after:inset-0" : ''} ${className}`}>
       {children}
     </Link>
   )

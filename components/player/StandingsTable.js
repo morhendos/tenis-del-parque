@@ -82,7 +82,7 @@ export default function StandingsTable({ players, language, unified = false, pla
                     <PlayerAvatar name={standing.player.name} avatar={standing.player.avatar} country={standing.player.country} size="sm" className="hidden min-[360px]:block" />
                   )}
                   <div className="min-w-0">
-                    <PlayerLink playerId={standing.player._id} className="block font-semibold text-gray-900 text-[12px] sm:text-sm truncate">
+                    <PlayerLink playerId={standing.player._id} stretch className="block font-semibold text-gray-900 text-[12px] sm:text-sm truncate">
                       {formatPlayerNameForStandings(standing.player.name, language)}
                     </PlayerLink>
                     <div className="text-[10px] text-gray-400">

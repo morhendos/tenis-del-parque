@@ -84,7 +84,7 @@ export default function RecentResults({ matches, language, maxResults = 3 }) {
           return (
             <div 
               key={match._id || index}
-              className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0"
+              className="relative flex items-center gap-3 py-2 border-b border-gray-100 last:border-0"
             >
               {/* Win/Loss indicator */}
               <div className={`w-1 h-8 rounded-full flex-shrink-0 ${
@@ -97,7 +97,7 @@ export default function RecentResults({ matches, language, maxResults = 3 }) {
                   {isBye ? (
                     <p className="font-medium text-gray-900 text-sm truncate">{t.bye}</p>
                   ) : (
-                    <PlayerLink playerId={match.opponentId} className="font-medium text-gray-900 text-sm truncate">
+                    <PlayerLink playerId={match.opponentId} stretch className="font-medium text-gray-900 text-sm truncate">
                       {isDemoMode ? getMaskedName(match.opponent) : match.opponent}
                     </PlayerLink>
                   )}
