@@ -6,6 +6,25 @@ import Link from 'next/link'
 import LeagueSeasonEditor from '../../../../components/admin/leagues/LeagueSeasonEditor'
 import SeasonStartEmailModal from '../../../../components/admin/leagues/SeasonStartEmailModal'
 
+const Svg = ({ d, className = 'w-5 h-5' }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d={d} />
+  </svg>
+)
+
+const IC = {
+  back: 'M15 19l-7-7 7-7',
+  overview: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z',
+  players: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z',
+  matches: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+  playoffs: 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z',
+  settings: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065zM15 12a3 3 0 11-6 0 3 3 0 016 0z',
+  euro: 'M14.121 15.536c-1.171 1.952-3.07 1.952-4.242 0-1.172-1.953-1.172-5.119 0-7.072 1.171-1.952 3.07-1.952 4.242 0M8 10.5h4m-4 3h4m9-1.5a9 9 0 11-18 0 9 9 0 0118 0z',
+  status: 'M13 10V3L4 14h7v7l9-11h-7z',
+  tag: 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z',
+  mail: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'
+}
+
 export default function LeagueManagementPage() {
   const [league, setLeague] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -280,65 +299,61 @@ export default function LeagueManagementPage() {
   return (
     <div className="space-y-6">
       {/* Back Navigation */}
-      <div className="flex items-center mb-4">
-        <button
-          onClick={() => router.push('/admin/leagues')}
-          className="flex items-center text-gray-600 hover:text-parque-purple transition-colors"
-        >
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Back to Leagues
-        </button>
-      </div>
+      <button
+        onClick={() => router.push('/admin/leagues')}
+        className="inline-flex items-center gap-1 text-sm font-medium text-gray-500 hover:text-parque-purple transition-colors"
+      >
+        <Svg d={IC.back} className="w-4 h-4" />
+        Leagues
+      </button>
 
       {/* League Header */}
-      <div className="bg-gradient-to-r from-parque-purple to-parque-green rounded-lg p-6 text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">{league.name}</h1>
-            <div className="flex items-center gap-3 mt-2">
-              <p className="text-parque-bg opacity-90">
-                {league.location?.city}, {league.location?.region}
-              </p>
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-parque-purple via-purple-600 to-indigo-600 p-6 text-white shadow-lg shadow-purple-900/10">
+        <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full bg-white/10" />
+        <div className="relative flex flex-wrap items-end justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-widest text-purple-200">
+              {[league.location?.city, league.location?.region].filter(Boolean).join(', ')}
+            </p>
+            <h1 className="mt-1 text-3xl font-bold leading-tight">{league.name}</h1>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/15 ring-1 ring-white/25">
+                {getStatusInfo(league.status).name}
+              </span>
               {league.skillLevel && league.skillLevel !== 'all' && (
-                <span className={`inline-block px-2 py-1 text-xs font-medium rounded border ${getSkillLevelBadgeColor(league.skillLevel)} bg-white bg-opacity-20 border-white border-opacity-30`}>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/15 ring-1 ring-white/25">
                   {getSkillLevelName(league.skillLevel)}
                 </span>
               )}
+              {league.season && (
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-white/15 ring-1 ring-white/25 capitalize">
+                  {league.season.type} {league.season.year}
+                </span>
+              )}
             </div>
-            {currentSeason && (
-              <p className="mt-1 text-parque-bg opacity-90">
-                {currentSeason.name} • {currentSeason.status.replace('_', ' ').toUpperCase()}
-              </p>
-            )}
           </div>
-          
           <div className="text-right">
-            <div className="text-2xl font-bold">{league.playerCount || 0}</div>
-            <div className="text-sm opacity-90">Players</div>
-            <div className={`text-sm mt-2 font-medium ${playoffPhase.color}`}>
-              {playoffPhase.text}
-            </div>
+            <p className="text-4xl font-bold tabular-nums leading-none">{league.playerCount || 0}</p>
+            <p className="mt-1 text-sm text-purple-200">players · {playoffPhase.text}</p>
           </div>
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="border-b border-gray-200">
-          <nav className="flex space-x-8 px-6">
+      <div className="bg-white rounded-2xl border border-gray-100">
+        <div className="border-b border-gray-100 px-2 sm:px-4 overflow-x-auto">
+          <nav className="flex gap-1">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => handleTabClick(tab.id)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                className={`inline-flex items-center gap-2 px-3 py-3.5 border-b-2 text-sm font-medium whitespace-nowrap transition-colors ${
                   activeTab === tab.id
                     ? 'border-parque-purple text-parque-purple'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    : 'border-transparent text-gray-500 hover:text-gray-800'
                 }`}
               >
-                <span className="mr-2">{tab.icon}</span>
+                <Svg d={IC[tab.id]} className="w-4 h-4" />
                 {tab.name}
               </button>
             ))}
@@ -346,233 +361,125 @@ export default function LeagueManagementPage() {
         </div>
 
         {/* Tab Content */}
-        <div className="p-6">
+        <div className="p-5 sm:p-6">
           {activeTab === 'overview' && (
             <div className="space-y-6">
               {/* Quick Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex items-center">
-                    <span className="text-2xl mr-3">👥</span>
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Total Players</p>
-                      <p className="text-2xl font-bold text-gray-900">{league.playerCount || 0}</p>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {[
+                  {
+                    label: 'Players',
+                    value: league.playerCount || 0,
+                    sub: league.seasonConfig?.maxPlayers ? `of ${league.seasonConfig.maxPlayers} max` : null,
+                    icon: IC.players
+                  },
+                  {
+                    label: 'Price',
+                    value: league.seasonConfig?.price?.isFree ? 'Free' : (league.seasonConfig?.price?.amount > 0 ? `${league.seasonConfig.price.amount}€` : '-'),
+                    icon: IC.euro
+                  },
+                  { label: 'Status', value: getStatusInfo(league.status).name, small: true, icon: IC.status },
+                  { label: 'Phase', value: playoffPhase.text, small: true, icon: IC.playoffs }
+                ].map(s => (
+                  <div key={s.label} className="rounded-2xl border border-gray-100 p-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-medium text-gray-500">{s.label}</p>
+                      <span className="text-parque-purple/60"><Svg d={s.icon} className="w-4 h-4" /></span>
                     </div>
+                    <p className={`mt-1.5 font-bold text-gray-900 ${s.small ? 'text-base' : 'text-2xl tabular-nums'}`}>{s.value}</p>
+                    {s.sub && <p className="text-xs text-gray-400">{s.sub}</p>}
                   </div>
-                </div>
-                
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex items-center">
-                    <span className="text-2xl mr-3">🎾</span>
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Total Matches</p>
-                      <p className="text-2xl font-bold text-gray-900">0</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex items-center">
-                    <span className="text-2xl mr-3">🏆</span>
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Current Phase</p>
-                      <p className="text-sm font-bold text-gray-900">
-                        {playoffPhase.text}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex items-center">
-                    <span className="text-2xl mr-3">📅</span>
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Season Status</p>
-                      <p className="text-sm font-bold text-gray-900 capitalize">
-                        {currentSeason?.status?.replace('_', ' ') || 'No Season'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                ))}
               </div>
 
               {/* Quick Actions */}
-              <div className="bg-white border rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <button
-                    onClick={() => handleTabClick('players')}
-                    className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <span className="text-2xl mr-3">👥</span>
-                    <div className="text-left">
-                      <p className="font-medium text-gray-900">Manage Players</p>
-                      <p className="text-sm text-gray-600">View and edit player list</p>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => handleTabClick('matches')}
-                    className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <span className="text-2xl mr-3">🎾</span>
-                    <div className="text-left">
-                      <p className="font-medium text-gray-900">Manage Matches</p>
-                      <p className="text-sm text-gray-600">Schedule and track matches</p>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => router.push(`/admin/leagues/${leagueId}/playoffs`)}
-                    className="flex items-center p-4 border border-purple-200 rounded-lg hover:bg-purple-50 transition-colors relative"
-                  >
-                    {league?.playoffConfig?.currentPhase !== 'regular_season' && (
-                      <span className="absolute top-2 right-2 w-2 h-2 bg-purple-600 rounded-full animate-pulse"></span>
-                    )}
-                    <span className="text-2xl mr-3">🏆</span>
-                    <div className="text-left">
-                      <p className="font-medium text-gray-900">Manage Playoffs</p>
-                      <p className="text-sm text-gray-600">Tournament bracket & settings</p>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => router.push(`/admin/leagues/${leagueId}/discounts`)}
-                    className="flex items-center p-4 border border-emerald-200 rounded-lg hover:bg-emerald-50 transition-colors relative"
-                  >
-                    {league?.discountCodes && league.discountCodes.length > 0 && (
-                      <span className="absolute top-2 right-2 px-2 py-0.5 bg-emerald-600 text-white text-xs rounded-full">
-                        {league.discountCodes.filter(d => d.isActive).length}
-                      </span>
-                    )}
-                    <span className="text-2xl mr-3">💰</span>
-                    <div className="text-left">
-                      <p className="font-medium text-gray-900">Discount Codes</p>
-                      <p className="text-sm text-gray-600">Manage promo codes</p>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => setShowSeasonStartEmail(true)}
-                    className="flex items-center p-4 border border-amber-200 rounded-lg hover:bg-amber-50 transition-colors"
-                  >
-                    <span className="text-2xl mr-3">📧</span>
-                    <div className="text-left">
-                      <p className="font-medium text-gray-900">Season Start Email</p>
-                      <p className="text-sm text-gray-600">Notify players about Round 1</p>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => handleTabClick('settings')}
-                    className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <span className="text-2xl mr-3">⚙️</span>
-                    <div className="text-left">
-                      <p className="font-medium text-gray-900">League Settings</p>
-                      <p className="text-sm text-gray-600">Configure league options</p>
-                    </div>
-                  </button>
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">Quick actions</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {[
+                    { title: 'Players', desc: 'View and edit the player list', icon: IC.players, onClick: () => handleTabClick('players') },
+                    { title: 'Matches', desc: 'Rounds, results and deadlines', icon: IC.matches, onClick: () => handleTabClick('matches') },
+                    { title: 'Playoffs', desc: 'Bracket and settings', icon: IC.playoffs, onClick: () => router.push(`/admin/leagues/${leagueId}/playoffs`), dot: league?.playoffConfig?.currentPhase && league.playoffConfig.currentPhase !== 'regular_season' },
+                    { title: 'Discount codes', desc: 'Promo and loyalty codes', icon: IC.tag, onClick: () => router.push(`/admin/leagues/${leagueId}/discounts`), count: league?.discountCodes?.filter(d => d.isActive).length || 0 },
+                    { title: 'Season start email', desc: 'Notify players about Round 1', icon: IC.mail, onClick: () => setShowSeasonStartEmail(true) },
+                    { title: 'Settings', desc: 'Status, levels and playoffs', icon: IC.settings, onClick: () => handleTabClick('settings') }
+                  ].map(a => (
+                    <button
+                      key={a.title}
+                      onClick={a.onClick}
+                      className="group relative flex items-center gap-3 rounded-2xl border border-gray-100 p-4 text-left hover:border-purple-200 hover:shadow-sm transition"
+                    >
+                      <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-purple-50 text-parque-purple flex items-center justify-center group-hover:bg-parque-purple group-hover:text-white transition-colors">
+                        <Svg d={a.icon} className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-900">{a.title}</p>
+                        <p className="text-xs text-gray-500 truncate">{a.desc}</p>
+                      </div>
+                      {a.count > 0 && (
+                        <span className="ml-auto px-2 py-0.5 rounded-full text-[11px] font-semibold bg-purple-50 text-parque-purple">{a.count}</span>
+                      )}
+                      {a.dot && <span className="ml-auto w-2 h-2 rounded-full bg-parque-purple animate-pulse" />}
+                    </button>
+                  ))}
                 </div>
               </div>
 
               {/* League Information */}
-              <div className="bg-white border rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">League Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Basic Details</h4>
-                    <dl className="space-y-2 text-sm">
-                      <div>
-                        <dt className="text-gray-600">Name:</dt>
-                        <dd className="font-medium">{league.name}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-gray-600">Location:</dt>
-                        <dd className="font-medium">{league.location?.city}, {league.location?.region}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-gray-600">Skill Level:</dt>
-                        <dd className="font-medium">{getSkillLevelName(league.skillLevel || 'all')}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-gray-600">Playoff Groups:</dt>
-                        <dd className="font-medium">
-                          {league?.playoffConfig?.numberOfGroups || 1} Group(s)
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-gray-600">Created:</dt>
-                        <dd className="font-medium">{new Date(league.createdAt).toLocaleDateString()}</dd>
-                      </div>
-                    </dl>
-                  </div>
-                  
-                  {currentSeason && (
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-2">Current Season</h4>
-                      <dl className="space-y-2 text-sm">
-                        <div>
-                          <dt className="text-gray-600">Season:</dt>
-                          <dd className="font-medium">{currentSeason.name}</dd>
-                        </div>
-                        <div>
-                          <dt className="text-gray-600">Status:</dt>
-                          <dd className="font-medium capitalize">{currentSeason.status.replace('_', ' ')}</dd>
-                        </div>
-                        <div>
-                          <dt className="text-gray-600">Start Date:</dt>
-                          <dd className="font-medium">
-                            {currentSeason.startDate ? new Date(currentSeason.startDate).toLocaleDateString() : 'TBD'}
-                          </dd>
-                        </div>
-                        <div>
-                          <dt className="text-gray-600">Phase:</dt>
-                          <dd className={`font-medium ${playoffPhase.color}`}>
-                            {playoffPhase.text}
-                          </dd>
-                        </div>
-                      </dl>
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">League details</h3>
+                <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-8 rounded-2xl border border-gray-100 px-5 py-1">
+                  {[
+                    ['Location', [league.location?.city, league.location?.region].filter(Boolean).join(', ')],
+                    ['Skill level', getSkillLevelName(league.skillLevel || 'all')],
+                    ['Season', league.seasonConfig?.startDate
+                      ? `${new Date(league.seasonConfig.startDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}${league.seasonConfig.endDate ? ` - ${new Date(league.seasonConfig.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}`
+                      : (currentSeason?.startDate ? new Date(currentSeason.startDate).toLocaleDateString('en-GB') : 'TBD')],
+                    ['Registration closes', league.seasonConfig?.registrationEnd ? new Date(league.seasonConfig.registrationEnd).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'],
+                    ['Max players', league.seasonConfig?.maxPlayers || '-'],
+                    ['Playoff groups', league?.playoffConfig?.numberOfGroups || 1],
+                    ['Phase', playoffPhase.text],
+                    ['Created', league.createdAt ? new Date(league.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '-']
+                  ].map(([k, v]) => (
+                    <div key={k} className="flex items-center justify-between gap-4 py-3 border-b border-gray-50 last:border-0 md:[&:nth-last-child(2)]:border-0">
+                      <dt className="text-sm text-gray-500">{k}</dt>
+                      <dd className="text-sm font-medium text-gray-900 text-right">{v}</dd>
                     </div>
-                  )}
-                </div>
+                  ))}
+                </dl>
               </div>
 
               {/* Discount Codes Summary */}
-              {league?.discountCodes && league.discountCodes.length > 0 && (
-                <div className="bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 rounded-lg p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Active Promotions</h3>
+              {league?.discountCodes && league.discountCodes.filter(d => d.isActive).length > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-gray-900">Active promotions</h3>
                     <button
                       onClick={() => router.push(`/admin/leagues/${leagueId}/discounts`)}
-                      className="text-sm text-emerald-700 hover:text-emerald-800 font-medium"
+                      className="text-sm font-medium text-parque-purple hover:underline"
                     >
-                      View All →
+                      View all
                     </button>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     {league.discountCodes.filter(d => d.isActive).slice(0, 3).map((discount) => (
-                      <div key={discount.code} className="bg-white rounded-lg p-4 border border-emerald-100">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-mono font-bold text-sm text-gray-900">{discount.code}</span>
-                          <span className="px-2 py-0.5 bg-emerald-600 text-white text-xs rounded-full">
-                            {discount.discountPercentage}% OFF
-                          </span>
+                      <div key={discount.code} className="rounded-2xl border border-gray-100 p-4">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-mono text-sm font-bold text-parque-purple bg-purple-50 px-2 py-0.5 rounded-lg border border-dashed border-purple-200">{discount.code}</span>
+                          <span className="text-sm font-bold text-gray-900">-{discount.discountPercentage}%</span>
                         </div>
-                        <p className="text-xs text-gray-600 mb-2">{discount.description}</p>
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-500">
-                            Used: {discount.usedCount || 0}{discount.maxUses ? `/${discount.maxUses}` : ''}
-                          </span>
-                          <span className="text-gray-500">
-                            Until {new Date(discount.validUntil).toLocaleDateString('en', { month: 'short', day: 'numeric' })}
-                          </span>
+                        {discount.description && <p className="mt-2 text-xs text-gray-500 truncate">{discount.description}</p>}
+                        <div className="mt-3 flex items-center justify-between text-xs text-gray-400">
+                          <span>Used {discount.usedCount || 0}{discount.maxUses ? ` / ${discount.maxUses}` : ''}</span>
+                          {discount.validUntil && (
+                            <span>Until {new Date(discount.validUntil).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+                          )}
                         </div>
                       </div>
                     ))}
                   </div>
                   {league.discountCodes.filter(d => d.isActive).length > 3 && (
-                    <p className="text-xs text-gray-600 mt-3 text-center">
+                    <p className="text-xs text-gray-500 mt-3 text-center">
                       + {league.discountCodes.filter(d => d.isActive).length - 3} more active codes
                     </p>
                   )}
