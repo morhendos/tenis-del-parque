@@ -178,41 +178,34 @@ function AdminPlayersContent() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Players</h2>
-          <p className="text-gray-600 mt-1">
-            {leagueParam ? 
-              `Manage players in ${leagues.find(l => l._id === leagueParam)?.name || 'selected league'}` :
-              'Manage all registered players across leagues'
-            }
-          </p>
-          <p className="text-sm text-blue-600 mt-2">
-            💡 Click <span className="font-medium">📧 Invite</span> for new players or <span className="font-medium">🔄 Re-invite</span> for players who need a new activation link
-          </p>
-        </div>
-        <div className="flex space-x-3">
-          <button
-            onClick={handleRecalculateAllPlayers}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center space-x-2"
-            title="Recalculate all player stats from match history"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            <span>Recalculate All Stats</span>
-          </button>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-gray-500">
+          {leagueParam
+            ? <>Players in <span className="font-semibold text-gray-900">{leagues.find(l => l._id === leagueParam)?.name || 'selected league'}</span></>
+            : 'All registered players across leagues'}
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setImportModal({ show: true })}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-colors"
           >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M16 8l-4-4m0 0L8 8m4-4v12" /></svg>
             Import CSV
           </button>
           <button
             onClick={exportCSV}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-colors"
           >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M8 12l4 4m0 0l4-4m-4 4V4" /></svg>
             Export CSV
+          </button>
+          <button
+            onClick={handleRecalculateAllPlayers}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold rounded-xl bg-purple-50 text-parque-purple hover:bg-purple-100 transition-colors"
+            title="Recalculate all player stats from match history"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            Recalculate stats
           </button>
         </div>
       </div>
