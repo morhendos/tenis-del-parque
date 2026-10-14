@@ -111,6 +111,18 @@ export default function MatchDetailPage() {
           </div>
         )}
 
+        {match.isBye ? (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-xl font-bold mb-1">Rest round (BYE)</h3>
+            <p className="text-gray-600 mb-4">{match.players.player1?.name} has no opponent in round {match.round}. Delete this to pair them with a player instead.</p>
+            <button
+              onClick={() => { if (confirm('Delete this bye?')) deleteMatch() }}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            >
+              Delete bye
+            </button>
+          </div>
+        ) : (<>
         {/* Players Card */}
         <MatchPlayersCard match={match} showEditIndicator={match.status !== 'completed'} />
 
@@ -169,6 +181,7 @@ export default function MatchDetailPage() {
             )}
           </div>
         </div>
+        </>)}
       </div>
     </div>
   )
