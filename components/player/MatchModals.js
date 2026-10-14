@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 
 export function MatchModals({ 
   showResultModal,
@@ -18,6 +19,8 @@ export function MatchModals({
   extensionsRemaining = 0,
   isEditingSchedule = false
 }) {
+  const [portalReady, setPortalReady] = useState(false)
+  useEffect(() => { setPortalReady(true) }, [])
   // Venue options by city
   const VENUE_OPTIONS = {
     sotogrande: [
@@ -392,12 +395,14 @@ export function MatchModals({
     return `Set ${index + 1}`
   }
 
-  return (
+  if (!portalReady) return null
+
+  return createPortal(
     <>
       {/* Result Modal - Mobile Optimized */}
       {showResultModal && selectedMatch && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4">
-          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-md p-6 pb-24 sm:pb-6 max-h-[95vh] overflow-y-auto animate-slide-up-mobile sm:animate-fade-in">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end sm:items-center justify-center sm:p-4">
+          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-md p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 max-h-[95vh] overflow-y-auto animate-slide-up-mobile sm:animate-fade-in">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900">
                 {language === 'es' ? 'Reportar Resultado' : 'Report Result'}
@@ -542,8 +547,8 @@ export function MatchModals({
 
       {/* Schedule Modal - Mobile Optimized */}
       {showScheduleModal && selectedMatch && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4">
-          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-md p-6 pb-24 sm:pb-6 max-h-[95vh] overflow-y-auto animate-slide-up-mobile sm:animate-fade-in">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end sm:items-center justify-center sm:p-4">
+          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-md p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 max-h-[95vh] overflow-y-auto animate-slide-up-mobile sm:animate-fade-in">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900">
                 {isEditingSchedule 
@@ -595,7 +600,7 @@ export function MatchModals({
                     setFormError('')
                   }}
                   min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-parque-purple focus:ring-1 focus:ring-parque-purple"
+                  className="block w-full min-w-0 appearance-none bg-white text-left px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-parque-purple focus:ring-1 focus:ring-parque-purple [&::-webkit-date-and-time-value]:text-left"
                   required
                 />
               </div>
@@ -610,7 +615,7 @@ export function MatchModals({
                     setScheduleForm({...scheduleForm, time: e.target.value})
                     setFormError('')
                   }}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-parque-purple focus:ring-1 focus:ring-parque-purple"
+                  className="block w-full min-w-0 appearance-none bg-white text-left px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-parque-purple focus:ring-1 focus:ring-parque-purple [&::-webkit-date-and-time-value]:text-left"
                   required
                 />
               </div>
@@ -780,8 +785,8 @@ export function MatchModals({
 
       {/* Extend Deadline Modal - Mobile Optimized */}
       {showExtendModal && selectedMatch && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4">
-          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-sm p-6 pb-24 sm:pb-6 animate-slide-up-mobile sm:animate-fade-in">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end sm:items-center justify-center sm:p-4">
+          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-sm p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-6 animate-slide-up-mobile sm:animate-fade-in">
             {/* Icon */}
             <div className="flex justify-center mb-4">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
@@ -851,6 +856,7 @@ export function MatchModals({
           animation: fade-in 0.3s ease-out;
         }
       `}</style>
-    </>
+    </>,
+    document.body
   )
 }
