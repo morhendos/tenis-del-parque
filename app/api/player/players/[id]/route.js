@@ -31,7 +31,13 @@ function matchView(m, perspectiveId) {
     round: m.round,
     matchType: m.matchType,
     date: m.result.playedAt || m.schedule?.confirmedDate || m.updatedAt,
-    league: m.league ? { name: m.league.name, slug: m.league.slug } : null,
+    league: m.league ? {
+      name: m.league.name,
+      slug: m.league.slug,
+      city: m.league.location?.city || null,
+      skillLevel: m.league.skillLevel || null,
+      season: m.league.season?.type ? { type: m.league.season.type, year: m.league.season.year } : null
+    } : null,
     opponent: opp ? { _id: opp._id, name: opp.name, avatar: opp.avatar || null, country: opp.country || null } : null
   }
 }
@@ -138,7 +144,7 @@ export async function GET(request, { params }) {
     })
       .populate('players.player1', 'name avatar country')
       .populate('players.player2', 'name avatar country')
-      .populate('league', 'name slug')
+      .populate('league', 'name slug skillLevel season location.city')
       .lean()
 
     const views = matches

@@ -166,7 +166,28 @@ export default function PlayerPublicProfilePage() {
     return m.retired ? `${s} ${t.ret}` : s
   }
 
-  const formatDate = (d) => d ? new Date(d).toLocaleDateString(locale === 'es' ? 'es-ES' : 'en-GB', { day: 'numeric', month: 'short' }) : ''
+  const formatDate = (d) => {
+    if (!d) return ''
+    const date = new Date(d)
+    const opts = { day: 'numeric', month: 'short' }
+    if (date.getFullYear() !== new Date().getFullYear()) opts.year = 'numeric'
+    return date.toLocaleDateString(locale === 'es' ? 'es-ES' : 'en-GB', opts)
+  }
+  const LEVELS = { advanced: 'Gold', intermediate: 'Silver', beginner: 'Bronze' }
+  const SEASONS = {
+    es: { spring: 'Primavera', summer: 'Verano', autumn: 'Otoño', winter: 'Invierno', annual: 'Anual' },
+    en: { spring: 'Spring', summer: 'Summer', autumn: 'Autumn', winter: 'Winter', annual: 'Annual' }
+  }
+  const leagueTitle = (l) => {
+    if (!l?.city) return l?.name || ''
+    const level = LEVELS[l.skillLevel]
+    return level ? `${l.city} ${level}` : l.city
+  }
+  const leagueSeason = (l) => {
+    if (!l?.season) return ''
+    const names = SEASONS[locale] || SEASONS.en
+    return `${names[l.season.type] || l.season.type} ${l.season.year}`
+  }
 
   const goBack = () => {
     if (typeof window !== 'undefined' && window.history.length > 1) router.back()
@@ -263,7 +284,10 @@ export default function PlayerPublicProfilePage() {
                   <span className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center flex-shrink-0 ${m.won ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
                     {m.won ? t.won : t.lost}
                   </span>
-                  <span className="text-gray-500 truncate">{m.league?.name}</span>
+                  <div className="min-w-0">
+                    <div className="text-gray-700 truncate">{leagueTitle(m.league)}</div>
+                    {m.league?.season && <div className="text-xs text-gray-400 truncate">{leagueSeason(m.league)}</div>}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <span className="font-mono text-gray-900">{formatScore(m)}</span>
