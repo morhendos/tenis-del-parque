@@ -414,6 +414,10 @@ export async function POST(request) {
         })
       }
     } else if (currentRegistration?.paymentStatus === 'waived' && (!isResume || resumedToWaived)) {
+      if (currentRegistration.status === 'pending') {
+        currentRegistration.status = 'confirmed'
+        await player.save()
+      }
       await League.findByIdAndUpdate(league._id, {
         $inc: { 'stats.totalPlayers': 1, 'stats.registeredPlayers': 1 }
       })
