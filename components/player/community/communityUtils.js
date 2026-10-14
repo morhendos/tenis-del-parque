@@ -24,11 +24,17 @@ export function isUnread(leagueId, latestAt) {
 }
 
 export function timeAgo(date, locale = 'es') {
-  const diff = (Date.now() - new Date(date).getTime()) / 1000
-  const rtf = new Intl.RelativeTimeFormat(locale === 'es' ? 'es' : 'en', { numeric: 'auto', style: 'short' })
-  if (diff < 60) return locale === 'es' ? 'ahora' : 'now'
+  const d = new Date(date)
+  const now = new Date()
+  const diff = (now.getTime() - d.getTime()) / 1000
+  const es = locale === 'es'
+  const rtf = new Intl.RelativeTimeFormat(es ? 'es' : 'en', { numeric: 'auto', style: 'short' })
+  if (diff < 60) return es ? 'ahora' : 'now'
   if (diff < 3600) return rtf.format(-Math.floor(diff / 60), 'minute')
-  if (diff < 86400) return rtf.format(-Math.floor(diff / 3600), 'hour')
-  if (diff < 86400 * 7) return rtf.format(-Math.floor(diff / 86400), 'day')
-  return new Date(date).toLocaleDateString(locale === 'es' ? 'es-ES' : 'en-GB', { day: 'numeric', month: 'short' })
+  const time = d.toLocaleTimeString(es ? 'es-ES' : 'en-GB', { hour: '2-digit', minute: '2-digit' })
+  const dayStart = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime()
+  const days = Math.round((dayStart(now) - dayStart(d)) / 86400000)
+  if (days === 0) return rtf.format(-Math.floor(diff / 3600), 'hour')
+  if (days < 7) return `${rtf.format(-days, 'day')} ${time}`
+  return d.toLocaleDateString(es ? 'es-ES' : 'en-GB', { day: 'numeric', month: 'short' })
 }
