@@ -7,6 +7,29 @@ import PushNotificationModal from '@/components/admin/matches/PushNotificationMo
 // ============================================================
 // DEADLINE HELPERS
 // ============================================================
+const MSvg = ({ d, className = 'w-4 h-4' }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d={d} />
+  </svg>
+)
+
+const MIC = {
+  plus: 'M12 4v16m8-8H4',
+  upload: 'M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M16 8l-4-4m0 0L8 8m4-4v12',
+  download: 'M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M8 12l4 4m0 0l4-4m-4 4V4',
+  rounds: 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15',
+  swiss: 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4',
+  bell: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9',
+  clock: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+  calendar: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+  pin: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z',
+  chevron: 'M9 5l7 7-7 7'
+}
+
+const mBtnSecondary = 'inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-colors'
+const mField = 'w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-parque-purple/40 focus:border-parque-purple'
+const mRoundBtn = 'inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors'
+
 function getDeadlineStatus(match) {
   if (match.status === 'completed') return { label: 'Completed', color: 'green', urgency: 0 }
   if (match.status === 'cancelled') return { label: 'Cancelled', color: 'red', urgency: 3 }
@@ -32,11 +55,11 @@ function getDeadlineStatus(match) {
 function DeadlineBadge({ match }) {
   const status = getDeadlineStatus(match)
   const colorClasses = {
-    green: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    yellow: 'bg-amber-50 text-amber-700 border-amber-200',
-    orange: 'bg-orange-50 text-orange-700 border-orange-200',
-    red: 'bg-red-50 text-red-700 border-red-200',
-    gray: 'bg-gray-50 text-gray-500 border-gray-200'
+    green: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+    yellow: 'bg-amber-50 text-amber-700 ring-amber-200',
+    orange: 'bg-orange-50 text-orange-700 ring-orange-200',
+    red: 'bg-rose-50 text-rose-700 ring-rose-200',
+    gray: 'bg-gray-50 text-gray-500 ring-gray-200'
   }
   const dotColors = {
     green: 'bg-emerald-400',
@@ -49,7 +72,7 @@ function DeadlineBadge({ match }) {
   if (match.status === 'completed' || match.isBye) return null
 
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full border ${colorClasses[status.color]}`}>
+    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-semibold rounded-full ring-1 ${colorClasses[status.color]}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${dotColors[status.color]}`} />
       {match.schedule?.deadline && (
         <span className="opacity-70">
@@ -271,194 +294,113 @@ function AdminMatchesContent() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Matches</h2>
-          <p className="text-gray-600 mt-1">
-            {selectedLeague ? `Manage matches and results for ${selectedLeague.name}` : 'Manage matches and results'}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <button
-            onClick={handleExport}
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 flex items-center"
-          >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-            </svg>
-            Export
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-gray-500">
+          {selectedLeague ? <>Matches and results for <span className="font-semibold text-gray-900">{selectedLeague.name}</span></> : 'Matches and results'}
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <button onClick={handleExport} className={mBtnSecondary}>
+            <MSvg d={MIC.download} /> Export
           </button>
-          <button
-            onClick={() => setShowImportModal(true)}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center"
-          >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-            </svg>
-            Import
+          <button onClick={() => setShowImportModal(true)} className={mBtnSecondary}>
+            <MSvg d={MIC.upload} /> Import
           </button>
-          <button
-            onClick={() => router.push(`/admin/matches/generate-round?league=${leagueId || selectedLeague?.id}`)}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center"
-          >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-            </svg>
-            Swiss Pairing
+          <button onClick={() => router.push(`/admin/matches/round-management?league=${leagueId || selectedLeague?.id}`)} className={mBtnSecondary}>
+            <MSvg d={MIC.rounds} /> Rounds
           </button>
-          <button
-            onClick={() => handleCreateMatch()}
-            className="px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-opacity-90 flex items-center"
-          >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-            </svg>
-            Create Match
+          <button onClick={() => router.push(`/admin/matches/generate-round?league=${leagueId || selectedLeague?.id}`)} className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold rounded-xl bg-purple-50 text-parque-purple hover:bg-purple-100 transition-colors">
+            <MSvg d={MIC.swiss} /> Swiss pairing
           </button>
-          <button
-            onClick={() => router.push(`/admin/matches/round-management?league=${leagueId || selectedLeague?.id}`)}
-            className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 flex items-center"
-          >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Round Management
+          <button onClick={() => handleCreateMatch()} className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold rounded-xl bg-parque-purple text-white hover:bg-parque-purple/90 shadow-sm transition-colors">
+            <MSvg d={MIC.plus} /> Create match
           </button>
         </div>
       </div>
 
       {/* Match Statistics Summary */}
-      {matches.length > 0 && (
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">League Progress</h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="text-2xl font-bold text-gray-900">
-                {matches.length}
-              </div>
-              <div className="text-sm text-gray-600">Total Matches</div>
-            </div>
-            <div className="bg-green-50 rounded-lg p-4">
-              <div className="text-2xl font-bold text-green-600">
-                {matches.filter(m => m.status === 'completed').length}
-              </div>
-              <div className="text-sm text-gray-600">Completed</div>
-            </div>
-            <div className="bg-blue-50 rounded-lg p-4">
-              <div className="text-2xl font-bold text-blue-600">
-                {matches.filter(m => m.status === 'scheduled').length}
-              </div>
-              <div className="text-sm text-gray-600">Scheduled</div>
-            </div>
-            <div className="bg-red-50 rounded-lg p-4">
-              <div className="text-2xl font-bold text-red-600">
-                {matches.filter(m => m.status === 'cancelled').length}
-              </div>
-              <div className="text-sm text-gray-600">Cancelled</div>
-            </div>
-          </div>
+      {matches.length > 0 && (() => {
+        const total = matches.length
+        const completed = matches.filter(m => m.status === 'completed').length
+        const scheduled = matches.filter(m => m.status === 'scheduled').length
+        const cancelledCount = matches.filter(m => m.status === 'cancelled').length
+        const pct = total ? Math.round(completed / total * 100) : 0
+        const scheduledMatches = matches.filter(m => m.status === 'scheduled')
+        const overdueCount = scheduledMatches.filter(m => getDeadlineStatus(m).urgency >= 4).length
+        const approachingCount = scheduledMatches.filter(m => {
+          const s = getDeadlineStatus(m)
+          return s.diffDays !== undefined && s.diffDays <= 5 && s.diffDays >= 0
+        }).length
 
-          {/* Deadline health row */}
-          {(() => {
-            const scheduledMatches = matches.filter(m => m.status === 'scheduled')
-            const overdueCount = scheduledMatches.filter(m => getDeadlineStatus(m).urgency >= 4).length
-            const approachingCount = scheduledMatches.filter(m => {
-              const s = getDeadlineStatus(m)
-              return s.diffDays !== undefined && s.diffDays <= 5 && s.diffDays >= 0
-            }).length
-            const cancelledCount = matches.filter(m => m.status === 'cancelled').length
-            const needsAttention = overdueCount + cancelledCount
-
-            if (needsAttention > 0 || approachingCount > 0) {
-              return (
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-                    <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    Deadline Health
-                  </h4>
-                  <div className="flex flex-wrap gap-3">
-                    {overdueCount > 0 && (
-                      <button
-                        onClick={() => setFilters(f => ({ ...f, status: 'overdue' }))}
-                        className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors cursor-pointer"
-                      >
-                        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                        <span className="text-sm font-medium text-red-700">{overdueCount} overdue</span>
-                      </button>
-                    )}
-                    {cancelledCount > 0 && (
-                      <button
-                        onClick={() => setFilters(f => ({ ...f, status: 'cancelled' }))}
-                        className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors cursor-pointer"
-                      >
-                        <span className="w-2 h-2 rounded-full bg-red-400" />
-                        <span className="text-sm font-medium text-red-600">{cancelledCount} cancelled</span>
-                      </button>
-                    )}
-                    {approachingCount > 0 && (
-                      <button
-                        onClick={() => setFilters(f => ({ ...f, status: 'approaching' }))}
-                        className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors cursor-pointer"
-                      >
-                        <span className="w-2 h-2 rounded-full bg-amber-400" />
-                        <span className="text-sm font-medium text-amber-700">{approachingCount} approaching deadline</span>
-                      </button>
-                    )}
+        return (
+          <div className="bg-white rounded-2xl border border-gray-100 p-5">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div className="flex flex-wrap gap-x-8 gap-y-3">
+                {[
+                  { label: 'Total', value: total, dot: 'bg-gray-300' },
+                  { label: 'Completed', value: completed, dot: 'bg-emerald-500' },
+                  { label: 'Scheduled', value: scheduled, dot: 'bg-parque-purple' },
+                  { label: 'Cancelled', value: cancelledCount, dot: 'bg-rose-400' }
+                ].map(s => (
+                  <div key={s.label}>
+                    <p className="text-2xl font-bold text-gray-900 tabular-nums">{s.value}</p>
+                    <p className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
+                      <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />{s.label}
+                    </p>
                   </div>
-                </div>
-              )
-            }
-            return null
-          })()}
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {overdueCount > 0 && (
+                  <button onClick={() => setFilters(f => ({ ...f, status: 'overdue' }))} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 ring-1 ring-rose-200 hover:bg-rose-100">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />{overdueCount} overdue
+                  </button>
+                )}
+                {cancelledCount > 0 && (
+                  <button onClick={() => setFilters(f => ({ ...f, status: 'cancelled' }))} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-600 ring-1 ring-rose-200 hover:bg-rose-100">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />{cancelledCount} cancelled
+                  </button>
+                )}
+                {approachingCount > 0 && (
+                  <button onClick={() => setFilters(f => ({ ...f, status: 'approaching' }))} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 ring-1 ring-amber-200 hover:bg-amber-100">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />{approachingCount} deadline soon
+                  </button>
+                )}
+              </div>
+            </div>
 
-          <div className="mt-4 bg-gray-100 rounded-full h-3">
-            <div 
-              className="bg-green-500 h-3 rounded-full transition-all duration-300"
-              style={{ 
-                width: `${matches.length > 0 ? (matches.filter(m => m.status === 'completed').length / matches.length) * 100 : 0}%` 
-              }}
-            ></div>
-          </div>
-          <div className="mt-2 text-center text-sm text-gray-600">
-            {matches.length > 0 && (
-              <>
-                {matches.filter(m => m.status === 'completed').length} completed out of {matches.length} matches 
-                ({Math.round((matches.filter(m => m.status === 'completed').length / matches.length) * 100)}% complete)
-              </>
-            )}
-          </div>
-          
-          {/* Round-by-round breakdown */}
-          {rounds.length > 1 && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <h4 className="text-sm font-medium text-gray-700 mb-3">Progress by Round</h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+            <div className="mt-4">
+              <div className="flex items-center justify-between text-xs text-gray-500 mb-1.5">
+                <span>Season progress</span>
+                <span className="font-semibold text-gray-700 tabular-nums">{completed}/{total} · {pct}%</span>
+              </div>
+              <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+                <div className="h-full rounded-full bg-gradient-to-r from-parque-purple to-purple-500 transition-all duration-300" style={{ width: `${pct}%` }} />
+              </div>
+            </div>
+
+            {rounds.length > 1 && (
+              <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-10 gap-3">
                 {rounds.map(round => {
                   const roundMatches = matches.filter(m => m.round === round)
-                  const completedInRound = roundMatches.filter(m => m.status === 'completed').length
-                  const totalInRound = roundMatches.length
-                  const percentage = totalInRound > 0 ? (completedInRound / totalInRound) * 100 : 0
-                  
+                  const done = roundMatches.filter(m => m.status === 'completed').length
+                  const p = roundMatches.length ? done / roundMatches.length * 100 : 0
                   return (
-                    <div key={round} className="text-center">
-                      <div className="text-xs font-medium text-gray-600 mb-1">Round {round}</div>
-                      <div className="bg-gray-200 rounded-full h-2 mb-1">
-                        <div 
-                          className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${percentage}%` }}
-                        ></div>
+                    <div key={round}>
+                      <div className="flex justify-between text-[11px] text-gray-500 mb-1">
+                        <span className="font-medium">R{round}</span>
+                        <span className="tabular-nums">{done}/{roundMatches.length}</span>
                       </div>
-                      <div className="text-xs text-gray-500">
-                        {completedInRound}/{totalInRound}
+                      <div className="h-1 rounded-full bg-gray-100 overflow-hidden">
+                        <div className="h-full rounded-full bg-parque-purple/70" style={{ width: `${p}%` }} />
                       </div>
                     </div>
                   )
                 })}
               </div>
-            </div>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )
+      })()}
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg p-4">
@@ -503,15 +445,15 @@ function AdminMatchesContent() {
 
       {/* Bulk Actions Toolbar */}
       {selectedMatches.length > 0 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <div className="bg-purple-50 border border-purple-200 rounded-2xl p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <span className="text-blue-800 font-medium">
+              <span className="text-parque-purple font-semibold">
                 {selectedMatches.length} matches selected
               </span>
               <button
                 onClick={() => setSelectedMatches([])}
-                className="text-blue-600 hover:text-blue-800 text-sm"
+                className="text-parque-purple/70 hover:text-parque-purple text-sm"
               >
                 Clear selection
               </button>
@@ -519,13 +461,13 @@ function AdminMatchesContent() {
             <div className="flex items-center space-x-3">
               <button
                 onClick={() => setShowPlayerReplacementModal(true)}
-                className="px-3 py-1 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 text-sm"
+                className="px-3 py-1.5 bg-white text-gray-700 ring-1 ring-gray-200 rounded-lg hover:bg-gray-50 text-sm font-medium"
               >
                 Replace Player
               </button>
               <button
                 onClick={handleBulkDelete}
-                className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
+                className="px-3 py-1.5 bg-rose-600 text-white rounded-lg hover:bg-rose-700 text-sm font-medium"
               >
                 Delete Selected
               </button>
@@ -535,73 +477,47 @@ function AdminMatchesContent() {
       )}
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Filters & Selection</h3>
-          {filteredMatches.length > 0 && (
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="select-all"
-                checked={selectedMatches.length === filteredMatches.length && filteredMatches.length > 0}
-                onChange={(e) => handleSelectAll(e.target.checked)}
-                className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-              />
-              <label htmlFor="select-all" className="text-sm text-gray-700">
-                Select all {filteredMatches.length} matches
-              </label>
-            </div>
-          )}
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Search Players
-            </label>
+      <div className="bg-white rounded-2xl border border-gray-100 p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr_1.3fr] gap-3">
+          <div className="relative">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z" />
+            </svg>
             <input
               type="text"
               value={filters.search}
               onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-              placeholder="Search by player name..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-transparent"
+              placeholder="Search player"
+              className={`${mField} pl-9`}
             />
           </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Round
-            </label>
-            <select
-              value={filters.round}
-              onChange={(e) => setFilters({ ...filters, round: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-transparent"
-            >
-              <option value="all">All Rounds</option>
-              {rounds.map(round => (
-                <option key={round} value={round}>Round {round}</option>
-              ))}
-            </select>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Status
-            </label>
-            <select
-              value={filters.status}
-              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-parque-purple focus:border-transparent"
-            >
-              <option value="all">All Status</option>
-              <option value="scheduled">Scheduled</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
-              <option value="postponed">Postponed</option>
-              <option value="overdue">⚠ Overdue (needs attention)</option>
-              <option value="approaching">⏰ Deadline approaching (≤5d)</option>
-            </select>
-          </div>
+          <select value={filters.round} onChange={(e) => setFilters({ ...filters, round: e.target.value })} className={mField}>
+            <option value="all">All rounds</option>
+            {rounds.map(round => (
+              <option key={round} value={round}>Round {round}</option>
+            ))}
+          </select>
+          <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })} className={mField}>
+            <option value="all">All statuses</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="postponed">Postponed</option>
+            <option value="overdue">Overdue (needs attention)</option>
+            <option value="approaching">Deadline soon (5 days or less)</option>
+          </select>
         </div>
+        {filteredMatches.length > 0 && (
+          <label className="mt-3 inline-flex items-center gap-2 text-sm text-gray-500 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={selectedMatches.length === filteredMatches.length && filteredMatches.length > 0}
+              onChange={(e) => handleSelectAll(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-parque-purple focus:ring-parque-purple"
+            />
+            Select all {filteredMatches.length} matches
+          </label>
+        )}
       </div>
 
       {/* Matches List - Grouped by Round only if showing all rounds AND no status filter */}
@@ -610,10 +526,10 @@ function AdminMatchesContent() {
           {Object.entries(matchesByRound)
             .sort(([a], [b]) => parseInt(b) - parseInt(a)) // Sort rounds in descending order
             .map(([round, roundMatches]) => (
-              <div key={round} className="space-y-4">
+              <div key={round} className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Round {round} ({roundMatches.length} matches)
+                  <h3 className="text-base font-bold text-gray-900">
+                    Round {round} <span className="ml-1 text-sm font-medium text-gray-400">{roundMatches.length} matches</span>
                   </h3>
                   {/* <button
                     onClick={() => handleCreateMatch(round)}
@@ -628,7 +544,7 @@ function AdminMatchesContent() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setPushModal({ mode: 'new-round', round: parseInt(round) })}
-                      className="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
+                      className={`${mRoundBtn} text-gray-600 hover:bg-gray-100`}
                       title="Notify players about their matches"
                     >
                       <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -638,7 +554,7 @@ function AdminMatchesContent() {
                     </button>
                     <button
                       onClick={() => setPushModal({ mode: 'reminder', round: parseInt(round) })}
-                      className="px-3 py-1 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 flex items-center"
+                      className={`${mRoundBtn} text-gray-600 hover:bg-gray-100`}
                       title="Send reminders for unplayed matches"
                     >
                       <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -648,7 +564,7 @@ function AdminMatchesContent() {
                     </button>
                     <button
                       onClick={() => handleCreateMatch(round)}
-                      className="px-3 py-1 text-sm bg-parque-purple text-white rounded-lg hover:bg-opacity-90 flex items-center"
+                      className={`${mRoundBtn} bg-purple-50 text-parque-purple hover:bg-purple-100`}
                     >
                       <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -789,160 +705,121 @@ function AdminMatchesContent() {
 
 // Match Card Component
 function MatchCard({ match, onEdit, onSelect, isSelected, onDeadlineAction }) {
-  const getStatusBadgeClass = (status) => {
-    switch (status) {
-      case 'scheduled':
-        return 'bg-blue-100 text-blue-800'
-      case 'completed':
-        return 'bg-green-100 text-green-800'
-      case 'cancelled':
-        return 'bg-red-100 text-red-800'
-      case 'postponed':
-        return 'bg-yellow-100 text-yellow-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
-    }
+  const statusStyle = {
+    scheduled: 'bg-purple-50 text-parque-purple ring-purple-200',
+    completed: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+    cancelled: 'bg-rose-50 text-rose-700 ring-rose-200',
+    postponed: 'bg-amber-50 text-amber-700 ring-amber-200'
   }
 
   const formatDate = (date) => {
-    if (!date) return 'TBD'
-    return new Date(date).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    if (!date) return null
+    return new Date(date).toLocaleDateString('en-GB', {
+      weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
     })
   }
 
-  const dlStatus = getDeadlineStatus(match)
-  const showDeadlineActions = match.status === 'cancelled' || 
-    (match.status === 'scheduled' && dlStatus.urgency >= 2)
-  const extensionCount = match.schedule?.extensionHistory?.length || 0
+  const initials = (name = '') =>
+    name.trim().split(/\s+/).slice(0, 2).map(p => p[0] || '').join('').toUpperCase()
 
-  // Card border highlight based on urgency
-  const urgencyBorder = match.status === 'cancelled' 
-    ? 'border-l-4 border-l-red-400' 
-    : dlStatus.urgency >= 4 
-      ? 'border-l-4 border-l-red-400' 
-      : dlStatus.urgency >= 2 
-        ? 'border-l-4 border-l-orange-400' 
-        : ''
+  const dlStatus = getDeadlineStatus(match)
+  const showDeadlineActions = match.status === 'cancelled' || (match.status === 'scheduled' && dlStatus.urgency >= 2)
+  const extensionCount = match.schedule?.extensionHistory?.length || 0
+  const p1 = match.players?.player1
+  const p2 = match.players?.player2
+  const winnerId = match.result?.winner && String(match.result.winner?._id || match.result.winner)
+  const p1Won = match.status === 'completed' && winnerId && p1 && winnerId === String(p1._id)
+  const p2Won = match.status === 'completed' && winnerId && p2 && winnerId === String(p2._id)
+  const sets = match.result?.score?.sets || []
+  const when = formatDate(match.schedule?.confirmedDate)
+
+  const urgencyBar = match.status === 'cancelled' || dlStatus.urgency >= 4
+    ? 'before:bg-rose-400'
+    : dlStatus.urgency >= 2 ? 'before:bg-amber-400' : 'before:bg-transparent'
+
+  const Player = ({ p, won, align }) => (
+    <div className={`flex items-center gap-3 min-w-0 ${align === 'right' ? 'flex-row-reverse text-right' : ''}`}>
+      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${won ? 'bg-parque-purple text-white' : 'bg-purple-50 text-parque-purple'}`}>
+        {p ? initials(p.name) : '-'}
+      </div>
+      <div className="min-w-0">
+        <p className={`text-sm truncate ${won ? 'font-bold text-gray-900' : 'font-semibold text-gray-800'}`}>{p?.name || (match.isBye ? 'Rest round' : 'TBD')}</p>
+        {p && <p className="text-xs text-gray-400 tabular-nums">ELO {p.stats?.eloRating || p.eloRating || 1200}</p>}
+      </div>
+    </div>
+  )
 
   return (
-    <div className={`bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow ${urgencyBorder} ${isSelected ? 'ring-2 ring-blue-500' : ''}`}>
-      <div className="flex justify-between items-start">
-        <div className="flex items-start space-x-3">
+    <div className={`relative overflow-hidden bg-white rounded-2xl border transition-all before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 ${urgencyBar} ${isSelected ? 'border-parque-purple ring-2 ring-parque-purple/20' : 'border-gray-100 hover:border-purple-200 hover:shadow-sm'}`}>
+      <div className="p-4 sm:p-5">
+        <div className="flex items-center gap-2 flex-wrap">
           <input
             type="checkbox"
             checked={isSelected || false}
             onChange={(e) => onSelect && onSelect(match._id, e.target.checked)}
-            className="mt-1 h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+            className="h-4 w-4 rounded border-gray-300 text-parque-purple focus:ring-parque-purple"
           />
-          <div className="flex-1">
-          <div className="flex items-center flex-wrap gap-2 mb-3">
-            <span className="text-sm font-medium text-gray-500">Round {match.round}</span>
-            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(match.status)}`}>
-              {match.status.toUpperCase()}
-            </span>
-            <DeadlineBadge match={match} />
-            {extensionCount > 0 && match.status !== 'completed' && (
-              <span className="text-xs text-gray-400" title={`${extensionCount} extension(s) used`}>
-                +{extensionCount} ext
-              </span>
+          <span className="text-xs font-semibold text-gray-400">R{match.round}</span>
+          <span className={`px-2 py-0.5 text-[11px] font-semibold rounded-full ring-1 capitalize ${statusStyle[match.status] || 'bg-gray-50 text-gray-600 ring-gray-200'}`}>
+            {match.status}
+          </span>
+          <DeadlineBadge match={match} />
+          {extensionCount > 0 && match.status !== 'completed' && (
+            <span className="text-[11px] text-gray-400" title={`${extensionCount} extension(s) used`}>+{extensionCount} ext</span>
+          )}
+          <div className="ml-auto flex items-center gap-1.5">
+            {match.status === 'cancelled' && (
+              <button onClick={() => onDeadlineAction && onDeadlineAction(match)} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100">
+                <MSvg d={MIC.rounds} className="w-3.5 h-3.5" /> Restore
+              </button>
+            )}
+            {match.status === 'scheduled' && showDeadlineActions && (
+              <button onClick={() => onDeadlineAction && onDeadlineAction(match)} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100">
+                <MSvg d={MIC.clock} className="w-3.5 h-3.5" /> Extend
+              </button>
+            )}
+            <button onClick={() => onEdit(match._id)} className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg text-parque-purple hover:bg-purple-50">
+              {match.status === 'scheduled' ? 'Manage' : 'Details'}
+              <MSvg d={MIC.chevron} className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+          <Player p={p1} won={p1Won} />
+          <div className="flex flex-col items-center">
+            {match.status === 'completed' && sets.length > 0 ? (
+              <div className="flex gap-1">
+                {sets.map((set, i) => (
+                  <span key={i} className="px-2 py-1 rounded-lg bg-purple-50 text-parque-purple text-xs font-bold tabular-nums">
+                    {set.player1}-{set.player2}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <span className="text-xs font-semibold text-gray-300">VS</span>
             )}
           </div>
-          
-          <div className="flex items-center mb-3">
-            <div className="flex-1">
-              <div className="text-lg font-semibold text-gray-900">
-                {match.players?.player1?.name || 'Player 1'}
-              </div>
-              <div className="text-sm text-gray-500">
-                {match.players?.player1?.level} &bull; ELO: {match.players?.player1?.stats?.eloRating || 1200}
-              </div>
-            </div>
-            
-            <div className="mx-6 text-gray-400 text-lg font-medium">VS</div>
-            
-            <div className="flex-1 text-right">
-              <div className="text-lg font-semibold text-gray-900">
-                {match.players?.player2?.name || 'Player 2'}
-              </div>
-              <div className="text-sm text-gray-500">
-                {match.players?.player2?.level} &bull; ELO: {match.players?.player2?.stats?.eloRating || 1200}
-              </div>
-            </div>
-          </div>
-          
-          {match.result && match.status === 'completed' && (
-            <div className="bg-gray-50 rounded-lg p-3 mb-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Result:</span>
-                <span className="font-medium">
-                  {match.result.score?.sets?.map(set => `${set.player1}-${set.player2}`).join(', ') || 'No score'}
-                </span>
-              </div>
-              {match.result.winner && match.players?.player1 && match.players?.player2 && (
-                <div className="mt-1 text-sm text-green-600 font-medium">
-                  Winner: {match.result.winner === match.players.player1._id ? match.players.player1.name : match.players.player2.name}
-                </div>
-              )}
-            </div>
-          )}
-          
-          <div className="flex items-center text-sm text-gray-500 space-x-4">
-            <span className="flex items-center">
-              <svg className="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-              {formatDate(match.schedule?.confirmedDate)}
-            </span>
+          <Player p={p2} won={p2Won} align="right" />
+        </div>
+
+        {(when || match.schedule?.court || match.notes) && (
+          <div className="mt-4 pt-3 border-t border-gray-50 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
+            {when && (
+              <span className="inline-flex items-center gap-1.5">
+                <MSvg d={MIC.calendar} className="w-3.5 h-3.5 text-gray-400" /> {when}
+              </span>
+            )}
             {match.schedule?.court && (
-              <span className="flex items-center">
-                <svg className="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                {match.schedule.court}
+              <span className="inline-flex items-center gap-1.5">
+                <MSvg d={MIC.pin} className="w-3.5 h-3.5 text-gray-400" /> {match.schedule.court}
               </span>
             )}
             {match.notes && (
-              <span className="flex items-center text-xs text-gray-400 italic max-w-[200px] truncate" title={match.notes}>
-                {match.notes}
-              </span>
+              <span className="italic text-gray-400 truncate max-w-[240px]" title={match.notes}>{match.notes}</span>
             )}
           </div>
-          </div>
-        </div>
-        
-        <div className="ml-4 flex flex-col gap-2 shrink-0">
-          <button
-            onClick={() => onEdit(match._id)}
-            className="px-4 py-2 text-sm bg-parque-purple text-white rounded-lg hover:bg-opacity-90 flex items-center"
-          >
-            <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-            </svg>
-            {match.status === 'scheduled' ? 'Manage' : 'Details'}
-          </button>
-
-          {/* Deadline action button */}
-          {match.status === 'cancelled' && (
-            <button
-              onClick={() => onDeadlineAction && onDeadlineAction(match)}
-              className="px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-1.5"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-              Restore
-            </button>
-          )}
-          {match.status === 'scheduled' && showDeadlineActions && (
-            <button
-              onClick={() => onDeadlineAction && onDeadlineAction(match)}
-              className="px-4 py-2 text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600 flex items-center gap-1.5"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              Extend
-            </button>
-          )}
-        </div>
+        )}
       </div>
     </div>
   )
