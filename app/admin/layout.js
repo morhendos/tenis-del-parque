@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useSession, signOut } from 'next-auth/react'
 import { ToastContainer } from '@/components/ui/Toast'
 
@@ -12,7 +13,6 @@ export default function AdminLayout({ children }) {
   const { data: session, status } = useSession()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [selectedLeague, setSelectedLeague] = useState(null)
-  const [showLeagueSwitcher, setShowLeagueSwitcher] = useState(false)
   const [isClient, setIsClient] = useState(false)
 
   const navigation = [
@@ -100,7 +100,7 @@ export default function AdminLayout({ children }) {
       )
     },
     { 
-      name: 'Areas Management', 
+      name: 'Areas', 
       href: '/admin/areas/map', 
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,6 +136,13 @@ export default function AdminLayout({ children }) {
       )
     },
   ]
+
+  const navSections = [
+    { label: 'League', items: ['Dashboard', 'Leagues', 'Players', 'Matches'] },
+    { label: 'Engagement', items: ['Messages', 'Community', 'Attribution'] },
+    { label: 'Places', items: ['Clubs', 'Cities', 'Areas'] },
+    { label: 'System', items: ['Users', 'Business Plan', 'Documentation'] }
+  ].map(s => ({ ...s, items: s.items.map(n => navigation.find(i => i.name === n)).filter(Boolean) }))
 
   // Set client flag
   useEffect(() => {
@@ -289,25 +296,24 @@ export default function AdminLayout({ children }) {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform ${
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-100 shadow-xl lg:shadow-none transform ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       } transition-transform duration-300 ease-in-out lg:translate-x-0`}>
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-between h-16 px-6 bg-gradient-to-r from-parque-purple to-parque-green">
-            <Link href="/admin/dashboard" className="flex items-center group">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold">🎾</span>
-                </div>
-                <span className="text-xl font-bold text-white group-hover:text-gray-100 transition-colors">
-                  Tennis Admin
-                </span>
+          <div className="flex items-center justify-between px-4 py-4 bg-gradient-to-r from-parque-purple via-purple-600 to-indigo-600">
+            <Link href="/admin/dashboard" className="group flex items-center space-x-2.5">
+              <div className="w-10 h-10 bg-white/30 rounded-lg flex items-center justify-center p-1.5 group-hover:bg-white/40 transition-colors">
+                <Image src="/logo-big.png" alt="Tenis del Parque" width={32} height={32} className="object-contain" />
+              </div>
+              <div>
+                <p className="text-base font-bold text-white leading-tight">Tenis del Parque</p>
+                <p className="text-xs text-purple-200">Admin</p>
               </div>
             </Link>
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="lg:hidden text-white hover:text-gray-200 p-2 rounded-lg hover:bg-white hover:bg-opacity-20 transition-colors"
+              className="lg:hidden text-white p-2 rounded-lg hover:bg-white/20 transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -316,51 +322,59 @@ export default function AdminLayout({ children }) {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
-                  isActive(item.href)
-                    ? 'bg-gradient-to-r from-parque-purple to-parque-green text-white shadow-md'
-                    : 'text-gray-700 hover:bg-gray-100 hover:text-parque-purple'
-                }`}
-              >
-                <span className="mr-3 flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
-                  {item.icon}
-                </span>
-                <span className="truncate">{item.name}</span>
-              </Link>
+          <nav className="flex-1 px-3 py-4 overflow-y-auto">
+            {navSections.map((section) => (
+              <div key={section.label} className="mb-4 last:mb-0">
+                <p className="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-gray-400">{section.label}</p>
+                <div className="space-y-0.5">
+                  {section.items.map((item) => (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      onClick={() => setIsSidebarOpen(false)}
+                      className={`flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-colors duration-150 ${
+                        isActive(item.href)
+                          ? 'bg-gradient-to-r from-parque-purple to-purple-600 text-white shadow-md shadow-purple-900/10'
+                          : 'text-gray-700 hover:bg-purple-50 hover:text-parque-purple'
+                      }`}
+                    >
+                      <span className={`mr-3 flex-shrink-0 ${isActive(item.href) ? 'text-white' : 'text-gray-400'}`}>
+                        {item.icon}
+                      </span>
+                      <span className="truncate">{item.name}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
             ))}
           </nav>
 
           {/* User section */}
-          <div className="p-4 border-t border-gray-200">
-            <div className="flex items-center space-x-3 mb-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-parque-purple to-parque-green rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-lg">
+          <div className="p-3 border-t border-gray-100">
+            <div className="flex items-center gap-3 px-2 py-1">
+              <div className="w-9 h-9 rounded-full bg-purple-50 text-parque-purple flex items-center justify-center flex-shrink-0">
+                <span className="font-bold text-sm">
                   {session?.user?.name?.[0]?.toUpperCase() || 'A'}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {session?.user?.name || 'Admin User'}
+                <p className="text-sm font-semibold text-gray-900 truncate">
+                  {session?.user?.name || 'Admin'}
                 </p>
                 <p className="text-xs text-gray-500 truncate">
                   {session?.user?.email || 'admin@tenisdp.es'}
                 </p>
               </div>
+              <button
+                onClick={handleLogout}
+                title="Logout"
+                className="p-2 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
             </div>
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 hover:text-parque-purple transition-colors duration-200"
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              Logout
-            </button>
           </div>
         </div>
       </div>
@@ -368,10 +382,10 @@ export default function AdminLayout({ children }) {
       {/* Main content */}
       <div className="lg:ml-64 flex flex-col min-h-screen">
         {/* Top bar */}
-        <div className="sticky top-0 z-40 flex items-center h-16 px-6 bg-white shadow-sm border-b border-gray-200">
+        <div className="sticky top-0 z-40 flex items-center min-h-[4rem] px-4 sm:px-6 py-3 bg-white/90 backdrop-blur border-b border-gray-100">
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="lg:hidden text-gray-600 hover:text-gray-900"
+            className="lg:hidden p-2 -ml-2 rounded-lg text-gray-600 hover:bg-gray-100"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -381,16 +395,16 @@ export default function AdminLayout({ children }) {
           <div className="flex-1 flex flex-col ml-4 lg:ml-0">
             {/* Breadcrumbs - only render on client to avoid hydration issues */}
             {isClient && getBreadcrumbs().length > 0 && (
-              <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-1">
+              <nav className="flex items-center flex-wrap text-xs text-gray-500 mb-0.5">
                 {getBreadcrumbs().map((breadcrumb, index) => (
                   <div key={index} className="flex items-center">
-                    {index > 0 && <span className="mx-2">/</span>}
+                    {index > 0 && <span className="mx-1.5 text-gray-300">/</span>}
                     {breadcrumb.href ? (
                       <Link href={breadcrumb.href} className="hover:text-parque-purple">
                         {breadcrumb.name}
                       </Link>
                     ) : (
-                      <span className="text-gray-900 font-medium">{breadcrumb.name}</span>
+                      <span className="text-gray-700 font-medium">{breadcrumb.name}</span>
                     )}
                   </div>
                 ))}
@@ -398,37 +412,30 @@ export default function AdminLayout({ children }) {
             )}
             
             {/* Page Title */}
-            <h1 className="text-xl font-semibold text-gray-900">
+            <h1 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight">
               {getPageTitle()}
             </h1>
           </div>
           
           {/* League Context & Switcher - only render on client */}
           {isClient && (pathname.includes('/admin/players') || pathname.includes('/admin/matches')) && selectedLeague && (
-            <div className="flex items-center space-x-3">
-              <span className="text-sm text-gray-500">Current league:</span>
-              <button
-                onClick={() => setShowLeagueSwitcher(!showLeagueSwitcher)}
-                className="flex items-center space-x-2 px-3 py-1 bg-parque-purple text-white text-sm rounded-lg hover:bg-opacity-90"
-              >
-                <span>{selectedLeague.name}</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
-                </svg>
-              </button>
-              <Link
-                href="/admin/leagues"
-                className="px-3 py-1 text-sm text-parque-purple hover:bg-parque-purple hover:text-white border border-parque-purple rounded-lg transition-colors"
-              >
-                Switch League
-              </Link>
-            </div>
+            <Link
+              href="/admin/leagues"
+              title="Switch league"
+              className="hidden sm:flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-full bg-purple-50 text-parque-purple text-sm font-medium hover:bg-purple-100 transition-colors"
+            >
+              <span className="w-2 h-2 rounded-full bg-parque-purple" />
+              <span className="truncate max-w-[220px]">{selectedLeague.name}</span>
+              <svg className="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+              </svg>
+            </Link>
           )}
         </div>
 
         {/* Page content */}
         <main className="flex-1 bg-gray-50">
-          <div className="container mx-auto px-6 py-6 max-w-7xl">
+          <div className="container mx-auto px-4 sm:px-6 py-6 max-w-7xl">
             {children}
           </div>
         </main>
@@ -437,7 +444,7 @@ export default function AdminLayout({ children }) {
       {/* Mobile sidebar backdrop */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden transition-opacity duration-300"
+          className="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
