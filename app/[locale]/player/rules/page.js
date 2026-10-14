@@ -232,10 +232,10 @@ export default function PlayerRules() {
       {/* Where to play */}
       <div className="bg-white rounded-2xl border border-purple-100 p-6 mb-4">
         <h2 className="text-lg font-bold text-gray-900">{locale === 'es' ? 'Dónde jugar' : 'Where to play'}</h2>
-        <p className="mt-1 text-sm text-gray-500">{locale === 'es' ? 'Pistas con precio especial para partidos de la liga' : 'Courts with a special price for league matches'}</p>
+        <p className="mt-1 text-sm text-gray-500">{locale === 'es' ? 'Jugad en la pista que os venga bien a los dos. Si necesitáis una, tenemos este precio especial:' : 'Play on any court that suits you both. If you need one, we have this special price:'}</p>
         <div className="mt-4 rounded-xl bg-purple-50 p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-parque-purple">Sotogrande</p>
-          <p className="mt-1 font-semibold text-gray-900">Club El Faisán</p>
+          <p className="mt-1 font-semibold text-gray-900">{locale === 'es' ? 'Lorenzo en las pistas del Faisán' : 'Lorenzo at the Faisán courts'}</p>
           <p className="mt-1 text-sm text-gray-600">
             {locale === 'es'
               ? '25€ por 1.5 horas (12.50€ por jugador). Llama a Lorenzo y di que es un partido de la Liga TDP.'

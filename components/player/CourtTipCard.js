@@ -6,14 +6,14 @@ const TIP_ID = 'court-sotogrande'
 
 const text = {
   es: {
-    title: 'Dónde jugar: Club El Faisán',
-    body: 'Precio especial para partidos de la liga: 25€ por 1.5 horas (12.50€ por jugador). Llama a Lorenzo y di que es un partido de la Liga TDP.',
+    title: '¿Dónde jugar? Donde queráis',
+    body: 'En cualquier pista que os venga bien a los dos. Si necesitáis una, Lorenzo en las pistas del Faisán hace 25€ por 1.5 horas (12.50€ cada uno) para partidos de la liga. Llámale y di que es un partido de la Liga TDP.',
     call: 'Llamar a Lorenzo',
     close: 'Cerrar'
   },
   en: {
-    title: 'Where to play: Club El Faisán',
-    body: "Special price for league matches: 25€ for 1.5 hours (12.50€ per player). Call Lorenzo and say it's a TDP League match.",
+    title: 'Where to play? Anywhere you like',
+    body: "Any court that suits you both. If you need one, Lorenzo at the Faisán courts does 25€ for 1.5 hours (12.50€ each) for league matches. Call him and say it's a TDP League match.",
     call: 'Call Lorenzo',
     close: 'Close'
   }
