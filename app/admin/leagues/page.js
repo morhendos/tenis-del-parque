@@ -9,6 +9,32 @@ import LeagueCityLinker from '../../../components/admin/leagues/LeagueCityLinker
 import LeagueSeasonEditor from '../../../components/admin/leagues/LeagueSeasonEditor'
 import { toast } from '@/components/ui/Toast'
 
+const Svg = ({ d, className = 'w-5 h-5' }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d={d} />
+  </svg>
+)
+
+const ICONS = {
+  plus: 'M12 4v16m8-8H4',
+  upload: 'M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M16 8l-4-4m0 0L8 8m4-4v12',
+  download: 'M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M8 12l4 4m0 0l4-4m-4 4V4',
+  calendar: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+  users: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z',
+  pin: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z',
+  up: 'M5 15l7-7 7 7',
+  down: 'M19 9l-7 7-7-7',
+  edit: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
+  archive: 'M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4',
+  euro: 'M14.121 15.536c-1.171 1.952-3.07 1.952-4.242 0-1.172-1.953-1.172-5.119 0-7.072 1.171-1.952 3.07-1.952 4.242 0M8 10.5h4m-4 3h4m9-1.5a9 9 0 11-18 0 9 9 0 0118 0z',
+  clock: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+  rocket: 'M13 10V3L4 14h7v7l9-11h-7z',
+  cloud: 'M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12'
+}
+
+const btnSecondary = 'inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-colors'
+const iconBtn = 'p-1.5 rounded-lg text-gray-400 hover:text-parque-purple hover:bg-purple-50 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors'
+
 export default function AdminLeaguesPage() {
   const router = useRouter()
   const [importModal, setImportModal] = useState({ show: false })
@@ -227,19 +253,19 @@ export default function AdminLeaguesPage() {
   const getStatusBadgeColor = (status) => {
     switch (status) {
       case 'active':
-        return 'bg-green-100 text-green-800'
+        return 'bg-emerald-50 text-emerald-700 ring-emerald-200'
       case 'registration_open':
-        return 'bg-blue-100 text-blue-800'
+        return 'bg-purple-50 text-parque-purple ring-purple-200'
       case 'coming_soon':
-        return 'bg-yellow-100 text-yellow-800'
+        return 'bg-amber-50 text-amber-700 ring-amber-200'
       case 'completed':
-        return 'bg-purple-100 text-purple-800'
+        return 'bg-indigo-50 text-indigo-700 ring-indigo-200'
       case 'archived':
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-gray-50 text-gray-600 ring-gray-200'
       case 'inactive':
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-gray-50 text-gray-600 ring-gray-200'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-gray-50 text-gray-600 ring-gray-200'
     }
   }
 
@@ -247,14 +273,14 @@ export default function AdminLeaguesPage() {
   const getSkillLevelBadgeColor = (skillLevel) => {
     switch (skillLevel) {
       case 'beginner':
-        return 'bg-green-50 text-green-700 border-green-200'
+        return 'bg-orange-50 text-orange-700 ring-orange-200'
       case 'intermediate':
-        return 'bg-yellow-50 text-yellow-700 border-yellow-200'
+        return 'bg-slate-50 text-slate-700 ring-slate-200'
       case 'advanced':
-        return 'bg-red-50 text-red-700 border-red-200'
+        return 'bg-amber-50 text-amber-700 ring-amber-200'
       case 'all':
       default:
-        return 'bg-gray-50 text-gray-700 border-gray-200'
+        return 'bg-gray-50 text-gray-600 ring-gray-200'
     }
   }
 
@@ -457,526 +483,260 @@ export default function AdminLeaguesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Leagues Management</h2>
-          <div className="mt-1">
-            <p className="text-gray-600">Manage your tennis leagues, seasons, and skill levels</p>
-            <p className="text-sm text-gray-500 mt-1">Create new seasons for existing leagues or start completely new leagues</p>
-          </div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="inline-flex rounded-xl bg-gray-100 p-1">
+          {[
+            { id: 'overview', label: 'Overview' },
+            { id: 'archive', label: 'Archive', count: archivedLeagues.length },
+            { id: 'city-links', label: 'City connections' }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-3.5 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                activeTab === tab.id ? 'bg-white text-parque-purple shadow-sm' : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              {tab.label}
+              {tab.count > 0 && (
+                <span className="ml-1.5 inline-flex items-center justify-center min-w-[1.25rem] px-1.5 rounded-full text-[11px] font-semibold bg-gray-200 text-gray-700">{tab.count}</span>
+              )}
+            </button>
+          ))}
         </div>
-        <div className="flex space-x-3">
-          <button
-            onClick={handleCreateSeason}
-            className="px-4 py-2 bg-parque-green text-white rounded-lg hover:bg-parque-green/90"
-          >
-            🏆 Create Season
+        <div className="flex flex-wrap items-center gap-2">
+          <button onClick={() => setImportModal({ show: true })} className={btnSecondary}>
+            <Svg d={ICONS.upload} className="w-4 h-4" /> Import CSV
           </button>
-          <button
-            onClick={handleCreateNew}
-            className="px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-parque-purple/90"
-          >
-            + Create League
+          <button onClick={exportCSV} className={btnSecondary}>
+            <Svg d={ICONS.download} className="w-4 h-4" /> Export CSV
           </button>
-          <button
-            onClick={() => setImportModal({ show: true })}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Import CSV
+          <button onClick={handleCreateSeason} className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold rounded-xl bg-purple-50 text-parque-purple hover:bg-purple-100 transition-colors">
+            <Svg d={ICONS.calendar} className="w-4 h-4" /> Create season
           </button>
-          <button
-            onClick={exportCSV}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-          >
-            Export CSV
+          <button onClick={handleCreateNew} className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-semibold rounded-xl bg-parque-purple text-white hover:bg-parque-purple/90 shadow-sm transition-colors">
+            <Svg d={ICONS.plus} className="w-4 h-4" /> Create league
           </button>
         </div>
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg p-4">
+        <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl p-4 text-sm">
           {error}
         </div>
       )}
-
-      {/* Tabs Navigation */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'overview'
-                ? 'border-parque-purple text-parque-purple'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            League Overview
-          </button>
-          <button
-            onClick={() => setActiveTab('archive')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'archive'
-                ? 'border-parque-purple text-parque-purple'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            Archive
-            {archivedLeagues.length > 0 && (
-              <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                {archivedLeagues.length}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab('city-links')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'city-links'
-                ? 'border-parque-purple text-parque-purple'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            City Connections
-            <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-              Fix Registration URLs
-            </span>
-          </button>
-          
-        </nav>
-      </div>
 
       {/* Tab Content */}
       {activeTab === 'overview' && (
         <>
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-            <div className="bg-white p-4 rounded-lg shadow">
-              <div className="text-2xl font-bold text-gray-900">{activeLeagues.length}</div>
-              <div className="text-sm text-gray-600">Active Leagues</div>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <div className="text-2xl font-bold text-purple-600">{sortedCities.length}</div>
-              <div className="text-sm text-gray-600">Cities</div>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <div className="text-2xl font-bold text-green-600">
-                {activeLeagues.filter(l => l.status === 'active').length}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {[
+              { label: 'Active leagues', value: activeLeagues.length, dot: 'bg-parque-purple' },
+              { label: 'Cities', value: sortedCities.length, dot: 'bg-indigo-400' },
+              { label: 'Running', value: activeLeagues.filter(l => l.status === 'active').length, dot: 'bg-emerald-500' },
+              { label: 'Registration open', value: activeLeagues.filter(l => l.status === 'registration_open').length, dot: 'bg-purple-400' },
+              { label: 'Archived', value: archivedLeagues.length, dot: 'bg-gray-300' }
+            ].map(s => (
+              <div key={s.label} className="bg-white rounded-2xl border border-gray-100 px-4 py-3.5">
+                <p className="text-2xl font-bold text-gray-900 tabular-nums">{s.value}</p>
+                <p className="mt-0.5 flex items-center gap-1.5 text-xs font-medium text-gray-500">
+                  <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />{s.label}
+                </p>
               </div>
-              <div className="text-sm text-gray-600">Running</div>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <div className="text-2xl font-bold text-blue-600">
-                {activeLeagues.filter(l => l.status === 'registration_open').length}
-              </div>
-              <div className="text-sm text-gray-600">Open for Registration</div>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <div className="text-2xl font-bold text-gray-600">{archivedLeagues.length}</div>
-              <div className="text-sm text-gray-600">Archived</div>
-            </div>
+            ))}
           </div>
 
           {/* Grouped Leagues by City */}
           <div className="space-y-6">
             {/* Sort Options */}
-            <div className="bg-white rounded-xl shadow-sm p-4 space-y-4">
-              {/* City Sort Options */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
-                  </svg>
-                  <span className="text-sm font-medium text-gray-700">Sort Cities:</span>
-                </div>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleSortChange('alphabetical')}
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                      sortBy === 'alphabetical'
-                        ? 'bg-emerald-600 text-white shadow-md'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    🔤 A-Z
-                  </button>
-                  <button
-                    onClick={() => handleSortChange('leagues')}
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                      sortBy === 'leagues'
-                        ? 'bg-emerald-600 text-white shadow-md'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    🏆 Most Leagues
-                  </button>
-                  <button
-                    onClick={() => handleSortChange('players')}
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                      sortBy === 'players'
-                        ? 'bg-emerald-600 text-white shadow-md'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    👥 Most Players
-                  </button>
-                  <button
-                    onClick={() => handleSortChange('custom')}
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                      sortBy === 'custom'
-                        ? 'bg-emerald-600 text-white shadow-md'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    ✨ Custom
-                  </button>
+            <div className="bg-white rounded-2xl border border-gray-100 p-4 flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-6">
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 w-14">Cities</span>
+                <div className="inline-flex rounded-xl bg-gray-100 p-1">
+                  {[['alphabetical', 'A-Z'], ['leagues', 'Leagues'], ['players', 'Players'], ['custom', 'Custom']].map(([key, label]) => (
+                    <button key={key} onClick={() => handleSortChange(key)} className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${sortBy === key ? 'bg-white text-parque-purple shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>{label}</button>
+                  ))}
                 </div>
               </div>
-
-              {/* League Sort Options */}
-              <div className="flex items-center justify-between border-t pt-4">
-                <div className="flex items-center space-x-2">
-                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                  </svg>
-                  <span className="text-sm font-medium text-gray-700">Sort Leagues:</span>
-                </div>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleLeagueSortChange('name')}
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                      leagueSortBy === 'name'
-                        ? 'bg-teal-600 text-white shadow-md'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    🔤 Name
-                  </button>
-                  <button
-                    onClick={() => handleLeagueSortChange('players')}
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                      leagueSortBy === 'players'
-                        ? 'bg-teal-600 text-white shadow-md'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    👥 Players
-                  </button>
-                  <button
-                    onClick={() => handleLeagueSortChange('status')}
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                      leagueSortBy === 'status'
-                        ? 'bg-teal-600 text-white shadow-md'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    📊 Status
-                  </button>
-                  <button
-                    onClick={() => handleLeagueSortChange('custom')}
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                      leagueSortBy === 'custom'
-                        ? 'bg-teal-600 text-white shadow-md'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    ✨ Custom
-                  </button>
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 w-14">Leagues</span>
+                <div className="inline-flex rounded-xl bg-gray-100 p-1">
+                  {[['name', 'Name'], ['players', 'Players'], ['status', 'Status'], ['custom', 'Custom']].map(([key, label]) => (
+                    <button key={key} onClick={() => handleLeagueSortChange(key)} className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${leagueSortBy === key ? 'bg-white text-parque-purple shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>{label}</button>
+                  ))}
                 </div>
               </div>
-
-              {/* Save Order Button */}
-              <div className="flex items-center justify-between border-t pt-4">
-                <div className="flex items-center space-x-2">
-                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span className="text-sm font-medium text-gray-700">Publish Order to Website:</span>
-                  <span className="text-xs text-gray-500">(saves current order to home page)</span>
-                </div>
-                <button
-                  onClick={handleSaveDisplayOrder}
-                  disabled={savingOrder}
-                  className={`px-6 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2 ${
-                    savingOrder
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 shadow-md hover:shadow-lg'
-                  }`}
-                >
-                  {savingOrder ? (
-                    <>
-                      <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                      </svg>
-                      Save Order to Site
-                    </>
-                  )}
-                </button>
-              </div>
+              <button
+                onClick={handleSaveDisplayOrder}
+                disabled={savingOrder}
+                title="Saves the current order to the home page"
+                className="lg:ml-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2 text-sm font-semibold rounded-xl border border-parque-purple/30 text-parque-purple hover:bg-purple-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {savingOrder ? (
+                  <span className="w-4 h-4 rounded-full border-2 border-parque-purple border-t-transparent animate-spin" />
+                ) : (
+                  <Svg d={ICONS.cloud} className="w-4 h-4" />
+                )}
+                {savingOrder ? 'Saving...' : 'Publish order to site'}
+              </button>
             </div>
 
             {/* Cities and Leagues */}
             <div className="space-y-8">
             {sortedCities.map((cityName, index) => (
-              <div key={cityName} className="space-y-4">
+              <div key={cityName} className="space-y-3">
                 {/* City Header */}
-                <div className="flex items-center justify-between bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-4 rounded-xl shadow-md">
-                  <div className="flex items-center space-x-3">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <h3 className="text-2xl font-bold">{cityName}</h3>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    {/* Custom sort arrows */}
-                    {sortBy === 'custom' && (
-                      <div className="flex space-x-1 mr-2">
-                        <button
-                          onClick={() => moveCityUp(cityName)}
-                          disabled={index === 0}
-                          className={`p-2 rounded-lg transition-all ${
-                            index === 0
-                              ? 'opacity-30 cursor-not-allowed'
-                              : 'hover:bg-white/20 active:scale-95'
-                          }`}
-                          title="Move up"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => moveCityDown(cityName)}
-                          disabled={index === sortedCities.length - 1}
-                          className={`p-2 rounded-lg transition-all ${
-                            index === sortedCities.length - 1
-                              ? 'opacity-30 cursor-not-allowed'
-                              : 'hover:bg-white/20 active:scale-95'
-                          }`}
-                          title="Move down"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </button>
-                      </div>
-                    )}
-                    <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-medium">
-                      {groupedLeagues[cityName].length} {groupedLeagues[cityName].length === 1 ? 'League' : 'Leagues'}
+                <div className="flex items-center justify-between px-1">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-purple-50 text-parque-purple flex items-center justify-center">
+                      <Svg d={ICONS.pin} className="w-4 h-4" />
+                    </div>
+                    <h3 className="text-lg font-bold text-gray-900">{cityName}</h3>
+                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                      {groupedLeagues[cityName].length} {groupedLeagues[cityName].length === 1 ? 'league' : 'leagues'}
                     </span>
                   </div>
+                  {sortBy === 'custom' && (
+                    <div className="flex gap-1">
+                      <button onClick={() => moveCityUp(cityName)} disabled={index === 0} className={iconBtn} title="Move up">
+                        <Svg d={ICONS.up} className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => moveCityDown(cityName)} disabled={index === sortedCities.length - 1} className={iconBtn} title="Move down">
+                        <Svg d={ICONS.down} className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Leagues Grid for this City */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {getSortedLeagues(cityName).map((league, leagueIndex) => {
-                    const currentSeason = league.seasons?.find(s => s.status === 'registration_open' || s.status === 'active') || league.seasons?.[0]
                     const playerCount = league.stats?.registeredPlayers || league.playerCount || 0
+                    const maxPlayers = league.seasonConfig?.maxPlayers
                     const sortedLeagues = getSortedLeagues(cityName)
-                    
+                    const fill = maxPlayers ? Math.min(100, Math.round(playerCount / maxPlayers * 100)) : 0
+
                     return (
-                      <div 
-                        key={league._id} 
-                        className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all relative overflow-hidden border-2 border-transparent hover:border-emerald-400"
+                      <div
+                        key={league._id}
+                        onClick={() => handleLeagueClick(league._id, league.name)}
+                        title={`Manage ${league.name}`}
+                        className="group bg-white rounded-2xl border border-gray-100 hover:border-purple-200 hover:shadow-md transition-all cursor-pointer flex flex-col"
                       >
-                        {/* Header Section - TWO ROWS */}
-                        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-4 py-3 border-b border-emerald-100">
-                          {/* ROW 1: Sort Arrows + Title */}
-                          <div className="flex items-start gap-2 mb-3">
+                        <div className="p-5 flex-1">
+                          <div className="flex items-start gap-2">
                             {leagueSortBy === 'custom' && (
-                              <div className="flex flex-col space-y-1 flex-shrink-0">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    moveLeagueUp(cityName, league._id)
-                                  }}
-                                  disabled={leagueIndex === 0}
-                                  className={`p-1.5 bg-teal-600 rounded-md shadow transition-all ${
-                                    leagueIndex === 0
-                                      ? 'opacity-30 cursor-not-allowed'
-                                      : 'hover:bg-teal-700 active:scale-95'
-                                  }`}
-                                  title="Move league up"
-                                >
-                                  <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 15l7-7 7 7" />
-                                  </svg>
+                              <div className="flex flex-col -ml-1 flex-shrink-0">
+                                <button onClick={(e) => { e.stopPropagation(); moveLeagueUp(cityName, league._id) }} disabled={leagueIndex === 0} className="p-0.5 rounded text-gray-400 hover:text-parque-purple hover:bg-purple-50 disabled:opacity-30 disabled:hover:bg-transparent" title="Move league up">
+                                  <Svg d={ICONS.up} className="w-4 h-4" />
                                 </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    moveLeagueDown(cityName, league._id)
-                                  }}
-                                  disabled={leagueIndex === sortedLeagues.length - 1}
-                                  className={`p-1.5 bg-teal-600 rounded-md shadow transition-all ${
-                                    leagueIndex === sortedLeagues.length - 1
-                                      ? 'opacity-30 cursor-not-allowed'
-                                      : 'hover:bg-teal-700 active:scale-95'
-                                  }`}
-                                  title="Move league down"
-                                >
-                                  <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
-                                  </svg>
+                                <button onClick={(e) => { e.stopPropagation(); moveLeagueDown(cityName, league._id) }} disabled={leagueIndex === sortedLeagues.length - 1} className="p-0.5 rounded text-gray-400 hover:text-parque-purple hover:bg-purple-50 disabled:opacity-30 disabled:hover:bg-transparent" title="Move league down">
+                                  <Svg d={ICONS.down} className="w-4 h-4" />
                                 </button>
                               </div>
                             )}
-                            
-                            {/* League Name - FULL WIDTH */}
-                            <div className="flex-1">
-                              <h3 className="text-lg font-bold text-gray-900 leading-tight">
-                                {league.name}
-                              </h3>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-base font-bold text-gray-900 leading-tight truncate">{league.name}</h4>
                               {league.season && (
-                                <div className="text-xs text-gray-600 mt-1 capitalize">
-                                  {league.season.type} {league.season.year}
-                                </div>
+                                <p className="text-xs text-gray-500 mt-0.5 capitalize">{league.season.type} {league.season.year}</p>
                               )}
                             </div>
+                            <div className="flex gap-0.5 -mr-1.5 -mt-1">
+                              <button onClick={(e) => { e.stopPropagation(); handleEditClick(e, league) }} className={iconBtn} title="Edit league settings">
+                                <Svg d={ICONS.edit} className="w-4 h-4" />
+                              </button>
+                              <button onClick={(e) => { e.stopPropagation(); handleArchiveLeague(league) }} className={iconBtn} title="Archive this league">
+                                <Svg d={ICONS.archive} className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
-                          
-                          {/* ROW 2: All Badges & Buttons */}
-                          <div className="flex items-center gap-2 flex-wrap">
-                            {/* Status Badge */}
-                            <span className={`px-2.5 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${getStatusBadgeColor(league.status)}`}>
-                              {league.status === 'registration_open' ? 'REG OPEN' : 
-                               league.status === 'coming_soon' ? 'COMING' :
-                               league.status?.replace('_', ' ').toUpperCase()}
+
+                          <div className="mt-3 flex items-center gap-1.5 flex-wrap">
+                            <span className={`px-2 py-0.5 text-[11px] font-semibold rounded-full ring-1 whitespace-nowrap ${getStatusBadgeColor(league.status)}`}>
+                              {league.status === 'registration_open' ? 'Registration open' :
+                               league.status === 'coming_soon' ? 'Coming soon' :
+                               (league.status || '').replace('_', ' ').replace(/^./, c => c.toUpperCase())}
                             </span>
-                            
-                            {/* Skill Level Badge */}
                             {league.skillLevel && league.skillLevel !== 'all' && (
-                              <span className={`px-2 py-1 text-xs font-medium rounded border whitespace-nowrap ${getSkillLevelBadgeColor(league.skillLevel)}`}>
+                              <span className={`px-2 py-0.5 text-[11px] font-semibold rounded-full ring-1 whitespace-nowrap ${getSkillLevelBadgeColor(league.skillLevel)}`}>
                                 {getSkillLevelName(league.skillLevel)}
                               </span>
                             )}
-                            
-                            {/* Archive button */}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleArchiveLeague(league)
-                              }}
-                              className="px-3 py-2 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-1.5"
-                              title="Archive this league"
-                            >
-                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                              </svg>
-                              Archive
-                            </button>
-                            
-                            {/* Edit button */}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleEditClick(e, league)
-                              }}
-                              className="p-2 bg-white/60 rounded-lg hover:bg-white transition-colors"
-                              title="Edit league settings"
-                            >
-                              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                              </svg>
-                            </button>
                           </div>
-                        </div>
 
-                        {/* Content Section - Clickable */}
-                        <div 
-                          onClick={() => handleLeagueClick(league._id, league.name)}
-                          className="p-5 cursor-pointer hover:bg-gray-50 transition-colors"
-                          title={`Click to manage ${league.name}`}
-                        >
-                          <div className="space-y-3 text-sm">
-                            {/* Expected launch date for coming soon leagues */}
+                          <div className="mt-4 space-y-2.5 text-sm text-gray-600">
                             {league.status === 'coming_soon' && league.expectedLaunchDate && (
-                              <div className="flex items-center text-gray-600">
-                                <span className="text-base mr-2">🚀</span>
-                                <span>Launch: {new Date(league.expectedLaunchDate).toLocaleDateString()}</span>
+                              <div className="flex items-center gap-2.5">
+                                <Svg d={ICONS.rocket} className="w-4 h-4 text-gray-400" />
+                                <span>Launch {new Date(league.expectedLaunchDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                               </div>
                             )}
-                            
-                            {/* Season dates for active leagues */}
                             {league.seasonConfig?.startDate && (
-                              <div className="flex items-center text-gray-600">
-                                <span className="text-base mr-2">📅</span>
+                              <div className="flex items-center gap-2.5">
+                                <Svg d={ICONS.calendar} className="w-4 h-4 text-gray-400" />
                                 <span className="truncate">
-                                  {new Date(league.seasonConfig.startDate).toLocaleDateString('en-GB')}
-                                  {league.seasonConfig.endDate && ` - ${new Date(league.seasonConfig.endDate).toLocaleDateString('en-GB')}`}
+                                  {new Date(league.seasonConfig.startDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                                  {league.seasonConfig.endDate && ` - ${new Date(league.seasonConfig.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`}
                                 </span>
                               </div>
                             )}
-                            
-                            <div className="flex items-center text-gray-600">
-                              <span className="text-base mr-2">👥</span>
-                              <span>
-                                <span className="font-semibold text-gray-900">{playerCount}</span> players
-                                {league.seasonConfig?.maxPlayers && (
-                                  <span className="text-gray-400"> / {league.seasonConfig.maxPlayers} max</span>
+                            {(league.status === 'active' || league.status === 'registration_open') && (
+                              <div className="flex items-center gap-2.5">
+                                <Svg d={ICONS.euro} className="w-4 h-4 text-gray-400" />
+                                {league.seasonConfig?.price?.isFree ? (
+                                  <span className="text-emerald-600 font-medium">Free</span>
+                                ) : league.seasonConfig?.price?.amount > 0 ? (
+                                  <span className="font-medium text-gray-900">{league.seasonConfig.price.amount}€</span>
+                                ) : (
+                                  <span className="text-gray-400">Price not set</span>
                                 )}
-                              </span>
+                              </div>
+                            )}
+                            <div>
+                              <div className="flex items-center gap-2.5">
+                                <Svg d={ICONS.users} className="w-4 h-4 text-gray-400" />
+                                <span>
+                                  <span className="font-semibold text-gray-900">{playerCount}</span> players
+                                  {maxPlayers && <span className="text-gray-400"> / {maxPlayers}</span>}
+                                </span>
+                              </div>
+                              {maxPlayers > 0 && (
+                                <div className="mt-2 ml-[1.625rem] h-1 rounded-full bg-gray-100 overflow-hidden">
+                                  <div className="h-full rounded-full bg-parque-purple/70" style={{ width: `${fill}%` }} />
+                                </div>
+                              )}
                             </div>
-                            
                             {league.waitingListCount > 0 && (
-                              <div className="flex items-center text-amber-600">
-                                <span className="text-base mr-2">⏳</span>
+                              <div className="flex items-center gap-2.5 text-amber-700">
+                                <Svg d={ICONS.clock} className="w-4 h-4" />
                                 <span className="font-medium">{league.waitingListCount} on waiting list</span>
                               </div>
                             )}
-
-                            {/* Pricing info - Always show for active/registration_open leagues */}
-                            {(league.status === 'active' || league.status === 'registration_open') && (
-                              <div className="flex items-center text-gray-600">
-                                <span className="text-base mr-2">💰</span>
-                                <span className="font-medium">
-                                  {league.seasonConfig?.price?.isFree ? (
-                                    <span className="text-green-600">Free</span>
-                                  ) : league.seasonConfig?.price?.amount > 0 ? (
-                                    `${league.seasonConfig.price.amount}€`
-                                  ) : (
-                                    <span className="text-gray-400">Price not set</span>
-                                  )}
-                                </span>
-                              </div>
-                            )}
                           </div>
+                        </div>
 
-                          {/* Action Buttons */}
-                          <div className="mt-5 grid grid-cols-2 gap-2.5 pt-4 border-t border-gray-100">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleMatchesClick(e, league._id, league.name)
-                              }}
-                              className="px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 active:scale-95 transition-all shadow-sm"
-                            >
-                              ⚔️ Matches
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handlePlayersClick(e, league._id, league.name)
-                              }}
-                              className="px-4 py-2.5 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 active:scale-95 transition-all shadow-sm"
-                            >
-                              👥 Players
-                            </button>
-                          </div>
+                        <div className="px-5 pb-5 grid grid-cols-2 gap-2">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleMatchesClick(e, league._id, league.name) }}
+                            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-xl bg-parque-purple text-white hover:bg-parque-purple/90 transition-colors"
+                          >
+                            <Svg d={ICONS.calendar} className="w-4 h-4" /> Matches
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handlePlayersClick(e, league._id, league.name) }}
+                            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-xl bg-purple-50 text-parque-purple hover:bg-purple-100 transition-colors"
+                          >
+                            <Svg d={ICONS.users} className="w-4 h-4" /> Players
+                          </button>
                         </div>
                       </div>
                     )
                   })}
                 </div>
               </div>
-            ))}            </div>
+            ))}
+            </div>
 
           {leagues.length === 0 && !loading && (
             <div className="text-center py-12 bg-white rounded-lg shadow">
