@@ -18,6 +18,7 @@ export default function MatchCard({
   isPublic = false,
   showLeagueBadge = false,
   openRankData = {},
+  onTapCompleted,
   className = ''
 }) {
   
@@ -175,7 +176,10 @@ export default function MatchCard({
     : 'bg-red-50 text-red-600'
 
   return (
-    <div className={'bg-white rounded-xl border border-gray-100 overflow-hidden transition-all ' + (isCancelled && !isUpcoming ? 'opacity-60 ' : '') + (!isUpcoming && !isCancelled ? (isWinner ? 'border-l-[3px] border-l-green-500 ' : 'border-l-[3px] border-l-red-400 ') : '') + className}>
+    <div
+      onClick={!isUpcoming && !isCancelled && onTapCompleted && result ? () => onTapCompleted(match, isWinner) : undefined}
+      className={'bg-white rounded-xl border border-gray-100 overflow-hidden transition-all ' + (!isUpcoming && !isCancelled && onTapCompleted && result ? 'cursor-pointer hover:shadow-sm ' : '') + (isCancelled && !isUpcoming ? 'opacity-60 ' : '') + (!isUpcoming && !isCancelled ? (isWinner ? 'border-l-[3px] border-l-green-500 ' : 'border-l-[3px] border-l-red-400 ') : '') + className}
+    >
       
       {/* Top row: Round pill + league + deadline/score */}
       <div className="flex items-center justify-between px-4 pt-3">
@@ -308,6 +312,19 @@ export default function MatchCard({
             {match.schedule.venue || match.schedule.club}
             {match.schedule?.notes && (' \u00b7 ' + match.schedule.notes)}
           </span>
+        </div>
+      )}
+
+      {isUpcoming && !isScheduled && match.schedule?.deadline && !isPublic && player && (
+        <div className="px-4 pb-2 -mt-1 text-[11px] text-gray-500">
+          {language === 'es' ? 'Jugad antes del ' : 'Play before '}
+          <span className="font-medium text-gray-700">
+            {new Date(match.schedule.deadline).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/Madrid' })}
+          </span>
+          {' \u00b7 '}
+          {language === 'es'
+            ? extensionsRemaining + (extensionsRemaining === 1 ? ' extensi\u00f3n disponible' : ' extensiones disponibles')
+            : extensionsRemaining + (extensionsRemaining === 1 ? ' extension left' : ' extensions left')}
         </div>
       )}
 

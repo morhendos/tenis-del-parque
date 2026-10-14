@@ -1,330 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import MatchCard from '@/components/player/MatchCard'
-import { MatchModals } from '@/components/player/MatchModals'
-import MatchResultCard from '@/components/player/MatchResultCard'
-import { toast } from '@/components/ui/Toast'
-import { processMatchResult } from '@/lib/utils/matchResultUtils'
-import { fetchWithRetry } from '@/lib/utils/fetchWithRetry'
+import usePlayerMatches from '@/components/player/usePlayerMatches'
 import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
 
 export default function PlayerMatches() {
   const params = useParams()
   const locale = params.locale || 'es'
-  const [matches, setMatches] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [player, setPlayer] = useState(null)
   const [activeTab, setActiveTab] = useState('upcoming')
-  const [showResultModal, setShowResultModal] = useState(false)
-  const [showScheduleModal, setShowScheduleModal] = useState(false)
-  const [selectedMatch, setSelectedMatch] = useState(null)
-  const [isEditingSchedule, setIsEditingSchedule] = useState(false)
-  const [showResultCard, setShowResultCard] = useState(false)
-  const [submittedMatch, setSubmittedMatch] = useState(null)
-  const [isWinner, setIsWinner] = useState(false)
-  const [selectedLeagueId, setSelectedLeagueId] = useState(null) // For multi-league filtering
-  const [openRankData, setOpenRankData] = useState({}) // OpenRank positions by player ID
-  const [showExtendModal, setShowExtendModal] = useState(false)
+  const [selectedLeagueId, setSelectedLeagueId] = useState(null)
   const router = useRouter()
-
-  // Get extensions remaining for a specific league (looks up the correct registration)
-  const getExtensionsForLeague = (leagueId) => {
-    if (!player?.registrations?.length || !leagueId) return 3 // default
-    const lid = leagueId?._id?.toString() || leagueId?.toString()
-    const registration = player.registrations.find(r => {
-      const regLeagueId = r.league?._id?.toString() || r.league?.toString()
-      return regLeagueId === lid
-    })
-    if (registration?.extensions) {
-      return registration.extensions.total - registration.extensions.used
-    }
-    return 3 // default if no extensions tracking yet
-  }
-
-  useEffect(() => {
-    fetchMatches()
-    fetchPlayerData()
-    fetchOpenRankData()
-  }, [])
-
-  const fetchPlayerData = async () => {
-    try {
-      const response = await fetchWithRetry('/api/player/profile', {}, { label: 'Matches:profile' })
-      if (response.ok) {
-        const data = await response.json()
-        setPlayer(data.player)
-      }
-    } catch (error) {
-      console.error('Error fetching player data:', error)
-    }
-  }
-
-  const fetchOpenRankData = async () => {
-    try {
-      const response = await fetchWithRetry('/api/openrank?all=true', {}, { label: 'Matches:openrank' })
-      if (response.ok) {
-        const data = await response.json()
-        // Create a map of player ID to their OpenRank position
-        const rankMap = {}
-        data.rankings?.forEach(player => {
-          rankMap[player._id] = player.position
-        })
-        setOpenRankData(rankMap)
-      }
-    } catch (error) {
-      console.error('Error fetching OpenRank data:', error)
-    }
-  }
-
-  const fetchMatches = async () => {
-    try {
-      setLoading(true)
-      const response = await fetchWithRetry('/api/player/matches', {}, { label: 'Matches:matches' })
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch matches')
-      }
-
-      const data = await response.json()
-      setMatches(data.matches || [])
-    } catch (error) {
-      console.error('Error fetching matches:', error)
-      setError('Failed to load matches')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleSchedule = (match, isEditing = false) => {
-    setSelectedMatch(match)
-    setIsEditingSchedule(isEditing)
-    setShowScheduleModal(true)
-  }
-
-  const handleResult = (match) => {
-    setSelectedMatch(match)
-    setShowResultModal(true)
-  }
-
-  const handleWhatsApp = (match, opponent) => {
-    if (!opponent?.whatsapp) return
-    
-    // Normalize phone number for WhatsApp
-    let cleaned = opponent.whatsapp.replace(/[^0-9]/g, '')
-    if (cleaned.startsWith('00')) {
-      cleaned = cleaned.substring(2)
-    }
-    
-    // Playoff-aware round label
-    const isPlayoff = match.matchType === 'playoff'
-    const stageLabels = {
-      quarterfinal: { es: 'cuartos de final de los playoffs', en: 'playoff quarterfinals' },
-      semifinal: { es: 'las semifinales de los playoffs', en: 'the playoff semifinals' },
-      final: { es: 'la final de los playoffs', en: 'the playoff final' },
-      third_place: { es: 'el partido por el tercer puesto', en: 'the 3rd place playoff' }
-    }
-    const roundLabel = isPlayoff
-      ? (stageLabels[match.playoffInfo?.stage]?.[locale] || stageLabels.quarterfinal[locale])
-      : (locale === 'es' ? `la ronda ${match.round}` : `round ${match.round}`)
-    
-    const message = locale === 'es'
-      ? `Hola ${opponent.name}! Soy ${player?.name} de TDP liga de tenis. Cuando te viene bien para jugar nuestro partido de ${roundLabel}?`
-      : `Hi ${opponent.name}! I'm ${player?.name} from the TDP tennis league. When would be a good time to play our ${roundLabel} match?`
-    const whatsappUrl = `https://wa.me/${cleaned}?text=${encodeURIComponent(message)}`
-    window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
-  }
-
-  const handleOpenExtendModal = (match) => {
-    setSelectedMatch(match)
-    setShowExtendModal(true)
-  }
-
-  const handleConfirmExtend = async (match) => {
-    try {
-      const response = await fetch('/api/player/matches/extend', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ matchId: match._id })
-      })
-      
-      const result = await response.json()
-      
-      if (response.ok) {
-        // Update match deadline in state
-        setMatches(prevMatches => 
-          prevMatches.map(m => {
-            if (m._id === match._id) {
-              return {
-                ...m,
-                schedule: {
-                  ...m.schedule,
-                  deadline: result.newDeadline
-                }
-              }
-            }
-            return m
-          })
-        )
-        
-        // Refresh player data to update extension counts
-        fetchPlayerData()
-        setShowExtendModal(false)
-        toast.success(locale === 'es' ? 'Límite extendido 7 días' : 'Deadline extended by 7 days')
-      } else {
-        toast.error(result.error || (locale === 'es' ? 'Error al extender límite' : 'Failed to extend deadline'))
-      }
-    } catch (error) {
-      console.error('Error extending deadline:', error)
-      toast.error(locale === 'es' ? 'Error al extender límite' : 'Error extending deadline')
-    }
-  }
-
-  const handleSubmitResult = async (data) => {
-    try {
-      const response = await fetch('/api/player/matches/result', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      })
-      
-      const result = await response.json()
-      
-      if (response.ok) {
-        // Find the match that was submitted
-        const match = matches.find(m => m._id === data.matchId)
-        
-        if (match) {
-          // Use the reusable utility to process the match result
-          const { updatedMatch, isPlayerWinner } = processMatchResult(match, player, data)
-          
-          // Update matches state
-          setMatches(prevMatches => 
-            prevMatches.map(m => 
-              m._id === data.matchId ? updatedMatch : m
-            )
-          )
-          
-          // Close the result modal first
-          setShowResultModal(false)
-          
-          // Set up the result card display with a small delay to ensure modal is closed
-          setTimeout(() => {
-            setSubmittedMatch(updatedMatch)
-            setIsWinner(isPlayerWinner)
-            setShowResultCard(true)
-          }, 100)
-          
-          // Show success toast
-          toast.success(locale === 'es' ? 'Resultado enviado con éxito' : 'Result submitted successfully')
-        } else {
-          toast.error(locale === 'es' ? 'Error: Partido no encontrado' : 'Error: Match not found')
-        }
-      } else {
-        toast.error(result.error || (locale === 'es' ? 'Error al enviar resultado' : 'Failed to submit result'))
-      }
-    } catch (error) {
-      console.error('Error submitting result:', error)
-      toast.error(locale === 'es' ? 'Error al enviar resultado' : 'Error submitting result')
-    }
-  }
-
-  const handleSubmitSchedule = async (data) => {
-    try {
-      const response = await fetch('/api/player/matches/schedule', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      })
-      
-      const result = await response.json()
-      
-      if (response.ok) {
-        // Optimistically update the match in state
-        setMatches(prevMatches => 
-          prevMatches.map(match => {
-            if (match._id === data.matchId) {
-              // Update match schedule
-              return {
-                ...match,
-                schedule: {
-                  ...match.schedule,
-                  confirmedDate: new Date(`${data.date}T${data.time}`).toISOString(),
-                  venue: data.venue,
-                  club: data.venue,
-                  court: data.court,
-                  time: data.time,
-                  notes: data.notes
-                },
-                scheduledDate: new Date(`${data.date}T${data.time}`).toISOString(),
-                notes: data.notes
-              }
-            }
-            return match
-          })
-        )
-        
-        setShowScheduleModal(false)
-        toast.success(
-          isEditingSchedule 
-            ? (locale === 'es' ? 'Programación actualizada con éxito' : 'Schedule updated successfully')
-            : (locale === 'es' ? 'Partido programado con éxito' : 'Match scheduled successfully')
-        )
-      } else {
-        toast.error(result.error || (locale === 'es' ? 'Error al programar partido' : 'Failed to schedule match'))
-      }
-    } catch (error) {
-      console.error('Error scheduling match:', error)
-      toast.error(locale === 'es' ? 'Error al programar partido' : 'Error scheduling match')
-    }
-  }
-
-  const handleUnschedule = async (match) => {
-    try {
-      const response = await fetch('/api/player/matches/unschedule', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ matchId: match._id })
-      })
-      
-      const result = await response.json()
-      
-      if (response.ok) {
-        // Optimistically update the match in state
-        setMatches(prevMatches => 
-          prevMatches.map(m => {
-            if (m._id === match._id) {
-              return {
-                ...m,
-                schedule: {
-                  ...m.schedule,
-                  confirmedDate: null,
-                  venue: null,
-                  club: null,
-                  court: null,
-                  time: null,
-                  notes: null
-                },
-                scheduledDate: null,
-                notes: null
-              }
-            }
-            return m
-          })
-        )
-        
-        setShowScheduleModal(false)
-        toast.success(locale === 'es' ? 'Partido desprogramado' : 'Match unscheduled')
-      } else {
-        toast.error(result.error || (locale === 'es' ? 'Error al desprogramar partido' : 'Failed to unschedule match'))
-      }
-    } catch (error) {
-      console.error('Error unscheduling match:', error)
-      toast.error(locale === 'es' ? 'Error al desprogramar partido' : 'Error unscheduling match')
-    }
-  }
+  const { matches, player, openRankData, loading, error, refetch: fetchMatches, cardProps, modals } = usePlayerMatches(locale)
 
   // Detect if player has multiple leagues
   const hasMultipleLeagues = player?.registrations?.length > 1
@@ -532,23 +220,13 @@ export default function PlayerMatches() {
         {activeTab === 'upcoming' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {upcomingMatches.length > 0 ? (
-              upcomingMatches.map((match, index) => (
+              upcomingMatches.map((match) => (
                 <MatchCard
                   key={match._id}
-                  match={match}
-                  player={player}
-                  language={locale}
-                  onSchedule={handleSchedule}
-                  onResult={handleResult}
-                  onWhatsApp={handleWhatsApp}
-                  onExtend={handleOpenExtendModal}
-                  extensionsRemaining={getExtensionsForLeague(match.league?._id || match.league)}
+                  {...cardProps(match)}
                   isUpcoming={true}
                   showActions={true}
                   showLeagueBadge={hasMultipleLeagues}
-                  openRankData={openRankData}
-                  className=""
-                  style={{ animationDelay: `${index * 0.1}s` }}
                 />
               ))
             ) : (
@@ -570,7 +248,7 @@ export default function PlayerMatches() {
         {activeTab === 'completed' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {completedMatches.length > 0 ? (
-              completedMatches.map((match, index) => (
+              completedMatches.map((match) => (
                 <MatchCard
                   key={match._id}
                   match={match}
@@ -580,8 +258,6 @@ export default function PlayerMatches() {
                   showActions={false}
                   showLeagueBadge={hasMultipleLeagues}
                   openRankData={openRankData}
-                  className=""
-                  style={{ animationDelay: `${index * 0.1}s` }}
                 />
               ))
             ) : (
@@ -600,44 +276,7 @@ export default function PlayerMatches() {
           </div>
         )}
 
-        {/* Match Modals */}
-        <MatchModals
-          showResultModal={showResultModal}
-          showScheduleModal={showScheduleModal}
-          showExtendModal={showExtendModal}
-          selectedMatch={selectedMatch}
-          player={player}
-          language={locale}
-          league={selectedMatch?.league}
-          onCloseResult={() => setShowResultModal(false)}
-          onCloseSchedule={() => {
-            setShowScheduleModal(false)
-            setIsEditingSchedule(false)
-          }}
-          onCloseExtend={() => setShowExtendModal(false)}
-          onSubmitResult={handleSubmitResult}
-          onSubmitSchedule={handleSubmitSchedule}
-          onUnschedule={handleUnschedule}
-          onConfirmExtend={handleConfirmExtend}
-          extensionsRemaining={getExtensionsForLeague(selectedMatch?.league?._id || selectedMatch?.league)}
-          isEditingSchedule={isEditingSchedule}
-        />
-
-        {/* Match Result Card */}
-        {showResultCard && submittedMatch && (
-          <MatchResultCard
-            match={submittedMatch}
-            player={player}
-            language={locale}
-            isWinner={isWinner}
-            onClose={() => {
-              setShowResultCard(false)
-              setSubmittedMatch(null)
-              // Refresh matches data
-              fetchMatches()
-            }}
-          />
-        )}
+        {modals}
       </div>
     </>
   )

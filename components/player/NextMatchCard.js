@@ -1,18 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { WhatsAppUtils } from '@/lib/utils/whatsappUtils'
-import { getMaskedName, isDemoModeActive } from '@/lib/utils/demoMode'
 import CountdownCard from './CountdownCard'
-import PlayerAvatar from './PlayerAvatar'
-import PlayerLink from './PlayerLink'
+import MatchCard from './MatchCard'
+import usePlayerMatches, { isUpcomingMatch } from './usePlayerMatches'
 
-export default function NextMatchCard({ matches = [], language, leagueInfo, playerName = '', registrations = [] }) {
-  const [isDemoMode, setIsDemoMode] = useState(false)
-  
-  useEffect(() => {
-    setIsDemoMode(isDemoModeActive())
-  }, [])
+export default function NextMatchCard({ matches = [], language, leagueInfo, playerName = '' }) {
+  const hasMatches = matches && matches.length > 0
+  const { matches: fullMatches, cardProps, modals } = usePlayerMatches(language, { enabled: hasMatches })
 
   const content = {
     es: {
@@ -36,7 +30,6 @@ export default function NextMatchCard({ matches = [], language, leagueInfo, play
   }
 
   const t = content[language] || content.es
-  const hasMatches = matches && matches.length > 0
 
   // No matches but we have league info - show countdown
   if (!hasMatches && leagueInfo) {
@@ -63,6 +56,9 @@ export default function NextMatchCard({ matches = [], language, leagueInfo, play
     return null
   }
 
+  const ids = new Set(matches.map(m => String(m._id)).filter(Boolean))
+  const upcoming = fullMatches.filter(isUpcomingMatch)
+  const shownMatches = ids.size ? upcoming.filter(m => ids.has(String(m._id))) : upcoming
   const title = matches.length === 1 ? t.titleSingle : t.title
 
   return (
@@ -83,93 +79,12 @@ export default function NextMatchCard({ matches = [], language, leagueInfo, play
       </div>
 
       {/* Match List */}
-      <div className="space-y-2">
-        {matches.map((match, index) => {
-          // Calculate days left from deadline
-          const daysLeft = match.deadline 
-            ? Math.max(0, Math.ceil((new Date(match.deadline) - new Date()) / (1000 * 60 * 60 * 24)))
-            : null
-
-          return (
-            <div key={match._id || index} className="bg-gray-50 rounded-xl p-2.5">
-              {/* Round + League label */}
-              <div className="flex items-center justify-between mb-1.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-purple-600">
-                    {match.matchType === 'playoff' && match.playoffInfo?.stage
-                      ? ({
-                          quarterfinal: language === 'es' ? 'Cuartos' : 'QF',
-                          semifinal: language === 'es' ? 'Semifinal' : 'SF',
-                          final: 'Final',
-                          third_place: language === 'es' ? '3er Puesto' : '3rd Place'
-                        }[match.playoffInfo.stage] || `${t.round} ${match.round}`)
-                      : `${t.round} ${match.round}`
-                    }
-                  </span>
-                  {match.leagueName && (
-                    <span className="text-xs text-gray-400">{match.leagueName}</span>
-                  )}
-                </div>
-                {daysLeft !== null && (
-                  <span className="text-xs text-gray-400">{daysLeft} {t.daysLeft}</span>
-                )}
-              </div>
-              <div className="relative flex items-center gap-2">
-                <PlayerAvatar name={match.opponent} avatar={isDemoMode ? null : match.opponentAvatar} country={match.opponentCountry} size="sm" />
-
-                <div className="flex-1 min-w-0 flex items-baseline gap-1.5">
-                  <PlayerLink playerId={match.opponentId} stretch className="text-sm font-medium text-gray-900 truncate">
-                    {isDemoMode ? getMaskedName(match.opponent) : match.opponent}
-                  </PlayerLink>
-                  {match.opponentPosition && (
-                    <span className="text-xs text-gray-400 flex-shrink-0">#{match.opponentPosition}</span>
-                  )}
-                </div>
-                
-                {/* WhatsApp Button */}
-                {match.opponentWhatsapp && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const isPlayoff = match.matchType === 'playoff'
-                      const stages = {
-                        quarterfinal: { es: 'cuartos de final de los playoffs', en: 'playoff quarterfinals' },
-                        semifinal: { es: 'las semifinales de los playoffs', en: 'the playoff semifinals' },
-                        final: { es: 'la final de los playoffs', en: 'the playoff final' },
-                        third_place: { es: 'el partido por el tercer puesto', en: 'the 3rd place playoff' }
-                      }
-                      const roundLabel = isPlayoff
-                        ? (stages[match.playoffInfo?.stage]?.[language] || stages.quarterfinal[language])
-                        : (language === 'es' ? `la ronda ${match.round}` : `round ${match.round}`)
-                      const msg = language === 'es'
-                        ? `Hola ${match.opponent}! Soy tu rival de la liga TDP. Cuando te viene bien para jugar nuestro partido de ${roundLabel}?`
-                        : `Hi ${match.opponent}! I'm your opponent from the TDP league. When would be a good time to play our ${roundLabel} match?`
-                      window.open(WhatsAppUtils.createMessageUrl(match.opponentWhatsapp, msg), '_blank')
-                    }}
-                    className="tap-target relative z-10 flex items-center gap-1 px-2.5 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs font-medium rounded-lg transition-colors flex-shrink-0"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                    </svg>
-                    WhatsApp
-                  </button>
-                )}
-              </div>
-              {match.deadline && (() => {
-                const reg = registrations.find(r => String(r.league?._id || r.league) === String(match.leagueId))
-                const ext = reg?.extensions
-                const left = ext ? Math.max(0, (ext.total ?? 3) - (ext.used ?? 0)) : 3
-                const date = new Date(match.deadline).toLocaleDateString(language === 'es' ? 'es-ES' : 'en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Europe/Madrid' })
-                return (
-                  <p className="mt-2 text-xs text-gray-500">
-                    {t.playBefore} <span className="font-medium text-gray-700">{date}</span> · {t.extensions(left)}
-                  </p>
-                )
-              })()}
-            </div>
-          )
-        })}
+      <div className="space-y-3">
+        {shownMatches.map(match => (
+          <MatchCard key={match._id} {...cardProps(match)} isUpcoming={true} showActions={true} />
+        ))}
       </div>
+      {modals}
     </div>
   )
 }
