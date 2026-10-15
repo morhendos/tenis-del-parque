@@ -70,7 +70,7 @@ const content = {
 
 function TdpBadge() {
   return (
-    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-parque-purple to-indigo-600 flex items-center justify-center p-1.5 flex-shrink-0">
+    <div className="w-10 h-10 rounded-full bg-white ring-1 ring-gray-200 flex items-center justify-center p-1.5 flex-shrink-0">
       <Image src="/logo-big.png" alt="Tenis del Parque" width={28} height={28} className="object-contain" />
     </div>
   )
