@@ -92,7 +92,7 @@ export default function BottomNavigation({ locale, user, playerData, onLogout })
   return (
     <>
       {/* Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden safe-area-bottom">
+      <nav className="relative flex-shrink-0 z-50 lg:hidden safe-area-bottom">
         {/* Gradient background with shadow for depth */}
         <div 
           className="absolute inset-0 bg-gradient-to-r from-parque-purple via-purple-600 to-indigo-600" 

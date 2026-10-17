@@ -55,7 +55,7 @@ export function ToastContainer() {
   if (toastArray.length === 0) return null
   
   return createPortal(
-    <div className="fixed top-4 right-4 z-50 space-y-2 pointer-events-none">
+    <div className="fixed top-[calc(env(safe-area-inset-top,0px)+1rem)] right-4 z-[70] space-y-2 pointer-events-none">
       {toastArray.map((toast) => (
         <Toast key={toast.id} {...toast} />
       ))}
