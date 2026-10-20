@@ -17,7 +17,7 @@ export default function PushNotificationModal({ mode, leagueId, round, onClose }
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
   const [customMessage, setCustomMessage] = useState('')
-  const [testMode, setTestMode] = useState(false)
+  const [testEmail, setTestEmail] = useState('')
 
   const isReminder = mode === 'reminder'
   const title = isReminder ? 'Send Match Reminders' : 'Notify Players About New Matches'
@@ -38,8 +38,7 @@ export default function PushNotificationModal({ mode, leagueId, round, onClose }
       const body = { leagueId }
       if (round) body.round = round
       if (customMessage.trim()) body.customMessage = customMessage.trim()
-      // testMode sends to logged-in admin's player only (handled server-side via testPlayerId)
-      // For now, we just include a flag — admin can use the test endpoint separately
+      if (testEmail.trim()) body.testEmail = testEmail.trim().toLowerCase()
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -92,6 +91,21 @@ export default function PushNotificationModal({ mode, leagueId, round, onClose }
                 onChange={(e) => setCustomMessage(e.target.value)}
                 placeholder="Leave empty for default reminder message"
                 rows={2}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-parque-purple focus:border-transparent"
+              />
+            </div>
+          )}
+
+          {!isReminder && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Test: only notify the player with this email (optional)
+              </label>
+              <input
+                type="email"
+                value={testEmail}
+                onChange={(e) => setTestEmail(e.target.value)}
+                placeholder="Leave empty to notify everyone"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-parque-purple focus:border-transparent"
               />
             </div>

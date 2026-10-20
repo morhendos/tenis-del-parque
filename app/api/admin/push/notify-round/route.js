@@ -24,7 +24,16 @@ export async function POST(request) {
 
     await dbConnect()
 
-    const { leagueId, round, testPlayerId } = await request.json()
+    const { leagueId, round, testEmail } = await request.json()
+    let testPlayerId = null
+
+    if (testEmail) {
+      const testPlayer = await Player.findOne({ email: testEmail.toLowerCase() }).select('_id').lean()
+      if (!testPlayer) {
+        return NextResponse.json({ error: `No player found with email ${testEmail}` }, { status: 404 })
+      }
+      testPlayerId = testPlayer._id.toString()
+    }
 
     if (!leagueId || !round) {
       return NextResponse.json(
@@ -41,8 +50,8 @@ export async function POST(request) {
     }
     
     const matches = await Match.find(matchQuery)
-      .populate('players.player1', 'name preferences')
-      .populate('players.player2', 'name preferences')
+      .populate('players.player1', 'name email preferences')
+      .populate('players.player2', 'name email preferences')
       .lean()
 
     if (matches.length === 0) {

@@ -232,6 +232,7 @@ export async function POST(request, { params }) {
           player: player1,
           opponent: isBye ? null : player2,
           isBye,
+          matchDeadline: match.deadline,
           language
         })
       }
@@ -242,6 +243,7 @@ export async function POST(request, { params }) {
           player: player2,
           opponent: player1,
           isBye: false,
+          matchDeadline: match.deadline,
           language
         })
       }
@@ -262,6 +264,7 @@ export async function POST(request, { params }) {
       // Send test regular match email
       if (sampleRegular) {
         const emailContent = generateSeasonStartEmail({
+          round,
           playerName: sampleRegular.player.name,
           playerEmail: testEmail,
           opponentName: sampleRegular.opponent?.name,
@@ -269,7 +272,7 @@ export async function POST(request, { params }) {
           leagueName: league.name,
           city: league.location?.city || '',
           season: league.season ? `${league.season.type}-${league.season.year}` : '',
-          deadline: deadline.toISOString(),
+          deadline: (sampleRegular.matchDeadline || deadline).toISOString(),
           isBye: false,
           language: testLanguage
         })
@@ -293,6 +296,7 @@ export async function POST(request, { params }) {
       // Send test BYE email
       if (sampleBye) {
         const emailContent = generateSeasonStartEmail({
+          round,
           playerName: sampleBye.player.name,
           playerEmail: testEmail,
           opponentName: null,
@@ -340,6 +344,7 @@ export async function POST(request, { params }) {
       }
 
       const emailContent = generateSeasonStartEmail({
+        round,
         playerName: singlePlayerData.player.name,
         playerEmail: singlePlayerData.player.email,
         opponentName: singlePlayerData.opponent?.name,
@@ -347,7 +352,7 @@ export async function POST(request, { params }) {
         leagueName: league.name,
         city: league.location?.city || '',
         season: league.season ? `${league.season.type}-${league.season.year}` : '',
-        deadline: singlePlayerData.isBye ? null : deadline.toISOString(),
+        deadline: singlePlayerData.isBye ? null : (singlePlayerData.matchDeadline || deadline).toISOString(),
         isBye: singlePlayerData.isBye,
         language: singlePlayerData.language
       })
@@ -394,6 +399,7 @@ export async function POST(request, { params }) {
 
     for (const emailData of emailsToSend) {
       const emailContent = generateSeasonStartEmail({
+        round,
         playerName: emailData.player.name,
         playerEmail: emailData.player.email,
         opponentName: emailData.opponent?.name,
@@ -401,7 +407,7 @@ export async function POST(request, { params }) {
         leagueName: league.name,
         city: league.location?.city || '',
         season: league.season ? `${league.season.type}-${league.season.year}` : '',
-        deadline: emailData.isBye ? null : deadline.toISOString(),
+        deadline: emailData.isBye ? null : (emailData.matchDeadline || deadline).toISOString(),
         isBye: emailData.isBye,
         language: emailData.language // Use player's preferred language
       })
