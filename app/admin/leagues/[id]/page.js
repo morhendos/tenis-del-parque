@@ -401,7 +401,7 @@ export default function LeagueManagementPage() {
                     { title: 'Matches', desc: 'Rounds, results and deadlines', icon: IC.matches, onClick: () => handleTabClick('matches') },
                     { title: 'Playoffs', desc: 'Bracket and settings', icon: IC.playoffs, onClick: () => router.push(`/admin/leagues/${leagueId}/playoffs`), dot: league?.playoffConfig?.currentPhase && league.playoffConfig.currentPhase !== 'regular_season' },
                     { title: 'Discount codes', desc: 'Promo and loyalty codes', icon: IC.tag, onClick: () => router.push(`/admin/leagues/${leagueId}/discounts`), count: league?.discountCodes?.filter(d => d.isActive).length || 0 },
-                    { title: 'Season start email', desc: 'Notify players about Round 1', icon: IC.mail, onClick: () => setShowSeasonStartEmail(true) },
+                    { title: 'Round emails', desc: 'Email players their rival for a round', icon: IC.mail, onClick: () => setShowSeasonStartEmail(true) },
                     { title: 'Settings', desc: 'Status, levels and playoffs', icon: IC.settings, onClick: () => handleTabClick('settings') }
                   ].map(a => (
                     <button
