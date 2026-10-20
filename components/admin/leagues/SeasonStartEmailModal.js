@@ -25,6 +25,27 @@ export default function SeasonStartEmailModal({
   const [testLanguage, setTestLanguage] = useState('es')
   const [selectedRound, setSelectedRound] = useState(1)
   const [languageOverrides, setLanguageOverrides] = useState({}) // { recipientIndex: 'es' | 'en' }
+  const [pushing, setPushing] = useState(false)
+  const [pushResult, setPushResult] = useState(null)
+
+  const sendPush = async (testEmailAddress) => {
+    if (!testEmailAddress && !confirm(`Send a push notification to every player with a match in Round ${selectedRound}?`)) return
+    setPushing(true)
+    setPushResult(null)
+    try {
+      const response = await fetch('/api/admin/push/notify-round', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leagueId, round: selectedRound, testEmail: testEmailAddress || undefined })
+      })
+      const data = await response.json()
+      setPushResult(response.ok ? data : { error: data.error || 'Failed to send push' })
+    } catch (error) {
+      setPushResult({ error: 'Failed to send push' })
+    } finally {
+      setPushing(false)
+    }
+  }
 
   // Fetch preview when modal opens
   useEffect(() => {
@@ -33,6 +54,7 @@ export default function SeasonStartEmailModal({
       setLanguageOverrides({}) // Reset overrides when refetching
       setIndividualResults({}) // Reset individual results
       setResult(null)
+      setPushResult(null)
     }
   }, [isOpen, leagueId, selectedRound])
 
@@ -335,8 +357,8 @@ export default function SeasonStartEmailModal({
               {/* Test */}
               <div className="bg-white border rounded-lg">
                 <div className="px-6 py-4 border-b border-gray-200">
-                  <h3 className="text-sm font-semibold text-gray-900">Test email</h3>
-                  <p className="text-xs text-gray-500 mt-1">Sends a match sample and a bye sample (if any) to this address</p>
+                  <h3 className="text-sm font-semibold text-gray-900">Test</h3>
+                  <p className="text-xs text-gray-500 mt-1">Email: a match sample and a bye sample (if any) to this address. Push: only to the player with this email.</p>
                 </div>
                 <div className="p-6 flex flex-wrap gap-3">
                   <input
@@ -359,10 +381,30 @@ export default function SeasonStartEmailModal({
                     disabled={!testEmail || sending}
                     className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm disabled:opacity-50"
                   >
-                    {sending ? 'Sending...' : 'Send test'}
+                    {sending ? 'Sending...' : 'Test email'}
+                  </button>
+                  <button
+                    onClick={() => sendPush(testEmail.trim().toLowerCase())}
+                    disabled={!testEmail || pushing}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm disabled:opacity-50"
+                  >
+                    {pushing ? 'Sending...' : 'Test push'}
                   </button>
                 </div>
               </div>
+
+              {pushResult && (
+                <div className={`rounded-lg border p-4 text-sm ${pushResult.error ? 'border-red-200 bg-red-50 text-red-800' : 'border-green-200 bg-green-50 text-green-800'}`}>
+                  {pushResult.error ? (
+                    <p>{pushResult.error}</p>
+                  ) : (
+                    <p className="font-medium">
+                      Push{pushResult.testMode ? ' test' : ''}: {pushResult.notificationsSent} sent, {pushResult.notificationsFailed} failed
+                      {!pushResult.testMode && ` (${pushResult.matchesProcessed} matches, only players with push enabled)`}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Result */}
               {result && (
@@ -399,14 +441,23 @@ export default function SeasonStartEmailModal({
           <button onClick={onClose} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm">
             Close
           </button>
+          <div className="flex items-center gap-2">
+          <button
+            onClick={() => sendPush()}
+            disabled={!preview || preview.error || pushing || preview?.summary?.regularMatches === 0}
+            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {pushing ? 'Sending...' : 'Send push to all'}
+          </button>
           <button
             onClick={handleSendAll}
             disabled={!preview || preview.error || sending || preview?.summary?.totalRecipients === 0}
             className="px-4 py-2 bg-parque-purple text-white rounded-lg hover:bg-parque-purple/90 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {sending && <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>}
-            {sending ? 'Sending...' : `Send to all (${preview?.summary?.totalRecipients || 0})`}
+            {sending ? 'Sending...' : `Send emails to all (${preview?.summary?.totalRecipients || 0})`}
           </button>
+          </div>
         </div>
       </div>
     </div>
