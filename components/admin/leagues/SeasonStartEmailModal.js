@@ -23,7 +23,7 @@ export default function SeasonStartEmailModal({
   const [individualResults, setIndividualResults] = useState({}) // { index: { success, error } }
   const [testEmail, setTestEmail] = useState('')
   const [testLanguage, setTestLanguage] = useState('es')
-  const [selectedRound, setSelectedRound] = useState(1)
+  const [selectedRound, setSelectedRound] = useState(null)
   const [languageOverrides, setLanguageOverrides] = useState({}) // { recipientIndex: 'es' | 'en' }
   const [pushing, setPushing] = useState(false)
   const [pushResult, setPushResult] = useState(null)
@@ -63,11 +63,12 @@ export default function SeasonStartEmailModal({
     setResult(null)
     try {
       const response = await fetch(
-        `/api/admin/leagues/${leagueId}/season-start-email?round=${selectedRound}`
+        `/api/admin/leagues/${leagueId}/season-start-email?round=${selectedRound ?? 'latest'}`
       )
       const data = await response.json()
       if (response.ok) {
         setPreview(data)
+        if (selectedRound == null) setSelectedRound(data.round)
       } else {
         setPreview({ error: data.error })
       }
@@ -231,7 +232,7 @@ export default function SeasonStartEmailModal({
           </div>
           <div className="flex items-center gap-3">
             <select
-              value={selectedRound}
+              value={selectedRound ?? ''}
               onChange={(e) => setSelectedRound(parseInt(e.target.value))}
               className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-parque-purple focus:border-parque-purple"
             >

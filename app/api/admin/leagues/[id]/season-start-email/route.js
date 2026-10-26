@@ -40,7 +40,12 @@ export async function GET(request, { params }) {
 
     const { id } = params
     const { searchParams } = new URL(request.url)
-    const round = parseInt(searchParams.get('round')) || 1
+    const roundParam = searchParams.get('round')
+    let round = parseInt(roundParam) || 1
+    if (roundParam === 'latest') {
+      const last = await Match.findOne({ league: id, matchType: 'regular' }).sort({ round: -1 }).select('round').lean()
+      round = last?.round || 1
+    }
 
     // Get league
     const league = await League.findById(id)
@@ -256,8 +261,9 @@ export async function POST(request, { params }) {
     // If test email, only send to that address
     if (testEmail) {
       // Find a sample match to use for the test
-      const sampleRegular = emailsToSend.find(e => !e.isBye)
-      const sampleBye = emailsToSend.find(e => e.isBye)
+      const own = emailsToSend.find(e => e.player.email?.toLowerCase() === testEmail.trim().toLowerCase())
+      const sampleRegular = own ? (own.isBye ? null : own) : emailsToSend.find(e => !e.isBye)
+      const sampleBye = own ? (own.isBye ? own : null) : emailsToSend.find(e => e.isBye)
       
       const results = []
       
