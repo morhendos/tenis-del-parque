@@ -240,6 +240,8 @@ export default function LeagueRegistrationPage() {
               else apiErrors.submit = error
             })
             setErrors(apiErrors)
+          } else if (data.field === 'whatsapp') {
+            setErrors({ whatsapp: data.error })
           } else {
             setErrors({ submit: data.error || 'Registration failed' })
           }

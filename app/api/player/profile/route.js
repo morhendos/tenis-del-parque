@@ -4,6 +4,7 @@ import Player from '../../../../lib/models/Player'
 import User from '../../../../lib/models/User'
 import Match from '../../../../lib/models/Match'
 import { requirePlayer } from '../../../../lib/auth/apiAuth'
+import { normalizePhoneForStorage, phoneErrorMessage } from '../../../../lib/utils/phoneUtils'
 
 // Import League model to ensure it's registered
 import '../../../../lib/models/League'
@@ -151,7 +152,14 @@ export async function PUT(request) {
 
     // Update player fields
     if (name) player.name = name
-    if (phone) player.whatsapp = phone // Save phone to whatsapp field
+    if (phone) {
+      const { phone: normalizedPhone, error: phoneError } = normalizePhoneForStorage(phone)
+      if (phoneError) {
+        const lang = preferences?.language || player.preferences?.preferredLanguage || 'es'
+        return NextResponse.json({ error: phoneErrorMessage(phoneError, lang) }, { status: 400 })
+      }
+      player.whatsapp = normalizedPhone
+    }
 
     if (country !== undefined) {
       player.country = country && /^[A-Za-z]{2}$/.test(country) ? country.toUpperCase() : null

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { MapPin, Calendar, Tag, ChevronRight, Eye, EyeOff } from 'lucide-react'
 import { getDiscountCode, storeDiscountCode } from '@/lib/utils/discountCode'
+import { normalizePhoneForStorage, phoneErrorMessage } from '@/lib/utils/phoneUtils'
 
 const skillLevelNames = {
   es: {
@@ -133,10 +134,20 @@ export default function ModernRegistrationForm({
       })
       return
     }
+    const isNewAccount = !loggedInPlayer && !hasAccount
+    const { phone: normalizedWhatsapp, error: phoneError } = isNewAccount
+      ? normalizePhoneForStorage(formData.whatsapp)
+      : { phone: formData.whatsapp, error: null }
+    if (phoneError) {
+      setLocalErrors({ whatsapp: phoneErrorMessage(phoneError, locale) })
+      return
+    }
+
     setLocalErrors({})
     
     const submissionData = {
       ...formData,
+      whatsapp: normalizedWhatsapp,
       discountCode: discountValidation?.valid ? discountCode : null
     }
     onSubmit(submissionData, hasAccount)
@@ -552,17 +563,17 @@ export default function ModernRegistrationForm({
                   required
                   autoComplete="tel"
                   className={`w-full px-3.5 py-2.5 sm:py-3 border ${
-                    errors.whatsapp ? 'border-red-400 bg-red-50' : 'border-gray-200'
+                    (localErrors.whatsapp || errors.whatsapp) ? 'border-red-400 bg-red-50' : 'border-gray-200'
                   } rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-base`}
                   placeholder="+34 600 000 000"
                 />
                 <p className="mt-1 text-xs text-gray-500">
                   {locale === 'es' 
-                    ? 'Para notificaciones de la liga'
-                    : 'For league notifications'}
+                    ? 'Con el prefijo de tu país (+34, +44, +1...) para que tus rivales puedan escribirte'
+                    : 'With your country code (+34, +44, +1...) so your rivals can message you'}
                 </p>
-                {errors.whatsapp && (
-                  <p className="mt-1 text-xs text-red-600">{errors.whatsapp}</p>
+                {(localErrors.whatsapp || errors.whatsapp) && (
+                  <p className="mt-1 text-xs text-red-600">{localErrors.whatsapp || errors.whatsapp}</p>
                 )}
               </div>
 

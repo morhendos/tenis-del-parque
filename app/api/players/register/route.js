@@ -6,6 +6,7 @@ import User from '../../../../lib/models/User'
 import { generateWelcomeEmail } from '../../../../lib/email/templates/welcomeEmail'
 import { sendEmail } from '../../../../lib/email/resend'
 import { postNewPlayer } from '../../../../lib/services/leagueFeedService'
+import { normalizePhoneForStorage, phoneErrorMessage } from '../../../../lib/utils/phoneUtils'
 
 // Helper function to normalize name to Title Case
 function toTitleCase(str) {
@@ -27,7 +28,7 @@ export async function POST(request) {
     const { 
       name, 
       email, 
-      whatsapp, 
+      whatsapp: rawWhatsapp, 
       level, 
       language = 'es',
       leagueId,
@@ -52,7 +53,7 @@ export async function POST(request) {
     })()
 
     // Basic validation
-    if (!name || !email || !whatsapp || !level) {
+    if (!name || !email || !rawWhatsapp || !level) {
       return Response.json(
         { 
           success: false, 
@@ -60,6 +61,14 @@ export async function POST(request) {
             ? 'Todos los campos son obligatorios' 
             : 'All fields are required' 
         },
+        { status: 400 }
+      )
+    }
+
+    const { phone: whatsapp, error: phoneError } = normalizePhoneForStorage(rawWhatsapp)
+    if (phoneError && !(await Player.exists({ email: email.toLowerCase() }))) {
+      return Response.json(
+        { success: false, error: phoneErrorMessage(phoneError, language), field: 'whatsapp' },
         { status: 400 }
       )
     }

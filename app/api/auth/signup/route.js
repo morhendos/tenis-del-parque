@@ -2,6 +2,7 @@ import dbConnect from '../../../../lib/db/mongoose'
 import Player from '../../../../lib/models/Player'
 import User from '../../../../lib/models/User'
 import { sendEmail } from '../../../../lib/email/resend'
+import { normalizePhoneForStorage, phoneErrorMessage } from '../../../../lib/utils/phoneUtils'
 
 // Helper function to normalize name to Title Case
 function toTitleCase(str) {
@@ -41,6 +42,14 @@ export async function POST(request) {
             ? 'Nombre, email y contraseña son obligatorios' 
             : 'Name, email and password are required' 
         },
+        { status: 400 }
+      )
+    }
+
+    const { phone: normalizedWhatsapp, error: phoneError } = normalizePhoneForStorage(whatsapp)
+    if (phoneError) {
+      return Response.json(
+        { success: false, error: phoneErrorMessage(phoneError, language), field: 'whatsapp' },
         { status: 400 }
       )
     }
@@ -89,7 +98,7 @@ export async function POST(request) {
     const player = new Player({
       name: normalizedName,
       email: normalizedEmail,
-      whatsapp: whatsapp || '',
+      whatsapp: normalizedWhatsapp,
       registrations: [], // Empty - no league yet
       preferences: {
         preferredLanguage: language
