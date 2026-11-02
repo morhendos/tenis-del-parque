@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import SeasonStartEmailModal from '@/components/admin/leagues/SeasonStartEmailModal'
 
 // Player Card Component for drag and drop
 function PlayerCard({ player, isSelected, onSelect, isDragging, matchHistory = [] }) {
@@ -213,6 +214,7 @@ function CreateMatchContent() {
   const [matches, setMatches] = useState([])
   const [mode, setMode] = useState('manual') // 'manual', 'automatic', 'combined'
   const [roundNumber, setRoundNumber] = useState(null) // Start with null instead of 1
+  const [notifyRound, setNotifyRound] = useState(null)
   const [playerHistory, setPlayerHistory] = useState({})
   const [isGenerating, setIsGenerating] = useState(false)
   const [existingRounds, setExistingRounds] = useState([])
@@ -520,10 +522,7 @@ function CreateMatchContent() {
       
       // Clear round selection from session storage on success
       sessionStorage.removeItem('roundSelection')
-      
-      setTimeout(() => {
-        router.push(`/admin/matches?league=${leagueId || selectedLeague?.id}`)
-      }, 2000)
+      setNotifyRound(roundNumber)
     } catch (error) {
       console.error('Error creating matches:', error)
       setError(error.message || 'Failed to create matches')
@@ -875,6 +874,13 @@ function LoadingFallback() {
   return (
     <div className="flex items-center justify-center h-64">
       <div className="text-xl text-gray-600">Loading...</div>
+      <SeasonStartEmailModal
+        isOpen={!!notifyRound}
+        onClose={() => router.push(`/admin/matches?league=${leagueId || selectedLeague?.id}`)}
+        leagueId={leagueId || selectedLeague?.id}
+        leagueName={selectedLeague?.name}
+        initialRound={notifyRound}
+      />
     </div>
   )
 }

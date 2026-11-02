@@ -4,6 +4,7 @@ import dbConnect from '../../../../lib/db/mongoose'
 import Match from '../../../../lib/models/Match'
 import Player from '../../../../lib/models/Player'
 import { requireAdmin } from '../../../../lib/auth/apiAuth'
+import { postNewRound } from '../../../../lib/services/leagueFeedService'
 
 // Force dynamic rendering for this route
 export const dynamic = 'force-dynamic'
@@ -258,6 +259,7 @@ export async function POST(request) {
     })
 
     await match.save()
+    await postNewRound(league, parseInt(round))
 
     // Populate player data for response
     await match.populate('players.player1 players.player2')

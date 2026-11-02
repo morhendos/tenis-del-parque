@@ -13,7 +13,8 @@ export default function SeasonStartEmailModal({
   isOpen, 
   onClose, 
   leagueId, 
-  leagueName 
+  leagueName,
+  initialRound = null
 }) {
   const [loading, setLoading] = useState(false)
   const [preview, setPreview] = useState(null)
@@ -49,6 +50,10 @@ export default function SeasonStartEmailModal({
 
   // Fetch preview when modal opens
   useEffect(() => {
+    if (isOpen && initialRound && selectedRound !== initialRound) {
+      setSelectedRound(initialRound)
+      return
+    }
     if (isOpen && leagueId) {
       fetchPreview()
       setLanguageOverrides({}) // Reset overrides when refetching
@@ -56,7 +61,7 @@ export default function SeasonStartEmailModal({
       setResult(null)
       setPushResult(null)
     }
-  }, [isOpen, leagueId, selectedRound])
+  }, [isOpen, leagueId, selectedRound, initialRound])
 
   const fetchPreview = async () => {
     setLoading(true)
@@ -231,15 +236,19 @@ export default function SeasonStartEmailModal({
             <p className="text-sm text-gray-500">{leagueName} · pairings, rival and deadline for each player</p>
           </div>
           <div className="flex items-center gap-3">
-            <select
-              value={selectedRound ?? ''}
-              onChange={(e) => setSelectedRound(parseInt(e.target.value))}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-parque-purple focus:border-parque-purple"
-            >
-              {[1, 2, 3, 4, 5, 6, 7, 8].map(r => (
-                <option key={r} value={r}>Round {r}</option>
-              ))}
-            </select>
+            {initialRound ? (
+              <span className="px-3 py-2 rounded-lg bg-purple-50 text-parque-purple text-sm font-semibold">Round {initialRound}</span>
+            ) : (
+              <select
+                value={selectedRound ?? ''}
+                onChange={(e) => setSelectedRound(parseInt(e.target.value))}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-parque-purple focus:border-parque-purple"
+              >
+                {[1, 2, 3, 4, 5, 6, 7, 8].map(r => (
+                  <option key={r} value={r}>Round {r}</option>
+                ))}
+              </select>
+            )}
             <button onClick={onClose} className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />

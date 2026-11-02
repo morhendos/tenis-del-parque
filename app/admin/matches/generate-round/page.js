@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import SeasonStartEmailModal from '@/components/admin/leagues/SeasonStartEmailModal'
 
 function GenerateRoundContent() {
   const [loading, setLoading] = useState(true)
@@ -10,6 +11,7 @@ function GenerateRoundContent() {
   const [success, setSuccess] = useState('')
   const [roundsData, setRoundsData] = useState(null)
   const [preview, setPreview] = useState(null)
+  const [notifyRound, setNotifyRound] = useState(null)
   const [selectedLeague, setSelectedLeague] = useState(null)
   
   const router = useRouter()
@@ -125,11 +127,7 @@ function GenerateRoundContent() {
 
       setSuccess(data.message)
       setPreview(null)
-      
-      // Redirect to matches page after 2 seconds
-      setTimeout(() => {
-        router.push(`/admin/matches?league=${selectedLeague?.id || leagueId}`)
-      }, 2000)
+      setNotifyRound(nextRound)
     } catch (error) {
       console.error('Error generating matches:', error)
       setError(error.message || 'Failed to generate matches')
@@ -377,6 +375,13 @@ function GenerateRoundContent() {
           </div>
         </div>
       )}
+      <SeasonStartEmailModal
+        isOpen={!!notifyRound}
+        onClose={() => router.push(`/admin/matches?league=${selectedLeague?.id || leagueId}`)}
+        leagueId={selectedLeague?.id || leagueId}
+        leagueName={selectedLeague?.name}
+        initialRound={notifyRound}
+      />
     </div>
   )
 }
