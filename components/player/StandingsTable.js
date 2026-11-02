@@ -43,7 +43,7 @@ export default function StandingsTable({ players, language, unified = false, pla
             <div className="w-8 sm:w-11 px-1 py-2.5 sm:py-3 text-center flex-shrink-0">#</div>
             <div className="flex-1 px-1 sm:px-2 py-2.5 sm:py-3 min-w-0">{language === 'es' ? 'Jugador' : 'Player'}</div>
             <div className="hidden min-[375px]:block w-16 min-[420px]:w-24 px-0.5 sm:px-1 py-2.5 sm:py-3 text-center flex-shrink-0">{language === 'es' ? 'Forma' : 'Form'}</div>
-            <div className="w-9 sm:w-12 px-0.5 py-2.5 sm:py-3 text-center flex-shrink-0">W-L</div>
+            <div className="w-12 sm:w-16 px-0.5 py-2.5 sm:py-3 text-center flex-shrink-0">W-D-L</div>
             <div className="w-9 sm:w-12 px-0.5 py-2.5 sm:py-3 text-center flex-shrink-0">Sets</div>
             <div className="w-12 sm:w-14 px-0.5 py-2.5 sm:py-3 text-center flex-shrink-0">{language === 'es' ? 'Juegos' : 'Games'}</div>
             <div className="w-9 sm:w-11 px-1 py-2.5 sm:py-3 text-center flex-shrink-0 font-bold">Pts</div>
@@ -119,16 +119,12 @@ export default function StandingsTable({ players, language, unified = false, pla
                 </div>
 
                 {/* Wins - Losses */}
-                <div className="w-9 sm:w-12 px-0.5 py-2 sm:py-2.5 flex items-center justify-center flex-shrink-0">
+                <div className="w-12 sm:w-16 px-0.5 py-2 sm:py-2.5 flex items-center justify-center flex-shrink-0">
                   <span className="text-[11px] sm:text-sm font-medium tabular-nums">
                     <span className="text-parque-purple font-semibold">{standing.stats.matchesWon}</span>
                     <span className="text-gray-300">-</span>
-                    {standing.stats.matchesDrawn > 0 && (
-                      <>
-                        <span className="text-orange-500 font-semibold">{standing.stats.matchesDrawn}</span>
-                        <span className="text-gray-300">-</span>
-                      </>
-                    )}
+                    <span className={standing.stats.matchesDrawn > 0 ? 'text-orange-500 font-semibold' : 'text-gray-400'}>{standing.stats.matchesDrawn || 0}</span>
+                    <span className="text-gray-300">-</span>
                     <span className="text-gray-400">{standing.stats.matchesLost}</span>
                   </span>
                 </div>

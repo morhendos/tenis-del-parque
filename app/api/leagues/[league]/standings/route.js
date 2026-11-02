@@ -204,6 +204,7 @@ export async function GET(request, { params }) {
           matchesPlayed: stats.matchesPlayed,
           matchesWon: stats.matchesWon,
           matchesLost: stats.matchesLost,
+          matchesDrawn: stats.matchesDrawn || 0,
           winPercentage,
           setsWon: stats.setsWon,
           setsLost: stats.setsLost,
