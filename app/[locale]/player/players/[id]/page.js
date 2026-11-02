@@ -32,7 +32,8 @@ const content = {
     of: 'de',
     points: 'Puntos',
     played: 'Jugados',
-    wl: 'G-P',
+    wl: 'G-E-P',
+    draws: (n) => `${n} empate${n === 1 ? '' : 's'}`,
     sets: 'Sets',
     games: 'Juegos',
     allTime: 'Total histórico',
@@ -67,7 +68,8 @@ const content = {
     of: 'of',
     points: 'Points',
     played: 'Played',
-    wl: 'W-L',
+    wl: 'W-D-L',
+    draws: (n) => `${n} draw${n === 1 ? '' : 's'}`,
     sets: 'Sets',
     games: 'Games',
     allTime: 'All-time',
@@ -114,6 +116,16 @@ function Stat({ label, value, sub }) {
 const pair = (a, b) => (
   <span>
     <span className="text-parque-purple">{a}</span>
+    <span className="text-gray-300">-</span>
+    <span className="text-gray-500">{b}</span>
+  </span>
+)
+
+const triple = (a, d, b) => (
+  <span>
+    <span className="text-parque-purple">{a}</span>
+    <span className="text-gray-300">-</span>
+    <span className="text-gray-500">{d}</span>
     <span className="text-gray-300">-</span>
     <span className="text-gray-500">{b}</span>
   </span>
@@ -279,6 +291,9 @@ export default function PlayerPublicProfilePage() {
               <div className="text-3xl font-bold text-gray-900 tabular-nums">{headToHead.theirWins}</div>
             </div>
           </div>
+          {headToHead.draws > 0 && (
+            <div className="text-center text-xs text-gray-500 -mt-1 pb-1">{t.draws(headToHead.draws)}</div>
+          )}
           <div className="px-4 pb-3 divide-y divide-gray-50">
             {headToHead.matches.map(m => (
               <div key={m._id} className="flex items-center justify-between py-2 text-sm">
@@ -307,7 +322,7 @@ export default function PlayerPublicProfilePage() {
             <Stat label={t.position} value={league.position ? `#${league.position}` : '-'} sub={league.totalPlayers ? `${t.of} ${league.totalPlayers}` : null} />
             <Stat label={t.points} value={league.stats.totalPoints} />
             <Stat label={t.played} value={league.stats.matchesPlayed} />
-            <Stat label={t.wl} value={pair(league.stats.matchesWon, league.stats.matchesLost)} />
+            <Stat label={t.wl} value={triple(league.stats.matchesWon, league.stats.matchesDrawn || 0, league.stats.matchesLost)} />
             <Stat label={t.sets} value={pair(league.stats.setsWon, league.stats.setsLost)} />
             <Stat label={t.games} value={pair(league.stats.gamesWon, league.stats.gamesLost)} />
           </div>

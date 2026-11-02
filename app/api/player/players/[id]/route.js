@@ -75,6 +75,7 @@ async function getLeagueSummary(registration, playerId) {
       matchesPlayed: stats.matchesPlayed || 0,
       matchesWon: stats.matchesWon || 0,
       matchesLost: stats.matchesLost || 0,
+      matchesDrawn: stats.matchesDrawn || 0,
       setsWon: stats.setsWon || 0,
       setsLost: stats.setsLost || 0,
       gamesWon: stats.gamesWon || 0,
