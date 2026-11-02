@@ -123,7 +123,7 @@ export default function StandingsTable({ players, language, unified = false, pla
                   <span className="text-[11px] sm:text-sm font-medium tabular-nums">
                     <span className="text-parque-purple font-semibold">{standing.stats.matchesWon}</span>
                     <span className="text-gray-300">-</span>
-                    <span className={standing.stats.matchesDrawn > 0 ? 'text-orange-500 font-semibold' : 'text-gray-400'}>{standing.stats.matchesDrawn || 0}</span>
+                    <span className="text-gray-400">{standing.stats.matchesDrawn || 0}</span>
                     <span className="text-gray-300">-</span>
                     <span className="text-gray-400">{standing.stats.matchesLost}</span>
                   </span>
