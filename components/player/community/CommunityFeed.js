@@ -31,6 +31,7 @@ const content = {
     tooFast: 'Espera unos segundos antes de publicar otra vez.',
     error: 'Algo ha fallado. Inténtalo de nuevo.',
     beat: 'ganó a',
+    drew: 'empató con',
     walkover: 'por W.O.',
     round: (n) => `Ronda ${n}`,
     playoff: 'Playoff',
@@ -59,6 +60,7 @@ const content = {
     tooFast: 'Wait a few seconds before posting again.',
     error: 'Something went wrong. Please try again.',
     beat: 'beat',
+    drew: 'drew with',
     walkover: 'by walkover',
     round: (n) => `Round ${n}`,
     playoff: 'Playoff',
@@ -186,7 +188,7 @@ function PostCard({ post, language, t, adminMode, isDemo, onChange, onRemove }) 
         <div>
           <p className="text-sm text-gray-800">
             <PlayerLink playerId={d.winner?._id} className="font-semibold text-gray-900">{name(d.winner?.name)}</PlayerLink>
-            {' '}{t.beat}{' '}
+            {' '}{d.draw ? t.drew : t.beat}{' '}
             <PlayerLink playerId={d.loser?._id} className="font-semibold text-gray-900">{name(d.loser?.name)}</PlayerLink>
             {d.walkover && <span className="text-gray-500"> {t.walkover}</span>}
           </p>

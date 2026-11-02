@@ -46,6 +46,7 @@ const content = {
     playoff: 'Playoff',
     won: 'V',
     lost: 'D',
+    draw: 'E',
     ret: 'ret.'
   },
   en: {
@@ -80,6 +81,7 @@ const content = {
     playoff: 'Playoff',
     won: 'W',
     lost: 'L',
+    draw: 'D',
     ret: 'ret.'
   }
 }
@@ -281,8 +283,8 @@ export default function PlayerPublicProfilePage() {
             {headToHead.matches.map(m => (
               <div key={m._id} className="flex items-center justify-between py-2 text-sm">
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center flex-shrink-0 ${m.won ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
-                    {m.won ? t.won : t.lost}
+                  <span className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center flex-shrink-0 ${m.won ? 'bg-green-100 text-green-700' : m.draw ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-600'}`}>
+                    {m.won ? t.won : m.draw ? t.draw : t.lost}
                   </span>
                   <div className="min-w-0">
                     <div className="text-gray-700 truncate">{leagueTitle(m.league)}</div>
@@ -334,7 +336,7 @@ export default function PlayerPublicProfilePage() {
           <div className="px-4 py-1 divide-y divide-gray-50">
             {recentResults.map(m => (
               <div key={m._id} className="flex items-center gap-3 py-2.5">
-                <div className={`w-1 h-9 rounded-full flex-shrink-0 ${m.won ? 'bg-green-500' : 'bg-red-400'}`} />
+                <div className={`w-1 h-9 rounded-full flex-shrink-0 ${m.won ? 'bg-green-500' : m.draw ? 'bg-orange-400' : 'bg-red-400'}`} />
                 <PlayerAvatar name={m.opponent?.name} avatar={isDemo ? null : m.opponent?.avatar} country={m.opponent?.country} size="sm" />
                 <div className="flex-1 min-w-0">
                   <PlayerLink playerId={m.opponent?._id} className="block text-sm font-medium text-gray-900 truncate">

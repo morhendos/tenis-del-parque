@@ -50,6 +50,7 @@ export function MatchModals({
       { myScore: '', opponentScore: '' }
     ],
     walkover: false,
+    draw: false,
     retiredPlayer: null
   })
   const [scheduleForm, setScheduleForm] = useState({
@@ -97,6 +98,7 @@ export function MatchModals({
           { myScore: '', opponentScore: '' }
         ],
         walkover: false,
+        draw: false,
         retiredPlayer: null
       })
       setValidationErrors({})
@@ -198,6 +200,8 @@ export function MatchModals({
       // Remove third set if it's not 1:1
       if (!(mySetWins === 1 && oppSetWins === 1)) {
         newSets.splice(2, 1)
+        setResultForm({ ...resultForm, sets: newSets, draw: false })
+        return
       }
     }
     
@@ -285,6 +289,7 @@ export function MatchModals({
         
         for (let i = 0; i < resultForm.sets.length; i++) {
           const set = resultForm.sets[i]
+          if (i === 2 && resultForm.draw) continue
           if (set.myScore === '' || set.opponentScore === '') {
             // For the third set (super tiebreak), it's optional if match is already decided
             if (i === 2) {
@@ -343,11 +348,12 @@ export function MatchModals({
       
       await onSubmitResult({
         matchId: selectedMatch._id,
-        sets: resultForm.walkover ? [] : resultForm.sets.map(set => ({
+        sets: resultForm.walkover ? [] : resultForm.sets.slice(0, resultForm.draw ? 2 : 3).map(set => ({
           myScore: parseInt(set.myScore),
           opponentScore: parseInt(set.opponentScore)
         })),
         walkover: resultForm.walkover,
+        draw: !!resultForm.draw,
         retiredPlayer: resultForm.retiredPlayer
       })
       
@@ -465,7 +471,7 @@ export function MatchModals({
                       {language === 'es' ? 'Puntuación de Sets' : 'Set Scores'}
                     </label>
                     
-                    {checkForSuperTiebreak() && resultForm.sets.length === 3 && (
+                    {checkForSuperTiebreak() && resultForm.sets.length === 3 && !resultForm.draw && (
                       <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded-lg">
                         {language === 'es' 
                           ? '⚡ Super tiebreak necesario (1-1 en sets)' 
@@ -474,6 +480,7 @@ export function MatchModals({
                     )}
                     
                     {resultForm.sets.map((set, index) => (
+                      (index === 2 && resultForm.draw) ? null :
                       <div key={index}>
                         <div className="flex items-center space-x-2 bg-gray-50 rounded-xl p-3">
                           <span className="text-sm text-gray-500 w-16">{getSetLabel(index)}:</span>
@@ -517,6 +524,25 @@ export function MatchModals({
                         )}
                       </div>
                     ))}
+
+                    {checkForSuperTiebreak() && selectedMatch?.matchType !== 'playoff' && (
+                      <label className="flex items-start p-3 bg-orange-50 rounded-xl cursor-pointer hover:bg-orange-100 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={!!resultForm.draw}
+                          onChange={(e) => {
+                            setResultForm({ ...resultForm, draw: e.target.checked })
+                            setValidationErrors({})
+                            setFormError('')
+                          }}
+                          className="mt-0.5 h-5 w-5 text-orange-500 border-gray-300 rounded focus:ring-orange-400"
+                        />
+                        <span className="ml-3 text-sm text-gray-700">
+                          <span className="font-medium">{language === 'es' ? 'No pudimos jugar el super tiebreak' : 'We could not play the super tiebreak'}</span>
+                          <span className="block text-xs text-gray-500 mt-0.5">{language === 'es' ? 'El partido queda en empate: 1 punto para cada uno, sin cambio de ELO.' : 'The match counts as a draw: 1 point each, no ELO change.'}</span>
+                        </span>
+                      </label>
+                    )}
                   </div>
                 </>
               )}

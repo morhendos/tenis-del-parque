@@ -15,6 +15,7 @@ const content = {
     empty: 'Saluda a tu liga o busca con quién pelotear esta semana.',
     write: 'Escribir',
     beat: 'ganó a',
+    drew: 'empató con',
     joined: 'se ha unido a la liga',
     round: (n) => `Empieza la Ronda ${n}`
   },
@@ -25,6 +26,7 @@ const content = {
     empty: 'Say hi to your league or find someone to hit with this week.',
     write: 'Write',
     beat: 'beat',
+    drew: 'drew with',
     joined: 'joined the league',
     round: (n) => `Round ${n} has started`
   }
@@ -37,7 +39,7 @@ function summary(post, t, language) {
   const d = post.data || {}
   if (post.autoType === 'result') {
     const score = (d.sets || []).map(s => `${s[0]}-${s[1]}`).join(' ')
-    return { who: null, text: `🎾 ${n(d.winner?.name)} ${t.beat} ${n(d.loser?.name)} ${d.walkover ? 'W.O.' : score}` }
+    return { who: null, text: `🎾 ${n(d.winner?.name)} ${d.draw ? t.drew : t.beat} ${n(d.loser?.name)} ${d.walkover ? 'W.O.' : score}` }
   }
   if (post.autoType === 'new_player') return { who: null, text: `👋 ${n(d.player?.name)} ${t.joined}` }
   return { who: null, text: `🚀 ${t.round(d.round)}` }

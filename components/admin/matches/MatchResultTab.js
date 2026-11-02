@@ -11,6 +11,7 @@ export default function MatchResultTab({ match, onResultUpdate, onResetToUnplaye
         sets: match.result.score?.sets || [{ player1: '', player2: '' }],
         winner: match.result.winner || '',
         walkover: match.result.score?.walkover || false,
+        draw: match.result.score?.draw || false,
         retiredPlayer: match.result.score?.retiredPlayer || ''
       }
     }
@@ -18,12 +19,13 @@ export default function MatchResultTab({ match, onResultUpdate, onResetToUnplaye
       sets: [{ player1: '', player2: '' }],
       winner: '',
       walkover: false,
+      draw: false,
       retiredPlayer: ''
     }
   })
 
   const handleSubmitResult = async () => {
-    if (!resultForm.winner) {
+    if (!resultForm.winner && !resultForm.draw) {
       alert('Please select a winner')
       return
     }
@@ -32,10 +34,11 @@ export default function MatchResultTab({ match, onResultUpdate, onResetToUnplaye
     try {
       // Prepare result data
       const result = {
-        winner: resultForm.winner,
+        winner: resultForm.draw ? null : resultForm.winner,
         score: {
           sets: resultForm.sets.filter(set => set.player1 !== '' && set.player2 !== ''),
-          walkover: resultForm.walkover
+          walkover: resultForm.walkover,
+          draw: !!resultForm.draw
         }
       }
 
@@ -89,6 +92,7 @@ export default function MatchResultTab({ match, onResultUpdate, onResetToUnplaye
                       sets: match.result.score?.sets || [{ player1: '', player2: '' }],
                       winner: match.result.winner || '',
                       walkover: match.result.score?.walkover || false,
+                      draw: match.result.score?.draw || false,
                       retiredPlayer: match.result.score?.retiredPlayer || ''
                     })
                   }

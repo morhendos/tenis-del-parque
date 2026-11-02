@@ -16,7 +16,8 @@ const idOf = (v) => String(v?._id || v || '')
 function matchView(m, perspectiveId) {
   const isP1 = idOf(m.players.player1) === String(perspectiveId)
   const opp = isP1 ? m.players.player2 : m.players.player1
-  const won = idOf(m.result.winner) === String(perspectiveId)
+  const draw = !!m.result.score?.draw
+  const won = !draw && idOf(m.result.winner) === String(perspectiveId)
   const walkover = !!m.result.score?.walkover
   const sets = walkover ? [] : (m.result.score?.sets || []).map(s => ({
     mine: isP1 ? s.player1 : s.player2,
@@ -25,6 +26,7 @@ function matchView(m, perspectiveId) {
   return {
     _id: m._id,
     won,
+    draw,
     walkover,
     retired: !!m.result.score?.retiredPlayer,
     sets,
@@ -139,8 +141,10 @@ export async function GET(request, { params }) {
     const matches = await Match.find({
       status: 'completed',
       isBye: { $ne: true },
-      'result.winner': { $exists: true, $ne: null },
-      $or: [{ 'players.player1': player._id }, { 'players.player2': player._id }]
+      $and: [
+        { $or: [{ 'result.winner': { $exists: true, $ne: null } }, { 'result.score.draw': true }] },
+        { $or: [{ 'players.player1': player._id }, { 'players.player2': player._id }] }
+      ]
     })
       .populate('players.player1', 'name avatar country')
       .populate('players.player2', 'name avatar country')
@@ -155,7 +159,8 @@ export async function GET(request, { params }) {
     const leagueIds = new Set()
     for (const v of views) {
       allTime.matchesPlayed++
-      if (v.won) allTime.matchesWon++
+      if (v.draw) allTime.matchesDrawn = (allTime.matchesDrawn || 0) + 1
+      else if (v.won) allTime.matchesWon++
       else allTime.matchesLost++
       for (const s of v.sets) {
         if (s.mine > s.theirs) allTime.setsWon++
@@ -180,7 +185,8 @@ export async function GET(request, { params }) {
         .sort((a, b) => new Date(b.date) - new Date(a.date))
       headToHead = {
         myWins: together.filter(v => v.won).length,
-        theirWins: together.filter(v => !v.won).length,
+        theirWins: together.filter(v => !v.won && !v.draw).length,
+        draws: together.filter(v => v.draw).length,
         matches: together
       }
     }

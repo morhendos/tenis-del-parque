@@ -55,7 +55,7 @@ export async function POST(request) {
     const { session: authSession, error } = await requirePlayer(request)
     if (error) return error
 
-    const { matchId, sets, walkover, retiredPlayer } = await request.json()
+    const { matchId, sets, walkover, retiredPlayer, draw } = await request.json()
 
     // Find the match
     match = await Match.findById(matchId)
@@ -189,8 +189,17 @@ export async function POST(request) {
         }, { status: 400 })
       }
       
+      if (draw) {
+        if (match.matchType === 'playoff') {
+          return NextResponse.json({ success: false, error: 'Draw is not allowed in playoff matches' }, { status: 400 })
+        }
+        if (sets.length !== 2 || player1SetsWon !== 1 || player2SetsWon !== 1) {
+          return NextResponse.json({ success: false, error: 'Draw is only possible with sets split 1-1 and no super tiebreak' }, { status: 400 })
+        }
+      }
+
       // Check for valid match outcomes
-      if (sets.length === 2) {
+      if (sets.length === 2 && !draw) {
         // If only 2 sets, one player must have won both
         if (player1SetsWon === 1 && player2SetsWon === 1) {
           return NextResponse.json({ 
@@ -219,7 +228,7 @@ export async function POST(request) {
         }
       }
       
-      winner = player1SetsWon > player2SetsWon ? match.players.player1 : match.players.player2
+      winner = draw ? null : player1SetsWon > player2SetsWon ? match.players.player1 : match.players.player2
     }
 
     // Start a database transaction to ensure all operations succeed or fail together
@@ -242,10 +251,10 @@ export async function POST(request) {
       ])
 
       // Calculate ELO changes only for non-walkover matches
-      const player1Won = winner.equals(match.players.player1)
+      const player1Won = !!winner && winner.equals(match.players.player1)
       let eloChange = 0;
-      
-      if (!walkover) {
+
+      if (!walkover && !draw) {
         eloChange = calculateEloChange(
           player1.eloRating || 1200,
           player2.eloRating || 1200,
@@ -259,6 +268,7 @@ export async function POST(request) {
         score: {
           sets: resultSets,
           walkover: walkover || false,
+          draw: !!draw,
           retiredPlayer: retiredPlayer || null
         },
         playedAt: new Date()

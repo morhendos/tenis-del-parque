@@ -46,14 +46,16 @@ export default function MatchResultDisplay({ match, onEdit, onResetToUnplayed })
           : 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200'
       }`}>
         <div className="text-4xl mb-4">
-          {match.result.score?.walkover ? '📝' : '🏆'}
+          {match.result.score?.walkover ? '📝' : match.result.score?.draw ? '🤝' : '🏆'}
         </div>
         <h4 className={`text-2xl font-bold mb-4 ${
           match.result.score?.walkover ? 'text-gray-700' : 'text-green-800'
         }`}>
-          {match.result.winner === match.players.player1._id 
+          {match.result.score?.draw
+            ? 'Draw - 1 point each'
+            : <>{match.result.winner === match.players.player1._id 
             ? match.players.player1.name 
-            : match.players.player2.name} {match.result.score?.walkover ? 'Wins by Walkover' : 'Wins!'}
+            : match.players.player2.name} {match.result.score?.walkover ? 'Wins by Walkover' : 'Wins!'}</>}
         </h4>
         
         {/* Set Score Summary */}

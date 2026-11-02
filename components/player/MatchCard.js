@@ -30,7 +30,9 @@ export default function MatchCard({
   }
 
   const getMatchResult = () => {
-    if (!player || !match.result || !match.result.winner) return null
+    if (!player || !match.result) return null
+    if (match.result.score?.draw) return 'draw'
+    if (!match.result.winner) return null
     return match.result.winner === player._id ? 'won' : 'lost'
   }
 
@@ -131,7 +133,8 @@ export default function MatchCard({
   const opponent = getOpponent()
   const result = getMatchResult()
   const isWinner = result === 'won'
-  const isCancelled = match.status === 'cancelled' || (!match.result?.winner && match.schedule?.deadline && new Date(match.schedule.deadline) < new Date())
+  const isDraw = result === 'draw'
+  const isCancelled = match.status === 'cancelled' || (!match.result?.winner && !isDraw && match.schedule?.deadline && new Date(match.schedule.deadline) < new Date())
   const isScheduled = !!(match.schedule?.confirmedDate || match.schedule?.venue || match.scheduledDate)
   const deadlineStatus = getDeadlineStatus()
 
@@ -164,6 +167,8 @@ export default function MatchCard({
     ? { bg: 'bg-gray-100', text: 'text-gray-400' }
     : isWinner
     ? { bg: 'bg-green-50', text: 'text-green-600' }
+    : isDraw
+    ? { bg: 'bg-orange-50', text: 'text-orange-500' }
     : { bg: 'bg-red-50', text: 'text-red-500' }
 
   // Round pill colors
@@ -173,12 +178,14 @@ export default function MatchCard({
     ? 'bg-gray-100 text-gray-500'
     : isWinner
     ? 'bg-green-50 text-green-700'
+    : isDraw
+    ? 'bg-orange-50 text-orange-700'
     : 'bg-red-50 text-red-600'
 
   return (
     <div
       onClick={!isUpcoming && !isCancelled && onTapCompleted && result ? () => onTapCompleted(match, isWinner) : undefined}
-      className={'bg-white rounded-xl border border-gray-100 overflow-hidden transition-all ' + (!isUpcoming && !isCancelled && onTapCompleted && result ? 'cursor-pointer hover:shadow-sm ' : '') + (isCancelled && !isUpcoming ? 'opacity-60 ' : '') + (!isUpcoming && !isCancelled ? (isWinner ? 'border-l-[3px] border-l-green-500 ' : 'border-l-[3px] border-l-red-400 ') : '') + className}
+      className={'bg-white rounded-xl border border-gray-100 overflow-hidden transition-all ' + (!isUpcoming && !isCancelled && onTapCompleted && result ? 'cursor-pointer hover:shadow-sm ' : '') + (isCancelled && !isUpcoming ? 'opacity-60 ' : '') + (!isUpcoming && !isCancelled ? (isWinner ? 'border-l-[3px] border-l-green-500 ' : isDraw ? 'border-l-[3px] border-l-orange-400 ' : 'border-l-[3px] border-l-red-400 ') : '') + className}
     >
       
       {/* Top row: Round pill + league + deadline/score */}
@@ -217,8 +224,8 @@ export default function MatchCard({
           {/* Completed: show result */}
           {!isUpcoming && !isCancelled && myScore !== undefined && (
             <div className="flex items-center gap-1.5">
-              <span className={'text-[11px] font-medium px-2 py-0.5 rounded-full ' + (isWinner ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600')}>
-                {isWinner ? (language === 'es' ? 'Victoria' : 'Win') : (language === 'es' ? 'Derrota' : 'Loss')}
+              <span className={'text-[11px] font-medium px-2 py-0.5 rounded-full ' + (isWinner ? 'bg-green-50 text-green-700' : isDraw ? 'bg-orange-50 text-orange-700' : 'bg-red-50 text-red-600')}>
+                {isWinner ? (language === 'es' ? 'Victoria' : 'Win') : isDraw ? (language === 'es' ? 'Empate' : 'Draw') : (language === 'es' ? 'Derrota' : 'Loss')}
               </span>
               <span className="text-sm font-semibold text-gray-900">{myScore}-{opponentScore}</span>
             </div>

@@ -28,6 +28,7 @@ export default function MatchCardUnified({
   const isCompleted = match.status === 'completed' || match.result?.winner
   const hasSets = match.result?.score?.sets?.length > 0
   const isWalkover = match.result?.score?.walkover === true
+  const isDraw = match.result?.score?.draw === true
   const isByeMatch = match.isBye === true
 
   // Get player data
@@ -200,6 +201,9 @@ export default function MatchCardUnified({
           )}
           {!isByeMatch && isCompleted && isWinner && (
             <div className="w-2 h-2 rounded-full bg-yellow-500" />
+          )}
+          {!isByeMatch && isCompleted && isDraw && (
+            <div className="w-2 h-2 rounded-full bg-orange-400" />
           )}
           {isVirtuallyCancelled && isFirst && (
             <svg className="w-3.5 h-3.5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -379,7 +383,7 @@ export default function MatchCardUnified({
           
           {!isByeMatch && isCompleted && !isWalkover && (
             <span className="text-xs font-medium text-white/90">
-              {formatPlayedDate()}
+              {formatPlayedDate()}{isDraw ? (language === 'es' ? ' · Empate' : ' · Draw') : ''}
             </span>
           )}
         </div>

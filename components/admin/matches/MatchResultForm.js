@@ -204,6 +204,21 @@ export default function MatchResultForm({
           </div>
         </label>
 
+        {!resultForm.walkover && match.matchType !== 'playoff' && (
+          <label className="flex items-center p-3 border border-orange-200 bg-orange-50 rounded-lg hover:bg-orange-100">
+            <input
+              type="checkbox"
+              checked={!!resultForm.draw}
+              onChange={(e) => onResultFormChange({ ...resultForm, draw: e.target.checked, winner: e.target.checked ? '' : resultForm.winner })}
+              className="mr-3 h-4 w-4 text-orange-500 focus:ring-orange-400 border-gray-300 rounded"
+            />
+            <div>
+              <span className="text-sm font-medium text-gray-900">Draw</span>
+              <p className="text-xs text-gray-600">Sets 1-1, super tiebreak not played. 1 point each, no ELO change.</p>
+            </div>
+          </label>
+        )}
+
         {!resultForm.walkover && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -226,7 +241,7 @@ export default function MatchResultForm({
       <div className="flex justify-end pt-4">
         <button
           onClick={onSubmit}
-          disabled={submitting || !resultForm.winner}
+          disabled={submitting || (!resultForm.winner && !resultForm.draw)}
           className="px-8 py-2 bg-parque-purple text-white rounded-lg hover:bg-opacity-90 disabled:opacity-50 font-medium"
         >
           {submitting ? 'Saving...' : 'Save Result'}

@@ -48,16 +48,20 @@ export async function GET(request) {
     const matches = await Match.find({
       status: 'completed',
       isBye: { $ne: true },
-      'result.winner': { $exists: true, $ne: null },
-      $or: [{ 'players.player1': player._id }, { 'players.player2': player._id }]
+      $and: [
+        { $or: [{ 'result.winner': { $exists: true, $ne: null } }, { 'result.score.draw': true }] },
+        { $or: [{ 'players.player1': player._id }, { 'players.player2': player._id }] }
+      ]
     }).select('players result').lean()
 
     const matchStats = { matchesPlayed: 0, matchesWon: 0, matchesLost: 0, setsWon: 0, setsLost: 0 }
     for (const m of matches) {
       const isP1 = String(m.players.player1) === String(player._id)
-      const won = String(m.result.winner) === String(player._id)
+      const draw = !!m.result.score?.draw
+      const won = !draw && String(m.result.winner) === String(player._id)
       matchStats.matchesPlayed++
-      if (won) matchStats.matchesWon++
+      if (draw) matchStats.matchesDrawn = (matchStats.matchesDrawn || 0) + 1
+      else if (won) matchStats.matchesWon++
       else matchStats.matchesLost++
       if (m.result.score?.walkover) continue
       for (const s of m.result.score?.sets || []) {

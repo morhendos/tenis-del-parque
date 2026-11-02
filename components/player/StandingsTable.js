@@ -30,7 +30,7 @@ export default function StandingsTable({ players, language, unified = false, pla
   const getFormData = (matchHistory) => {
     if (!matchHistory || matchHistory.length === 0) return []
     // matchHistory is already sorted most recent first, and limited to 5
-    return matchHistory.map(m => m.result === 'won' ? 'W' : 'L')
+    return matchHistory.map(m => m.result === 'won' ? 'W' : m.result === 'draw' ? 'D' : 'L')
   }
 
   return (
@@ -102,9 +102,9 @@ export default function StandingsTable({ players, language, unified = false, pla
                         <div
                           key={i}
                           className={`w-2 h-2 min-[420px]:w-2.5 min-[420px]:h-2.5 rounded-full ${isLastDot ? 'hidden min-[420px]:block' : ''} ${
-                            match === 'W' ? 'bg-green-500' : 'bg-red-400'
+                            match === 'W' ? 'bg-green-500' : match === 'D' ? 'bg-orange-400' : 'bg-red-400'
                           }`}
-                          title={match === 'W' ? (language === 'es' ? 'Victoria' : 'Win') : (language === 'es' ? 'Derrota' : 'Loss')}
+                          title={match === 'W' ? (language === 'es' ? 'Victoria' : 'Win') : match === 'D' ? (language === 'es' ? 'Empate' : 'Draw') : (language === 'es' ? 'Derrota' : 'Loss')}
                         />
                       )
                     }
@@ -123,6 +123,12 @@ export default function StandingsTable({ players, language, unified = false, pla
                   <span className="text-[11px] sm:text-sm font-medium tabular-nums">
                     <span className="text-parque-purple font-semibold">{standing.stats.matchesWon}</span>
                     <span className="text-gray-300">-</span>
+                    {standing.stats.matchesDrawn > 0 && (
+                      <>
+                        <span className="text-orange-500 font-semibold">{standing.stats.matchesDrawn}</span>
+                        <span className="text-gray-300">-</span>
+                      </>
+                    )}
                     <span className="text-gray-400">{standing.stats.matchesLost}</span>
                   </span>
                 </div>

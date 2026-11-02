@@ -182,13 +182,13 @@ export async function GET(request, { params }) {
         .filter(match => {
           const p1 = match.players?.player1?.toString() || match.players?.player1?._id?.toString()
           const p2 = match.players?.player2?.toString() || match.players?.player2?._id?.toString()
-          return (p1 === playerIdStr || p2 === playerIdStr) && match.result?.winner
+          return (p1 === playerIdStr || p2 === playerIdStr) && (match.result?.winner || match.result?.score?.draw)
         })
         .sort((a, b) => (b.result?.playedAt || b.updatedAt) - (a.result?.playedAt || a.updatedAt))
         .slice(0, 5)
         .map(match => {
           const winnerId = match.result.winner?.toString() || match.result.winner?._id?.toString()
-          return { result: winnerId === playerIdStr ? 'won' : 'lost', round: match.round }
+          return { result: match.result.score?.draw ? 'draw' : winnerId === playerIdStr ? 'won' : 'lost', round: match.round }
         })
       
       return {

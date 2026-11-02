@@ -176,7 +176,14 @@ export async function PATCH(request, { params }) {
             writeConcern: { w: 'majority' }
           })
         // Validate result data
-        if (!body.result.winner) {
+        const isDraw = !!body.result.score?.draw
+        if (isDraw) {
+          if (match.matchType === 'playoff') {
+            return NextResponse.json({ error: 'Draw is not allowed in playoff matches' }, { status: 400 })
+          }
+          body.result.winner = null
+        }
+        if (!body.result.winner && !isDraw) {
           return NextResponse.json(
             { error: 'Result must include a winner' },
             { status: 400 }
@@ -188,7 +195,7 @@ export async function PATCH(request, { params }) {
         const player1Id = match.players.player1.toString()
         const player2Id = match.players.player2.toString()
         
-        if (winnerId !== player1Id && winnerId !== player2Id) {
+        if (!isDraw && winnerId !== player1Id && winnerId !== player2Id) {
           return NextResponse.json(
             { error: 'Winner must be one of the match players' },
             { status: 400 }
@@ -202,7 +209,7 @@ export async function PATCH(request, { params }) {
         ])
 
         // If this match already has a result, we need to reverse the old stats first
-        if (match.result && match.result.winner && match.eloChanges) {
+        if (match.result && (match.result.winner || match.result.score?.draw) && match.eloChanges) {
           await reversePlayerStatsOnMatchReset(match, player1, player2, session)
         }
 
@@ -215,7 +222,7 @@ export async function PATCH(request, { params }) {
         const player2RegForElo = getPlayerRegistration(player2, match.league, match.season)
         
         // Only calculate ELO for non-walkover matches using GLOBAL player ELO
-        if (!body.result.score?.walkover) {
+        if (!body.result.score?.walkover && !isDraw) {
           eloChange = calculateEloChange(
             player1.eloRating || 1200,
             player2.eloRating || 1200,

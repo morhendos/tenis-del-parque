@@ -31,6 +31,7 @@ export default function MatchResultCard({
 
   // Check if this is a walkover match
   const isWalkover = match.result?.score?.walkover === true
+  const isDraw = match.result?.score?.draw === true
 
   // Calculate final score and determine actual winner for player matches
   let myScore = 0, opponentScore = 0
@@ -171,6 +172,8 @@ export default function MatchResultCard({
               <h2 className="text-xl sm:text-2xl font-bold mb-0.5">
                 {isWalkover 
                   ? 'Walkover'
+                  : isDraw
+                  ? (language === 'es' ? 'Empate' : 'Draw')
                   : (isPlayerMatch 
                     ? (actualIsWinner 
                       ? (language === 'es' ? '¡Victoria!' : 'Victory!') 
@@ -179,6 +182,7 @@ export default function MatchResultCard({
               </h2>
               <p className="text-xs sm:text-sm opacity-80">
                 {language === 'es' ? 'Ronda' : 'Round'} {match.round}
+                {isDraw && (language === 'es' ? ' · 1 punto cada uno' : ' · 1 point each')}
               </p>
             </div>
           </div>
@@ -438,7 +442,7 @@ export default function MatchResultCard({
             )}
 
             {/* Encouraging Message - Only for player's own LOSING matches (NOT walkovers) */}
-            {isPlayerMatch && !actualIsWinner && !isWalkover && (
+            {isPlayerMatch && !actualIsWinner && !isWalkover && !isDraw && (
               <p className="text-center text-sm text-gray-500 mt-4 pt-4 border-t border-gray-100 italic">
                 {(() => {
                   const motivationalMessages = {
