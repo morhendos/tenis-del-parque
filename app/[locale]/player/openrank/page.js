@@ -1,5 +1,7 @@
 'use client'
 
+import { playerFetch } from '@/lib/utils/playerApi'
+
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
@@ -129,7 +131,7 @@ export default function OpenRankPage() {
 
   const fetchCurrentPlayer = async () => {
     try {
-      const response = await fetch('/api/player/profile')
+      const response = await playerFetch('/api/player/profile')
       if (response.ok) {
         const data = await response.json()
         setCurrentPlayer(data.player)

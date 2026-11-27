@@ -1,5 +1,7 @@
 'use client'
 
+import { playerFetch } from '@/lib/utils/playerApi'
+
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams, usePathname } from 'next/navigation'
 import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
@@ -46,7 +48,7 @@ export default function PlayerProfile() {
   const fetchProfile = useCallback(async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/player/profile')
+      const response = await playerFetch('/api/player/profile')
       
       if (!response.ok) {
         throw new Error('Failed to fetch profile')
@@ -140,7 +142,7 @@ export default function PlayerProfile() {
       // Check if language is changing
       const isLanguageChanging = user?.preferences?.language !== formData.preferences.language
 
-      const response = await fetch('/api/player/profile', {
+      const response = await playerFetch('/api/player/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'

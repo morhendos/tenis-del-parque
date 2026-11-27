@@ -1,3 +1,4 @@
+import { playerFetch } from '@/lib/utils/playerApi'
 import React, { useState, useEffect } from 'react'
 import MatchCard from './MatchCard'
 import { MatchModals } from './MatchModals'
@@ -26,7 +27,7 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
     const fetchPlayerMatches = async () => {
       try {
         setLoadingPlayerMatches(true)
-        const response = await fetch('/api/player/matches')
+        const response = await playerFetch('/api/player/matches')
         if (response.ok) {
           const data = await response.json()
           setPlayerMatches(data.matches || [])
@@ -41,7 +42,7 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
     const fetchExtensionsStatus = async () => {
       if (!league?._id) return
       try {
-        const response = await fetch('/api/player/profile')
+        const response = await playerFetch('/api/player/profile')
         if (response.ok) {
           const data = await response.json()
           // Find registration for this league
@@ -133,7 +134,7 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
 
   const handleSubmitResult = async (data) => {
     try {
-      const response = await fetch('/api/player/matches/result', {
+      const response = await playerFetch('/api/player/matches/result', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -180,7 +181,7 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
         ? new Date(`${data.date}T${data.time}`).toISOString()
         : null
 
-      const response = await fetch('/api/player/matches/schedule', {
+      const response = await playerFetch('/api/player/matches/schedule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...data, confirmedDate })
@@ -228,7 +229,7 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
 
   const handleUnschedule = async (match) => {
     try {
-      const response = await fetch('/api/player/matches/unschedule', {
+      const response = await playerFetch('/api/player/matches/unschedule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ matchId: match._id })
@@ -271,7 +272,7 @@ export default function ScheduleTab({ schedule, language, totalRounds = 8, playe
 
   const handleExtend = async (match) => {
     try {
-      const response = await fetch('/api/player/matches/extend', {
+      const response = await playerFetch('/api/player/matches/extend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ matchId: match._id })

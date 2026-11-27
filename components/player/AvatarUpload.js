@@ -1,5 +1,7 @@
 'use client'
 
+import { playerFetch } from '@/lib/utils/playerApi'
+
 import { useRef, useState } from 'react'
 import { Camera, Loader2, Trash2 } from 'lucide-react'
 import { countryFlag } from '@/lib/utils/countries'
@@ -44,7 +46,7 @@ export default function AvatarUpload({ avatar, name, country, language = 'es', o
       const blob = await resizeToSquare(file)
       const fd = new FormData()
       fd.append('file', blob, 'avatar.jpg')
-      const res = await fetch('/api/player/avatar', { method: 'POST', body: fd })
+      const res = await playerFetch('/api/player/avatar', { method: 'POST', body: fd })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
       onChange?.(data.avatar)
@@ -59,7 +61,7 @@ export default function AvatarUpload({ avatar, name, country, language = 'es', o
     setBusy(true)
     setError('')
     try {
-      const res = await fetch('/api/player/avatar', { method: 'DELETE' })
+      const res = await playerFetch('/api/player/avatar', { method: 'DELETE' })
       if (!res.ok) throw new Error()
       onChange?.(null)
     } catch {

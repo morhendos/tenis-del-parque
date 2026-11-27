@@ -1,5 +1,7 @@
 'use client'
 
+import { playerFetch } from '@/lib/utils/playerApi'
+
 import { useState } from 'react'
 
 const TIP_ID = 'court-sotogrande'
@@ -34,7 +36,7 @@ export default function CourtTipCard({ player, hasUpcomingMatch, language = 'es'
 
   const dismiss = () => {
     setHidden(true)
-    fetch('/api/player/dismiss-tip', {
+    playerFetch('/api/player/dismiss-tip', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tip: TIP_ID })

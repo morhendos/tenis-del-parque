@@ -1,5 +1,7 @@
 'use client'
 
+import { playerFetch } from '@/lib/utils/playerApi'
+
 import { useState } from 'react'
 import { LayoutGrid, Zap, Target, Hand, Repeat, Circle, Calendar, Pencil, Loader2 } from 'lucide-react'
 
@@ -71,7 +73,7 @@ export default function TennisProfileCard({ tennisProfile, language = 'es', onSa
     setSaving(true)
     setError('')
     try {
-      const res = await fetch('/api/player/profile', {
+      const res = await playerFetch('/api/player/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tennisProfile: form })

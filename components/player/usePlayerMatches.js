@@ -1,5 +1,7 @@
 'use client'
 
+import { playerFetch } from '@/lib/utils/playerApi'
+
 import { useState, useEffect, useCallback } from 'react'
 import { MatchModals } from './MatchModals'
 import MatchResultCard from './MatchResultCard'
@@ -41,7 +43,7 @@ export default function usePlayerMatches(language = 'es', { enabled = true, onRe
   const fetchMatches = useCallback(async () => {
     try {
       setLoading(true)
-      const response = await fetchWithRetry('/api/player/matches', {}, { label: 'Matches:matches' })
+      const response = await playerFetch('/api/player/matches', {}, { label: 'Matches:matches' })
       if (!response.ok) throw new Error('Failed to fetch matches')
       const data = await response.json()
       setMatches(data.matches || [])
@@ -56,7 +58,7 @@ export default function usePlayerMatches(language = 'es', { enabled = true, onRe
 
   const fetchPlayer = useCallback(async () => {
     try {
-      const response = await fetchWithRetry('/api/player/profile', {}, { label: 'Matches:profile' })
+      const response = await playerFetch('/api/player/profile', {}, { label: 'Matches:profile' })
       if (response.ok) {
         const data = await response.json()
         setPlayer(data.player)
@@ -142,7 +144,7 @@ export default function usePlayerMatches(language = 'es', { enabled = true, onRe
   }
 
   const postJson = async (url, body) => {
-    const response = await fetch(url, {
+    const response = await playerFetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)

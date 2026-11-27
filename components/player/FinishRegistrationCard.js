@@ -1,5 +1,7 @@
 'use client'
 
+import { playerFetch } from '@/lib/utils/playerApi'
+
 import { useEffect, useState } from 'react'
 import { CreditCard, Loader2 } from 'lucide-react'
 
@@ -45,7 +47,7 @@ export default function FinishRegistrationCard({ player, language = 'es' }) {
     setCancelling(true)
     setError(false)
     try {
-      const res = await fetch('/api/player/cancel-registration', {
+      const res = await playerFetch('/api/player/cancel-registration', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ leagueId: league._id })

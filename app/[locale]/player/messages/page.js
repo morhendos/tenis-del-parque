@@ -1,5 +1,7 @@
 'use client'
 
+import { playerFetch } from '@/lib/utils/playerApi'
+
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
@@ -39,20 +41,20 @@ export default function MessagesPage() {
   const fetchPlayerData = async () => {
     try {
       // Get player profile data
-      const profileResponse = await fetch('/api/player/profile')
+      const profileResponse = await playerFetch('/api/player/profile')
       if (profileResponse.ok) {
         const profileData = await profileResponse.json()
         setPlayer(profileData.player)
         
         // Get user preferences including seenAnnouncements
-        const preferencesResponse = await fetch('/api/player/preferences')
+        const preferencesResponse = await playerFetch('/api/player/preferences')
         if (preferencesResponse.ok) {
           const preferencesData = await preferencesResponse.json()
           setSeenAnnouncements(preferencesData.seenAnnouncements || [])
         }
         
         // Check for first round matches (one per league)
-        const matchesResponse = await fetch('/api/player/matches')
+        const matchesResponse = await playerFetch('/api/player/matches')
         if (matchesResponse.ok) {
           const matchesData = await matchesResponse.json()
           // Get ALL round 1 matches (could be in multiple leagues)
@@ -265,7 +267,7 @@ export default function MessagesPage() {
     // Mark announcement as seen if it's an announcement
     if (modalType === 'announcement' && selectedMessage?.id && selectedMessage?.isNew) {
       try {
-        const response = await fetch('/api/player/messages/mark-seen', {
+        const response = await playerFetch('/api/player/messages/mark-seen', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ messageIds: [selectedMessage.id] })

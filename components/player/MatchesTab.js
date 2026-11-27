@@ -1,3 +1,4 @@
+import { playerFetch } from '@/lib/utils/playerApi'
 import React, { useState, useEffect, useMemo } from 'react'
 import MatchCardUnified from './MatchCardUnified'
 import { MatchModals } from './MatchModals'
@@ -35,7 +36,7 @@ export default function MatchesTab({
     const fetchPlayerMatches = async () => {
       try {
         setLoadingPlayerMatches(true)
-        const response = await fetch('/api/player/matches')
+        const response = await playerFetch('/api/player/matches')
         if (response.ok) {
           const data = await response.json()
           setPlayerMatches(data.matches || [])
@@ -50,7 +51,7 @@ export default function MatchesTab({
     const fetchExtensionsStatus = async () => {
       if (!league?._id) return
       try {
-        const response = await fetch('/api/player/profile')
+        const response = await playerFetch('/api/player/profile')
         if (response.ok) {
           const data = await response.json()
           const registration = data.player?.registrations?.find(
@@ -148,7 +149,7 @@ export default function MatchesTab({
 
   const handleSubmitResult = async (data) => {
     try {
-      const response = await fetch('/api/player/matches/result', {
+      const response = await playerFetch('/api/player/matches/result', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -197,7 +198,7 @@ export default function MatchesTab({
 
   const handleSubmitSchedule = async (data) => {
     try {
-      const response = await fetch('/api/player/matches/schedule', {
+      const response = await playerFetch('/api/player/matches/schedule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -245,7 +246,7 @@ export default function MatchesTab({
 
   const handleUnschedule = async (match) => {
     try {
-      const response = await fetch('/api/player/matches/unschedule', {
+      const response = await playerFetch('/api/player/matches/unschedule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ matchId: match._id })
@@ -293,7 +294,7 @@ export default function MatchesTab({
 
   const handleConfirmExtend = async (match) => {
     try {
-      const response = await fetch('/api/player/matches/extend', {
+      const response = await playerFetch('/api/player/matches/extend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ matchId: match._id })

@@ -1,5 +1,7 @@
 'use client'
 
+import { playerFetch } from '@/lib/utils/playerApi'
+
 import { useState, useEffect } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { signIn, signOut, useSession } from 'next-auth/react'
@@ -98,7 +100,7 @@ export default function LeagueRegistrationPage() {
       setProfileChecked(true)
       return
     }
-    fetch('/api/player/profile')
+    playerFetch('/api/player/profile')
       .then(res => (res.ok ? res.json() : null))
       .then(data => setLoggedInPlayer(data?.player?.email ? data.player : null))
       .catch(() => setLoggedInPlayer(null))
@@ -191,7 +193,7 @@ export default function LeagueRegistrationPage() {
         }
         
         // After successful sign in, fetch the user's profile data
-        const profileResponse = await fetch('/api/player/profile')
+        const profileResponse = await playerFetch('/api/player/profile')
         if (!profileResponse.ok) {
           setErrors({ 
             submit: validLocale === 'es' 

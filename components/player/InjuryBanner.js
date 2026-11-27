@@ -1,5 +1,7 @@
 'use client'
 
+import { playerFetch } from '@/lib/utils/playerApi'
+
 import { useState } from 'react'
 
 const translations = {
@@ -69,7 +71,7 @@ export default function InjuryBanner({ player, language = 'es', onUpdate }) {
     if (!returnDate) return
     setLoading(true)
     try {
-      const res = await fetch('/api/player/injury', {
+      const res = await playerFetch('/api/player/injury', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -97,7 +99,7 @@ export default function InjuryBanner({ player, language = 'es', onUpdate }) {
   const handleClear = async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/player/injury', {
+      const res = await playerFetch('/api/player/injury', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'clear' })

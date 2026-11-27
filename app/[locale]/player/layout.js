@@ -1,5 +1,7 @@
 'use client'
 
+import { playerFetch } from '@/lib/utils/playerApi'
+
 import { useState, useEffect, useCallback } from 'react'
 import { usePathname, useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
@@ -52,7 +54,7 @@ export default function PlayerLayout({ children }) {
         // Fetch user preferences to get the latest seenAnnouncements
         let seenAnnouncements = []
         try {
-          const preferencesResponse = await fetch('/api/player/preferences')
+          const preferencesResponse = await playerFetch('/api/player/preferences')
           if (preferencesResponse.ok) {
             const preferencesData = await preferencesResponse.json()
             
@@ -60,7 +62,7 @@ export default function PlayerLayout({ children }) {
             
             // Check for first round match announcements by fetching matches
             try {
-              const matchesResponse = await fetch('/api/player/matches')
+              const matchesResponse = await playerFetch('/api/player/matches')
               if (matchesResponse.ok) {
                 const matchesData = await matchesResponse.json()
                 const firstRoundAnnouncementIds = getLiveRoundOneMatches(matchesData.matches)
@@ -76,7 +78,7 @@ export default function PlayerLayout({ children }) {
           }
           
           // Also fetch player profile for name display AND language preference
-          const profileResponse = await fetch('/api/player/profile')
+          const profileResponse = await playerFetch('/api/player/profile')
           if (profileResponse.ok) {
             const profileData = await profileResponse.json()
             setPlayerData(profileData)

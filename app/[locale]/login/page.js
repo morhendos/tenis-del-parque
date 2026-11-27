@@ -1,5 +1,7 @@
 'use client'
 
+import { playerFetch } from '@/lib/utils/playerApi'
+
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams, useParams } from 'next/navigation'
 import { signIn, useSession } from 'next-auth/react'
@@ -49,7 +51,7 @@ function LoginForm() {
   const checkUserLanguageAndRedirect = async () => {
     try {
       // Fetch user profile to get language preference
-      const response = await fetch('/api/player/profile')
+      const response = await playerFetch('/api/player/profile')
       if (response.ok) {
         const data = await response.json()
         const userLanguage = data.user?.preferences?.language

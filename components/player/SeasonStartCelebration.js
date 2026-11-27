@@ -1,5 +1,7 @@
 'use client'
 
+import { playerFetch } from '@/lib/utils/playerApi'
+
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import confetti from 'canvas-confetti'
@@ -39,7 +41,7 @@ export default function SeasonStartCelebration({ player, language = 'es' }) {
 
     startedRef.current = true
     if (registration && !forced) {
-      fetch('/api/player/season-celebration', {
+      playerFetch('/api/player/season-celebration', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ leagueId: registration.league._id || registration.league })
