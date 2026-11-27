@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
+import useSWR from 'swr'
 import { Trophy, ChevronRight, ChevronDown } from 'lucide-react'
 
 const seasonNames = {
@@ -10,23 +11,10 @@ const seasonNames = {
 }
 
 export default function NewSeasonCard({ language, locale, placement = 'top' }) {
-  const [cities, setCities] = useState([])
-  const [joinedOpen, setJoinedOpen] = useState(false)
   const [expanded, setExpanded] = useState(false)
-
-  useEffect(() => {
-    let cancelled = false
-    fetch('/api/player/open-leagues')
-      .then(res => (res.ok ? res.json() : null))
-      .then(data => {
-        if (!cancelled && data?.cities) {
-          setCities(data.cities)
-          setJoinedOpen(!!data.joinedOpen)
-        }
-      })
-      .catch(() => {})
-    return () => { cancelled = true }
-  }, [])
+  const { data } = useSWR('/api/player/open-leagues')
+  const cities = data?.cities || []
+  const joinedOpen = !!data?.joinedOpen
 
   if (cities.length === 0) return null
   if (placement === 'top' && joinedOpen) return null
