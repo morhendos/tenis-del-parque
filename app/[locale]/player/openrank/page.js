@@ -1,8 +1,8 @@
 'use client'
 
-import { playerFetch } from '@/lib/utils/playerApi'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useLayoutEffect } from 'react'
+import useSWR from 'swr'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
@@ -13,6 +13,8 @@ import { TennisPreloaderInline } from '@/components/ui/TennisPreloader'
 import { getMaskedName, isDemoModeActive } from '@/lib/utils/demoMode'
 import PlayerAvatar from '@/components/player/PlayerAvatar'
 import PlayerLink from '@/components/player/PlayerLink'
+
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 
 export default function OpenRankPage() {
   const params = useParams()
@@ -90,56 +92,30 @@ export default function OpenRankPage() {
     setIsDemoMode(isDemoModeActive())
   }, [])
 
-  useEffect(() => {
-    fetchOpenRank()
-    fetchCurrentPlayer()
-    fetchEloHistory()
-  }, [])
+  const { data: openRankData, isLoading: openRankLoading } = useSWR('/api/openrank?all=true')
+  const { data: profileData } = useSWR('/api/player/profile')
+  const { data: eloData, isLoading: eloDataLoading } = useSWR('/api/player/elo-history')
 
-  const fetchEloHistory = async () => {
-    try {
-      const response = await fetch('/api/player/elo-history')
-      if (response.ok) {
-        const data = await response.json()
-        setEloHistory(data)
-      }
-    } catch (error) {
-      console.error('Error fetching ELO history:', error)
-    } finally {
-      setEloLoading(false)
+  useIsomorphicLayoutEffect(() => {
+    if (openRankData) {
+      setRankings(openRankData.rankings || [])
+      setAlmostQualified(openRankData.almostQualified || [])
+      setStats({
+        qualifiedCount: openRankData.qualifiedCount || 0,
+        matchesRequired: openRankData.matchesRequired || 8
+      })
     }
-  }
+    if (!openRankLoading) setLoading(false)
+  }, [openRankData, openRankLoading])
 
-  const fetchOpenRank = async () => {
-    try {
-      const response = await fetch('/api/openrank?all=true')
-      if (response.ok) {
-        const data = await response.json()
-        setRankings(data.rankings || [])
-        setAlmostQualified(data.almostQualified || [])
-        setStats({
-          qualifiedCount: data.qualifiedCount || 0,
-          matchesRequired: data.matchesRequired || 8
-        })
-      }
-    } catch (error) {
-      console.error('Error fetching OpenRank:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  useIsomorphicLayoutEffect(() => {
+    if (profileData?.player) setCurrentPlayer(profileData.player)
+  }, [profileData])
 
-  const fetchCurrentPlayer = async () => {
-    try {
-      const response = await playerFetch('/api/player/profile')
-      if (response.ok) {
-        const data = await response.json()
-        setCurrentPlayer(data.player)
-      }
-    } catch (error) {
-      console.error('Error fetching player:', error)
-    }
-  }
+  useIsomorphicLayoutEffect(() => {
+    if (eloData) setEloHistory(eloData)
+    if (!eloDataLoading) setEloLoading(false)
+  }, [eloData, eloDataLoading])
 
   // Find current player's position
   const currentPlayerRanking = rankings.find(r => 

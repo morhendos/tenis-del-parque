@@ -2,12 +2,12 @@
 
 import { playerFetch } from '@/lib/utils/playerApi'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useMemo } from 'react'
+import useSWR from 'swr'
 import { MatchModals } from './MatchModals'
 import MatchResultCard from './MatchResultCard'
 import { toast } from '@/components/ui/Toast'
 import { processMatchResult } from '@/lib/utils/matchResultUtils'
-import { fetchWithRetry } from '@/lib/utils/fetchWithRetry'
 
 const clearedSchedule = {
   confirmedDate: null,
@@ -25,11 +25,24 @@ export function isUpcomingMatch(m) {
 }
 
 export default function usePlayerMatches(language = 'es', { enabled = true, onResultSubmitted } = {}) {
-  const [matches, setMatches] = useState([])
-  const [player, setPlayer] = useState(null)
-  const [openRankData, setOpenRankData] = useState({})
-  const [loading, setLoading] = useState(enabled)
-  const [error, setError] = useState('')
+  const {
+    data: matchesData,
+    error: matchesError,
+    isLoading: matchesLoading,
+    mutate: mutateMatches
+  } = useSWR(enabled ? '/api/player/matches' : null)
+  const { data: profileData, mutate: mutateProfile } = useSWR(enabled ? '/api/player/profile' : null)
+  const { data: openRankResponse } = useSWR(enabled ? '/api/openrank?all=true' : null)
+
+  const matches = useMemo(() => matchesData?.matches || [], [matchesData])
+  const player = profileData?.player || null
+  const openRankData = useMemo(() => {
+    const rankMap = {}
+    openRankResponse?.rankings?.forEach(p => { rankMap[p._id] = p.position })
+    return rankMap
+  }, [openRankResponse])
+  const loading = enabled && matchesLoading
+  const error = matchesError ? 'Failed to load matches' : ''
 
   const [selectedMatch, setSelectedMatch] = useState(null)
   const [showResultModal, setShowResultModal] = useState(false)
@@ -40,55 +53,6 @@ export default function usePlayerMatches(language = 'es', { enabled = true, onRe
 
   const es = language === 'es'
 
-  const fetchMatches = useCallback(async () => {
-    try {
-      setLoading(true)
-      const response = await playerFetch('/api/player/matches', {}, { label: 'Matches:matches' })
-      if (!response.ok) throw new Error('Failed to fetch matches')
-      const data = await response.json()
-      setMatches(data.matches || [])
-      setError('')
-    } catch (err) {
-      console.error('Error fetching matches:', err)
-      setError('Failed to load matches')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  const fetchPlayer = useCallback(async () => {
-    try {
-      const response = await playerFetch('/api/player/profile', {}, { label: 'Matches:profile' })
-      if (response.ok) {
-        const data = await response.json()
-        setPlayer(data.player)
-      }
-    } catch (err) {
-      console.error('Error fetching player data:', err)
-    }
-  }, [])
-
-  const fetchOpenRank = useCallback(async () => {
-    try {
-      const response = await fetchWithRetry('/api/openrank?all=true', {}, { label: 'Matches:openrank' })
-      if (response.ok) {
-        const data = await response.json()
-        const rankMap = {}
-        data.rankings?.forEach(p => { rankMap[p._id] = p.position })
-        setOpenRankData(rankMap)
-      }
-    } catch (err) {
-      console.error('Error fetching OpenRank data:', err)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!enabled) return
-    fetchMatches()
-    fetchPlayer()
-    fetchOpenRank()
-  }, [enabled, fetchMatches, fetchPlayer, fetchOpenRank])
-
   const getExtensionsForLeague = (leagueId) => {
     if (!player?.registrations?.length || !leagueId) return 3
     const lid = leagueId?._id?.toString() || leagueId?.toString()
@@ -98,7 +62,9 @@ export default function usePlayerMatches(language = 'es', { enabled = true, onRe
   }
 
   const updateMatch = (matchId, fn) => {
-    setMatches(prev => prev.map(m => (m._id === matchId ? fn(m) : m)))
+    mutateMatches(current => (
+      current ? { ...current, matches: (current.matches || []).map(m => (m._id === matchId ? fn(m) : m)) } : current
+    ))
   }
 
   const handleSchedule = (match, isEditing = false) => {
@@ -157,7 +123,7 @@ export default function usePlayerMatches(language = 'es', { enabled = true, onRe
       const { response, result } = await postJson('/api/player/matches/extend', { matchId: match._id })
       if (response.ok) {
         updateMatch(match._id, m => ({ ...m, schedule: { ...m.schedule, deadline: result.newDeadline } }))
-        fetchPlayer()
+        mutateProfile()
         setShowExtendModal(false)
         toast.success(es ? 'Límite extendido 7 días' : 'Deadline extended by 7 days')
       } else {
@@ -278,7 +244,7 @@ export default function usePlayerMatches(language = 'es', { enabled = true, onRe
             setResultCard(null)
             if (!wasNew) return
             if (onResultSubmitted) onResultSubmitted()
-            else fetchMatches()
+            else mutateMatches()
           }}
         />
       )}
@@ -291,7 +257,7 @@ export default function usePlayerMatches(language = 'es', { enabled = true, onRe
     openRankData,
     loading,
     error,
-    refetch: fetchMatches,
+    refetch: () => mutateMatches(),
     cardProps,
     showResultFor,
     getExtensionsForLeague,
