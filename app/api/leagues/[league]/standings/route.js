@@ -47,12 +47,29 @@ export async function GET(request, { params }) {
       )
     }
     
-    // Find the Season ObjectId that matches the league's season
-    console.log('API: League season:', league.season)
-    const seasonDoc = await Season.findOne({
-      year: league.season.year,
-      type: league.season.type
-    })
+    const playerQuery = {
+      'registrations.league': league._id,
+      'registrations.season': league.season
+    }
+    if (level) playerQuery['registrations.level'] = level
+
+    const [seasonDoc, foundPlayers, matches, latestRound] = await Promise.all([
+      Season.findOne({
+        year: league.season.year,
+        type: league.season.type
+      }),
+      Player.find(playerQuery).lean(),
+      Match.find({
+        league: league._id,
+        status: 'completed',
+        matchType: { $ne: 'playoff' }
+      }).lean(),
+      Match.findOne({
+        league: league._id,
+        'season.year': league.season.year,
+        'season.type': league.season.type
+      }).sort({ round: -1 }).select('round')
+    ])
     
     if (!seasonDoc) {
       console.error(`Season not found for year: ${league.season.year}, type: ${league.season.type}`)
@@ -65,17 +82,7 @@ export async function GET(request, { params }) {
       )
     }
     
-    console.log('API: Found Season ObjectId:', seasonDoc._id)
-    
-    // Build query for players using new registrations structure
-    const playerQuery = {
-      'registrations.league': league._id,
-      'registrations.season': league.season // Use league's Season ObjectId, not URL parameter
-    }
-    if (level) playerQuery['registrations.level'] = level
-    
-    // Get players with matching registrations
-    let players = await Player.find(playerQuery).lean()
+    let players = foundPlayers
     
     // Transform players to match the expected structure
     // Extract the relevant registration data for each player
@@ -111,7 +118,6 @@ export async function GET(request, { params }) {
     
     // FALLBACK: If no players found with exact season, try without season filter
     if (players.length === 0) {
-      console.log('No players found with exact season, trying without season filter...')
       const fallbackQuery = { 'registrations.league': league._id }
       if (level) fallbackQuery['registrations.level'] = level
       
@@ -144,22 +150,7 @@ export async function GET(request, { params }) {
           metadata: player.metadata
         }
       }).filter(Boolean)
-      
-      console.log(`Fallback: Found ${players.length} players without season filter`)
     }
-    
-    // Get all completed matches for the league
-    // NOTE: We query by league only, not by season, because each league instance
-    // already represents a specific season (e.g., "Sotogrande Gold Winter 2026")
-    const matches = await Match.find({
-      league: league._id,
-      status: 'completed',
-      matchType: { $ne: 'playoff' } // Exclude playoff matches from regular standings
-    }).lean()
-    
-    console.log(`API: Found ${matches.length} matches for league ${league.name}`)
-    
-    console.log(`📊 PUBLIC STANDINGS: ${players.length} players, ${matches.length} matches`)
     
     // USE THE SINGLE SOURCE OF TRUTH SERVICE!
     const sortedStandings = calculateLeagueStandings(players, matches, true) // include status sort for public
@@ -219,13 +210,6 @@ export async function GET(request, { params }) {
         matchHistory: playerMatches
       }
     })
-    
-    // Get current round info
-    const latestRound = await Match.findOne({ 
-      league: league._id, 
-      'season.year': league.season.year,
-      'season.type': league.season.type
-    }).sort({ round: -1 }).select('round')
     
     return NextResponse.json({
       success: true,
