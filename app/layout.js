@@ -1,27 +1,7 @@
-import { Inter, Outfit, Raleway } from 'next/font/google'
+import './fonts.css'
 import './globals.css'
 import { Providers } from './providers'
 import TapFeedback from '@/components/TapFeedback'
-
-const inter = Inter({ 
-  subsets: ['latin'],
-  display: 'swap', // Prevent flash of invisible text
-  preload: true
-})
-
-const outfit = Outfit({ 
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-outfit',
-  preload: true
-})
-
-const raleway = Raleway({ 
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-raleway',
-  preload: true
-})
 
 export const metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_URL || 'https://www.tenisdp.es'),
@@ -101,8 +81,10 @@ export default function RootLayout({ children }) {
         <link rel="alternate" hrefLang="es" href="/es" />
         <link rel="alternate" hrefLang="en" href="/en" />
         <link rel="alternate" hrefLang="x-default" href="/es" />
+        <link rel="preload" href="/fonts/outfit-latin.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/raleway-latin.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
       </head>
-      <body className={`${inter.className} ${outfit.variable} ${raleway.variable} font-sans`}>
+      <body className="font-sans">
         <TapFeedback />
         <Providers>
           {children}
