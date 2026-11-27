@@ -5,7 +5,7 @@ import ServiceWorkerRegistration from '@/components/common/ServiceWorkerRegistra
 
 export function Providers({ children }) {
   return (
-    <SessionProvider>
+    <SessionProvider refetchOnWindowFocus={false}>
       <ServiceWorkerRegistration />
       {children}
     </SessionProvider>

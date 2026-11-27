@@ -6,20 +6,15 @@ const defaultLocale = 'es';
 
 // Get the preferred locale from the request with improved parsing
 function getLocale(request) {
-  const pathname = request.nextUrl.pathname;
-  
   // Check if there's a locale cookie from user preference
   const localeCookie = request.cookies.get('NEXT_LOCALE');
-  console.log(`[Language Debug] Path: ${pathname}, Cookie: ${localeCookie?.value || 'none'}`);
   
   if (localeCookie && locales.includes(localeCookie.value)) {
-    console.log(`[Language Debug] Using cookie language: ${localeCookie.value}`);
     return localeCookie.value;
   }
   
   // Check Accept-Language header with improved parsing
   const acceptLanguage = request.headers.get('Accept-Language');
-  console.log(`[Language Debug] Accept-Language header: ${acceptLanguage || 'none'}`);
   
   if (acceptLanguage) {
     // Parse Accept-Language header properly
@@ -34,23 +29,15 @@ function getLocale(request) {
       })
       .sort((a, b) => b.quality - a.quality); // Sort by quality (priority)
     
-    console.log(`[Language Debug] Parsed languages:`, languages);
-    
     // Find the first language that matches our supported locales
     for (const { code } of languages) {
       // Extract the primary language code (e.g., "en" from "en-US")
       const primaryCode = code.split('-')[0].toLowerCase();
-      console.log(`[Language Debug] Checking code: ${code} -> primary: ${primaryCode}`);
       
       if (locales.includes(primaryCode)) {
-        console.log(`[Language Detection] ✅ Detected language: ${primaryCode} from Accept-Language: ${acceptLanguage}`);
         return primaryCode;
       }
     }
-    
-    console.log(`[Language Detection] ❌ No supported language found in Accept-Language: ${acceptLanguage}, using default: ${defaultLocale}`);
-  } else {
-    console.log(`[Language Detection] ❌ No Accept-Language header found, using default: ${defaultLocale}`);
   }
   
   return defaultLocale;
