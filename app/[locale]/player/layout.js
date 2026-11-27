@@ -1,8 +1,8 @@
 'use client'
 
-import { playerFetch } from '@/lib/utils/playerApi'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import useSWR from 'swr'
 import { usePathname, useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -23,111 +23,55 @@ export default function PlayerLayout({ children }) {
   const params = useParams()
   const { data: session, status } = useSession()
   const urlLocale = params.locale || 'es'
-  const [locale, setLocale] = useState(urlLocale)
 
   useEffect(() => {
     document.getElementById('player-scroll')?.scrollTo(0, 0)
     window.scrollTo(0, 0)
   }, [pathname])
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [hasNewAnnouncement, setHasNewAnnouncement] = useState(false)
-  const [playerData, setPlayerData] = useState(null)
   const [isDemoMode, setIsDemoMode] = useState(false)
 
   useEffect(() => {
     setIsDemoMode(isDemoModeActive())
   }, [])
 
-  const checkAuth = useCallback(async () => {
-    try {
-      if (status === 'loading') return
-      
-      if (status === 'unauthenticated') {
-        router.push(`/${urlLocale}/login?return=${pathname}`)
-        return
-      }
-      
-      if (session?.user) {
-        setUser(session.user)
-        
-        // Fetch user preferences to get the latest seenAnnouncements
-        let seenAnnouncements = []
-        try {
-          const preferencesResponse = await playerFetch('/api/player/preferences')
-          if (preferencesResponse.ok) {
-            const preferencesData = await preferencesResponse.json()
-            
-            seenAnnouncements = preferencesData.seenAnnouncements || []
-            
-            // Check for first round match announcements by fetching matches
-            try {
-              const matchesResponse = await playerFetch('/api/player/matches')
-              if (matchesResponse.ok) {
-                const matchesData = await matchesResponse.json()
-                const firstRoundAnnouncementIds = getLiveRoundOneMatches(matchesData.matches)
-                  .map(getRoundOneAnnouncementId)
-                
-                // Check if any first round announcements are unseen
-                const hasUnseenFirstRound = firstRoundAnnouncementIds.some(id => !seenAnnouncements.includes(id))
-                setHasNewAnnouncement(hasUnseenFirstRound)
-              }
-            } catch (error) {
-              console.error('Error checking first round announcements:', error)
-            }
-          }
-          
-          // Also fetch player profile for name display AND language preference
-          const profileResponse = await playerFetch('/api/player/profile')
-          if (profileResponse.ok) {
-            const profileData = await profileResponse.json()
-            setPlayerData(profileData)
-            
-            // Check for league-specific announcements based on player's registrations
-            const playerLeagueSlugs = (profileData.player?.registrations || [])
-              .map(reg => reg.league?.slug)
-              .filter(Boolean)
-            
-            const hasUnseenLeagueAnnouncement = getLeagueTargetedAnnouncements(
-              playerLeagueSlugs,
-              seenAnnouncements
-            ).length > 0
-            
-            // Update hasNewAnnouncement to include league-specific ones
-            if (hasUnseenLeagueAnnouncement) {
-              setHasNewAnnouncement(true)
-            }
-            
-            // Check if user has a language preference
-            const userLanguage = profileData.user?.preferences?.language
-            
-            if (userLanguage && userLanguage !== urlLocale) {
-              // User's preferred language differs from URL locale
-              // Redirect to the correct locale while preserving the rest of the path
-              const pathWithoutLocale = pathname.replace(`/${urlLocale}`, '')
-              const newPath = `/${userLanguage}${pathWithoutLocale}${typeof window !== 'undefined' ? window.location.search : ''}`
-              
-              console.log(`[Player Layout] Redirecting from ${pathname} to ${newPath} based on user preference`)
-              router.replace(newPath)
-              return // Don't continue loading, we're redirecting
-            } else {
-              // Use the user's preference or URL locale
-              setLocale(userLanguage || urlLocale)
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching user data:', error)
-          setHasNewAnnouncement(false)
-        }
-      }
-    } finally {
-      setLoading(false)
-    }
-  }, [router, status, session, urlLocale, pathname])
+  const isAuthenticated = status === 'authenticated'
+  const user = session?.user || null
+
+  const { data: preferencesData } = useSWR(isAuthenticated ? '/api/player/preferences' : null)
+  const { data: matchesData } = useSWR(isAuthenticated ? '/api/player/matches' : null)
+  const { data: playerData, isLoading: profileLoading } = useSWR(isAuthenticated ? '/api/player/profile' : null)
 
   useEffect(() => {
-    checkAuth()
-  }, [checkAuth])
+    if (status === 'unauthenticated') router.push(`/${urlLocale}/login?return=${pathname}`)
+  }, [status, router, urlLocale, pathname])
+
+  const hasNewAnnouncement = useMemo(() => {
+    if (!preferencesData) return false
+    const seenAnnouncements = preferencesData.seenAnnouncements || []
+
+    const hasUnseenFirstRound = getLiveRoundOneMatches(matchesData?.matches || [])
+      .map(getRoundOneAnnouncementId)
+      .some(id => !seenAnnouncements.includes(id))
+
+    const playerLeagueSlugs = (playerData?.player?.registrations || [])
+      .map(reg => reg.league?.slug)
+      .filter(Boolean)
+    const hasUnseenLeagueAnnouncement = getLeagueTargetedAnnouncements(playerLeagueSlugs, seenAnnouncements).length > 0
+
+    return hasUnseenFirstRound || hasUnseenLeagueAnnouncement
+  }, [preferencesData, matchesData, playerData])
+
+  const userLanguage = playerData?.user?.preferences?.language
+  const needsLocaleRedirect = !!userLanguage && userLanguage !== urlLocale
+  const locale = userLanguage || urlLocale
+
+  useEffect(() => {
+    if (!needsLocaleRedirect) return
+    const pathWithoutLocale = pathname.replace(`/${urlLocale}`, '')
+    router.replace(`/${userLanguage}${pathWithoutLocale}${window.location.search}`)
+  }, [needsLocaleRedirect, userLanguage, urlLocale, pathname, router])
+
+  const loading = status === 'loading' || (isAuthenticated && profileLoading)
 
   const navigation = [
     { 
